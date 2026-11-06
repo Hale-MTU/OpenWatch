@@ -117,6 +117,7 @@
     <string name="privacy_policy_body_2">Tato aplikace nenahrává vaše zdravotní data do cloudu, neobsahuje reklamy a nesdílí data s třetími stranami.</string>
     <string name="privacy_policy_body_medical">Kde Health Connect nabízí zdravotní záznamy, OpenWatch je ve vašem zařízení zobrazuje, importuje a exportuje. Kategorii čte jen s vaším oprávněním, zapisuje jen při importu a záznamy ukazuje tak, jak přišly, bez výkladu.</string>
     <string name="privacy_policy_body_3">OpenWatch není zdravotnický prostředek a není určen k diagnostice, léčbě, vyléčení ani prevenci žádné nemoci či zdravotní potíže. Nenahrazuje lékařskou radu, diagnózu ani léčbu od kvalifikovaného zdravotníka.</string>
+    <string name="notification_listener_label">Oznámení na hodinkách</string>
     <string name="screen_watch_notifications">Oznámení na hodinkách</string>
     <string name="settings_watch_notifications_section">Oznámení</string>
     <string name="settings_watch_notifications_title">Posílat oznámení na hodinky</string>
@@ -179,6 +180,7 @@
     <string name="settings_watch_point_coordinates_hint">Například 48.8584, 2.2945 nebo N 48° 51.504 E 002° 17.670</string>
     <string name="settings_watch_point_preview">Poloha: %1$s, %2$s</string>
     <string name="settings_watch_point_send">Odeslat do hodinek</string>
+    <string name="settings_watch_point_alias_label">Odeslat do hodinek</string>
     <string name="settings_watch_point_no_watch">Žádné spárované hodinky Garmin neumí ukládat body.</string>
     <string name="settings_watch_point_open_watches">Otevřít hodinky</string>
     <string name="settings_watch_point_shared_unreadable">Sdílený text neobsahuje souřadnice. Napište je nebo vložte sem.</string>

@@ -171,6 +171,7 @@
     <string name="privacy_policy_body_2">Tämä sovellus ei lataa terveystietojasi pilvipalveluun, ei sisällä mainoksia eikä jaa tietoja kolmansille osapuolille.</string>
     <string name="privacy_policy_body_medical">Kun Health Connect tarjoaa terveystietoja, OpenWatch näyttää, tuo ja vie niitä laitteellasi. Se lukee luokkaa vain luvallasi, kirjoittaa vain tuodessasi ja näyttää merkinnät sellaisinaan tulkitsematta niitä.</string>
     <string name="privacy_policy_body_3">OpenWatch ei ole lääkinnällinen laite eikä diagnosoi, hoida, paranna tai ehkäise mitään sairautta tai terveydentilaa. Se ei korvaa pätevän terveydenhuollon ammattilaisen lääketieteellistä neuvoa, diagnoosia tai hoitoa.</string>
+    <string name="notification_listener_label">Kellon ilmoitukset</string>
     <string name="screen_watch_notifications">Kellon ilmoitukset</string>
     <string name="settings_watch_notifications_section">Ilmoitukset</string>
     <string name="settings_watch_notifications_title">Lähetä ilmoitukset kelloon</string>
@@ -225,6 +226,7 @@
     <string name="settings_watch_point_coordinates_hint">Esimerkiksi 48.8584, 2.2945 tai N 48° 51.504 E 002° 17.670</string>
     <string name="settings_watch_point_preview">Sijainti: %1$s, %2$s</string>
     <string name="settings_watch_point_send">Lähetä kelloon</string>
+    <string name="settings_watch_point_alias_label">Lähetä kelloon</string>
     <string name="settings_watch_point_no_watch">Mikään pariliitetty Garmin-kello ei voi tallentaa pisteitä.</string>
     <string name="settings_watch_point_open_watches">Avaa kellot</string>
     <string name="settings_watch_point_shared_unreadable">Jaetussa tekstissä ei ole koordinaatteja. Kirjoita tai liitä ne tähän.</string>

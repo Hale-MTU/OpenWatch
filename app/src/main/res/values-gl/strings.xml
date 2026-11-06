@@ -172,6 +172,7 @@
     <string name="privacy_policy_body_2">Esta app non sobe os teus datos de saúde a ningún servizo na nube, non inclúe anuncios e non comparte datos con terceiros.</string>
     <string name="privacy_policy_body_medical">Onde Health Connect ofrece historial médico, OpenWatch móstrao, impórtao e expórtao no teu dispositivo. Só le unha categoría co teu permiso, só escribe cando importas e mostra os rexistros tal como chegan, sen interpretalos.</string>
     <string name="privacy_policy_body_3">OpenWatch non é un dispositivo médico e non diagnostica, trata, cura nin prevén ningunha enfermidade ou condición médica. Non substitúe o consello, diagnóstico ou tratamento dun profesional sanitario cualificado.</string>
+    <string name="notification_listener_label">Notificacións do reloxo</string>
     <string name="screen_watch_notifications">Notificacións do reloxo</string>
     <string name="settings_watch_notifications_section">Notificacións</string>
     <string name="settings_watch_notifications_title">Enviar notificacións ao reloxo</string>
@@ -226,6 +227,7 @@ Podes desactivalo cando queiras e revogar o acceso ás notificacións desde os a
     <string name="settings_watch_point_coordinates_hint">Por exemplo 48.8584, 2.2945 ou N 48° 51.504 E 002° 17.670</string>
     <string name="settings_watch_point_preview">Posición: %1$s, %2$s</string>
     <string name="settings_watch_point_send">Enviar ao reloxo</string>
+    <string name="settings_watch_point_alias_label">Enviar ao reloxo</string>
     <string name="settings_watch_point_no_watch">Ningún reloxo Garmin emparellado pode gardar puntos.</string>
     <string name="settings_watch_point_open_watches">Abrir reloxos</string>
     <string name="settings_watch_point_shared_unreadable">O texto compartido non ten coordenadas. Escríbeas ou pégaas aquí.</string>

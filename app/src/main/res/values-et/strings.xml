@@ -116,6 +116,7 @@
     <string name="onboarding_os_notification_forwarding_desc">Telefoni teavituste saatmine ühendatud kella. Avab Androidi seaded.</string>
     <string name="onboarding_action_grant_all">Anna kõik</string>
     <string name="settings_body_profile_group_title">Kehaprofiil</string>
+    <string name="notification_listener_label">Kella teavitused</string>
     <string name="screen_watch_notifications">Kella teavitused</string>
     <string name="settings_watch_notifications_section">Teavitused</string>
     <string name="settings_watch_notifications_title">Saada teavitused kella</string>
@@ -174,6 +175,7 @@
     <string name="settings_watch_point_coordinates_hint">Näiteks 48.8584, 2.2945 või N 48° 51.504 E 002° 17.670</string>
     <string name="settings_watch_point_preview">Asukoht: %1$s, %2$s</string>
     <string name="settings_watch_point_send">Saada kella</string>
+    <string name="settings_watch_point_alias_label">Saada kella</string>
     <string name="settings_watch_point_no_watch">Ükski seotud Garmini kell ei saa punkte salvestada.</string>
     <string name="settings_watch_point_open_watches">Ava kellad</string>
     <string name="settings_watch_point_shared_unreadable">Jagatud tekstis pole koordinaate. Sisesta või kleebi need siia.</string>

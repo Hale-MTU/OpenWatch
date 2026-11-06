@@ -120,6 +120,7 @@
     <string name="privacy_policy_body_2">此应用不会将你的健康数据上传到云服务，不包含广告，也不与第三方分享数据。</string>
     <string name="privacy_policy_body_medical">在 Health Connect 提供医疗记录的设备上，OpenWatch 会在你的设备上显示、导入和导出这些记录。只有获得你的许可才会读取某个类别，只在你导入时写入，并按收到的原样显示记录，不做解读。</string>
     <string name="privacy_policy_body_3">OpenWatch 不是医疗器械，不诊断、治疗、治愈或预防任何疾病或身体状况。它不能替代合格医疗专业人士的医疗建议、诊断或治疗。</string>
+    <string name="notification_listener_label">手表通知</string>
     <string name="screen_watch_notifications">手表通知</string>
     <string name="settings_watch_notifications_section">通知</string>
     <string name="settings_watch_notifications_title">将通知发送到手表</string>
@@ -178,6 +179,7 @@
     <string name="settings_watch_point_coordinates_hint">例如 48.8584, 2.2945 或 N 48° 51.504 E 002° 17.670</string>
     <string name="settings_watch_point_preview">位置：%1$s, %2$s</string>
     <string name="settings_watch_point_send">发送到手表</string>
+    <string name="settings_watch_point_alias_label">发送到手表</string>
     <string name="settings_watch_point_no_watch">没有已配对的 Garmin 手表可以存储位置点。</string>
     <string name="settings_watch_point_open_watches">打开手表设置</string>
     <string name="settings_watch_point_shared_unreadable">分享的文本中没有坐标。请在此输入或粘贴。</string>

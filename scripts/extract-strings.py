@@ -48,6 +48,16 @@ def parse(path):
     return tree.getroot()
 
 
+def rename_product(element):
+    """A copied string names the app it is in. The keys OpenWatch adds itself are left alone."""
+    for node in element.iter():
+        if node.text and "OpenVitals" in node.text:
+            node.text = node.text.replace("OpenVitals", "OpenWatch")
+        if node.tail and "OpenVitals" in node.tail:
+            node.tail = node.tail.replace("OpenVitals", "OpenWatch")
+    return element
+
+
 def serialize(root):
     body = []
     for element in root:
@@ -86,7 +96,7 @@ def main():
         target_dir = os.path.join(APP_RES, folder)
         target_file = os.path.join(target_dir, "strings.xml")
         root = parse(source_file)
-        kept = [element for element in root if element.get("name") in keys]
+        kept = [rename_product(element) for element in root if element.get("name") in keys]
         own = own_keys(target_file, source_keys)
         os.makedirs(target_dir, exist_ok=True)
         new_root = ET.Element("resources")

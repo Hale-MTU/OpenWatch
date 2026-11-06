@@ -75,6 +75,7 @@ class BleSensorCoordinator @Inject constructor(
         WearOsDeviceClassifier(),
     )
 
+    @SuppressLint("MissingPermission")
     fun startScan(showAllDevices: Boolean = false) {
         stopScan()
         scanResults.clear()

@@ -116,6 +116,7 @@
     <string name="onboarding_os_notification_forwarding_desc">Envía notificaciones del teléfono a un reloj conectado. Abre la configuración de Android.</string>
     <string name="onboarding_action_grant_all">Conceder todo</string>
     <string name="settings_body_profile_group_title">Perfil corporal</string>
+    <string name="notification_listener_label">Notificaciones en el reloj</string>
     <string name="screen_watch_notifications">Notificaciones en el reloj</string>
     <string name="settings_watch_notifications_section">Notificaciones</string>
     <string name="settings_watch_notifications_title">Enviar notificaciones al reloj</string>
@@ -176,6 +177,7 @@
     <string name="settings_watch_point_coordinates_hint">Por ejemplo 48.8584, 2.2945 o N 48° 51.504 E 002° 17.670</string>
     <string name="settings_watch_point_preview">Posición: %1$s, %2$s</string>
     <string name="settings_watch_point_send">Enviar al reloj</string>
+    <string name="settings_watch_point_alias_label">Enviar al reloj</string>
     <string name="settings_watch_point_no_watch">Ningún reloj Garmin emparejado puede guardar puntos.</string>
     <string name="settings_watch_point_open_watches">Abrir relojes</string>
     <string name="settings_watch_point_shared_unreadable">El texto compartido no tiene coordenadas. Escríbelas o pégalas aquí.</string>

@@ -120,6 +120,7 @@
     <string name="privacy_policy_body_2">Cette application n\'envoie pas vos données de santé vers un service cloud, ne contient pas de publicité et ne partage aucune donnée avec des tiers.</string>
     <string name="privacy_policy_body_medical">Quand Health Connect propose les dossiers médicaux, OpenWatch les affiche, les importe et les exporte sur votre appareil. Il ne lit une catégorie qu\'avec votre autorisation, n\'écrit que lors d\'un import et affiche les dossiers tels quels, sans les interpréter.</string>
     <string name="privacy_policy_body_3">OpenWatch n\'est pas un dispositif médical et ne diagnostique, ne traite, ne guérit ni ne prévient aucune maladie ou affection. Elle ne remplace pas l\'avis, le diagnostic ou le traitement d\'un professionnel de santé qualifié.</string>
+    <string name="notification_listener_label">Notifications sur la montre</string>
     <string name="screen_watch_notifications">Notifications sur la montre</string>
     <string name="settings_watch_notifications_section">Notifications</string>
     <string name="settings_watch_notifications_title">Envoyer les notifications à la montre</string>
@@ -180,6 +181,7 @@
     <string name="settings_watch_point_coordinates_hint">Par exemple 48.8584, 2.2945 ou N 48° 51.504 E 002° 17.670</string>
     <string name="settings_watch_point_preview">Position : %1$s, %2$s</string>
     <string name="settings_watch_point_send">Envoyer à la montre</string>
+    <string name="settings_watch_point_alias_label">Envoyer à la montre</string>
     <string name="settings_watch_point_no_watch">Aucune montre Garmin appairée ne peut stocker de points.</string>
     <string name="settings_watch_point_open_watches">Ouvrir les montres</string>
     <string name="settings_watch_point_shared_unreadable">Le texte partagé ne contient pas de coordonnées. Saisissez-les ou collez-les ici.</string>

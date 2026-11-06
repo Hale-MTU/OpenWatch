@@ -116,6 +116,7 @@
     <string name="onboarding_os_notification_forwarding_desc">Inviare le notifiche del telefono a un orologio connesso. Apre le impostazioni di Android.</string>
     <string name="onboarding_action_grant_all">Concedi tutto</string>
     <string name="settings_body_profile_group_title">Profilo corporeo</string>
+    <string name="notification_listener_label">Notifiche sull\'orologio</string>
     <string name="screen_watch_notifications">Notifiche sull\'orologio</string>
     <string name="settings_watch_notifications_section">Notifiche</string>
     <string name="settings_watch_notifications_title">Invia le notifiche all\'orologio</string>
@@ -174,6 +175,7 @@
     <string name="settings_watch_point_coordinates_hint">Per esempio 48.8584, 2.2945 oppure N 48° 51.504 E 002° 17.670</string>
     <string name="settings_watch_point_preview">Posizione: %1$s, %2$s</string>
     <string name="settings_watch_point_send">Invia all\'orologio</string>
+    <string name="settings_watch_point_alias_label">Invia all\'orologio</string>
     <string name="settings_watch_point_no_watch">Nessun orologio Garmin associato può salvare punti.</string>
     <string name="settings_watch_point_open_watches">Apri orologi</string>
     <string name="settings_watch_point_shared_unreadable">Il testo condiviso non contiene coordinate. Scrivile o incollale qui.</string>

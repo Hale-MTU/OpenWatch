@@ -156,10 +156,9 @@ class GarminActivityImporterTest {
 
     private fun importer(): GarminActivityImporter {
         every { preferencesRepository.unitSystem } returns UnitSystem.METRIC
-        every { preferencesRepository.elevationCorrectionEnabled } returns true
         every { preferencesRepository.favoriteActivityExerciseType } returns null
         every { preferencesRepository.lastActivityExerciseType } returns null
-        every { activityRepository.activityWritePermissions() } returns emptySet()
+        every { activityRepository.activityWritePermissions(any<ActivityWriteRequest>()) } returns emptySet()
         coEvery { activityRepository.hasActivityWritePermission(any<ActivityWriteRequest>()) } returns true
 
         return GarminActivityImporter(

@@ -53,6 +53,6 @@ class LogMessageInterpolationRatchetTest {
         val SplicedMessage = Regex("""\$\{[^}]*\.(?:message|localizedMessage)\b[^}]*}|\$(?:e|error|throwable|cause)\b""")
 
         // Bluetooth, pairing and foreground-service refusals: platform text, no record values.
-        const val Ceiling = 30
+        const val Ceiling = 20
     }
 }
