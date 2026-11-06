@@ -23,5 +23,7 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "OpenWatch"
+include(":app")
+include(":domain")
 include(":wear")
 include(":wearlink")
