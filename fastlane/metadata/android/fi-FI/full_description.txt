@@ -1,0 +1,24 @@
+OpenWatch yhdistää kellosi ja vaakasi puhelimeen ja kirjoittaa niiden tallentamat tiedot Health Connectiin. Se on OpenVitalsin laitepuoli: OpenVitals näyttää tiedot, OpenWatch tuo ne.
+
+Tietosi pysyvät puhelimessa. Ei tiliä, ei pilvisynkronointia, ei mainoksia eikä analytiikkaa, eikä sovelluksella ole internet-oikeutta. Kaikki kulkee Bluetoothilla laitteen ja puhelimen välillä.
+
+Mitä se tekee
+
+* Garmin-kellot Garminin omalla Bluetooth-protokollalla: suoritukset reitteineen, askeleet, matka, kerrokset, kalorit, syke, HRV, veren happi, hengitystiheys, VO2 max ja uni, kirjoitettuna Health Connectiin. Ilmoitusten välitys, herätysten ja kellon asetusten lähetys, kellon etsintä, musiikin ohjaus, kalenteri ja sää ranteessa sekä CoMaps-navigointi kellossa. Mittaukset, joita Health Connect ei voi tallentaa, kuten stressi, Body Battery ja unipisteet, pysyvät sovelluksen Kellon tiedot -näkymässä.
+* Wear OS -kellot OpenWatch-kellosovelluksella: kellossa tallennetut syke, askeleet ja kerrokset synkronoituna Health Connectiin napautuksella tai aikataulun mukaan, lisäksi arvioitu unijakso ja yön leposyke. Kellosovellus tarjoaa ruudut sykkeelle, askelille ja kerroksille.
+* Xiaomi Body Composition Scale S400 ja S400 Pro: jokainen punnitus tallentuu Health Connectiin heti, sovellus auki tai ei, purettuna vaa'an omasta lähetyksestä Xiaomi-tilisi avaimella. Paino ja syke mitattuina; rasvaprosentti, rasvaton massa ja kehon vesi arvioidaan puhelimessa.
+
+Miksi OpenWatch
+
+* Yksityinen lähtökohtaisesti: ei tiliä, ei pilveä, ei mainoksia, ei seurantaa
+* Health Connect on totuuden lähde. Jokainen tietue nimeää OpenWatchin lähteeksi, ja mikä tahansa Health Connect -sovellus voi näyttää sen
+* Valitset jokaisen luvan itse ja voit muuttaa sitä myöhemmin
+* Avoin lähdekoodi: koodi, julkaisutiedot ja koontiversiot ovat julkisia
+
+Vaatimukset
+
+OpenWatch tarvitsee Health Connectin. Se kuuluu Android 14:ään ja uudempiin. Android 13:ssa ja vanhemmissa asenna Health Connect -sovellus Google Playsta. Wear OS -sovellus tarvitsee Wear OS 3:n tai uudemman.
+
+Terveyshuomautus
+
+OpenWatch on tarkoitettu vain yleiseen hyvinvointiin ja tiedoksi. Se ei ole lääkinnällinen laite eikä anna lääketieteellisiä neuvoja. Se ei diagnosoi, hoida, paranna tai ehkäise mitään sairautta. Käänny aina pätevän terveydenhuollon ammattilaisen puoleen lääketieteellisissä kysymyksissä.

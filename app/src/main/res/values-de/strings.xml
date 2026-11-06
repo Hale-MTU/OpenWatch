@@ -95,9 +95,8 @@
     <string name="health_connect_sync_paused">Health-Connect-Synchronisation pausiert</string>
     <string name="dashboard_summary_today">Heute</string>
     <string name="privacy_policy_title">Datenschutzerklärung</string>
-    <string name="privacy_policy_body_1">OpenWatch liest Daten aus Health Connect, um Schritte, Trainings, Schlaf, Herzfrequenz, Gewicht, Kalorien, Hydrierung, Ernährung, Achtsamkeit und Vitalwerte auf deinem Gerät anzuzeigen. Einträge, die du ausdrücklich protokollierst, einschließlich importierter GPX/KML/KMZ-Routen und importierter FIT-Dateien, werden in Health Connect geschrieben.</string>
+    <string name="privacy_policy_body_1">OpenWatch koppelt eine Garmin- oder Wear-OS-Uhr und eine Xiaomi-Waage mit deinem Telefon und schreibt, was sie aufzeichnen, in Health Connect: Aktivitäten, Schritte, Stockwerke, Kalorien, Herzfrequenz, Schlaf und Gewicht. Es liest nur, was eine Synchronisierung braucht, etwa dein Gewicht und deine Größe, und nur mit deiner Erlaubnis.</string>
     <string name="privacy_policy_body_2">Diese App lädt deine Gesundheitsdaten nicht in einen Cloud-Dienst hoch, enthält keine Werbung und teilt keine Daten mit Dritten.</string>
-    <string name="privacy_policy_body_medical">Wo Health Connect medizinische Unterlagen anbietet, zeigt, importiert und exportiert OpenWatch sie auf deinem Gerät. Es liest eine Kategorie nur mit deiner Erlaubnis, schreibt nur beim Import und zeigt Einträge so, wie sie ankommen, ohne sie zu deuten.</string>
     <string name="privacy_policy_body_3">OpenWatch ist kein Medizinprodukt und diagnostiziert, behandelt, heilt oder verhindert keine Krankheit oder medizinische Erkrankung. Es ersetzt keine medizinische Beratung, Diagnose oder Behandlung durch qualifiziertes medizinisches Fachpersonal.</string>
     <string name="exercise_type_stationary_bike">Heimtrainer</string>
     <string name="screen_heart_rate">Herzfrequenz</string>

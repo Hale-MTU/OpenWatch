@@ -1,7 +1,9 @@
 package tech.mmarca.openwatch.features.settings
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.Settings
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -23,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,6 +43,8 @@ fun SettingsScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     var showNotificationDisclosure by remember { mutableStateOf(false) }
+    val privacyPolicyUrl = stringResource(R.string.settings_privacy_policy_url)
+    val noBrowserMessage = stringResource(R.string.settings_privacy_policy_no_browser, privacyPolicyUrl)
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
 
     Column(
@@ -91,6 +96,18 @@ fun SettingsScreen(
                     context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
                 } else {
                     showNotificationDisclosure = true
+                }
+            },
+        )
+        SettingsRow(
+            title = stringResource(R.string.privacy_policy_title),
+            body = stringResource(R.string.settings_privacy_policy_body),
+            onClick = {
+                try {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, privacyPolicyUrl.toUri()))
+                } catch (_: ActivityNotFoundException) {
+                    // This app needs no browser, so some phones that run it have none.
+                    Toast.makeText(context, noBrowserMessage, Toast.LENGTH_LONG).show()
                 }
             },
         )

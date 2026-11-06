@@ -1,0 +1,24 @@
+OpenWatch pairs your watch and your scale with your phone and writes what they record to Health Connect. It is the devices half of OpenVitals: OpenVitals shows the data, OpenWatch is where it comes from.
+
+Your data stays on your phone. There is no account, no cloud sync, no ads and no analytics, and the app has no internet permission. Everything travels over Bluetooth between the device and the phone.
+
+What it does
+
+* Garmin watches, over Garmin's own Bluetooth protocol: activities with their route, steps, distance, floors, calories, heart rate, HRV, blood oxygen, breathing rate, VO2 max and sleep, written to Health Connect. Forward notifications, send alarms and the watch's settings, find your watch, control music, see your calendar and the weather on the wrist, and follow CoMaps navigation there. Measurements Health Connect cannot hold, such as stress, Body Battery and the sleep score, stay in the app's Watch Data screen.
+* Wear OS watches, with the OpenWatch watch app: heart rate, steps and floors recorded on the watch, synced to Health Connect on a tap or on a schedule, plus an estimated sleep session and the night's resting heart rate. The watch app offers tiles for heart rate, steps and floors.
+* Xiaomi Body Composition Scale S400 and S400 Pro: every weigh-in saved to Health Connect as it happens, with the app open or closed, decoded from the scale's own broadcast with the key from your Xiaomi account. Weight and heart rate as measured; body fat, lean mass and body water estimated on the phone.
+
+Why OpenWatch
+
+* Private by design: no account, no cloud, no ads, no tracking
+* Health Connect is the source of truth. Every record names OpenWatch as its source, and any Health Connect app can show it
+* You choose each permission and can change it later
+* Open source: the code, release notes and builds are public
+
+Requirements
+
+OpenWatch needs Health Connect. It is part of Android 14 and newer. On Android 13 and older, install the Health Connect app from Google Play. The Wear OS app needs Wear OS 3 or newer.
+
+Health disclaimer
+
+OpenWatch is for general wellness and information only. It is not a medical device and does not give medical advice. It does not diagnose, treat, cure or prevent any disease or medical condition. Always consult a qualified healthcare professional for medical advice, diagnosis or treatment.

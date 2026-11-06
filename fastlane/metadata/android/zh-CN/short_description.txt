@@ -1,0 +1,1 @@
+将 Garmin 和 Wear OS 手表及 Xiaomi 体重秤同步到 Health Connect。无需云端。

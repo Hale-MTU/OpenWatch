@@ -73,13 +73,132 @@ adb -s <watch> shell 'nohup am instrument -w tech.mmarca.openwatch.debug.test/an
 adb -s <watch> shell cat /data/local/tmp/ow-inst.txt   # until it ends in OK or FAILURES
 ```
 
-There is no store client on a watch, so the watch app is sideloaded over Wi-Fi adb.
+Between releases, or on a watch without the Play Store, the watch app is sideloaded over Wi-Fi adb.
 `scripts/wear-pair.sh` pairs the computer, `scripts/wear-install.sh` builds, installs and
 grants the permissions, and `scripts/wear-skip-onboarding.sh` marks a never-onboarded watch
 as set up. The walkthrough is [docs/how-to/wear-os-sideload.md](../how-to/wear-os-sideload.md).
 
-## No Release Pipeline Yet
+## Releases
 
-OpenWatch has no Play or F-Droid pipeline yet. A release build signs with the
-`OPENWATCH_RELEASE_STORE_FILE`, `OPENWATCH_RELEASE_STORE_PASSWORD`, `OPENWATCH_RELEASE_KEY_ALIAS`
-and `OPENWATCH_RELEASE_KEY_PASSWORD` environment variables, as OpenVitals' does.
+`.github/workflows/release.yml` is the release, on the schedule, a version tag and the manual
+run; it is OpenVitals' pipeline with the watch app added. A tag or the nightly is cut from a
+commit on `main`, whose push ran the verify workflow; the release's `context` job looks that
+run up, waits for it if it is still going, and stops the release if there is none or it
+failed. The verify run's `lint` and `wear-test` jobs skip when their paths did not change
+and still leave the run successful, which is what the gate reads.
+
+Its `build` job signs everything once, with one key, in one Gradle invocation: the phone
+APK, the phone debug APK, the phone AAB, the watch APK and the watch AAB. They are the run's
+`release-build` artifact; every job after it, production included, ships those files as
+they are. Two GitHub release outputs:
+
+- The `00:00 UTC` schedule, or a manual run of the release workflow with target `nightly`,
+  builds `:app:assembleNightly`, `:app:bundleNightly`, `:app:assembleDebug`,
+  `:wear:assembleNightly` and `:wear:bundleNightly`, then publishes `OpenWatch-nightly.apk`,
+  `OpenWatch-nightly-debug.apk`, `OpenWatch-nightly.aab`, `OpenWatch-wear-nightly.apk` and
+  `OpenWatch-wear-nightly.aab` to the fixed GitHub `nightly` prerelease. The same run uploads
+  the phone AAB to the Google Play open testing track (`beta` in the Play Developer API) and
+  the watch AAB to the Wear OS form-factor track (`wear:beta`).
+- A pushed `vX.Y.Z` or `VX.Y.Z` tag builds the `release` variants and publishes the same
+  five files under `OpenWatch-vX.Y.Z` and `OpenWatch-wear-vX.Y.Z` names to its own versioned
+  GitHub prerelease, uploads both AABs to open testing, then waits for the `production`
+  environment's approval. Approving the run promotes the phone from `beta` to `production`
+  with the store listing, the watch from `wear:beta` to `wear:production`, marks the GitHub
+  release stable, and posts the notes to the Zulip `releases` channel
+  (`scripts/announce-zulip.sh`).
+
+Each AAB has a `.sha256` beside it. A manual run with target `production`, started from the
+tag, downloads both AABs from the prerelease, checks them, and runs the production jobs on
+them: the way to ship a tag whose own run is gone.
+
+### One listing, two form factors, one version
+
+The phone app and the watch app share the `applicationId` `tech.mmarca.openwatch`, so Play
+lists the watch as a form factor of the one app. The release version lives once, in
+`gradle.properties`:
+
+```
+openwatch.versionCode=N
+openwatch.versionName=X.Y.Z
+```
+
+The phone ships `versionCode` N and the watch `2000000000 + N` (`wear/build.gradle.kts`
+accepts `2000000001..2099999999`, so N stays at or below `99999999`;
+`scripts/ci-release-context.sh` checks). `versionName` and `versionCode` are detached:
+`versionName` is the human name (`0.1.0`, `0.1.0-nightly.12`, the suffix being the run
+number), `versionCode` a monotonic update counter shared by nightlies and releases. CI
+reads `OpenWatch-Version-Code` markers from the GitHub release notes plus the append-only
+`refs/version-code/*` refs, uses `max(markers, refs, openwatch.versionCode) + 1` for a new
+build, writes the chosen code into the release notes, and records it as a ref before the
+nightly tag moves (`scripts/move-nightly-tag.sh`). The marker holds the phone code; the
+watch code is derived. The fastlane lanes compare the incoming code with the live Play track
+(`beta`, `wear:beta`, `production`, `wear:production`) before uploading, so a code Play
+already serves fails with a message instead of an opaque API error. The nightly run also
+prunes old versioned GitHub releases, keeping the newest nine.
+
+The scheduled run skips the build when there is nothing new: the `nightly` tag already
+points at HEAD, or HEAD has no commits after the latest `vX.Y.Z`. Manual runs always build.
+
+### Secrets and variables
+
+The workflow's `GITHUB_TOKEN` creates and edits releases and pushes the `nightly` tag and
+the `refs/version-code/*` refs; a tag ruleset that blocks either breaks the nightly.
+Repository Actions secrets:
+
+- `OPENWATCH_RELEASE_KEYSTORE_BASE64`, `OPENWATCH_RELEASE_STORE_PASSWORD`,
+  `OPENWATCH_RELEASE_KEY_ALIAS` and `OPENWATCH_RELEASE_KEY_PASSWORD`: a PKCS12 upload key,
+  base64-encoded (`base64 -w0 openwatch-release.p12`). One key signs both form factors and
+  the published debug APK, so every build updates the one before.
+- `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64`: the JSON key of a service account that can
+  release `tech.mmarca.openwatch` to testing and production. If it may stage edits but not
+  send them for review, set the variable `OPENWATCH_PLAY_CHANGES_NOT_SENT_FOR_REVIEW=true`.
+- `ZULIP_BOT_EMAIL` and `ZULIP_BOT_API_KEY` for a bot on `openvitals.zulipchat.com`
+  subscribed to the `releases` channel; only the `announce-zulip` job sees them.
+
+The `production` environment needs required reviewers, or a production run never waits.
+
+While a release is in Play review, a new upload to any track restarts the review. The
+variable `OPENWATCH_PLAY_PAUSED=true` holds every Play upload, phone and watch: the nightly
+skips its Play job, and a production run still waits for approval, marks the GitHub release
+stable and posts to Zulip, but uploads nothing. Delete the variable to resume.
+
+### Before the first run
+
+By hand, once, outside the repository:
+
+1. The keystore: `keytool -genkeypair -storetype PKCS12 -keystore openwatch-release.p12
+   -alias openwatch -keyalg RSA -keysize 4096 -validity 10000`; the four secrets above (the
+   key password equals the store password for PKCS12). Keep the file offline.
+2. Play Console: create the app `tech.mmarca.openwatch`, enrol it in Play App Signing with
+   this key as the upload key, add the Wear OS form factor (Advanced settings, Form factors)
+   so the `wear:*` tracks exist, create open testing for both form factors, fill the store
+   listing (`fastlane/metadata/android/` holds the text and the 512 px icon; the feature
+   graphic and screenshots are added in the Console), the content rating, the Data safety
+   form and the Health Connect declaration, and set the privacy policy URL to
+   `https://github.com/OpenVitals-MTU/OpenWatch/blob/main/PRIVACY.md`. Play refuses an API
+   upload to an app with no release, so the first bundle on each track goes up by hand, from
+   the first run's GitHub prerelease.
+3. The service account, invited in Users and permissions with release rights on this app.
+4. The Zulip bot, the `production` environment and the `OPENWATCH_PLAY_PAUSED` variable.
+5. A manual `nightly` run with `OPENWATCH_PLAY_PAUSED=true` proves the GitHub side; a second
+   without it proves the Play side, the `wear:beta` upload included.
+
+## Release Checklist
+
+The procedure, written out step by step, is `.claude/skills/release/SKILL.md`. In short:
+
+1. Write the documents first: `CHANGELOG.md`, `docs/releases/X.Y.Z.md` (it becomes the tag
+   message and the release notes), the README, and one Play changelog per locale under
+   `fastlane/metadata/android/<locale>/changelogs/<versionCode>.txt`, named by the phone's
+   code (the watch has none), 490 characters or fewer.
+2. `./gradlew verifyCi verifyWearCi` and `git diff --check`.
+3. `bash scripts/release.sh X.Y.Z`: it computes the code with `scripts/version-code.sh
+   next`, patches `gradle.properties`, commits `chore: release X.Y.Z`, tags `vX.Y.Z` with the
+   release notes and pushes `main` and the tag together. Check the printed code against the
+   changelog file names.
+4. The tag's run builds, publishes the prerelease and waits. Approve it (Actions, the run,
+   Review deployments). If the run is gone, run the workflow by hand from the tag with target
+   `production`.
+
+CI has no device, so it never runs the instrumented tests. To run them, connect a phone or
+emulator: `ANDROID_SERIAL=<serial> ./gradlew verifyAndroidTest`.

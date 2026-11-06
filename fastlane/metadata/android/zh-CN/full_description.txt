@@ -1,0 +1,24 @@
+OpenWatch 将你的手表和体重秤与手机配对，并把它们记录的数据写入 Health Connect。它是 OpenVitals 的设备端：OpenVitals 展示数据，OpenWatch 提供数据。
+
+你的数据留在手机上。无需账号，没有云同步，没有广告，没有分析，应用也没有联网权限。一切都通过蓝牙在设备和手机之间传输。
+
+功能
+
+* Garmin 手表，通过 Garmin 自己的蓝牙协议：带路线的运动记录、步数、距离、楼层、卡路里、心率、HRV、血氧、呼吸频率、VO2 max 和睡眠，写入 Health Connect。转发通知、发送闹钟和手表设置、查找手表、控制音乐、在手腕上查看日历和天气，以及在手表上跟随 CoMaps 导航。Health Connect 无法保存的测量值，如压力、Body Battery 和睡眠评分，保留在应用的"手表数据"页面。
+* Wear OS 手表，搭配 OpenWatch 手表应用：手表记录的心率、步数和楼层，可点击或按计划同步到 Health Connect，还有估算的睡眠时段和夜间静息心率。手表应用提供心率、步数和楼层的信息卡。
+* Xiaomi 体脂秤 S400 和 S400 Pro：每次称重即时保存到 Health Connect，无论应用是否打开，使用你小米账号中的密钥解码体重秤自身的广播。体重和心率为实测值；体脂、瘦体重和体水分在手机上估算。
+
+为什么选择 OpenWatch
+
+* 隐私优先的设计：无账号、无云端、无广告、无跟踪
+* Health Connect 是唯一的数据来源。每条记录都以 OpenWatch 为来源，任何 Health Connect 应用都能显示
+* 每项权限由你选择，之后随时可以更改
+* 开源：代码、发布说明和构建均公开
+
+要求
+
+OpenWatch 需要 Health Connect。它是 Android 14 及更高版本的一部分。在 Android 13 及更低版本上，请从 Google Play 安装 Health Connect 应用。Wear OS 应用需要 Wear OS 3 或更高版本。
+
+健康免责声明
+
+OpenWatch 仅用于一般健康和信息目的。它不是医疗设备，不提供医疗建议。它不诊断、治疗、治愈或预防任何疾病。如需医疗建议、诊断或治疗，请务必咨询有资质的医疗专业人员。
