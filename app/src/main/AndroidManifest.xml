@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Health Connect: what a watch sync writes. -->
+    <uses-permission android:name="android.permission.health.WRITE_STEPS" />
+    <uses-permission android:name="android.permission.health.WRITE_DISTANCE" />
+    <uses-permission android:name="android.permission.health.WRITE_EXERCISE" />
+    <uses-permission android:name="android.permission.health.WRITE_EXERCISE_ROUTE" />
+    <uses-permission android:name="android.permission.health.WRITE_ELEVATION_GAINED" />
+    <uses-permission android:name="android.permission.health.WRITE_ACTIVE_CALORIES_BURNED" />
+    <uses-permission android:name="android.permission.health.WRITE_TOTAL_CALORIES_BURNED" />
+    <uses-permission android:name="android.permission.health.WRITE_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.WRITE_RESTING_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.WRITE_HEART_RATE_VARIABILITY" />
+    <uses-permission android:name="android.permission.health.WRITE_BASAL_METABOLIC_RATE" />
+    <uses-permission android:name="android.permission.health.WRITE_FLOORS_CLIMBED" />
+    <uses-permission android:name="android.permission.health.WRITE_WHEELCHAIR_PUSHES" />
+    <uses-permission android:name="android.permission.health.WRITE_SPEED" />
+    <uses-permission android:name="android.permission.health.WRITE_POWER" />
+    <uses-permission android:name="android.permission.health.WRITE_STEPS_CADENCE" />
+    <uses-permission android:name="android.permission.health.WRITE_CYCLING_PEDALING_CADENCE" />
+    <uses-permission android:name="android.permission.health.WRITE_OXYGEN_SATURATION" />
+    <uses-permission android:name="android.permission.health.WRITE_RESPIRATORY_RATE" />
+    <uses-permission android:name="android.permission.health.WRITE_VO2_MAX" />
+    <uses-permission android:name="android.permission.health.WRITE_SLEEP" />
+    <!-- What a scale weigh-in writes. -->
+    <uses-permission android:name="android.permission.health.WRITE_WEIGHT" />
+    <uses-permission android:name="android.permission.health.WRITE_BODY_FAT" />
+    <uses-permission android:name="android.permission.health.WRITE_LEAN_BODY_MASS" />
+    <uses-permission android:name="android.permission.health.WRITE_BODY_WATER_MASS" />
+    <!-- What the estimates read: a weight and height for the walking energy and the body
+         composition, the workouts a minute falls in, the sleep a night already holds. -->
+    <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_STEPS" />
+    <uses-permission android:name="android.permission.health.READ_SLEEP" />
+    <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
+    <uses-permission android:name="android.permission.health.READ_EXERCISE" />
+    <uses-permission android:name="android.permission.health.READ_WEIGHT" />
+    <uses-permission android:name="android.permission.health.READ_HEIGHT" />
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY" />
+    <!-- A scheduled sync with the app closed can only see other apps' weights and workouts with this. -->
+    <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
+
+    <!--
+        Android 11 and older. Without these a scan, a GATT connect and the
+        bonded-device list throw SecurityException. Android 12 replaced them
+        with BLUETOOTH_SCAN and BLUETOOTH_CONNECT below.
+    -->
+    <uses-permission
+        android:name="android.permission.BLUETOOTH"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_ADMIN"
+        android:maxSdkVersion="30" />
+    <uses-permission
+        android:name="android.permission.BLUETOOTH_SCAN"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- A Bluetooth scan on Android 11 and older needs location; the scale's broadcast is heard by a scan. -->
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:maxSdkVersion="30" />
+    <!--
+        Garmin watch calendar glance (devices/garmin/GarminCalendarSource.kt).
+        Read only while answering a watch that asked, gated behind a per-watch
+        toggle that is off by default; events go to the wrist over BLE and are
+        never stored or sent anywhere else (the app has no INTERNET permission
+        to send them with).
+    -->
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <!--
+        Watch onboarding (devices/core/pairing/CompanionDevicePairing.kt).
+        The companion association is what lets the OS keep this app's process
+        alive while the watch is in range, so a FIT-file sync that runs for
+        minutes is not killed halfway through. Install-time grants with no
+        runtime prompt of their own; the user's consent is the system
+        "Allow OpenWatch to access <watch>?" dialog.
+    -->
+    <uses-permission android:name="android.permission.REQUEST_COMPANION_RUN_IN_BACKGROUND" />
+    <!--
+        Bathroom scale (devices/xiaomi/ScaleListeningService.kt). The scale's
+        result is on the air for two seconds, and a closed app only scans
+        full time while it holds a foreground service. This lets the app
+        start that service when Android reports the associated scale awake.
+    -->
+    <uses-permission android:name="android.permission.REQUEST_COMPANION_START_FOREGROUND_SERVICES_FROM_BACKGROUND" />
+    <!--
+        Required by start/stopObservingDevicePresence, which is what makes the OS
+        bind OpenWatchCompanionDeviceService when the watch comes into range.
+    -->
+    <uses-permission android:name="android.permission.REQUEST_OBSERVE_COMPANION_DEVICE_PRESENCE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- CoMaps' live-navigation provider is read-protected by a permission the
+         installed CoMaps FLAVOUR declares, so every flavour's name must be
+         declared here. Debug-flavour names live in the debug manifest. -->
+    <uses-permission android:name="app.comaps.permission.READ_NAVIGATION_DATA" />
+    <uses-permission android:name="app.comaps.fdroid.permission.READ_NAVIGATION_DATA" />
+    <uses-permission android:name="app.comaps.google.permission.READ_NAVIGATION_DATA" />
+    <uses-permission android:name="app.comaps.huawei.permission.READ_NAVIGATION_DATA" />
+
+    <!-- OpenWatch is offline-only. Do not inherit network permissions from dependencies. -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_WIFI_STATE"
+        tools:node="remove" />
+    <uses-feature
+        android:name="android.hardware.wifi"
+        tools:node="remove" />
+
+    <uses-feature
+        android:name="android.hardware.bluetooth_le"
+        android:required="false" />
+    <!--
+        CompanionDeviceManager. Without this declaration `associate` throws from
+        the system service, so the association can never be offered.
+        `required="false"` keeps the app installable where companion support is
+        missing; onboarding then degrades to a plain bond.
+    -->
+    <uses-feature
+        android:name="android.software.companion_device_setup"
+        android:required="false" />
+
+    <queries>
+        <package android:name="com.google.android.apps.healthdata" />
+        <package android:name="com.android.vending" />
+        <!-- CoMaps live-navigation provider: both the packages and the authorities. -->
+        <package android:name="app.comaps" />
+        <package android:name="app.comaps.fdroid" />
+        <package android:name="app.comaps.google" />
+        <package android:name="app.comaps.huawei" />
+        <package android:name="app.comaps.test" />
+        <package android:name="app.comaps.debug" />
+        <package android:name="app.comaps.fdroid.debug" />
+        <package android:name="app.comaps.google.debug" />
+        <package android:name="app.comaps.huawei.debug" />
+        <provider android:authorities="app.comaps.provider.navigation" />
+        <provider android:authorities="app.comaps.fdroid.provider.navigation" />
+        <provider android:authorities="app.comaps.google.provider.navigation" />
+        <provider android:authorities="app.comaps.huawei.provider.navigation" />
+        <provider android:authorities="app.comaps.test.provider.navigation" />
+        <provider android:authorities="app.comaps.debug.provider.navigation" />
+        <provider android:authorities="app.comaps.fdroid.debug.provider.navigation" />
+        <provider android:authorities="app.comaps.google.debug.provider.navigation" />
+        <provider android:authorities="app.comaps.huawei.debug.provider.navigation" />
+        <intent>
+            <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+        </intent>
+        <intent>
+            <action android:name="android.health.connect.action.MANAGE_HEALTH_PERMISSIONS" />
+        </intent>
+        <intent>
+            <action android:name="android.health.connect.action.HEALTH_HOME_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="androidx.health.ACTION_HEALTH_CONNECT_SETTINGS" />
+        </intent>
+        <intent>
+            <action android:name="android.health.connect.action.MANAGE_HEALTH_DATA" />
+        </intent>
+        <intent>
+            <action android:name="androidx.health.ACTION_MANAGE_HEALTH_DATA" />
+        </intent>
+        <!-- Launcher apps, for the watch-notification blocklist picker. Not QUERY_ALL_PACKAGES. -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <application
+        android:name=".OpenWatchApp"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.OpenWatch">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.OpenWatch">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- A place shared from a maps app, sent on to a Garmin watch. An alias,
+             so the share sheet says what it does instead of the app's name. -->
+        <activity-alias
+            android:name=".SendPointToWatchActivity"
+            android:exported="true"
+            android:label="@string/settings_watch_point_alias_label"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="geo" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity
+            android:name=".PermissionsRationaleActivity"
+            android:exported="true"
+            android:theme="@style/Theme.OpenWatch">
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE" />
+            </intent-filter>
+        </activity>
+
+        <activity-alias
+            android:name=".ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".PermissionsRationaleActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE" />
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity
+            android:name=".HealthConnectOnboardingActivity"
+            android:exported="false"
+            android:theme="@style/Theme.OpenWatch" />
+
+        <activity-alias
+            android:name=".OnboardingActivity"
+            android:exported="true"
+            android:targetActivity=".HealthConnectOnboardingActivity"
+            android:permission="com.google.android.apps.healthdata.permission.START_ONBOARDING">
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_ONBOARDING" />
+            </intent-filter>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".UAndAboveOnboardingActivity"
+            android:exported="true"
+            android:targetActivity=".HealthConnectOnboardingActivity"
+            android:permission="android.permission.health.START_ONBOARDING">
+            <intent-filter>
+                <action android:name="android.health.connect.action.SHOW_ONBOARDING" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- Bound by the OS while an associated device is in range. For a watch the
+             binding elevates this process's priority so a multi-minute BLE file sync
+             is not killed. The primary companion service: the only one Android tells
+             that a device appeared, which it passes on (CompanionPresenceObserver) to
+             the watch's notification bridge and the scale listener. -->
+        <service
+            android:name=".devices.core.pairing.OpenWatchCompanionDeviceService"
+            android:exported="true"
+            android:permission="android.permission.BIND_COMPANION_DEVICE_SERVICE"
+            tools:targetApi="s">
+            <intent-filter>
+                <action android:name="android.companion.CompanionDeviceService" />
+            </intent-filter>
+        </service>
+
+        <!--
+            devices/notifications: reads the phone's notifications so they can be
+            mirrored to a paired Garmin watch. The system alone may bind this; the
+            user grants notification access from a system settings screen. What it
+            reads never leaves the phone by any route but the watch: a bounded
+            in-memory buffer, no file, no database, and no INTERNET permission.
+        -->
+        <service
+            android:name=".devices.notifications.OpenWatchNotificationListenerService"
+            android:exported="true"
+            android:label="@string/notification_listener_label"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".devices.garmin.GarminFindPhoneStopReceiver"
+            android:exported="false" />
+
+        <!-- Where the system delivers the bathroom scale's broadcasts, with the app
+             open or not (devices/xiaomi/ScaleScanRadio.kt). Reached only through
+             this app's own explicit PendingIntent. -->
+        <receiver
+            android:name=".devices.xiaomi.ScaleScanReceiver"
+            android:exported="false" />
+
+        <!-- Held for the seconds a weigh-in takes, so the scan runs full time. Runs no logic. -->
+        <service
+            android:name=".devices.xiaomi.ScaleListeningService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+
+        <!-- Weather from a companion app (Breezy Weather et al.) over the
+             generic-weather broadcast contract. Exported because an external app
+             must reach it; the payload is public weather. -->
+        <receiver
+            android:name=".devices.weather.GenericWeatherReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="nodomain.freeyourgadget.gadgetbridge.ACTION_GENERIC_WEATHER" />
+                <action android:name="tech.mmarca.openwatch.ACTION_GENERIC_WEATHER" />
+            </intent-filter>
+        </receiver>
+    </application>
+
+</manifest>
