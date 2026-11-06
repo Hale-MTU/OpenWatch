@@ -136,6 +136,6 @@ cat <<TEXT
 
 Next, on the phone:
   1. Bluetooth settings: pair the watch (it may be listed twice; either entry works).
-  2. OpenWatch, Settings, Watches, add watch: it is offered as a Wear OS watch.
+  2. OpenWatch, home screen, add watch: it is offered as a Wear OS watch.
   3. On the watch's screen in OpenWatch, "Validate Wear OS App" should answer.
 TEXT

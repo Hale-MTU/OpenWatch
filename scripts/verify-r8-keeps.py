@@ -2,15 +2,14 @@
 """Checks that R8 kept what is reached by name at run time.
 
 Nothing runs the minified build before it ships, so a class or a constructor
-that only reflection reaches can vanish unseen. R8 once stripped the no-arg
-constructor of a Glance ActionCallback, and every widget tap was dead from
-2.7.0 to 2.7.1.
+that only reflection reaches can vanish unseen. In OpenVitals R8 once stripped
+the no-arg constructor of a widget callback, and every widget tap was dead
+for a release.
 
-Three groups are checked against mapping.txt:
-  1. Manifest components. Android makes them by name, with no arguments.
-  2. Glance ActionCallback subclasses. Glance does the same at tap time.
-  3. Health Connect record classes named in SyncRecordCodec.kt. Phone sync
-     sends the simple name to the other phone, so it must not be renamed.
+The manifest components are checked against mapping.txt: Android makes them
+by name, with no arguments. (OpenVitals' script also checks its widget
+callbacks and the record names its phone sync puts on the wire; OpenWatch has
+neither.)
 
 Exit 0 when all hold, 1 with one line per problem.
 """
@@ -27,9 +26,6 @@ APP_PACKAGE = "tech.mmarca.openwatch"
 
 CLASS_LINE = re.compile(r"^(\S+) -> (\S+):$")
 NO_ARG_CONSTRUCTOR = re.compile(r"\bvoid <init>\(\)(?::\d+(?::\d+)?)? -> <init>$")
-ACTION_CALLBACK = re.compile(r"\bclass\s+(\w+)\s*(?:\([^)]*\))?\s*:\s*[^{\n]*\bActionCallback\b")
-PACKAGE_LINE = re.compile(r"^package\s+([\w.]+)", re.M)
-RECORD_CLASS = re.compile(r"\b(\w+Record)::class\b")
 
 
 def manifest_components(manifest: Path) -> set[str]:
@@ -51,26 +47,6 @@ def manifest_components(manifest: Path) -> set[str]:
         if name.startswith(APP_PACKAGE):
             names.add(name)
     return names
-
-
-def action_callbacks(sources: Path) -> set[str]:
-    names = set()
-    for path in sources.rglob("*.kt"):
-        text = path.read_text(encoding="utf-8")
-        if "ActionCallback" not in text:
-            continue
-        package = PACKAGE_LINE.search(text)
-        for match in ACTION_CALLBACK.finditer(text):
-            names.add(f"{package.group(1)}.{match.group(1)}" if package else match.group(1))
-    return names
-
-
-def sync_record_classes(sources: Path) -> set[str]:
-    codec = next(sources.rglob("SyncRecordCodec.kt"), None)
-    if codec is None:
-        return set()
-    text = codec.read_text(encoding="utf-8")
-    return {f"androidx.health.connect.client.records.{name}" for name in RECORD_CLASS.findall(text)}
 
 
 def read_mapping(mapping: Path, wanted: set[str]) -> dict[str, dict]:
@@ -102,24 +78,20 @@ def main() -> int:
             return 1
 
     components = manifest_components(args.manifest)
-    callbacks = action_callbacks(args.sources)
-    records = sync_record_classes(args.sources)
     # A check that finds nothing to check has stopped checking.
-    for label, group in (("manifest components", components), ("ActionCallback classes", callbacks),
-                         ("sync record classes", records)):
-        if not group:
-            print(f"verify-r8-keeps: found no {label}; the scan is broken", file=sys.stderr)
-            return 1
+    if not components:
+        print("verify-r8-keeps: found no manifest components; the scan is broken", file=sys.stderr)
+        return 1
 
-    found = read_mapping(args.mapping, components | callbacks | records)
+    found = read_mapping(args.mapping, components)
     problems = []
-    for name in sorted(components | callbacks | records):
+    for name in sorted(components):
         entry = found.get(name)
         if entry is None:
             problems.append(f"{name}: removed by R8")
         elif entry["renamed_to"] != name:
             problems.append(f"{name}: renamed to {entry['renamed_to']}")
-        elif name not in records and not entry["init"]:
+        elif not entry["init"]:
             problems.append(f"{name}: its no-arg constructor was removed, so it cannot be made by name")
 
     if problems:
@@ -129,10 +101,7 @@ def main() -> int:
         print("Add a keep rule to app/proguard-rules.pro, with its reason.", file=sys.stderr)
         return 1
 
-    print(
-        f"verify-r8-keeps: {len(components)} manifest components, {len(callbacks)} ActionCallback "
-        f"classes and {len(records)} sync record classes kept."
-    )
+    print(f"verify-r8-keeps: {len(components)} manifest components kept.")
     return 0
 
 

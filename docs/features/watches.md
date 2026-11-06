@@ -8,7 +8,7 @@
 >
 > This page came over from OpenVitals with the code. Where it names a dashboard, a widget, Body Energy or another OpenVitals screen, that part stays in OpenVitals: OpenWatch writes the records to Health Connect and OpenVitals shows them.
 
-OpenWatch has experimental support for wrist devices. Settings, Watches pairs a watch and copies what it recorded onto the phone over Bluetooth. There is no watch-vendor account and no network step; the app declares no internet permission.
+OpenWatch has experimental support for wrist devices. The home screen pairs a watch and copies what it recorded onto the phone over Bluetooth. There is no watch-vendor account and no network step; the app declares no internet permission.
 
 Support differs sharply by make:
 
@@ -25,7 +25,7 @@ The watch app runs `WearAppService`, a `connectedDevice` foreground service with
 
 The watch app also offers three tiles, added from the watch's tile list: **Heart rate**, **Steps** and **Floors**. Each shows today's value in the metric's colour from the phone app and the day's curve from midnight to midnight, drawn up to now, over the hours 0, 6, 12, 18 and 24: the heart rate as quarter-hour means, broken where the watch stored none (off the wrist or charging), the steps and floors as a running total. The steps are the ones the watch counted itself, so they can fall short of the phone app's total, which adds the phone's own steps and other apps' from Health Connect. The heart rate is the newest sample with its age; one older than an hour shows as a dash. Under its curve is the day's lowest and highest sample. The floors are counted as the phone counts them before writing them to Health Connect: only the height that enough steps carry (`AscentCredit`), three metres a floor, both rounded down; under the curve are the metres that counted. A value whose permission is off, or whose sensor the watch lacks, shows as a dash with the reason. The tiles only read the watch's metric store and start no sensor; a tile counts as stale five minutes after it was drawn, so Wear OS asks for a new one. Tapping a tile opens the watch app. Verified on a TicWatch Pro 5 with Wear OS 4.
 
-When opening a paired Wear OS watch on its device screen in Settings, Watches:
+When opening a paired Wear OS watch on its device screen from the home screen:
 - **Paired**: OpenWatch looks for the watch among the phone's bonded devices. The address stored at onboarding comes from the BLE scan, and Wear OS watches advertise with a private address, so the match falls back to the name (a trailing ` LE` ignored). There is no guess beyond that: another bonded watch is never reported as this one.
 - **Found when adding**: the Watches scan offers a bonded device as a Wear OS watch when its name is a known smartwatch family or its service list names the OpenWatch Wear OS app. A wrist-watch Bluetooth class alone is not enough, since Garmin, Fitbit and Huawei watches report it too. The service list Android caches at pairing predates the app, so the scan re-queries it (SDP) for bonded dual-mode devices that nothing has claimed yet and that are not audio, peripheral or imaging devices. A watch with an unknown name is therefore found once the OpenWatch Wear OS app runs on it.
 - **App answers**: the phone pings the watch over RFCOMM, giving up after 8 seconds. No answer means the watch is off or out of range, or the watch app is not running; a bond alone is never shown as connected.
@@ -86,14 +86,14 @@ Watch support is developed and verified against a single Garmin model. It is off
 
 ## Pairing A Watch
 
-Settings, Watches shows the paired watches, or "No watch paired" with a Pair a watch button.
+The home screen shows the paired watches, or "No watch paired" with a Pair a watch button.
 
 1. OpenWatch asks for nearby-device Bluetooth permission where Android requires it, then scans. The watch must be awake and close to the phone. Watches already bonded with the phone appear in the list even when they advertise nothing useful.
 2. Picking a Garmin watch runs a short checklist: pairing with the watch, asking Android for access, and checking what the watch supports.
 3. Android shows its own pairing dialog. The code shown on the watch has to be confirmed.
 4. Android then asks separately whether OpenWatch may access this watch. This step is optional. Allowing it lets Android keep OpenWatch alive while the watch is nearby, so a sync that takes minutes is not interrupted. Declining still pairs the watch, and syncing then works while OpenWatch is open.
 
-The path taken decides what the device becomes. A device added through Settings, Watches is a watch; one added through the Bluetooth LE sensors flow is a live sensor, even when it is physically a smartwatch. The name no longer decides: a Garmin watch added as a sensor behaves exactly like a heart-rate strap.
+The path taken decides what the device becomes. A device added from the home screen is a watch. (In OpenVitals a smartwatch can also be added as a live sensor; OpenWatch has no sensor flow.)
 
 After pairing, a checklist offers the OS-level permissions a watch benefits from: notification access for forwarding, and exemption from battery optimization so a held link survives the night. Each row explains itself and opens the right system screen; all of them can be declined and granted later.
 
