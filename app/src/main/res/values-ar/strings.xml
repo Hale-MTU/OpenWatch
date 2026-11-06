@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">OpenWatch</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_save">حفظ</string>
+    <string name="action_close">إغلق</string>
+    <string name="action_delete">مسح</string>
+    <string name="action_grant">منح</string>
+    <string name="action_grant_permission">منح الإذن</string>
+    <string name="action_not_now">ليس الأن</string>
+</resources>

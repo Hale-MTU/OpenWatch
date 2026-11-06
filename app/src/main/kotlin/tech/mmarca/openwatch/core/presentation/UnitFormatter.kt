@@ -1,0 +1,214 @@
+package tech.mmarca.openwatch.core.presentation
+
+import tech.mmarca.openwatch.domain.model.GlucoseMgPerDlPerMmolPerL
+import tech.mmarca.openwatch.domain.preferences.UnitQuantity
+import tech.mmarca.openwatch.domain.preferences.UnitSystem
+import java.text.NumberFormat
+import java.util.Locale
+import kotlin.math.roundToInt
+import kotlin.math.roundToLong
+
+class UnitFormatter(
+    private val unitSystemProvider: () -> UnitSystem,
+    private val localeProvider: () -> Locale = { Locale.getDefault() },
+    private val unitOverrideProvider: (UnitQuantity) -> UnitSystem? = { null },
+    /** "bpm" in the app's language; some languages use their own abbreviation. */
+    private val heartRateUnitProvider: () -> String = { "bpm" },
+) {
+    fun unitSystem(): UnitSystem = unitSystemProvider()
+
+    /** The effective system for one quantity: its override, else the base setting. */
+    fun unitSystem(quantity: UnitQuantity): UnitSystem =
+        unitOverrideProvider(quantity) ?: unitSystem()
+
+    fun count(value: Long): String = integerFormat().format(value)
+
+    fun count(value: Int): String = integerFormat().format(value)
+
+    fun distance(meters: Double): DisplayValue =
+        when (unitSystem(UnitQuantity.DISTANCE)) {
+            UnitSystem.METRIC -> metricDistance(meters)
+            UnitSystem.IMPERIAL -> imperialDistance(meters)
+        }
+
+    fun elevation(meters: Double): DisplayValue =
+        when (unitSystem(UnitQuantity.ELEVATION)) {
+            UnitSystem.METRIC -> metricDistance(meters)
+            UnitSystem.IMPERIAL -> DisplayValue(count(metersToFeet(meters).roundToInt()), "ft")
+        }
+
+    fun weight(kg: Double): DisplayValue =
+        when (unitSystem(UnitQuantity.WEIGHT)) {
+            UnitSystem.METRIC -> DisplayValue(decimal(kg, 1), "kg")
+            UnitSystem.IMPERIAL -> DisplayValue(decimal(kgToPounds(kg), 1), "lb")
+        }
+
+    fun height(centimeters: Double): DisplayValue =
+        when (unitSystem(UnitQuantity.HEIGHT)) {
+            UnitSystem.METRIC -> DisplayValue(decimal(centimeters, 0), "cm")
+            UnitSystem.IMPERIAL -> {
+                val totalInches = (centimeters / 2.54).roundToInt()
+                val feet = totalInches / 12
+                val inches = totalInches % 12
+                DisplayValue("$feet' $inches\"", "")
+            }
+        }
+
+    fun bodyMass(kg: Double, decimals: Int = 1): DisplayValue =
+        when (unitSystem(UnitQuantity.WEIGHT)) {
+            UnitSystem.METRIC -> DisplayValue(decimal(kg, decimals), "kg")
+            UnitSystem.IMPERIAL -> DisplayValue(decimal(kgToPounds(kg), decimals), "lb")
+        }
+
+    fun hydration(liters: Double): DisplayValue =
+        when (unitSystem(UnitQuantity.HYDRATION)) {
+            UnitSystem.METRIC -> DisplayValue(decimal(liters, 2), "L")
+            UnitSystem.IMPERIAL -> DisplayValue(decimal(litersToFluidOunces(liters), 0), "fl oz")
+        }
+
+    fun energy(kcal: Double): DisplayValue = DisplayValue(count(kcal.roundToInt()), "kcal")
+
+    fun temperature(celsius: Double, decimals: Int = 1): DisplayValue {
+        val system = unitSystem(UnitQuantity.TEMPERATURE)
+        return DisplayValue(decimal(TemperatureUnits.fromCelsius(celsius, system), decimals), TemperatureUnits.label(system))
+    }
+
+    /**
+     * A difference: no freezing-point offset, and a value that rounds to zero is "0.0", unsigned.
+     * [signed] false drops the "+" for running text ("about 0.3 deg C").
+     */
+    fun temperatureDelta(celsius: Double, signed: Boolean = true): DisplayValue {
+        val system = unitSystem(UnitQuantity.TEMPERATURE)
+        val converted = when (system) {
+            UnitSystem.METRIC -> celsius
+            UnitSystem.IMPERIAL -> celsius * 9.0 / 5.0
+        }
+        // Sign and digits must agree after rounding: -0.04 is "0.0", not "-0.0". The
+        // added zero turns IEEE negative zero into positive zero.
+        val value = (converted * 10.0).roundToLong() / 10.0 + 0.0
+        val prefix = if (signed && value > 0.0) "+" else ""
+        return DisplayValue("$prefix${decimal(value, 1)}", TemperatureUnits.label(system))
+    }
+
+    fun bloodGlucose(millimolesPerLiter: Double): DisplayValue =
+        when (unitSystem(UnitQuantity.BLOOD_GLUCOSE)) {
+            UnitSystem.METRIC -> DisplayValue(decimal(millimolesPerLiter, 1), "mmol/L")
+            UnitSystem.IMPERIAL -> DisplayValue(decimal(millimolesPerLiter * GlucoseMgPerDlPerMmolPerL, 0), "mg/dL")
+        }
+
+    fun percent(value: Double, decimals: Int = 1): DisplayValue =
+        DisplayValue(decimal(value, decimals), "%")
+
+    fun heartRate(bpm: Long): DisplayValue = DisplayValue(bpm.toString(), heartRateUnit())
+
+    fun heartRateUnit(): String = heartRateUnitProvider()
+
+    fun hrv(milliseconds: Double): DisplayValue = DisplayValue(decimal(milliseconds, 1), "ms")
+
+    fun bloodPressure(systolic: Int, diastolic: Int): DisplayValue =
+        DisplayValue("$systolic/$diastolic", "mmHg")
+
+    fun respiratoryRate(value: Double): DisplayValue = DisplayValue(decimal(value, 1), "br/min")
+
+    fun vo2Max(value: Double): DisplayValue = DisplayValue(decimal(value, 1), "mL/kg/min")
+
+    fun duration(durationMs: Long): String {
+        val hours = durationMs / 3_600_000
+        val minutes = (durationMs % 3_600_000) / 60_000
+        return "${hours}h ${minutes.toString().padStart(2, '0')}m"
+    }
+
+    fun averageSpeed(distanceMeters: Double, durationMs: Long): DisplayValue {
+        val hours = durationMs.coerceAtLeast(0L).toDouble() / 3_600_000.0
+        val metersPerHour = if (distanceMeters > 0.0 && hours > 0.0) {
+            distanceMeters / hours
+        } else {
+            0.0
+        }
+        // Speed and pace ride the distance override, or the two would contradict each other.
+        return when (unitSystem(UnitQuantity.DISTANCE)) {
+            UnitSystem.METRIC -> DisplayValue(decimal(metersPerHour / 1000.0, 1), "km/h")
+            UnitSystem.IMPERIAL -> DisplayValue(decimal(metersPerHour / 1609.344, 1), "mph")
+        }
+    }
+
+    fun speed(metersPerSecond: Double): DisplayValue =
+        when (unitSystem(UnitQuantity.DISTANCE)) {
+            UnitSystem.METRIC -> DisplayValue(decimal(metersPerSecond * 3.6, 1), "km/h")
+            UnitSystem.IMPERIAL -> DisplayValue(decimal(metersPerSecond * 2.2369362921, 1), "mph")
+        }
+
+    fun power(watts: Double): DisplayValue = DisplayValue(decimal(watts, 0), "W")
+
+    fun cadence(value: Double): DisplayValue = DisplayValue(decimal(value, 1), "rpm")
+
+    fun averagePace(distanceMeters: Double, durationMs: Long): DisplayValue? {
+        if (distanceMeters <= 0.0 || durationMs <= 0L) return null
+        val system = unitSystem(UnitQuantity.DISTANCE)
+        val distanceUnitMeters = when (system) {
+            UnitSystem.METRIC -> 1000.0
+            UnitSystem.IMPERIAL -> 1609.344
+        }
+        val distanceUnits = distanceMeters / distanceUnitMeters
+        if (distanceUnits <= 0.0 || !distanceUnits.isFinite()) return null
+
+        val secondsPerUnit = ((durationMs / 1_000.0) / distanceUnits)
+            .roundToInt()
+            .coerceAtLeast(0)
+        val minutes = secondsPerUnit / 60
+        val seconds = secondsPerUnit % 60
+        val unit = when (system) {
+            UnitSystem.METRIC -> "min/km"
+            UnitSystem.IMPERIAL -> "min/mi"
+        }
+        return DisplayValue(String.format(Locale.US, "%d:%02d", minutes, seconds), unit)
+    }
+
+    fun minutes(minutes: Long): DisplayValue = DisplayValue(count(minutes), "min")
+
+    fun decimal(value: Double, decimals: Int): String =
+        decimalFormat(localeProvider(), decimals).format(value)
+
+    // A NumberFormat is costly to build and was built on every call: once per axis label,
+    // per list row, per chart point. One per locale and precision, per thread, because
+    // NumberFormat is not thread-safe.
+    private val decimalFormats = ThreadLocal.withInitial { HashMap<Pair<Locale, Int>, NumberFormat>() }
+
+    private fun decimalFormat(locale: Locale, decimals: Int): NumberFormat =
+        decimalFormats.get().getOrPut(locale to decimals) {
+            NumberFormat.getNumberInstance(locale).apply {
+                minimumFractionDigits = decimals
+                maximumFractionDigits = decimals
+            }
+        }
+
+    private fun metricDistance(meters: Double): DisplayValue =
+        if (meters >= 1000.0) {
+            DisplayValue(decimal(meters / 1000.0, 1), "km")
+        } else {
+            DisplayValue(count(meters.roundToInt()), "m")
+        }
+
+    private fun imperialDistance(meters: Double): DisplayValue {
+        val miles = metersToMiles(meters)
+        return if (miles >= 0.1) {
+            DisplayValue(decimal(miles, 1), "mi")
+        } else {
+            DisplayValue(count(metersToFeet(meters).roundToInt()), "ft")
+        }
+    }
+
+    private fun integerFormat(): NumberFormat =
+        NumberFormat.getIntegerInstance(localeProvider()).apply {
+            maximumFractionDigits = 0
+        }
+
+    private fun kgToPounds(kg: Double): Double = kg * 2.2046226218
+
+    private fun metersToFeet(meters: Double): Double = meters * 3.280839895
+
+    private fun metersToMiles(meters: Double): Double = meters / 1609.344
+
+    private fun litersToFluidOunces(liters: Double): Double = liters * 33.8140227018
+
+}
