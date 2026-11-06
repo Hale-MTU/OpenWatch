@@ -57,4 +57,4 @@ __pycache__/
 /fhir/
 testData/
 # Local scratch files (sample CSVs, notes) that never ship
-local/
+/local/
