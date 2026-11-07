@@ -51,7 +51,7 @@ class DeviceSyncControllerTest {
         /** Set by the test that breaks the never-throws contract on purpose. */
         var thrown: Exception? = null
 
-        override fun canSync(device: BleSensorDevice): Boolean = device.isGarminGfdi
+        override fun canSync(device: BleSensorDevice): Boolean = device.isWearosWatch
 
         override suspend fun sync(
             device: BleSensorDevice,
@@ -80,12 +80,12 @@ class DeviceSyncControllerTest {
     }
 
     private fun addWatch(): BleSensorDevice = repo.addDevice(
-        displayName = "vívoactive 5",
+        displayName = "Pixel Watch",
         address = "E0:48:24:D5:F7:10",
-        bluetoothName = "vívoactive 5",
+        bluetoothName = "Pixel Watch",
         capabilities = emptySet(),
         kind = BleDeviceKind.WATCH,
-        integration = DeviceIntegration.GARMIN,
+        integration = DeviceIntegration.WEAROS,
     )
 
     private fun kotlinx.coroutines.test.TestScope.controller() =
@@ -133,7 +133,7 @@ class DeviceSyncControllerTest {
             bluetoothName = "Other",
             capabilities = emptySet(),
             kind = BleDeviceKind.WATCH,
-            integration = DeviceIntegration.GARMIN,
+            integration = DeviceIntegration.WEAROS,
         )
         port.gate = CompletableDeferred()
         val controller = controller()

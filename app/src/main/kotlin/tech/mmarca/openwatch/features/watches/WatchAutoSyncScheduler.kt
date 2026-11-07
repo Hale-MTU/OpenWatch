@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.features.watches
 
 import android.content.Context
+import androidx.core.content.edit
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -13,8 +14,7 @@ import javax.inject.Singleton
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
-import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
-import tech.mmarca.openwatch.devices.garmin.GarminLog
+import tech.mmarca.openwatch.devices.wearos.WearOsLog
 
 /**
  * Owns the automatic watch sync schedule: the stored per-watch interval and
@@ -26,17 +26,24 @@ import tech.mmarca.openwatch.devices.garmin.GarminLog
 class WatchAutoSyncScheduler @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val deviceRepository: BleDeviceRepository,
-    private val stateStore: GarminDeviceStateStore,
     private val syncPort: DeviceSyncPort,
 ) {
 
     private val workManager: WorkManager get() = WorkManager.getInstance(context)
 
-    fun interval(deviceId: String): AutoSyncInterval = stateStore.autoSyncInterval(deviceId)
+    private val prefs by lazy { context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE) }
+
+    /** The stored choice. A value this build no longer offers reads as OFF, not another schedule. */
+    fun interval(deviceId: String): AutoSyncInterval =
+        AutoSyncInterval.fromMinutes(prefs.getInt(deviceId, 0))
+
+    private fun storeInterval(deviceId: String, interval: AutoSyncInterval) {
+        prefs.edit { putInt(deviceId, interval.minutes) }
+    }
 
     /** Stores the choice and re-plans from now, so a shorter interval runs sooner. */
     fun setInterval(deviceId: String, interval: AutoSyncInterval) {
-        stateStore.setAutoSyncInterval(deviceId, interval)
+        storeInterval(deviceId, interval)
         if (interval.isOn) {
             enqueue(deviceId, interval, ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE)
         } else {
@@ -49,7 +56,7 @@ class WatchAutoSyncScheduler @Inject constructor(
         // Runs from Application.onCreate. Not worth failing app start over.
         runCatching {
             deviceRepository.devices.forEach { device ->
-                val interval = stateStore.autoSyncInterval(device.id)
+                val interval = interval(device.id)
                 if (interval.isOn && syncPort.canSync(device)) {
                     enqueue(device.id, interval, ExistingPeriodicWorkPolicy.KEEP)
                 } else {
@@ -57,7 +64,7 @@ class WatchAutoSyncScheduler @Inject constructor(
                     cancel(device.id)
                 }
             }
-        }.onFailure { GarminLog.log("[GARMIN-AUTOSYNC] could not restore the schedules: $it") }
+        }.onFailure { WearOsLog.log("[AUTOSYNC] could not restore the schedules: $it") }
     }
 
     /** Stops a watch's schedule without touching the stored interval. */
@@ -68,7 +75,7 @@ class WatchAutoSyncScheduler @Inject constructor(
     /** Removal: the schedule goes with the watch, and so does the choice. */
     fun forget(deviceId: String) {
         cancel(deviceId)
-        stateStore.setAutoSyncInterval(deviceId, AutoSyncInterval.OFF)
+        storeInterval(deviceId, AutoSyncInterval.OFF)
     }
 
     private fun enqueue(
@@ -91,6 +98,9 @@ class WatchAutoSyncScheduler @Inject constructor(
     companion object {
         /** A watch out of range is usually back within minutes. */
         private const val RETRY_BACKOFF_MINUTES = 10L
+
+        /** Minutes between runs per device id; absent means OFF. */
+        private const val PREFS_FILE = "watch_auto_sync"
 
         fun uniqueWorkName(deviceId: String): String = "watch-auto-sync-$deviceId"
     }

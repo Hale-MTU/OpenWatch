@@ -18,10 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.automirrored.outlined.BluetoothSearching
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -39,9 +36,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openwatch.R
-import tech.mmarca.openwatch.devices.garmin.GarminOnboardStep
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
-import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.ui.components.OpenWatchButton
 import tech.mmarca.openwatch.ui.components.DeviceAvatar
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
@@ -127,9 +122,6 @@ fun WatchesSection(
                 ) {
                     Text(
                         text = when (notice) {
-                            WatchOnboardNotice.UNSUPPORTED_TRANSPORT ->
-                                stringResource(R.string.settings_watch_unsupported_notice)
-
                             WatchOnboardNotice.NO_COMPANION ->
                                 stringResource(R.string.settings_watch_no_companion_notice)
                         },
@@ -336,10 +328,6 @@ private fun AddWatchDialog(
                         singleLine = true,
                         enabled = !state.isOnboarding,
                     )
-                    // A GFDI device picks no capabilities. WearOS has no bond or probe steps.
-                    if (state.addingIntegration != DeviceIntegration.WEAROS) {
-                        WatchPairSteps(step = state.onboardStep)
-                    }
                     state.errorMessage?.let { message ->
                         Text(
                             text = message,
@@ -374,85 +362,5 @@ private fun AddWatchDialog(
     )
 }
 
-/** The platform steps of onboarding, as a checklist. [step] is null outside pairing. */
-@Composable
-private fun WatchPairSteps(step: GarminOnboardStep?) {
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-        Text(
-            text = stringResource(R.string.settings_watch_pair_title),
-            style = MaterialTheme.typography.labelLarge,
-        )
-        Text(
-            text = stringResource(R.string.settings_watch_pair_body),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.padding(top = Spacing.xs))
-        WatchPairStepRow(
-            label = stringResource(R.string.settings_watch_step_bonding),
-            active = step == GarminOnboardStep.BONDING,
-            done = step == GarminOnboardStep.ASSOCIATING || step == GarminOnboardStep.PROBING,
-        )
-        WatchPairStepRow(
-            label = stringResource(R.string.settings_watch_step_associating),
-            active = step == GarminOnboardStep.ASSOCIATING,
-            done = step == GarminOnboardStep.PROBING,
-        )
-        Text(
-            text = stringResource(R.string.settings_watch_step_associating_hint),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = Spacing.xxxl),
-        )
-        WatchPairStepRow(
-            label = stringResource(R.string.settings_watch_step_probing),
-            active = step == GarminOnboardStep.PROBING,
-            done = false,
-        )
-    }
-}
-
-@Composable
-private fun WatchPairStepRow(
-    label: String,
-    active: Boolean,
-    done: Boolean,
-) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        when {
-            active -> CircularProgressIndicator(
-                modifier = Modifier.size(Spacing.lg),
-                strokeWidth = WatchProgressStroke,
-            )
-
-            done -> Icon(
-                imageVector = Icons.Outlined.CheckCircle,
-                contentDescription = null,
-                modifier = Modifier.size(WatchPermissionIconSize),
-                tint = MaterialTheme.colorScheme.primary,
-            )
-
-            else -> Icon(
-                imageVector = Icons.Outlined.RadioButtonUnchecked,
-                contentDescription = null,
-                modifier = Modifier.size(WatchPermissionIconSize),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Spacer(modifier = Modifier.width(Spacing.sm))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (active) {
-                MaterialTheme.colorScheme.onSurface
-            } else {
-                MaterialTheme.colorScheme.onSurfaceVariant
-            },
-        )
-    }
-}
-
-/** The small in-row progress spinner's stroke. */
-private val WatchProgressStroke = 2.dp
 /** Gap between a row's leading icon and its text. */
 private val WatchRowIconGap = 14.dp

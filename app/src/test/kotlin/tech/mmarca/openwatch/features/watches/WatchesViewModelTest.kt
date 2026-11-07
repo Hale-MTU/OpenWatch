@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -21,12 +20,7 @@ import tech.mmarca.openwatch.core.permissions.OsPermissionsService
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.DeviceClassification
-import tech.mmarca.openwatch.devices.core.pairing.WatchBondResult
 import tech.mmarca.openwatch.devices.core.pairing.WatchPairingPort
-import tech.mmarca.openwatch.devices.garmin.GarminGattReport
-import tech.mmarca.openwatch.devices.garmin.GarminTransportProbe
-import tech.mmarca.openwatch.devices.garmin.GarminTransportVariant
-import tech.mmarca.openwatch.devices.garmin.OnboardGarminWatchUseCase
 import tech.mmarca.openwatch.devices.wearos.OnboardWearOsWatchUseCase
 import tech.mmarca.openwatch.domain.model.OsPermissionCatalog
 import tech.mmarca.openwatch.domain.model.OsPermissionId
@@ -38,8 +32,9 @@ import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
 import tech.mmarca.openwatch.util.MainDispatcherRule
 
 /**
- * The sheet-level flow: no capability probe for a GFDI device, what a refused pairing leaves
- * on screen, and the no-companion notice's lifetime. Registry writes are `OnboardGarminWatchUseCaseTest`.
+ * The sheet-level flow: the permission checklist, what selecting and onboarding a watch
+ * leave on screen, and the no-companion notice's lifetime. Registry writes are
+ * `OnboardWearOsWatchUseCaseTest`.
  */
 class WatchesViewModelTest {
 
@@ -48,18 +43,8 @@ class WatchesViewModelTest {
 
     /** Records what onboarding asked the platform to do; answers as set up. */
     private class FakePairing : WatchPairingPort {
-        var bondResult = WatchBondResult.BONDED
         var associateResult = true
         val calls = mutableListOf<String>()
-
-        override suspend fun bond(address: String): WatchBondResult {
-            calls.add("bond:$address")
-            return bondResult
-        }
-
-        override suspend fun removeBond(address: String) {
-            calls.add("removeBond:$address")
-        }
 
         override suspend fun associateCompanion(
             address: String,
@@ -75,46 +60,21 @@ class WatchesViewModelTest {
         }
     }
 
-    /** Canned GATT verdict; never opens a connection. */
-    private class FakeProbe : GarminTransportProbe {
-        var variant = GarminTransportVariant.V1
-
-        override suspend fun probe(address: String): GarminGattReport = GarminGattReport(
-            address = address,
-            variant = variant,
-            services = emptyList(),
-        )
-    }
-
     private lateinit var repo: BleDeviceRepository
     private lateinit var pairing: FakePairing
-    private lateinit var probe: FakeProbe
     private lateinit var coordinator: BleSensorCoordinator
 
     /** How the coordinator classifies whatever the test selects. */
     private var classification = DeviceClassification(
-        integration = DeviceIntegration.GARMIN,
+        integration = DeviceIntegration.WEAROS,
         kind = BleDeviceKind.WATCH,
     )
 
-    /** How many times a capability probe was asked for. */
-    private var capabilityProbes = 0
-
     private val watch = BleDiscoveredDevice(
-        address = "E0:48:24:D5:F7:10",
-        name = "vívoactive 5",
+        address = "A8:D1:62:BE:3A:3B",
+        name = "Galaxy Watch8",
         rssi = -55,
         suggestedCapabilities = emptySet(),
-        advertisesSyncService = true,
-    )
-
-    /** A Garmin Edge: GFDI like a watch, but its own kind. */
-    private val bikeComputer = BleDiscoveredDevice(
-        address = "E0:48:24:D5:F7:20",
-        name = "Edge 840",
-        rssi = -55,
-        suggestedCapabilities = emptySet(),
-        advertisesSyncService = true,
     )
 
     @Before
@@ -123,16 +83,11 @@ class WatchesViewModelTest {
         every { context.getSharedPreferences(any(), any()) } returns FakeSharedPreferences()
         repo = BleDeviceRepository(context)
         pairing = FakePairing()
-        probe = FakeProbe()
         coordinator = mockk<BleSensorCoordinator>().also { fake ->
             every { fake.discoveredDevices } returns MutableStateFlow(emptyList())
             every { fake.startScan(any()) } just runs
             every { fake.stopScan() } just runs
             every { fake.classifyDiscoveredDevice(any()) } answers { classification }
-            io.mockk.coEvery { fake.discoverCapabilities(any()) } answers {
-                capabilityProbes++
-                emptySet()
-            }
         }
     }
 
@@ -152,8 +107,7 @@ class WatchesViewModelTest {
     ) = WatchesViewModel(
         deviceRepository = repo,
         sensorCoordinator = coordinator,
-        onboardGarminWatch = OnboardGarminWatchUseCase(pairing, repo, probe),
-        onboardWearOsWatch = mockk<OnboardWearOsWatchUseCase>(relaxed = true),
+        onboardWearOsWatch = OnboardWearOsWatchUseCase(pairing, repo),
         osPermissionsService = os,
     )
 
@@ -179,7 +133,7 @@ class WatchesViewModelTest {
                 OsPermissionCatalog(
                     rows = listOf(
                         osRow(OsPermissionId.BLUETOOTH, granted = false, "scan", "connect"),
-                        osRow(OsPermissionId.NOTIFICATIONS, granted = true, "post"),
+                        osRow(OsPermissionId.LOCATION, granted = true, "location"),
                         osRow(OsPermissionId.BATTERY_OPTIMIZATION, granted = false),
                     ),
                 ),
@@ -204,7 +158,7 @@ class WatchesViewModelTest {
     fun `continuing anyway leaves the checklist for the scan`() = runTest {
         val vm = viewModel(
             os = osPermissions(
-                OsPermissionCatalog(rows = listOf(osRow(OsPermissionId.NOTIFICATION_FORWARDING, false))),
+                OsPermissionCatalog(rows = listOf(osRow(OsPermissionId.BATTERY_OPTIMIZATION, false))),
             ),
         )
         vm.startAdd()
@@ -222,7 +176,7 @@ class WatchesViewModelTest {
             OsPermissionCatalog(
                 rows = listOf(
                     osRow(OsPermissionId.BATTERY_OPTIMIZATION, granted = false),
-                    osRow(OsPermissionId.NOTIFICATION_FORWARDING, granted = false),
+                    osRow(OsPermissionId.LOCATION, granted = false),
                 ),
             ),
         )
@@ -235,11 +189,11 @@ class WatchesViewModelTest {
 
         // Only the first: the app leaves the foreground to show it, so a second would never be seen.
         verify(exactly = 1) { service.openSettingsFor(OsPermissionId.BATTERY_OPTIMIZATION) }
-        verify(exactly = 0) { service.openSettingsFor(OsPermissionId.NOTIFICATION_FORWARDING) }
+        verify(exactly = 0) { service.openSettingsFor(OsPermissionId.LOCATION) }
 
         // Coming back from that screen hands over the next one.
         vm.openNextSpecialPermission()
-        verify(exactly = 1) { service.openSettingsFor(OsPermissionId.NOTIFICATION_FORWARDING) }
+        verify(exactly = 1) { service.openSettingsFor(OsPermissionId.LOCATION) }
         assertTrue(vm.uiState.value.pendingSpecialPermissions.isEmpty())
     }
 
@@ -249,7 +203,7 @@ class WatchesViewModelTest {
             OsPermissionCatalog(
                 rows = listOf(
                     osRow(OsPermissionId.BATTERY_OPTIMIZATION, granted = false),
-                    osRow(OsPermissionId.NOTIFICATION_FORWARDING, granted = false),
+                    osRow(OsPermissionId.LOCATION, granted = false),
                 ),
             ),
         )
@@ -262,14 +216,14 @@ class WatchesViewModelTest {
         every { service.watchSetupCatalog() } returns OsPermissionCatalog(
             rows = listOf(
                 osRow(OsPermissionId.BATTERY_OPTIMIZATION, granted = true),
-                osRow(OsPermissionId.NOTIFICATION_FORWARDING, granted = false),
+                osRow(OsPermissionId.LOCATION, granted = false),
             ),
         )
         vm.openNextSpecialPermission()
 
         // A settled screen is skipped.
         verify(exactly = 0) { service.openSettingsFor(OsPermissionId.BATTERY_OPTIMIZATION) }
-        verify(exactly = 1) { service.openSettingsFor(OsPermissionId.NOTIFICATION_FORWARDING) }
+        verify(exactly = 1) { service.openSettingsFor(OsPermissionId.LOCATION) }
     }
 
     @Test
@@ -286,31 +240,15 @@ class WatchesViewModelTest {
     }
 
     @Test
-    fun `selecting a watch skips the capability probe entirely`() = runTest {
+    fun `selecting a watch stops the scan and names it`() = runTest {
         val vm = viewModel()
 
         vm.selectDiscoveredDevice(watch)
 
-        // The sheet asks the user to bond it, not to pick capabilities.
-        assertEquals(0, capabilityProbes)
-        assertEquals(DeviceIntegration.GARMIN, vm.uiState.value.addingIntegration)
+        assertEquals(DeviceIntegration.WEAROS, vm.uiState.value.addingIntegration)
         assertEquals(BleDeviceKind.WATCH, vm.uiState.value.selectedClassification?.kind)
-        assertEquals("vívoactive 5", vm.uiState.value.addDisplayName)
-    }
-
-    @Test
-    fun `selecting an Edge skips the probe like a watch`() = runTest {
-        classification = DeviceClassification(
-            integration = DeviceIntegration.GARMIN,
-            kind = BleDeviceKind.BIKE_COMPUTER,
-        )
-        val vm = viewModel()
-
-        vm.selectDiscoveredDevice(bikeComputer)
-
-        assertEquals(0, capabilityProbes)
-        assertEquals(BleDeviceKind.BIKE_COMPUTER, vm.uiState.value.selectedClassification?.kind)
-        assertEquals("Edge 840", vm.uiState.value.addDisplayName)
+        assertEquals("Galaxy Watch8", vm.uiState.value.addDisplayName)
+        verify { coordinator.stopScan() }
     }
 
     @Test
@@ -323,35 +261,16 @@ class WatchesViewModelTest {
         vm.onboardSelectedWatch { closed = it }
 
         assertEquals(true, closed)
-        assertEquals(1, repo.devices.size)
-        assertEquals(BleDeviceKind.WATCH, repo.devices.single().kind)
-        assertFalse(vm.uiState.value.isOnboarding)
-        assertNull(vm.uiState.value.onboardStep)
-        assertFalse(vm.uiState.value.showAddFlow)
-    }
-
-    @Test
-    fun `onboarding an Edge registers it as a bike computer`() = runTest {
-        classification = DeviceClassification(
-            integration = DeviceIntegration.GARMIN,
-            kind = BleDeviceKind.BIKE_COMPUTER,
-        )
-        val vm = viewModel()
-        vm.openAddFlow()
-        vm.selectDiscoveredDevice(bikeComputer)
-
-        vm.onboardSelectedWatch()
-
         val registered = repo.devices.single()
-        assertEquals(BleDeviceKind.BIKE_COMPUTER, registered.kind)
-        assertTrue(registered.isBikeComputer)
-        assertTrue(registered.isGarminGfdi)
-        assertTrue(registered.capabilities.isEmpty())
+        assertTrue(registered.isWearosWatch)
+        assertFalse(vm.uiState.value.isOnboarding)
+        assertFalse(vm.uiState.value.showAddFlow)
+        assertEquals(listOf("associate:A8:D1:62:BE:3A:3B"), pairing.calls)
     }
 
     @Test
-    fun `a refused pairing keeps the sheet open and explains why`() = runTest {
-        pairing.bondResult = WatchBondResult.REFUSED
+    fun `a device no integration claims is not onboarded`() = runTest {
+        classification = DeviceClassification.SENSOR
         val vm = viewModel()
         vm.openAddFlow()
         vm.selectDiscoveredDevice(watch)
@@ -361,11 +280,7 @@ class WatchesViewModelTest {
 
         assertEquals(false, closed)
         assertTrue(repo.devices.isEmpty())
-        // The sheet must survive: re-scanning to retry a mistyped code is a pointless round trip.
-        assertNotNull(vm.uiState.value.selectedDevice)
-        assertTrue(vm.uiState.value.showAddFlow)
-        assertFalse(vm.uiState.value.isOnboarding)
-        assertNotNull(vm.uiState.value.errorMessage)
+        assertTrue(pairing.calls.isEmpty())
     }
 
     @Test
@@ -410,6 +325,6 @@ class WatchesViewModelTest {
 
         vm.onboardSelectedWatch()
 
-        assertEquals("vívoactive 5", repo.devices.single().displayName)
+        assertEquals("Galaxy Watch8", repo.devices.single().displayName)
     }
 }

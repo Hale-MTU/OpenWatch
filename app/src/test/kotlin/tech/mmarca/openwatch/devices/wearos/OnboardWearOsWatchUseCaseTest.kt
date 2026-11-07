@@ -12,7 +12,6 @@ import org.junit.Before
 import org.junit.Test
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
-import tech.mmarca.openwatch.devices.core.pairing.WatchBondResult
 import tech.mmarca.openwatch.devices.core.pairing.WatchPairingPort
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleDiscoveredDevice
@@ -40,13 +39,6 @@ private class FakePairing : WatchPairingPort {
     override suspend fun disassociateCompanion(address: String) {
         seenDisassociateAddress = address
     }
-
-    // A WearOS watch never bonds: these must never be called.
-    override suspend fun bond(address: String): WatchBondResult =
-        error("WearOS onboarding must not bond")
-
-    override suspend fun removeBond(address: String): Unit =
-        error("WearOS onboarding must not touch bonds")
 }
 
 class OnboardWearOsWatchUseCaseTest {
@@ -83,7 +75,6 @@ class OnboardWearOsWatchUseCaseTest {
         assertEquals(BleDeviceKind.WATCH, device.kind)
         assertEquals(DeviceIntegration.WEAROS, device.integration)
         assertTrue(device.isWearosWatch)
-        assertFalse(device.isGarminWatch)
         assertTrue(device.capabilities.isEmpty())
     }
 

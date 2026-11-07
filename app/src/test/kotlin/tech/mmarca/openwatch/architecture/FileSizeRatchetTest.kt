@@ -64,12 +64,7 @@ class FileSizeRatchetTest {
         }
         const val MaxLines = 800
 
-        /** The files over the limit when the device code moved here (2026-11-06). Each ceiling leaves room for small fixes. */
-        val Ceilings: Map<String, Int> = mapOf(
-            "devices/garmin/wellness/GarminFitWellness.kt" to 1250,
-            "features/watches/WatchDeviceScreen.kt" to 1100,
-            "devices/garmin/GarminMessages.kt" to 1100,
-            "devices/garmin/GarminSession.kt" to 950,
-        )
+        /** Files allowed over the limit, each with its own ceiling. None since Garmin and the scale left (2026-11-07). */
+        val Ceilings: Map<String, Int> = emptyMap()
     }
 }

@@ -2,7 +2,7 @@
 <!--
     allowBackup="false" keeps the app out of cloud backup, but from Android 12 on it
     does not stop a transfer to a new phone. The device state moves with the phone;
-    a watch and a scale are paired again on the new one anyway.
+    a watch is paired again on the new one anyway.
 -->
 <data-extraction-rules>
     <cloud-backup>

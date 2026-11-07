@@ -105,16 +105,12 @@ private fun PermissionRow(row: OsPermissionRow, onGrant: () -> Unit) {
 
 private fun OsPermissionRow.titleRes(): Int = when (id) {
     OsPermissionId.BLUETOOTH -> R.string.onboarding_os_bluetooth
-    OsPermissionId.NOTIFICATIONS -> R.string.onboarding_os_notifications
     OsPermissionId.LOCATION -> R.string.onboarding_os_location
     OsPermissionId.BATTERY_OPTIMIZATION -> R.string.onboarding_os_battery
-    OsPermissionId.NOTIFICATION_FORWARDING -> R.string.onboarding_os_notification_forwarding
 }
 
 private fun OsPermissionRow.descriptionRes(): Int = when (id) {
     OsPermissionId.BLUETOOTH -> R.string.onboarding_os_bluetooth_desc
-    OsPermissionId.NOTIFICATIONS -> R.string.onboarding_os_notifications_desc
     OsPermissionId.LOCATION -> R.string.onboarding_os_location_desc
     OsPermissionId.BATTERY_OPTIMIZATION -> R.string.onboarding_os_battery_desc
-    OsPermissionId.NOTIFICATION_FORWARDING -> R.string.onboarding_os_notification_forwarding_desc
 }

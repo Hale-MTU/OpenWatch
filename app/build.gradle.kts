@@ -9,12 +9,6 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-// Room writes the schema of each database version here. The files are committed: a migration
-// can only be tested against a version whose schema was kept.
-ksp {
-    arg("room.schemaLocation", "$projectDir/schemas")
-}
-
 val releaseStoreFilePath = System.getenv("OPENWATCH_RELEASE_STORE_FILE")
 val releaseStorePassword = System.getenv("OPENWATCH_RELEASE_STORE_PASSWORD")
 val releaseKeyAlias = System.getenv("OPENWATCH_RELEASE_KEY_ALIAS")
@@ -233,11 +227,6 @@ dependencies {
 
     // Background work
     implementation(libs.androidx.work.runtime.ktx)
-
-    // Local metric storage
-    implementation(libs.androidx.room.runtime)
-    implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
 
     // Health Connect
     implementation(libs.health.connect.client)

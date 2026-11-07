@@ -6,10 +6,8 @@ package tech.mmarca.openwatch.domain.model
  */
 enum class OsPermissionId {
     BLUETOOTH,
-    NOTIFICATIONS,
     LOCATION,
     BATTERY_OPTIMIZATION,
-    NOTIFICATION_FORWARDING,
 }
 
 /**

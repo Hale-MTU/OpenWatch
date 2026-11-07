@@ -10,8 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
-import tech.mmarca.openwatch.devices.garmin.GarminRealtimeState
-import tech.mmarca.openwatch.devices.garmin.GarminRealtimeStore
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.features.watches.DeviceSyncController
 
@@ -24,25 +22,19 @@ data class WatchTileState(
     /** More watches than the one shown, for a "+2" style suffix. */
     val additionalCount: Int = 0,
     val isSyncing: Boolean = false,
-    /** Live beats per minute over a held link, or null when nothing fresh is streaming. */
-    val liveHeartRateBpm: Int? = null,
-    /** Today's step count as the watch counts it, live over the same link. */
-    val liveSteps: Int? = null,
 )
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     deviceRepository: BleDeviceRepository,
     private val syncController: DeviceSyncController,
-    realtimeStore: GarminRealtimeStore,
 ) : ViewModel() {
 
     val watchTile: StateFlow<WatchTileState?> = combine(
         deviceRepository.devicesFlow,
         syncController.state,
-        realtimeStore.readings,
-    ) { devices, sync, live ->
-        devices.toWatchTileState(syncingDeviceId = sync.syncingDeviceId, live = live)
+    ) { devices, sync ->
+        devices.toWatchTileState(syncingDeviceId = sync.syncingDeviceId)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun syncWatch(deviceId: String) {
@@ -53,8 +45,6 @@ class HomeViewModel @Inject constructor(
 /** Bike computers excluded: the tile is for a wrist. */
 internal fun List<BleSensorDevice>.toWatchTileState(
     syncingDeviceId: String? = null,
-    live: GarminRealtimeState = GarminRealtimeState(),
-    now: Instant = Instant.now(),
 ): WatchTileState? {
     val watches = filter { it.isWatch }
     // The watch being synced owns the tile; failing that, the most recently synced.
@@ -68,8 +58,5 @@ internal fun List<BleSensorDevice>.toWatchTileState(
         lastSyncedAt = primary.lastSyncedAt,
         additionalCount = watches.size - 1,
         isSyncing = primary.id == syncingDeviceId,
-        // Only one watch can hold a link, so the live values belong to it or nothing.
-        liveHeartRateBpm = live.freshHeartRate(now),
-        liveSteps = live.freshSteps(now),
     )
 }

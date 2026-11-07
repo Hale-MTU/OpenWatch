@@ -4,10 +4,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothClass
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
@@ -16,8 +13,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
-import android.os.Handler
-import android.os.HandlerThread
 import android.os.Build
 import android.os.ParcelUuid
 import android.os.Parcelable
@@ -27,19 +22,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.coroutines.withContext
-import kotlin.coroutines.resume
 import tech.mmarca.openwatch.devices.core.DeviceClassification
 import tech.mmarca.openwatch.devices.core.DeviceClassifier
-import tech.mmarca.openwatch.devices.core.DeviceScanClassifier
 import tech.mmarca.openwatch.devices.core.classifyDevice
-import tech.mmarca.openwatch.devices.garmin.GarminDeviceClassifier
-import tech.mmarca.openwatch.devices.garmin.GarminScanClassifier
 import tech.mmarca.openwatch.devices.wearos.WearOsDeviceClassifier
 import tech.mmarca.openwatch.domain.model.BleDiscoveredDevice
-import tech.mmarca.openwatch.domain.model.BleSensorCapability
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -55,8 +42,6 @@ import kotlinx.coroutines.flow.asStateFlow
 class BleSensorCoordinator @Inject constructor(
     @ApplicationContext private val context: Context,
 ) {
-    private val bleThread = HandlerThread("OpenWatchBle").apply { start() }
-    private val bleHandler = Handler(bleThread.looper)
     private val bluetoothManager =
         context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val bluetoothAdapter: BluetoothAdapter? = bluetoothManager.adapter
@@ -68,12 +53,8 @@ class BleSensorCoordinator @Inject constructor(
     private var sdpReceiver: BroadcastReceiver? = null
     private val scanResults = ConcurrentHashMap<String, BleDiscoveredDevice>()
 
-    /** Per-integration classifiers: scan-time evidence, and the `(integration, kind)` verdict. */
-    private val scanClassifiers: List<DeviceScanClassifier> = listOf(GarminScanClassifier())
-    private val deviceClassifiers: List<DeviceClassifier> = listOf(
-        GarminDeviceClassifier(),
-        WearOsDeviceClassifier(),
-    )
+    /** Per-integration classifiers: the `(integration, kind)` verdict. */
+    private val deviceClassifiers: List<DeviceClassifier> = listOf(WearOsDeviceClassifier())
 
     @SuppressLint("MissingPermission")
     fun startScan(showAllDevices: Boolean = false) {
@@ -137,7 +118,7 @@ class BleSensorCoordinator @Inject constructor(
      * The bond's service list is cached from pairing, before any app on the
      * device listened. A fresh SDP query lets a classifier see the services
      * running now. Only unclaimed dual-mode bonds are paged: one a classifier
-     * already claims (a Garmin, a known smartwatch name) gains nothing, and
+     * already claims (a known smartwatch name) gains nothing, and
      * audio/video, peripheral and imaging bonds never run the app.
      */
     @SuppressLint("MissingPermission")
@@ -193,78 +174,6 @@ class BleSensorCoordinator @Inject constructor(
     }
 
     @SuppressLint("MissingPermission")
-    suspend fun discoverCapabilities(address: String): Set<BleSensorCapability> =
-        withContext(Dispatchers.IO) {
-            suspendCancellableCoroutine { continuation ->
-                val adapter = bluetoothAdapter
-                if (adapter == null || !adapter.isEnabled) {
-                    continuation.resume(emptySet())
-                    return@suspendCancellableCoroutine
-                }
-                val device = runCatching { adapter.getRemoteDevice(address) }.getOrNull()
-                if (device == null) {
-                    continuation.resume(emptySet())
-                    return@suspendCancellableCoroutine
-                }
-
-                val discovered = mutableSetOf<BleSensorCapability>()
-                var gatt: BluetoothGatt? = null
-                var finished = false
-                var timeoutRunnable: Runnable? = null
-
-                fun complete(result: Set<BleSensorCapability>) {
-                    if (finished || !continuation.isActive) return
-                    finished = true
-                    timeoutRunnable?.let { bleHandler.removeCallbacks(it) }
-                    runCatching { gatt?.close() }
-                    gatt = null
-                    continuation.resume(result)
-                }
-
-                timeoutRunnable = Runnable { complete(discovered.toSet()) }
-
-                continuation.invokeOnCancellation {
-                    finished = true
-                    timeoutRunnable?.let { bleHandler.removeCallbacks(it) }
-                    runCatching { gatt?.disconnect() }
-                    runCatching { gatt?.close() }
-                    gatt = null
-                }
-
-                gatt = device.connectGatt(
-                    context,
-                    false,
-                    object : BluetoothGattCallback() {
-                        @SuppressLint("MissingPermission")
-                        override fun onConnectionStateChange(
-                            gatt: BluetoothGatt,
-                            status: Int,
-                            newState: Int,
-                        ) {
-                            when (newState) {
-                                BluetoothProfile.STATE_CONNECTED -> gatt.discoverServices()
-                                BluetoothProfile.STATE_DISCONNECTED -> complete(discovered.toSet())
-                            }
-                        }
-
-                        override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-                            if (status == BluetoothGatt.GATT_SUCCESS) {
-                                gatt.services.forEach { service ->
-                                    discovered.addAll(BleUuids.capabilitiesForService(service.uuid))
-                                }
-                            }
-                            runCatching { gatt.disconnect() }
-                        }
-                    },
-                    BluetoothDevice.TRANSPORT_LE,
-                    BluetoothDevice.PHY_LE_1M,
-                    bleHandler,
-                )
-                bleHandler.postDelayed(timeoutRunnable!!, CAPABILITY_DISCOVERY_TIMEOUT_MS)
-            }
-        }
-
-    @SuppressLint("MissingPermission")
     private fun bondedDevices(): List<BluetoothDevice> =
         try {
             bluetoothAdapter?.bondedDevices?.filter {
@@ -284,19 +193,12 @@ class BleSensorCoordinator @Inject constructor(
         val serviceCapabilities = advertisedUuids
             .flatMap { BleUuids.capabilitiesForService(it) }
             .toSet()
-        // Which integration claims this advertisement as a sync watch. The
-        // scanner carries no protocol knowledge of its own.
-        val advertisedUuidStrings = advertisedUuids.map { it.toString() }
-        val advertisesSync =
-            scanClassifiers.any { it.advertisesSyncService(advertisedUuidStrings) }
         // Atomic per key: the SDP receiver updates the same entry on the main thread.
         scanResults.compute(address) { _, existing -> BleDiscoveredDevice(
             address = address,
             name = device.name ?: existing?.name,
             rssi = result.rssi,
             suggestedCapabilities = (existing?.suggestedCapabilities.orEmpty() + serviceCapabilities).toSet(),
-            // Sticky across advertisements: one sighting of the member service settles it.
-            advertisesSyncService = advertisesSync || (existing?.advertisesSyncService ?: false),
             // Bond evidence comes from the bonded list and SDP, never an advertisement.
             classicServiceUuids = existing?.classicServiceUuids.orEmpty(),
         ) }
@@ -304,8 +206,8 @@ class BleSensorCoordinator @Inject constructor(
     }
 
     /**
-     * Maps a discovered device to how it registers: Garmin watch, Edge,
-     * WearOS watch, or a plain sensor. Garmin's verdict beats the name match.
+     * Maps a discovered device to how it registers: a Wear OS watch, or a
+     * plain sensor the add-watch flow does not list.
      */
     fun classifyDiscoveredDevice(device: BleDiscoveredDevice): DeviceClassification =
         classifyDevice(device, deviceClassifiers)
@@ -324,7 +226,6 @@ class BleSensorCoordinator @Inject constructor(
 
     companion object {
         private const val TAG = "BleSensorCoordinator"
-        private const val CAPABILITY_DISCOVERY_TIMEOUT_MS = 8_000L
     }
 }
 /** Major classes that never run the OpenWatch Wear OS app. */

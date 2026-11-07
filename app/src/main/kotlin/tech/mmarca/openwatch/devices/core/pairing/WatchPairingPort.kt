@@ -1,20 +1,5 @@
 package tech.mmarca.openwatch.devices.core.pairing
 
-/** Where an onboarding attempt got to, ordered by progress. */
-enum class WatchBondResult {
-    /** The device was already bonded; no dialog was shown. */
-    ALREADY_BONDED,
-
-    /** The user accepted the OS pairing dialog. */
-    BONDED,
-
-    /** The user dismissed the pairing dialog, or it timed out. */
-    REFUSED,
-
-    /** The watch could not be reached to begin with. */
-    UNREACHABLE,
-}
-
 /** How the association dialog looks for the device. */
 enum class CompanionFilter {
     /** A BLE scan for the address: a watch reached over BLE only. */
@@ -28,17 +13,12 @@ enum class CompanionFilter {
 }
 
 /**
- * The two platform steps that make a scanned watch usable: an OS bond, and
- * an optional companion association. A port, so onboarding is testable
- * without a radio.
+ * The platform step that makes a scanned watch keep the app alive while it
+ * is in range: an optional companion association. The bond is Android's,
+ * made in its Bluetooth settings or by the vendor's onboarding. A port, so
+ * onboarding is testable without a radio.
  */
 interface WatchPairingPort {
-
-    /** Creates an OS bond, showing the pairing dialog if needed. ALREADY_BONDED without prompting. */
-    suspend fun bond(address: String): WatchBondResult
-
-    /** Removes the OS bond. Best-effort. */
-    suspend fun removeBond(address: String)
 
     /**
      * Asks the OS to associate [address] as a companion. False is not a

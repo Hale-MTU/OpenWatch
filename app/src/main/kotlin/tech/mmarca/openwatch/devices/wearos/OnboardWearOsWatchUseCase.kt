@@ -21,8 +21,7 @@ data class WearOsOnboardOutcome(
 
 /**
  * Turns a scanned WearOS watch into a registered `(WATCH, WEAROS)` device.
- * Associate (optional), then register with no capabilities, off the Garmin
- * sync path. Recorded and live data come over the RFCOMM link (`BluetoothWearOsNodePort`).
+ * Associate (optional), then register with no capabilities. Recorded and live data come over the RFCOMM link (`BluetoothWearOsNodePort`).
  */
 @Singleton
 class OnboardWearOsWatchUseCase @Inject constructor(

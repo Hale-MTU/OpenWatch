@@ -2,8 +2,7 @@ package tech.mmarca.openwatch.devices.wearos
 
 /**
  * Recognises a wrist smartwatch by its advertised name: the allow-list for
- * the Watches screen. A match is not a Garmin sync watch. The Sensors
- * screen never asks.
+ * the Watches screen.
  */
 object WearOsDeviceNames {
 

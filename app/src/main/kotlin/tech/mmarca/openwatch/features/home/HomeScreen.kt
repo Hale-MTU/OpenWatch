@@ -33,8 +33,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openwatch.R
-import tech.mmarca.openwatch.features.scales.ScalesSection
-import tech.mmarca.openwatch.features.scales.ScalesViewModel
 import tech.mmarca.openwatch.features.watches.WatchesSection
 import tech.mmarca.openwatch.features.watches.WatchesViewModel
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
@@ -42,17 +40,14 @@ import tech.mmarca.openwatch.ui.components.formatDeviceTime
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
- * The device list: the watch tile, the paired watches with the add flow, the
- * scale with its add flow, then Health Connect and Settings. The watch and scale
- * sections are the same composables their own screens use.
+ * The device list: the watch tile, the paired watches with the add flow, then
+ * Health Connect and Settings.
  */
 @Composable
 fun HomeScreen(
     watchesViewModel: WatchesViewModel,
-    scalesViewModel: ScalesViewModel,
     homeViewModel: HomeViewModel,
     onOpenWatch: (String) -> Unit,
-    onOpenScale: () -> Unit,
     onOpenHealthConnect: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
@@ -75,8 +70,6 @@ fun HomeScreen(
         }
         SectionTitle(stringResource(R.string.home_section_watches))
         WatchesSection(viewModel = watchesViewModel, onOpenWatch = onOpenWatch)
-        SectionTitle(stringResource(R.string.home_section_scale))
-        ScalesSection(viewModel = scalesViewModel, onOpenScale = onOpenScale)
         SectionTitle(stringResource(R.string.home_section_app))
         HomeRow(
             icon = Icons.Outlined.FavoriteBorder,
@@ -181,8 +174,6 @@ internal fun WatchTile(
 @Composable
 private fun watchTileSubtitle(tile: WatchTileState): String? {
     val parts = buildList {
-        tile.liveHeartRateBpm?.let { add(stringResource(R.string.home_watch_live_heart_rate, it)) }
-        tile.liveSteps?.let { add(stringResource(R.string.home_watch_live_steps, it)) }
         tile.batteryPercent?.let { add(stringResource(R.string.home_watch_battery, it)) }
         add(
             tile.lastSyncedAt?.let { stringResource(R.string.settings_watch_last_synced, formatDeviceTime(it)) }

@@ -10,7 +10,7 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
-import tech.mmarca.openwatch.devices.garmin.GarminLog
+import tech.mmarca.openwatch.devices.wearos.WearOsLog
 
 /**
  * One scheduled sync of one watch, run by `WorkManager`. Not a foreground
@@ -56,7 +56,7 @@ class WatchAutoSyncWorker(
             is DeviceSyncResult.Succeeded -> Result.success()
 
             is DeviceSyncResult.Failed -> {
-                GarminLog.log("[GARMIN-AUTOSYNC] run failed: ${result.message}")
+                WearOsLog.log("[AUTOSYNC] run failed: ${result.message}")
                 // Out of range, busy radio, recording: retry on the backoff, then wait for the next period.
                 if (runAttemptCount < MaxAttempts) Result.retry() else Result.success()
             }

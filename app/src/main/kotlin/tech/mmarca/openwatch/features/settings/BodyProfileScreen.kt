@@ -36,8 +36,8 @@ import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
- * The declared body: birth year, sex, height and weight. The scale's body
- * composition needs the sex and height; the walking energy needs the weight.
+ * The declared body: birth year, sex, height and weight. The walking energy
+ * needs the weight.
  * A weight or height Health Connect holds is shown and wins over the typed one.
  */
 @Composable

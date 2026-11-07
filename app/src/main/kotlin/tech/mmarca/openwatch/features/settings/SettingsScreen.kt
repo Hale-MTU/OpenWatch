@@ -1,7 +1,5 @@
 package tech.mmarca.openwatch.features.settings
 
-import android.content.Intent
-import android.provider.Settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,18 +14,13 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openwatch.R
-import tech.mmarca.openwatch.features.watches.NotificationAccessDisclosureDialog
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.theme.Spacing
 
@@ -38,8 +31,6 @@ fun SettingsScreen(
     onOpenBodyProfile: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val context = LocalContext.current
-    var showNotificationDisclosure by remember { mutableStateOf(false) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
 
     Column(
@@ -77,23 +68,6 @@ fun SettingsScreen(
                 Switch(checked = state.syncEnabled, onCheckedChange = viewModel::setSyncEnabled)
             }
         }
-        SettingsRow(
-            title = stringResource(R.string.settings_notification_access_title),
-            body = stringResource(
-                if (state.notificationAccessGranted) {
-                    R.string.settings_notification_access_granted
-                } else {
-                    R.string.settings_notification_access_body
-                },
-            ),
-            onClick = {
-                if (state.notificationAccessGranted) {
-                    context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-                } else {
-                    showNotificationDisclosure = true
-                }
-            },
-        )
         Text(
             text = stringResource(R.string.settings_about_version, state.versionName),
             style = MaterialTheme.typography.bodySmall,
@@ -104,18 +78,6 @@ fun SettingsScreen(
             text = stringResource(R.string.settings_about_body),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
-
-    if (showNotificationDisclosure) {
-        NotificationAccessDisclosureDialog(
-            title = stringResource(R.string.settings_watch_notifications_disclosure_title),
-            body = stringResource(R.string.settings_watch_notifications_disclosure_body),
-            onAccept = {
-                showNotificationDisclosure = false
-                context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-            },
-            onDecline = { showNotificationDisclosure = false },
         )
     }
 }

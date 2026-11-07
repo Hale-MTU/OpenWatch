@@ -10,9 +10,6 @@ class AppForegroundGate @Inject constructor() {
 
     private val foregroundState = kotlinx.coroutines.flow.MutableStateFlow(false)
 
-    /** Observable [isForeground]. Garmin watches defer online errands until the companion is active. */
-    val foregroundFlow: kotlinx.coroutines.flow.StateFlow<Boolean> = foregroundState
-
     private var foreground: Boolean
         get() = foregroundState.value
         set(value) { foregroundState.value = value }

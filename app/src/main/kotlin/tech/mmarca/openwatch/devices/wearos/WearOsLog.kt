@@ -4,7 +4,7 @@ import android.util.Log
 import tech.mmarca.openwatch.BuildConfig
 
 /**
- * Logging for the Wear OS link, debug builds only, like `GarminLog`. Without
+ * Logging for the Wear OS link and its sync, debug builds only. Without
  * an installed sink it is a no-op, which is also what a unit test sees: the
  * JVM `Log` stub throws.
  */

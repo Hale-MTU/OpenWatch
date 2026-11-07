@@ -3,8 +3,6 @@ package tech.mmarca.openwatch.devices.core.pairing
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanFilter
-import android.bluetooth.le.ScanResult
-import android.companion.AssociationInfo
 import android.companion.AssociationRequest
 import android.companion.BluetoothDeviceFilter
 import android.companion.BluetoothLeDeviceFilter
@@ -13,30 +11,23 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentSender
 import android.os.Build
-import android.os.ParcelUuid
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.IntentCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeoutOrNull
-import tech.mmarca.openwatch.devices.core.ServiceDataFilter
-
-/** What the companion dialog said the user picked: the address, and the name it advertised. */
-data class CompanionDevice(val address: String, val name: String?)
 
 /**
  * CompanionDeviceManager association. For a watch it lets the OS raise
- * this app's priority while the watch is in range, which a long sync needs;
- * for a scale it is how the OS wakes the app when someone steps on. Optional
- * for a watch: the user can decline, and presence needs API 31+, so every
+ * this app's priority while the watch is in range, which a long sync needs.
+ * Optional: the user can decline, and presence needs API 31+, so every
  * method returns "no association" rather than throwing. The device address
  * is never logged. Association needs an attached Activity.
  */
@@ -120,9 +111,9 @@ class CompanionDevicePairing @Inject constructor(
             startObservingPresence(address)
             return true
         }
-        // A Garmin watch is reached over BLE, so filter by scan, not classic MAC.
-        // A Wear OS watch may be registered under its Classic bond address,
-        // which no BLE scan sees: without the Classic filter the dialog searches forever.
+        // Filter by address over a BLE scan. A Wear OS watch may be registered under its
+        // Classic bond address, which no BLE scan sees: without the Classic filter
+        // (BLE_OR_CLASSIC) the dialog searches forever.
         val builder =
             AssociationRequest.Builder()
                 .addDeviceFilter(
@@ -136,38 +127,6 @@ class CompanionDevicePairing @Inject constructor(
         }
         pendingAddress = address
         return request(builder.build()) != null
-    }
-
-    /**
-     * Shows the system dialog listing every nearby device whose service data
-     * under [serviceUuid] passes one of [filters], and returns the one the
-     * user picked, now associated and watched for presence. Null when the
-     * user declines, when nothing is found, and on every degraded path. The
-     * device has to be advertising while the dialog looks.
-     */
-    suspend fun discover(serviceUuid: String, filters: List<ServiceDataFilter>): CompanionDevice? {
-        if (manager() == null || launcher == null) {
-            Log.w(TAG, "discover: companion association unavailable")
-            return null
-        }
-        val uuid = ParcelUuid.fromString(serviceUuid)
-        val builder = AssociationRequest.Builder().setSingleDevice(false)
-        for (filter in filters) {
-            builder.addDeviceFilter(
-                BluetoothLeDeviceFilter.Builder()
-                    .setScanFilter(ScanFilter.Builder().setServiceData(uuid, filter.data, filter.mask).build())
-                    .build(),
-            )
-        }
-        pendingAddress = null
-        val result = request(builder.build()) ?: return null
-        val device = result.chosenDevice()
-        if (device == null) {
-            Log.w(TAG, "discover: the result names no device")
-            return null
-        }
-        startObservingPresence(device.address)
-        return device
     }
 
     /**
@@ -235,28 +194,6 @@ class CompanionDevicePairing @Inject constructor(
             resolvePending(null)
             throw error
         }
-    }
-
-    /** The device the dialog's result names. The scan result first; it says the advertised name too. */
-    private fun Intent.chosenDevice(): CompanionDevice? {
-        @Suppress("DEPRECATION")
-        val scanResult = IntentCompat.getParcelableExtra(this, CompanionDeviceManager.EXTRA_DEVICE, ScanResult::class.java)
-        if (scanResult != null) {
-            return CompanionDevice(
-                address = scanResult.device.address.uppercase(),
-                name = scanResult.scanRecord?.deviceName?.takeIf { it.isNotBlank() },
-            )
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val association = IntentCompat.getParcelableExtra(
-                this,
-                CompanionDeviceManager.EXTRA_ASSOCIATION,
-                AssociationInfo::class.java,
-            )
-            val address = association?.deviceMacAddress?.toString() ?: return null
-            return CompanionDevice(address = address.uppercase(), name = association.displayName?.toString())
-        }
-        return null
     }
 
     fun isAssociated(address: String): Boolean {

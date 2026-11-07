@@ -16,9 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import tech.mmarca.openwatch.core.geo.GeoUri
-import tech.mmarca.openwatch.core.geo.SharedGeoPoint
-import tech.mmarca.openwatch.core.geo.SharedLocationText
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevicePairing
@@ -38,7 +35,6 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var unitFormatter: UnitFormatter
     @Inject lateinit var companionDevicePairing: CompanionDevicePairing
 
-    private var externalNavigationRoute by mutableStateOf<String?>(null)
     private var startDestination by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,13 +44,8 @@ class MainActivity : AppCompatActivity() {
         }
         enableEdgeToEdge()
         // The companion association dialog needs an Activity launcher. Without this
-        // attach, no watch or scale is ever associated.
+        // attach, no watch is ever associated.
         companionDevicePairing.attachToActivity(this)
-        // A recreated Activity still holds the launch intent and its back stack comes
-        // back on its own; applying the intent again would push a second copy.
-        if (savedInstanceState == null) {
-            updateExternalNavigationRoute(intent)
-        }
 
         setContent {
             val darkTheme = isSystemInDarkTheme()
@@ -95,8 +86,6 @@ class MainActivity : AppCompatActivity() {
                     AppNavigation(
                         unitFormatter = unitFormatter,
                         startDestination = resolvedStartDestination,
-                        externalNavigationRoute = externalNavigationRoute,
-                        onExternalNavigationHandled = { externalNavigationRoute = null },
                         onSetupComplete = {
                             preferences.onboardingDone = true
                             startDestination = Screen.Home.route
@@ -115,10 +104,7 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        if (redirectHealthConnectOnboardingIfNeeded(intent)) {
-            return
-        }
-        updateExternalNavigationRoute(intent)
+        redirectHealthConnectOnboardingIfNeeded(intent)
     }
 
     private fun redirectHealthConnectOnboardingIfNeeded(intent: Intent?): Boolean {
@@ -133,10 +119,6 @@ class MainActivity : AppCompatActivity() {
         finish()
         return true
     }
-
-    private fun updateExternalNavigationRoute(intent: Intent?) {
-        externalNavigationRoute = intent?.sendPointRoute()
-    }
 }
 
 private fun Intent.isHealthConnectOnboardingIntent(): Boolean {
@@ -144,36 +126,3 @@ private fun Intent.isHealthConnectOnboardingIntent(): Boolean {
     return action == "androidx.health.ACTION_SHOW_ONBOARDING" ||
         action == "android.health.connect.action.SHOW_ONBOARDING"
 }
-
-/**
- * The send-a-point route for a place another app shared: a `geo:` link, or
- * text holding one, a maps URL or bare coordinates. Built here from parsed
- * numbers, so nothing from the intent reaches the navigator as a route.
- */
-internal fun Intent.sendPointRoute(): String? = when (action) {
-    Intent.ACTION_VIEW -> sharedPlaceRoute(geoLink = dataString, text = null)
-    Intent.ACTION_SEND -> sharedPlaceRoute(
-        geoLink = null,
-        text = getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
-            .takeIf { type?.startsWith("text/") == true },
-    )
-    else -> null
-}
-
-/** Null when there is nothing place-like at all. A share with no position still opens the form, which says so. */
-internal fun sharedPlaceRoute(geoLink: String?, text: String?): String? {
-    val point = when {
-        geoLink != null -> GeoUri.parse(geoLink) ?: return null
-        text != null -> SharedLocationText.parse(text) ?: SharedGeoPoint()
-        else -> return null
-    }
-    return Screen.WatchSendPoint.createRoute(
-        latitude = point.latitude,
-        longitude = point.longitude,
-        name = point.name?.take(SharedPlaceNameLimit),
-        unreadable = !point.hasPosition,
-    )
-}
-
-/** The watch keeps 31 bytes. This only stops a whole shared page becoming a route. */
-private const val SharedPlaceNameLimit = 64

@@ -12,7 +12,7 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
  * its SDP record lists the OpenWatch Wear OS app. The last one holds whatever
  * the watch is called. A wrist-watch Bluetooth class alone is not enough:
  * Garmin, Fitbit and Huawei watches report it too.
- * Classified as `(WEAROS, WATCH)`, off the Garmin sync path.
+ * Classified as `(WEAROS, WATCH)`.
  */
 class WearOsDeviceClassifier : DeviceClassifier {
 

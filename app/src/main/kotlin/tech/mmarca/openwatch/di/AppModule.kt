@@ -1,7 +1,6 @@
 package tech.mmarca.openwatch.di
 
 import android.content.Context
-import androidx.room.Room
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,10 +12,6 @@ import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
 import tech.mmarca.openwatch.core.presentation.CurrentLocaleStrings
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
-import tech.mmarca.openwatch.data.local.OpenWatchDatabase
-import tech.mmarca.openwatch.data.local.garmin.GarminSleepMinuteDao
-import tech.mmarca.openwatch.data.local.garmin.GarminWellnessDao
-import tech.mmarca.openwatch.data.local.scale.ScaleWeighInDao
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.domain.preferences.SystemUnitSystemProvider
 
@@ -27,26 +22,6 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDispatcherProvider(): DispatcherProvider = DefaultDispatcherProvider
-
-    @Provides
-    @Singleton
-    fun provideOpenWatchDatabase(@ApplicationContext context: Context): OpenWatchDatabase =
-        Room.databaseBuilder(context, OpenWatchDatabase::class.java, OpenWatchDatabase.NAME).build()
-
-    @Provides
-    @Singleton
-    fun provideGarminWellnessDao(database: OpenWatchDatabase): GarminWellnessDao =
-        database.garminWellnessDao()
-
-    @Provides
-    @Singleton
-    fun provideGarminSleepMinuteDao(database: OpenWatchDatabase): GarminSleepMinuteDao =
-        database.garminSleepMinuteDao()
-
-    @Provides
-    @Singleton
-    fun provideScaleWeighInDao(database: OpenWatchDatabase): ScaleWeighInDao =
-        database.scaleWeighInDao()
 
     @Provides
     @Singleton

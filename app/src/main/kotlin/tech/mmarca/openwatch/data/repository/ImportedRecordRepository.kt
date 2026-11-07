@@ -11,7 +11,7 @@ import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 
 /**
  * The one door every device write goes through, so a deterministic
- * `clientRecordId` upserts the same way for a watch, a scale and a re-sync.
+ * `clientRecordId` upserts the same way for a first sync and a re-sync.
  */
 @Singleton
 class ImportedRecordRepository @Inject constructor(

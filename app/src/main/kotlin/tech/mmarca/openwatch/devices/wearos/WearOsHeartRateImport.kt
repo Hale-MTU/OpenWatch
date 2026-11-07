@@ -8,8 +8,8 @@ import java.time.Instant
 
 /**
  * Maps the watch's heart rate samples onto Health Connect records: one
- * `HeartRateRecord` per clock hour, keyed on the bucket's first sample, the
- * same shape the Garmin wellness import writes. A re-pull of the same samples
+ * `HeartRateRecord` per clock hour, keyed on the bucket's first sample. A
+ * re-pull of the same samples
  * produces the same ids, so a second write updates rather than duplicates.
  *
  * Pure: no Android, so it is testable without a device.

@@ -28,33 +28,9 @@ class BleDeviceRepository @Inject constructor(
     val devices: List<BleSensorDevice>
         get() = _devices.value
 
-    val enabledDevices: List<BleSensorDevice>
-        get() = devices.filter { it.enabled }
-
     fun refresh() {
         _devices.value = readDevices()
     }
-
-    fun resolveCapabilityAssignments(): Map<BleSensorCapability, BleSensorDevice> {
-        val assignments = linkedMapOf<BleSensorCapability, BleSensorDevice>()
-        enabledDevices.forEach { device ->
-            // Only devices with capabilities take part. A sync-only watch has none.
-            if (!device.isLiveSensorCapable) return@forEach
-            device.capabilities.forEach { capability ->
-                assignments.putIfAbsent(capability, device)
-            }
-        }
-        return assignments
-    }
-
-    fun capabilityConflicts(
-        capabilities: Set<BleSensorCapability>,
-        excludingDeviceId: String? = null,
-    ): Map<BleSensorCapability, BleSensorDevice> =
-        resolveCapabilityAssignments()
-            .filter { (capability, device) ->
-                capability in capabilities && device.id != excludingDeviceId
-            }
 
     /**
      * Registers [address], or folds these fields into the existing entry.
@@ -127,7 +103,7 @@ class BleDeviceRepository @Inject constructor(
     }
 
     fun removeDevice(deviceId: String) {
-        // Garmin-specific state is cleared by whoever forgets the watch.
+        // Integration state is cleared by whoever forgets the watch.
         persist(devices.filterNot { it.id == deviceId })
     }
 
@@ -255,7 +231,7 @@ internal object BleDeviceRegistryJson {
                             kind = item.optString("kind")
                                 .let { BleDeviceKind.fromStorage(it) }
                                 ?: BleDeviceKind.SENSOR,
-                            // Null reads back as Garmin via `isGarminWatch`.
+                            // Absent for a sensor; an integration this build dropped reads as none.
                             integration = item.optString("integration")
                                 .let { DeviceIntegration.fromStorage(it) },
                             lastSyncedAt = item.opt("lastSyncedAt")

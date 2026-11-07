@@ -34,32 +34,6 @@ class BleDeviceRepositoryTest {
     )
 
     @Test
-    fun resolveAssignments_usesFirstEnabledDevicePerCapability() {
-        val repo = newRepository()
-        val hr = repo.addStrap()
-        val power = repo.addDevice(
-            displayName = "Power",
-            address = "AA:BB:CC:DD:EE:02",
-            bluetoothName = null,
-            capabilities = setOf(BleSensorCapability.CYCLING_POWER),
-        )
-
-        val assignments = repo.resolveCapabilityAssignments()
-
-        assertEquals(hr.id, assignments[BleSensorCapability.HEART_RATE]?.id)
-        assertEquals(power.id, assignments[BleSensorCapability.CYCLING_POWER]?.id)
-    }
-
-    @Test
-    fun disabledDevicesAreExcludedFromAssignments() {
-        val repo = newRepository()
-        val strap = repo.addStrap()
-        repo.setDeviceEnabled(strap.id, enabled = false)
-
-        assertEquals(0, repo.resolveCapabilityAssignments().size)
-    }
-
-    @Test
     fun `a wheel circumference below the default survives storage unchanged`() {
         newRepository().addDevice(
             displayName = "Speed",
@@ -177,114 +151,28 @@ class BleDeviceRepositoryTest {
     }
 
     @Test
-    fun `a sync-only watch is kept out of capability assignment`() {
-        val repo = newRepository()
-        val sensor = repo.addStrap()
-        repo.addDevice(
-            displayName = "vívoactive 5",
-            address = "E0:48:24:D5:F7:10",
-            bluetoothName = "vívoactive 5",
-            // The watch path registers no capabilities, so nothing is handed to the recording coordinator.
-            capabilities = emptySet(),
-            kind = BleDeviceKind.WATCH,
-        )
-
-        val assignments = repo.resolveCapabilityAssignments()
-
-        assertEquals(sensor.id, assignments[BleSensorCapability.HEART_RATE]?.id)
-        assertFalse(assignments.values.any { it.isWatch })
-    }
-
-    @Test
-    fun `a watch also added through the sensors path DOES take part`() {
-        val repo = newRepository()
-        val watch = repo.addDevice(
-            displayName = "vívoactive 5",
-            address = "E0:48:24:D5:F7:10",
-            bluetoothName = "vívoactive 5",
-            capabilities = emptySet(),
-            kind = BleDeviceKind.WATCH,
-            integration = DeviceIntegration.GARMIN,
-        )
-        // The Sensors path: capabilities and no kind. It never makes a watch stop being one.
-        repo.addDevice(
-            displayName = "vívoactive 5",
-            address = "E0:48:24:D5:F7:10",
-            bluetoothName = "vívoactive 5",
-            capabilities = setOf(BleSensorCapability.HEART_RATE),
-        )
-
-        val stored = repo.devices.single()
-        assertEquals(watch.id, stored.id)
-        // Both roles on one entry, the way an Edge already was.
-        assertEquals(BleDeviceKind.WATCH, stored.kind)
-        assertTrue(stored.isGarminGfdi)
-        assertEquals(
-            stored.id,
-            repo.resolveCapabilityAssignments()[BleSensorCapability.HEART_RATE]?.id,
-        )
-    }
-
-    @Test
     fun `the watch path does not clear what the sensors path added`() {
         val repo = newRepository()
         repo.addDevice(
-            displayName = "vívoactive 5",
-            address = "E0:48:24:D5:F7:10",
-            bluetoothName = "vívoactive 5",
+            displayName = "Galaxy Watch8",
+            address = "A8:D1:62:BE:3A:3B",
+            bluetoothName = "Galaxy Watch8",
             capabilities = setOf(BleSensorCapability.HEART_RATE),
         )
-        // The reverse order: onboarding as a watch must not wipe the live role.
+        // The reverse order: onboarding as a watch must not wipe what was stored before.
         repo.addDevice(
-            displayName = "vívoactive 5",
-            address = "E0:48:24:D5:F7:10",
-            bluetoothName = "vívoactive 5",
+            displayName = "Galaxy Watch8",
+            address = "A8:D1:62:BE:3A:3B",
+            bluetoothName = "Galaxy Watch8",
             capabilities = emptySet(),
             kind = BleDeviceKind.WATCH,
-            integration = DeviceIntegration.GARMIN,
+            integration = DeviceIntegration.WEAROS,
         )
 
         val stored = repo.devices.single()
         assertEquals(setOf(BleSensorCapability.HEART_RATE), stored.capabilities)
         assertEquals(BleDeviceKind.WATCH, stored.kind)
-        assertTrue(stored.isLiveSensorCapable)
-    }
-
-    @Test
-    fun `an Edge bike computer with capabilities DOES take part`() {
-        val repo = newRepository()
-        repo.addStrap()
-        val edge = repo.addDevice(
-            displayName = "Edge 840",
-            address = "E0:48:24:D5:F7:20",
-            bluetoothName = "Edge 840",
-            capabilities = setOf(BleSensorCapability.CYCLING_POWER),
-            kind = BleDeviceKind.BIKE_COMPUTER,
-            integration = DeviceIntegration.GARMIN,
-        )
-
-        val assignments = repo.resolveCapabilityAssignments()
-
-        // A bike computer broadcasting standard GATT is a live source.
-        assertEquals(edge.id, assignments[BleSensorCapability.CYCLING_POWER]?.id)
-    }
-
-    @Test
-    fun `a bike computer with NO capabilities stays out`() {
-        val repo = newRepository()
-        repo.addStrap()
-        repo.addDevice(
-            displayName = "Edge 840",
-            address = "E0:48:24:D5:F7:20",
-            bluetoothName = "Edge 840",
-            capabilities = emptySet(),
-            kind = BleDeviceKind.BIKE_COMPUTER,
-            integration = DeviceIntegration.GARMIN,
-        )
-
-        val assignments = repo.resolveCapabilityAssignments()
-
-        assertFalse(assignments.values.any { it.isBikeComputer })
+        assertTrue(stored.isWearosWatch)
     }
 
     @Test
@@ -296,14 +184,6 @@ class BleDeviceRepositoryTest {
             bluetoothName = "vívoactive 5",
             capabilities = emptySet(),
             kind = BleDeviceKind.WATCH,
-        )
-        repo.addDevice(
-            displayName = "Edge 840",
-            address = "E0:48:24:D5:F7:20",
-            bluetoothName = "Edge 840",
-            capabilities = emptySet(),
-            kind = BleDeviceKind.BIKE_COMPUTER,
-            integration = DeviceIntegration.GARMIN,
         )
         repo.addDevice(
             displayName = "Galaxy Watch8",
@@ -322,7 +202,6 @@ class BleDeviceRepositoryTest {
         assertEquals(
             listOf(
                 Triple(BleDeviceKind.WATCH, null, syncedAt),
-                Triple(BleDeviceKind.BIKE_COMPUTER, DeviceIntegration.GARMIN, null),
                 Triple(BleDeviceKind.WATCH, DeviceIntegration.WEAROS, null),
             ),
             reloaded.map { Triple(it.kind, it.integration, it.lastSyncedAt) },
@@ -353,8 +232,9 @@ class BleDeviceRepositoryTest {
     }
 
     @Test
-    fun registryJson_decodesFlutterEraWatchJson() {
-        // What the Flutter build wrote for an onboarded Garmin watch: storageName strings for kind/integration.
+    fun registryJson_decodesADroppedIntegrationAsNone() {
+        // What the Flutter build wrote for an onboarded Garmin watch. Garmin is gone: the watch keeps its kind and
+        // loses the integration, so nothing claims it.
         val flutterJson = """
             [{"id":"ble-1753000000000000","displayName":"vívoactive 5",
               "address":"AA:BB:CC:DD:EE:05","bluetoothName":"vívoactive 5",
@@ -369,11 +249,10 @@ class BleDeviceRepositoryTest {
         assertEquals(1, decoded.size)
         val device = decoded.single()
         assertEquals(BleDeviceKind.WATCH, device.kind)
-        assertEquals(DeviceIntegration.GARMIN, device.integration)
+        assertNull(device.integration)
         assertEquals(Instant.ofEpochMilli(1_753_100_000_000), device.lastSyncedAt)
         assertTrue(device.isWatch)
-        assertTrue(device.isGarminWatch)
-        assertTrue(device.isGarminGfdi)
+        assertFalse(device.isWearosWatch)
     }
 
     @Test

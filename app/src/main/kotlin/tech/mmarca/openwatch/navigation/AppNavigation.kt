@@ -13,7 +13,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -27,7 +26,6 @@ import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
 import tech.mmarca.openwatch.features.healthconnect.HealthConnectSetupScreen
 import tech.mmarca.openwatch.features.home.HomeScreen
-import tech.mmarca.openwatch.features.scales.ScaleDeviceScreen
 import tech.mmarca.openwatch.features.settings.BodyProfileScreen
 import tech.mmarca.openwatch.features.settings.SettingsScreen
 import tech.mmarca.openwatch.ui.components.LocalAppBarState
@@ -41,8 +39,6 @@ import tech.mmarca.openwatch.ui.components.LocalAppBarState
 fun AppNavigation(
     unitFormatter: UnitFormatter,
     startDestination: String,
-    externalNavigationRoute: String? = null,
-    onExternalNavigationHandled: () -> Unit = {},
     onSetupComplete: () -> Unit = {},
     navController: NavHostController = rememberNavController(),
 ) {
@@ -53,13 +49,6 @@ fun AppNavigation(
     val routeTitle = Screen.titleResFor(currentRoute?.substringBefore('?'))?.let { stringResource(it) }
     val title = declared?.title ?: routeTitle ?: stringResource(R.string.app_name)
     val isHome = currentRoute == Screen.Home.route || currentRoute == Screen.HealthConnectSetup.route
-
-    LaunchedEffect(externalNavigationRoute, currentRoute) {
-        if (externalNavigationRoute != null && currentRoute != null) {
-            navController.navigate(externalNavigationRoute) { launchSingleTop = true }
-            onExternalNavigationHandled()
-        }
-    }
 
     Scaffold(
         topBar = {
@@ -115,12 +104,10 @@ fun AppNavigation(
             composable(Screen.Home.route) {
                 HomeScreen(
                     watchesViewModel = hiltViewModel(),
-                    scalesViewModel = hiltViewModel(),
                     homeViewModel = hiltViewModel(),
                     onOpenWatch = { deviceId ->
                         navController.navigate(Screen.WatchDevice.createRoute(deviceId)) { launchSingleTop = true }
                     },
-                    onOpenScale = { navController.navigate(Screen.ScaleDevice.route) { launchSingleTop = true } },
                     onOpenHealthConnect = {
                         navController.navigate(Screen.HealthConnectSetup.route) { launchSingleTop = true }
                     },
@@ -138,13 +125,6 @@ fun AppNavigation(
             }
             composable(Screen.BodyProfile.route) {
                 BodyProfileScreen(viewModel = hiltViewModel(), unitFormatter = unitFormatter)
-            }
-            composable(Screen.ScaleDevice.route) {
-                ScaleDeviceScreen(
-                    viewModel = hiltViewModel(),
-                    onOpenBodyProfile = { navController.navigate(Screen.BodyProfile.route) { launchSingleTop = true } },
-                    onRemoved = { navController.popBackStack() },
-                )
             }
             watchRoutes(navController)
         }
