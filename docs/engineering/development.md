@@ -175,7 +175,7 @@ By hand, once, outside the repository:
    listing (`fastlane/metadata/android/` holds the text and the 512 px icon; the feature
    graphic and screenshots are added in the Console), the content rating, the Data safety
    form and the Health Connect declaration, and set the privacy policy URL to
-   `https://github.com/OpenVitals-MTU/OpenWatch/blob/main/PRIVACY.md`. Play refuses an API
+   `https://github.com/Hale-MTU/OpenWatch/blob/main/PRIVACY.md`. Play refuses an API
    upload to an app with no release, so the first bundle on each track goes up by hand, from
    the first run's GitHub prerelease.
 3. The service account, invited in Users and permissions with release rights on this app.

@@ -239,7 +239,7 @@ shift || true
 floor="${OPENWATCH_VERSION_CODE_FLOOR:-$DEFAULT_FLOOR}"
 server_url="${GITHUB_SERVER_URL:-https://github.com}"
 api_url="${GITHUB_API_URL:-https://api.github.com}"
-repo="${GITHUB_REPOSITORY:-OpenVitals-MTU/OpenWatch}"
+repo="${GITHUB_REPOSITORY:-Hale-MTU/OpenWatch}"
 tag=""
 
 case "$mode" in

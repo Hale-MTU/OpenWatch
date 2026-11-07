@@ -24,7 +24,7 @@ the commit with the release notes, and pushes in one motion.
   be English-only (`python3 scripts/verify-translations.py` reports coverage). Say so in the
   notes when a screen is English-only in a shipping locale.
 - The release workflow is enabled: `state` is `active` in
-  `https://api.github.com/repos/OpenVitals-MTU/OpenWatch/actions/workflows/release.yml`.
+  `https://api.github.com/repos/Hale-MTU/OpenWatch/actions/workflows/release.yml`.
   A tag pushed while it is disabled starts nothing, and enabling it afterwards does not
   replay the push.
 
