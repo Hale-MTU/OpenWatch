@@ -59,7 +59,8 @@ built yourself is installed over Wi-Fi adb:
 Both apps share the `applicationId` `tech.mmarca.openwatch`, so one Google Play listing
 carries both form factors, and one release ships both. A nightly build is published every
 night to the `nightly` GitHub prerelease and to Play open testing; a tagged version gets its
-own GitHub release and goes to open testing, then to production once approved. The GitHub
+own GitHub release and goes to open testing, then to production once approved. Until Google
+has approved the app, every Play upload goes to internal testing instead. The GitHub
 release holds the signed phone APK, a signed debug APK, the signed watch APK and both app
 bundles, for a sideload or a Play upload by hand. The pipeline, its secrets and the release
 procedure are in [docs/engineering/development.md](docs/engineering/development.md); the

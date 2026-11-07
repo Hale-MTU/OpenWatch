@@ -6,7 +6,7 @@ description: >-
   the release-build artifact.
 inputs:
   lane:
-    description: open_testing or production
+    description: internal_testing, open_testing or production
     required: true
   form-factor:
     description: phone (the default) or wear; picks the AAB, the versionCode and the Play track family
