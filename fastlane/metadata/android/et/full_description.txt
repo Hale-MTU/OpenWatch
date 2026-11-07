@@ -1,0 +1,24 @@
+OpenWatch seob su kella ja kaalu telefoniga ning kirjutab nende salvestatu Health Connecti. See on OpenVitalsi seadmete pool: OpenVitals näitab andmeid, OpenWatch on nende allikas.
+
+Su andmed jäävad telefoni. Pole kontot, pilvesünkroonimist, reklaame ega analüütikat ning rakendusel pole internetiluba. Kõik liigub Bluetoothi kaudu seadme ja telefoni vahel.
+
+Mida see teeb
+
+* Garmini kellad, Garmini enda Bluetoothi-protokolli kaudu: tegevused koos marsruudiga, sammud, vahemaa, korrused, kalorid, pulss, HRV, vere hapnikusisaldus, hingamissagedus, VO2 max ja uni, kirjutatud Health Connecti. Teavituste edastamine, äratuste ja kella seadete saatmine, kella otsimine, muusika juhtimine, kalender ja ilm randmel ning CoMapsi navigeerimine kellal. Mõõtmised, mida Health Connect hoida ei saa, nagu stress, Body Battery ja uneskoor, jäävad rakenduse kuvale Kella andmed.
+* Wear OS-i kellad OpenWatchi kellarakendusega: kellal salvestatud pulss, sammud ja korrused, sünkroonitud Health Connecti puudutuse või ajakava järgi, lisaks hinnanguline uneseanss ja öö puhkepulss. Kellarakendus pakub paane pulsi, sammude ja korruste jaoks.
+* Xiaomi Body Composition Scale S400 ja S400 Pro: iga kaalumine salvestatakse kohe Health Connecti, rakendus avatud või mitte, dekodeeritud kaalu enda saatest sinu Xiaomi konto võtmega. Kaal ja pulss nagu mõõdetud; keharasv, rasvavaba mass ja kehavesi hinnatakse telefonis.
+
+Miks OpenWatch
+
+* Privaatne algusest peale: pole kontot, pilve, reklaame ega jälgimist
+* Health Connect on tõe allikas. Iga kirje nimetab allikaks OpenWatchi ja iga Health Connecti rakendus saab seda näidata
+* Sina valid iga loa ja saad seda hiljem muuta
+* Avatud lähtekood: kood, väljalaskemärkmed ja ehitused on avalikud
+
+Nõuded
+
+OpenWatch vajab Health Connecti. See on osa Android 14-st ja uuemast. Android 13 ja vanema puhul paigalda Health Connecti rakendus Google Playst. Wear OS-i rakendus vajab Wear OS 3 või uuemat.
+
+Tervisealane märkus
+
+OpenWatch on mõeldud üksnes üldise heaolu ja teabe jaoks. See ei ole meditsiiniseade ega anna meditsiinilist nõu. See ei diagnoosi, ravi ega enneta ühtegi haigust. Meditsiinilise nõu, diagnoosi või ravi saamiseks pöördu alati kvalifitseeritud tervishoiutöötaja poole.

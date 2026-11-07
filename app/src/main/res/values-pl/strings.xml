@@ -163,9 +163,8 @@
     <string name="settings_watch_live_readings_body">Przesyła tętno i kroki z zegarka na pulpit, gdy zegarek jest połączony. Zużywa więcej baterii zegarka.</string>
     <string name="dashboard_summary_today">Dziś</string>
     <string name="privacy_policy_title">Polityka prywatności</string>
-    <string name="privacy_policy_body_1">OpenWatch odczytuje dane z Health Connect, aby pokazywać na Twoim urządzeniu kroki, treningi, sen, tętno, wagę, kalorie, nawodnienie, odżywianie, mindfulness i parametry życiowe. Wpisy, które sam zapisujesz, w tym importowane trasy GPX/KML/KMZ i pliki FIT, są zapisywane w Health Connect.</string>
+    <string name="privacy_policy_body_1">OpenWatch paruje zegarek Garmin lub Wear OS i wagę Xiaomi z Twoim telefonem i zapisuje to, co rejestrują, w Health Connect: aktywności, kroki, piętra, kalorie, tętno, sen i masę ciała. Odczytuje tylko to, czego potrzebuje synchronizacja, na przykład Twoją masę i wzrost, i tylko za Twoją zgodą.</string>
     <string name="privacy_policy_body_2">Ta aplikacja nie wysyła Twoich danych zdrowotnych do chmury, nie zawiera reklam i nie udostępnia danych osobom trzecim.</string>
-    <string name="privacy_policy_body_medical">Tam, gdzie Health Connect oferuje dokumentację medyczną, OpenWatch wyświetla, importuje i eksportuje ją na Twoim urządzeniu. Odczytuje kategorię tylko za Twoją zgodą, zapisuje tylko przy imporcie i pokazuje wpisy tak, jak przyszły, bez ich interpretowania.</string>
     <string name="privacy_policy_body_3">OpenWatch nie jest wyrobem medycznym i nie jest przeznaczony do diagnozowania, leczenia, wyleczenia ani zapobiegania jakimkolwiek chorobom lub stanom zdrowia. Nie zastępuje porady, diagnozy ani leczenia przez wykwalifikowanego pracownika ochrony zdrowia.</string>
     <string name="notification_listener_label">Powiadomienia na zegarku</string>
     <string name="screen_watch_notifications">Powiadomienia na zegarku</string>

@@ -1,0 +1,24 @@
+OpenWatch koppelt deine Uhr und deine Waage mit dem Telefon und schreibt, was sie aufzeichnen, in Health Connect. Es ist die Gerätehälfte von OpenVitals: OpenVitals zeigt die Daten, OpenWatch liefert sie.
+
+Deine Daten bleiben auf dem Telefon. Kein Konto, keine Cloud-Synchronisierung, keine Werbung, keine Analyse, und die App hat keine Internetberechtigung. Alles läuft über Bluetooth zwischen Gerät und Telefon.
+
+Was die App kann
+
+* Garmin-Uhren, über Garmins eigenes Bluetooth-Protokoll: Aktivitäten mit Strecke, Schritte, Distanz, Stockwerke, Kalorien, Herzfrequenz, HRV, Sauerstoffsättigung, Atemfrequenz, VO2max und Schlaf, geschrieben in Health Connect. Benachrichtigungen weiterleiten, Wecker und die Uhreneinstellungen senden, die Uhr finden, Musik steuern, Kalender und Wetter am Handgelenk sehen und der CoMaps-Navigation dort folgen. Werte, die Health Connect nicht speichern kann, etwa Stress, Body Battery und den Schlafwert, bleiben im Bildschirm Uhrendaten der App.
+* Wear-OS-Uhren mit der OpenWatch-Uhren-App: Herzfrequenz, Schritte und Stockwerke, auf der Uhr aufgezeichnet und per Tipp oder nach Zeitplan in Health Connect synchronisiert, dazu eine geschätzte Schlafsitzung und der Ruhepuls der Nacht. Die Uhren-App bietet Kacheln für Herzfrequenz, Schritte und Stockwerke.
+* Xiaomi Body Composition Scale S400 und S400 Pro: jedes Wiegen landet sofort in Health Connect, ob die App offen ist oder nicht, entschlüsselt aus dem Funksignal der Waage mit dem Schlüssel aus deinem Xiaomi-Konto. Gewicht und Puls wie gemessen; Körperfett, Magermasse und Körperwasser auf dem Telefon geschätzt.
+
+Warum OpenWatch
+
+* Privat von Grund auf: kein Konto, keine Cloud, keine Werbung, kein Tracking
+* Health Connect ist die eine Wahrheit. Jeder Eintrag nennt OpenWatch als Quelle, und jede Health-Connect-App kann ihn zeigen
+* Du wählst jede Berechtigung selbst und kannst sie später ändern
+* Open Source: Code, Versionshinweise und Builds sind öffentlich
+
+Voraussetzungen
+
+OpenWatch braucht Health Connect. Es ist Teil von Android 14 und neuer. Auf Android 13 und älter installiere die Health-Connect-App aus Google Play. Die Wear-OS-App braucht Wear OS 3 oder neuer.
+
+Gesundheitshinweis
+
+OpenWatch dient nur dem allgemeinen Wohlbefinden und der Information. Es ist kein Medizinprodukt und gibt keinen medizinischen Rat. Es diagnostiziert, behandelt, heilt oder verhindert keine Krankheit. Wende dich für medizinischen Rat, Diagnose oder Behandlung immer an qualifiziertes Fachpersonal.

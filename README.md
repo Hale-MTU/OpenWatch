@@ -50,11 +50,21 @@ JDK 17 or 21 and the Android SDK (platform 37, build-tools 37.0.0).
 ```
 
 The gates: `./gradlew verifyCi` for the phone app and `./gradlew verifyWearCi` for the watch
-app; see [docs/engineering/development.md](docs/engineering/development.md). The watch app is
-installed over Wi-Fi adb: [docs/how-to/wear-os-sideload.md](docs/how-to/wear-os-sideload.md).
+app; see [docs/engineering/development.md](docs/engineering/development.md). A watch app you
+built yourself is installed over Wi-Fi adb:
+[docs/how-to/wear-os-sideload.md](docs/how-to/wear-os-sideload.md).
 
-There is no store release yet. Both apps share the `applicationId` `tech.mmarca.openwatch`,
-so a listing can carry both form factors.
+## Releases
+
+Both apps share the `applicationId` `tech.mmarca.openwatch`, so one Google Play listing
+carries both form factors, and one release ships both. A nightly build is published every
+night to the `nightly` GitHub prerelease and to Play open testing; a tagged version gets its
+own GitHub release and goes to open testing, then to production once approved. The GitHub
+release holds the signed phone APK, a signed debug APK, the signed watch APK and both app
+bundles, for a sideload or a Play upload by hand. The pipeline, its secrets and the release
+procedure are in [docs/engineering/development.md](docs/engineering/development.md); the
+Play listing text is under `fastlane/metadata/android/`. The privacy policy is
+[PRIVACY.md](PRIVACY.md).
 
 ## Migrating from OpenVitals
 

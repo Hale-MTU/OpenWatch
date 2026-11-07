@@ -1,0 +1,1 @@
+Sync Garmin and Wear OS watches and a Xiaomi scale to Health Connect. No cloud.

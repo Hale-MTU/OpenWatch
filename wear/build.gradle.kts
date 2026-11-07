@@ -9,8 +9,33 @@ plugins {
 // range 2_000_000_000 to 2_099_999_999. The phone counter stays below that.
 // Play caps versionCode at 2_100_000_000.
 val wearVersionCodeBase = 2_000_000_000
-val wearBaseVersionCode = wearVersionCodeBase + 1
-val wearBaseVersionName = "1.0.0"
+// The release value lives in gradle.properties, shared with app/.
+val wearBaseVersionCode = providers.gradleProperty("openwatch.versionCode")
+    .map { wearVersionCodeBase + it.toInt() }
+val wearBaseVersionName = providers.gradleProperty("openwatch.versionName")
+
+// Same signing as the phone app, from the same environment variables: both
+// form factors ship under one applicationId, so one key signs both.
+val releaseStoreFilePath = System.getenv("OPENWATCH_RELEASE_STORE_FILE")
+val releaseStorePassword = System.getenv("OPENWATCH_RELEASE_STORE_PASSWORD")
+val releaseKeyAlias = System.getenv("OPENWATCH_RELEASE_KEY_ALIAS")
+val releaseKeyPassword = System.getenv("OPENWATCH_RELEASE_KEY_PASSWORD")
+val isPkcs12ReleaseStore = releaseStoreFilePath
+    ?.lowercase()
+    ?.let { it.endsWith(".p12") || it.endsWith(".pfx") || it.endsWith(".pkcs12") }
+    ?: false
+val effectiveReleaseKeyPassword = if (isPkcs12ReleaseStore) {
+    releaseStorePassword
+} else {
+    releaseKeyPassword
+}
+val hasReleaseSigning = listOf(
+    releaseStoreFilePath,
+    releaseStorePassword,
+    releaseKeyAlias,
+    effectiveReleaseKeyPassword,
+).all { !it.isNullOrBlank() }
+val signDebugWithReleaseKey = System.getenv("OPENWATCH_SIGN_DEBUG_WITH_RELEASE_KEY") == "true"
 // Same switch as the phone app: a published debug APK is not debuggable, and
 // is not run through R8 (it was until 2026-10; see app/build.gradle.kts).
 val publishedDebugApk = System.getenv("OPENWATCH_PUBLISHED_DEBUG_APK") == "true"
@@ -43,12 +68,26 @@ android {
         versionName = wearVersionNameOverride.orElse(wearBaseVersionName).get()
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(checkNotNull(releaseStoreFilePath))
+                storePassword = checkNotNull(releaseStorePassword)
+                keyAlias = checkNotNull(releaseKeyAlias)
+                keyPassword = checkNotNull(effectiveReleaseKeyPassword)
+            }
+        }
+    }
+
     buildTypes {
         // Same suffix as the phone debug build, so a debug watch pairs with a
         // debug phone.
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
+            if (signDebugWithReleaseKey && hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             if (publishedDebugApk) {
                 isDebuggable = false
             }
@@ -57,6 +96,9 @@ android {
         // R8 on, the same way the phone app does it. The newer
         // optimization.enable DSL needs an experimental AGP flag.
         release {
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -81,6 +123,16 @@ android {
         compose = true
     }
 
+    // The release build runs after the gate's lint (verifyWearCi); lintVital
+    // would repeat part of it inside the signing build.
+    lint {
+        checkReleaseBuilds = false
+    }
+
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
 }
 
 dependencies {

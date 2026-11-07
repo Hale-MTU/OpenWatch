@@ -1,6 +1,6 @@
 # Install the Watch App on a Wear OS Watch
 
-OpenWatch talks to a Wear OS watch through its own small watch app. The watch app is not on any store a watch can reach, so it is installed over adb from a computer. This guide covers that, and the optional step that lets a brand-new watch skip the vendor's onboarding so the vendor's phone app is never needed.
+OpenWatch talks to a Wear OS watch through its own small watch app. A released watch app comes from Google Play, as the Wear OS form factor of the OpenWatch listing; a nightly, a build of your own, or a watch without the Play Store takes it over adb from a computer. This guide covers that, and the optional step that lets a brand-new watch skip the vendor's onboarding so the vendor's phone app is never needed.
 
 For what the watch app does once installed, see [Watches](../features/watches.md#wear-os-companion-app).
 

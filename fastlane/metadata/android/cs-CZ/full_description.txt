@@ -1,0 +1,24 @@
+OpenWatch spáruje hodinky a váhu s telefonem a zapisuje, co zaznamenají, do Health Connect. Je to zařízeňová polovina OpenVitals: OpenVitals data zobrazuje, OpenWatch je jejich zdroj.
+
+Vaše data zůstávají v telefonu. Žádný účet, žádná synchronizace do cloudu, žádné reklamy ani analytika a aplikace nemá oprávnění k internetu. Vše putuje přes Bluetooth mezi zařízením a telefonem.
+
+Co umí
+
+* Hodinky Garmin, přes vlastní Bluetooth protokol Garminu: aktivity s trasou, kroky, vzdálenost, patra, kalorie, tep, HRV, okysličení krve, dechová frekvence, VO2 max a spánek, zapsané do Health Connect. Přeposílání oznámení, odesílání budíků a nastavení hodinek, hledání hodinek, ovládání hudby, kalendář a počasí na zápěstí a navigace CoMaps na hodinkách. Měření, která Health Connect neumí uložit, jako stres, Body Battery a skóre spánku, zůstávají na obrazovce Data hodinek v aplikaci.
+* Hodinky Wear OS s aplikací OpenWatch pro hodinky: tep, kroky a patra zaznamenané na hodinkách, synchronizované do Health Connect klepnutím nebo podle plánu, plus odhadovaný spánek a noční klidový tep. Aplikace pro hodinky nabízí dlaždice pro tep, kroky a patra.
+* Váha Xiaomi Body Composition Scale S400 a S400 Pro: každé vážení uložené do Health Connect hned, s otevřenou i zavřenou aplikací, dekódované z vlastního vysílání váhy klíčem z vašeho účtu Xiaomi. Hmotnost a tep jak byly změřeny; tělesný tuk, svalová hmota a voda odhadnuté v telefonu.
+
+Proč OpenWatch
+
+* Soukromí od návrhu: žádný účet, cloud, reklamy ani sledování
+* Health Connect je zdrojem pravdy. Každý záznam uvádí OpenWatch jako zdroj a může ho zobrazit kterákoli aplikace pro Health Connect
+* Každé oprávnění volíte sami a můžete ho později změnit
+* Open source: kód, poznámky k vydání i sestavení jsou veřejné
+
+Požadavky
+
+OpenWatch potřebuje Health Connect. Je součástí Androidu 14 a novějšího. Na Androidu 13 a starším nainstalujte aplikaci Health Connect z Google Play. Aplikace pro Wear OS vyžaduje Wear OS 3 nebo novější.
+
+Zdravotní upozornění
+
+OpenWatch slouží jen pro obecnou pohodu a informace. Není zdravotnickým prostředkem a neposkytuje lékařské rady. Nediagnostikuje, neléčí ani nepředchází žádné nemoci. Lékařské rady, diagnózu či léčbu vždy konzultujte s kvalifikovaným zdravotníkem.

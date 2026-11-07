@@ -116,9 +116,8 @@
     <string name="health_connect_sync_paused">La synchronisation Santé Connect est en pause</string>
     <string name="dashboard_summary_today">Aujourd\'hui</string>
     <string name="privacy_policy_title">Politique de confidentialité</string>
-    <string name="privacy_policy_body_1">OpenWatch lit les données de Santé Connect pour afficher sur votre appareil les pas, entraînements, sommeil, fréquence cardiaque, poids, calories, hydratation, nutrition, pleine conscience et constantes vitales. Les entrées que vous enregistrez explicitement, y compris les itinéraires GPX/KML/KMZ et les fichiers FIT importés, sont écrites dans Santé Connect.</string>
+    <string name="privacy_policy_body_1">OpenWatch associe une montre Garmin ou Wear OS et une balance Xiaomi à votre téléphone et écrit ce qu\'elles enregistrent dans Santé Connect : activités, pas, étages, calories, fréquence cardiaque, sommeil et poids. Il ne lit que ce dont une synchronisation a besoin, comme votre poids et votre taille, et seulement avec votre permission.</string>
     <string name="privacy_policy_body_2">Cette application n\'envoie pas vos données de santé vers un service cloud, ne contient pas de publicité et ne partage aucune donnée avec des tiers.</string>
-    <string name="privacy_policy_body_medical">Quand Health Connect propose les dossiers médicaux, OpenWatch les affiche, les importe et les exporte sur votre appareil. Il ne lit une catégorie qu\'avec votre autorisation, n\'écrit que lors d\'un import et affiche les dossiers tels quels, sans les interpréter.</string>
     <string name="privacy_policy_body_3">OpenWatch n\'est pas un dispositif médical et ne diagnostique, ne traite, ne guérit ni ne prévient aucune maladie ou affection. Elle ne remplace pas l\'avis, le diagnostic ou le traitement d\'un professionnel de santé qualifié.</string>
     <string name="notification_listener_label">Notifications sur la montre</string>
     <string name="screen_watch_notifications">Notifications sur la montre</string>

@@ -10,15 +10,15 @@ plugins {
     alias(libs.plugins.ksp) apply false
 }
 
-val openVitalsGroup = providers.gradleProperty("openVitalsGroup")
+val openWatchGroup = providers.gradleProperty("openWatchGroup")
     .orElse("tech.mmarca.openwatch")
-val openVitalsArtifactVersion = providers.gradleProperty("openVitalsArtifactVersion")
+val openWatchArtifactVersion = providers.gradleProperty("openWatchArtifactVersion")
     .orElse(providers.environmentVariable("OPENWATCH_ARTIFACT_VERSION"))
-    .orElse("2.16.0-SNAPSHOT")
+    .orElse(providers.gradleProperty("openwatch.versionName").map { "$it-SNAPSHOT" })
 
 allprojects {
-    group = openVitalsGroup.get()
-    version = openVitalsArtifactVersion.get()
+    group = openWatchGroup.get()
+    version = openWatchArtifactVersion.get()
 
     dependencyLocking {
         lockAllConfigurations()
@@ -68,7 +68,7 @@ tasks.register("verifyCiPreflight") {
 }
 
 // Lint is half of the gate's task time. CI runs it on pushes to main and in
-// the release build, not on pull requests (.github/workflows/test.yml), so it
+// the release build, not on pull requests (.github/workflows/verify.yml), so it
 // is not part of verifyCiPreflight.
 tasks.register("verifyCiLint") {
     group = "verification"
@@ -76,8 +76,8 @@ tasks.register("verifyCiLint") {
     dependsOn(":app:lintCi", ":domain:lintCi")
 }
 
-// Phone app only. The wear module has its own gate (verifyWearCi) and its own
-// pipeline (.github/workflows/wear-test.yml), so a watch failure never blocks a phone PR.
+// Phone app only. The wear module has its own gate (verifyWearCi), its own job
+// in .github/workflows/verify.yml, so a watch failure never blocks a phone PR.
 // The whole gate in one invocation, for a local run and the release build.
 tasks.register("verifyCi") {
     group = "verification"

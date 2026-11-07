@@ -1,0 +1,24 @@
+OpenWatch associe votre montre et votre balance à votre téléphone et écrit ce qu'elles enregistrent dans Santé Connect. C'est la moitié « appareils » d'OpenVitals : OpenVitals affiche les données, OpenWatch les fournit.
+
+Vos données restent sur votre téléphone. Pas de compte, pas de synchronisation cloud, pas de publicité, pas d'analyse, et l'application n'a pas la permission internet. Tout passe par Bluetooth entre l'appareil et le téléphone.
+
+Ce qu'elle fait
+
+* Montres Garmin, via le protocole Bluetooth propre à Garmin : activités avec leur parcours, pas, distance, étages, calories, fréquence cardiaque, VFC, oxygène sanguin, fréquence respiratoire, VO2 max et sommeil, écrits dans Santé Connect. Transfert des notifications, envoi des alarmes et des réglages de la montre, recherche de la montre, contrôle de la musique, agenda et météo au poignet, et navigation CoMaps sur la montre. Les mesures que Santé Connect ne peut pas stocker, comme le stress, la Body Battery et le score de sommeil, restent dans l'écran Données de la montre de l'application.
+* Montres Wear OS, avec l'application de montre OpenWatch : fréquence cardiaque, pas et étages enregistrés sur la montre, synchronisés vers Santé Connect d'un geste ou selon un horaire, plus une session de sommeil estimée et la fréquence cardiaque au repos de la nuit. L'application de montre propose des tuiles pour la fréquence cardiaque, les pas et les étages.
+* Balance Xiaomi Body Composition Scale S400 et S400 Pro : chaque pesée est enregistrée dans Santé Connect au moment même, application ouverte ou non, décodée depuis la diffusion de la balance avec la clé de votre compte Xiaomi. Poids et pouls tels que mesurés ; masse grasse, masse maigre et eau corporelle estimées sur le téléphone.
+
+Pourquoi OpenWatch
+
+* Privée par conception : pas de compte, pas de cloud, pas de publicité, pas de pistage
+* Santé Connect est la source de vérité. Chaque enregistrement nomme OpenWatch comme source, et toute application Santé Connect peut l'afficher
+* Vous choisissez chaque permission et pouvez la modifier plus tard
+* Open source : le code, les notes de version et les builds sont publics
+
+Prérequis
+
+OpenWatch a besoin de Santé Connect. Il fait partie d'Android 14 et plus récent. Sur Android 13 et antérieur, installez l'application Santé Connect depuis Google Play. L'application Wear OS requiert Wear OS 3 ou plus récent.
+
+Avertissement santé
+
+OpenWatch est destinée au bien-être général et à l'information uniquement. Ce n'est pas un dispositif médical et elle ne donne pas de conseil médical. Elle ne diagnostique, ne traite, ne guérit ni ne prévient aucune maladie. Consultez toujours un professionnel de santé qualifié pour un avis, un diagnostic ou un traitement médical.
