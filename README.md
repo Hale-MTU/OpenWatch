@@ -1,6 +1,6 @@
 # OpenWatch
 
-The devices half of [OpenVitals](https://github.com/Hale-MTU/android-app): a Wear OS
+The devices half of [OpenVitals](https://github.com/Hale-MTU/OpenVitals): a Wear OS
 watch app, the phone-to-watch link, and a phone app that pairs a Garmin or Wear OS watch and
 a Xiaomi S400 scale, copies what they record into Health Connect, and manages them. OpenVitals
 stays the dashboard that shows the data; OpenWatch is where it comes from.
