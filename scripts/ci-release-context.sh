@@ -44,6 +44,13 @@ aab_basename=""
 build_aab="false"
 build_debug_apk="false"
 play_track=""
+# The testing track: open testing, or internal testing while the repository
+# variable OPENWATCH_PLAY_INTERNAL_ONLY=true holds every upload short of
+# Google's approval. The workflow picks the fastlane lane the same way.
+testing_track="beta"
+if [ "${OPENWATCH_PLAY_INTERNAL_ONLY:-}" = "true" ]; then
+    testing_track="internal"
+fi
 version_code=""
 version_name_override=""
 debug_apk_basename=""
@@ -89,7 +96,7 @@ if [ "$release_tag" = "nightly" ]; then
     prerelease="true"
     build_aab="true"
     build_debug_apk="true"
-    play_track="beta"
+    play_track="$testing_track"
     debug_apk_basename="OpenWatch-nightly-debug.apk"
     pipeline_number="${GITHUB_RUN_NUMBER:-1}"
 
@@ -135,8 +142,8 @@ else
         build_debug_apk="true"
         debug_apk_basename="OpenWatch-$release_tag-debug.apk"
         # A tag build also makes the app bundle, attaches it to the GitHub release
-        # and uploads it to open testing; production is a promotion from there.
-        play_track="beta"
+        # and uploads it to the testing track; production is a promotion from there.
+        play_track="$testing_track"
         bundle_task=":app:bundleRelease"
         aab_variant_dir="release"
         aab_basename="OpenWatch-$release_tag.aab"

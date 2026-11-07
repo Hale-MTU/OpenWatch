@@ -71,8 +71,9 @@ printed `versionCode` afterwards.
    - Direct Google Play production upload, to the phone track and the Wear OS track, from the approved production run of the release workflow.
    ```
 
-   While the repository variable `OPENWATCH_PLAY_PAUSED=true` holds the Play uploads, the
-   second line is false: say instead that the Google Play update follows later.
+   While the repository variable `OPENWATCH_PLAY_PAUSED=true` holds the Play uploads, or
+   `OPENWATCH_PLAY_INTERNAL_ONLY=true` keeps them on internal testing before Google's
+   approval, the second line is false: say instead that the Google Play update follows later.
 3. **`README.md`**: highlight bullets for headline features; update any claim the release
    changes.
 4. **`fastlane/metadata/android/<locale>/changelogs/<versionCode>.txt`**, one per Play
@@ -114,6 +115,12 @@ factors to production, marks the release stable and posts the notes to the Zulip
 `releases` channel. A tag whose run is gone is shipped by a manual run of the release
 workflow with target `production`, started from the tag: it takes both AABs from the
 prerelease, no build.
+
+While the repository variable `OPENWATCH_PLAY_INTERNAL_ONLY=true` is set (before Google
+has approved the app), both AABs go to internal testing instead and the production job
+uploads nothing; the rest of the run is unchanged. After the approval, delete the variable
+and ship the waiting version with that same manual `production` run from its tag: the lane
+promotes it from internal testing.
 
 ## 4. Afterwards
 

@@ -98,14 +98,16 @@ they are. Two GitHub release outputs:
   `OpenWatch-nightly-debug.apk`, `OpenWatch-nightly.aab`, `OpenWatch-wear-nightly.apk` and
   `OpenWatch-wear-nightly.aab` to the fixed GitHub `nightly` prerelease. The same run uploads
   the phone AAB to the Google Play open testing track (`beta` in the Play Developer API) and
-  the watch AAB to the Wear OS form-factor track (`wear:beta`).
+  the watch AAB to the Wear OS form-factor track (`wear:beta`), or to internal testing
+  (`internal`, `wear:internal`) while `OPENWATCH_PLAY_INTERNAL_ONLY=true` holds.
 - A pushed `vX.Y.Z` or `VX.Y.Z` tag builds the `release` variants and publishes the same
   five files under `OpenWatch-vX.Y.Z` and `OpenWatch-wear-vX.Y.Z` names to its own versioned
-  GitHub prerelease, uploads both AABs to open testing, then waits for the `production`
-  environment's approval. Approving the run promotes the phone from `beta` to `production`
-  with the store listing, the watch from `wear:beta` to `wear:production`, marks the GitHub
-  release stable, and posts the notes to the Zulip `releases` channel
-  (`scripts/announce-zulip.sh`).
+  GitHub prerelease, uploads both AABs to open testing (or internal testing, under the same
+  variable), then waits for the `production` environment's approval. Approving the run
+  promotes the phone from `beta` to `production` with the store listing, the watch from
+  `wear:beta` to `wear:production`, marks the GitHub release stable, and posts the notes to
+  the Zulip `releases` channel (`scripts/announce-zulip.sh`). The promotion reads the
+  version from whichever testing track has it, open or internal.
 
 Each AAB has a `.sha256` beside it. A manual run with target `production`, started from the
 tag, downloads both AABs from the prerelease, checks them, and runs the production jobs on
@@ -132,7 +134,7 @@ reads `OpenWatch-Version-Code` markers from the GitHub release notes plus the ap
 build, writes the chosen code into the release notes, and records it as a ref before the
 nightly tag moves (`scripts/move-nightly-tag.sh`). The marker holds the phone code; the
 watch code is derived. The fastlane lanes compare the incoming code with the live Play track
-(`beta`, `wear:beta`, `production`, `wear:production`) before uploading, so a code Play
+(`internal`, `beta`, `production` and their `wear:` twins) before uploading, so a code Play
 already serves fails with a message instead of an opaque API error. The nightly run also
 prunes old versioned GitHub releases, keeping the newest nine.
 
@@ -157,10 +159,23 @@ Repository Actions secrets:
 
 The `production` environment needs required reviewers, or a production run never waits.
 
-While a release is in Play review, a new upload to any track restarts the review. The
-variable `OPENWATCH_PLAY_PAUSED=true` holds every Play upload, phone and watch: the nightly
-skips its Play job, and a production run still waits for approval, marks the GitHub release
-stable and posts to Zulip, but uploads nothing. Delete the variable to resume.
+Two variables hold Play back, for two situations:
+
+- Before Google has approved the app, only internal testing may take a build: Play reviews
+  a closed or open testing release and a production release, and a new app's first review
+  is also the gate on every later track. The variable `OPENWATCH_PLAY_INTERNAL_ONLY=true`
+  sends the nightly's and a tag's uploads to internal testing (`internal`, `wear:internal`)
+  instead of open testing, and makes the production job upload nothing; the run still waits
+  for approval, marks the GitHub release stable and posts to Zulip. Open testing and
+  production are not touched while it is set. Once Google has approved the app, delete the
+  variable; the next tag goes to open testing and then production as usual, and a version
+  that is waiting on internal testing is promoted from there by a manual run of the
+  workflow from its tag with target `production`.
+- While a release is in Play review, a new upload to any track restarts the review. The
+  variable `OPENWATCH_PLAY_PAUSED=true` holds every Play upload, phone and watch, internal
+  testing included: the nightly skips its Play job, and a production run still waits for
+  approval, marks the GitHub release stable and posts to Zulip, but uploads nothing.
+  Delete the variable to resume.
 
 ### Before the first run
 
@@ -171,17 +186,20 @@ By hand, once, outside the repository:
    key password equals the store password for PKCS12). Keep the file offline.
 2. Play Console: create the app `tech.mmarca.openwatch`, enrol it in Play App Signing with
    this key as the upload key, add the Wear OS form factor (Advanced settings, Form factors)
-   so the `wear:*` tracks exist, create open testing for both form factors, fill the store
-   listing (`fastlane/metadata/android/` holds the text and the 512 px icon; the feature
-   graphic and screenshots are added in the Console), the content rating, the Data safety
-   form and the Health Connect declaration, and set the privacy policy URL to
+   so the `wear:*` tracks exist, create internal testing and open testing for both form
+   factors, fill the store listing (`fastlane/metadata/android/` holds the text and the
+   512 px icon; the feature graphic and screenshots are added in the Console), the content
+   rating, the Data safety form and the Health Connect declaration, and set the privacy
+   policy URL to
    `https://github.com/Hale-MTU/OpenWatch/blob/main/PRIVACY.md`. Play refuses an API
    upload to an app with no release, so the first bundle on each track goes up by hand, from
    the first run's GitHub prerelease.
 3. The service account, invited in Users and permissions with release rights on this app.
-4. The Zulip bot, the `production` environment and the `OPENWATCH_PLAY_PAUSED` variable.
+4. The Zulip bot, the `production` environment, and the variables: `OPENWATCH_PLAY_PAUSED`
+   for the first run, `OPENWATCH_PLAY_INTERNAL_ONLY=true` for every run until Google has
+   approved the app.
 5. A manual `nightly` run with `OPENWATCH_PLAY_PAUSED=true` proves the GitHub side; a second
-   without it proves the Play side, the `wear:beta` upload included.
+   without it proves the Play side, the `wear:internal` upload included.
 
 ## Release Checklist
 
