@@ -1,6 +1,6 @@
 # Install the Watch App on a Wear OS Watch
 
-OpenWatch talks to a Wear OS watch through its own small watch app. The watch app is not on any store a watch can reach, so it is installed over adb from a computer. This guide covers that, and the optional step that lets a brand-new watch skip the vendor's onboarding so the vendor's phone app is never needed.
+OpenWatch talks to a Wear OS watch through its own small watch app. A released watch app comes from Google Play, as the Wear OS form factor of the OpenWatch listing; a nightly, a build of your own, or a watch without the Play Store takes it over adb from a computer. This guide covers that, and the optional step that lets a brand-new watch skip the vendor's onboarding so the vendor's phone app is never needed.
 
 For what the watch app does once installed, see [Watches](../features/watches.md#wear-os-companion-app).
 
@@ -10,7 +10,7 @@ Everything below is driven by three small scripts in the repository: `scripts/we
 
 On the computer:
 
-- A clone of the OpenWatch repository (`OpenVitals-MTU/OpenWatch`).
+- A clone of the OpenWatch repository (`Hale-MTU/OpenWatch`).
 - Android platform-tools (`adb`). The script finds it on `PATH`, in `$ANDROID_HOME/platform-tools`, or in the default SDK location under your home directory.
 - To build the watch app yourself: a JDK and the Android SDK, the same setup as [development.md](../engineering/development.md). To install an APK you already have, neither is needed; pass it with `--apk`.
 - Optional: `avahi-browse` (package `avahi-utils`) makes discovery more reliable on Linux desktops that run their own mDNS daemon.

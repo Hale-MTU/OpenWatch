@@ -37,9 +37,8 @@
     <string name="settings_sensors_open_bluetooth">打开蓝牙设置</string>
     <string name="option_not_specified">未指定</string>
     <string name="privacy_policy_title">隐私政策</string>
-    <string name="privacy_policy_body_1">OpenWatch 从 Health Connect 读取数据，在你的设备上显示步数、锻炼、睡眠、心率、体重、卡路里、饮水、营养、正念和生命体征。你明确记录的内容，包括导入的 GPX/KML/KMZ 路线和导入的 FIT 文件，会写入 Health Connect。</string>
+    <string name="privacy_policy_body_1">OpenWatch 将 Garmin 或 Wear OS 手表和 Xiaomi 体重秤与你的手机配对，并把它们记录的数据写入 Health Connect：运动、步数、楼层、卡路里、心率、睡眠和体重。它只读取同步所需的内容，例如你的体重和身高，并且只在你授权后读取。</string>
     <string name="privacy_policy_body_2">此应用不会将你的健康数据上传到云服务，不包含广告，也不与第三方分享数据。</string>
-    <string name="privacy_policy_body_medical">在 Health Connect 提供医疗记录的设备上，OpenWatch 会在你的设备上显示、导入和导出这些记录。只有获得你的许可才会读取某个类别，只在你导入时写入，并按收到的原样显示记录，不做解读。</string>
     <string name="privacy_policy_body_3">OpenWatch 不是医疗器械，不诊断、治疗、治愈或预防任何疾病或身体状况。它不能替代合格医疗专业人士的医疗建议、诊断或治疗。</string>
     <string name="settings_watches_intro">将手表记录的内容复制到 OpenWatch。不发送到互联网。</string>
     <string name="settings_watches_empty_title">未配对手表</string>

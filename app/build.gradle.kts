@@ -50,9 +50,14 @@ val nightlyVersionNameSuffix = versionNameOverride
     .orElse("-nightly")
 // versionCode is a monotonic release counter, independent of versionName.
 // The phone app counts up from 1; the watch app owns 2_000_000_001 and up
-// (wear/build.gradle.kts), since both ship under one applicationId.
-val baseVersionCode = 1
-val baseVersionName = "0.1.0"
+// (wear/build.gradle.kts), since both ship under one applicationId. The
+// release value lives in gradle.properties, which both modules read.
+val baseVersionCode = providers.gradleProperty("openwatch.versionCode").map { it.toInt() }
+val baseVersionName = providers.gradleProperty("openwatch.versionName")
+val phoneVersionCode = versionCodeOverride.orElse(baseVersionCode).get()
+require(phoneVersionCode in 1..99_999_999) {
+    "versionCode $phoneVersionCode must leave room for the watch's 2_000_000_000 + versionCode."
+}
 android {
     namespace = "tech.mmarca.openwatch"
     compileSdk = 37
@@ -63,7 +68,7 @@ android {
         applicationId = "tech.mmarca.openwatch"
         minSdk = 26
         targetSdk = 36
-        versionCode = versionCodeOverride.orElse(baseVersionCode).get()
+        versionCode = phoneVersionCode
         versionName = versionNameOverride.orElse(baseVersionName).get()
         buildConfigField("boolean", "OPENWATCH_DIAGNOSTICS", "false")
         if (apkAbiFilters.isNotEmpty()) {

@@ -1,5 +1,8 @@
 package tech.mmarca.openwatch.features.settings
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,7 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -31,6 +36,9 @@ fun SettingsScreen(
     onOpenBodyProfile: () -> Unit,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val privacyPolicyUrl = stringResource(R.string.settings_privacy_policy_url)
+    val noBrowserMessage = stringResource(R.string.settings_privacy_policy_no_browser, privacyPolicyUrl)
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
 
     Column(
@@ -68,11 +76,28 @@ fun SettingsScreen(
                 Switch(checked = state.syncEnabled, onCheckedChange = viewModel::setSyncEnabled)
             }
         }
+        SettingsRow(
+            title = stringResource(R.string.privacy_policy_title),
+            body = stringResource(R.string.settings_privacy_policy_body),
+            onClick = {
+                try {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, privacyPolicyUrl.toUri()))
+                } catch (_: ActivityNotFoundException) {
+                    // This app needs no browser, so some phones that run it have none.
+                    Toast.makeText(context, noBrowserMessage, Toast.LENGTH_LONG).show()
+                }
+            },
+        )
         Text(
             text = stringResource(R.string.settings_about_version, state.versionName),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(top = Spacing.md),
+        )
+        Text(
+            text = stringResource(R.string.settings_app_publisher),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
             text = stringResource(R.string.settings_about_body),

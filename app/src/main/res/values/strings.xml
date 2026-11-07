@@ -28,6 +28,10 @@
     <string name="hc_setup_continue">Continue</string>
     <string name="settings_title">Settings</string>
     <string name="settings_about_version">OpenWatch %1$s</string>
+    <string name="settings_privacy_policy_body">What OpenWatch reads, writes and keeps. Opens in the browser.</string>
+    <string name="settings_privacy_policy_url" translatable="false">https://github.com/Hale-MTU/OpenWatch/blob/main/PRIVACY.md</string>
+    <string name="settings_privacy_policy_no_browser">No app on this phone can open the link. The policy is at %1$s</string>
+    <string name="settings_app_publisher" translatable="false">Hale · hale.ngo</string>
     <string name="settings_about_body">Open source under the AGPL-3.0-or-later. The watch and sync code comes from OpenVitals.</string>
     <string name="body_profile_title">Body profile</string>
     <string name="body_profile_settings_body">Birth year, sex, height and weight for the estimates</string>
@@ -81,9 +85,8 @@
     <string name="settings_sensors_open_bluetooth">Open Bluetooth settings</string>
     <string name="option_not_specified">Not specified</string>
     <string name="privacy_policy_title">Privacy policy</string>
-    <string name="privacy_policy_body_1">OpenWatch reads data from Health Connect to show steps, workouts, sleep, heart rate, weight, calories, hydration, nutrition, mindfulness, and vitals on your device. Entries you explicitly log, including imported GPX/KML/KMZ routes and imported FIT files, are written to Health Connect.</string>
+    <string name="privacy_policy_body_1">OpenWatch pairs a Garmin or Wear OS watch and a Xiaomi scale with your phone and writes what they record to Health Connect: activities, steps, floors, calories, heart rate, sleep and weight. It reads only what a sync needs, such as your weight and height, and only with your permission.</string>
     <string name="privacy_policy_body_2">This app does not upload your health data to a cloud service, does not include ads, and does not share data with third parties.</string>
-    <string name="privacy_policy_body_medical">Where Health Connect offers medical records, OpenWatch shows, imports and exports them on your device. It reads a category only with your permission, writes only when you import, and shows records as received, without interpreting them.</string>
     <string name="privacy_policy_body_3">OpenWatch is not a medical device and does not diagnose, treat, cure, or prevent any disease or medical condition. It is not a substitute for medical advice, diagnosis, or treatment from a qualified healthcare professional.</string>
     <string name="settings_watches_intro">Copies what your watch recorded into OpenWatch. Nothing is sent to the internet.</string>
     <string name="settings_watches_empty_title">No watch paired</string>

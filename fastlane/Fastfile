@@ -1,0 +1,197 @@
+opt_out_usage
+
+default_platform(:android)
+
+require "pathname"
+
+OPENWATCH_PACKAGE_NAME = "tech.mmarca.openwatch"
+OPENWATCH_METADATA_PATH = "fastlane/metadata/android"
+OPENWATCH_PROJECT_ROOT = File.expand_path("..", __dir__)
+
+# The phone app and the watch app share the listing and the applicationId.
+# Play keeps the watch on its own form-factor tracks, named "wear:<track>" in
+# the Play Developer API; supply and google_play_track_version_codes pass the
+# name through. The phone's tracks keep the plain names.
+def openwatch_track(form_factor, track)
+  form_factor.to_s == "wear" ? "wear:#{track}" : track
+end
+
+def openwatch_form_factor(options)
+  form_factor = (options[:form_factor] || ENV["OPENWATCH_FORM_FACTOR"] || "phone").to_s
+  UI.user_error!("form_factor must be phone or wear, got #{form_factor}") unless %w[phone wear].include?(form_factor)
+  form_factor
+end
+
+def openwatch_project_path(path)
+  value = path.to_s
+  return value if value.empty?
+
+  pathname = Pathname.new(value)
+  pathname.absolute? ? value : File.expand_path(value, OPENWATCH_PROJECT_ROOT)
+end
+
+# The testing upload the internal_testing and open_testing lanes share: the
+# bundle goes to one testing track of the form factor, with no store metadata,
+# after the versionCode guards.
+def openwatch_upload_to_testing(options, track)
+  json_key = options[:json_key] || ENV["GOOGLE_PLAY_JSON_KEY"]
+  aab = options[:aab] || ENV["OPENWATCH_NIGHTLY_AAB"]
+  version_code = options[:version_code] || ENV["OPENWATCH_VERSION_CODE"]
+  form_factor = openwatch_form_factor(options)
+  testing_track = openwatch_track(form_factor, track)
+
+  UI.user_error!("json_key is required") if json_key.to_s.empty?
+  UI.user_error!("aab is required") if aab.to_s.empty?
+
+  json_key = openwatch_project_path(json_key)
+  aab = openwatch_project_path(aab)
+
+  UI.user_error!("aab does not exist: #{aab}") unless File.file?(aab)
+
+  if version_code.to_s.length > 0
+    existing_codes = google_play_track_version_codes(
+      package_name: OPENWATCH_PACKAGE_NAME,
+      json_key: json_key,
+      track: testing_track
+    ).map(&:to_i)
+
+    if existing_codes.include?(version_code.to_i)
+      UI.message("Version code #{version_code} is already on Google Play track '#{testing_track}'; skipping upload.")
+      return
+    end
+
+    # Play refuses a rollout no existing user can upgrade to. Codes that only
+    # ever went to Play carry no release marker, so the versionCode counter
+    # cannot see them; fail here with the fix instead of letting supply
+    # surface a cryptic Google API error.
+    max_existing = existing_codes.max
+    if max_existing && max_existing >= version_code.to_i
+      UI.user_error!(
+        "Google Play track '#{testing_track}' already serves versionCode #{max_existing} >= incoming #{version_code}; " \
+        "no existing user could upgrade, so supply would be rejected. " \
+        "Bump openwatch.versionCode in gradle.properties past #{max_existing}" \
+        "#{form_factor == 'wear' ? ' - 2000000000' : ''}."
+      )
+    end
+  end
+
+  supply(
+    package_name: OPENWATCH_PACKAGE_NAME,
+    json_key: json_key,
+    aab: aab,
+    track: testing_track,
+    release_status: "completed",
+    skip_upload_metadata: true,
+    skip_upload_changelogs: true,
+    skip_upload_images: true,
+    skip_upload_screenshots: true,
+    changes_not_sent_for_review: ENV["OPENWATCH_PLAY_CHANGES_NOT_SENT_FOR_REVIEW"] == "true",
+    timeout: 600
+  )
+end
+
+platform :android do
+  desc "Upload a signed Android App Bundle (the phone's, or the watch's with form_factor:wear) to Google Play internal testing, the one track Play serves without a review: where every build goes while OPENWATCH_PLAY_INTERNAL_ONLY holds"
+  lane :internal_testing do |options|
+    openwatch_upload_to_testing(options, "internal")
+  end
+
+  desc "Upload a signed Android App Bundle (the phone's, or the watch's with form_factor:wear) to Google Play open testing"
+  lane :open_testing do |options|
+    openwatch_upload_to_testing(options, "beta")
+  end
+
+  desc "Promote the version from open testing, or from internal testing, to Google Play production (the phone run carries the store metadata; form_factor:wear promotes the watch), or upload it there when no testing track had it"
+  lane :production do |options|
+    json_key = options[:json_key] || ENV["GOOGLE_PLAY_JSON_KEY"]
+    aab = options[:aab] || ENV["OPENWATCH_RELEASE_AAB"]
+    version_code = options[:version_code] || ENV["OPENWATCH_VERSION_CODE"]
+    form_factor = openwatch_form_factor(options)
+    # The testing tracks the version may be on, in the order they are looked
+    # at: open testing is where a release normally comes from, internal
+    # testing where it went while OPENWATCH_PLAY_INTERNAL_ONLY held.
+    testing_tracks = [openwatch_track(form_factor, "beta"), openwatch_track(form_factor, "internal")]
+    production_track = openwatch_track(form_factor, "production")
+    # One listing: the phone run syncs the store text, changelogs and images;
+    # the watch run touches its tracks only.
+    metadata_options = if form_factor == "wear"
+      { skip_upload_metadata: true, skip_upload_changelogs: true, skip_upload_images: true, skip_upload_screenshots: true }
+    else
+      { metadata_path: OPENWATCH_METADATA_PATH, sync_image_upload: true }
+    end
+
+    UI.user_error!("json_key is required") if json_key.to_s.empty?
+    UI.user_error!("aab is required") if aab.to_s.empty?
+
+    json_key = openwatch_project_path(json_key)
+    aab = openwatch_project_path(aab)
+
+    UI.user_error!("aab does not exist: #{aab}") unless File.file?(aab)
+
+    if version_code.to_s.length > 0
+      existing_codes = google_play_track_version_codes(
+        package_name: OPENWATCH_PACKAGE_NAME,
+        json_key: json_key,
+        track: production_track
+      ).map(&:to_i)
+
+      if existing_codes.include?(version_code.to_i)
+        UI.message("Version code #{version_code} is already on Google Play track '#{production_track}'; skipping production upload.")
+        next
+      end
+
+      # Same guard as open_testing: surface a downgrade as an actionable
+      # failure before supply hits Play's opaque rollout error.
+      max_existing = existing_codes.max
+      if max_existing && max_existing >= version_code.to_i
+        UI.user_error!(
+          "Google Play track '#{production_track}' already serves versionCode #{max_existing} >= incoming #{version_code}; " \
+          "no existing user could upgrade, so supply would be rejected. " \
+          "Bump openwatch.versionCode in gradle.properties past #{max_existing}" \
+          "#{form_factor == 'wear' ? ' - 2000000000' : ''}."
+        )
+      end
+
+      # The pipeline's stage 2 put this version on a testing track; production
+      # is then a promotion of that same release, with the store metadata, not
+      # a second upload. A version no testing track had (Play was paused at the
+      # time) falls through to the upload below.
+      source_track = testing_tracks.find do |track|
+        google_play_track_version_codes(
+          package_name: OPENWATCH_PACKAGE_NAME,
+          json_key: json_key,
+          track: track
+        ).map(&:to_i).include?(version_code.to_i)
+      end
+      if source_track
+        UI.message("Promoting version code #{version_code} from '#{source_track}' to '#{production_track}'.")
+        supply(
+          package_name: OPENWATCH_PACKAGE_NAME,
+          json_key: json_key,
+          track: source_track,
+          track_promote_to: production_track,
+          track_promote_release_status: "completed",
+          version_code: version_code.to_i,
+          skip_upload_aab: true,
+          skip_upload_apk: true,
+          changes_not_sent_for_review: ENV["OPENWATCH_PLAY_CHANGES_NOT_SENT_FOR_REVIEW"] == "true",
+          timeout: 600,
+          **metadata_options
+        )
+        next
+      end
+      UI.message("Version code #{version_code} is on no testing track (#{testing_tracks.join(', ')}); uploading the bundle to '#{production_track}'.")
+    end
+
+    supply(
+      package_name: OPENWATCH_PACKAGE_NAME,
+      json_key: json_key,
+      aab: aab,
+      track: production_track,
+      release_status: "completed",
+      changes_not_sent_for_review: ENV["OPENWATCH_PLAY_CHANGES_NOT_SENT_FOR_REVIEW"] == "true",
+      timeout: 600,
+      **metadata_options
+    )
+  end
+end

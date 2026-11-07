@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- The single-colour layer of the OpenWatch icon: bezel, strap stubs, heartbeat and dot; the dial is left open. Also the notification small icon on the watch. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Strap stubs. -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:pathData="M45,23h18M45,85h18" />
+    <!-- The OpenVitals heartbeat, clipped to the dial. -->
+    <group>
+        <clip-path android:pathData="M31.5,54a22.5,22.5 0,1 0,45 0a22.5,22.5 0,1 0,-45 0z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M25.5,59.48L26.19,59.03L29.27,58.11L31.33,57.88L38.18,57.88L41.27,53.77L42.29,53.2L44.35,53.09L45.72,53.54L46.4,54.23L50.52,60.74L51.2,61.42L51.54,61.2L56.68,50.46L57.71,49.55L59.08,49.2L60.8,49.32L61.82,49.89L69.36,59.48L69.7,59.37L71.42,57.65L72.1,57.2L73.13,56.97L82.04,56.86L88.55,56.4L89.23,56.51L89.69,57.2L89.69,58.68L89.23,59.14L88.21,59.48L75.53,60.17L71.42,64.28L69.7,64.96L68.33,64.96L66.96,64.51L66.28,63.82L60.45,56.06L60.11,56.06L59.77,56.4L54.29,67.71L53.94,68.16L53.26,68.51L51.89,68.85L50.52,68.73L49.15,68.05L43.66,59.71L42.29,60.74L40.58,61.08L25.5,59.48Z" />
+    </group>
+    <!-- The OpenVitals dot. -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M44,22h20a4,4 0,0 1,4 4v8h-28v-8a4,4 0,0 1,4 -4z" />
+        android:pathData="M45.15,46.63a4.74,4.74 0,1 0,9.48 0a4.74,4.74 0,1 0,-9.48 0z" />
+    <!-- The bezel. -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M44,86h20a4,4 0,0 0,4 -4v-8h-28v8a4,4 0,0 0,4 4z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,30a24,24 0,1 0,0.01 0zM54,36a18,18 0,1 1,-0.01 0z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M52.5,42h3v14h-3zM53,53h11v3h-11z" />
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="5"
+        android:pathData="M29,54a25,25 0,1 0,50 0a25,25 0,1 0,-50 0z" />
 </vector>

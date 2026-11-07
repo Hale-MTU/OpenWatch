@@ -73,3 +73,11 @@ Do not break these without an explicit decision.
 `./gradlew verifyCi` (phone app and domain) and `./gradlew verifyWearCi` (watch app), or
 `scripts/ci-android-gradle.sh <task>` on a machine without the SDK pieces set up. See
 `docs/engineering/development.md`.
+
+## Releases
+
+One release ships both form factors: the version lives in `gradle.properties`
+(`openwatch.versionCode`, `openwatch.versionName`), the watch adds 2000000000 to the code,
+and `.github/workflows/release.yml` signs both with one key and uploads the phone bundle to
+the Play `beta`/`production` tracks and the watch bundle to `wear:beta`/`wear:production`.
+`scripts/release.sh X.Y.Z` cuts a release; the procedure is `.claude/skills/release/SKILL.md`.

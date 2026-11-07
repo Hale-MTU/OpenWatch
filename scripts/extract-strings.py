@@ -8,7 +8,7 @@ the non-string resources reference, then rewrites each values*/strings.xml of
 this repo so it holds exactly those keys, in the order the source file has
 them, plus the keys only OpenWatch defines (kept from the existing file).
 
-    python3 -I scripts/extract-strings.py --source /path/to/openvitals/android-app
+    python3 -I scripts/extract-strings.py --source /path/to/OpenVitals
 
 Rerun after copying more code from OpenVitals. Keys the source lacks are reported.
 """
@@ -79,7 +79,7 @@ def own_keys(path, taken):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--source", required=True, help="an OpenVitals android-app checkout")
+    parser.add_argument("--source", required=True, help="an OpenVitals checkout")
     args = parser.parse_args()
     source_res = os.path.join(args.source, "app", "src", "main", "res")
     keys = referenced_keys()

@@ -37,9 +37,8 @@
     <string name="settings_sensors_open_bluetooth">Bluetooth 設定を開く</string>
     <string name="option_not_specified">未指定</string>
     <string name="privacy_policy_title">プライバシーポリシー</string>
-    <string name="privacy_policy_body_1">OpenWatch は Health Connect からデータを読み取り、歩数、ワークアウト、睡眠、心拍数、体重、カロリー、水分補給、栄養、マインドフルネス、バイタルをデバイス上に表示します。インポートした GPX/KML/KMZ ルートや FIT ファイルを含め、明示的に記録した内容は Health Connect に書き込まれます。</string>
+    <string name="privacy_policy_body_1">OpenWatch は Garmin または Wear OS のウォッチと Xiaomi の体重計をスマートフォンとペアリングし、記録したデータ（アクティビティ、歩数、階数、カロリー、心拍数、睡眠、体重）をヘルスコネクトに書き込みます。読み取るのは同期に必要な体重や身長などのみで、あなたの許可がある場合に限ります。</string>
     <string name="privacy_policy_body_2">このアプリは健康データをクラウドサービスにアップロードせず、広告を含まず、第三者とデータを共有しません。</string>
-    <string name="privacy_policy_body_medical">Health Connect が医療記録に対応している端末では、OpenWatch は端末上で医療記録を表示、インポート、エクスポートします。カテゴリはあなたの許可がある場合にのみ読み取り、書き込むのはインポート時だけです。記録は受け取ったまま表示し、解釈はしません。</string>
     <string name="privacy_policy_body_3">OpenWatch は医療機器ではなく、いかなる疾患や病状の診断、治療、治癒、予防も行いません。資格のある医療専門家による医学的助言、診断、治療の代わりにはなりません。</string>
     <string name="settings_watches_intro">ウォッチが記録した内容を OpenWatch にコピーします。インターネットには何も送られません。</string>
     <string name="settings_watches_empty_title">ウォッチがペアリングされていません</string>

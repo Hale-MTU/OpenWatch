@@ -1,0 +1,34 @@
+name: Publish the GitHub release
+description: >-
+  Creates or updates the GitHub release named in build/release-ci/release-context.env
+  and uploads this run's signed artifacts to it. The job provides GH_TOKEN and
+  GH_REPO and has the release-build artifact under build/release-ci.
+runs:
+  using: composite
+  steps:
+    # The app bundles go last: they are there for a Play upload by hand, when
+    # Play refuses the upload from the pipeline.
+    - shell: bash
+      run: |
+        set -eu
+        . build/release-ci/release-context.env
+        out=build/release-ci
+        set -- "$out/$OPENWATCH_APK_BASENAME" "$out/$OPENWATCH_APK_BASENAME.sha256"
+        if [ "$OPENWATCH_BUILD_DEBUG_APK" = "true" ]; then
+          set -- "$@" "$out/$OPENWATCH_DEBUG_APK_BASENAME" "$out/$OPENWATCH_DEBUG_APK_BASENAME.sha256"
+        fi
+        if [ "$OPENWATCH_BUILD_WEAR" = "true" ]; then
+          set -- "$@" "$out/$OPENWATCH_WEAR_APK_BASENAME" "$out/$OPENWATCH_WEAR_APK_BASENAME.sha256"
+        fi
+        if [ "$OPENWATCH_BUILD_AAB" = "true" ]; then
+          set -- "$@" "$out/$OPENWATCH_AAB_BASENAME" "$out/$OPENWATCH_AAB_BASENAME.sha256"
+        fi
+        if [ "$OPENWATCH_BUILD_WEAR" = "true" ]; then
+          set -- "$@" "$out/$OPENWATCH_WEAR_AAB_BASENAME" "$out/$OPENWATCH_WEAR_AAB_BASENAME.sha256"
+        fi
+        scripts/publish-github-release.sh \
+          "$OPENWATCH_RELEASE_TAG" \
+          "$out/release-title.txt" \
+          "$out/release-notes.md" \
+          "$OPENWATCH_RELEASE_PRERELEASE" \
+          "$@"

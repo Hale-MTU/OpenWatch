@@ -1,0 +1,24 @@
+OpenWatch paruje zegarek i wagę z telefonem i zapisuje to, co rejestrują, w Health Connect. To urządzeniowa połowa OpenVitals: OpenVitals pokazuje dane, OpenWatch je dostarcza.
+
+Twoje dane zostają w telefonie. Bez konta, bez synchronizacji z chmurą, bez reklam i analityki, a aplikacja nie ma uprawnienia do internetu. Wszystko wędruje przez Bluetooth między urządzeniem a telefonem.
+
+Co potrafi
+
+* Zegarki Garmin, przez własny protokół Bluetooth Garmina: aktywności z trasą, kroki, dystans, piętra, kalorie, tętno, HRV, saturacja, częstość oddechów, VO2 max i sen, zapisane w Health Connect. Przekazywanie powiadomień, wysyłanie alarmów i ustawień zegarka, znajdowanie zegarka, sterowanie muzyką, kalendarz i pogoda na nadgarstku oraz nawigacja CoMaps na zegarku. Pomiary, których Health Connect nie przechowuje, jak stres, Body Battery i wynik snu, zostają na ekranie Dane zegarka w aplikacji.
+* Zegarki Wear OS z aplikacją OpenWatch na zegarek: tętno, kroki i piętra zarejestrowane na zegarku, synchronizowane z Health Connect dotknięciem lub według harmonogramu, plus szacowana sesja snu i nocne tętno spoczynkowe. Aplikacja na zegarek oferuje kafelki tętna, kroków i pięter.
+* Waga Xiaomi Body Composition Scale S400 i S400 Pro: każde ważenie zapisane w Health Connect od razu, z otwartą lub zamkniętą aplikacją, odkodowane z transmisji wagi kluczem z Twojego konta Xiaomi. Masa i tętno jak zmierzone; tkanka tłuszczowa, masa beztłuszczowa i woda w organizmie szacowane w telefonie.
+
+Dlaczego OpenWatch
+
+* Prywatność od podstaw: bez konta, chmury, reklam i śledzenia
+* Health Connect jest źródłem prawdy. Każdy rekord wskazuje OpenWatch jako źródło i może go pokazać każda aplikacja Health Connect
+* Sam wybierasz każde uprawnienie i możesz je później zmienić
+* Otwarte źródła: kod, informacje o wydaniach i kompilacje są publiczne
+
+Wymagania
+
+OpenWatch potrzebuje Health Connect. Jest częścią Androida 14 i nowszych. Na Androidzie 13 i starszych zainstaluj aplikację Health Connect z Google Play. Aplikacja Wear OS wymaga Wear OS 3 lub nowszego.
+
+Zastrzeżenie zdrowotne
+
+OpenWatch służy wyłącznie ogólnemu dobremu samopoczuciu i informacji. Nie jest wyrobem medycznym i nie udziela porad lekarskich. Nie diagnozuje, nie leczy, nie uzdrawia ani nie zapobiega żadnej chorobie. W sprawie porady, diagnozy lub leczenia zawsze zwracaj się do wykwalifikowanego pracownika ochrony zdrowia.

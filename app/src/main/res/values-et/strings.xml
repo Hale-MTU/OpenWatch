@@ -26,9 +26,8 @@
     <string name="settings_sensors_scan_stopped">Otsing peatatud</string>
     <string name="settings_sensors_open_bluetooth">Ava Bluetoothi seaded</string>
     <string name="privacy_policy_title">Privaatsuspoliitika</string>
-    <string name="privacy_policy_body_1">OpenWatch loeb andmeid Health Connectist, et näidata sinu seadmes samme, treeninguid, und, pulssi, kaalu, kaloreid, vedelikutarbimist, toitumist, teadvelolekut ja elunäitajaid. Kirjed, mida sa ise logid, sealhulgas imporditud GPX/KML/KMZ marsruudid ja imporditud FIT-failid, kirjutatakse Health Connectisse.</string>
+    <string name="privacy_policy_body_1">OpenWatch seob Garmini või Wear OS-i kella ja Xiaomi kaalu sinu telefoniga ning kirjutab nende salvestatu Health Connecti: tegevused, sammud, korrused, kalorid, pulsi, une ja kaalu. See loeb ainult seda, mida sünkroonimine vajab, näiteks sinu kaalu ja pikkust, ja ainult sinu loal.</string>
     <string name="privacy_policy_body_2">See rakendus ei laadi sinu terviseandmeid pilveteenusesse, ei sisalda reklaame ega jaga andmeid kolmandate osapooltega.</string>
-    <string name="privacy_policy_body_medical">Kus Health Connect pakub meditsiinilisi andmeid, näitab, impordib ja ekspordib OpenWatch neid sinu seadmes. See loeb kategooriat ainult sinu loal, kirjutab ainult importimisel ja näitab kirjeid sellisena, nagu need saabusid, neid tõlgendamata.</string>
     <string name="privacy_policy_body_3">OpenWatch ei ole meditsiiniseade ega diagnoosi, ravi, tervenda ega enneta ühtegi haigust ega terviseseisundit. See ei asenda kvalifitseeritud tervishoiutöötaja meditsiinilist nõuannet, diagnoosi ega ravi.</string>
     <string name="watch_permissions_title">Load sinu kella jaoks</string>
     <string name="watch_permissions_body">Android küsib neid Health Connectist eraldi. Ilma nendeta ei leia kella üles ja taustal toimuv sünkroonimine lakkab vaikselt.</string>

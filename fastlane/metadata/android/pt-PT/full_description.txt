@@ -1,0 +1,24 @@
+O OpenWatch emparelha o seu relógio e a sua balança com o telemóvel e escreve o que registam no Health Connect. É a metade de dispositivos do OpenVitals: o OpenVitals mostra os dados, o OpenWatch é de onde eles vêm.
+
+Os seus dados ficam no telemóvel. Não há conta, nem sincronização na nuvem, nem anúncios, nem análises, e a aplicação não tem permissão de internet. Tudo viaja por Bluetooth entre o dispositivo e o telemóvel.
+
+O que faz
+
+* Relógios Garmin, pelo protocolo Bluetooth do próprio Garmin: atividades com o percurso, passos, distância, andares, calorias, frequência cardíaca, VFC, oxigénio no sangue, frequência respiratória, VO2 máx e sono, escritos no Health Connect. Reencaminha notificações, envia alarmes e as definições do relógio, encontra o relógio, controla a música, mostra o calendário e a meteorologia no pulso e segue a navegação do CoMaps aí. As medições que o Health Connect não guarda, como o stress, a Body Battery e a pontuação de sono, ficam no ecrã Dados do relógio da aplicação.
+* Relógios Wear OS, com a aplicação de relógio OpenWatch: frequência cardíaca, passos e andares registados no relógio, sincronizados com o Health Connect com um toque ou segundo um horário, mais uma sessão de sono estimada e a frequência cardíaca em repouso da noite. A aplicação do relógio oferece mosaicos de frequência cardíaca, passos e andares.
+* Balança Xiaomi Body Composition Scale S400 e S400 Pro: cada pesagem guardada no Health Connect no momento, com a aplicação aberta ou fechada, descodificada da emissão da própria balança com a chave da sua conta Xiaomi. Peso e pulsação como medidos; gordura corporal, massa magra e água corporal estimadas no telemóvel.
+
+Porquê o OpenWatch
+
+* Privado por conceção: sem conta, sem nuvem, sem anúncios, sem rastreio
+* O Health Connect é a fonte de verdade. Cada registo nomeia o OpenWatch como origem, e qualquer aplicação do Health Connect pode mostrá-lo
+* Escolhe cada permissão e pode alterá-la mais tarde
+* Código aberto: o código, as notas de versão e as compilações são públicos
+
+Requisitos
+
+O OpenWatch precisa do Health Connect. Faz parte do Android 14 e posteriores. No Android 13 e anteriores, instale a aplicação Health Connect a partir do Google Play. A aplicação Wear OS precisa do Wear OS 3 ou posterior.
+
+Aviso de saúde
+
+O OpenWatch destina-se apenas ao bem-estar geral e à informação. Não é um dispositivo médico nem dá aconselhamento médico. Não diagnostica, trata, cura nem previne qualquer doença. Consulte sempre um profissional de saúde qualificado para aconselhamento, diagnóstico ou tratamento médico.
