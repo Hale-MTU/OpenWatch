@@ -10,7 +10,7 @@ Everything below is driven by three small scripts in the repository: `scripts/we
 
 On the computer:
 
-- A clone of the OpenWatch repository (`OpenVitals-MTU/OpenWatch`).
+- A clone of the OpenWatch repository (`Hale-MTU/OpenWatch`).
 - Android platform-tools (`adb`). The script finds it on `PATH`, in `$ANDROID_HOME/platform-tools`, or in the default SDK location under your home directory.
 - To build the watch app yourself: a JDK and the Android SDK, the same setup as [development.md](../engineering/development.md). To install an APK you already have, neither is needed; pass it with `--apk`.
 - Optional: `avahi-browse` (package `avahi-utils`) makes discovery more reliable on Linux desktops that run their own mDNS daemon.

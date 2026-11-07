@@ -118,6 +118,11 @@ fun SettingsScreen(
             modifier = Modifier.padding(top = Spacing.md),
         )
         Text(
+            text = stringResource(R.string.settings_app_publisher),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
             text = stringResource(R.string.settings_about_body),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -35,8 +35,9 @@
     <string name="settings_notification_access_granted">Granted. Tap to change it in Android settings.</string>
     <string name="settings_about_version">OpenWatch %1$s</string>
     <string name="settings_privacy_policy_body">What OpenWatch reads, writes and keeps. Opens in the browser.</string>
-    <string name="settings_privacy_policy_url" translatable="false">https://github.com/OpenVitals-MTU/OpenWatch/blob/main/PRIVACY.md</string>
+    <string name="settings_privacy_policy_url" translatable="false">https://github.com/Hale-MTU/OpenWatch/blob/main/PRIVACY.md</string>
     <string name="settings_privacy_policy_no_browser">No app on this phone can open the link. The policy is at %1$s</string>
+    <string name="settings_app_publisher" translatable="false">Hale · hale.ngo</string>
     <string name="settings_about_body">Open source under the AGPL-3.0-or-later. The watch, scale and sync code comes from OpenVitals.</string>
     <string name="body_profile_title">Body profile</string>
     <string name="body_profile_settings_body">Birth year, sex, height and weight for the estimates</string>
@@ -447,7 +448,7 @@
     <string name="settings_scales_wake_row">Android is not waking OpenWatch for this scale, so weigh-ins are heard only while the app is open.</string>
     <string name="settings_scales_supported_action">Supported scales</string>
     <string name="settings_scales_key_help_action">How to get the key</string>
-    <string name="settings_scales_supported_url" translatable="false">https://docs.openvitals.health/features/scales</string>
+    <string name="settings_scales_supported_url" translatable="false">https://docs.hale.ngo/openvitals/features/scales/</string>
     <string name="settings_scales_intro">OpenWatch saves each weigh-in from a Bluetooth scale as it happens, with the app open or closed. It never connects to the scale, and nothing is sent to the internet.</string>
     <string name="settings_scales_key_help">The scale encrypts what it sends. Pair it once in Xiaomi Home, read its Bluetooth key from your Xiaomi account with a token extractor tool, and paste the key here. It stays on this phone.</string>
     <string name="settings_scales_key_label">Bluetooth key</string>
