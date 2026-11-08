@@ -83,6 +83,24 @@ fun SettingsScreen(
                 Switch(checked = state.syncEnabled, onCheckedChange = viewModel::setSyncEnabled)
             }
         }
+        OpenWatchCard(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(Spacing.lg),
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = stringResource(R.string.settings_respiratory_rate_title), style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        text = stringResource(R.string.settings_respiratory_rate_body),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = state.writeRespiratoryRate, onCheckedChange = viewModel::setWriteRespiratoryRate)
+            }
+        }
         SettingsRow(
             title = stringResource(R.string.connected_apps_title),
             body = stringResource(R.string.connected_apps_settings_body),
