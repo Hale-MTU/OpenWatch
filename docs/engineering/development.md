@@ -112,7 +112,10 @@ they are. Two GitHub release outputs:
 
 Each AAB has a `.sha256` beside it. A manual run with target `production`, started from the
 tag, downloads both AABs from the prerelease, checks them, and runs the production jobs on
-them: the way to ship a tag whose own run is gone.
+them: the way to ship a tag whose own run is gone. Started from `main` with the `tag` input
+naming the version instead, it does the same with `main`'s workflow, lanes and scripts, and
+the tag's own `gradle.properties` for the version: the way to apply a fix to the release
+machinery to a tag already cut.
 
 ### One listing, two form factors, one version
 

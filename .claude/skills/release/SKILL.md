@@ -114,7 +114,8 @@ approval. Approving that run (Actions, the run, Review deployments) promotes bot
 factors to production, marks the release stable and posts the notes to the Zulip
 `releases` channel. A tag whose run is gone is shipped by a manual run of the release
 workflow with target `production`, started from the tag: it takes both AABs from the
-prerelease, no build.
+prerelease, no build. Started from `main` with the `tag` input instead, the same run uses
+`main`'s pipeline for a tag already cut, for when the fix is in the release machinery.
 
 While the repository variable `OPENWATCH_PLAY_INTERNAL_ONLY=true` is set (before Google
 has approved the app), both AABs go to internal testing instead and the production job

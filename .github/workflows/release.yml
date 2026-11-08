@@ -6,7 +6,9 @@
 # target "production", started from a tag, is the fallback for a tag whose run
 # is gone (its approval lapsed, or it predates this workflow): its build job
 # downloads the AAB from that tag's GitHub prerelease instead of building,
-# checks the sha256, and stage 3 runs on it.
+# checks the sha256, and stage 3 runs on it. Started from main with the "tag"
+# input instead, it ships that tag's prerelease with main's pipeline: the way
+# to apply a fix to the release machinery to a tag already cut.
 #
 #   context: the commit must have passed the verify workflow (verify.yml) on
 #     its push to main. A run still going is waited for; none, or a failed
@@ -53,6 +55,10 @@ on:
         type: choice
         options: [nightly, production]
         default: nightly
+      tag:
+        description: "with target production, started from main: the vX.Y.Z tag to ship, from its prerelease, with this commit's pipeline"
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -120,6 +126,8 @@ jobs:
           # Name the testing track in the context the jobs share.
           OPENWATCH_PLAY_INTERNAL_ONLY: ${{ vars.OPENWATCH_PLAY_INTERNAL_ONLY }}
           OPENWATCH_PLAY_TESTING_TRACK: ${{ vars.OPENWATCH_PLAY_TESTING_TRACK }}
+          # A production run from main names the tag it ships.
+          OPENWATCH_RELEASE_TAG_INPUT: ${{ inputs.tag }}
         run: |
           sh scripts/ci-release-context.sh
           . build/release-ci/release-context.env
@@ -439,6 +447,8 @@ jobs:
           RELEASE_TAG: ${{ needs.context.outputs.tag }}
         run: echo "::notice::$RELEASE_TAG approved for production"
 
+  # Marks the release stable and sets its notes to the run's: a lightweight
+  # tag's prerelease was published with placeholder notes.
   github-stable:
     needs: [context, production-approval]
     if: ${{ !cancelled() && needs.production-approval.result == 'success' }}
@@ -446,11 +456,15 @@ jobs:
     permissions:
       contents: write
     steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-context
+          path: build/release-ci
       - env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           RELEASE_TAG: ${{ needs.context.outputs.tag }}
-        run: gh release edit "$RELEASE_TAG" --prerelease=false --draft=false --latest
+        run: gh release edit "$RELEASE_TAG" --prerelease=false --draft=false --latest --notes-file build/release-ci/release-notes.md
 
   # Promotes the version from the testing track that has it (open testing, or
   # internal testing) to production, with the store metadata; a version no

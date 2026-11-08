@@ -27,13 +27,30 @@ else
             release_tag="${GITHUB_REF#refs/tags/}"
             ;;
         *)
-            # A production run started from a branch rather than the tag: use the
-            # vX.Y.Z tag on that commit, if there is one.
+            # A production run started from a branch rather than the tag: the tag
+            # the run names, else the vX.Y.Z tag on that commit, if there is one.
             if [ "${OPENWATCH_RELEASE_EVENT:-}" = "deployment" ]; then
-                release_tag="$(git tag --points-at "${GITHUB_SHA:?}" | grep -E '^[vV][0-9]+\.[0-9]+\.[0-9]+$' | tail -n 1 || true)"
+                if [ -n "${OPENWATCH_RELEASE_TAG_INPUT:-}" ]; then
+                    release_tag="$OPENWATCH_RELEASE_TAG_INPUT"
+                else
+                    release_tag="$(git tag --points-at "${GITHUB_SHA:?}" | grep -E '^[vV][0-9]+\.[0-9]+\.[0-9]+$' | tail -n 1 || true)"
+                fi
             fi
             ;;
     esac
+fi
+
+# A production run ships a tag's build, so its version is the tag's
+# gradle.properties, not this checkout's: started from main, the checkout may
+# be any number of releases later.
+gradle_properties="gradle.properties"
+if [ "${OPENWATCH_RELEASE_EVENT:-}" = "deployment" ] && [ -n "$release_tag" ]; then
+    if ! git rev-parse -q --verify "refs/tags/$release_tag^{commit}" >/dev/null; then
+        echo "Release tag $release_tag does not exist." >&2
+        exit 1
+    fi
+    gradle_properties="$(mktemp)"
+    git show "refs/tags/$release_tag:gradle.properties" > "$gradle_properties"
 fi
 
 gradle_task=":app:assembleRelease"
@@ -67,13 +84,13 @@ wear_version_code=""
 
 # The release version lives in gradle.properties, read by the phone and the
 # watch build alike (the watch adds 2000000000 to the code).
-configured_version_code="$(sed -n 's/^openwatch\.versionCode=\([0-9][0-9]*\)[[:space:]]*$/\1/p' gradle.properties | head -n 1)"
+configured_version_code="$(sed -n 's/^openwatch\.versionCode=\([0-9][0-9]*\)[[:space:]]*$/\1/p' "$gradle_properties" | head -n 1)"
 if [ -z "$configured_version_code" ]; then
     echo "Could not read openwatch.versionCode from gradle.properties." >&2
     exit 1
 fi
 
-version_name="$(sed -n 's/^openwatch\.versionName=\([^[:space:]]*\)[[:space:]]*$/\1/p' gradle.properties | head -n 1)"
+version_name="$(sed -n 's/^openwatch\.versionName=\([^[:space:]]*\)[[:space:]]*$/\1/p' "$gradle_properties" | head -n 1)"
 if ! printf '%s\n' "$version_name" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
     echo "Release builds require a numeric openwatch.versionName, found $version_name." >&2
     exit 1
@@ -189,6 +206,11 @@ if [ "$release_channel" = "release" ]; then
         tag_object_type="$(git cat-file -t "$release_tag")"
         if [ "$tag_object_type" = "tag" ]; then
             git for-each-ref "refs/tags/$release_tag" --format='%(contents)' > "$notes_file"
+        fi
+        # A lightweight tag carries no message: the release notes file in the
+        # tag's tree, without its title line, says what the annotation would.
+        if [ ! -s "$notes_file" ]; then
+            git show "refs/tags/$release_tag:docs/releases/${release_tag#[vV]}.md" 2>/dev/null | sed '1{/^# /d}' | sed '1{/^$/d}' > "$notes_file" || : > "$notes_file"
         fi
     fi
     if [ ! -s "$notes_file" ]; then
