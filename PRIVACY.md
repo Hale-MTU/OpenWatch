@@ -1,6 +1,6 @@
 # OpenWatch Privacy Policy
 
-Last updated: November 6, 2026
+Last updated: November 8, 2026
 
 OpenWatch is a local-first Android app that pairs a Garmin or Wear OS watch and a Xiaomi body composition scale with your phone and writes what they record to Health Connect.
 
@@ -18,7 +18,7 @@ OpenWatch is designed to keep health data on your device.
 - No ads are shown.
 - No analytics SDKs are included.
 - No health data is sold or shared with third parties.
-- Data travels only over Bluetooth, between your watch or scale and your phone.
+- Data travels only over Bluetooth, between your watch or scale and your phone, and inside the phone to apps you connect (see "Apps You Connect On Your Phone").
 - OpenWatch writes to Health Connect only what a device you paired recorded, and only after you grant the relevant Android permissions.
 - OpenWatch reads from Health Connect only the few things a sync needs, listed below.
 
@@ -77,6 +77,22 @@ OpenWatch opts out of Android's cloud backup. When you move to a new phone, Andr
 ## Diagnostics
 
 OpenWatch sends no reports by itself. Its logs hold counts, types and reasons, never a value, a record's time, a name or a device address.
+
+## Apps You Connect On Your Phone
+
+Other apps on the same phone can ask to use OpenWatch through OpenLink, an interface that
+works only inside the phone. OpenVitals is the first. Nothing travels over a network.
+
+- OpenVitals, signed by the same developer, is connected without asking. Any other app
+  waits until you allow it on OpenWatch's Connected apps screen, and you can block or
+  forget an app, or switch off any one thing it may do, at any time.
+- What a connected app can be allowed: your body profile (birth year, sex, height,
+  weight), shared both ways so you enter it once; the list of your watches and scale with
+  their battery and last sync, and a request to sync one; keeping your watch streaming while
+  the app records an activity; and the watch's heart rate and steps while it does.
+- Live readings go only to the app that asked for them, while its recording runs, and are
+  not stored by OpenWatch. Notifications, calendar events, music, locations and the scale's
+  key are never shared.
 
 ## Data Sharing
 

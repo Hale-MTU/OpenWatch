@@ -136,6 +136,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateExternalNavigationRoute(intent: Intent?) {
         externalNavigationRoute = intent?.sendPointRoute()
+            ?: Screen.ConnectedApps.route.takeIf { intent?.action == ACTION_OPENLINK_CONSENT }
+    }
+
+    companion object {
+        /** The consent screen an OpenLink client opens for a pending request. */
+        const val ACTION_OPENLINK_CONSENT = "tech.mmarca.openwatch.action.OPENLINK_CONSENT"
     }
 }
 

@@ -9,6 +9,7 @@ import tech.mmarca.openwatch.devices.garmin.GarminNavigationRelay
 import tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleListener
 import tech.mmarca.openwatch.features.watches.WatchAutoSyncScheduler
+import tech.mmarca.openwatch.link.OpenWatchLinkPublisher
 
 class AppStartupActorsTest {
 
@@ -18,9 +19,10 @@ class AppStartupActorsTest {
     private val autoSyncScheduler = mockk<WatchAutoSyncScheduler>(relaxed = true)
     private val garminLocalData = mockk<GarminLocalData>(relaxed = true)
     private val scaleListener = mockk<XiaomiScaleListener>(relaxed = true)
+    private val linkPublisher = mockk<OpenWatchLinkPublisher>(relaxed = true)
 
     @Test
-    fun `every device actor is re-armed at start`() {
+    fun `every device actor is re-armed at start, and the OpenLink publisher starts`() {
         AppStartupActors(
             notificationBridge,
             navigationRelay,
@@ -28,6 +30,7 @@ class AppStartupActorsTest {
             autoSyncScheduler,
             garminLocalData,
             scaleListener,
+            linkPublisher,
         ).start()
 
         verify(exactly = 1) { notificationBridge.onAppStart() }
@@ -36,5 +39,6 @@ class AppStartupActorsTest {
         verify(exactly = 1) { autoSyncScheduler.restoreAll() }
         verify(exactly = 1) { garminLocalData.pruneOnAppStart() }
         verify(exactly = 1) { scaleListener.onAppStart() }
+        verify(exactly = 1) { linkPublisher.start() }
     }
 }

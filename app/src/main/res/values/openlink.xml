@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        SHA-256 of the signing certificates whose apps OpenWatch trusts over OpenLink without
+        asking: OpenVitals' release upload key, and its Play app-signing key once known.
+        Lowercase hex, no colons. Anything else asks on the Connected apps screen.
+    -->
+    <string-array name="openlink_known_signers" translatable="false">
+        <!-- OpenVitals release and nightly builds (GitHub), CN=Manuel Marcatili, OU=OpenVitals -->
+        <item>0416c0651543e951ef3b6c1ed9beb13833bff3a2be9ddacf492270712861e05d</item>
+    </string-array>
+</resources>

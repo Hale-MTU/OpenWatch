@@ -30,6 +30,8 @@ OpenWatch seams noted.
 | `features/home` | The device list, the watch tile, and the way to the other screens. |
 | `features/watches`, `features/scales` | The device screens, as in OpenVitals. |
 | `features/healthconnect`, `features/settings` | Health Connect setup, the sync switch, the body profile, notification access. |
+| `features/connectedapps` | The apps that use OpenWatch over OpenLink: allow, block, per-capability switches, forget; the home card for a pending app. |
+| `link/` | The OpenLink host: the exported service, the device list and profile as OpenLink shows them, recording sessions and live readings for another app. |
 | `healthconnect/` | `HealthConnectGateway`, `ActivityRecordWriter`, the sync gate, intents and availability. |
 | `activityimport/` | FIT activity files into `ActivityWriteRequest`s. |
 | `data/local`, `data/repository` | Room, the repositories and the SharedPreferences stores. |
@@ -187,6 +189,31 @@ The phone-to-watch link, in `wearlink/`, pure Kotlin on the JDK with no Android 
 - `WearLinkToken` — the secret a phone presents on every connection: 32 random bytes as Base64, compared in constant time. The bond says the devices know each other; the token says this app on this phone is the one the wearer allowed. The phone keeps one per added watch (`WearOsLinkStore`, keyed by the address the watch was added under, since pairing again can list the bond under another address) and drops it when the watch is removed; the watch keeps one per phone address. A known phone presenting another token, as after a reinstall, is asked about again like a new one, and allowing it replaces the old token.
 
 Its tests run in both gates (`verifyCiUnitTest` and `verifyWearCi` depend on `:wearlink:test`), its lockfile is `wearlink/gradle.lockfile`, and the two ratchet tests hold its files to the same limits as the phone app's. `ArchitectureDocTest` fails when a Gradle module is missing from this document.
+
+## OpenLink host (`link/`, composite build `openlink/`)
+
+OpenVitals, and any app the user allows, reaches OpenWatch through OpenLink, a bound
+service with an AIDL interface. The library is a git submodule at `openlink/` taken as a
+composite build (`includeBuild("openlink")`, dependency `tech.mmarca.openlink:host`); its
+protocol and trust rules are `openlink/docs/spec.md`. Health data still travels through
+Health Connect; OpenLink carries the body profile, the device list with "sync now",
+recording sessions and live readings.
+
+- `OpenWatchLinkService` is exported behind `${applicationId}.permission.OPENLINK`
+  (`normal`); the trust is decided per call by `OpenLinkHostCore` from the caller's signing
+  certificate. `res/values/openlink.xml` lists the certificates trusted without asking
+  (OpenVitals' release key); any other app waits on the Connected apps screen.
+- `OpenWatchLinkCapabilities` answers from memory on the binder thread: `LinkDevices` (a
+  StateFlow over the registry, the sync controller, the Wear OS link store and the scale),
+  `LinkProfileSync` (last writer wins, stamped in `openlink_profile`), and
+  `LinkLiveSessions`.
+- A recording session cannot start a workout on either watch; it keeps the watch's live
+  readings flowing (a Garmin held link with its heart-rate and steps streams on, through
+  `GarminNotificationBridge.holdLiveForSession`, without touching the user's switch; the
+  Wear OS app's live heart rate) and reports `RECORDING` on the first reading. A live
+  subscription batches those readings once a second to the app that owns the session.
+- `OpenWatchLinkPublisher`, started with the app, sends device and local profile changes to
+  bound clients.
 
 ## Cross-Cutting Rules
 

@@ -23,6 +23,7 @@ class AppStartupActors @Inject constructor(
     private val watchAutoSyncScheduler: WatchAutoSyncScheduler,
     private val garminLocalData: GarminLocalData,
     private val xiaomiScaleListener: XiaomiScaleListener,
+    private val linkPublisher: tech.mmarca.openwatch.link.OpenWatchLinkPublisher,
 ) {
     fun start() {
         // Companion mode must be re-armed on every start.
@@ -35,5 +36,7 @@ class AppStartupActors @Inject constructor(
         garminLocalData.pruneOnAppStart()
         // A reboot or Bluetooth going off drops the scan that hears the scale.
         xiaomiScaleListener.onAppStart()
+        // OpenLink clients hear about device and profile changes while they are bound.
+        linkPublisher.start()
     }
 }
