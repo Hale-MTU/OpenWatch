@@ -30,6 +30,18 @@ def openwatch_project_path(path)
   pathname.absolute? ? value : File.expand_path(value, OPENWATCH_PROJECT_ROOT)
 end
 
+# The tracks of a form factor that already hold a versionCode, among the
+# ones this pipeline uses.
+def openwatch_tracks_holding(form_factor, version_code, json_key)
+  %w[internal beta production].map { |track| openwatch_track(form_factor, track) }.select do |track|
+    google_play_track_version_codes(
+      package_name: OPENWATCH_PACKAGE_NAME,
+      json_key: json_key,
+      track: track
+    ).map(&:to_i).include?(version_code.to_i)
+  end
+end
+
 # The testing upload the internal_testing and open_testing lanes share: the
 # bundle goes to one testing track of the form factor, with no store metadata,
 # after the versionCode guards.
@@ -57,6 +69,16 @@ def openwatch_upload_to_testing(options, track)
 
     if existing_codes.include?(version_code.to_i)
       UI.message("Version code #{version_code} is already on Google Play track '#{testing_track}'; skipping upload.")
+      return
+    end
+
+    # Play refuses a code it has seen on any track ("Version code N has
+    # already been used"): a bundle uploaded by hand to another track, say.
+    # Nothing to upload then; the production lane promotes from wherever the
+    # code sits.
+    elsewhere = openwatch_tracks_holding(form_factor, version_code, json_key) - [testing_track]
+    unless elsewhere.empty?
+      UI.message("Version code #{version_code} is already on Google Play track(s) #{elsewhere.join(', ')}; skipping the '#{testing_track}' upload.")
       return
     end
 

@@ -22,16 +22,19 @@
 #     version to the production track and the prerelease to stable, in
 #     parallel, and announces on Zulip. Nothing is rebuilt or re-signed.
 #
-# Two repository variables hold Play back. OPENWATCH_PLAY_INTERNAL_ONLY=true
-# is for before Google has approved the app: every testing upload goes to the
-# internal testing track (internal, wear:internal), the one track Play serves
-# without a review, and the production job uploads nothing; open testing and
-# production are not touched until the variable is deleted.
-# OPENWATCH_PLAY_PAUSED=true holds every Play upload, the internal one
-# included, for while a release sits in Play review: a new upload would
-# restart it. Under either, the GitHub releases and the announcement go on.
-# Play uploads go to the phone track and the Wear OS form-factor track
-# (wear:internal, wear:beta, wear:production), one fastlane run each.
+# Three repository variables steer Play. OPENWATCH_PLAY_TESTING_TRACK names
+# the track the nightly and a tag upload to: `beta` (open testing, the
+# default) or `internal` (internal testing, the one track Play serves without
+# a review); production is promoted from whichever has the version.
+# OPENWATCH_PLAY_INTERNAL_ONLY=true is for before Google has approved the
+# app: the uploads go to internal testing and the production job uploads
+# nothing; open testing and production are not touched until the variable
+# is deleted. OPENWATCH_PLAY_PAUSED=true holds every Play upload, the
+# internal one included, for while a release sits in Play review: a new
+# upload would restart it. Under any of them, the GitHub releases and the
+# announcement go on. Play uploads go to the phone track and the Wear OS
+# form-factor track (wear:internal, wear:beta, wear:production), one
+# fastlane run each.
 #
 # scripts/ci-release-context.sh decides the release details from
 # OPENWATCH_RELEASE_EVENT and writes them to build/release-ci/, which the jobs
@@ -114,8 +117,9 @@ jobs:
         env:
           # version-code.sh reads release markers through the API.
           GH_TOKEN: ${{ github.token }}
-          # Names the testing track in the context the jobs share.
+          # Name the testing track in the context the jobs share.
           OPENWATCH_PLAY_INTERNAL_ONLY: ${{ vars.OPENWATCH_PLAY_INTERNAL_ONLY }}
+          OPENWATCH_PLAY_TESTING_TRACK: ${{ vars.OPENWATCH_PLAY_TESTING_TRACK }}
         run: |
           sh scripts/ci-release-context.sh
           . build/release-ci/release-context.env
@@ -329,8 +333,8 @@ jobs:
           GH_REPO: ${{ github.repository }}
 
   # Beside the prerelease, not after it: a Play refusal must not hold the
-  # download page back. Open testing, or internal testing while
-  # OPENWATCH_PLAY_INTERNAL_ONLY holds.
+  # download page back. The testing track OPENWATCH_PLAY_TESTING_TRACK names,
+  # or internal testing while OPENWATCH_PLAY_INTERNAL_ONLY holds.
   nightly-play-testing:
     needs: [context, nightly-tag]
     if: ${{ !cancelled() && needs.nightly-tag.result == 'success' && vars.OPENWATCH_PLAY_PAUSED != 'true' }}
@@ -343,12 +347,12 @@ jobs:
           path: build/release-ci
       - uses: ./.github/actions/play-upload
         with:
-          lane: ${{ vars.OPENWATCH_PLAY_INTERNAL_ONLY == 'true' && 'internal_testing' || 'open_testing' }}
+          lane: ${{ (vars.OPENWATCH_PLAY_INTERNAL_ONLY == 'true' || vars.OPENWATCH_PLAY_TESTING_TRACK == 'internal') && 'internal_testing' || 'open_testing' }}
           service-account-json-base64: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
           changes-not-sent-for-review: ${{ vars.OPENWATCH_PLAY_CHANGES_NOT_SENT_FOR_REVIEW }}
       - uses: ./.github/actions/play-upload
         with:
-          lane: ${{ vars.OPENWATCH_PLAY_INTERNAL_ONLY == 'true' && 'internal_testing' || 'open_testing' }}
+          lane: ${{ (vars.OPENWATCH_PLAY_INTERNAL_ONLY == 'true' || vars.OPENWATCH_PLAY_TESTING_TRACK == 'internal') && 'internal_testing' || 'open_testing' }}
           form-factor: wear
           service-account-json-base64: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
           changes-not-sent-for-review: ${{ vars.OPENWATCH_PLAY_CHANGES_NOT_SENT_FOR_REVIEW }}
@@ -387,7 +391,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
 
-  # The version goes to open testing now (internal testing while
+  # The version goes to the testing track now (open testing by default,
+  # internal under OPENWATCH_PLAY_TESTING_TRACK=internal or while
   # OPENWATCH_PLAY_INTERNAL_ONLY holds); stage 3 promotes it from there.
   version-play-testing:
     needs: [context, build]
@@ -401,12 +406,12 @@ jobs:
           path: build/release-ci
       - uses: ./.github/actions/play-upload
         with:
-          lane: ${{ vars.OPENWATCH_PLAY_INTERNAL_ONLY == 'true' && 'internal_testing' || 'open_testing' }}
+          lane: ${{ (vars.OPENWATCH_PLAY_INTERNAL_ONLY == 'true' || vars.OPENWATCH_PLAY_TESTING_TRACK == 'internal') && 'internal_testing' || 'open_testing' }}
           service-account-json-base64: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
           changes-not-sent-for-review: ${{ vars.OPENWATCH_PLAY_CHANGES_NOT_SENT_FOR_REVIEW }}
       - uses: ./.github/actions/play-upload
         with:
-          lane: ${{ vars.OPENWATCH_PLAY_INTERNAL_ONLY == 'true' && 'internal_testing' || 'open_testing' }}
+          lane: ${{ (vars.OPENWATCH_PLAY_INTERNAL_ONLY == 'true' || vars.OPENWATCH_PLAY_TESTING_TRACK == 'internal') && 'internal_testing' || 'open_testing' }}
           form-factor: wear
           service-account-json-base64: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_BASE64 }}
           changes-not-sent-for-review: ${{ vars.OPENWATCH_PLAY_CHANGES_NOT_SENT_FOR_REVIEW }}

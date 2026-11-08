@@ -44,11 +44,12 @@ aab_basename=""
 build_aab="false"
 build_debug_apk="false"
 play_track=""
-# The testing track: open testing, or internal testing while the repository
-# variable OPENWATCH_PLAY_INTERNAL_ONLY=true holds every upload short of
-# Google's approval. The workflow picks the fastlane lane the same way.
+# The testing track: open testing (beta) unless the repository variable
+# OPENWATCH_PLAY_TESTING_TRACK says internal, or OPENWATCH_PLAY_INTERNAL_ONLY=true
+# holds every upload short of Google's approval. The workflow picks the
+# fastlane lane the same way.
 testing_track="beta"
-if [ "${OPENWATCH_PLAY_INTERNAL_ONLY:-}" = "true" ]; then
+if [ "${OPENWATCH_PLAY_INTERNAL_ONLY:-}" = "true" ] || [ "${OPENWATCH_PLAY_TESTING_TRACK:-}" = "internal" ]; then
     testing_track="internal"
 fi
 version_code=""
