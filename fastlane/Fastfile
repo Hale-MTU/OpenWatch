@@ -2,6 +2,7 @@ opt_out_usage
 
 default_platform(:android)
 
+require "digest"
 require "pathname"
 
 OPENWATCH_PACKAGE_NAME = "tech.mmarca.openwatch"
@@ -40,6 +41,55 @@ def openwatch_tracks_holding(form_factor, version_code, json_key)
       track: track
     ).map(&:to_i).include?(version_code.to_i)
   end
+end
+
+# The bundles Google Play already holds for the app, its App Bundle Explorer,
+# as versionCode => sha256 of the uploaded file. A code Play refuses with
+# "Version code N has already been used" is in here, on a track or not: a
+# bundle uploaded by hand and left as a draft, say.
+def openwatch_bundle_library(json_key)
+  client = Supply::Client.make_from_config(params: { json_key: json_key, package_name: OPENWATCH_PACKAGE_NAME, timeout: 600 })
+  client.begin_edit(package_name: OPENWATCH_PACKAGE_NAME)
+  bundles = Array(client.client.list_edit_bundles(OPENWATCH_PACKAGE_NAME, client.current_edit.id).bundles)
+  client.abort_current_edit
+  bundles.to_h { |bundle| [bundle.version_code.to_i, bundle.sha256.to_s] }
+end
+
+# Releases a bundle Play already holds to a track, with no new upload: supply
+# builds the release from version_codes_to_retain when it uploads nothing.
+# Refuses a bundle whose bytes are not this run's, so a stray upload under
+# the same code never ships. Returns false when Play holds no such bundle.
+def openwatch_release_held_bundle(aab, version_code, track, json_key, **supply_options)
+  library = openwatch_bundle_library(json_key)
+  held_sha256 = library[version_code.to_i]
+  return false if held_sha256.nil?
+
+  local_sha256 = Digest::SHA256.file(aab).hexdigest
+  unless held_sha256.casecmp?(local_sha256)
+    UI.user_error!(
+      "Google Play already holds a bundle with versionCode #{version_code} that is not #{File.basename(aab)} " \
+      "(sha256 #{held_sha256} on Play, #{local_sha256} here); refusing to release it. " \
+      "Bump openwatch.versionCode in gradle.properties."
+    )
+  end
+
+  UI.message("Google Play already holds the bundle for versionCode #{version_code}; releasing it to '#{track}' without a new upload.")
+  # supply wants a metadata path or an upload to have something to do; with
+  # every skip_upload_* set the metadata is left alone.
+  supply(
+    package_name: OPENWATCH_PACKAGE_NAME,
+    json_key: json_key,
+    track: track,
+    release_status: "completed",
+    skip_upload_aab: true,
+    skip_upload_apk: true,
+    version_codes_to_retain: [version_code.to_i],
+    version_code: version_code.to_i,
+    changes_not_sent_for_review: ENV["OPENWATCH_PLAY_CHANGES_NOT_SENT_FOR_REVIEW"] == "true",
+    timeout: 600,
+    **{ metadata_path: OPENWATCH_METADATA_PATH }.merge(supply_options)
+  )
+  true
 end
 
 # The testing upload the internal_testing and open_testing lanes share: the
@@ -95,6 +145,11 @@ def openwatch_upload_to_testing(options, track)
         "#{form_factor == 'wear' ? ' - 2000000000' : ''}."
       )
     end
+  end
+
+  testing_metadata_options = { skip_upload_metadata: true, skip_upload_changelogs: true, skip_upload_images: true, skip_upload_screenshots: true }
+  if version_code.to_s.length > 0 && openwatch_release_held_bundle(aab, version_code, testing_track, json_key, **testing_metadata_options)
+    return
   end
 
   supply(
@@ -202,7 +257,10 @@ platform :android do
         )
         next
       end
-      UI.message("Version code #{version_code} is on no testing track (#{testing_tracks.join(', ')}); uploading the bundle to '#{production_track}'.")
+      # On no track, but maybe in Play's bundle library already (a hand upload
+      # left as a draft): then the release is made from that bundle.
+      next if openwatch_release_held_bundle(aab, version_code, production_track, json_key, **metadata_options)
+      UI.message("Version code #{version_code} is on no testing track (#{testing_tracks.join(', ')}) and not on Google Play; uploading the bundle to '#{production_track}'.")
     end
 
     supply(

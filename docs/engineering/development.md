@@ -112,7 +112,10 @@ they are. Two GitHub release outputs:
 
 Each AAB has a `.sha256` beside it. A manual run with target `production`, started from the
 tag, downloads both AABs from the prerelease, checks them, and runs the production jobs on
-them: the way to ship a tag whose own run is gone.
+them: the way to ship a tag whose own run is gone. Started from `main` with the `tag` input
+naming the version instead, it does the same with `main`'s workflow, lanes and scripts, and
+the tag's own `gradle.properties` for the version: the way to apply a fix to the release
+machinery to a tag already cut.
 
 ### One listing, two form factors, one version
 
@@ -164,8 +167,9 @@ The variable `OPENWATCH_PLAY_TESTING_TRACK` names the testing track the nightly 
 upload to: `beta`, open testing, when unset, or `internal`, internal testing. Production is
 promoted from whichever track has the version, so `internal` gives an internal testing,
 then production, flow with no open testing in between. A version code Play already holds
-on any track, a bundle uploaded by hand say, is skipped by the upload and promoted from
-where it sits.
+is never uploaded twice: on a track, it is skipped by the upload and promoted from where it
+sits; in Play's bundle library only (a hand upload left as a draft), the release is made from
+that bundle, after its sha256 is checked against the run's.
 
 Two more variables hold Play back, for two situations:
 
