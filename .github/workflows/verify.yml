@@ -44,6 +44,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
+          # The OpenLink library is a submodule the phone app builds from.
+          submodules: true
           fetch-depth: 0
       - id: changes
         env:
@@ -95,6 +97,9 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The OpenLink library is a submodule the phone app builds from.
+          submodules: true
       - run: echo "GRADLE_USER_HOME=$RUNNER_TEMP/gradle-user-home" >> "$GITHUB_ENV"
       - uses: gradle/actions/setup-gradle@v5
       - run: scripts/ci-android-gradle.sh -Popenwatch.testForks=4 verifyCiUnitTest verifyCiPreflight
@@ -107,6 +112,9 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The OpenLink library is a submodule the phone app builds from.
+          submodules: true
       - run: echo "GRADLE_USER_HOME=$RUNNER_TEMP/gradle-user-home" >> "$GITHUB_ENV"
       - uses: gradle/actions/setup-gradle@v5
       - run: scripts/ci-android-gradle.sh verifyCiLint
@@ -122,6 +130,9 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The OpenLink library is a submodule the phone app builds from.
+          submodules: true
       - run: echo "GRADLE_USER_HOME=$RUNNER_TEMP/gradle-user-home" >> "$GITHUB_ENV"
       - uses: gradle/actions/setup-gradle@v5
       - run: scripts/ci-android-gradle.sh verifyWearCi

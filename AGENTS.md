@@ -51,6 +51,11 @@ Do not break these without an explicit decision.
   `clientRecordId`, so a re-sync upserts; the gateway's reads throw on failure, they never
   return an empty answer that would pass for "no data". There is no rate-limit backoff: the
   devices issue a handful of reads per sync. Add one only once a refusal is seen.
+- **Another app reaches OpenWatch through OpenLink only.** `link/OpenWatchLinkService` is
+  the one exported entry for apps; every call is gated by `OpenLinkHostCore`'s trust store,
+  answered from memory on the binder thread, and never carries a Health Connect record, a
+  notification or the scale's key. The library is the `openlink/` submodule; its spec is
+  `openlink/docs/spec.md`.
 - **A missing permission is `ScreenError.PermissionDenied`.** Use `isPermissionFailure()` /
   `toScreenError()`; never pattern-match exception messages.
 - **Nothing waits on the main thread.** No `runBlocking` in `src/main`

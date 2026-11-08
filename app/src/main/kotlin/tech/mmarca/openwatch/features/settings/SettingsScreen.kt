@@ -39,6 +39,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel,
     onOpenHealthConnect: () -> Unit,
     onOpenBodyProfile: () -> Unit,
+    onOpenConnectedApps: () -> Unit = {},
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -82,6 +83,11 @@ fun SettingsScreen(
                 Switch(checked = state.syncEnabled, onCheckedChange = viewModel::setSyncEnabled)
             }
         }
+        SettingsRow(
+            title = stringResource(R.string.connected_apps_title),
+            body = stringResource(R.string.connected_apps_settings_body),
+            onClick = onOpenConnectedApps,
+        )
         SettingsRow(
             title = stringResource(R.string.settings_notification_access_title),
             body = stringResource(

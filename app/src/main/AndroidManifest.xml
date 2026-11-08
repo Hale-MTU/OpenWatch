@@ -131,7 +131,23 @@
         android:name="android.software.companion_device_setup"
         android:required="false" />
 
+    <!--
+        OpenLink: other apps (OpenVitals first) bind OpenWatchLinkService for the body profile,
+        the devices, recording sessions and live readings. The permission is named after this
+        build's package, so a debug and a release build install side by side; it only keeps
+        apps that never asked from binding. Who gets what is decided per call by the trust
+        store, from the caller's signing certificate (link/, openlink/docs/spec.md).
+    -->
+    <permission
+        android:name="${applicationId}.permission.OPENLINK"
+        android:description="@string/openlink_permission_description"
+        android:label="@string/openlink_permission_label"
+        android:protectionLevel="normal" />
+
     <queries>
+        <!-- OpenLink's first-party client, for its name on the Connected apps screen. -->
+        <package android:name="tech.mmarca.openvitals" />
+        <package android:name="tech.mmarca.openvitals.debug" />
         <package android:name="com.google.android.apps.healthdata" />
         <package android:name="com.android.vending" />
         <!-- CoMaps live-navigation provider: both the packages and the authorities. -->
@@ -325,6 +341,14 @@
                 <action android:name="tech.mmarca.openwatch.ACTION_GENERIC_WEATHER" />
             </intent-filter>
         </receiver>
+        <service
+            android:name=".link.OpenWatchLinkService"
+            android:exported="true"
+            android:permission="${applicationId}.permission.OPENLINK">
+            <intent-filter>
+                <action android:name="tech.mmarca.openlink.action.HOST" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

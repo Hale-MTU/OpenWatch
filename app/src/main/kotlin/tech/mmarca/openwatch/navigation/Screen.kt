@@ -25,6 +25,7 @@ sealed class Screen(
     data object HealthConnectSetup : Screen("health_connect", R.string.hc_setup_title)
     data object Settings : Screen("settings", R.string.settings_title)
     data object BodyProfile : Screen("settings/body_profile", R.string.body_profile_title)
+    data object ConnectedApps : Screen("settings/connected_apps", R.string.connected_apps_title)
 
     /** The one scale's device view. Titled by the scale's name, like a watch. */
     data object ScaleDevice : Screen("scale")
@@ -94,6 +95,7 @@ sealed class Screen(
                 HealthConnectSetup,
                 Settings,
                 BodyProfile,
+                ConnectedApps,
                 ScaleDevice,
                 WatchDevice,
                 WatchData,

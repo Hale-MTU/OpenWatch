@@ -200,6 +200,8 @@ androidComponents {
 }
 
 dependencies {
+    // The OpenLink host, from the openlink/ submodule (a composite build).
+    implementation("tech.mmarca.openlink:host")
     implementation(project(":domain"))
     implementation(project(":wearlink"))
     implementation(libs.androidx.core.ktx)

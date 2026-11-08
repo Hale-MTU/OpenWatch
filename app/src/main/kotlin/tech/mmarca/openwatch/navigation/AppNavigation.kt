@@ -1,5 +1,7 @@
 package tech.mmarca.openwatch.navigation
 
+import tech.mmarca.openwatch.features.connectedapps.ConnectedAppsScreen
+
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -125,6 +127,7 @@ fun AppNavigation(
                         navController.navigate(Screen.HealthConnectSetup.route) { launchSingleTop = true }
                     },
                     onOpenSettings = { navController.navigate(Screen.Settings.route) { launchSingleTop = true } },
+                    onOpenConnectedApps = { navController.navigate(Screen.ConnectedApps.route) { launchSingleTop = true } },
                 )
             }
             composable(Screen.Settings.route) {
@@ -134,7 +137,11 @@ fun AppNavigation(
                         navController.navigate(Screen.HealthConnectSetup.route) { launchSingleTop = true }
                     },
                     onOpenBodyProfile = { navController.navigate(Screen.BodyProfile.route) { launchSingleTop = true } },
+                    onOpenConnectedApps = { navController.navigate(Screen.ConnectedApps.route) { launchSingleTop = true } },
                 )
+            }
+            composable(Screen.ConnectedApps.route) {
+                ConnectedAppsScreen(viewModel = hiltViewModel())
             }
             composable(Screen.BodyProfile.route) {
                 BodyProfileScreen(viewModel = hiltViewModel(), unitFormatter = unitFormatter)

@@ -100,6 +100,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
+          # The OpenLink library is a submodule the phone app builds from.
+          submodules: true
           # The nightly skip check and the tag lookup need history and tags.
           fetch-depth: 0
 
@@ -192,6 +194,9 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The OpenLink library is a submodule the phone app builds from.
+          submodules: true
       - uses: actions/download-artifact@v8
         with:
           name: release-context
@@ -312,6 +317,8 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
+          # The OpenLink library is a submodule the phone app builds from.
+          submodules: true
           fetch-depth: 0
       - uses: actions/download-artifact@v8
         with:
@@ -331,6 +338,9 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The OpenLink library is a submodule the phone app builds from.
+          submodules: true
       - uses: actions/download-artifact@v8
         with:
           name: release-build
@@ -349,6 +359,9 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The OpenLink library is a submodule the phone app builds from.
+          submodules: true
       - uses: actions/download-artifact@v8
         with:
           name: release-build
@@ -373,6 +386,9 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The OpenLink library is a submodule the phone app builds from.
+          submodules: true
       - env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -390,6 +406,9 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The OpenLink library is a submodule the phone app builds from.
+          submodules: true
       - uses: actions/download-artifact@v8
         with:
           name: release-build
@@ -408,6 +427,9 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The OpenLink library is a submodule the phone app builds from.
+          submodules: true
       - uses: actions/download-artifact@v8
         with:
           name: release-build
@@ -479,6 +501,9 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The OpenLink library is a submodule the phone app builds from.
+          submodules: true
       - uses: actions/download-artifact@v8
         with:
           name: release-build
@@ -512,6 +537,9 @@ jobs:
     runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v5
+        with:
+          # The OpenLink library is a submodule the phone app builds from.
+          submodules: true
       - uses: actions/download-artifact@v8
         with:
           name: release-context

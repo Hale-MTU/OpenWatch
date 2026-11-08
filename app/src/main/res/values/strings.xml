@@ -475,4 +475,26 @@
     <string name="settings_scales_delete_body">Its weight, heart rate and body composition are removed from Health Connect.</string>
     <string name="settings_scales_remove">Remove scale</string>
     <string name="settings_scales_remove_body">OpenWatch stops listening and forgets the key. Weigh-ins already saved stay.</string>
+    <!-- OpenLink: other apps that use OpenWatch (features/connectedapps) -->
+    <string name="connected_apps_title">Connected apps</string>
+    <string name="connected_apps_settings_body">Apps that use your watches, scale and body profile through OpenWatch, and what each may do</string>
+    <string name="connected_apps_intro">These apps asked to use OpenWatch. Each sees only what you allow here, and nothing leaves the phone.</string>
+    <string name="connected_apps_empty">No app has asked yet. OpenVitals connects once both apps are installed.</string>
+    <string name="connected_apps_state_pending">Asks to connect</string>
+    <string name="connected_apps_state_trusted">Connected</string>
+    <string name="connected_apps_state_blocked">Blocked</string>
+    <string name="connected_apps_asks_for">It asks to:</string>
+    <string name="connected_apps_allow">Allow</string>
+    <string name="connected_apps_block">Block</string>
+    <string name="connected_apps_forget">Forget</string>
+    <string name="connected_apps_unblock">Unblock</string>
+    <string name="connected_apps_capability_devices">See your watches and scale, their battery and last sync, and start a sync</string>
+    <string name="connected_apps_capability_profile">Share your body profile (birth year, sex, height, weight) with OpenWatch, both ways</string>
+    <string name="connected_apps_capability_recording">Keep your watch streaming while it records an activity</string>
+    <string name="connected_apps_capability_live">Receive your watch\'s heart rate and steps while it records</string>
+    <string name="connected_apps_pending_title">%1$s wants to connect</string>
+    <string name="connected_apps_pending_body">Review what it may do before you allow it.</string>
+    <string name="connected_apps_review">Review</string>
+    <string name="openlink_permission_label">use OpenWatch\'s devices and profile</string>
+    <string name="openlink_permission_description">Lets the app ask OpenWatch for your watches\' status, their live readings and your body profile. OpenWatch asks you before it answers an app it does not know.</string>
 </resources>

@@ -70,6 +70,12 @@ class GarminNotificationBridge @Inject constructor(
 
     private val identity = GarminPhoneIdentity()
 
+    /**
+     * Devices whose live streams a recording session holds on (OpenLink), whatever the
+     * user's live-readings switch says. In memory: a session dies with the process.
+     */
+    private val sessionHolds: MutableSet<String> = java.util.concurrent.ConcurrentHashMap.newKeySet()
+
     init {
         // The relay follows the player; the link is here.
         musicRelay.onState = { state -> scope.launch { forwarder?.pushMusic(state) } }
@@ -190,7 +196,7 @@ class GarminNotificationBridge @Inject constructor(
             hostForeground = { foregroundGate.isForeground },
             realtimeServices = {
                 val device = deviceFor(address)
-                if (device != null && stateStore.liveReadings(device.id)) {
+                if (device != null && (stateStore.liveReadings(device.id) || device.id in sessionHolds)) {
                     LIVE_SERVICES
                 } else {
                     emptySet()
@@ -322,6 +328,33 @@ class GarminNotificationBridge @Inject constructor(
                 current.setRealtimeService(service, enabled)
             }
             GarminLog.log("[GARMIN-LIVE] live readings ${if (enabled) "on" else "off"}")
+        }
+    }
+
+    /**
+     * Holds the watch's live streams on for a recording another app runs, or lets them go.
+     * The link is opened and held companion-style for the session, so the streams outlast
+     * the idle timeout; letting go drops a link held only for the session.
+     */
+    fun holdLiveForSession(deviceId: String, held: Boolean) {
+        scope.launch {
+            val device = deviceRepository.devices.firstOrNull { it.id == deviceId && it.isGarminGfdi } ?: return@launch
+            if (held) {
+                if (!sessionHolds.add(deviceId)) return@launch
+                GarminLog.log("[GARMIN-LIVE] held for a recording session")
+                val current = forwarderFor(device.address, companion = true) ?: return@launch
+                current.ensureLink()
+                for (service in LIVE_SERVICES) current.setRealtimeService(service, true)
+            } else {
+                if (!sessionHolds.remove(deviceId)) return@launch
+                GarminLog.log("[GARMIN-LIVE] released by its recording session")
+                if (stateStore.liveReadings(deviceId)) return@launch
+                if (stateStore.stayConnected(deviceId)) {
+                    forwarder?.let { current -> LIVE_SERVICES.forEach { current.setRealtimeService(it, false) } }
+                } else {
+                    dropForwarder()
+                }
+            }
         }
     }
 
