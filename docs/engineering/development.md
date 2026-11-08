@@ -164,8 +164,9 @@ The variable `OPENWATCH_PLAY_TESTING_TRACK` names the testing track the nightly 
 upload to: `beta`, open testing, when unset, or `internal`, internal testing. Production is
 promoted from whichever track has the version, so `internal` gives an internal testing,
 then production, flow with no open testing in between. A version code Play already holds
-on any track, a bundle uploaded by hand say, is skipped by the upload and promoted from
-where it sits.
+is never uploaded twice: on a track, it is skipped by the upload and promoted from where it
+sits; in Play's bundle library only (a hand upload left as a draft), the release is made from
+that bundle, after its sha256 is checked against the run's.
 
 Two more variables hold Play back, for two situations:
 
