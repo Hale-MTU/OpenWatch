@@ -8,4 +8,23 @@
     <string name="action_grant">منح</string>
     <string name="action_grant_permission">منح الإذن</string>
     <string name="action_not_now">ليس الأن</string>
+    <string name="hc_setup_missing_title">لم تُمنح بعد:</string>
+    <string name="hc_setup_missing_extra">الوصول في الخلفية وإلى السجل في صفحة مستقلة: افتح إعدادات Health Connect، ثم OpenWatch، ثم الوصول الإضافي.</string>
+    <string name="time_just_now">الآن</string>
+    <string name="connected_apps_in_use">قيد الاستخدام الآن</string>
+    <string name="connected_apps_last_connected">آخر اتصال %1$s</string>
+    <string name="connected_apps_profile_received">آخر ملف شخصي مستلم %1$s</string>
+    <string name="connected_apps_session_heart_rate">تسجيل: يُرسل معدل نبض القلب من %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">تسجيل: يُرسل معدل نبض القلب والخطوات من %1$s</string>
+    <string name="connected_apps_session_keeping">تسجيل: يبقى %1$s في البث</string>
+    <string name="connected_apps_session_waiting">تسجيل: في انتظار قراءة من %1$s</string>
+    <string name="body_profile_synced">متزامن مع %1$s</string>
+    <string name="body_profile_synced_updated">متزامن مع %1$s · حُدّث %2$s</string>
+    <string name="link_streaming_channel">قراءات مباشرة لتطبيقات أخرى</string>
+    <string name="link_streaming_heart_rate">يُرسل معدل نبض القلب إلى %1$s</string>
+    <string name="link_streaming_heart_rate_steps">يُرسل معدل نبض القلب والخطوات إلى %1$s</string>
+    <string name="link_streaming_keeping">تبقى ساعتك في البث لـ %1$s</string>
+    <string name="link_streaming_waiting">في انتظار ساعتك، لـ %1$s</string>
+    <string name="link_streaming_from">من %1$s</string>
+    <string name="link_streaming_waiting_for">في انتظار قراءة من %1$s</string>
 </resources>

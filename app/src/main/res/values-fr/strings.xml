@@ -428,4 +428,23 @@
     <string name="settings_scales_delete_body">Son poids, sa fréquence cardiaque et sa composition corporelle sont supprimés de Santé Connect.</string>
     <string name="settings_scales_remove">Retirer la balance</string>
     <string name="settings_scales_remove_body">OpenWatch cesse d’écouter et oublie la clé. Les pesées déjà enregistrées sont conservées.</string>
+    <string name="hc_setup_missing_title">Pas encore accordées :</string>
+    <string name="hc_setup_missing_extra">L\'accès en arrière-plan et à l\'historique est sur une page à part : ouvrez les paramètres de Santé Connect, puis OpenWatch, puis Accès supplémentaire.</string>
+    <string name="time_just_now">à l\'instant</string>
+    <string name="connected_apps_in_use">Utilisée en ce moment</string>
+    <string name="connected_apps_last_connected">Dernière connexion %1$s</string>
+    <string name="connected_apps_profile_received">Dernier profil reçu %1$s</string>
+    <string name="connected_apps_session_heart_rate">Enregistrement : fréquence cardiaque transmise depuis %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">Enregistrement : fréquence cardiaque et pas transmis depuis %1$s</string>
+    <string name="connected_apps_session_keeping">Enregistrement : %1$s reste en diffusion</string>
+    <string name="connected_apps_session_waiting">Enregistrement : en attente d\'une mesure de %1$s</string>
+    <string name="body_profile_synced">Synchronisé avec %1$s</string>
+    <string name="body_profile_synced_updated">Synchronisé avec %1$s · mis à jour %2$s</string>
+    <string name="link_streaming_channel">Mesures en direct pour d\'autres apps</string>
+    <string name="link_streaming_heart_rate">Fréquence cardiaque transmise à %1$s</string>
+    <string name="link_streaming_heart_rate_steps">Fréquence cardiaque et pas transmis à %1$s</string>
+    <string name="link_streaming_keeping">Votre montre reste en diffusion pour %1$s</string>
+    <string name="link_streaming_waiting">En attente de votre montre, pour %1$s</string>
+    <string name="link_streaming_from">Depuis %1$s</string>
+    <string name="link_streaming_waiting_for">En attente d\'une mesure de %1$s</string>
 </resources>

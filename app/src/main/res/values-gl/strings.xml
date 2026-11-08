@@ -427,4 +427,23 @@ Podes desactivalo cando queiras e revogar o acceso ás notificacións desde os a
     <string name="settings_scales_delete_body">O seu peso, frecuencia cardíaca e composición corporal elimínanse de Health Connect.</string>
     <string name="settings_scales_remove">Quitar báscula</string>
     <string name="settings_scales_remove_body">OpenWatch deixa de escoitar e esquece a clave. As pesaxes xa gardadas consérvanse.</string>
+    <string name="hc_setup_missing_title">Aínda sen conceder:</string>
+    <string name="hc_setup_missing_extra">O acceso en segundo plano e ao historial está nunha páxina propia: abre a configuración de Health Connect, despois OpenWatch e despois Acceso adicional.</string>
+    <string name="time_just_now">agora mesmo</string>
+    <string name="connected_apps_in_use">En uso agora</string>
+    <string name="connected_apps_last_connected">Última conexión %1$s</string>
+    <string name="connected_apps_profile_received">Último perfil recibido %1$s</string>
+    <string name="connected_apps_session_heart_rate">Gravando: enviando a frecuencia cardíaca de %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">Gravando: enviando a frecuencia cardíaca e os pasos de %1$s</string>
+    <string name="connected_apps_session_keeping">Gravando: mantendo %1$s transmitindo</string>
+    <string name="connected_apps_session_waiting">Gravando: agardando unha lectura de %1$s</string>
+    <string name="body_profile_synced">Sincronizado con %1$s</string>
+    <string name="body_profile_synced_updated">Sincronizado con %1$s · actualizado %2$s</string>
+    <string name="link_streaming_channel">Lecturas en directo para outras apps</string>
+    <string name="link_streaming_heart_rate">Enviando a frecuencia cardíaca a %1$s</string>
+    <string name="link_streaming_heart_rate_steps">Enviando a frecuencia cardíaca e os pasos a %1$s</string>
+    <string name="link_streaming_keeping">Mantendo o reloxo transmitindo para %1$s</string>
+    <string name="link_streaming_waiting">Agardando polo reloxo, para %1$s</string>
+    <string name="link_streaming_from">De %1$s</string>
+    <string name="link_streaming_waiting_for">Agardando unha lectura de %1$s</string>
 </resources>

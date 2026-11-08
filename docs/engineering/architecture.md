@@ -199,9 +199,9 @@ protocol and trust rules are `openlink/docs/spec.md`. Health data still travels 
 Health Connect; OpenLink carries the body profile, the device list with "sync now",
 recording sessions and live readings.
 
-- `OpenWatchLinkService` is exported behind `${applicationId}.permission.OPENLINK`
-  (`normal`); the trust is decided per call by `OpenLinkHostCore` from the caller's signing
-  certificate. `res/values/openlink.xml` lists the certificates trusted without asking
+- `OpenWatchLinkService` is exported with no permission (a custom one is granted only if
+  OpenWatch was installed first, and a normal one protects nothing); the trust is decided
+  per call by `OpenLinkHostCore` from the caller's signing certificate. `res/values/openlink.xml` lists the certificates trusted without asking
   (OpenVitals' release key); any other app waits on the Connected apps screen.
 - `OpenWatchLinkCapabilities` answers from memory on the binder thread: `LinkDevices` (a
   StateFlow over the registry, the sync controller, the Wear OS link store and the scale),
@@ -212,6 +212,11 @@ recording sessions and live readings.
   `GarminNotificationBridge.holdLiveForSession`, without touching the user's switch; the
   Wear OS app's live heart rate) and reports `RECORDING` on the first reading. A live
   subscription batches those readings once a second to the app that owns the session.
+- Connected apps shows per app "In use now" (`OpenLinkHost.connected`) or the last
+  connection, each session's state (`OpenLinkHost.activeSessions` joined with
+  `LinkLiveSessions.activity` in `linkSessionStatuses`), and the last profile received.
+  `LinkStreamingNotifier` keeps a silent notification up while any session holds a watch
+  ("Streaming heart rate to OpenVitals").
 - `OpenWatchLinkPublisher`, started with the app, sends device and local profile changes to
   bound clients.
 

@@ -36,6 +36,7 @@ class LinkProfileSyncTest {
         // The profile flow shows the accepted profile; that is not a change made here.
         assertNull(sync.onLocalProfile(stored, now = 3_000))
         assertEquals(2_000, sync.current().updatedAtMillis)
+        assertEquals(2_000, sync.updatedAtMillis.value)
     }
 
     @Test

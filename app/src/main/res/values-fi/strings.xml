@@ -423,4 +423,23 @@
     <string name="settings_scales_delete_body">Sen paino, syke ja kehonkoostumus poistetaan Health Connectista.</string>
     <string name="settings_scales_remove">Poista vaaka</string>
     <string name="settings_scales_remove_body">OpenWatch lopettaa kuuntelun ja unohtaa avaimen. Jo tallennetut punnitukset säilyvät.</string>
+    <string name="hc_setup_missing_title">Ei vielä myönnetty:</string>
+    <string name="hc_setup_missing_extra">Taustakäyttö ja historian käyttö ovat omalla sivullaan: avaa Health Connectin asetukset, sitten OpenWatch ja sitten Lisäkäyttöoikeudet.</string>
+    <string name="time_just_now">juuri nyt</string>
+    <string name="connected_apps_in_use">Käytössä nyt</string>
+    <string name="connected_apps_last_connected">Viimeksi yhdistetty %1$s</string>
+    <string name="connected_apps_profile_received">Viimeisin profiili vastaanotettu %1$s</string>
+    <string name="connected_apps_session_heart_rate">Tallennus: syke välitetään laitteesta %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">Tallennus: syke ja askeleet välitetään laitteesta %1$s</string>
+    <string name="connected_apps_session_keeping">Tallennus: %1$s pidetään lähettämässä</string>
+    <string name="connected_apps_session_waiting">Tallennus: odotetaan lukemaa laitteesta %1$s</string>
+    <string name="body_profile_synced">Pidetään synkronoituna: %1$s</string>
+    <string name="body_profile_synced_updated">Pidetään synkronoituna: %1$s · päivitetty %2$s</string>
+    <string name="link_streaming_channel">Reaaliaikaiset lukemat muille sovelluksille</string>
+    <string name="link_streaming_heart_rate">Syke välitetään sovellukseen %1$s</string>
+    <string name="link_streaming_heart_rate_steps">Syke ja askeleet välitetään sovellukseen %1$s</string>
+    <string name="link_streaming_keeping">Kello pidetään lähettämässä sovellukselle %1$s</string>
+    <string name="link_streaming_waiting">Odotetaan kelloa sovellukselle %1$s</string>
+    <string name="link_streaming_from">Laitteesta %1$s</string>
+    <string name="link_streaming_waiting_for">Odotetaan lukemaa laitteesta %1$s</string>
 </resources>

@@ -31,6 +31,8 @@ import tech.mmarca.openwatch.core.presentation.UnitFormatter
 import tech.mmarca.openwatch.domain.preferences.BiologicalSex
 import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
+import tech.mmarca.openwatch.features.connectedapps.isRealTime
+import tech.mmarca.openwatch.features.connectedapps.relativeTime
 import tech.mmarca.openwatch.ui.components.OpenWatchButton
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.theme.Spacing
@@ -70,6 +72,17 @@ fun BodyProfileScreen(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        state.syncedWith?.let { peer ->
+            Text(
+                text = if (state.syncUpdatedAtMillis.isRealTime()) {
+                    stringResource(R.string.body_profile_synced_updated, peer, relativeTime(state.syncUpdatedAtMillis))
+                } else {
+                    stringResource(R.string.body_profile_synced, peer)
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+        }
         OpenWatchCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.padding(Spacing.lg),

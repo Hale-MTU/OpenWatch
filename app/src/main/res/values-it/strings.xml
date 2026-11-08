@@ -423,4 +423,23 @@
     <string name="settings_scales_delete_body">Peso, frequenza cardiaca e composizione corporea vengono rimossi da Health Connect.</string>
     <string name="settings_scales_remove">Rimuovi bilancia</string>
     <string name="settings_scales_remove_body">OpenWatch smette di ascoltare e dimentica la chiave. Le pesate già salvate restano.</string>
+    <string name="hc_setup_missing_title">Non ancora concessi:</string>
+    <string name="hc_setup_missing_extra">L\'accesso in background e alla cronologia è in una pagina a parte: apri le impostazioni di Connessione Salute, poi OpenWatch, poi Accesso aggiuntivo.</string>
+    <string name="time_just_now">proprio ora</string>
+    <string name="connected_apps_in_use">In uso ora</string>
+    <string name="connected_apps_last_connected">Ultima connessione %1$s</string>
+    <string name="connected_apps_profile_received">Ultimo profilo ricevuto %1$s</string>
+    <string name="connected_apps_session_heart_rate">Registrazione: invio della frequenza cardiaca da %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">Registrazione: invio di frequenza cardiaca e passi da %1$s</string>
+    <string name="connected_apps_session_keeping">Registrazione: %1$s resta in trasmissione</string>
+    <string name="connected_apps_session_waiting">Registrazione: in attesa di una lettura da %1$s</string>
+    <string name="body_profile_synced">Sincronizzato con %1$s</string>
+    <string name="body_profile_synced_updated">Sincronizzato con %1$s · aggiornato %2$s</string>
+    <string name="link_streaming_channel">Letture in diretta per altre app</string>
+    <string name="link_streaming_heart_rate">Invio della frequenza cardiaca a %1$s</string>
+    <string name="link_streaming_heart_rate_steps">Invio di frequenza cardiaca e passi a %1$s</string>
+    <string name="link_streaming_keeping">L\'orologio resta in trasmissione per %1$s</string>
+    <string name="link_streaming_waiting">In attesa dell\'orologio, per %1$s</string>
+    <string name="link_streaming_from">Da %1$s</string>
+    <string name="link_streaming_waiting_for">In attesa di una lettura da %1$s</string>
 </resources>

@@ -91,7 +91,7 @@ works only inside the phone. OpenVitals is the first. Nothing travels over a net
   their battery and last sync, and a request to sync one; keeping your watch streaming while
   the app records an activity; and the watch's heart rate and steps while it does.
 - Live readings go only to the app that asked for them, while its recording runs, and are
-  not stored by OpenWatch. Notifications, calendar events, music, locations and the scale's
+  not stored by OpenWatch. While they flow, OpenWatch shows a notification naming the app. Notifications, calendar events, music, locations and the scale's
   key are never shared.
 
 ## Data Sharing

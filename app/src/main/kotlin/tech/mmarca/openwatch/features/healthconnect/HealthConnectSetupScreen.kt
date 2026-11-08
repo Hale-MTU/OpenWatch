@@ -76,6 +76,19 @@ fun HealthConnectSetupScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (state.availability == HealthConnectAvailability.AVAILABLE && state.missing.isNotEmpty()) {
+                    Text(text = stringResource(R.string.hc_setup_missing_title), style = MaterialTheme.typography.labelLarge)
+                    state.missing.forEach { name ->
+                        Text(text = "• $name", style = MaterialTheme.typography.bodySmall)
+                    }
+                    if (state.missingExtraAccess) {
+                        Text(
+                            text = stringResource(R.string.hc_setup_missing_extra),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
                 if (state.availability == HealthConnectAvailability.AVAILABLE) {
                     if (!state.allGranted) {
                         OpenWatchButton(

@@ -433,4 +433,23 @@
     <string name="settings_scales_delete_body">Его вес, пульс и состав тела будут удалены из Health Connect.</string>
     <string name="settings_scales_remove">Удалить весы</string>
     <string name="settings_scales_remove_body">OpenWatch перестанет слушать и забудет ключ. Уже сохранённые взвешивания останутся.</string>
+    <string name="hc_setup_missing_title">Ещё не выдано:</string>
+    <string name="hc_setup_missing_extra">Доступ в фоне и к истории находится на отдельной странице: откройте настройки Health Connect, затем OpenWatch, затем «Дополнительный доступ».</string>
+    <string name="time_just_now">только что</string>
+    <string name="connected_apps_in_use">Используется сейчас</string>
+    <string name="connected_apps_last_connected">Последнее подключение: %1$s</string>
+    <string name="connected_apps_profile_received">Последний профиль получен: %1$s</string>
+    <string name="connected_apps_session_heart_rate">Запись: передаётся пульс с %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">Запись: передаются пульс и шаги с %1$s</string>
+    <string name="connected_apps_session_keeping">Запись: %1$s продолжает передачу</string>
+    <string name="connected_apps_session_waiting">Запись: ожидание показаний с %1$s</string>
+    <string name="body_profile_synced">Синхронизируется с %1$s</string>
+    <string name="body_profile_synced_updated">Синхронизируется с %1$s · обновлено %2$s</string>
+    <string name="link_streaming_channel">Показания в реальном времени для других приложений</string>
+    <string name="link_streaming_heart_rate">Пульс передаётся в %1$s</string>
+    <string name="link_streaming_heart_rate_steps">Пульс и шаги передаются в %1$s</string>
+    <string name="link_streaming_keeping">Часы продолжают передачу для %1$s</string>
+    <string name="link_streaming_waiting">Ожидание часов для %1$s</string>
+    <string name="link_streaming_from">С %1$s</string>
+    <string name="link_streaming_waiting_for">Ожидание показаний с %1$s</string>
 </resources>

@@ -495,6 +495,23 @@
     <string name="connected_apps_pending_title">%1$s wants to connect</string>
     <string name="connected_apps_pending_body">Review what it may do before you allow it.</string>
     <string name="connected_apps_review">Review</string>
-    <string name="openlink_permission_label">use OpenWatch\'s devices and profile</string>
-    <string name="openlink_permission_description">Lets the app ask OpenWatch for your watches\' status, their live readings and your body profile. OpenWatch asks you before it answers an app it does not know.</string>
+    <string name="hc_setup_missing_title">Not granted yet:</string>
+    <string name="hc_setup_missing_extra">Background and history access sit on their own page: open Health Connect settings, then OpenWatch, then Additional access.</string>
+    <string name="time_just_now">just now</string>
+    <string name="connected_apps_in_use">In use now</string>
+    <string name="connected_apps_last_connected">Last connected %1$s</string>
+    <string name="connected_apps_profile_received">Last profile received %1$s</string>
+    <string name="connected_apps_session_heart_rate">Recording: streaming heart rate from %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">Recording: streaming heart rate and steps from %1$s</string>
+    <string name="connected_apps_session_keeping">Recording: keeping %1$s streaming</string>
+    <string name="connected_apps_session_waiting">Recording: waiting for a reading from %1$s</string>
+    <string name="body_profile_synced">Kept in sync with %1$s</string>
+    <string name="body_profile_synced_updated">Kept in sync with %1$s · updated %2$s</string>
+    <string name="link_streaming_channel">Live readings for other apps</string>
+    <string name="link_streaming_heart_rate">Streaming heart rate to %1$s</string>
+    <string name="link_streaming_heart_rate_steps">Streaming heart rate and steps to %1$s</string>
+    <string name="link_streaming_keeping">Keeping your watch streaming for %1$s</string>
+    <string name="link_streaming_waiting">Waiting for your watch, for %1$s</string>
+    <string name="link_streaming_from">From %1$s</string>
+    <string name="link_streaming_waiting_for">Waiting for a reading from %1$s</string>
 </resources>

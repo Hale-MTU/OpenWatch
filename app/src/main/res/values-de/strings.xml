@@ -423,4 +423,23 @@
     <string name="settings_scales_delete_body">Gewicht, Herzfrequenz und Körperzusammensetzung werden aus Health Connect entfernt.</string>
     <string name="settings_scales_remove">Waage entfernen</string>
     <string name="settings_scales_remove_body">OpenWatch lauscht nicht mehr und vergisst den Schlüssel. Bereits gespeicherte Messungen bleiben.</string>
+    <string name="hc_setup_missing_title">Noch nicht erteilt:</string>
+    <string name="hc_setup_missing_extra">Hintergrund- und Verlaufszugriff stehen auf einer eigenen Seite: Health-Connect-Einstellungen öffnen, dann OpenWatch, dann Zusätzlicher Zugriff.</string>
+    <string name="time_just_now">gerade eben</string>
+    <string name="connected_apps_in_use">Gerade in Verwendung</string>
+    <string name="connected_apps_last_connected">Zuletzt verbunden %1$s</string>
+    <string name="connected_apps_profile_received">Letztes Profil empfangen %1$s</string>
+    <string name="connected_apps_session_heart_rate">Aufzeichnung: Herzfrequenz von %1$s wird übertragen</string>
+    <string name="connected_apps_session_heart_rate_steps">Aufzeichnung: Herzfrequenz und Schritte von %1$s werden übertragen</string>
+    <string name="connected_apps_session_keeping">Aufzeichnung: %1$s bleibt verbunden</string>
+    <string name="connected_apps_session_waiting">Aufzeichnung: warte auf einen Messwert von %1$s</string>
+    <string name="body_profile_synced">Mit %1$s synchron gehalten</string>
+    <string name="body_profile_synced_updated">Mit %1$s synchron gehalten · aktualisiert %2$s</string>
+    <string name="link_streaming_channel">Live-Messwerte für andere Apps</string>
+    <string name="link_streaming_heart_rate">Herzfrequenz wird an %1$s übertragen</string>
+    <string name="link_streaming_heart_rate_steps">Herzfrequenz und Schritte werden an %1$s übertragen</string>
+    <string name="link_streaming_keeping">Uhr bleibt für %1$s verbunden</string>
+    <string name="link_streaming_waiting">Warte auf die Uhr, für %1$s</string>
+    <string name="link_streaming_from">Von %1$s</string>
+    <string name="link_streaming_waiting_for">Warte auf einen Messwert von %1$s</string>
 </resources>

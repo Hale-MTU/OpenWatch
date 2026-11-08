@@ -25,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openlink.OpenLink
 import tech.mmarca.openlink.OpenLinkTrust
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.link.LinkSessionStatus
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.theme.Spacing
 
@@ -86,6 +87,7 @@ private fun ConnectedAppCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (app.trust != OpenLinkTrust.BLOCKED) ActivityLines(app)
             when (app.trust) {
                 OpenLinkTrust.PENDING -> {
                     Text(text = stringResource(R.string.connected_apps_asks_for), style = MaterialTheme.typography.bodyMedium)
@@ -119,6 +121,36 @@ private fun ConnectedAppCard(
                 }
             }
         }
+    }
+}
+
+/** In use now or when it last was, what its sessions do to a watch, and when its profile came. */
+@Composable
+private fun ActivityLines(app: ConnectedApp) {
+    val lines = buildList {
+        when {
+            app.inUse -> add(stringResource(R.string.connected_apps_in_use))
+            app.lastSeenAtMillis.isRealTime() ->
+                add(stringResource(R.string.connected_apps_last_connected, relativeTime(app.lastSeenAtMillis, app.nowMillis)))
+        }
+        app.sessions.forEach { add(sessionLine(it)) }
+        if (app.profileReceivedAtMillis.isRealTime()) {
+            add(stringResource(R.string.connected_apps_profile_received, relativeTime(app.profileReceivedAtMillis, app.nowMillis)))
+        }
+    }
+    lines.forEach { line ->
+        Text(text = line, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+@Composable
+internal fun sessionLine(status: LinkSessionStatus): String {
+    val devices = status.deviceNames.joinToString(", ")
+    return when (status.kind) {
+        LinkSessionStatus.Kind.HEART_RATE -> stringResource(R.string.connected_apps_session_heart_rate, devices)
+        LinkSessionStatus.Kind.HEART_RATE_AND_STEPS -> stringResource(R.string.connected_apps_session_heart_rate_steps, devices)
+        LinkSessionStatus.Kind.KEEPING_STREAMING -> stringResource(R.string.connected_apps_session_keeping, devices)
+        LinkSessionStatus.Kind.WAITING -> stringResource(R.string.connected_apps_session_waiting, devices)
     }
 }
 

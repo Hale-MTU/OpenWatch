@@ -5,6 +5,9 @@ import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import tech.mmarca.openlink.OpenLinkProfile
 import tech.mmarca.openlink.OpenLinkSex
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
@@ -23,6 +26,14 @@ class LinkProfileSync @Inject constructor(
 ) {
     private val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
+    private val _updatedAtMillis = MutableStateFlow(prefs.getLong(KEY_UPDATED_AT, 0L))
+
+    /**
+     * When the profile last changed on either side, as both sides agree on it; 0 or 1 for
+     * one that predates the link.
+     */
+    val updatedAtMillis: StateFlow<Long> = _updatedAtMillis.asStateFlow()
+
     fun current(): OpenLinkProfile =
         preferences.bodyProfile().toLink(prefs.getLong(KEY_UPDATED_AT, 0L))
 
@@ -37,6 +48,7 @@ class LinkProfileSync @Inject constructor(
             putLong(KEY_UPDATED_AT, profile.updatedAtMillis)
             putString(KEY_SIGNATURE, stored.signature())
         }
+        _updatedAtMillis.value = profile.updatedAtMillis
         return true
     }
 
@@ -61,6 +73,7 @@ class LinkProfileSync @Inject constructor(
             putLong(KEY_UPDATED_AT, stamp)
             putString(KEY_SIGNATURE, signature)
         }
+        _updatedAtMillis.value = stamp
         return profile.toLink(stamp).takeIf { stamp > 0 }
     }
 
