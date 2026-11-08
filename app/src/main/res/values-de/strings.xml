@@ -514,4 +514,18 @@
     <string name="settings_watch_wearos_companion_required">Android hat die Uhr nicht mit OpenWatch verknüpft, deshalb wurde sie nicht hinzugefügt. OpenWatch braucht diese Verknüpfung, um Workouts aufzuzeichnen, die eine andere App auf der Uhr startet. Tippe erneut auf Koppeln und erlaube die Anfrage.</string>
     <string name="settings_watch_wearos_companion_missing">Android hat diese Uhr nicht mit OpenWatch verknüpft. Ohne die Verknüpfung kann OpenWatch keine Workouts aufzeichnen, die eine andere App auf der Uhr startet.</string>
     <string name="settings_watch_wearos_companion_link">Uhr verknüpfen</string>
+    <string name="watch_settings_section">Uhr-Einstellungen</string>
+    <string name="watch_settings_not_read">Die Uhr speichert diese Einstellungen selbst. Lies sie aus, um sie hier zu ändern.</string>
+    <string name="watch_settings_unreachable">Die Uhr hat nicht geantwortet. Ist sie in der Nähe und läuft ihre OpenWatch-App?</string>
+    <string name="watch_settings_read">Von der Uhr lesen</string>
+    <string name="watch_settings_power_save">Puls im Sparmodus</string>
+    <string name="watch_settings_power_save_body">Etwa alle 10 Minuten außerhalb des Schlafenszeitmodus. Im Schlafenszeitmodus wird immer alle 10 Sekunden gemessen.</string>
+    <string name="watch_settings_synced">Gebündeltes Aufwecken im Schlaf</string>
+    <string name="watch_settings_synced_body">Hält jede Schlafminute vollständig über das Aufwecken durch den Pulssensor statt über einen dauerhaften Wake Lock. Funktioniert nur mit dem Puls vom Sensor.</string>
+    <string name="watch_settings_samsung_note">Samsung-Plattform: braucht den Entwicklermodus der Health Platform auf der Uhr. Ohne ihn fragt die Plattform bei Samsung nach dieser App. Eine Samsung-Quelle, die ausfällt, wechselt zum Sensor.</string>
+    <string name="watch_settings_hr_samsung">Puls von der Samsung-Plattform</string>
+    <string name="watch_settings_hrv_samsung">HRV von der Samsung-Plattform</string>
+    <string name="watch_settings_skin">Hauttemperatur in der Nacht</string>
+    <string name="watch_settings_spo2">SpO2 stündlich in der Nacht</string>
+    <string name="watch_settings_allow_on_watch">Erlaube es auf der Uhr: Öffne dort OpenWatch und schalte es einmal ein.</string>
 </resources>
