@@ -423,4 +423,23 @@
     <string name="settings_scales_delete_body">其体重、心率和身体成分将从 Health Connect 中移除。</string>
     <string name="settings_scales_remove">移除体重秤</string>
     <string name="settings_scales_remove_body">OpenWatch 将停止接收并忘记密钥。已保存的称重记录会保留。</string>
+    <string name="hc_setup_missing_title">尚未授予：</string>
+    <string name="hc_setup_missing_extra">后台访问和历史记录访问在单独的页面：打开 Health Connect 设置，然后选择 OpenWatch，再选择“其他访问权限”。</string>
+    <string name="time_just_now">刚刚</string>
+    <string name="connected_apps_in_use">正在使用</string>
+    <string name="connected_apps_last_connected">上次连接：%1$s</string>
+    <string name="connected_apps_profile_received">上次收到个人资料：%1$s</string>
+    <string name="connected_apps_session_heart_rate">记录中：正在传送 %1$s 的心率</string>
+    <string name="connected_apps_session_heart_rate_steps">记录中：正在传送 %1$s 的心率和步数</string>
+    <string name="connected_apps_session_keeping">记录中：保持 %1$s 持续传输</string>
+    <string name="connected_apps_session_waiting">记录中：正在等待 %1$s 的读数</string>
+    <string name="body_profile_synced">与 %1$s 保持同步</string>
+    <string name="body_profile_synced_updated">与 %1$s 保持同步 · 更新于%2$s</string>
+    <string name="link_streaming_channel">供其他应用使用的实时读数</string>
+    <string name="link_streaming_heart_rate">正在向 %1$s 传送心率</string>
+    <string name="link_streaming_heart_rate_steps">正在向 %1$s 传送心率和步数</string>
+    <string name="link_streaming_keeping">正在为 %1$s 保持手表持续传输</string>
+    <string name="link_streaming_waiting">正在为 %1$s 等待手表</string>
+    <string name="link_streaming_from">来自 %1$s</string>
+    <string name="link_streaming_waiting_for">正在等待 %1$s 的读数</string>
 </resources>

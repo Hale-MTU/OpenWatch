@@ -427,4 +427,23 @@
     <string name="settings_scales_delete_body">体重、心拍数、体組成が Health Connect から削除されます。</string>
     <string name="settings_scales_remove">体重計を削除</string>
     <string name="settings_scales_remove_body">OpenWatch は受信を停止し、キーを消去します。保存済みの測定は残ります。</string>
+    <string name="hc_setup_missing_title">未許可:</string>
+    <string name="hc_setup_missing_extra">バックグラウンドと履歴へのアクセスは別のページにあります。ヘルスコネクトの設定を開き、OpenWatch、追加のアクセスの順に進んでください。</string>
+    <string name="time_just_now">たった今</string>
+    <string name="connected_apps_in_use">使用中</string>
+    <string name="connected_apps_last_connected">最終接続: %1$s</string>
+    <string name="connected_apps_profile_received">最終プロフィール受信: %1$s</string>
+    <string name="connected_apps_session_heart_rate">記録中: %1$s の心拍数を送信中</string>
+    <string name="connected_apps_session_heart_rate_steps">記録中: %1$s の心拍数と歩数を送信中</string>
+    <string name="connected_apps_session_keeping">記録中: %1$s のストリーミングを維持中</string>
+    <string name="connected_apps_session_waiting">記録中: %1$s からの測定値を待機中</string>
+    <string name="body_profile_synced">%1$s と同期</string>
+    <string name="body_profile_synced_updated">%1$s と同期 · %2$s に更新</string>
+    <string name="link_streaming_channel">他のアプリ向けのリアルタイム測定値</string>
+    <string name="link_streaming_heart_rate">%1$s に心拍数を送信中</string>
+    <string name="link_streaming_heart_rate_steps">%1$s に心拍数と歩数を送信中</string>
+    <string name="link_streaming_keeping">%1$s のためにウォッチのストリーミングを維持中</string>
+    <string name="link_streaming_waiting">%1$s のためにウォッチを待機中</string>
+    <string name="link_streaming_from">%1$s から</string>
+    <string name="link_streaming_waiting_for">%1$s からの測定値を待機中</string>
 </resources>

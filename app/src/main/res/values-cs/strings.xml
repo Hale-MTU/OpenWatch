@@ -433,4 +433,23 @@
     <string name="settings_scales_delete_body">Jeho hmotnost, srdeční tep a složení těla se odstraní z Health Connect.</string>
     <string name="settings_scales_remove">Odebrat váhu</string>
     <string name="settings_scales_remove_body">OpenWatch přestane poslouchat a zapomene klíč. Už uložená vážení zůstanou.</string>
+    <string name="hc_setup_missing_title">Zatím neuděleno:</string>
+    <string name="hc_setup_missing_extra">Přístup na pozadí a k historii je na samostatné stránce: otevřete nastavení Health Connect, pak OpenWatch, pak Další přístup.</string>
+    <string name="time_just_now">právě teď</string>
+    <string name="connected_apps_in_use">Právě se používá</string>
+    <string name="connected_apps_last_connected">Naposledy připojeno %1$s</string>
+    <string name="connected_apps_profile_received">Poslední profil přijat %1$s</string>
+    <string name="connected_apps_session_heart_rate">Záznam: odesílá se tep z %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">Záznam: odesílá se tep a kroky z %1$s</string>
+    <string name="connected_apps_session_keeping">Záznam: %1$s zůstává ve vysílání</string>
+    <string name="connected_apps_session_waiting">Záznam: čeká se na měření z %1$s</string>
+    <string name="body_profile_synced">Synchronizováno s %1$s</string>
+    <string name="body_profile_synced_updated">Synchronizováno s %1$s · aktualizováno %2$s</string>
+    <string name="link_streaming_channel">Živá měření pro jiné aplikace</string>
+    <string name="link_streaming_heart_rate">Tep se odesílá do %1$s</string>
+    <string name="link_streaming_heart_rate_steps">Tep a kroky se odesílají do %1$s</string>
+    <string name="link_streaming_keeping">Hodinky zůstávají ve vysílání pro %1$s</string>
+    <string name="link_streaming_waiting">Čeká se na hodinky, pro %1$s</string>
+    <string name="link_streaming_from">Z %1$s</string>
+    <string name="link_streaming_waiting_for">Čeká se na měření z %1$s</string>
 </resources>

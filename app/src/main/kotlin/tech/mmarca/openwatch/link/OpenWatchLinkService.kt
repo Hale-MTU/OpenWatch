@@ -5,7 +5,7 @@ import javax.inject.Inject
 import tech.mmarca.openlink.host.OpenLinkHost
 import tech.mmarca.openlink.host.OpenLinkHostService
 
-/** The exported OpenLink service; the manifest guards it with this app's OPENLINK permission. */
+/** The exported OpenLink service. The trust store, not a permission, decides who gets what. */
 @AndroidEntryPoint
 class OpenWatchLinkService : OpenLinkHostService() {
     @Inject

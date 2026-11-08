@@ -423,4 +423,23 @@
     <string name="settings_scales_delete_body">Selle kaal, pulss ja keha koostis eemaldatakse Health Connectist.</string>
     <string name="settings_scales_remove">Eemalda kaal</string>
     <string name="settings_scales_remove_body">OpenWatch lõpetab kuulamise ja unustab võtme. Juba salvestatud kaalumised jäävad alles.</string>
+    <string name="hc_setup_missing_title">Veel andmata:</string>
+    <string name="hc_setup_missing_extra">Taustal ja ajaloo juurdepääs on eraldi lehel: ava Health Connecti seaded, siis OpenWatch, siis Täiendav juurdepääs.</string>
+    <string name="time_just_now">just praegu</string>
+    <string name="connected_apps_in_use">Praegu kasutusel</string>
+    <string name="connected_apps_last_connected">Viimati ühendatud %1$s</string>
+    <string name="connected_apps_profile_received">Viimane profiil saadud %1$s</string>
+    <string name="connected_apps_session_heart_rate">Salvestamine: pulssi saadetakse seadmest %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">Salvestamine: pulssi ja samme saadetakse seadmest %1$s</string>
+    <string name="connected_apps_session_keeping">Salvestamine: %1$s jätkab saatmist</string>
+    <string name="connected_apps_session_waiting">Salvestamine: ootan näitu seadmest %1$s</string>
+    <string name="body_profile_synced">Sünkroonis rakendusega %1$s</string>
+    <string name="body_profile_synced_updated">Sünkroonis rakendusega %1$s · uuendatud %2$s</string>
+    <string name="link_streaming_channel">Reaalajas näidud teistele rakendustele</string>
+    <string name="link_streaming_heart_rate">Pulssi saadetakse rakendusse %1$s</string>
+    <string name="link_streaming_heart_rate_steps">Pulssi ja samme saadetakse rakendusse %1$s</string>
+    <string name="link_streaming_keeping">Kell jätkab saatmist rakendusele %1$s</string>
+    <string name="link_streaming_waiting">Ootan kella rakendusele %1$s</string>
+    <string name="link_streaming_from">Seadmest %1$s</string>
+    <string name="link_streaming_waiting_for">Ootan näitu seadmest %1$s</string>
 </resources>

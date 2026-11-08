@@ -423,4 +423,23 @@
     <string name="settings_scales_delete_body">O peso, a frequência cardíaca e a composição corporal são removidos do Health Connect.</string>
     <string name="settings_scales_remove">Remover balança</string>
     <string name="settings_scales_remove_body">O OpenWatch deixa de escutar e esquece a chave. As pesagens já guardadas mantêm-se.</string>
+    <string name="hc_setup_missing_title">Ainda não concedidas:</string>
+    <string name="hc_setup_missing_extra">O acesso em segundo plano e ao histórico fica numa página própria: abra as definições do Health Connect, depois OpenWatch, depois Acesso adicional.</string>
+    <string name="time_just_now">agora mesmo</string>
+    <string name="connected_apps_in_use">Em uso agora</string>
+    <string name="connected_apps_last_connected">Última ligação %1$s</string>
+    <string name="connected_apps_profile_received">Último perfil recebido %1$s</string>
+    <string name="connected_apps_session_heart_rate">A gravar: a enviar a frequência cardíaca de %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">A gravar: a enviar a frequência cardíaca e os passos de %1$s</string>
+    <string name="connected_apps_session_keeping">A gravar: %1$s mantém-se a transmitir</string>
+    <string name="connected_apps_session_waiting">A gravar: à espera de uma leitura de %1$s</string>
+    <string name="body_profile_synced">Mantido em sincronia com %1$s</string>
+    <string name="body_profile_synced_updated">Mantido em sincronia com %1$s · atualizado %2$s</string>
+    <string name="link_streaming_channel">Leituras em direto para outras apps</string>
+    <string name="link_streaming_heart_rate">A enviar a frequência cardíaca para %1$s</string>
+    <string name="link_streaming_heart_rate_steps">A enviar a frequência cardíaca e os passos para %1$s</string>
+    <string name="link_streaming_keeping">O relógio mantém-se a transmitir para %1$s</string>
+    <string name="link_streaming_waiting">À espera do relógio, para %1$s</string>
+    <string name="link_streaming_from">De %1$s</string>
+    <string name="link_streaming_waiting_for">À espera de uma leitura de %1$s</string>
 </resources>

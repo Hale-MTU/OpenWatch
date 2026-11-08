@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
+    <string name="hc_setup_missing_title">עדיין לא ניתנו:</string>
+    <string name="hc_setup_missing_extra">גישה ברקע וגישה להיסטוריה נמצאות בדף נפרד: פתחו את הגדרות Health Connect, אחר כך OpenWatch, ואז גישה נוספת.</string>
+    <string name="time_just_now">ממש עכשיו</string>
+    <string name="connected_apps_in_use">בשימוש עכשיו</string>
+    <string name="connected_apps_last_connected">חיבור אחרון %1$s</string>
+    <string name="connected_apps_profile_received">פרופיל אחרון התקבל %1$s</string>
+    <string name="connected_apps_session_heart_rate">הקלטה: הדופק נשלח מ-%1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">הקלטה: הדופק והצעדים נשלחים מ-%1$s</string>
+    <string name="connected_apps_session_keeping">הקלטה: %1$s ממשיך לשדר</string>
+    <string name="connected_apps_session_waiting">הקלטה: ממתין לקריאה מ-%1$s</string>
+    <string name="body_profile_synced">מסונכרן עם %1$s</string>
+    <string name="body_profile_synced_updated">מסונכרן עם %1$s · עודכן %2$s</string>
+    <string name="link_streaming_channel">קריאות חיות לאפליקציות אחרות</string>
+    <string name="link_streaming_heart_rate">הדופק נשלח אל %1$s</string>
+    <string name="link_streaming_heart_rate_steps">הדופק והצעדים נשלחים אל %1$s</string>
+    <string name="link_streaming_keeping">השעון ממשיך לשדר עבור %1$s</string>
+    <string name="link_streaming_waiting">ממתין לשעון, עבור %1$s</string>
+    <string name="link_streaming_from">מ-%1$s</string>
+    <string name="link_streaming_waiting_for">ממתין לקריאה מ-%1$s</string>
 </resources>

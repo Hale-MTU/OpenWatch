@@ -8,14 +8,17 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChangedBy
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -23,11 +26,12 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import tech.mmarca.openlink.OpenLinkDevice
+import tech.mmarca.openlink.OpenLinkIntegration
 import tech.mmarca.openlink.OpenLinkLiveBatch
 import tech.mmarca.openlink.OpenLinkLiveSubscription
-import tech.mmarca.openlink.OpenLinkIntegration
 import tech.mmarca.openlink.OpenLinkRecordingPhase
 import tech.mmarca.openlink.OpenLinkRecordingRequest
 import tech.mmarca.openlink.OpenLinkRecordingState
@@ -38,6 +42,19 @@ import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge
 import tech.mmarca.openwatch.devices.garmin.GarminRealtimeStore
 import tech.mmarca.openwatch.devices.wearos.WearOsCompanionManager
+
+/** What one session is doing, for the Connected apps screen and the streaming notification. */
+data class LinkSessionActivity(
+    val sessionId: String,
+    /** The devices the session follows, by name, and whether each has sent a reading yet. */
+    val devices: List<LinkSessionDevice> = emptyList(),
+    /** The live sample types a subscription under this session receives; empty if none. */
+    val liveTypes: Set<OpenLinkSampleType> = emptySet(),
+) {
+    val streaming: List<LinkSessionDevice> get() = devices.filter { it.streaming }
+}
+
+data class LinkSessionDevice(val id: String, val name: String, val streaming: Boolean)
 
 /**
  * Recording sessions and live subscriptions from another app. Neither watch can be told to
@@ -59,6 +76,11 @@ class LinkLiveSessions @Inject constructor(
     private val recordings = mutableMapOf<String, Job>()
     private val subscriptions = mutableMapOf<String, Job>()
 
+    private val _activity = MutableStateFlow<Map<String, LinkSessionActivity>>(emptyMap())
+
+    /** Each running session's devices and live types, by session id. */
+    val activity: StateFlow<Map<String, LinkSessionActivity>> = _activity.asStateFlow()
+
     @Synchronized
     fun startRecording(request: OpenLinkRecordingRequest) {
         if (request.sessionId in recordings) return
@@ -67,6 +89,7 @@ class LinkLiveSessions @Inject constructor(
             publish(OpenLinkRecordingState(request.sessionId, request.deviceId.orEmpty(), OpenLinkRecordingPhase.FAILED, OpenLinkRecordingState.REASON_NO_DEVICE, now()))
             return
         }
+        follow(request.sessionId, targets)
         recordings[request.sessionId] = scope.launch {
             targets.forEach { device ->
                 launch { followDevice(request.sessionId, device) }
@@ -78,6 +101,7 @@ class LinkLiveSessions @Inject constructor(
     fun stopRecording(sessionId: String) {
         val job = recordings.remove(sessionId) ?: return
         job.cancel()
+        settle(sessionId)
         publish(OpenLinkRecordingState(sessionId, "", OpenLinkRecordingPhase.STOPPED, OpenLinkRecordingState.REASON_STOPPED_BY_CLIENT, now()))
     }
 
@@ -86,6 +110,11 @@ class LinkLiveSessions @Inject constructor(
         if (subscription.sessionId in subscriptions) return
         val targets = targets(subscription.deviceId).filter { device -> subscription.types.any { it in device.liveSampleTypes } }
         if (targets.isEmpty()) return
+        follow(subscription.sessionId, targets)
+        _activity.update { all ->
+            val types = subscription.types intersect targets.flatMap { it.liveSampleTypes }.toSet()
+            all + (subscription.sessionId to all.getValue(subscription.sessionId).copy(liveTypes = types))
+        }
         subscriptions[subscription.sessionId] = scope.launch {
             targets.forEach { device ->
                 launch { relay(subscription, device) }
@@ -95,7 +124,30 @@ class LinkLiveSessions @Inject constructor(
 
     @Synchronized
     fun unsubscribe(sessionId: String) {
-        subscriptions.remove(sessionId)?.cancel()
+        subscriptions.remove(sessionId)?.cancel() ?: return
+        _activity.update { all -> all[sessionId]?.let { all + (sessionId to it.copy(liveTypes = emptySet())) } ?: all }
+        settle(sessionId)
+    }
+
+    /** Adds [targets] to the session's devices, not yet streaming unless already. */
+    private fun follow(sessionId: String, targets: List<OpenLinkDevice>) = _activity.update { all ->
+        val current = all[sessionId] ?: LinkSessionActivity(sessionId)
+        val known = current.devices.map { it.id }.toSet()
+        val added = targets.filter { it.id !in known }.map { LinkSessionDevice(it.id, it.displayName, streaming = false) }
+        all + (sessionId to current.copy(devices = current.devices + added))
+    }
+
+    /** A device of the session sent its first reading. */
+    private fun markStreaming(sessionId: String, deviceId: String) = _activity.update { all ->
+        val current = all[sessionId] ?: return@update all
+        if (current.devices.none { it.id == deviceId && !it.streaming }) return@update all
+        all + (sessionId to current.copy(devices = current.devices.map { if (it.id == deviceId) it.copy(streaming = true) else it }))
+    }
+
+    /** Drops the session's activity once neither a recording nor a subscription holds it. */
+    private fun settle(sessionId: String) {
+        if (sessionId in recordings || sessionId in subscriptions) return
+        _activity.update { it - sessionId }
     }
 
     private fun targets(deviceId: String?): List<OpenLinkDevice> =
@@ -117,6 +169,7 @@ class LinkLiveSessions @Inject constructor(
             if (!reading) {
                 reading = true
                 watchdog.cancel()
+                markStreaming(sessionId, device.id)
                 publish(OpenLinkRecordingState(sessionId, device.id, OpenLinkRecordingPhase.RECORDING, null, now()))
             }
         }
@@ -134,6 +187,7 @@ class LinkLiveSessions @Inject constructor(
         }
         try {
             stream(device).collect { sample ->
+                markStreaming(subscription.sessionId, device.id)
                 if (sample.type in subscription.types) synchronized(pending) { pending += sample }
             }
         } finally {

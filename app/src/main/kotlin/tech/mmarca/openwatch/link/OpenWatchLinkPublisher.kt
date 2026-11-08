@@ -10,13 +10,17 @@ import kotlinx.coroutines.launch
 import tech.mmarca.openlink.host.OpenLinkHost
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
 
-/** Sends the device list and local profile changes to the bound OpenLink clients. */
+/**
+ * Sends the device list and local profile changes to the bound OpenLink clients, and keeps
+ * the streaming notification up while a client holds a session.
+ */
 @Singleton
 class OpenWatchLinkPublisher @Inject constructor(
     private val host: OpenLinkHost,
     private val devices: LinkDevices,
     private val preferences: BodyProfilePreferences,
     private val profileSync: LinkProfileSync,
+    private val streamingNotifier: LinkStreamingNotifier,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var started = false
@@ -33,5 +37,6 @@ class OpenWatchLinkPublisher @Inject constructor(
                 profileSync.onLocalProfile(profile)?.let(host::publishProfile)
             }
         }
+        scope.launch { streamingNotifier.run() }
     }
 }
