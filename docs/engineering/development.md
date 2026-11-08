@@ -99,11 +99,12 @@ they are. Two GitHub release outputs:
   `OpenWatch-wear-nightly.aab` to the fixed GitHub `nightly` prerelease. The same run uploads
   the phone AAB to the Google Play open testing track (`beta` in the Play Developer API) and
   the watch AAB to the Wear OS form-factor track (`wear:beta`), or to internal testing
-  (`internal`, `wear:internal`) while `OPENWATCH_PLAY_INTERNAL_ONLY=true` holds.
+  (`internal`, `wear:internal`) under `OPENWATCH_PLAY_TESTING_TRACK=internal` or while
+  `OPENWATCH_PLAY_INTERNAL_ONLY=true` holds.
 - A pushed `vX.Y.Z` or `VX.Y.Z` tag builds the `release` variants and publishes the same
   five files under `OpenWatch-vX.Y.Z` and `OpenWatch-wear-vX.Y.Z` names to its own versioned
   GitHub prerelease, uploads both AABs to open testing (or internal testing, under the same
-  variable), then waits for the `production` environment's approval. Approving the run
+  variables), then waits for the `production` environment's approval. Approving the run
   promotes the phone from `beta` to `production` with the store listing, the watch from
   `wear:beta` to `wear:production`, marks the GitHub release stable, and posts the notes to
   the Zulip `releases` channel (`scripts/announce-zulip.sh`). The promotion reads the
@@ -159,7 +160,14 @@ Repository Actions secrets:
 
 The `production` environment needs required reviewers, or a production run never waits.
 
-Two variables hold Play back, for two situations:
+The variable `OPENWATCH_PLAY_TESTING_TRACK` names the testing track the nightly and a tag
+upload to: `beta`, open testing, when unset, or `internal`, internal testing. Production is
+promoted from whichever track has the version, so `internal` gives an internal testing,
+then production, flow with no open testing in between. A version code Play already holds
+on any track, a bundle uploaded by hand say, is skipped by the upload and promoted from
+where it sits.
+
+Two more variables hold Play back, for two situations:
 
 - Before Google has approved the app, only internal testing may take a build: Play reviews
   a closed or open testing release and a production release, and a new app's first review
@@ -168,9 +176,9 @@ Two variables hold Play back, for two situations:
   instead of open testing, and makes the production job upload nothing; the run still waits
   for approval, marks the GitHub release stable and posts to Zulip. Open testing and
   production are not touched while it is set. Once Google has approved the app, delete the
-  variable; the next tag goes to open testing and then production as usual, and a version
-  that is waiting on internal testing is promoted from there by a manual run of the
-  workflow from its tag with target `production`.
+  variable; the next tag goes to the testing track and then production as usual, and a
+  version that is waiting on internal testing is promoted from there by a manual run of
+  the workflow from its tag with target `production`.
 - While a release is in Play review, a new upload to any track restarts the review. The
   variable `OPENWATCH_PLAY_PAUSED=true` holds every Play upload, phone and watch, internal
   testing included: the nightly skips its Play job, and a production run still waits for
