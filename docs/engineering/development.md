@@ -88,7 +88,7 @@ The [wiki](https://github.com/Hale-MTU/OpenWatch/wiki) is a mirror of the reposi
 python3 scripts/sync-wiki.py --repo Hale-MTU/OpenWatch --out /tmp/openwatch-wiki
 ```
 
-Two Markdown files with the same first heading would become one page; the script stops and names both.
+Two Markdown files with the same first heading would become one page; the script stops and names both. The same script runs in OpenVitals, OpenLink and OpenBridge; keep the copies alike.
 
 ## Releases
 
