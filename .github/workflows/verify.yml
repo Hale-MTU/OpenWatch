@@ -47,6 +47,10 @@ jobs:
           # The OpenLink library is a submodule the phone app builds from.
           submodules: true
           fetch-depth: 0
+      # The wiki is built from the Markdown (wiki.yml); a relative link to a
+      # file that does not exist would be a 404 there, so it fails here.
+      - name: Check the docs' links
+        run: python3 scripts/sync-wiki.py --repo "$GITHUB_REPOSITORY" --check
       - id: changes
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}

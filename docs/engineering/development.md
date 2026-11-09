@@ -78,6 +78,18 @@ Between releases, or on a watch without the Play Store, the watch app is sideloa
 grants the permissions, and `scripts/wear-skip-onboarding.sh` marks a never-onboarded watch
 as set up. The walkthrough is [docs/how-to/wear-os-sideload.md](../how-to/wear-os-sideload.md).
 
+## Docs and the Wiki
+
+The [wiki](https://github.com/Hale-MTU/OpenWatch/wiki) is a mirror of the repository's Markdown, rebuilt by `.github/workflows/wiki.yml` on every push to `main` that touches a `.md` file: `README.md` is Home, every file under `docs/` and the other root Markdown files (changelog, privacy policy, agent notes) are one page each, named after their first heading, with a sidebar by folder. Edit the files here, never the wiki: the next run overwrites it.
+
+`scripts/sync-wiki.py` rewrites each relative link to the page it points at, or to the file on GitHub for anything that is not a page. Its `--check` mode runs in the verify gate and fails on a relative link to a file that does not exist. To see the pages locally:
+
+```bash
+python3 scripts/sync-wiki.py --repo Hale-MTU/OpenWatch --out /tmp/openwatch-wiki
+```
+
+Two Markdown files with the same first heading would become one page; the script stops and names both.
+
 ## Releases
 
 `.github/workflows/release.yml` is the release, on the schedule, a version tag and the manual

@@ -77,7 +77,7 @@ Verified on 2026-10-07 with a Galaxy Watch8 (Wear OS on Android 16) and a Graphe
 
 ## Experimental Status
 
-Watch support is developed and verified against a single Garmin model. It is offered in the same spirit as [Bluetooth LE sensors](ble-sensors.md): useful, honest about its limits, and not a substitute for the vendor's own app.
+Watch support is developed and verified against a single Garmin model. It is offered in the same spirit as [Bluetooth LE sensors](https://github.com/Hale-MTU/OpenVitals/blob/main/docs/features/ble-sensors.md): useful, honest about its limits, and not a substitute for the vendor's own app.
 
 - The protocol is not model-specific, and OpenWatch asks each watch what it can do rather than assuming. A watch that does not report find-my-watch gets no Find button; one without a settings tree gets no settings row.
 - Both Garmin transports sync and forward notifications: current multi-link watches and the older direct-GFDI characteristic pair. Live heart-rate and step streaming, and the newer FileSync listing, need the multi-link transport, so an older watch pairs and syncs but has no live readings. Pairing probes the watch and warns when neither transport can be recognized.
@@ -146,7 +146,7 @@ If "Stay connected" is also on, the held link is given up for the duration of th
 
 ### Recorded Activities
 
-Activity files go through the same importer a hand-picked folder of FIT files uses, so imports are batched and a single bad file does not stop the rest. See [FIT files import](fit-files-import.md). The same path applies [elevation correction](elevation-correction.md), so a watch with a drifting barometer gets its altitude from imported tiles.
+Activity files go through the same importer a hand-picked folder of FIT files uses, so imports are batched and a single bad file does not stop the rest. See [FIT files import](https://github.com/Hale-MTU/OpenVitals/blob/main/docs/features/fit-files-import.md). The same path applies [elevation correction](https://github.com/Hale-MTU/OpenVitals/blob/main/docs/features/elevation-correction.md), so a watch with a drifting barometer gets its altitude from imported tiles.
 
 Activities are written to Health Connect as exercise sessions with their routes and series, and appear on the normal activity screens alongside data from any other source. A file is skipped when the Health Connect write permission it needs is missing.
 
@@ -212,7 +212,7 @@ The Data action on a Garmin watch opens the watch-only measurements: the things 
 Today:
 
 - Stress, with today's average.
-- Body Battery, with today's highest value. This also feeds the app's own Body Energy calibration; see [Body Energy](body-energy.md).
+- Body Battery, with today's highest value. This also feeds the app's own Body Energy calibration; see [Body Energy](https://github.com/Hale-MTU/OpenVitals/blob/main/docs/features/body-energy.md).
 - Intensity minutes, counting vigorous minutes double, against the 150-minute weekly target. The week starts on Monday.
 
 Last night:
@@ -298,7 +298,7 @@ Everything rides the held link, so it needs "Stay connected". The watch asks whi
 
 ## CoMaps Guidance On The Watch
 
-"CoMaps guidance on watch", on the watch's device screen, puts the turn-by-turn guidance CoMaps is giving (see [CoMaps navigation context](comaps-navigation-context.md)) on the wrist. Off by default, and complete in itself: no recording has to be running, and the activity-recording CoMaps integration does not have to be on. Switching it on asks for CoMaps' own permission, and the card says so if that grant is declined or later revoked. Ride with a route set in CoMaps and nothing else switched on, and the turns still reach the watch; record a GPS activity at the same time and the wrist and the phone's turn strip show the same guidance.
+"CoMaps guidance on watch", on the watch's device screen, puts the turn-by-turn guidance CoMaps is giving (see [CoMaps navigation context](https://github.com/Hale-MTU/OpenVitals/blob/main/docs/features/comaps-navigation-context.md)) on the wrist. Off by default, and complete in itself: no recording has to be running, and the activity-recording CoMaps integration does not have to be on. Switching it on asks for CoMaps' own permission, and the card says so if that grant is declined or later revoked. Ride with a route set in CoMaps and nothing else switched on, and the turns still reach the watch; record a GPS activity at the same time and the wrist and the phone's turn strip show the same guidance.
 
 Garmin watches have no turn-by-turn channel a phone can drive, so the guidance travels as a notification: the next manoeuvre as the title ("Turn left", "Roundabout, exit 3", "Arrive at destination"), the distance to it as the subtitle, and the street, the distance left and the time left as the body. One notification is added when guidance starts and updated in place from then on, so the watch does not buzz at every fix; it is withdrawn the moment guidance stops — the route ended, the toggle went off, the watch was forgotten — so a finished route never lingers on the wrist.
 
@@ -375,7 +375,7 @@ Notification text is read on the device, held in memory only while it is needed,
 
 Calendar events follow the same rule: read only while answering a watch that asked, held in memory only, sent only to the watch, never stored. Weather comes from a weather app on the phone and goes only to the watch; OpenWatch itself never talks to a weather service. What the phone is playing is read only while music controls are on for a paired watch, goes only to that watch, and is never stored.
 
-See [Privacy](../app/privacy.md) and [Permissions](../app/permissions.md) for the full boundary, including why the companion association is asked for and why it is optional.
+See [Privacy](../../PRIVACY.md) and [Permissions](../app/permissions.md) for the full boundary, including why the companion association is asked for and why it is optional.
 
 ## Known Limitations
 
