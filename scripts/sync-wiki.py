@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """Build the GitHub wiki from the repository's Markdown.
 
-The repository is the source: README.md becomes Home, every file under docs/
-and the other root Markdown files become one page each, and a sidebar groups
-them by folder. The wiki is flat and links by page name, so each relative link
+The repository is the source: README.md becomes Home, every other Markdown
+file at the root and every file under docs/ becomes one page, and a sidebar
+groups them by folder. The wiki is flat and links by page name, so each relative link
 is rewritten: to the page it points at, or, for anything else in the
 repository, to the file on GitHub. Pages whose source is gone are removed.
 
-  scripts/sync-wiki.py --repo Hale-MTU/OpenWatch --out path/to/wiki-checkout
-  scripts/sync-wiki.py --repo Hale-MTU/OpenWatch --check
+  scripts/sync-wiki.py --repo OWNER/NAME --out path/to/wiki-checkout
+  scripts/sync-wiki.py --repo OWNER/NAME --check
 
 --out is run by .github/workflows/wiki.yml on every push to main that touches
 Markdown. --check, run by verify.yml, builds nothing and fails on a relative
 link to a file that does not exist, which the wiki would turn into a 404.
+
+The same script runs in OpenVitals, OpenWatch, OpenLink and OpenBridge; keep
+the copies alike.
 """
 
 from __future__ import annotations
@@ -27,16 +30,23 @@ import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
-# Root files and the page each becomes; the rest of the root is not docs.
-ROOT_PAGES = {
+# Files whose page name is fixed, and the name is the title too; any other
+# file is named after its first heading.
+FIXED_PAGES = {
     "README.md": "Home",
     "CHANGELOG.md": "Changelog",
     "PRIVACY.md": "Privacy-Policy",
     "AGENTS.md": "Agents",
+    # OpenVitals: the detailed inventory, beside docs/features/README.md's "Features" index.
+    "Features.md": "Feature-Inventory",
+    # OpenLink: its one doc, whose heading is a sentence.
+    "docs/spec.md": "Specification",
 }
 # The sidebar's order for docs/ folders; one not listed comes after, by name.
-SECTION_ORDER = ["features", "how-to", "app", "engineering", "releases"]
+SECTION_ORDER = ["features", "how-to", "app", "reference", "engineering", "proposals", "releases"]
 SECTION_TITLES = {"how-to": "How-to"}
+# Sections listed newest first: release notes named by version.
+NEWEST_FIRST = {"releases"}
 # Wiki files this script owns. Anything else in the wiki (an uploaded image) is kept.
 GENERATED = {"_Sidebar.md", "_Footer.md"}
 
@@ -70,18 +80,24 @@ def first_heading(text: str) -> str | None:
 
 def collect(root: pathlib.Path) -> list[Page]:
     pages: list[Page] = []
-    for source, name in ROOT_PAGES.items():
-        path = root / source
-        if path.is_file():
-            heading = first_heading(path.read_text(encoding="utf-8"))
-            # "# AGENTS.md" names the file, not the page.
-            title = heading if heading and not heading.endswith(".md") else name.replace("-", " ")
-            pages.append(Page(source, name, title, ""))
+    roots = sorted(root.glob("*.md"), key=lambda p: (p.name != "README.md", p.name.lower()))
+    for path in roots:
+        heading = first_heading(path.read_text(encoding="utf-8"))
+        name = FIXED_PAGES.get(path.name)
+        if name is None:
+            name = page_name(heading) if heading and not heading.endswith(".md") else page_name(path.stem.replace("_", " ").title())
+        # A fixed name is the title too ("# AGENTS.md" names the file, not the page).
+        fixed = path.name in FIXED_PAGES and path.name != "README.md"
+        title = heading if heading and not heading.endswith(".md") and not fixed else name.replace("-", " ")
+        pages.append(Page(path.name, name, title, ""))
     for path in sorted((root / "docs").rglob("*.md")):
         source = path.relative_to(root).as_posix()
         title = first_heading(path.read_text(encoding="utf-8")) or path.stem
+        name = FIXED_PAGES.get(source) or page_name(title)
+        if source in FIXED_PAGES:
+            title = name.replace("-", " ")
         section = source.split("/")[1] if source.count("/") >= 2 else ""
-        pages.append(Page(source, page_name(title), title, section))
+        pages.append(Page(source, name, title, section))
     seen: dict[str, str] = {}
     for page in pages:
         if page.name in seen:
@@ -151,6 +167,11 @@ def body(page: Page, text: str) -> str:
     return "\n".join(lines).strip("\n") + "\n"
 
 
+def natural(page: Page) -> list:
+    """Sorts "2.10.0" after "2.9.0"."""
+    return [int(part) if part.isdigit() else part for part in re.split(r"(\d+)", page.title.lower())]
+
+
 def sidebar(pages: list[Page]) -> str:
     lines = ["**[[Home]]**", ""]
     sections = sorted(
@@ -159,14 +180,17 @@ def sidebar(pages: list[Page]) -> str:
     )
     for section in sections:
         lines.append(f"**{SECTION_TITLES.get(section, section.replace('-', ' ').capitalize())}**")
-        for page in sorted((p for p in pages if p.section == section), key=lambda p: p.title.lower()):
+        listed = sorted((p for p in pages if p.section == section), key=natural, reverse=section in NEWEST_FIRST)
+        # A folder's README is its index: first.
+        listed.sort(key=lambda p: not p.source.endswith("/README.md"))
+        for page in listed:
             lines.append(f"- [[{page.title}|{page.name}]]")
         lines.append("")
-    lines.append("**Project**")
-    for page in pages:
-        if not page.section and page.name != "Home":
-            lines.append(f"- [[{page.title}|{page.name}]]")
-    return "\n".join(lines) + "\n"
+    project = [page for page in pages if not page.section and page.name != "Home"]
+    if project:
+        lines.append("**Project**")
+        lines.extend(f"- [[{page.title}|{page.name}]]" for page in project)
+    return "\n".join(lines).rstrip("\n") + "\n"
 
 
 def build(root: pathlib.Path, repo: str, branch: str, out: pathlib.Path) -> tuple[list[str], list[tuple[str, str]]]:
