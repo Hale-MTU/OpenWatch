@@ -202,7 +202,7 @@ recording sessions and live readings.
 - `OpenWatchLinkService` is exported with no permission (a custom one is granted only if
   OpenWatch was installed first, and a normal one protects nothing); the trust is decided
   per call by `OpenLinkHostCore` from the caller's signing certificate. `res/values/openlink.xml` lists the certificates trusted without asking
-  (OpenVitals' release key); any other app waits on the Connected apps screen.
+  (OpenVitals' release upload key and its Play app-signing key); any other app waits on the Connected apps screen.
 - `OpenWatchLinkCapabilities` answers from memory on the binder thread: `LinkDevices` (a
   StateFlow over the registry, the sync controller, the Wear OS link store and the scale),
   `LinkProfileSync` (last writer wins, stamped in `openlink_profile`), and

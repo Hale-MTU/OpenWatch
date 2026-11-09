@@ -67,22 +67,26 @@ procedure are in [docs/engineering/development.md](docs/engineering/development.
 Play listing text is under `fastlane/metadata/android/`. The privacy policy is
 [PRIVACY.md](PRIVACY.md).
 
-## Migrating from OpenVitals
+## Coming from OpenVitals
 
-OpenVitals keeps its device code for now, so the two apps can be installed side by side.
-Three things to know:
+OpenVitals 2.16.0 and earlier synced watches and the scale themselves; from the next version
+that is OpenWatch's job, and an updated OpenVitals says so once, with a link here. Three things
+to know:
 
 - **Health Connect records belong to the app that wrote them.** OpenWatch cannot update or
-  delete a record OpenVitals wrote, and the reverse. The sync cursors and file watermarks
-  start empty, so OpenWatch's first sync imports what the watch still holds, as new records
-  under OpenWatch. Remove the watch and the scale from OpenVitals first, or pause its device
-  syncs, so each record has one writer.
-- **The Wear OS watch app is a different app.** It installs beside OpenVitals' watch app under
-  its own id and answers only OpenWatch's phone app (a different link UUID). Uninstall the
-  OpenVitals watch app so the two do not both record the sensors.
+  delete a record OpenVitals wrote. The sync cursors and file watermarks start empty, so
+  OpenWatch's first sync imports what the watch still holds, as new records under OpenWatch.
+- **The Wear OS watch app is a different app.** It installs beside OpenVitals' old watch app
+  under its own id and answers only OpenWatch's phone app (a different link UUID). Uninstall
+  the OpenVitals watch app so the two do not both record the sensors.
 - **The watch-only Garmin data is not copied over.** Stress, Body Battery and the other
   measurements OpenVitals kept on the phone are not in Health Connect; OpenWatch fills its own
   store from the next syncs.
+
+OpenVitals and OpenWatch talk over [OpenLink](https://github.com/Hale-MTU/OpenLink) on the
+phone: the body profile, the paired watches for OpenVitals' dashboard tile, and a watch's live
+heart rate while OpenVitals records an activity. OpenWatch asks before it answers an app it
+does not know, on its Connected apps screen.
 
 ## Privacy
 
