@@ -154,7 +154,7 @@ class WearOsWatchSyncService(
         clock = clock,
         zone = zone,
     )
-    private val zones by lazy { WearOsZoneSync(healthConnect, nodePort, zoneProfile, clock, zone) }
+    private val zones by lazy { WearOsZoneSync(healthConnect, nodePort, zoneProfile, profile, clock, zone) }
 
     private val linkRetry = object : WearOsNightSeriesSync.Retry {
         override suspend fun <T> run(pull: suspend () -> T): T = retryOnce(pull)

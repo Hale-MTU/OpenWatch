@@ -29,6 +29,12 @@ object WearLinkPreferences {
     const val HEART_RATE_MAX: String = "hr_max"
     const val HEART_RATE_REST: String = "hr_rest"
 
+    /** The profile for a workout's energy: weight in 100 g, height in cm, birth year, `f`/`m`; `0` for none. */
+    const val BODY_WEIGHT: String = "body_hg"
+    const val BODY_HEIGHT: String = "body_cm"
+    const val BIRTH_YEAR: String = "birth_year"
+    const val SEX: String = "sex"
+
     /** Read only: whether the watch has the Samsung Health Platform. [OFF] / [ON]. */
     const val SAMSUNG_AVAILABLE: String = "samsung"
 

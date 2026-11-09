@@ -8,6 +8,7 @@ import kotlinx.coroutines.CancellationException
 import tech.mmarca.openwatch.domain.insights.HeartRateZoneBasis
 import tech.mmarca.openwatch.domain.insights.observedMaxHeartRateLookbackDays
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.domain.preferences.BiologicalSex
 import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.wearlink.WearLinkPreferences as Preferences
@@ -17,33 +18,55 @@ import tech.mmarca.openwatch.wearlink.WearLinkPreferences as Preferences
  * the maximum and the resting heart rate, as two watch settings, after each
  * sync. From the body profile (shared with OpenVitals over OpenLink), the
  * highest heart rate Health Connect holds for the last year and the latest
- * night's resting rate. An extra: a failed read or an old watch app skips
- * it, and it never fails the sync.
+ * night's resting rate. Beside them the profile a workout's energy needs
+ * (weight, height, birth year, sex), from [energyProfile]. Extras: a failed
+ * read skips only what it was for (a missing weight grant still sends the
+ * zones), an old watch app skips both, and neither ever fails the sync.
  */
 internal class WearOsZoneSync(
     private val healthConnect: HealthConnectGateway,
     private val nodePort: WearOsNodePort,
     private val profile: suspend () -> BodyProfile,
+    private val energyProfile: suspend () -> BodyProfile,
     private val clock: () -> Instant,
     private val zone: () -> ZoneId,
 ) {
 
     suspend fun sync(device: BleSensorDevice, retry: WearOsNightSeriesSync.Retry) {
-        val basis = try {
+        val zones = read("zones") {
             val now = clock()
             val observed = healthConnect.readMaxHeartRate(now.minus(Duration.ofDays(observedMaxHeartRateLookbackDays)), now)?.toInt()
-            HeartRateZoneBasis.of(profile(), now.atZone(zone()).toLocalDate(), observed, latestResting(now))
+            val basis = HeartRateZoneBasis.of(profile(), now.atZone(zone()).toLocalDate(), observed, latestResting(now))
+            listOf(
+                Preferences.HEART_RATE_MAX to (basis.maxBpm ?: 0).toString(),
+                Preferences.HEART_RATE_REST to (basis.restingBpm ?: 0).toString(),
+            )
+        }
+        val body = read("profile") {
+            val body = energyProfile()
+            listOf(
+                Preferences.BODY_WEIGHT to (body.weightKg?.let { Math.round(it * 10).toInt() } ?: 0).toString(),
+                Preferences.BODY_HEIGHT to (body.heightCm?.let { Math.round(it).toInt() } ?: 0).toString(),
+                Preferences.BIRTH_YEAR to (body.birthYear ?: 0).toString(),
+                Preferences.SEX to when (body.sex) { BiologicalSex.FEMALE -> "f"; BiologicalSex.MALE -> "m"; null -> "0" },
+            )
+        }
+        for ((key, value) in zones.orEmpty() + body.orEmpty()) {
+            retry.run { nodePort.setWatchSetting(device.address, device.bluetoothName, key, value) }
+        }
+        if (zones != null || body != null) WearOsLog.log("zones and profile: sent")
+    }
+
+    /** The settings [settings] reads; null, logged by [what], when a read fails. */
+    private suspend fun read(what: String, settings: suspend () -> List<Pair<String, String>>): List<Pair<String, String>>? =
+        try {
+            settings()
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            WearOsLog.log("zones: not read: ${error.javaClass.simpleName}")
-            return
+            WearOsLog.log("$what: not read: ${error.javaClass.simpleName}")
+            null
         }
-        for ((key, bpm) in listOf(Preferences.HEART_RATE_MAX to basis.maxBpm, Preferences.HEART_RATE_REST to basis.restingBpm)) {
-            retry.run { nodePort.setWatchSetting(device.address, device.bluetoothName, key, (bpm ?: 0).toString()) }
-        }
-        WearOsLog.log("zones: sent")
-    }
 
     /** The latest night's resting heart rate of the last week, from any app. */
     private suspend fun latestResting(now: Instant): Int? {

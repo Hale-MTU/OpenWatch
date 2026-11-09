@@ -25,6 +25,7 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.devices.core.sync.UnwrittenSeries
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.domain.model.WearSleepMinute
@@ -380,6 +381,8 @@ class WearOsWatchSyncServiceTest {
             weightKg = { weightReads++; null },
             clock = { t0 },
             zone = { ZoneId.of("+02:00") },
+            // The profile sent to the watch for its workout energy is read on its own; this counts the walking energy's.
+            profile = { BodyProfile() },
         )
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 12)
