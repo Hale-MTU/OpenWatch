@@ -9,4 +9,15 @@
         <!-- OpenVitals release and nightly builds (GitHub), CN=Manuel Marcatili, OU=OpenVitals -->
         <item>0416c0651543e951ef3b6c1ed9beb13833bff3a2be9ddacf492270712861e05d</item>
     </string-array>
+
+    <!--
+        The package names of OpenWatch's first-party OpenLink clients. One of these names under
+        a signer not listed above gets a warning on the Connected apps screen: another app may
+        be using the name.
+    -->
+    <string-array name="openlink_first_party_packages" translatable="false">
+        <item>tech.mmarca.openvitals</item>
+        <item>tech.mmarca.openvitals.debug</item>
+        <item>tech.mmarca.openvitals.ci</item>
+    </string-array>
 </resources>

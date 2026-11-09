@@ -30,7 +30,7 @@ OpenWatch seams noted.
 | `features/home` | The device list, the watch tile, and the way to the other screens. |
 | `features/watches`, `features/scales` | The device screens, as in OpenVitals. |
 | `features/healthconnect`, `features/settings` | Health Connect setup, the sync switch, the body profile, notification access. |
-| `features/connectedapps` | The apps that use OpenWatch over OpenLink: allow, block, per-capability switches, forget; the home card for a pending app. |
+| `features/connectedapps` | The apps that use OpenWatch over OpenLink: allow, block, per-capability switches, forget; a warning for a first-party name under an unknown signer; overlays hidden while it shows. |
 | `link/` | The OpenLink host: the exported service, the device list and profile as OpenLink shows them, recording sessions and live readings for another app. |
 | `healthconnect/` | `HealthConnectGateway`, `ActivityRecordWriter`, the sync gate, intents and availability. |
 | `activityimport/` | FIT activity files into `ActivityWriteRequest`s. |
@@ -212,6 +212,12 @@ recording sessions and live readings.
   `GarminNotificationBridge.holdLiveForSession`, without touching the user's switch; the
   Wear OS app's live heart rate) and reports `RECORDING` on the first reading. A live
   subscription batches those readings once a second to the app that owns the session.
+- A pending app gets no card on the home screen: any app can say hello, and `MainActivity`
+  is exported, so a card could be raised from outside. Pending apps head the Connected apps
+  list, and a client opens that screen from a tap through its `consentIntent`.
+- An app under a first-party package name (`openlink_first_party_packages`) whose signer is
+  not in `openlink_known_signers` gets a warning on its card. While the screen shows, touches
+  through other windows are dropped and, from API 31, other apps' overlays are hidden.
 - Connected apps shows per app "In use now" (`OpenLinkHost.connected`) or the last
   connection, each session's state (`OpenLinkHost.activeSessions` joined with
   `LinkLiveSessions.activity` in `linkSessionStatuses`), and the last profile received.
