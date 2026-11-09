@@ -131,6 +131,13 @@
     <string name="unit_percent">%</string>
     <string name="unit_steps">steps</string>
     <string name="unit_vo2_max">ml/kg/min</string>
+    <string name="metric_body_fat">Body fat</string>
+    <string name="metric_respiratory_rate">Breathing rate</string>
+    <string name="metric_body_temperature">Body temperature</string>
+    <string name="metric_blood_glucose">Blood glucose</string>
+    <string name="unit_breaths">breaths/min</string>
+    <string name="unit_mmol_l">mmol/L</string>
+    <string name="unit_mg_dl">mg/dL</string>
 
     <string name="unit_mmhg">mmHg</string>
     <string name="unit_hpa">hPa</string>
@@ -254,9 +261,7 @@
     <string name="status_phone_refused">%1$s was refused: its key changed</string>
     <string name="action_forget_phone">Forget phone</string>
     <string name="metric_skin_temperature">Skin temperature</string>
-    <string name="metric_respiratory_rate">Breathing rate</string>
     <string name="unit_celsius">°C</string>
     <string name="unit_fahrenheit">°F</string>
-    <string name="unit_breaths_per_minute">br/min</string>
     <string name="measure_error_moved">You moved too much. Rest your arm and try again.</string>
 </resources>
