@@ -39,12 +39,12 @@ notes, and pushes in one motion.
   repository's log between the two commits.
 - Translations: count the keys each `values-*/strings.xml` is missing against
   `values/strings.xml` (translatable ones only) before writing the notes;
-  `verifyTranslations` only enforces 70%. Unlike OpenVitals, OpenWatch is not
-  at 100%: the screens it added after the split (home, Health Connect setup,
-  body profile, settings, part of Connected apps) are English in every locale.
-  Translate the keys the release adds, or say in the notes which screen is
-  English-only. A locale under 70% (Arabic `values-ar` and Hebrew `values-iw`)
-  is not in the picker and must not be announced as a language.
+  `verifyTranslations` only enforces 70%. The thirteen shipping locales are at
+  100% since 2026-11-10 (0.3.0 shipped with the screens OpenWatch added after
+  the split still in English). Translate the keys the release adds, or say in
+  the notes which screen is English-only. A locale under 70% (Arabic
+  `values-ar` and Hebrew `values-iw`) is not in the picker and must not be
+  announced as a language.
 - `gh` is installed and logged in on this laptop. `gh issue view` has printed
   nothing before; `curl` against
   `https://api.github.com/repos/Hale-MTU/OpenWatch/...` (anonymous, 60 calls
