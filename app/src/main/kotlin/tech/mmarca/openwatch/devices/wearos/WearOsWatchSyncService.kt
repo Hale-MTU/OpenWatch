@@ -99,6 +99,8 @@ class WearOsWatchSyncService(
     private val zone: () -> ZoneId,
     /** Whether the user chose to write the watch's breathing rate; off by default, not yet checked against a reference. */
     private val writeRespiratoryRate: () -> Boolean = { false },
+    /** Whether the watch's night is written although another app wrote one; Health Connect's priority then decides. */
+    private val writeSleepBesideOthers: () -> Boolean = { true },
     /** The body for a workout's calories: sex, age and weight. Strict like [weightKg]. */
     private val profile: suspend () -> BodyProfile = { BodyProfile(weightKg = weightKg()) },
     /** The body profile for the watch's heart rate zones: what was entered, no Health Connect read. */
@@ -121,6 +123,7 @@ class WearOsWatchSyncService(
         { bodyProfile.resolve().weightKg },
         Instant::now, ZoneId::systemDefault,
         { preferences.writeRespiratoryRate },
+        { preferences.writeSleepBesideOthers },
         { bodyProfile.resolve() },
         { bodyProfile.declared() },
     )
@@ -510,7 +513,7 @@ class WearOsWatchSyncService(
             }
             // Before the session check: a vendor that owns the session may not own the resting heart rate.
             writeRestingHeartRate(minutes, estimated, night, offset, restingHeartRate, progress)
-            if (hasForeignRecord(SleepSessionRecord::class, from, to, WearOsSleepImport::isOwnRecordId)) {
+            if (!writeSleepBesideOthers() && hasForeignRecord(SleepSessionRecord::class, from, to, WearOsSleepImport::isOwnRecordId)) {
                 WearOsLog.log("$night: Health Connect already holds a session from elsewhere, skipping")
                 continue
             }
@@ -533,7 +536,7 @@ class WearOsWatchSyncService(
         var written = 0
         for ((nap, offset) in WearOsSleepImport.naps(minutes, cursor)) {
             val record = WearOsSleepImport.napRecord(nap, offset, version = clock().toEpochMilli()) ?: continue
-            if (hasForeignRecord(SleepSessionRecord::class, nap.onset, nap.end, WearOsSleepImport::isOwnRecordId)) {
+            if (!writeSleepBesideOthers() && hasForeignRecord(SleepSessionRecord::class, nap.onset, nap.end, WearOsSleepImport::isOwnRecordId)) {
                 WearOsLog.log("nap: Health Connect already holds a session from elsewhere, skipping")
                 continue
             }
