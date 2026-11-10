@@ -514,9 +514,6 @@
     <string name="connected_apps_capability_profile">Udostępniać profil ciała (rok urodzenia, płeć, wzrost, masa ciała) OpenWatch, w obie strony</string>
     <string name="connected_apps_capability_recording">Utrzymywać nadawanie zegarka, gdy nagrywa aktywność</string>
     <string name="connected_apps_capability_live">Odbierać tętno i kroki z zegarka podczas nagrywania</string>
-    <string name="connected_apps_pending_title">%1$s chce się połączyć</string>
-    <string name="connected_apps_pending_body">Zanim na to zezwolisz, sprawdź, co może robić.</string>
-    <string name="connected_apps_review">Sprawdź</string>
     <plurals name="home_watch_more">
         <item quantity="one">%1$s +%2$d</item>
         <item quantity="few">%1$s +%2$d</item>

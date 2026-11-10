@@ -504,9 +504,6 @@
     <string name="connected_apps_capability_profile">与 OpenWatch 双向共享身体档案（出生年份、性别、身高、体重）</string>
     <string name="connected_apps_capability_recording">在它记录活动时保持手表持续传输</string>
     <string name="connected_apps_capability_live">在它记录时接收手表的心率和步数</string>
-    <string name="connected_apps_pending_title">%1$s 想要连接</string>
-    <string name="connected_apps_pending_body">允许之前，请先查看它可以做什么。</string>
-    <string name="connected_apps_review">查看</string>
     <plurals name="home_watch_more">
         <item quantity="one">%1$s +%2$d</item>
         <item quantity="other">%1$s +%2$d</item>

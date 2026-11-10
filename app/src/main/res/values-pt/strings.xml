@@ -504,9 +504,6 @@
     <string name="connected_apps_capability_profile">Partilhar o perfil corporal (ano de nascimento, sexo, altura, peso) com o OpenWatch, nos dois sentidos</string>
     <string name="connected_apps_capability_recording">Manter o relógio a transmitir enquanto grava uma atividade</string>
     <string name="connected_apps_capability_live">Receber a frequência cardíaca e os passos do relógio enquanto grava</string>
-    <string name="connected_apps_pending_title">%1$s quer ligar-se</string>
-    <string name="connected_apps_pending_body">Reveja o que pode fazer antes de a permitir.</string>
-    <string name="connected_apps_review">Rever</string>
     <plurals name="home_watch_more">
         <item quantity="one">%1$s +%2$d</item>
         <item quantity="other">%1$s +%2$d</item>

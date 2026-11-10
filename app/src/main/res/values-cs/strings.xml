@@ -514,9 +514,6 @@
     <string name="connected_apps_capability_profile">Sdílet váš tělesný profil (rok narození, pohlaví, výška, váha) s OpenWatch, oběma směry</string>
     <string name="connected_apps_capability_recording">Udržovat hodinky ve vysílání, zatímco zaznamenává aktivitu</string>
     <string name="connected_apps_capability_live">Dostávat tep a kroky z hodinek, zatímco zaznamenává</string>
-    <string name="connected_apps_pending_title">%1$s se chce připojit</string>
-    <string name="connected_apps_pending_body">Než ji povolíte, zkontrolujte, co smí dělat.</string>
-    <string name="connected_apps_review">Zkontrolovat</string>
     <plurals name="home_watch_more">
         <item quantity="one">%1$s +%2$d</item>
         <item quantity="few">%1$s +%2$d</item>
