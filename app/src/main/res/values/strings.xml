@@ -248,6 +248,9 @@
     <string name="settings_watch_step_probing">Checking what the watch supports</string>
     <string name="settings_watch_pair_action">Pair</string>
     <string name="settings_watch_unsupported_notice">Paired, but this watch uses a connection OpenWatch does not support yet, so it cannot sync.</string>
+    <string name="settings_watch_wearos_companion_required">Android did not link the watch to OpenWatch, so it was not added. OpenWatch needs this link to record workouts that another app starts on the watch. Tap Pair again and allow the request.</string>
+    <string name="settings_watch_wearos_companion_missing">Android has not linked this watch to OpenWatch. Without the link, OpenWatch cannot record workouts that another app starts on the watch.</string>
+    <string name="settings_watch_wearos_companion_link">Link watch</string>
     <string name="settings_watch_no_companion_notice">Paired, but Android access was not granted. Syncing works while OpenWatch is open.</string>
     <string name="settings_watch_connected">Connected</string>
     <string name="settings_watch_not_connected">Not connected</string>

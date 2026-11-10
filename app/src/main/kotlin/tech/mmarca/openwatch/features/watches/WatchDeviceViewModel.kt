@@ -100,6 +100,13 @@ data class WatchDeviceUiState(
     val isCheckingWearOsStatus: Boolean = false,
     /** Why the last Wear OS check failed. [ScreenError.PermissionDenied] gets a grant affordance. */
     val wearOsError: ScreenError? = null,
+    /**
+     * The Wear OS watch has no companion association: it was added before the association
+     * was required, or the user removed it in Android's settings.
+     */
+    val wearOsCompanionMissing: Boolean = false,
+    /** True while Android's association dialog is open. */
+    val isAssociatingWearOs: Boolean = false,
 ) {
     /** Whether the watch declared [capability]. Unknown means show: a never-synced watch has no list. */
     fun supports(capability: GarminCapability): Boolean =
@@ -245,7 +252,12 @@ class WatchDeviceViewModel @Inject constructor(
     fun checkWearOsStatus() {
         val device = uiState.value.device ?: return
         if (!device.isWearosWatch || localState.value.isCheckingWearOsStatus) return
-        localState.update { it.copy(isCheckingWearOsStatus = true) }
+        localState.update {
+            it.copy(
+                isCheckingWearOsStatus = true,
+                wearOsCompanionMissing = !onboardWearOsWatch.isAssociated(device.address),
+            )
+        }
         viewModelScope.launch {
             try {
                 val status = wearOsCompanionManager.checkWearOsWatchStatus(
@@ -263,6 +275,17 @@ class WatchDeviceViewModel @Inject constructor(
             } finally {
                 localState.update { it.copy(isCheckingWearOsStatus = false) }
             }
+        }
+    }
+
+    /** Asks Android for the companion association of a Wear OS watch that has none. */
+    fun associateWearOs() {
+        val device = uiState.value.device ?: return
+        if (!device.isWearosWatch || localState.value.isAssociatingWearOs) return
+        localState.update { it.copy(isAssociatingWearOs = true) }
+        viewModelScope.launch {
+            val associated = onboardWearOsWatch.associate(device.address, device.displayName)
+            localState.update { it.copy(isAssociatingWearOs = false, wearOsCompanionMissing = !associated) }
         }
     }
 
