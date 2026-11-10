@@ -41,7 +41,7 @@
     <string name="settings_about_body">Open source under the AGPL-3.0-or-later. The watch, scale and sync code comes from OpenVitals.</string>
     <string name="body_profile_title">Body profile</string>
     <string name="body_profile_settings_body">Birth year, sex, height and weight for the estimates</string>
-    <string name="body_profile_intro">The scale\'s body composition needs your sex and height; the walking-energy estimate needs your weight. A weight or height Health Connect holds is used instead of the one typed here.</string>
+    <string name="body_profile_intro">The walking-energy estimate needs your weight. A weight or height Health Connect holds is used instead of the one typed here.</string>
     <string name="body_profile_birth_year">Birth year</string>
     <string name="body_profile_sex">Sex</string>
     <string name="body_profile_sex_female">Female</string>
@@ -523,4 +523,18 @@
     <string name="link_streaming_waiting_for">Waiting for a reading from %1$s</string>
     <string name="settings_respiratory_rate_title">Breathing rate from the watch (experimental)</string>
     <string name="settings_respiratory_rate_body">Writes the breathing rate of the watch\'s night-time HRV windows to Health Connect. Not yet checked against a reference device.</string>
+    <string name="watch_settings_section">Watch settings</string>
+    <string name="watch_settings_not_read">The watch keeps these settings itself. Read them to change them here.</string>
+    <string name="watch_settings_unreachable">The watch did not answer. Is it near and its OpenWatch app running?</string>
+    <string name="watch_settings_read">Read from the watch</string>
+    <string name="watch_settings_power_save">Power-save heart rate</string>
+    <string name="watch_settings_power_save_body">About every 10 minutes outside bedtime mode. Bedtime mode always measures every 10 seconds.</string>
+    <string name="watch_settings_synced">Synced wake-ups during sleep</string>
+    <string name="watch_settings_synced_body">Keeps every sleep minute with the heart rate sensor\'s wake-ups instead of a lasting wake lock. Works only with the heart rate from the sensor.</string>
+    <string name="watch_settings_samsung_note">Samsung platform: needs Health Platform Developer Mode on the watch. Without it the platform asks Samsung about this app. A Samsung source that fails falls back to the sensor.</string>
+    <string name="watch_settings_hr_samsung">Heart rate from the Samsung platform</string>
+    <string name="watch_settings_hrv_samsung">HRV from the Samsung platform</string>
+    <string name="watch_settings_skin">Skin temperature at night</string>
+    <string name="watch_settings_spo2">SpO2 hourly at night</string>
+    <string name="watch_settings_allow_on_watch">Allow it on the watch: open OpenWatch there and switch it on once.</string>
 </resources>

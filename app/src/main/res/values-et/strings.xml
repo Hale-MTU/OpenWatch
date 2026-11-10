@@ -514,4 +514,18 @@
     <string name="settings_watch_wearos_companion_required">Android ei sidunud kella OpenWatchiga, seega seda ei lisatud. OpenWatch vajab seda seost, et salvestada treeninguid, mille mõni teine rakendus kellas käivitab. Puuduta uuesti Seo ja luba taotlus.</string>
     <string name="settings_watch_wearos_companion_missing">Android pole seda kella OpenWatchiga sidunud. Ilma seoseta ei saa OpenWatch salvestada treeninguid, mille mõni teine rakendus kellas käivitab.</string>
     <string name="settings_watch_wearos_companion_link">Seo kell</string>
+    <string name="watch_settings_section">Kella seaded</string>
+    <string name="watch_settings_not_read">Kell hoiab neid seadeid ise. Loe need, et neid siin muuta.</string>
+    <string name="watch_settings_unreachable">Kell ei vastanud. Kas see on lähedal ja OpenWatchi rakendus töötab?</string>
+    <string name="watch_settings_read">Loe kellast</string>
+    <string name="watch_settings_power_save">Säästlik pulss</string>
+    <string name="watch_settings_power_save_body">Umbes iga 10 minuti järel väljaspool unerežiimi. Unerežiim mõõdab alati iga 10 sekundi järel.</string>
+    <string name="watch_settings_synced">Koondatud äratused une ajal</string>
+    <string name="watch_settings_synced_body">Hoiab iga uneminuti pulsianduri äratustega püsiva äratuslukuta. Töötab ainult anduri pulsiga.</string>
+    <string name="watch_settings_samsung_note">Samsungi platvorm: vajab kellas Health Platformi arendajarežiimi. Ilma selleta küsib platvorm Samsungilt selle rakenduse kohta. Ebaõnnestuv Samsungi allikas lülitub andurile.</string>
+    <string name="watch_settings_hr_samsung">Pulss Samsungi platvormilt</string>
+    <string name="watch_settings_hrv_samsung">HRV Samsungi platvormilt</string>
+    <string name="watch_settings_skin">Naha temperatuur öösel</string>
+    <string name="watch_settings_spo2">SpO2 iga tund öösel</string>
+    <string name="watch_settings_allow_on_watch">Luba see kellas: ava seal OpenWatch ja lülita see üks kord sisse.</string>
 </resources>

@@ -514,4 +514,18 @@
     <string name="settings_watch_wearos_companion_required">Android 未将手表关联到 OpenWatch，因此没有添加。OpenWatch 需要此关联才能记录其他应用在手表上开始的锻炼。请再次点按“配对”并允许请求。</string>
     <string name="settings_watch_wearos_companion_missing">Android 尚未将此手表关联到 OpenWatch。没有此关联，OpenWatch 无法记录其他应用在手表上开始的锻炼。</string>
     <string name="settings_watch_wearos_companion_link">关联手表</string>
+    <string name="watch_settings_section">手表设置</string>
+    <string name="watch_settings_not_read">这些设置保存在手表上。读取后即可在此更改。</string>
+    <string name="watch_settings_unreachable">手表没有响应。它在附近吗？OpenWatch 应用在运行吗？</string>
+    <string name="watch_settings_read">从手表读取</string>
+    <string name="watch_settings_power_save">省电心率</string>
+    <string name="watch_settings_power_save_body">睡眠模式之外约每 10 分钟一次。睡眠模式始终每 10 秒测量一次。</string>
+    <string name="watch_settings_synced">睡眠时合并唤醒</string>
+    <string name="watch_settings_synced_body">通过心率传感器的唤醒而非持续唤醒锁保留每一分钟睡眠。仅适用于传感器心率。</string>
+    <string name="watch_settings_samsung_note">Samsung 平台：需要在手表上开启 Health Platform 开发者模式。否则平台会向 Samsung 查询此应用。失败的 Samsung 来源会切换回传感器。</string>
+    <string name="watch_settings_hr_samsung">来自 Samsung 平台的心率</string>
+    <string name="watch_settings_hrv_samsung">来自 Samsung 平台的 HRV</string>
+    <string name="watch_settings_skin">夜间皮肤温度</string>
+    <string name="watch_settings_spo2">夜间每小时 SpO2</string>
+    <string name="watch_settings_allow_on_watch">请在手表上允许：在手表上打开 OpenWatch 并开启一次。</string>
 </resources>
