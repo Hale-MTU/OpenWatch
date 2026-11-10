@@ -96,6 +96,33 @@ data class WearOsAscentPage(
 /** One night-time HRV window the watch measured: its start, the RMSSD and the clean beats it rests on. */
 data class WearOsHrvWindow(val start: Instant, val rmssdMillis: Double, val beats: Int)
 
+/** One minute of skin temperature the watch recorded with the Samsung platform. */
+data class WearOsSkinMinute(val time: Instant, val celsius: Double)
+
+/** One page of a skin temperature pull. [hasMore] means the watch cut the reply at its limit. */
+data class WearOsSkinPage(
+    val minutes: List<WearOsSkinMinute>,
+    val hasMore: Boolean,
+)
+
+/** One SpO2 spot measurement the watch took with the Samsung platform. */
+data class WearOsSpo2Measurement(val time: Instant, val percent: Int)
+
+/** One page of an SpO2 pull. [hasMore] means the watch cut the reply at its limit. */
+data class WearOsSpo2Page(
+    val measurements: List<WearOsSpo2Measurement>,
+    val hasMore: Boolean,
+)
+
+/** The breathing rate of one night-time window, and how many routes agreed on it. */
+data class WearOsRespiratoryWindow(val start: Instant, val breathsPerMinute: Double, val routes: Int)
+
+/** One page of a breathing rate pull. [hasMore] means the watch cut the reply at its limit. */
+data class WearOsRespiratoryPage(
+    val windows: List<WearOsRespiratoryWindow>,
+    val hasMore: Boolean,
+)
+
 /** One page of an HRV pull. [hasMore] means the watch cut the reply at its limit. */
 data class WearOsHrvPage(
     val windows: List<WearOsHrvWindow>,
@@ -189,6 +216,39 @@ interface WearOsNodePort {
         targetName: String?,
         onSample: (WearOsHeartRateSample) -> Unit,
     ): Boolean
+
+    /**
+     * Breathing rates of the night-time windows newer than [since], oldest
+     * first. Empty page: the watch app is too old or measures none. Null: no
+     * bonded watch matches. Any other failure throws [WearOsLinkFailure].
+     */
+    suspend fun pullRespiratory(
+        targetAddress: String?,
+        targetName: String?,
+        since: Instant,
+    ): WearOsRespiratoryPage?
+
+    /**
+     * SpO2 spot measurements newer than [since], oldest first. Empty page:
+     * the watch app is too old or has no Samsung platform. Null: no bonded
+     * watch matches. Any other failure throws [WearOsLinkFailure].
+     */
+    suspend fun pullSpo2(
+        targetAddress: String?,
+        targetName: String?,
+        since: Instant,
+    ): WearOsSpo2Page?
+
+    /**
+     * Skin temperature minutes newer than [since], oldest first. Empty page:
+     * the watch app is too old or has no Samsung platform. Null: no bonded
+     * watch matches. Any other failure throws [WearOsLinkFailure].
+     */
+    suspend fun pullSkin(
+        targetAddress: String?,
+        targetName: String?,
+        since: Instant,
+    ): WearOsSkinPage?
 
     /**
      * Tells the watch the wearer used the phone at [at], so it ends a sleep

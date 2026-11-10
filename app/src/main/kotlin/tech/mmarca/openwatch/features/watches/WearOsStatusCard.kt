@@ -263,12 +263,18 @@ internal fun WearOsSyncCard(
                     val weightLine = stringResource(R.string.settings_watch_wearos_needs_weight_read)
                     val restingHeartRateLine = stringResource(R.string.settings_watch_wearos_needs_resting_heart_rate)
                     val hrvLine = stringResource(R.string.settings_watch_wearos_needs_hrv_write)
+                    val respiratoryLine = stringResource(R.string.settings_watch_wearos_needs_respiratory_write)
+                    val spo2Line = stringResource(R.string.settings_watch_wearos_needs_spo2_write)
+                    val skinLine = stringResource(R.string.settings_watch_wearos_needs_skin_write)
                     InlineGrantPrompt(
                         message = listOfNotNull(
                             stepsLine.takeIf { UnwrittenSeries.STEPS in unwritten },
                             caloriesLine.takeIf { UnwrittenSeries.WALKING_ENERGY in unwritten },
                             restingHeartRateLine.takeIf { UnwrittenSeries.RESTING_HEART_RATE in unwritten },
                             hrvLine.takeIf { UnwrittenSeries.HEART_RATE_VARIABILITY in unwritten },
+                            respiratoryLine.takeIf { UnwrittenSeries.RESPIRATORY_RATE in unwritten },
+                            spo2Line.takeIf { UnwrittenSeries.OXYGEN_SATURATION in unwritten },
+                            skinLine.takeIf { UnwrittenSeries.SKIN_TEMPERATURE in unwritten },
                             weightLine.takeIf { weightUnreadable },
                         ).joinToString("\n"),
                         actionLabel = stringResource(R.string.action_grant_permission),

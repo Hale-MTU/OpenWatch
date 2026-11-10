@@ -12,7 +12,9 @@ one, and events from the recorders. This script pulls those files over adb
 3. the power-save heart rate windows: alarms, windows, their length;
 4. the Samsung platform: bind, first delivery, flush answers, lag, errors;
 5. the night-time HRV windows per source: started, stored, dropped and why,
-   and the RMSSD each source gave.
+   and the RMSSD each source gave;
+6. the sleep holds and the synced wake-ups;
+7. the breathing rate of each window by route, and what the skin tracker sent.
 
     python3 -I scripts/wear-debug-report.py --serial 192.168.178.63:41399
     python3 -I scripts/wear-debug-report.py --save out/ --serial ...   # also keeps the raw files
@@ -73,7 +75,9 @@ def when(ms):
 def state_of(snap):
     parts = []
     if snap.get("sleepHold"):
-        parts.append("hold synced" if snap.get("syncedHold") else "hold lock")
+        # "lock" is whether the lasting wake lock was really held; older lines only have the setting.
+        lock = snap.get("lock", not snap.get("syncedHold"))
+        parts.append("hold lock" if lock else "hold synced")
     hr = snap.get("hrSec")
     parts.append("hr off" if not hr else ("hr 10s" if hr == 10 else "hr save"))
     if hr:
@@ -167,6 +171,33 @@ def samsung_lag(snaps):
         print(f"oldest point at its delivery: {statistics.median(lags) / 1000:.0f} s median, {max(lags) / 1000:.0f} s max")
 
 
+def breathing_and_skin(snaps, events):
+    print("\n## 7. Breathing rate, skin temperature, SpO2 and fall-backs\n")
+    windows = [e for e in events if e["src"] == "NightHrv" and e["ev"] in ("ppg_window", "samsung_window")]
+    for e in windows:
+        if e["ev"] == "ppg_window":
+            print(f"  {when(e['startedAt'])} PPG     intervals {e.get('rrIntervals')} signal {e.get('rrSignal')} -> {e.get('rr')}")
+        else:
+            print(f"  {when(e['startedAt'])} Samsung intervals {e.get('rr')} (share {e.get('rrShare')})")
+    if not windows:
+        print("no night windows")
+    c = collections.Counter()
+    for s in snaps:
+        c.update({k: v for k, v in s.get("c", {}).items() if k.startswith("skin.") or k == "samsung.points.SKIN_TEMPERATURE_CONTINUOUS"})
+    o2 = [e for e in events if e["src"] == "Spo2" and e["ev"] == "ended"]
+    if o2:
+        done = [e for e in o2 if e.get("percent") is not None]
+        print(f"SpO2 measurements {len(o2)}, completed {len(done)}"
+              + (f", {statistics.median(e['afterMs'] for e in done) / 1000:.0f} s median" if done else "")
+              + "".join(f"\n  {when(e['t'])}  {e['percent']} %  {e.get('bpm')} bpm" for e in done)
+              + "".join(f"\n  {when(e['t'])}  failed: {e['why']}{' (moving)' if e.get('moving') else ''}" for e in o2 if e.get("percent") is None))
+    fallbacks = [e for e in events if e["ev"] == "fallback"]
+    for e in fallbacks:
+        print(f"fallback to the raw sensor: {e['src']} at {when(e['t'])} ({e.get('why', 'window failed')})")
+    started = [e for e in events if e["src"] == "SamsungFeed" and e.get("type") == "SKIN_TEMPERATURE_CONTINUOUS"]
+    print(f"skin tracker events {len(started)}, points {c.get('samsung.points.SKIN_TEMPERATURE_CONTINUOUS', 0)}, stored minutes {c.get('skin.rows', 0)}")
+
+
 def holds(snaps, events):
     print("\n## 6. Sleep holds and synced wake-ups\n")
     hold = [e for e in events if e["src"] == "SleepHold"]
@@ -240,6 +271,7 @@ def main():
     samsung_lag(snaps)
     hrv(events)
     holds(snaps, events)
+    breathing_and_skin(snaps, events)
 
 
 if __name__ == "__main__":

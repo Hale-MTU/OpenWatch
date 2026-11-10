@@ -147,6 +147,48 @@ class BluetoothWearOsNodePort @Inject constructor(
         }
     }
 
+    override suspend fun pullRespiratory(
+        targetAddress: String?,
+        targetName: String?,
+        since: Instant,
+    ): WearOsRespiratoryPage? = withContext(Dispatchers.IO) {
+        val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext null
+        withSession(match, targetAddress, PULL_TIMEOUT_MS) { session ->
+            if (WearLinkProtocol.CAP_RESPIRATORY_RATE !in session.peer.capabilities) return@withSession WearOsRespiratoryPage(emptyList(), false)
+            val page = unwrap(session.pullRespiratory(since.toEpochMilli(), WearLinkProtocol.MAX_WINDOWS_PER_REQUEST))
+            WearOsRespiratoryPage(
+                windows = page.items.map { WearOsRespiratoryWindow(Instant.ofEpochMilli(it.epochMillis), it.breathsPerMinute, it.routes) },
+                hasMore = page.more,
+            )
+        }
+    }
+
+    override suspend fun pullSpo2(
+        targetAddress: String?,
+        targetName: String?,
+        since: Instant,
+    ): WearOsSpo2Page? = withContext(Dispatchers.IO) {
+        val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext null
+        withSession(match, targetAddress, PULL_TIMEOUT_MS) { session ->
+            if (WearLinkProtocol.CAP_SPO2 !in session.peer.capabilities) return@withSession WearOsSpo2Page(emptyList(), false)
+            val page = unwrap(session.pullSpo2(since.toEpochMilli(), WearLinkProtocol.MAX_WINDOWS_PER_REQUEST))
+            WearOsSpo2Page(page.items.map { WearOsSpo2Measurement(Instant.ofEpochMilli(it.epochMillis), it.percent) }, page.more)
+        }
+    }
+
+    override suspend fun pullSkin(
+        targetAddress: String?,
+        targetName: String?,
+        since: Instant,
+    ): WearOsSkinPage? = withContext(Dispatchers.IO) {
+        val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext null
+        withSession(match, targetAddress, PULL_TIMEOUT_MS) { session ->
+            if (WearLinkProtocol.CAP_SKIN_TEMPERATURE !in session.peer.capabilities) return@withSession WearOsSkinPage(emptyList(), false)
+            val page = unwrap(session.pullSkin(since.toEpochMilli(), WearLinkProtocol.MAX_SKIN_MINUTES_PER_REQUEST))
+            WearOsSkinPage(page.items.map { WearOsSkinMinute(Instant.ofEpochMilli(it.epochMillis), it.skinCelsius) }, page.more)
+        }
+    }
+
     override suspend fun notifyPhoneActive(
         targetAddress: String?,
         targetName: String?,

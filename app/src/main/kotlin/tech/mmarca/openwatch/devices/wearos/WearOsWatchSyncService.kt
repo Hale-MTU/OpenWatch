@@ -28,6 +28,7 @@ import tech.mmarca.openwatch.core.presentation.isPermissionFailure
 import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.data.repository.BodyProfileProvider
+import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPhase
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
@@ -95,6 +96,8 @@ class WearOsWatchSyncService(
     private val weightKg: suspend () -> Double?,
     private val clock: () -> Instant,
     private val zone: () -> ZoneId,
+    /** Whether the user chose to write the watch's breathing rate; off by default, not yet checked against a reference. */
+    private val writeRespiratoryRate: () -> Boolean = { false },
 ) : DeviceSyncPort {
 
     @Inject
@@ -106,21 +109,30 @@ class WearOsWatchSyncService(
         healthConnect: HealthConnectGateway,
         linkStore: WearOsLinkStore,
         bodyProfile: BodyProfileProvider,
+        preferences: OpenWatchPreferences,
     ) : this(
         nodePort, cursors, importRepository, bleDeviceRepository, healthConnect, linkStore,
         // Strict by construction: a failed Health Connect read throws, it never passes for "no weight".
         { bodyProfile.resolve().weightKg },
         Instant::now, ZoneId::systemDefault,
+        { preferences.writeRespiratoryRate },
     )
 
     private val syncMutex = Mutex()
 
-    private val hrv = WearOsHrvSync(
+    private val nightSeries = WearOsNightSeriesSync(
         importRepository = importRepository,
+        healthConnect = healthConnect,
         cursors = cursors,
-        granted = { healthConnect.grantedPermissions() },
+        nodePort = nodePort,
+        clock = clock,
         zone = zone,
+        writeRespiratoryRate = writeRespiratoryRate,
     )
+
+    private val linkRetry = object : WearOsNightSeriesSync.Retry {
+        override suspend fun <T> run(pull: suspend () -> T): T = retryOnce(pull)
+    }
 
     init {
         WearOsLog.installLogcatSink()
@@ -150,7 +162,9 @@ class WearOsWatchSyncService(
                 return notPaired(device)
             }
             if (!pullSleep(device, progress)) return notPaired(device)
-            if (!pullHrv(device, progress)) return notPaired(device)
+            val night = nightSeries.sync(device, linkRetry) ?: return notPaired(device)
+            progress.unwritten += night.unwritten
+            progress.withheldPermissions += night.withheld
         } catch (error: CancellationException) {
             throw error
         } catch (failure: WearOsLinkFailure) {
@@ -502,24 +516,6 @@ class WearOsWatchSyncService(
         healthConnect.deleteImportedRecordsByClientIds(SleepSessionRecord::class, stale)
     }
 
-
-    /**
-     * The night-time HRV windows, written as RMSSD records ([WearOsHrvSync]).
-     * Optional like the other estimates: a missing grant leaves them on the
-     * watch and the sync goes on. False when no bonded watch matches.
-     */
-    private suspend fun pullHrv(device: BleSensorDevice, progress: Progress): Boolean {
-        val outcome = hrv.sync(device.id) { since ->
-            retryOnce { nodePort.pullHrv(device.address, device.bluetoothName, since) }
-        } ?: return false
-        if (outcome.withheld) {
-            progress.unwritten += UnwrittenSeries.HEART_RATE_VARIABILITY
-            progress.withheldPermissions += WearOsHrvImport.writePermission
-            WearOsLog.log("hrv: not written, Health Connect permission missing")
-        }
-        WearOsLog.log("hrv: ${outcome.written} window(s) written")
-        return true
-    }
 
     /**
      * A page pull again after one link failure. The first connection to a

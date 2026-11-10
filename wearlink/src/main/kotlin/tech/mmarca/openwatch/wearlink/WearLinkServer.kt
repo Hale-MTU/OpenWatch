@@ -161,6 +161,21 @@ class WearLinkServer(
                 for (minute in page.items) writer.line(WearLinkProtocol.formatAscentMinute(minute))
                 writer.line(WearLinkProtocol.formatEnd(page.items.size, page.more))
             }
+            is WearLinkProtocol.Request.RespiratorySince -> {
+                val page = handler.respiratorySince(request.sinceEpochMillis, request.limit)
+                for (window in page.items) writer.line(WearLinkProtocol.formatRespiratoryWindow(window))
+                writer.line(WearLinkProtocol.formatEnd(page.items.size, page.more))
+            }
+            is WearLinkProtocol.Request.Spo2Since -> {
+                val page = handler.spo2Since(request.sinceEpochMillis, request.limit)
+                for (measurement in page.items) writer.line(WearLinkProtocol.formatSpo2(measurement))
+                writer.line(WearLinkProtocol.formatEnd(page.items.size, page.more))
+            }
+            is WearLinkProtocol.Request.SkinSince -> {
+                val page = handler.skinSince(request.sinceEpochMillis, request.limit)
+                for (minute in page.items) writer.line(WearLinkProtocol.formatSkinMinute(minute))
+                writer.line(WearLinkProtocol.formatEnd(page.items.size, page.more))
+            }
             is WearLinkProtocol.Request.PhoneActive -> {
                 handler.phoneActive(request.epochMillis)
                 writer.line(WearLinkProtocol.formatEnd(0, false))
