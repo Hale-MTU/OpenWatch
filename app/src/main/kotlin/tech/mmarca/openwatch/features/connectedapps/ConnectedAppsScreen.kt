@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openlink.OpenLink
+import tech.mmarca.openwatch.MainActivity
 import tech.mmarca.openlink.OpenLinkTrust
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.link.LinkSessionStatus
@@ -178,18 +179,19 @@ internal fun capabilityLabel(capability: String): Int = when (capability) {
 /**
  * While this screen shows, a touch that passes through another app's window is dropped, and
  * from API 31 other apps' overlays are hidden. Another app cannot then draw over the screen
- * and steer a tap on Allow or on a capability switch.
+ * and steer a tap on Allow or on a capability switch. The activity drops the touches: Compose
+ * does not apply a view's own `filterTouchesWhenObscured`.
  */
 @Composable
 private fun HideOverlaysWhileShown() {
     val view = LocalView.current
     DisposableEffect(view) {
-        val window = view.context.findActivity()?.window
-        val filtered = view.filterTouchesWhenObscured
-        view.filterTouchesWhenObscured = true
+        val activity = view.context.findActivity()
+        val window = activity?.window
+        (activity as? MainActivity)?.dropObscuredTouches = true
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) window?.setHideOverlayWindows(true)
         onDispose {
-            view.filterTouchesWhenObscured = filtered
+            (activity as? MainActivity)?.dropObscuredTouches = false
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) window?.setHideOverlayWindows(false)
         }
     }
