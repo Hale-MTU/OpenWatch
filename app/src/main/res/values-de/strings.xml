@@ -504,9 +504,6 @@
     <string name="connected_apps_capability_profile">Dein Körperprofil (Geburtsjahr, Geschlecht, Größe, Gewicht) mit OpenWatch teilen, in beide Richtungen</string>
     <string name="connected_apps_capability_recording">Deine Uhr verbunden halten, während sie eine Aktivität aufzeichnet</string>
     <string name="connected_apps_capability_live">Herzfrequenz und Schritte deiner Uhr empfangen, während sie aufzeichnet</string>
-    <string name="connected_apps_pending_title">%1$s möchte sich verbinden</string>
-    <string name="connected_apps_pending_body">Prüfe, was sie darf, bevor du sie erlaubst.</string>
-    <string name="connected_apps_review">Prüfen</string>
     <plurals name="home_watch_more">
         <item quantity="one">%1$s +%2$d</item>
         <item quantity="other">%1$s +%2$d</item>

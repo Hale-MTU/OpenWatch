@@ -508,9 +508,6 @@ Podes desactivalo cando queiras e revogar o acceso ás notificacións desde os a
     <string name="connected_apps_capability_profile">Compartir o teu perfil corporal (ano de nacemento, sexo, altura, peso) con OpenWatch, nos dous sentidos</string>
     <string name="connected_apps_capability_recording">Manter o teu reloxo transmitindo mentres grava unha actividade</string>
     <string name="connected_apps_capability_live">Recibir a frecuencia cardíaca e os pasos do teu reloxo mentres grava</string>
-    <string name="connected_apps_pending_title">%1$s quere conectarse</string>
-    <string name="connected_apps_pending_body">Revisa o que pode facer antes de permitila.</string>
-    <string name="connected_apps_review">Revisar</string>
     <plurals name="home_watch_more">
         <item quantity="one">%1$s +%2$d</item>
         <item quantity="other">%1$s +%2$d</item>

@@ -508,9 +508,6 @@
     <string name="connected_apps_capability_profile">体のプロフィール（生年、性別、身長、体重）を OpenWatch と双方向で共有する</string>
     <string name="connected_apps_capability_recording">アクティビティの記録中、ウォッチのストリーミングを維持する</string>
     <string name="connected_apps_capability_live">記録中にウォッチの心拍数と歩数を受け取る</string>
-    <string name="connected_apps_pending_title">%1$s が接続を求めています</string>
-    <string name="connected_apps_pending_body">許可する前に、アプリにできることを確認してください。</string>
-    <string name="connected_apps_review">確認</string>
     <plurals name="home_watch_more">
         <item quantity="one">%1$s +%2$d</item>
         <item quantity="other">%1$s +%2$d</item>

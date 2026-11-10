@@ -68,6 +68,12 @@ behind a per-watch toggle that is off by default.
 `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_CONNECTED_DEVICE`, for the scale's 45-second
 listening service. `WAKE_LOCK` and `POST_NOTIFICATIONS` go with it.
 
+## Overlay Protection
+
+`HIDE_OVERLAY_WINDOWS`, a normal permission with no prompt. While the Connected apps screen
+shows, OpenWatch hides other apps' overlays (API 31 and newer) and drops touches that pass
+through another app's window, so no app can draw over Allow or a capability switch.
+
 ## Removed Network Permissions
 
 `INTERNET`, `ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE` and the `android.hardware.wifi`

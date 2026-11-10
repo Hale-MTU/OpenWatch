@@ -504,9 +504,6 @@
     <string name="connected_apps_capability_profile">Jakaa kehoprofiilisi (syntymävuosi, sukupuoli, pituus, paino) OpenWatchin kanssa, molempiin suuntiin</string>
     <string name="connected_apps_capability_recording">Pitää kellosi lähettämässä, kun se tallentaa harjoitusta</string>
     <string name="connected_apps_capability_live">Vastaanottaa kellosi sykkeen ja askeleet tallennuksen aikana</string>
-    <string name="connected_apps_pending_title">%1$s haluaa yhdistää</string>
-    <string name="connected_apps_pending_body">Tarkista ennen sallimista, mitä se saa tehdä.</string>
-    <string name="connected_apps_review">Tarkista</string>
     <plurals name="home_watch_more">
         <item quantity="one">%1$s +%2$d</item>
         <item quantity="other">%1$s +%2$d</item>

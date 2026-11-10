@@ -504,9 +504,6 @@
     <string name="connected_apps_capability_profile">Jagada sinu kehaprofiili (sünniaasta, sugu, pikkus, kehakaal) OpenWatchiga, mõlemas suunas</string>
     <string name="connected_apps_capability_recording">Hoida kella saatmas, kuni see salvestab tegevust</string>
     <string name="connected_apps_capability_live">Saada salvestamise ajal sinu kella pulssi ja samme</string>
-    <string name="connected_apps_pending_title">%1$s soovib ühenduda</string>
-    <string name="connected_apps_pending_body">Vaata enne lubamist üle, mida see tohib teha.</string>
-    <string name="connected_apps_review">Vaata üle</string>
     <plurals name="home_watch_more">
         <item quantity="one">%1$s +%2$d</item>
         <item quantity="other">%1$s +%2$d</item>

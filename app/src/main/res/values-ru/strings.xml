@@ -514,9 +514,6 @@
     <string name="connected_apps_capability_profile">Обмениваться профилем тела (год рождения, пол, рост, вес) с OpenWatch в обе стороны</string>
     <string name="connected_apps_capability_recording">Поддерживать передачу с часов, пока оно записывает активность</string>
     <string name="connected_apps_capability_live">Получать пульс и шаги с часов во время записи</string>
-    <string name="connected_apps_pending_title">%1$s хочет подключиться</string>
-    <string name="connected_apps_pending_body">Проверьте, что ему будет разрешено, прежде чем дать доступ.</string>
-    <string name="connected_apps_review">Просмотреть</string>
     <plurals name="home_watch_more">
         <item quantity="one">%1$s +%2$d</item>
         <item quantity="few">%1$s +%2$d</item>
