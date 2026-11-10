@@ -20,7 +20,7 @@ import tech.mmarca.openlink.OpenLinkTrust
 import tech.mmarca.openlink.host.OpenLinkClientRecord
 import tech.mmarca.openlink.host.OpenLinkHost
 import tech.mmarca.openlink.host.OpenLinkHostCore
-import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.link.FirstPartyApps
 import tech.mmarca.openwatch.link.LinkLiveSessions
 import tech.mmarca.openwatch.link.LinkSessionStatus
 import tech.mmarca.openwatch.link.linkSessionStatuses
@@ -57,10 +57,7 @@ class ConnectedAppsViewModel @Inject constructor(
 
     private val statuses = combine(host.activeSessions, liveSessions.activity, ::linkSessionStatuses)
 
-    private val firstParty = FirstPartyApps(
-        packageNames = context.resources.getStringArray(R.array.openlink_first_party_packages).toSet(),
-        knownSigners = context.resources.getStringArray(R.array.openlink_known_signers).toSet(),
-    )
+    private val firstParty = FirstPartyApps.from(context)
 
     val apps: StateFlow<List<ConnectedApp>> =
         combine(core.clients, host.connected, statuses, ticker()) { records, connected, sessions, now ->
@@ -92,7 +89,7 @@ class ConnectedAppsViewModel @Inject constructor(
         granted = capabilities,
         lastSeenAtMillis = lastSeenAtMillis,
         profileReceivedAtMillis = profileReceivedAtMillis,
-        unknownSignerForKnownName = firstParty.usesNameWithoutKey(packageName, signerSha256),
+        unknownSignerForKnownName = firstParty.usesNameWithoutKey(packageName, knownSigner),
     )
 
     /** The time now, again every half minute, so "5 min ago" moves on an open screen. */

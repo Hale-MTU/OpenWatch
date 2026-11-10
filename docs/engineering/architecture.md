@@ -215,9 +215,13 @@ recording sessions and live readings.
 - A pending app gets no card on the home screen: any app can say hello, and `MainActivity`
   is exported, so a card could be raised from outside. Pending apps head the Connected apps
   list, and a client opens that screen from a tap through its `consentIntent`.
-- An app under a first-party package name (`openlink_first_party_packages`) whose signer is
-  not in `openlink_known_signers` gets a warning on its card. While the screen shows, touches
-  through other windows are dropped and, from API 31, other apps' overlays are hidden.
+- Only a first-party package name (`openlink_first_party_packages`) under one of
+  `openlink_known_signers` is trusted without asking (`FirstPartyApps`); the same key under
+  another name asks like any app. A first-party name that came under another key gets a
+  warning on its card. What the user switches off stays off through the app's next hello.
+- While the Connected apps screen shows, `MainActivity` drops touches that came through
+  another app's window (Compose ignores a view's `filterTouchesWhenObscured`), and from
+  API 31 other apps' overlays are hidden.
 - Connected apps shows per app "In use now" (`OpenLinkHost.connected`) or the last
   connection, each session's state (`OpenLinkHost.activeSessions` joined with
   `LinkLiveSessions.activity` in `linkSessionStatuses`), and the last profile received.
