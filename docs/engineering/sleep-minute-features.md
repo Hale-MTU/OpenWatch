@@ -94,3 +94,33 @@ The watch closes a minute 90 seconds after it started; by then every batch that 
 ## What the watch actually delivers
 
 The Watch8's accelerometer cannot wake the watch and buffers 300 readings, 48 seconds at the 6.25 Hz the hub delivers; readings older than that are lost when the buffer wraps. The heart rate sensor can wake the watch, so its report latency sets how often the watch wakes at night and is kept at 40 seconds so the accelerometer buffer is drained before it wraps. A minute still ends up sparse now and then (`SPARSE` flag, `n` under 150), with few or no valid five-second epochs; the phone's window detector carries the last known angle change across such minutes rather than reading them as movement. The first recorded night, before the latency change, kept a median of 30 readings a minute.
+
+### Automatic hold on the watch
+
+The watch does not need bedtime mode to record whole minutes at night or during a nap: `SleepHold` (in `:wear`) starts the wake lock when the last ten minutes were worn, still (no steps, no screen, movement at most 2) and the heart rate fell (later half at least 2 bpm under the earlier half and at least 4 bpm under the median of the last 180 readings; three readings, one per half, are enough). It stops after five waking minutes in a row (screen on, steps, or movement of at least 8), when the watch leaves the wrist or goes on the charger, or after ten hours, and waits an hour after the cap. A minute that arrives sparse because the processor dozed counts as still only when it has no steps and no screen, so walking with the screen off is not read as rest. Not yet verified on a watch.
+
+Against false starts the hold needs twenty quiet minutes by day (06:00 to 22:00) instead of ten, and the phone reports an unlock (`PHONE_ACTIVE` over the link, `WearOsPhoneActivity`, at most one every five minutes): a hold `SleepHold` started ends at once and none starts for thirty minutes. A glance at the watch is not use: its screen-on minute is one waking minute of the five that release the hold, and a bedtime-mode hold is never ended by the phone.
+
+### Synced wake-ups instead of a lasting wake lock
+
+Only wake-up sensors wake the processor, and on the Galaxy Watch7 that is the batched heart rate sensor. The accelerometer (its buffer holds 48 seconds at 6.25 Hz, the slowest it runs), the barometer and the step counter deliver on their own timers and only while the processor is awake; the timers drift against the heart rate's, and the accelerometer lost readings even with the heart rate waking the watch every 40 seconds (2026-11-08 01:00-02:00: a median of 0 of 375 readings a minute). `SensorWakeSync` therefore flushes every sensor's buffer at each heart rate batch and holds a short wake lock until the flushes complete, so one wake-up empties everything. With "Sleep: synced wake-ups" on the status screen (`WearSettings.syncedSleepHold`) a sleep hold relies on that alone and takes no lasting lock while the heart rate runs at the full rate from the sensor; otherwise it keeps the lock. Which of the two records whole minutes for less battery is what the debug protocol is to show.
+
+The night of 2026-11-02/03 used to check the night estimator (the estimate 01:38-08:02, 6 h 13 sleep, against Samsung Health's 01:25-08:17, 6 h 35) is not a typical night: Sleep as Android ran from 01:18 with its watch companion, which streams the watch's accelerometer and heart rate and very likely kept the processor awake, so its movement is denser than a normal night without bedtime mode. Do not tune thresholds to that density; the automatic hold is what has to make an ordinary night as dense.
+
+## Naps
+
+`WearNaps` (in `:domain`, run on the phone) finds sleep outside the main night in the same rows. It reads the day, not only the night window, and leaves the night to `WearNight`: the night's estimate does not change, a test checks that.
+
+A nap is a run of minutes that are all of: worn, scored as sleep by `SleepWakeScorer` (still arm, quiet pulse), and with the 5-minute median heart rate clearly under the wearer's waking level. The waking level is the lower quarter of the heart rate of the worn minutes between 06:00 and 22:00 outside the night sessions; with fewer than 90 such minutes there is no level and no nap.
+
+| Rule | Value |
+| --- | --- |
+| Minimum sleep | 20 minutes |
+| Longest nap | 4 hours (a longer run is a night not estimated yet) |
+| Heart rate drop by day (06:00-22:00) | at least 10 bpm and 12% of the waking level |
+| Heart rate drop 22:00-06:00 | at least 6 bpm and 8%, and only when the minutes hold a night session |
+| Gap that joins two runs | up to 5 minutes, worn |
+| Distance from a night session | a run within 30 minutes of one is part of that night |
+| Onset | moved back up to 15 minutes over still, worn minutes with the pulse at least 3 bpm under the waking level |
+
+The thresholds are judgement, not fitted: no nap was recorded against a reference yet. Sitting still on a sofa or in a cinema lowers the pulse by a few beats, so by day the drop is the stricter rule. A nap has one `LIGHT` stage for its sleep, `AWAKE` for wake minutes; it is too short for deep and REM. A nap has no resting heart rate. Its identity is its onset minute, so re-estimating as the day fills in gives the same nap; if the onset moves, the phone replaces the old record.

@@ -4,6 +4,7 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
+import android.hardware.SensorEventListener2
 import android.hardware.SensorManager
 import android.os.Handler
 import android.os.HandlerThread
@@ -21,7 +22,9 @@ import android.util.Log
 class AscentRecorder(
     context: Context,
     private val store: MetricStore,
-) : SensorEventListener {
+    /** Empties the barometer's buffer at each heart rate wake-up; see [SensorWakeSync]. */
+    private val wakeSync: SensorWakeSync? = null,
+) : SensorEventListener2 {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private var thread: HandlerThread? = null
@@ -51,12 +54,14 @@ class AscentRecorder(
             return false
         }
         thread = worker
+        wakeSync?.join(this)
         Log.i(TAG, "Recording ascent from ${sensor.name}")
         return true
     }
 
     fun stop() {
         val worker = thread ?: return
+        wakeSync?.leave(this)
         sensorManager.unregisterListener(this)
         worker.quitSafely()
         thread = null
@@ -65,6 +70,7 @@ class AscentRecorder(
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_PRESSURE) return
+        DebugProtocol.arrival("baro")
         val counter = counter ?: return
         val hectopascals = event.values.firstOrNull() ?: return
         val at = SensorTime.epochMillisOf(event.timestamp)
@@ -82,6 +88,10 @@ class AscentRecorder(
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+
+    override fun onFlushCompleted(sensor: Sensor?) {
+        wakeSync?.flushed(this)
+    }
 
     companion object {
         private const val TAG = "AscentRecorder"
