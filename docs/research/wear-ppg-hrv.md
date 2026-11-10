@@ -7,11 +7,11 @@ how, or whether, to integrate a heart-rate-variability feature that does not
 depend on the Samsung Health Sensor SDK (which is Partner-Program / Play-only
 and cannot ship in the public repo).
 
-The Kotlin port on the watch is in review in
-[#27](https://github.com/Hale-MTU/OpenWatch/pull/27) (`PpgBeats`,
-`HrvRmssd`, `NightHrvRecorder`). It times each beat with a zero-phase
-band-pass and a parabola through the peak sample instead of the FFT
-up-sampling the prototype below used.
+It is built now: the watch's night HRV comes from `PpgBeats`, `HrvRmssd` and
+`NightHrvRecorder`, which time each beat with a zero-phase band-pass and a
+parabola through the peak sample instead of the FFT up-sampling the prototype
+below used, and the breathing rate from the same windows. This record stays as
+the measurements behind those choices.
 
 ## Goal
 
@@ -151,28 +151,22 @@ from the numpy prototype to Kotlin on the watch.
 
 Sources: [Samsung: how the sensor breaks new ground](https://news.samsung.com/ca/how-galaxy-watchs-innovative-sensor-breaks-new-ground-in-tracking-your-health), [Samsung support: Watch8 health features](https://www.samsung.com/uk/support/mobile-devices/health-features-on-the-galaxy-watch8-and-watch8-classic/), [Android Authority: AGEs APK teardown](https://www.androidauthority.com/samsung-galaxy-watch-ages-index-apk-teardown-3456073/).
 
-**Respiratory rate (not built).** It can be derived from what the night windows already have:
+**Respiratory rate (built since, opt-in).** Derived from what the night windows already have:
 
 1. From the beat intervals: breathing modulates the interval length (respiratory sinus arrhythmia). Resample the interval series to 4 Hz, take the spectrum, and read the peak between 0.1 and 0.5 Hz (6 to 30 breaths per minute).
 2. From the PPG itself: the baseline wander and the pulse amplitude also move with breathing. The same band applies, and it works as a second estimate when the beats are too few.
 3. Take the value only when both agree within 2 breaths per minute, and only in still windows (the accelerometer gate exists).
 
-Needs: no new sensor, no extra wake time (the 6-minute windows already run). Health Connect has `RespiratoryRateRecord`. Open: compare against Samsung Health's own sleep respiratory rate (it writes to Health Connect) over several nights before showing it.
+Needs: no new sensor, no extra wake time (the 6-minute windows already run). It is written as `RespiratoryRateRecord` only when the user switches it on. Still open: compare against Samsung Health's own sleep respiratory rate over several nights.
 
-## What this means for integration
+## What came of it
 
-- The wake-lock change is a genuine, self-contained improvement to the raw
-  capture and could be lifted into the debug logger independently.
-- A FOSS, on-device **RMSSD** from `hr_raw` is now **demonstrated** on clean
-  rest (RMSSD 44.8 ms, 0 % artifacts). Recommended path:
-  1. Port the numpy pipeline to Kotlin on the watch, with a motion/quality
-     gate (accelerometer + `v0` status) so a noisy window is refused, not
-     reported, and validate against a chest-strap/ECG reference across a few
-     wearers. Ship it FOSS — no Samsung SDK, works in the public repo.
-  2. Fallback only if on-watch cost or cross-wearer robustness disappoints:
-     keep HRV on the Samsung IBI path (SDK / Health Connect) as a Play-only,
-     SDK-gated watch feature, with the phone app and public repo still
-     SDK-free.
+- The wake lock and the unbatched sampling are how the night windows read `hr_raw`.
+- The RMSSD is computed on the watch. A window counts only when the sleep
+  minute rows around it show a still arm, so a noisy window is dropped, not reported.
+- Still open: validate the absolute values against a chest strap or ECG across a
+  few wearers, wrist positions and skin tones. On Samsung watches the platform's
+  own inter-beat intervals are a second HRV source to compare against.
 
 ## Reproduce
 

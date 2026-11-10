@@ -1,6 +1,6 @@
 # Watch: Automatic Activity Detection, More From The Sensors, Workout UI
 
-> **Status (2026-11-04):** Research and proposal, nothing built. Written in the OpenVitals repository while the watch app lived there, and moved here with it: where a status below says "done", it was done in that watch app; in OpenWatch, workouts on the watch are in review in [#28](https://github.com/Hale-MTU/OpenWatch/pull/28). Current behaviour: [Watches](../features/watches.md). Sections say what was checked and what is this project's own judgement.
+> **Status (2026-11-04, workout table updated 2026-11-10):** Research and proposal, nothing built. Written in the OpenVitals repository while the watch app lived there, and moved here with it. Current behaviour: [Watches](../features/watches.md). Sections say what was checked and what is this project's own judgement.
 
 ## Goal
 
@@ -96,15 +96,17 @@ Each item needs a verified, cited source before it is implemented. Listed, not s
 
 ## Wear OS workout idioms
 
+OpenWatch's workout (`wear/workout/WorkoutScreen.kt`) is one screen: time, heart rate, distance and steps, with pause, resume and stop buttons, and a haptic cue when it ends.
+
 | Idiom | Status |
 | --- | --- |
-| Horizontal pager with the page indicator, controls one swipe to the left | Done (`RecordingScreen`) |
-| Bottom action button (`EdgeButton`) | Used on the measurement screens; the workout controls are round buttons on their own page |
-| Ongoing Activity: the pill on the watch face and in recents, with a stopwatch | Done (OpenVitals branch `wear/ongoing-workout`) |
+| Horizontal pager with the page indicator, controls one swipe to the left | Open: the values and the buttons share one screen |
+| Bottom action button (`EdgeButton`) | Open: the controls are full-width buttons |
+| Ongoing Activity: the pill on the watch face and in recents, with a stopwatch | Open (OpenVitals had it on a branch that was not ported) |
 | Ambient (always-on) mode of the workout screen | Open: the screen must dim and show only the elapsed time and heart rate; needs a watch to try |
-| Haptic tick at each kilometre or mile, and at a heart rate zone change | Open |
+| Haptic tick at each kilometre or mile, and at a heart rate zone change | Open: only the end of a workout has a cue |
 | Auto-pause when standing still | Open: the tracker has pauses; the rule is not written |
-| Watch face complications (steps, heart rate) | Open |
+| Watch face complications (steps, heart rate) | Open: tiles exist (`MetricTileService`), complications do not |
 | Rotary crown on lists | The Compose lists scroll with it already |
 | Always-on tile for a running workout | Open |
 

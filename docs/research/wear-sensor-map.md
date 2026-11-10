@@ -1,8 +1,10 @@
 # Research: which Galaxy Watch7 sensors an app can read without the Samsung SDK
 
-**Status: research record, moved here from the OpenVitals repository with the watch app.** Companion to
-[wear-ppg-hrv.md](wear-ppg-hrv.md). Answers the question "what can the watch
-give us with only AOSP APIs and permissions an ordinary app can hold?"
+**Status: research record, moved here from the OpenVitals repository with the watch app; the metric table is updated to what OpenWatch builds.** Companion to
+[wear-ppg-hrv.md](wear-ppg-hrv.md). Answers the question "which raw sensors can an
+ordinary app read on the watch?" The other two ways to read the watch, Health
+Services and the Samsung Health Platform, are in
+[samsung-health-and-privacy.md](../engineering/samsung-health-and-privacy.md).
 
 Source: `adb shell dumpsys sensorservice` on a Galaxy Watch7 (`SM-L310`),
 2026-11-02. The `perm:` column of each sensor decides who may read it.
@@ -34,38 +36,24 @@ the research logger already records.
 
 ## What follows for each wanted metric
 
-| Metric | Route without the SDK |
-|---|---|
-| Heart rate, sleep, steps, ascent | done |
-| HRV (RMSSD) | demonstrated from `hr_raw`, see wear-ppg-hrv.md |
-| Respiratory rate, stress | derivable from PPG, accelerometer and HRV; not yet built |
-| Sleep stages, VO2max, calories, fall detection | derivable from heart rate and motion; not yet built |
-| SpO2 | open. There is no SpO2 sensor. SpO2 needs red and IR light, and `hr_raw` under `READ_HEART_RATE` only exposes two green-like channels (`v1`, `v5`). Whether another mode of `hr_raw` exposes red/IR is unchecked. |
-| ECG, body composition, skin temperature | only through `SSENSOR`, i.e. the Samsung Health Sensor SDK |
-| Cycle tracking | needs skin temperature, so it is blocked with it |
-| Blood pressure | needs calibration and the SDK; not planned |
+| Metric | Route | In OpenWatch |
+|---|---|---|
+| Heart rate, sleep, steps, ascent | Raw sensors | built |
+| Sleep stages | From heart rate and motion (`SleepStageEstimator`) | built |
+| HRV (RMSSD) | From `hr_raw` ([wear-ppg-hrv.md](wear-ppg-hrv.md), `PpgBeats`, `HrvRmssd`), or the Samsung platform's inter-beat intervals | built |
+| Respiratory rate | From the night HRV windows (beat intervals and PPG baseline) | built, opt-in, not checked against a reference |
+| SpO2 | No SpO2 sensor type an ordinary app may read, and `hr_raw` shows only two green-like channels; the Samsung platform's on-demand SpO2 tracker | built, Samsung watches |
+| Skin temperature | Only `SSENSOR` as a raw sensor; the Samsung platform's tracker | built, Samsung watches |
+| ECG, body composition (BIA) | Only `SSENSOR` as a raw sensor; the Samsung platform offers on-demand trackers | not built |
+| VO2 max, fall detection, stress | From heart rate, HRV and motion | not built; see [wear-auto-activity.md](../proposals/wear-auto-activity.md) for VO2 max |
+| Blood pressure | Needs calibration and Samsung's own app | not planned |
 
-## Future plan: reach the SSENSOR-gated sensors without the SDK
-
-The goal is to get ECG, BIA and skin temperature without depending on the
-Samsung Health Sensor SDK, which is Partner-Program gated and cannot live in
-the public repo. This is a later item.
-
-Scope limit, so a future session does not misread this: defeating the
-`SSENSOR` signature permission or otherwise bypassing Android platform
-security is out of scope. Routes that stay in scope:
-
-- Samsung's Partner Program, if access can be obtained, for a Play-Store-only
-  watch build that stays out of the public repo.
-- Reading what Samsung Health already writes to Health Connect (for example
-  the Samsung-written `HeartRateVariabilityRmssdRecord`), accepting that this
-  keeps a Samsung Health dependency on the phone.
-- Checking whether open or documented Health Services / Wear OS APIs expose
-  any of these metrics on this hardware.
+The Samsung platform is reached over Binder without Samsung's library and only
+with its Developer Mode or Samsung's approval; defeating the `SSENSOR` signature
+permission or any other platform protection stays out of scope.
 
 ## Open questions
 
-1. Does `hr_raw` ever expose red/IR channels (SpO2), for example at another
-   sampling rate or sensor configuration?
-2. Port the HRV pipeline to Kotlin on the watch with a motion gate.
-3. Validate the HRV result against a chest strap or ECG reference.
+1. Does `hr_raw` ever expose red/IR channels, for example at another sampling
+   rate or sensor configuration?
+2. Validate the HRV and breathing rate against a chest strap or ECG reference.
