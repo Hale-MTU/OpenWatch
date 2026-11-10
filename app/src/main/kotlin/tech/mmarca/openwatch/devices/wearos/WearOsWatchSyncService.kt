@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.devices.wearos
 
+import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.ElevationGainedRecord
@@ -98,6 +99,8 @@ class WearOsWatchSyncService(
     private val zone: () -> ZoneId,
     /** Whether the user chose to write the watch's breathing rate; off by default, not yet checked against a reference. */
     private val writeRespiratoryRate: () -> Boolean = { false },
+    /** The body for a workout's calories: sex, age and weight. Strict like [weightKg]. */
+    private val profile: suspend () -> BodyProfile = { BodyProfile(weightKg = weightKg()) },
 ) : DeviceSyncPort {
 
     @Inject
@@ -116,6 +119,7 @@ class WearOsWatchSyncService(
         { bodyProfile.resolve().weightKg },
         Instant::now, ZoneId::systemDefault,
         { preferences.writeRespiratoryRate },
+        { bodyProfile.resolve() },
     )
 
     private val syncMutex = Mutex()
@@ -134,6 +138,14 @@ class WearOsWatchSyncService(
         importRepository = importRepository,
         cursors = cursors,
         granted = { healthConnect.grantedPermissions() },
+        zone = zone,
+    )
+
+    private val workoutEnergy = WearOsWorkoutEnergy(
+        healthConnect = healthConnect,
+        profile = profile,
+        insert = { records -> insertEstimates(records, "workout energy") },
+        clock = clock,
         zone = zone,
     )
 
@@ -424,6 +436,24 @@ class WearOsWatchSyncService(
         emptyList()
     }
 
+    /** A written workout's active calories ([WearOsWorkoutEnergy]); a missing grant or weight is reported as the walking energy's. */
+    private suspend fun writeWorkoutEnergy(workout: WearOsWorkout, progress: Progress) {
+        when (val outcome = workoutEnergy.write(workout)) {
+            WearOsWorkoutEnergy.Outcome.Written, WearOsWorkoutEnergy.Outcome.Skipped -> Unit
+            WearOsWorkoutEnergy.Outcome.PermissionMissing -> {
+                progress.withheldPermissions += WearOsWorkoutImport.energyPermission
+                progress.unwritten += UnwrittenSeries.WALKING_ENERGY
+            }
+            is WearOsWorkoutEnergy.Outcome.NoWeight -> {
+                progress.missingBodyWeight = true
+                if (outcome.weightReadWithheld) {
+                    progress.weightReadWithheld = true
+                    progress.withheldPermissions += WEIGHT_READ_PERMISSION
+                }
+            }
+        }
+    }
+
     /** The weight for the walking energy; a failure when it could not be read. It is optional, so that never fails the sync. */
     private suspend fun bodyWeightKg(): Result<Double?> = try {
         Result.success(weightKg())
@@ -531,7 +561,10 @@ class WearOsWatchSyncService(
      * watch and the sync goes on. False when no bonded watch matches.
      */
     private suspend fun pullWorkouts(device: BleSensorDevice, progress: Progress): Boolean {
-        val outcome = workouts.sync(device.id) { since ->
+        val outcome = workouts.sync(
+            deviceId = device.id,
+            afterWritten = { writeWorkoutEnergy(it, progress) },
+        ) { since ->
             retryOnce { nodePort.pullWorkouts(device.address, device.bluetoothName, since) }
         } ?: return false
         if (outcome.withheld.isNotEmpty()) {
