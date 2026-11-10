@@ -1,6 +1,7 @@
 # OpenLink: security fixes, and workouts the watch records itself (proposal)
 
-> **Status:** proposal, nothing built. It builds on OpenLink version 1 as merged
+> **Status:** sections 1.1 to 1.4 are built, 1.5 was dropped (see each section); sections 2
+> and 3 are still proposals. It builds on OpenLink version 1 as merged
 > (`openlink/docs/spec.md`, OpenWatch #15 and #16, OpenVitals #346 and #347).
 > **Decided** marks what the proposal's authors settled in discussion; everything else is for
 > the maintainers.
@@ -20,6 +21,8 @@ Each fix is small and can be merged on its own.
 
 ### 1.1 Keep trust across a key rotation
 
+**Status: built** (OpenLink #4). The caller resolver also reads the certificates the caller's key was rotated from; trust given to a past certificate carries over and the record moves to the current one. An app with several signers is identified by all of them.
+
 `OpenLinkCallerResolver` compares only the caller's current certificate
 (`signingCertificateHistory.last()`). After a regular key rotation (APK signature scheme v3) a
 trusted client drops back to `PENDING`, and the user must approve it again.
@@ -31,6 +34,8 @@ is true, every signer must match. On API 26 and 27 there is no rotation, and the
 `GET_SIGNATURES` check stays. A known signer is checked the same way.
 
 ### 1.2 Warn when a known name comes with an unknown key
+
+**Status: built** (OpenWatch #39). The host takes its first-party clients as package name to certificates (`knownClients`), so the same key under another name asks like any app. A card warns when a first-party name did not come under a first-party key.
 
 An OpenVitals build that OpenWatch's list of known signers does not hold, for example an
 F-Droid build or a build someone made themselves, shows on the Connected apps screen like any
@@ -44,6 +49,8 @@ trust where it came from."
 
 ### 1.3 Protect the consent screen from overlays
 
+**Status: built** (OpenWatch #24 and #39), not yet tested on a device. `MainActivity` drops touches that pass through another app's window, because Compose ignores the view's `filterTouchesWhenObscured`; from API 31 other apps' overlays are hidden.
+
 The Connected apps screen and the pending card can be opened by another app (through the
 `consentIntent`), and nothing stops an app from drawing over them while the user taps "Allow".
 
@@ -53,6 +60,8 @@ permission `HIDE_OVERLAY_WINDOWS` (no dialog).
 
 ### 1.4 Limit pending records
 
+**Status: built** (OpenWatch #24 and #39, OpenLink #4). No home card for a pending app; at most 10 pending records are kept, and one not seen for 30 days is dropped.
+
 Every `hello()` from an unknown app creates a `PENDING` record and a card on OpenWatch's home
 screen. An app can create such a card without the user doing anything.
 
@@ -61,6 +70,8 @@ Fix: show a card only for a client that opened the consent screen from a tap
 at most 10 pending records, drop the oldest, and drop a pending record not seen for 30 days.
 
 ### 1.5 Limit recording requests
+
+**Status: dropped** (OpenLink #4). The first version of that change had a rate limit and a session cap; they cut a watch's heart rate off in a long outing. Only a client the user trusts with `recording` can open a session.
 
 There is no limit on `startRecording`. Fix: one `startRecording` per client per 10 seconds,
 and a session that was not stopped ends after 6 hours. A refused request reports
