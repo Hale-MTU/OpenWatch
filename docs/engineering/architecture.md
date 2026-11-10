@@ -230,6 +230,9 @@ recording sessions and live readings.
 - `OpenWatchLinkPublisher`, started with the app, sends device and local profile changes to
   bound clients.
 
+Proposed, not built: security fixes and workouts the watch records itself, in
+[openlink-recording-proposal.md](openlink-recording-proposal.md).
+
 ## Cross-Cutting Rules
 
 These rules hold app-wide. Breaking one is not a local decision.
