@@ -20,4 +20,5 @@
     <string name="link_streaming_waiting">ממתין לשעון, עבור %1$s</string>
     <string name="link_streaming_from">מ-%1$s</string>
     <string name="link_streaming_waiting_for">ממתין לקריאה מ-%1$s</string>
+    <string name="settings_watch_wearos_needs_hrv_write">שונות קצב הלב לא נכתבה: אשר ל-OpenWatch לכתוב אותה ב-Health Connect, ואז סנכרן שוב.</string>
 </resources>
