@@ -31,6 +31,19 @@ import java.util.UUID
  *   each newer than `epochMillis` (exclusive), then `END <count> <more>`.
  * - `SM_SINCE <epochMillis> <limit>` → up to `limit` `SM` lines, oldest first,
  *   each newer than `epochMillis` (exclusive), then `END <count> <more>`.
+ * - `HV_SINCE <epochMillis> <limit>` → up to `limit` `HV` lines, oldest first,
+ *   each newer than `epochMillis` (exclusive), then `END <count> <more>`. The
+ *   heart rate variability the watch measured at night; only a watch
+ *   announcing `hv` serves it.
+ * - `RR_SINCE <epochMillis> <limit>` → `RR` lines, as `HV_SINCE`; only a watch
+ *   announcing `rr` serves it.
+ * - `SK_SINCE <epochMillis> <limit>` → `SK` lines, as `HV_SINCE`; only a watch
+ *   announcing `sk` serves it.
+ * - `O2_SINCE <epochMillis> <limit>` → `O2` lines, as `HV_SINCE`; only a watch
+ *   announcing `o2` serves it.
+ * - `PHONE_ACTIVE <epochMillis>` → `END 0 0`. The wearer unlocked the phone at
+ *   that time: they are awake, so the watch ends a sleep hold it started by
+ *   itself. Only a watch announcing `pa` serves it.
  * - `HR_LIVE <seconds>` → for up to `seconds` (at most [MAX_LIVE_SECONDS],
  *   less than the watch's idle timeout), one `HR` line as each reading
  *   arrives, then `END <count> 0`. Only a watch announcing `hl` serves it; a
@@ -38,6 +51,15 @@ import java.util.UUID
  *
  * Reply lines:
  * - `HR <epochMillis> <bpm>` — one heart rate sample.
+ * - `HV <epochMillis> <rmssd10> <beats>` — one night-time window: its start,
+ *   the RMSSD in tenths of a millisecond and the clean beats it rests on.
+ * - `RR <epochMillis> <breaths10> <routes>` — the breathing rate of one
+ *   night-time window, in tenths of a breath a minute, and how many routes
+ *   (beat intervals, signal baseline) agreed on it.
+ * - `O2 <epochMillis> <percent> <bpm|->` — one SpO2 spot measurement by the
+ *   Samsung platform: its time, the saturation in percent, the heart rate.
+ * - `SK <minuteMillis> <skin100> <ambient100>` — one minute of the Samsung
+ *   platform's skin temperature, in hundredths of a degree Celsius.
  * - `SM <epochMillis> <kind> <offsetSeconds> <flags> <n> <mv10> <bpm|-> <hsd10|->
  *   <hn> <mx> <my> <mz> <sx> <sy> <sz> <zmin|-> <zmax|-> <zd10|->` — one sleep
  *   minute, the sleep pipeline's input on the phone, every field an integer
@@ -86,7 +108,16 @@ object WearLinkProtocol {
     const val STEP_MINUTE: String = "ST"
     const val ASCENT_SINCE: String = "AS_SINCE"
     const val ASCENT_MINUTE: String = "AS"
+    const val HRV_SINCE: String = "HV_SINCE"
+    const val HRV_WINDOW: String = "HV"
+    const val RESPIRATORY_SINCE: String = "RR_SINCE"
+    const val RESPIRATORY_WINDOW: String = "RR"
+    const val SKIN_SINCE: String = "SK_SINCE"
+    const val SPO2_SINCE: String = "O2_SINCE"
+    const val SPO2_MEASUREMENT: String = "O2"
+    const val SKIN_MINUTE: String = "SK"
     const val HEART_RATE_LIVE: String = "HR_LIVE"
+    const val PHONE_ACTIVE: String = "PHONE_ACTIVE"
     const val END: String = "END"
 
     /** Longer than this a line is a protocol violation; the reader closes rather than buffers. */
@@ -100,6 +131,21 @@ object WearLinkProtocol {
     const val CAP_STEPS: String = "st"
     const val CAP_ASCENT: String = "as"
     const val CAP_LIVE_HEART_RATE: String = "hl"
+
+    /** The watch measures heart rate variability at night and serves `HV_SINCE`. */
+    const val CAP_HRV: String = "hv"
+
+    /** The watch measures the breathing rate in its night windows and serves `RR_SINCE`. */
+    const val CAP_RESPIRATORY_RATE: String = "rr"
+
+    /** The watch records skin temperature from the Samsung platform and serves `SK_SINCE`. */
+    const val CAP_SKIN_TEMPERATURE: String = "sk"
+
+    /** The watch measures SpO2 at night with the Samsung platform and serves `O2_SINCE`. */
+    const val CAP_SPO2: String = "o2"
+
+    /** The watch takes `PHONE_ACTIVE`: the phone says when the wearer used it. */
+    const val CAP_PHONE_ACTIVE: String = "pa"
     const val NO_CAPABILITIES: String = "-"
 
     /** The phone's opening line. */
@@ -143,6 +189,11 @@ object WearLinkProtocol {
         data class SleepMinutesSince(val sinceEpochMillis: Long, val limit: Int) : Request()
         data class StepsSince(val sinceEpochMillis: Long, val limit: Int) : Request()
         data class AscentSince(val sinceEpochMillis: Long, val limit: Int) : Request()
+        data class HrvSince(val sinceEpochMillis: Long, val limit: Int) : Request()
+        data class PhoneActive(val epochMillis: Long) : Request()
+        data class RespiratorySince(val sinceEpochMillis: Long, val limit: Int) : Request()
+        data class SkinSince(val sinceEpochMillis: Long, val limit: Int) : Request()
+        data class Spo2Since(val sinceEpochMillis: Long, val limit: Int) : Request()
         data class LiveHeartRate(val seconds: Int) : Request()
     }
 
@@ -200,6 +251,11 @@ object WearLinkProtocol {
         is Request.SleepMinutesSince -> formatSleepMinutesRequest(request.sinceEpochMillis, request.limit)
         is Request.StepsSince -> formatStepsRequest(request.sinceEpochMillis, request.limit)
         is Request.AscentSince -> formatAscentRequest(request.sinceEpochMillis, request.limit)
+        is Request.HrvSince -> formatHrvRequest(request.sinceEpochMillis, request.limit)
+        is Request.PhoneActive -> "$PHONE_ACTIVE ${request.epochMillis}"
+        is Request.RespiratorySince -> "$RESPIRATORY_SINCE ${request.sinceEpochMillis} ${request.limit.coerceIn(1, MAX_WINDOWS_PER_REQUEST)}"
+        is Request.Spo2Since -> "$SPO2_SINCE ${request.sinceEpochMillis} ${request.limit.coerceIn(1, MAX_WINDOWS_PER_REQUEST)}"
+        is Request.SkinSince -> "$SKIN_SINCE ${request.sinceEpochMillis} ${request.limit.coerceIn(1, MAX_SKIN_MINUTES_PER_REQUEST)}"
         is Request.LiveHeartRate -> "$HEART_RATE_LIVE ${request.seconds.coerceIn(1, MAX_LIVE_SECONDS)}"
     }
 
@@ -214,6 +270,13 @@ object WearLinkProtocol {
         parseSinceRequest(line, ASCENT_SINCE, MAX_ASCENT_MINUTES_PER_REQUEST)?.let { (since, limit) ->
             return Request.AscentSince(since, limit)
         }
+        parseSinceRequest(line, HRV_SINCE, MAX_HRV_WINDOWS_PER_REQUEST)?.let { (since, limit) ->
+            return Request.HrvSince(since, limit)
+        }
+        parsePhoneActive(line)?.let { return it }
+        parseSinceRequest(line, RESPIRATORY_SINCE, MAX_WINDOWS_PER_REQUEST)?.let { (since, limit) -> return Request.RespiratorySince(since, limit) }
+        parseSinceRequest(line, SPO2_SINCE, MAX_WINDOWS_PER_REQUEST)?.let { (since, limit) -> return Request.Spo2Since(since, limit) }
+        parseSinceRequest(line, SKIN_SINCE, MAX_SKIN_MINUTES_PER_REQUEST)?.let { (since, limit) -> return Request.SkinSince(since, limit) }
         parseLiveRequest(line)?.let { return Request.LiveHeartRate(it) }
         return null
     }
@@ -258,6 +321,37 @@ object WearLinkProtocol {
 
     /** The most ascent minutes one `AS_SINCE` reply carries. The phone pages past it. */
     const val MAX_ASCENT_MINUTES_PER_REQUEST: Int = 2000
+
+    /** The most HRV windows one `HV_SINCE` reply carries: a week at 2 a night is far below it. */
+    const val MAX_HRV_WINDOWS_PER_REQUEST: Int = 500
+
+    /** The most breathing windows one `RR_SINCE` reply carries, as for HRV. */
+    const val MAX_WINDOWS_PER_REQUEST: Int = 500
+
+    /** The most skin temperature minutes one `SK_SINCE` reply carries. The phone pages past it. */
+    const val MAX_SKIN_MINUTES_PER_REQUEST: Int = 2000
+
+    /**
+     * One night-time heart rate variability window, keyed on its start: the
+     * RMSSD in tenths of a millisecond (integers on the wire) and the clean
+     * beats it rests on.
+     */
+    data class HrvWindow(val epochMillis: Long, val rmssd10: Int, val beats: Int) {
+        val rmssdMillis: Double get() = rmssd10 / 10.0
+    }
+
+    /** The breathing rate of one night-time window, keyed on its start; [routes] that agreed on it. */
+    data class RespiratoryWindow(val epochMillis: Long, val breaths10: Int, val routes: Int) {
+        val breathsPerMinute: Double get() = breaths10 / 10.0
+    }
+
+    /** One SpO2 spot measurement, keyed on its time; [bpm] is the heart rate the platform took with it. */
+    data class Spo2Measurement(val epochMillis: Long, val percent: Int, val bpm: Int?)
+
+    /** One minute of skin temperature, keyed on the minute's start, in hundredths of a degree Celsius. */
+    data class SkinMinute(val epochMillis: Long, val skin100: Int, val ambient100: Int) {
+        val skinCelsius: Double get() = skin100 / 100.0
+    }
 
     data class HeartRateRequest(val sinceEpochMillis: Long, val limit: Int)
 
@@ -366,6 +460,70 @@ object WearLinkProtocol {
         val steps = fields[2].toIntOrNull() ?: return null
         if (at <= 0 || at % MINUTE_MILLIS != 0L || steps !in 1..MAX_STEPS_PER_MINUTE) return null
         return StepMinute(at, steps)
+    }
+
+    private fun parsePhoneActive(line: String): Request.PhoneActive? {
+        val fields = fields(line)
+        if (fields.size != 2 || fields[0] != PHONE_ACTIVE) return null
+        val at = fields[1].toLongOrNull()?.takeIf { it > 0 } ?: return null
+        return Request.PhoneActive(at)
+    }
+
+    fun formatRespiratoryWindow(window: RespiratoryWindow): String =
+        "$RESPIRATORY_WINDOW ${window.epochMillis} ${window.breaths10} ${window.routes}"
+
+    /** Null unless [line] is a well-formed `RR` line: a time, a breathing rate of 6 to 30 a minute, one or two routes. */
+    fun parseRespiratoryWindow(line: String): RespiratoryWindow? {
+        val fields = fields(line)
+        if (fields.size != 4 || fields[0] != RESPIRATORY_WINDOW) return null
+        val at = fields[1].toLongOrNull() ?: return null
+        val breaths10 = fields[2].toIntOrNull() ?: return null
+        val routes = fields[3].toIntOrNull() ?: return null
+        if (at <= 0 || breaths10 !in MIN_BREATHS10..MAX_BREATHS10 || routes !in 1..2) return null
+        return RespiratoryWindow(at, breaths10, routes)
+    }
+
+    fun formatSpo2(measurement: Spo2Measurement): String =
+        "$SPO2_MEASUREMENT ${measurement.epochMillis} ${measurement.percent} ${measurement.bpm ?: NO_VALUE}"
+
+    /** Null unless [line] is a well-formed `O2` line: a time, 70 to 100 percent, and a plausible heart rate or none. */
+    fun parseSpo2(line: String): Spo2Measurement? {
+        val fields = fields(line)
+        if (fields.size != 4 || fields[0] != SPO2_MEASUREMENT) return null
+        val at = fields[1].toLongOrNull() ?: return null
+        val percent = fields[2].toIntOrNull() ?: return null
+        val bpm = if (fields[3] == NO_VALUE) null else fields[3].toIntOrNull() ?: return null
+        if (at <= 0 || percent !in MIN_SPO2..MAX_SPO2 || (bpm != null && bpm !in MIN_BPM..MAX_BPM)) return null
+        return Spo2Measurement(at, percent, bpm)
+    }
+
+    fun formatSkinMinute(minute: SkinMinute): String = "$SKIN_MINUTE ${minute.epochMillis} ${minute.skin100} ${minute.ambient100}"
+
+    /** Null unless [line] is a well-formed `SK` line: a minute start and temperatures a wrist can have. */
+    fun parseSkinMinute(line: String): SkinMinute? {
+        val fields = fields(line)
+        if (fields.size != 4 || fields[0] != SKIN_MINUTE) return null
+        val at = fields[1].toLongOrNull() ?: return null
+        val skin = fields[2].toIntOrNull() ?: return null
+        val ambient = fields[3].toIntOrNull() ?: return null
+        if (at <= 0 || at % MINUTE_MILLIS != 0L || skin !in MIN_SKIN100..MAX_SKIN100 || ambient !in MIN_AMBIENT100..MAX_AMBIENT100) return null
+        return SkinMinute(at, skin, ambient)
+    }
+
+    fun formatHrvRequest(sinceEpochMillis: Long, limit: Int): String =
+        "$HRV_SINCE $sinceEpochMillis ${limit.coerceIn(1, MAX_HRV_WINDOWS_PER_REQUEST)}"
+
+    fun formatHrvWindow(window: HrvWindow): String = "$HRV_WINDOW ${window.epochMillis} ${window.rmssd10} ${window.beats}"
+
+    /** Null unless [line] is a well-formed `HV` line: a time, a plausible RMSSD and a plausible beat count. */
+    fun parseHrvWindow(line: String): HrvWindow? {
+        val fields = fields(line)
+        if (fields.size != 4 || fields[0] != HRV_WINDOW) return null
+        val at = fields[1].toLongOrNull() ?: return null
+        val rmssd10 = fields[2].toIntOrNull() ?: return null
+        val beats = fields[3].toIntOrNull() ?: return null
+        if (at <= 0 || rmssd10 !in MIN_RMSSD10..MAX_RMSSD10 || beats !in 1..MAX_HRV_BEATS) return null
+        return HrvWindow(at, rmssd10, beats)
     }
 
     fun formatAscentRequest(sinceEpochMillis: Long, limit: Int): String =
@@ -497,6 +655,27 @@ object WearLinkProtocol {
 
     /** A fast elevator climbs about 600 m a minute. More means the barometer jumped. */
     const val MAX_ASCENT_DECIMETRES_PER_MINUTE: Int = 9000
+
+    /** An RMSSD of 0.1 to 300 ms, in tenths. Outside it the detector failed, not a heart. */
+    const val MIN_RMSSD10: Int = 1
+    const val MAX_RMSSD10: Int = 3000
+
+    /** 6 to 30 breaths a minute, in tenths: the band the estimate reads. */
+    const val MIN_BREATHS10: Int = 60
+    const val MAX_BREATHS10: Int = 300
+
+    /** Below 70 percent the reading is a failed measurement, not a sleeper. */
+    const val MIN_SPO2: Int = 70
+    const val MAX_SPO2: Int = 100
+
+    /** A wrist reads 20 to 42 °C; the air around it -20 to 50 °C. In hundredths. */
+    const val MIN_SKIN100: Int = 2000
+    const val MAX_SKIN100: Int = 4200
+    const val MIN_AMBIENT100: Int = -2000
+    const val MAX_AMBIENT100: Int = 5000
+
+    /** A window of a few minutes holds under a thousand beats. */
+    const val MAX_HRV_BEATS: Int = 1000
 
     /** Outside this range the sensor is reporting noise, not a heart. */
     const val MIN_BPM: Int = 25

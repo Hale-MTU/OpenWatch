@@ -72,6 +72,48 @@ class WearLinkSession internal constructor(
             Reply.Unexpected
         }
 
+    fun pullRespiratory(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.RespiratoryWindow>> {
+        val items = ArrayList<WearLinkProtocol.RespiratoryWindow>()
+        return exchange(WearLinkProtocol.Request.RespiratorySince(sinceEpochMillis, limit)) { line ->
+            WearLinkProtocol.parseRespiratoryWindow(line)?.let { items += it; return@exchange Reply.More }
+            WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(Page(items, it.more)) }
+            Reply.Unexpected
+        }
+    }
+
+    fun pullSpo2(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.Spo2Measurement>> {
+        val items = ArrayList<WearLinkProtocol.Spo2Measurement>()
+        return exchange(WearLinkProtocol.Request.Spo2Since(sinceEpochMillis, limit)) { line ->
+            WearLinkProtocol.parseSpo2(line)?.let { items += it; return@exchange Reply.More }
+            WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(Page(items, it.more)) }
+            Reply.Unexpected
+        }
+    }
+
+    fun pullSkin(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.SkinMinute>> {
+        val items = ArrayList<WearLinkProtocol.SkinMinute>()
+        return exchange(WearLinkProtocol.Request.SkinSince(sinceEpochMillis, limit)) { line ->
+            WearLinkProtocol.parseSkinMinute(line)?.let { items += it; return@exchange Reply.More }
+            WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(Page(items, it.more)) }
+            Reply.Unexpected
+        }
+    }
+
+    /** Tells the watch the wearer used the phone at [epochMillis]. */
+    fun notifyPhoneActive(epochMillis: Long): WearLinkOutcome<Unit> =
+        exchange(WearLinkProtocol.Request.PhoneActive(epochMillis)) { line ->
+            if (WearLinkProtocol.parseEnd(line) != null) Reply.Done(Unit) else Reply.Unexpected
+        }
+
+    fun pullHrv(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.HrvWindow>> {
+        val items = ArrayList<WearLinkProtocol.HrvWindow>()
+        return exchange(WearLinkProtocol.Request.HrvSince(sinceEpochMillis, limit)) { line ->
+            WearLinkProtocol.parseHrvWindow(line)?.let { items += it; return@exchange Reply.More }
+            WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(Page(items, it.more)) }
+            Reply.Unexpected
+        }
+    }
+
     /** Closes the connection; the watch is waiting for exactly this. */
     fun close() = connection.close()
 

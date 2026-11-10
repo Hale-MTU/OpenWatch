@@ -17,6 +17,7 @@ data class SettingsUiState(
     val syncEnabled: Boolean = true,
     /** Whether the system lets this app read notifications, for the watch forwarder. */
     val notificationAccessGranted: Boolean = false,
+    val writeRespiratoryRate: Boolean = false,
     val versionName: String = BuildConfig.VERSION_NAME,
 )
 
@@ -26,13 +27,16 @@ class SettingsViewModel @Inject constructor(
     private val preferences: OpenWatchPreferences,
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(SettingsUiState(syncEnabled = preferences.healthConnectSyncEnabled))
+    private val _uiState = MutableStateFlow(
+        SettingsUiState(syncEnabled = preferences.healthConnectSyncEnabled, writeRespiratoryRate = preferences.writeRespiratoryRate),
+    )
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     fun refresh() {
         _uiState.update {
             it.copy(
                 syncEnabled = preferences.healthConnectSyncEnabled,
+                writeRespiratoryRate = preferences.writeRespiratoryRate,
                 notificationAccessGranted =
                     context.packageName in NotificationManagerCompat.getEnabledListenerPackages(context),
             )
@@ -42,5 +46,10 @@ class SettingsViewModel @Inject constructor(
     fun setSyncEnabled(enabled: Boolean) {
         preferences.healthConnectSyncEnabled = enabled
         _uiState.update { it.copy(syncEnabled = enabled) }
+    }
+
+    fun setWriteRespiratoryRate(enabled: Boolean) {
+        preferences.writeRespiratoryRate = enabled
+        _uiState.update { it.copy(writeRespiratoryRate = enabled) }
     }
 }

@@ -26,6 +26,16 @@ private class FakeWearOsNodePort : WearOsNodePort {
     override suspend fun pullSteps(targetAddress: String?, targetName: String?, since: Instant): WearOsStepPage? = null
     override suspend fun pullAscent(targetAddress: String?, targetName: String?, since: Instant): WearOsAscentPage? = null
 
+    override suspend fun pullHrv(targetAddress: String?, targetName: String?, since: Instant): WearOsHrvPage? = null
+
+    override suspend fun pullRespiratory(targetAddress: String?, targetName: String?, since: Instant): WearOsRespiratoryPage? = null
+
+    override suspend fun pullSpo2(targetAddress: String?, targetName: String?, since: Instant): WearOsSpo2Page? = null
+
+    override suspend fun pullSkin(targetAddress: String?, targetName: String?, since: Instant): WearOsSkinPage? = null
+
+    override suspend fun notifyPhoneActive(targetAddress: String?, targetName: String?, at: Instant): Boolean = false
+
     /** One entry per live session: the readings it hands out, then whether the watch could stream; a failure throws. */
     val liveSessions = ArrayDeque<Pair<List<Int>, Boolean>>()
     var liveFailures = 0

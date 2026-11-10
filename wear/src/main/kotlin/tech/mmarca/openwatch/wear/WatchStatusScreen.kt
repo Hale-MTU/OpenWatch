@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -44,6 +45,7 @@ internal fun WatchStatusScreen(
     readMinuteCount: () -> Long,
     readStepMinuteCount: () -> Long,
     ppgLogAvailable: Boolean,
+    readSamsungDiagnostics: () -> Boolean?,
     onTogglePpgLog: () -> Unit,
     onGrant: () -> Unit,
     onAllow: (PendingPhone) -> Unit,
@@ -58,6 +60,7 @@ internal fun WatchStatusScreen(
     val heartRateGranted = remember(permissionsVersion) { hasHeartRate() }
     val bluetoothGranted = remember(permissionsVersion) { hasBluetooth() }
     val stepsGranted = remember(permissionsVersion) { hasSteps() }
+    var samsungDiagnostics by remember { mutableStateOf<Boolean?>(null) }
 
     // The stores are written by the service; the screen reads them every few seconds.
     LaunchedEffect(Unit) {
@@ -66,6 +69,7 @@ internal fun WatchStatusScreen(
             count = readCount()
             minuteCount = readMinuteCount()
             stepMinuteCount = readStepMinuteCount()
+            samsungDiagnostics = readSamsungDiagnostics()
             WearLinkState.expirePending(System.currentTimeMillis())
             delay(3_000)
         }
@@ -110,7 +114,7 @@ internal fun WatchStatusScreen(
         Line(
             stringResource(
                 when (link.bedtimeHold) {
-                    BedtimeHold.OFF -> R.string.status_bedtime_off
+                    BedtimeHold.OFF -> if (link.sleepHoldActive) R.string.status_sleep_holding else R.string.status_bedtime_off
                     BedtimeHold.HOLDING -> R.string.status_bedtime_holding
                     BedtimeHold.PAUSED_OFF_WRIST -> R.string.status_bedtime_paused_off_wrist
                     BedtimeHold.PAUSED_CHARGING -> R.string.status_bedtime_paused_charging
@@ -130,6 +134,10 @@ internal fun WatchStatusScreen(
                 Text(stringResource(R.string.action_grant))
             }
         }
+        samsungDiagnostics?.let { on ->
+            Line(stringResource(if (on) R.string.status_samsung_diagnostics_on else R.string.status_samsung_diagnostics_off))
+        }
+        WatchSettingsSection(LocalContext.current)
         PhoneCards(link, onAllow, onBlock, onOpenBluetoothSettings)
         if (link.ppgLogging) Line(stringResource(R.string.status_ppg_logging))
     }

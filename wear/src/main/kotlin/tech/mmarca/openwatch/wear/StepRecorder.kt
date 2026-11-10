@@ -4,6 +4,7 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
+import android.hardware.SensorEventListener2
 import android.hardware.SensorManager
 import android.os.Handler
 import android.os.HandlerThread
@@ -33,7 +34,9 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 class StepRecorder(
     context: Context,
     private val store: MetricStore,
-) : SensorEventListener {
+    /** Empties the counter's buffer at each heart rate wake-up; see [SensorWakeSync]. */
+    private val wakeSync: SensorWakeSync? = null,
+) : SensorEventListener2 {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val boot: Int = Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT, -1)
@@ -109,11 +112,13 @@ class StepRecorder(
             Log.w(TAG, "Step listener not registered")
             return false
         }
+        wakeSync?.join(this)
         return true
     }
 
     fun stop() {
         val worker = thread ?: return
+        wakeSync?.leave(this)
         sensorManager.unregisterListener(this)
         // Runs before the quit: quitSafely still delivers what is due now.
         handler?.post(::flush)
@@ -125,6 +130,7 @@ class StepRecorder(
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_STEP_COUNTER) return
+        DebugProtocol.arrival("steps")
         val counter = counter ?: return
         val total = event.values.firstOrNull()?.toLong() ?: return
         counter.onTotal(SensorTime.epochMillisOf(event.timestamp), total)
@@ -172,6 +178,10 @@ class StepRecorder(
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+
+    override fun onFlushCompleted(sensor: Sensor?) {
+        wakeSync?.flushed(this)
+    }
 
     private var lastRow: WearLinkProtocol.StepMinute? = null
 

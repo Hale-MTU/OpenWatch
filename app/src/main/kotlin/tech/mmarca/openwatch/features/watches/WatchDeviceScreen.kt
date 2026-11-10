@@ -190,6 +190,7 @@ fun WatchDeviceScreen(
                     bluetoothPermission.launch(android.Manifest.permission.BLUETOOTH_CONNECT)
                 },
                 liveHeartRateBpm = liveHeartRateBpm,
+                onAssociate = (viewModel::associateWearOs).takeIf { state.wearOsCompanionMissing },
             )
             SectionHeader(stringResource(R.string.settings_watch_wearos_sync_section))
             WearOsSyncCard(device, state.sync, onSync = viewModel::syncNow, onAllowGrants = syncGrantLauncher.launch)

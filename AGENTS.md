@@ -38,6 +38,12 @@ Do not break these without an explicit decision.
 
 - **No `INTERNET` permission.** The manifest removes `INTERNET`, `ACCESS_NETWORK_STATE` and
   `ACCESS_WIFI_STATE`. Never add a dependency that needs a socket.
+- **The watch app is offline too.** Its manifest removes the same three network permissions.
+  It reads the raw Android sensors; Health Services and the Samsung Health Sensor SDK are not
+  dependencies, and the SDK's `.aar` never enters the repository or a build. The one Samsung
+  source is the clean-room Binder client in `wear/.../samsung/`, opt-in and offered only on a
+  watch that has the Samsung Health Platform. Why, and what
+  a Samsung source would have to respect: `docs/engineering/samsung-health-and-privacy.md`.
 - **One foreground service, and only for the scale.** The 45-second `ScaleListeningService`
   is the one service the app starts without a tap. A watch sync runs with no foreground
   service; its process-priority story is the companion association.

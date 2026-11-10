@@ -2,12 +2,14 @@
 <resources>
     <!--
         SHA-256 of the signing certificates whose apps OpenWatch trusts over OpenLink without
-        asking: OpenVitals' release upload key, and its Play app-signing key once known.
+        asking: OpenVitals' release upload key and its Play app-signing key.
         Lowercase hex, no colons. Anything else asks on the Connected apps screen.
     -->
     <string-array name="openlink_known_signers" translatable="false">
         <!-- OpenVitals release and nightly builds (GitHub), CN=Manuel Marcatili, OU=OpenVitals -->
         <item>0416c0651543e951ef3b6c1ed9beb13833bff3a2be9ddacf492270712861e05d</item>
+        <!-- OpenVitals from Google Play, signed by Play's app-signing key -->
+        <item>63ce8aa47f88e6b58dd83a82b170c2adaaf629f2f56d22d0005f94ef8a588541</item>
     </string-array>
 
     <!--

@@ -28,6 +28,7 @@ import tech.mmarca.openwatch.core.presentation.isPermissionFailure
 import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.data.repository.BodyProfileProvider
+import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPhase
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
@@ -35,7 +36,7 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.devices.core.sync.UnwrittenSeries
 import tech.mmarca.openwatch.data.repository.RecordWrite
 import tech.mmarca.openwatch.data.repository.insertWithOutcomes
-import tech.mmarca.openwatch.devices.core.sync.sleepNightWindow
+import tech.mmarca.openwatch.domain.insights.sleepNightWindow
 import tech.mmarca.openwatch.domain.insights.WearSleepEstimator
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.WearSleepMinute
@@ -66,7 +67,9 @@ import tech.mmarca.openwatch.wearlink.AscentCredit
  * in, every night those minutes touch estimated whole and written as one
  * session per night, replacing the earlier estimate. A night that already
  * holds a session from anywhere else, the vendor's app or the user's own
- * entry, is left alone. Each finished night with sleep also gives a nocturnal
+ * entry, is left alone. Naps are written the same way, one session each
+ * under the id of its onset, and a nap never replaces a session from
+ * elsewhere ([WearOsSleepImport.naps]). Each finished night with sleep also gives a nocturnal
  * resting heart rate ([WearOsRestingHeartRateImport]). The app averages the
  * values of a calendar day, so a day that holds one from elsewhere gets none
  * from here, and one that turns up later removes ours. Without the grants to
@@ -93,6 +96,8 @@ class WearOsWatchSyncService(
     private val weightKg: suspend () -> Double?,
     private val clock: () -> Instant,
     private val zone: () -> ZoneId,
+    /** Whether the user chose to write the watch's breathing rate; off by default, not yet checked against a reference. */
+    private val writeRespiratoryRate: () -> Boolean = { false },
 ) : DeviceSyncPort {
 
     @Inject
@@ -104,14 +109,30 @@ class WearOsWatchSyncService(
         healthConnect: HealthConnectGateway,
         linkStore: WearOsLinkStore,
         bodyProfile: BodyProfileProvider,
+        preferences: OpenWatchPreferences,
     ) : this(
         nodePort, cursors, importRepository, bleDeviceRepository, healthConnect, linkStore,
         // Strict by construction: a failed Health Connect read throws, it never passes for "no weight".
         { bodyProfile.resolve().weightKg },
         Instant::now, ZoneId::systemDefault,
+        { preferences.writeRespiratoryRate },
     )
 
     private val syncMutex = Mutex()
+
+    private val nightSeries = WearOsNightSeriesSync(
+        importRepository = importRepository,
+        healthConnect = healthConnect,
+        cursors = cursors,
+        nodePort = nodePort,
+        clock = clock,
+        zone = zone,
+        writeRespiratoryRate = writeRespiratoryRate,
+    )
+
+    private val linkRetry = object : WearOsNightSeriesSync.Retry {
+        override suspend fun <T> run(pull: suspend () -> T): T = retryOnce(pull)
+    }
 
     init {
         WearOsLog.installLogcatSink()
@@ -141,6 +162,9 @@ class WearOsWatchSyncService(
                 return notPaired(device)
             }
             if (!pullSleep(device, progress)) return notPaired(device)
+            val night = nightSeries.sync(device, linkRetry) ?: return notPaired(device)
+            progress.unwritten += night.unwritten
+            progress.withheldPermissions += night.withheld
         } catch (error: CancellationException) {
             throw error
         } catch (failure: WearOsLinkFailure) {
@@ -446,11 +470,52 @@ class WearOsWatchSyncService(
             writeReplacing(record)
             nights++
         }
+        val naps = writeNaps(minutes, cursor)
         cursors.setSleepCursor(device.id, newest)
         progress.nights = nights
-        WearOsLog.log("sleep: $nights night(s) written from ${minutes.size} minutes")
+        WearOsLog.log("sleep: $nights night(s) and $naps nap(s) written from ${minutes.size} minutes")
         return true
     }
+
+    /**
+     * One session per nap under its onset's id. A session from anywhere else
+     * that overlaps the nap wins. An earlier estimate of the same nap with
+     * another onset is removed, so re-estimating never leaves two.
+     */
+    private suspend fun writeNaps(minutes: List<WearSleepMinute>, cursor: Instant): Int {
+        var written = 0
+        for ((nap, offset) in WearOsSleepImport.naps(minutes, cursor)) {
+            val record = WearOsSleepImport.napRecord(nap, offset, version = clock().toEpochMilli()) ?: continue
+            if (hasForeignRecord(SleepSessionRecord::class, nap.onset, nap.end, WearOsSleepImport::isOwnRecordId)) {
+                WearOsLog.log("nap: Health Connect already holds a session from elsewhere, skipping")
+                continue
+            }
+            removeOtherNapEstimates(nap.onset, nap.end, keepId = WearOsSleepImport.napClientRecordId(nap))
+            writeReplacing(record)
+            written++
+        }
+        return written
+    }
+
+    /** Deletes this import's nap sessions in the window other than [keepId]. A failed read leaves them. */
+    private suspend fun removeOtherNapEstimates(from: Instant, to: Instant, keepId: String) {
+        val stale = ArrayList<String>()
+        try {
+            healthConnect.forEachSyncRecordPage(SleepSessionRecord::class, from, to) { page ->
+                for (record in page) {
+                    val id = record.metadata.clientRecordId
+                    if (id != null && id != keepId && WearOsSleepImport.isOwnNapId(id)) stale += id
+                }
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            WearOsLog.log("nap: could not read earlier estimates: $error")
+            return
+        }
+        healthConnect.deleteImportedRecordsByClientIds(SleepSessionRecord::class, stale)
+    }
+
 
     /**
      * A page pull again after one link failure. The first connection to a

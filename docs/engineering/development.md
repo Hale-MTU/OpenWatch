@@ -78,6 +78,18 @@ Between releases, or on a watch without the Play Store, the watch app is sideloa
 grants the permissions, and `scripts/wear-skip-onboarding.sh` marks a never-onboarded watch
 as set up. The walkthrough is [docs/how-to/wear-os-sideload.md](../how-to/wear-os-sideload.md).
 
+## Docs and the Wiki
+
+The [wiki](https://github.com/Hale-MTU/OpenWatch/wiki) is a mirror of the repository's Markdown, rebuilt by `.github/workflows/wiki.yml` on every push to `main` that touches a `.md` file: `README.md` is Home, every file under `docs/` and the other root Markdown files (changelog, privacy policy, agent notes) are one page each, named after their first heading, with a sidebar by folder. Edit the files here, never the wiki: the next run overwrites it.
+
+`scripts/sync-wiki.py` rewrites each relative link to the page it points at, or to the file on GitHub for anything that is not a page. Its `--check` mode runs in the verify gate and fails on a relative link to a file that does not exist. To see the pages locally:
+
+```bash
+python3 scripts/sync-wiki.py --repo Hale-MTU/OpenWatch --out /tmp/openwatch-wiki
+```
+
+Two Markdown files with the same first heading would become one page; the script stops and names both. The same script runs in OpenVitals, OpenLink and OpenBridge; keep the copies alike.
+
 ## Releases
 
 `.github/workflows/release.yml` is the release, on the schedule, a version tag and the manual
@@ -215,9 +227,10 @@ By hand, once, outside the repository:
 
 ## Release Checklist
 
-The procedure, written out step by step, is `.claude/skills/release/SKILL.md`. In short:
+The procedure, written out step by step, is `.claude/skills/release/SKILL.md`. It is
+OpenVitals' procedure, and the two skills are kept alike. In short:
 
-1. Write the documents first: `CHANGELOG.md`, `docs/releases/X.Y.Z.md` (it becomes the tag
+1. Write the documents first: `CHANGELOG.md` (six language sections), `docs/releases/X.Y.Z.md` (it becomes the tag
    message and the release notes), the README, and one Play changelog per locale under
    `fastlane/metadata/android/<locale>/changelogs/<versionCode>.txt`, named by the phone's
    code (the watch has none), 490 characters or fewer.
@@ -229,6 +242,9 @@ The procedure, written out step by step, is `.claude/skills/release/SKILL.md`. I
 4. The tag's run builds, publishes the prerelease and waits. Approve it (Actions, the run,
    Review deployments). If the run is gone, run the workflow by hand from the tag with target
    `production`.
+5. The companion repositories: the docs site ports the release notes page
+   (`scripts/app-docs.json` there) and the landing page's OpenWatch copy follows a headline
+   feature.
 
 CI has no device, so it never runs the instrumented tests. To run them, connect a phone or
 emulator: `ANDROID_SERIAL=<serial> ./gradlew verifyAndroidTest`.

@@ -1,9 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-feature
         android:name="android.hardware.type.watch"
         android:required="true" />
+
+    <!-- The watch app is offline-only. Do not inherit network permissions from dependencies. -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_WIFI_STATE"
+        tools:node="remove" />
 
     <!-- The heart rate sensor. Android 16 gates it behind the Health Connect
          READ_HEART_RATE permission; earlier releases behind BODY_SENSORS. The
@@ -15,6 +27,9 @@
         android:name="android.permission.BODY_SENSORS_BACKGROUND"
         android:maxSdkVersion="35" />
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
+    <!-- The Samsung platform checks these per tracker on Android 16 (skin temperature, SpO2); asked only when switched on. -->
+    <uses-permission android:name="android.permission.health.READ_SKIN_TEMPERATURE" />
+    <uses-permission android:name="android.permission.health.READ_OXYGEN_SATURATION" />
     <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
 
     <!-- The step counter. -->
@@ -39,6 +54,11 @@
     <!-- Keeps the processor up in bedtime mode, worn and off the charger, so the
          accelerometer's 48-second buffer is read before it overflows. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- The Samsung Health Platform, an optional heart rate and HRV source; see WearSettings. -->
+    <queries>
+        <package android:name="com.samsung.android.service.health" />
+    </queries>
 
     <application
         android:allowBackup="false"
@@ -70,6 +90,11 @@
         <!-- Allow or Block from the phone request notification. -->
         <receiver
             android:name=".WearPhoneConfirmReceiver"
+            android:exported="false" />
+
+        <!-- The power-save heart rate window's alarm; see HeartRateRecorder. -->
+        <receiver
+            android:name=".HeartRateAlarmReceiver"
             android:exported="false" />
 
         <!-- The metric tiles: each reads what the recorders stored and starts no sensor. -->

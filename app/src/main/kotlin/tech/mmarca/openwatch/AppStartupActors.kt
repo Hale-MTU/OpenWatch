@@ -7,6 +7,7 @@ import tech.mmarca.openwatch.devices.garmin.GarminMusicRelay
 import tech.mmarca.openwatch.devices.garmin.GarminNavigationRelay
 import tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleListener
+import tech.mmarca.openwatch.devices.wearos.WearOsPhoneActivity
 import tech.mmarca.openwatch.features.watches.WatchAutoSyncScheduler
 
 /**
@@ -24,6 +25,7 @@ class AppStartupActors @Inject constructor(
     private val garminLocalData: GarminLocalData,
     private val xiaomiScaleListener: XiaomiScaleListener,
     private val linkPublisher: tech.mmarca.openwatch.link.OpenWatchLinkPublisher,
+    private val phoneActivity: WearOsPhoneActivity,
 ) {
     fun start() {
         // Companion mode must be re-armed on every start.
@@ -38,5 +40,7 @@ class AppStartupActors @Inject constructor(
         xiaomiScaleListener.onAppStart()
         // OpenLink clients hear about device and profile changes while they are bound.
         linkPublisher.start()
+        // Tells the watches when the phone is unlocked, so they end a sleep hold they started.
+        phoneActivity.start()
     }
 }

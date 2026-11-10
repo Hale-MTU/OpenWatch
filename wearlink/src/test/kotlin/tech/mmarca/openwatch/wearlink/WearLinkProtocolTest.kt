@@ -198,6 +198,57 @@ class WearLinkProtocolTest {
     }
 
     @Test
+    fun `breathing and skin lines round-trip and refuse what no wrist gives`() {
+        val rr = WearLinkProtocol.RespiratoryWindow(1_700_000_100_000L, 142, 2)
+        assertEquals("RR 1700000100000 142 2", WearLinkProtocol.formatRespiratoryWindow(rr))
+        assertEquals(rr, WearLinkProtocol.parseRespiratoryWindow(WearLinkProtocol.formatRespiratoryWindow(rr)))
+        assertNull(WearLinkProtocol.parseRespiratoryWindow("RR 1700000100000 40 2"))
+        assertNull(WearLinkProtocol.parseRespiratoryWindow("RR 1700000100000 142 3"))
+        val sk = WearLinkProtocol.SkinMinute(1_700_000_040_000L, 3412, 2250)
+        assertEquals(sk, WearLinkProtocol.parseSkinMinute(WearLinkProtocol.formatSkinMinute(sk)))
+        assertNull(WearLinkProtocol.parseSkinMinute("SK 1700000040000 1500 2250"))
+        assertNull(WearLinkProtocol.parseSkinMinute("SK 1700000040001 3412 2250"))
+        assertEquals(WearLinkProtocol.Request.RespiratorySince(10, 500), WearLinkProtocol.parseRequest("RR_SINCE 10 99999"))
+        assertEquals(WearLinkProtocol.Request.SkinSince(10, 2000), WearLinkProtocol.parseRequest("SK_SINCE 10 99999"))
+    }
+
+    @Test
+    fun `an SpO2 line round-trips with or without its heart rate and refuses a failed reading`() {
+        val o2 = WearLinkProtocol.Spo2Measurement(1_700_000_300_000L, 96, 54)
+        assertEquals("O2 1700000300000 96 54", WearLinkProtocol.formatSpo2(o2))
+        assertEquals(o2, WearLinkProtocol.parseSpo2(WearLinkProtocol.formatSpo2(o2)))
+        assertEquals(o2.copy(bpm = null), WearLinkProtocol.parseSpo2("O2 1700000300000 96 -"))
+        assertNull(WearLinkProtocol.parseSpo2("O2 1700000300000 0 54"))
+        assertNull(WearLinkProtocol.parseSpo2("O2 1700000300000 101 54"))
+        assertEquals(WearLinkProtocol.Request.Spo2Since(10, 500), WearLinkProtocol.parseRequest("O2_SINCE 10 99999"))
+    }
+
+    @Test
+    fun `phone active round-trips and refuses a bad time`() {
+        assertEquals("PHONE_ACTIVE 1700000000000", WearLinkProtocol.formatRequest(WearLinkProtocol.Request.PhoneActive(1_700_000_000_000L)))
+        assertEquals(WearLinkProtocol.Request.PhoneActive(1_700_000_000_000L), WearLinkProtocol.parseRequest("PHONE_ACTIVE 1700000000000"))
+        assertNull(WearLinkProtocol.parseRequest("PHONE_ACTIVE 0"))
+        assertNull(WearLinkProtocol.parseRequest("PHONE_ACTIVE x"))
+        assertNull(WearLinkProtocol.parseRequest("PHONE_ACTIVE"))
+    }
+
+    @Test
+    fun `an HRV window round-trips, and one with an impossible RMSSD or beat count is refused`() {
+        val window = WearLinkProtocol.HrvWindow(1_700_000_100_000L, 452, 280)
+        assertEquals("HV 1700000100000 452 280", WearLinkProtocol.formatHrvWindow(window))
+        assertEquals(window, WearLinkProtocol.parseHrvWindow(WearLinkProtocol.formatHrvWindow(window)))
+        assertEquals(45.2, window.rmssdMillis, 1e-9)
+        assertNull(WearLinkProtocol.parseHrvWindow("HV 1700000100000 0 280"))
+        assertNull(WearLinkProtocol.parseHrvWindow("HV 1700000100000 ${WearLinkProtocol.MAX_RMSSD10 + 1} 280"))
+        assertNull(WearLinkProtocol.parseHrvWindow("HV 1700000100000 452 0"))
+        assertNull(WearLinkProtocol.parseHrvWindow("HV 0 452 280"))
+        assertNull(WearLinkProtocol.parseHrvWindow("HV 1700000100000 452"))
+        assertNull(WearLinkProtocol.parseHrvWindow("AS 1700000040000 32"))
+        assertEquals(WearLinkProtocol.Request.HrvSince(10, 500), WearLinkProtocol.parseRequest("HV_SINCE 10 99999"))
+        assertEquals("HV_SINCE 10 500", WearLinkProtocol.formatRequest(WearLinkProtocol.Request.HrvSince(10, 99999)))
+    }
+
+    @Test
     fun `ping tolerates surrounding whitespace`() {
         assertTrue(WearLinkProtocol.isPing(" PING\r"))
     }

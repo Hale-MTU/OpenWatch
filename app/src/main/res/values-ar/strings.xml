@@ -27,4 +27,5 @@
     <string name="link_streaming_waiting">في انتظار ساعتك، لـ %1$s</string>
     <string name="link_streaming_from">من %1$s</string>
     <string name="link_streaming_waiting_for">في انتظار قراءة من %1$s</string>
+    <string name="settings_watch_wearos_needs_hrv_write">لم يُكتب تقلّب معدل ضربات القلب: اسمح لـ OpenWatch بكتابته في Health Connect، ثم زامن مرة أخرى.</string>
 </resources>

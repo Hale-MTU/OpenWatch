@@ -1,12 +1,12 @@
 # OpenWatch Privacy Policy
 
-Last updated: November 8, 2026
+Last updated: November 9, 2026
 
 OpenWatch is a local-first Android app that pairs a Garmin or Wear OS watch and a Xiaomi body composition scale with your phone and writes what they record to Health Connect.
 
-This policy applies to the OpenWatch phone app and the OpenWatch Wear OS app, both published under the package name `tech.mmarca.openwatch`.
+This policy applies to the OpenWatch phone app and the OpenWatch Wear OS app, both published under the package name `tech.mmarca.openwatch` by Mittetulundusühing Hale (MTÜ Hale), a non-profit association registered in Estonia, registry code 80677610.
 
-Privacy contact: manuel@mmarca.tech
+Privacy contact: hello@hale.ngo
 
 ## Summary
 
@@ -36,9 +36,9 @@ The app asks for Bluetooth and, on older Android versions, location permissions 
 
 What a paired device recorded, when you sync it or when a sync runs on a schedule you chose:
 
-- From a Garmin watch: activities with their route and sensor samples, steps, distance, floors, calories, heart rate, resting heart rate, heart rate variability, oxygen saturation, respiratory rate, VO2 max, and sleep.
-- From a Wear OS watch: heart rate, steps and floors recorded on the watch, an estimated sleep session per night, and the night's resting heart rate.
-- From the scale: weight, and the body fat, lean mass, body water and basal metabolic rate the app estimates from the scale's measurement and your body profile.
+- From a Garmin watch: activities with their route and sensor samples, steps, distance, calories, heart rate, resting heart rate, heart rate variability, oxygen saturation, respiratory rate, VO2 max, basal metabolic rate, sleep, and the weight a Garmin scale relays through the watch.
+- From a Wear OS watch: heart rate, steps (with their cadence and an estimate of the calories walking cost), floors and elevation gained recorded on the watch, an estimated sleep session per night, and the night's resting heart rate.
+- From the scale: weight and heart rate as the scale measured them, and the body fat, lean mass and body water the app estimates from the scale's measurement and your body profile.
 
 Each record names OpenWatch as its source. Records OpenWatch wrote can be deleted from Health Connect's own settings at any time. Records written by other apps are never changed.
 
@@ -124,4 +124,4 @@ This privacy policy may be updated when OpenWatch changes how it accesses, uses,
 
 For privacy questions, contact:
 
-manuel@mmarca.tech
+hello@hale.ngo
