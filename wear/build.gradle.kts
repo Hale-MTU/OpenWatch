@@ -142,6 +142,8 @@ dependencies {
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.wear.compose.material3)
+    // The watch face pill of a running workout.
+    implementation(libs.androidx.wear.ongoing)
     // The metric tiles: Material 3 tile layouts, no Play Services.
     implementation(libs.androidx.wear.tiles)
     implementation(libs.androidx.wear.protolayout)
