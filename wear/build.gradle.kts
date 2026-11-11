@@ -148,6 +148,8 @@ dependencies {
     implementation(libs.androidx.wear.compose.navigation)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    // The watch face pill of a running workout.
+    implementation(libs.androidx.wear.ongoing)
     // The metric tiles: Material 3 tile layouts, no Play Services.
     implementation(libs.androidx.wear.tiles)
     implementation(libs.androidx.wear.protolayout)
