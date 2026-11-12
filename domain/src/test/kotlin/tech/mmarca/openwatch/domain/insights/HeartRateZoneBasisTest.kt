@@ -39,4 +39,19 @@ class HeartRateZoneBasisTest {
         // Without a resting rate an observed maximum cannot be judged.
         assertEquals(187, HeartRateZoneBasis.of(profile, today, observedMaxBpm = 196).maxBpm)
     }
+
+    @Test
+    fun `the resting rate is the entered one only, the night's just judges the maximum`() {
+        val basis = HeartRateZoneBasis.of(BodyProfile(birthYear = 1996), today, nightRestingBpm = 50)
+        assertNull(basis.restingBpm)
+    }
+
+    @Test
+    fun `the observed maximum must clear 150 and resting plus 60, as everywhere in the app`() {
+        val profile = BodyProfile(birthYear = 1996)
+        // Resting 90: the bar is max(150, 150) = 150, and 150 clears it.
+        assertEquals(150, HeartRateZoneBasis.of(profile, today, observedMaxBpm = 150, nightRestingBpm = 90).maxBpm)
+        // Resting 91: the bar is 151, so Tanaka's 208 - 0.7 x 30 = 187 stands.
+        assertEquals(187, HeartRateZoneBasis.of(profile, today, observedMaxBpm = 150, nightRestingBpm = 91).maxBpm)
+    }
 }

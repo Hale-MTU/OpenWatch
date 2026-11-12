@@ -27,4 +27,12 @@ class HeartRateZonesTest {
         assertEquals(3, HeartRateZones.zoneOf(154.0, basis))
         assertEquals(4, HeartRateZones.zoneOf(192.0, basis))
     }
+
+    @Test
+    fun `no maximum from the phone means no zones, not a guessed one`() {
+        assertEquals(null, HeartRateZones.Basis.of(null, 52))
+        assertEquals(null, HeartRateZones.Basis.of(0, 52))
+        assertEquals(HeartRateZones.Basis(187, 52), HeartRateZones.Basis.of(187, 52))
+        assertEquals(HeartRateZones.Basis(187, null), HeartRateZones.Basis.of(187, 0))
+    }
 }

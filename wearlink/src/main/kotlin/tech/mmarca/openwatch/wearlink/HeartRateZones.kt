@@ -28,6 +28,12 @@ object HeartRateZones {
         }
 
         val bounds: List<Double> get() = if (resting != null) RESERVE_SHARE_BOUNDS else MAX_SHARE_BOUNDS
+
+        companion object {
+            /** The basis for [maxBpm]; null without a maximum, so no zones are drawn on a guess. */
+            fun of(maxBpm: Int?, restingBpm: Int?): Basis? =
+                maxBpm?.takeIf { it > 0 }?.let { Basis(it, restingBpm?.takeIf { rest -> rest > 0 }) }
+        }
     }
 
     /** The zone index, 0 to 4; null below zone 1. */
