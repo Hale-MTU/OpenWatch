@@ -73,24 +73,29 @@ internal fun WorkoutScreen(zones: ZoneBasis?, onClose: () -> Unit) {
             unitSystem = UnitSystem.METRIC,
             zones = zones,
             onTogglePause = { if (snapshot.paused) WearAppService.resumeWorkout(context) else WearAppService.pauseWorkout(context) },
-            onStop = { askRecovery = true },
+            onStop = {
+                when (val plan = RecoveryPlan.atStop(snapshot.rest, snapshot.heartRateBpm, zones)) {
+                    RecoveryAtStop.LIVE -> askRecovery = true
+                    else -> WearAppService.stopWorkout(context, plan)
+                }
+            },
         )
         AlertDialog(
             visible = askRecovery,
             onDismissRequest = {
                 askRecovery = false
-                WearAppService.stopWorkout(context, measureRecovery = false)
+                WearAppService.stopWorkout(context, RecoveryAtStop.NONE)
             },
             confirmButton = {
                 AlertDialogDefaults.ConfirmButton(onClick = {
                     askRecovery = false
-                    WearAppService.stopWorkout(context, measureRecovery = true)
+                    WearAppService.stopWorkout(context, RecoveryAtStop.LIVE)
                 })
             },
             dismissButton = {
                 AlertDialogDefaults.DismissButton(onClick = {
                     askRecovery = false
-                    WearAppService.stopWorkout(context, measureRecovery = false)
+                    WearAppService.stopWorkout(context, RecoveryAtStop.NONE)
                 })
             },
             title = { Text(stringResource(R.string.recovery_ask)) },

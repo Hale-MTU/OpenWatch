@@ -98,6 +98,11 @@
             android:name=".WearPhoneConfirmReceiver"
             android:exported="false" />
 
+        <!-- Record from the detected workout notification; see ActivityDetectionMonitor. -->
+        <receiver
+            android:name=".workout.ActivityDetectionReceiver"
+            android:exported="false" />
+
         <!-- The power-save heart rate window's alarm; see HeartRateRecorder. -->
         <receiver
             android:name=".HeartRateAlarmReceiver"

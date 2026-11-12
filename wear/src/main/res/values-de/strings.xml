@@ -290,4 +290,13 @@
     <string name="settings_hrv_source_explained">Sensor: HRV aus dem rohen Pulssignal, jeder Schlag. Samsung: die Schlagabstände der Plattform; derzeit gehen davon etwa 60 % verloren (Issue #25), daher seltener ein Wert.</string>
     <string name="settings_skin_explained">Hauttemperatur am Handgelenk im Schlaf, ein Wert pro Minute von der Samsung-Plattform. Wenig Strom, sonst keine Änderung.</string>
     <string name="settings_spo2_explained">Blutsauerstoff höchstens einmal pro Stunde im Schlaf, etwa 15 s Rotlicht. Wenige mAh pro Nacht; entfällt, wenn sich der Arm bewegt.</string>
+    <string name="settings_auto_pause_on">Auto-Pause: an</string>
+    <string name="settings_auto_pause_off">Auto-Pause: aus</string>
+    <string name="settings_auto_detect_on">Workouts erkennen: an</string>
+    <string name="settings_auto_detect_off">Workouts erkennen: aus</string>
+    <string name="detected_channel_name">Erkannte Workouts</string>
+    <string name="detected_walk">Sieht nach einem Spaziergang aus</string>
+    <string name="detected_run">Sieht nach einem Lauf aus</string>
+    <string name="detected_body">%1$d min, %2$d Schritte. Aufzeichnen?</string>
+    <string name="detected_start">Aufzeichnen</string>
 </resources>

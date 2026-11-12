@@ -33,6 +33,8 @@ internal object WearSettings {
     private const val KEY_HEIGHT_CM = "body_height_cm"
     private const val KEY_BIRTH_YEAR = "birth_year"
     private const val KEY_SEX = "sex"
+    private const val KEY_AUTO_PAUSE = "auto_pause"
+    private const val KEY_AUTO_DETECT = "auto_detect"
 
     fun heartRateDay(context: Context): HeartRateInterval =
         prefs(context).getString(KEY_HEART_RATE_DAY, null)?.let(HeartRateInterval::fromWire)
@@ -40,6 +42,20 @@ internal object WearSettings {
 
     fun setHeartRateDay(context: Context, interval: HeartRateInterval) {
         prefs(context).edit().putString(KEY_HEART_RATE_DAY, interval.wire).apply()
+    }
+
+    /** Whether a running or cycling workout pauses by itself when the wearer stops. On by default. */
+    fun autoPause(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_PAUSE, true)
+
+    fun setAutoPause(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean(KEY_AUTO_PAUSE, on).apply()
+    }
+
+    /** Whether the watch offers a walk or a run it sees in the step minutes. On by default. */
+    fun autoDetect(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_DETECT, true)
+
+    fun setAutoDetect(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean(KEY_AUTO_DETECT, on).apply()
     }
 
     fun heartRateSource(context: Context): Source = source(context, KEY_HEART_RATE_SOURCE)

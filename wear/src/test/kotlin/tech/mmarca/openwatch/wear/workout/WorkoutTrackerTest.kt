@@ -319,3 +319,56 @@ class WorkoutTrackerTest {
         ))
     }
 }
+
+class WorkoutTrackerRestTest {
+
+    private val t0 = 1_700_000_040_000L
+
+    @Test fun `a rest at the end gives the fall from the heart rate when the arm came to rest`() {
+        val tracker = WorkoutTracker(WorkoutSport.RUNNING, t0, useGps = false)
+        // 60 s of running at 160, then 100 s standing: 160 falls to 130 after one minute.
+        for (s in 0 until 60) {
+            tracker.onHeartRate(t0 + s * 1000L, 160)
+            for (i in 0 until 5) tracker.onAcceleration(t0 + s * 1000L + i * 200L, 9.81 + if (i % 2 == 0) 3.0 else -3.0)
+        }
+        for (s in 60 until 160) {
+            tracker.onHeartRate(t0 + s * 1000L, (160 - (s - 60) * 30 / 60).coerceAtLeast(120))
+            for (i in 0 until 5) tracker.onAcceleration(t0 + s * 1000L + i * 200L, 9.81)
+        }
+
+        val rest = tracker.restRecovery(t0 + 160_000)!!
+
+        assertEquals(t0 + 60_000, rest.startMillis)
+        assertEquals(160.0, rest.endBpm.toDouble(), 2.0)
+        assertEquals(30.0, rest.oneMinuteBpm!!.toDouble(), 3.0)
+        assertNull(rest.twoMinutesBpm)
+        assertEquals(rest, tracker.snapshot(t0 + 160_000).rest)
+    }
+
+    @Test fun `without a rest the snapshot has none`() {
+        val tracker = WorkoutTracker(WorkoutSport.RUNNING, t0, useGps = false)
+        tracker.onHeartRate(t0, 150)
+
+        assertNull(tracker.snapshot(t0 + 1000).rest)
+    }
+}
+
+class WorkoutTrackerCreditTest {
+
+    private val t0 = 1_700_000_040_000L
+
+    @Test fun `a workout begun in the past is credited with the steps and heart rate since`() {
+        val tracker = WorkoutTracker(WorkoutSport.WALKING, t0, useGps = false)
+        val rows = (0 until 10).map { WearLinkProtocol.StepMinute(t0 + it * 60_000L, 100) }
+        val beats = (0 until 10).map { tech.mmarca.openwatch.wearlink.WorkoutMetrics.Beat(t0 + it * 60_000L, 110 + it) }
+
+        tracker.credit(rows, beats)
+        tracker.onStepTotal(t0 + 600_000L, 5_000L)
+        tracker.onStepTotal(t0 + 640_000L, 5_040L)
+
+        val snapshot = tracker.snapshot(t0 + 640_000L)
+        assertEquals(1_040, snapshot.steps)
+        assertEquals(119, snapshot.maxHeartRateBpm)
+        assertEquals(115, snapshot.averageHeartRateBpm)
+    }
+}

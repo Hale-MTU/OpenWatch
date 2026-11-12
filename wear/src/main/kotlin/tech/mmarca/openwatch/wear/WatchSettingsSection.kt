@@ -32,6 +32,8 @@ fun WatchSettingsSection(context: Context) {
     var hrvSource by remember { mutableStateOf(WearSettings.hrvSource(context)) }
     var skin by remember { mutableStateOf(WearSettings.skinTemperature(context)) }
     var spo2 by remember { mutableStateOf(WearSettings.spo2AtNight(context)) }
+    var autoPause by remember { mutableStateOf(WearSettings.autoPause(context)) }
+    var autoDetect by remember { mutableStateOf(WearSettings.autoDetect(context)) }
 
     val powerSave = day == HeartRateInterval.POWER_SAVE
     Toggle(stringResource(if (powerSave) R.string.settings_heart_rate_power_save else R.string.settings_heart_rate_every_10_seconds)) {
@@ -40,6 +42,14 @@ fun WatchSettingsSection(context: Context) {
         WearAppService.settingsChanged(context)
     }
     Line(stringResource(if (powerSave) R.string.settings_power_save_on_explained else R.string.settings_power_save_off_explained))
+    Toggle(stringResource(if (autoPause) R.string.settings_auto_pause_on else R.string.settings_auto_pause_off)) {
+        autoPause = !autoPause
+        WearSettings.setAutoPause(context, autoPause)
+    }
+    Toggle(stringResource(if (autoDetect) R.string.settings_auto_detect_on else R.string.settings_auto_detect_off)) {
+        autoDetect = !autoDetect
+        WearSettings.setAutoDetect(context, autoDetect)
+    }
     if (!samsung) return
 
     val heartRateSamsung = heartRateSource == WearSettings.Source.SAMSUNG_PLATFORM

@@ -34,6 +34,8 @@ import tech.mmarca.openwatch.wear.workout.WorkoutPillKey
 import tech.mmarca.openwatch.wear.workout.WorkoutState
 import tech.mmarca.openwatch.wear.workout.pillKey
 import tech.mmarca.openwatch.wear.workout.sportName
+import tech.mmarca.openwatch.wear.workout.ActivityDetectionMonitor
+import tech.mmarca.openwatch.wear.workout.RecoveryAtStop
 import tech.mmarca.openwatch.wear.workout.stopwatchBaseMillis
 import tech.mmarca.openwatch.wear.features.quicklog.EntryLog
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
@@ -76,6 +78,7 @@ class WearAppService : Service() {
     private lateinit var debugSnapshots: DebugSnapshots
     private lateinit var wakeSync: SensorWakeSync
     private lateinit var workout: WorkoutRecorder
+    private lateinit var detectionMonitor: ActivityDetectionMonitor
     private lateinit var ppgLogger: PpgRawLogger
     private lateinit var trust: WearTrustStore
     private lateinit var link: WearLinkServerHost
@@ -118,6 +121,7 @@ class WearAppService : Service() {
             reconcileRecorders()
         }
         Thread({ workout.recoverInterrupted() }, "WorkoutRecover").start()
+        detectionMonitor = ActivityDetectionMonitor(this, store, mainHandler) { workout.isActive || workout.isRecovering }
         // A start, pause, resume or end changes the pill; the ticking of the clock does not.
         serviceScope.launch {
             WorkoutState.state.map { it.pillKey() }.distinctUntilChanged().collect { mainHandler.post(::refreshNotification) }
@@ -205,6 +209,7 @@ class WearAppService : Service() {
         ascentRecorder.start()
         wornMonitor.start()
         debugSnapshots.start()
+        detectionMonitor.start()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -223,7 +228,7 @@ class WearAppService : Service() {
             ACTION_WORKOUT_START -> {
                 val sport = WorkoutSport.fromId(intent.getStringExtra(EXTRA_SPORT)) ?: return START_STICKY
                 val gps = intent.getBooleanExtra(EXTRA_GPS, false) && WearPermissions.hasLocation(this)
-                workout.start(sport, gps)
+                workout.start(sport, gps, intent.getLongExtra(EXTRA_START, 0L).takeIf { it > 0L } ?: System.currentTimeMillis())
                 return START_STICKY
             }
             ACTION_WORKOUT_PAUSE -> { workout.pause(); return START_STICKY }
@@ -232,7 +237,7 @@ class WearAppService : Service() {
                 stepRecorder.setInteractive(intent.getBooleanExtra(EXTRA_INTERACTIVE, false))
                 return START_STICKY
             }
-            ACTION_WORKOUT_STOP -> { workout.stop(intent.getBooleanExtra(EXTRA_RECOVERY, false)); return START_STICKY }
+            ACTION_WORKOUT_STOP -> { workout.stop(RecoveryAtStop.entries.getOrElse(intent.getIntExtra(EXTRA_RECOVERY, 0)) { RecoveryAtStop.NONE }); return START_STICKY }
             ACTION_SETTINGS_CHANGED -> {
                 recorder.resetFallBack()
                 nightHrv.resetFallBack()
@@ -488,6 +493,7 @@ class WearAppService : Service() {
             wornMonitor.stop()
             bedtimeMonitor.stop()
             debugSnapshots.stop()
+            detectionMonitor.stop()
             mainHandler.removeCallbacksAndMessages(null)
             recorder.stop()
             stepRecorder.stop()
@@ -533,19 +539,30 @@ class WearAppService : Service() {
         private const val ACTION_WORKOUT_STOP = "tech.mmarca.openwatch.wear.WORKOUT_STOP"
         private const val EXTRA_SPORT = "sport"
         private const val EXTRA_GPS = "gps"
+        private const val EXTRA_START = "start"
         private const val EXTRA_RECOVERY = "recovery"
 
-        /** Starts a workout; [gps] only takes effect with the location grant. Called from the foreground app. */
-        fun startWorkout(context: Context, sport: WorkoutSport, gps: Boolean) =
-            sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_START).putExtra(EXTRA_SPORT, sport.id).putExtra(EXTRA_GPS, gps))
+        /**
+         * Starts a workout; [gps] only takes effect with the location grant. Called from the foreground app.
+         * With a [startMillis] in the past the workout begins then and is credited with the steps and heart rate since.
+         */
+        fun startWorkout(context: Context, sport: WorkoutSport, gps: Boolean, startMillis: Long = 0L) =
+            sendWorkout(
+                context,
+                Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_START)
+                    .putExtra(EXTRA_SPORT, sport.id).putExtra(EXTRA_GPS, gps).putExtra(EXTRA_START, startMillis),
+            )
 
         fun pauseWorkout(context: Context) = sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_PAUSE))
 
         fun resumeWorkout(context: Context) = sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_RESUME))
 
-        /** Ends the workout; with [measureRecovery] the heart rate stays live for the recovery's two minutes. */
-        fun stopWorkout(context: Context, measureRecovery: Boolean = false) =
-            sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_STOP).putExtra(EXTRA_RECOVERY, measureRecovery))
+        /**
+         * Ends the workout. [recovery] says what becomes of the heart rate recovery: nothing, the fall read
+         * from a rest before the stop, or the heart rate kept live for the recovery's two minutes.
+         */
+        fun stopWorkout(context: Context, recovery: RecoveryAtStop = RecoveryAtStop.NONE) =
+            sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_STOP).putExtra(EXTRA_RECOVERY, recovery.ordinal))
 
         private fun sendWorkout(context: Context, intent: Intent) {
             runCatching { context.startForegroundService(intent) }
