@@ -1,14 +1,11 @@
 package tech.mmarca.openwatch.devices.wearos
 
 import androidx.health.connect.client.permission.HealthPermission
-import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.ExerciseLap
 import androidx.health.connect.client.records.Record
-import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.Vo2MaxRecord
 import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
-import androidx.health.connect.client.units.Energy
 import java.time.Instant
 import java.time.ZoneId
 import kotlin.math.roundToInt
@@ -18,20 +15,16 @@ import tech.mmarca.openwatch.wearlink.WorkoutMetrics
 /**
  * What a workout's [WorkoutMetrics.Summary] adds in Health Connect: the
  * kilometre splits as the session's laps, a line of the session's notes
- * with the heart rate figures, the energy above rest (or, without a height
- * for the resting rate, the whole energy), and a VO2max estimate. The extra
- * records are optional: each needs its own grant, and a missing one leaves
- * only that record out. Ids follow the workout's start, so a re-pull upserts.
+ * with the heart rate figures, and a VO2max estimate. The calories are
+ * [WearOsWorkoutEnergy]'s. The VO2max record is optional: it needs its own
+ * grant, and a missing one leaves it out. Ids follow the workout's start, so a re-pull upserts.
  *
  * Pure, so it is testable without a device.
  */
 object WearOsWorkoutMetrics {
 
-    const val ENERGY_PREFIX = "wearos_workout_energy_"
     const val VO2_PREFIX = "wearos_workout_vo2_"
 
-    val activeEnergyPermission: String = HealthPermission.getWritePermission(ActiveCaloriesBurnedRecord::class)
-    val totalEnergyPermission: String = HealthPermission.getWritePermission(TotalCaloriesBurnedRecord::class)
     val vo2Permission: String = HealthPermission.getWritePermission(Vo2MaxRecord::class)
 
     /** The workout as the shared metrics read it. */
@@ -70,29 +63,20 @@ object WearOsWorkoutMetrics {
         return parts.takeIf { it.isNotEmpty() }?.joinToString(". ")
     }
 
-    /** The energy and VO2max records [granted] allows. */
+    /**
+     * The VO2max record [granted] allows. The workout's calories are not here:
+     * [WearOsWorkoutEnergy] writes them, by the same estimate.
+     */
     fun records(workout: WearOsWorkout, summary: WorkoutMetrics.Summary, zone: ZoneId, granted: Set<String>): List<Record> {
-        val startOffset = zone.rules.getOffset(workout.start)
         val endOffset = zone.rules.getOffset(workout.end)
         val key = workout.start.toEpochMilli()
-        val energy = when {
-            summary.activeKcal != null && activeEnergyPermission in granted -> ActiveCaloriesBurnedRecord(
-                startTime = workout.start, startZoneOffset = startOffset, endTime = workout.end, endZoneOffset = endOffset,
-                energy = Energy.kilocalories(summary.activeKcal!!), metadata = metadata("$ENERGY_PREFIX$key"),
-            )
-            summary.activeKcal == null && summary.totalKcal != null && totalEnergyPermission in granted -> TotalCaloriesBurnedRecord(
-                startTime = workout.start, startZoneOffset = startOffset, endTime = workout.end, endZoneOffset = endOffset,
-                energy = Energy.kilocalories(summary.totalKcal!!), metadata = metadata("$ENERGY_PREFIX$key"),
-            )
-            else -> null
-        }
         val vo2 = summary.vo2Max?.takeIf { vo2Permission in granted && it in MIN_VO2..MAX_VO2 }?.let {
             Vo2MaxRecord(
                 time = workout.end, zoneOffset = endOffset, vo2MillilitersPerMinuteKilogram = it,
                 measurementMethod = Vo2MaxRecord.MEASUREMENT_METHOD_OTHER, metadata = metadata("$VO2_PREFIX$key"),
             )
         }
-        return listOfNotNull(energy, vo2)
+        return listOfNotNull(vo2)
     }
 
     private fun metadata(id: String) = Metadata.autoRecorded(device = Device(type = Device.TYPE_WATCH), clientRecordId = id)

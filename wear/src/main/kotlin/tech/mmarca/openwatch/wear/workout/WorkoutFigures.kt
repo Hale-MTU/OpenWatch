@@ -1,7 +1,10 @@
 package tech.mmarca.openwatch.wear.workout
 
 import android.content.Context
-import java.time.LocalDate
+import java.time.Instant
+import java.time.ZoneId
+import tech.mmarca.openwatch.domain.preferences.BiologicalSex
+import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.wear.MetricStore
 import tech.mmarca.openwatch.wear.WearMetrics
 import tech.mmarca.openwatch.wear.WearSettings
@@ -24,13 +27,15 @@ internal object WorkoutFigures {
         val beats = metricStore.since(WearMetrics.HEART_RATE, workout.startMillis - 1, MAX_READINGS, workout.endMillis + 1)
             .map { WorkoutMetrics.Beat(it.epochMillis, it.bpm) }
         val settings = WearSettings.read(context)
-        val body = WorkoutMetrics.Body(
+        val profile = BodyProfile(
+            birthYear = settings.birthYear,
             weightKg = settings.weightHectograms?.div(10.0),
             heightCm = settings.heightCm?.toDouble(),
-            ageYears = settings.birthYear?.let { LocalDate.now().year - it },
-            female = settings.female,
+            sex = settings.female?.let { if (it) BiologicalSex.FEMALE else BiologicalSex.MALE },
         )
-        return WorkoutMetrics.summarize(workout, beats, zones, body, WorkoutSport.fromExerciseType(workout.exerciseType))
+        // The age on the workout's day, as the phone reads it.
+        val day = Instant.ofEpochMilli(workout.startMillis).atZone(ZoneId.systemDefault()).toLocalDate()
+        return WorkoutMetrics.summarize(workout, beats, zones, profile, day, WorkoutSport.fromExerciseType(workout.exerciseType))
     }
 
     private const val LOOKBACK_MILLIS = 2L * 24 * 60 * 60 * 1000

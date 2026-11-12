@@ -1,7 +1,5 @@
 package tech.mmarca.openwatch.devices.wearos
 
-import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
-import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.Vo2MaxRecord
 import java.time.Instant
 import java.time.ZoneOffset
@@ -14,9 +12,7 @@ class WearOsWorkoutMetricsTest {
 
     private val start = Instant.parse("2026-11-09T19:35:00Z")
     private val workout = WearOsWorkout(start, start.plusSeconds(3600), 78, null, null, null, emptyList(), emptyList())
-    private val all = setOf(
-        WearOsWorkoutMetrics.activeEnergyPermission, WearOsWorkoutMetrics.totalEnergyPermission, WearOsWorkoutMetrics.vo2Permission,
-    )
+    private val all = setOf(WearOsWorkoutMetrics.vo2Permission)
 
     private fun summary(active: Double?, total: Double?, vo2: Double? = null) = WorkoutMetrics.Summary(
         averageBpm = 120, maxBpm = 160, zoneSeconds = listOf(600L, 1200L, 1800L, 0L, 0L), trimp = 85.4,
@@ -24,17 +20,15 @@ class WearOsWorkoutMetricsTest {
     )
 
     @Test
-    fun `active energy wins, and the whole energy only stands in for it`() {
-        val withActive = WearOsWorkoutMetrics.records(workout, summary(450.0, 520.0), ZoneOffset.UTC, all)
-        assertEquals(450.0, (withActive.single() as ActiveCaloriesBurnedRecord).energy.inKilocalories, 0.01)
-        val totalOnly = WearOsWorkoutMetrics.records(workout, summary(null, 520.0), ZoneOffset.UTC, all)
-        assertTrue(totalOnly.single() is TotalCaloriesBurnedRecord)
+    fun `the summary writes no calories, WearOsWorkoutEnergy does`() {
+        val records = WearOsWorkoutMetrics.records(workout, summary(450.0, 520.0, 48.0), ZoneOffset.UTC, all)
+        assertTrue(records.single() is Vo2MaxRecord)
+        assertTrue(WearOsWorkoutMetrics.records(workout, summary(450.0, 520.0), ZoneOffset.UTC, all).isEmpty())
     }
 
     @Test
-    fun `a missing grant leaves only that record out`() {
-        val records = WearOsWorkoutMetrics.records(workout, summary(450.0, 520.0, 48.0), ZoneOffset.UTC, setOf(WearOsWorkoutMetrics.vo2Permission))
-        assertTrue(records.single() is Vo2MaxRecord)
+    fun `without the VO2max grant nothing is written`() {
+        assertTrue(WearOsWorkoutMetrics.records(workout, summary(450.0, 520.0, 48.0), ZoneOffset.UTC, emptySet()).isEmpty())
     }
 
     @Test

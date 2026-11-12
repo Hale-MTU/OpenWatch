@@ -6,7 +6,6 @@ import java.time.Duration
 import java.time.ZoneId
 import tech.mmarca.openwatch.domain.insights.HeartRateZoneBasis
 import tech.mmarca.openwatch.domain.insights.observedMaxHeartRateLookbackDays
-import tech.mmarca.openwatch.domain.preferences.BiologicalSex
 import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.wearlink.HeartRateZones
@@ -42,17 +41,11 @@ internal class WearOsWorkoutFigures(
         // The same zones the watch draws: the night's resting rate only judges the observed maximum.
         val basis = HeartRateZoneBasis.of(body, day, observed, resting)
         val zones = HeartRateZones.Basis.of(basis.maxBpm, basis.restingBpm)
-        val metricsBody = WorkoutMetrics.Body(
-            weightKg = body.weightKg,
-            heightCm = body.heightCm,
-            ageYears = body.ageYears(day),
-            female = body.sex?.let { it == BiologicalSex.FEMALE },
-        )
         val end = workout.end.toEpochMilli()
         val after = beats.count { it.epochMillis in (end + 1)..(end + RECOVERY_SPAN.toMillis()) }
         val recovery = if (after >= WorkoutMetrics.MIN_RECOVERY_READINGS) WorkoutMetrics.recovery(beats, end).first else null
         return WorkoutMetrics.summarize(
-            WearOsWorkoutMetrics.linkWorkout(workout), beats, zones, metricsBody, WorkoutSport.fromExerciseType(workout.exerciseType),
+            WearOsWorkoutMetrics.linkWorkout(workout), beats, zones, body, day, WorkoutSport.fromExerciseType(workout.exerciseType),
         ).copy(recoveryBpm = recovery)
     }
 
