@@ -266,14 +266,16 @@ object WorkoutMetrics {
      * the readings within five seconds of its moment.
      */
     fun recovery(beats: List<Beat>, stopMillis: Long): Pair<Int?, Int?> {
-        fun around(at: Long) = beats.filter { it.epochMillis in (at - RECOVERY_WINDOW_MILLIS)..(at + RECOVERY_WINDOW_MILLIS) }
-            .map { it.bpm }.takeIf { it.isNotEmpty() }?.average()
-        val end = beats.filter { it.epochMillis in (stopMillis - RECOVERY_WINDOW_MILLIS)..stopMillis }
-            .map { it.bpm }.takeIf { it.isNotEmpty() }?.average() ?: return null to null
-        val one = around(stopMillis + MINUTE_MILLIS)?.let { (end - it).toInt() }
-        val two = around(stopMillis + 2 * MINUTE_MILLIS)?.let { (end - it).toInt() }
+        val end = meanBpmAround(beats, stopMillis) ?: return null to null
+        val one = meanBpmAround(beats, stopMillis + MINUTE_MILLIS)?.let { (end - it).toInt() }
+        val two = meanBpmAround(beats, stopMillis + 2 * MINUTE_MILLIS)?.let { (end - it).toInt() }
         return one to two
     }
+
+    /** The mean of the readings within five seconds of [at]; null with none. */
+    fun meanBpmAround(beats: List<Beat>, at: Long): Double? =
+        beats.filter { it.epochMillis in (at - RECOVERY_WINDOW_MILLIS)..(at + RECOVERY_WINDOW_MILLIS) }
+            .map { it.bpm }.takeIf { it.isNotEmpty() }?.average()
 
     /** Readings in the two minutes after a stop that show a recovery was measured (one a second), not the day's 10 s grid. */
     const val MIN_RECOVERY_READINGS: Int = 60

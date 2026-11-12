@@ -38,6 +38,15 @@
     <string name="settings_heart_rate_power_save_note">About every 10 minutes outside bedtime mode. Sleep without bedtime mode is then detected from sparse readings.</string>
     <string name="settings_sleep_hold_wake_lock">Sleep: wake lock</string>
     <string name="settings_sleep_hold_synced">Sleep: synced wake-ups</string>
+    <string name="settings_auto_pause_on">Auto-pause: on</string>
+    <string name="settings_auto_pause_off">Auto-pause: off</string>
+    <string name="settings_auto_detect_on">Detect workouts: on</string>
+    <string name="settings_auto_detect_off">Detect workouts: off</string>
+    <string name="detected_channel_name">Detected workouts</string>
+    <string name="detected_walk">Looks like a walk</string>
+    <string name="detected_run">Looks like a run</string>
+    <string name="detected_body">%1$d min, %2$d steps. Record it?</string>
+    <string name="detected_start">Record</string>
     <string name="settings_heart_rate_source_sensor">Heart rate: sensor</string>
     <string name="settings_heart_rate_source_samsung">Heart rate: Samsung platform</string>
     <string name="settings_skin_temperature_off">Skin temperature: off</string>

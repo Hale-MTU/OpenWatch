@@ -27,7 +27,8 @@ internal object Stillness {
         return moving > MAX_MOVING_SHARE * judged.size
     }
 
-    private fun spread(values: List<Double>): Double {
+    /** The standard deviation of [values]. */
+    fun spread(values: List<Double>): Double {
         val mean = values.average()
         return sqrt(values.sumOf { (it - mean) * (it - mean) } / values.size)
     }

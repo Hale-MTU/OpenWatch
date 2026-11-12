@@ -284,4 +284,13 @@
     <string name="summary_split">Km %1$d</string>
     <string name="recovery_one_minute">Erholung nach 1 min</string>
     <string name="recovery_two_minutes">Erholung nach 2 min</string>
+    <string name="settings_auto_pause_on">Auto-Pause: an</string>
+    <string name="settings_auto_pause_off">Auto-Pause: aus</string>
+    <string name="settings_auto_detect_on">Workouts erkennen: an</string>
+    <string name="settings_auto_detect_off">Workouts erkennen: aus</string>
+    <string name="detected_channel_name">Erkannte Workouts</string>
+    <string name="detected_walk">Sieht nach einem Spaziergang aus</string>
+    <string name="detected_run">Sieht nach einem Lauf aus</string>
+    <string name="detected_body">%1$d min, %2$d Schritte. Aufzeichnen?</string>
+    <string name="detected_start">Aufzeichnen</string>
 </resources>
