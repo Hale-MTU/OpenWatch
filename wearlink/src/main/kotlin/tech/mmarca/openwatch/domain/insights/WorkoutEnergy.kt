@@ -1,6 +1,5 @@
 package tech.mmarca.openwatch.domain.insights
 
-import androidx.health.connect.client.records.ExerciseSessionRecord
 import java.time.LocalDate
 import tech.mmarca.openwatch.domain.preferences.BiologicalSex
 import tech.mmarca.openwatch.domain.preferences.BodyProfile
