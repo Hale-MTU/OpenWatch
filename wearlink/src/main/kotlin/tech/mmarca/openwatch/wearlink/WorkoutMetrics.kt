@@ -1,11 +1,12 @@
 package tech.mmarca.openwatch.wearlink
 
-import kotlin.math.asin
-import kotlin.math.cos
+import java.time.LocalDate
 import kotlin.math.exp
-import kotlin.math.pow
-import kotlin.math.sin
-import kotlin.math.sqrt
+import tech.mmarca.openwatch.core.geo.haversineMeters
+import tech.mmarca.openwatch.domain.insights.WorkoutEnergyResult
+import tech.mmarca.openwatch.domain.insights.estimateWorkoutEnergy
+import tech.mmarca.openwatch.domain.preferences.BiologicalSex
+import tech.mmarca.openwatch.domain.preferences.BodyProfile
 
 /**
  * What a workout comes to, worked out from its heart rate, its route and the
@@ -18,15 +19,6 @@ object WorkoutMetrics {
     /** One heart rate reading. */
     data class Beat(val epochMillis: Long, val bpm: Int)
 
-    /** What the energy and the load need of the wearer; any may be missing. */
-    data class Body(
-        val weightKg: Double? = null,
-        val heightCm: Double? = null,
-        val ageYears: Int? = null,
-        /** Null when unknown: the sex-specific formulas then take the mean of both. */
-        val female: Boolean? = null,
-    )
-
     /** One split: the time the distance [index] + 1 kilometres took, pauses left out. */
     data class Split(val index: Int, val startMillis: Long, val endMillis: Long, val activeSeconds: Long)
 
@@ -36,9 +28,9 @@ object WorkoutMetrics {
         /** Seconds in each of the five zones, zone 1 first ([HeartRateZones]); below zone 1 is not counted. */
         val zoneSeconds: List<Long>,
         val trimp: Double?,
-        /** Energy above rest, kcal: Keytel minus Mifflin-St Jeor. Null without weight, age and height. */
+        /** Energy above rest, kcal, from [energy]. Null without an estimate (no weight, or no sourced cost). */
         val activeKcal: Double?,
-        /** Whole energy, kcal: Keytel alone. Null without weight and age. */
+        /** Whole energy, kcal: [activeKcal] plus the resting share of the same minutes. */
         val totalKcal: Double?,
         val splits: List<Split>,
         /** Seconds per kilometre over the active time; null without distance. */
@@ -52,17 +44,22 @@ object WorkoutMetrics {
     /** Readings further apart than this are a gap, not a reading that lasted. */
     const val MAX_SAMPLE_GAP_MILLIS: Long = 30_000
 
+    /**
+     * [profile] is the wearer's body profile; [today] the day its age is read on,
+     * the workout's own day where that is known.
+     */
     fun summarize(
         workout: WearLinkWorkout,
         beats: List<Beat>,
         zones: HeartRateZones.Basis?,
-        body: Body,
+        profile: BodyProfile,
+        today: LocalDate,
         sport: WorkoutSport?,
     ): Summary {
         val active = activeBeats(workout, beats)
         val spans = spans(active, workout)
-        val total = spans.sumOf { it.second }.toDouble()
-        val average = if (total > 0) (spans.sumOf { (beat, ms) -> beat.bpm * ms.toDouble() } / total).toInt() else null
+        val average = meanBpm(spans)?.toInt()
+        val estimate = energy(workout, beats, profile, today) as? WorkoutEnergyResult.Estimate
         val zoneSeconds = LongArray(HeartRateZones.COUNT)
         if (zones != null) {
             for ((beat, ms) in spans) HeartRateZones.zoneOf(beat.bpm.toDouble(), zones)?.let { zoneSeconds[it] += ms / 1000 }
@@ -74,9 +71,9 @@ object WorkoutMetrics {
             averageBpm = average,
             maxBpm = active.maxOfOrNull { it.bpm },
             zoneSeconds = zoneSeconds.toList(),
-            trimp = zones?.restingBpm?.let { banisterTrimp(spans, it, zones.maxBpm, body.female) },
-            activeKcal = activeKcal(spans, body),
-            totalKcal = keytelKcal(spans, body),
+            trimp = zones?.restingBpm?.let { banisterTrimp(workout, active, it, zones.maxBpm, profile.sex) },
+            activeKcal = estimate?.activeKcal,
+            totalKcal = estimate?.totalKcal,
             splits = splits,
             paceSecondsPerKm = if (distance != null && distance > 0) activeSeconds / (distance / 1000.0) else null,
             vo2Max = if (sport != null && zones?.restingBpm != null) vo2Max(workout, active, zones, sport) else null,
@@ -103,88 +100,74 @@ object WorkoutMetrics {
         (workout.endMillis - workout.startMillis) - workout.pauses.sumOf { (it.endMillis - it.startMillis).coerceAtLeast(0) }
 
     /**
+     * The time-weighted mean heart rate: each reading counts for its span
+     * ([spans]), so a stretch of sparse readings does not weigh less than a
+     * dense one. Null when the readings cover no time.
+     */
+    fun meanBpm(spans: List<Pair<Beat, Long>>): Double? {
+        val total = spans.sumOf { it.second }
+        if (total <= 0) return null
+        return spans.sumOf { (beat, ms) -> beat.bpm * ms.toDouble() } / total
+    }
+
+    /**
+     * The workout's calories, by the app's one estimate ([estimateWorkoutEnergy],
+     * the same OpenVitals uses): Keytel from the time-weighted [meanBpm] of the
+     * readings outside the pauses, else ACSM from a walk or run's distance, else
+     * the activity's Compendium MET, over the active time. The resting share is
+     * Mifflin-St Jeor when the profile has sex, age, weight and height, else 1 MET.
+     */
+    fun energy(workout: WearLinkWorkout, beats: List<Beat>, profile: BodyProfile, today: LocalDate): WorkoutEnergyResult =
+        estimateWorkoutEnergy(
+            exerciseType = workout.exerciseType,
+            durationMinutes = activeMillis(workout) / MINUTE_MILLIS.toDouble(),
+            meanHeartRateBpm = meanBpm(spans(activeBeats(workout, beats), workout)),
+            profile = profile,
+            today = today,
+            distanceMeters = workout.distanceMetres?.toDouble()?.takeIf { it > 0.0 },
+        )
+
+    /**
      * Banister's training impulse: minutes times the heart rate reserve fraction
      * times 0.64·e^(1.92·HRr) for men, 0.86·e^(1.67·HRr) for women. Morton,
      * Fitz-Clarke and Banister, J Appl Physiol 1990;69(3):1171-1177,
-     * doi:10.1152/jappl.1990.69.3.1171. Unknown sex takes the mean of both.
+     * doi:10.1152/jappl.1990.69.3.1171. Each pair of neighbouring readings counts
+     * for the time between them at their mean (the trapezoid rule), as OpenVitals'
+     * cardio load does. A pair further apart than [MAX_SAMPLE_GAP_MILLIS], or with
+     * a pause between, counts for nothing: app choice, no source (OpenVitals
+     * allows 5 minutes).
+     *
+     * TODO(user decision): without a sex this takes the mean of the men's and the
+     * women's constants; OpenVitals takes the men's. Pick one for both apps.
      */
-    fun banisterTrimp(spans: List<Pair<Beat, Long>>, restingBpm: Int, maxBpm: Int, female: Boolean?): Double? {
-        if (maxBpm <= restingBpm || spans.isEmpty()) return null
-        return spans.sumOf { (beat, ms) ->
-            val reserve = ((beat.bpm - restingBpm).toDouble() / (maxBpm - restingBpm)).coerceIn(0.0, 1.0)
+    fun banisterTrimp(
+        workout: WearLinkWorkout,
+        active: List<Beat>,
+        restingBpm: Int,
+        maxBpm: Int,
+        sex: BiologicalSex?,
+    ): Double? {
+        if (maxBpm <= restingBpm || active.size < 2) return null
+        return active.zipWithNext().sumOf { (a, b) ->
+            val ms = b.epochMillis - a.epochMillis
+            val paused = workout.pauses.any { it.startMillis in a.epochMillis..b.epochMillis }
+            if (ms <= 0 || ms > MAX_SAMPLE_GAP_MILLIS || paused) return@sumOf 0.0
+            val mean = (a.bpm + b.bpm) / 2.0
+            val reserve = ((mean - restingBpm) / (maxBpm - restingBpm)).coerceIn(0.0, 1.0)
             val male = 0.64 * exp(1.92 * reserve)
             val woman = 0.86 * exp(1.67 * reserve)
-            val weight = when (female) {
-                true -> woman
-                false -> male
+            val weight = when (sex) {
+                BiologicalSex.FEMALE -> woman
+                BiologicalSex.MALE -> male
                 null -> (male + woman) / 2
             }
             ms / 60_000.0 * reserve * weight
         }
     }
 
-    /**
-     * Energy from heart rate, Keytel et al., "Prediction of energy expenditure
-     * from heart rate monitoring during submaximal exercise", J Sports Sci
-     * 2005;23(3):289-297, doi:10.1080/02640410470001730089, the equations
-     * without VO2max, in kJ/min:
-     * men −55.0969 + 0.6309·HR + 0.1988·kg + 0.2017·age,
-     * women −20.4022 + 0.4472·HR − 0.1263·kg + 0.074·age.
-     * Unknown sex takes the mean of both. A minute never counts below the
-     * resting rate of [mifflinKcalPerMinute] when that is known, nor below zero.
-     */
-    fun keytelKcal(spans: List<Pair<Beat, Long>>, body: Body): Double? {
-        val kg = body.weightKg ?: return null
-        val age = body.ageYears ?: return null
-        val floor = mifflinKcalPerMinute(body) ?: 0.0
-        return spans.sumOf { (beat, ms) -> maxOf(keytelKcalPerMinute(beat.bpm.toDouble(), kg, age, body.female), floor) * ms / 60_000.0 }
-    }
-
-    private fun keytelKcalPerMinute(bpm: Double, kg: Double, age: Int, female: Boolean?): Double {
-        val male = -55.0969 + 0.6309 * bpm + 0.1988 * kg + 0.2017 * age
-        val woman = -20.4022 + 0.4472 * bpm - 0.1263 * kg + 0.074 * age
-        val kj = when (female) {
-            true -> woman
-            false -> male
-            null -> (male + woman) / 2
-        }
-        return (kj / KJ_PER_KCAL).coerceAtLeast(0.0)
-    }
-
-    /** [keytelKcal] less the resting energy of the same minutes: what the session added. */
-    fun activeKcal(spans: List<Pair<Beat, Long>>, body: Body): Double? {
-        val total = keytelKcal(spans, body) ?: return null
-        val rest = mifflinKcalPerMinute(body) ?: return null
-        return (total - rest * spans.sumOf { it.second } / 60_000.0).coerceAtLeast(0.0)
-    }
-
-    /**
-     * Resting energy per minute, Mifflin et al., "A new predictive equation for
-     * resting energy expenditure in healthy individuals", Am J Clin Nutr
-     * 1990;51(2):241-247, doi:10.1093/ajcn/51.2.241: 10·kg + 6.25·cm − 5·age,
-     * +5 for men, −161 for women, per day. Unknown sex takes the mean.
-     */
-    fun mifflinKcalPerMinute(body: Body): Double? {
-        val kg = body.weightKg ?: return null
-        val cm = body.heightCm ?: return null
-        val age = body.ageYears ?: return null
-        val sexTerm = when (body.female) {
-            true -> -161.0
-            false -> 5.0
-            null -> -78.0
-        }
-        return (10 * kg + 6.25 * cm - 5 * age + sexTerm) / MINUTES_PER_DAY
-    }
-
-    /** The route's distance, haversine between fixes on a sphere of the mean Earth radius. */
-    fun metresBetween(a: WearLinkWorkout.RoutePoint, b: WearLinkWorkout.RoutePoint): Double {
-        val lat1 = Math.toRadians(a.latitudeE7 / 1e7)
-        val lat2 = Math.toRadians(b.latitudeE7 / 1e7)
-        val dLat = lat2 - lat1
-        val dLon = Math.toRadians((b.longitudeE7 - a.longitudeE7) / 1e7)
-        val h = sin(dLat / 2).pow(2) + cos(lat1) * cos(lat2) * sin(dLon / 2).pow(2)
-        return 2 * EARTH_RADIUS_METRES * asin(sqrt(h))
-    }
+    /** The route's distance between two fixes, by the app's one haversine ([haversineMeters], R = 6 371 000 m). */
+    fun metresBetween(a: WearLinkWorkout.RoutePoint, b: WearLinkWorkout.RoutePoint): Double =
+        haversineMeters(a.latitudeE7 / 1e7, a.longitudeE7 / 1e7, b.latitudeE7 / 1e7, b.longitudeE7 / 1e7)
 
     /** One split per whole kilometre of the route, its time without pauses. */
     fun splits(workout: WearLinkWorkout): List<Split> {
@@ -264,6 +247,15 @@ object WorkoutMetrics {
      * 1999;341(18):1351-1357, doi:10.1056/NEJM199910283411804: a fall of 12
      * beats or less in the first minute was abnormal. Each value is the mean of
      * the readings within five seconds of its moment.
+     *
+     * OpenVitals (HeartRateRecovery.kt) also checks that the peak falls in the
+     * last 10 s before the stop, that the heart rate did not ease off by 4 bpm or
+     * more before it, and that the effort was near-maximal. The watch does
+     * without: it measures from the moment the wearer ends the workout, at one
+     * reading a second, and shows the fall as measured. Those checks judge
+     * whether one reading compares with another, not the fall itself, and they
+     * are app choices without a published source; they belong where readings
+     * are compared, which is OpenVitals' trend.
      */
     fun recovery(beats: List<Beat>, stopMillis: Long): Pair<Int?, Int?> {
         val end = meanBpmAround(beats, stopMillis) ?: return null to null
@@ -281,9 +273,6 @@ object WorkoutMetrics {
     const val MIN_RECOVERY_READINGS: Int = 60
 
     private val VO2_SPORTS = setOf(WorkoutSport.WALKING, WorkoutSport.RUNNING, WorkoutSport.HIKING)
-    private const val KJ_PER_KCAL = 4.184
-    private const val MINUTES_PER_DAY = 1440.0
-    private const val EARTH_RADIUS_METRES = 6_371_008.8
     private const val METRES_PER_KM = 1000.0
     private const val MINUTE_MILLIS = 60_000L
     private const val REST_VO2 = 3.5

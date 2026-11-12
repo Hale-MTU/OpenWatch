@@ -108,6 +108,17 @@ class WearOsWorkoutImportTest {
     }
 
     @Test
+    fun `the mean heart rate is weighted by time, as the watch's summary weighs it`() {
+        // 120 bpm stands 10 s until the next reading, 160 bpm stands 30 s (the cap):
+        // (120 * 10 + 160 * 30) / 40 = 150 bpm, the same calories as a steady 150.
+        // A plain average, 140 bpm, would give fewer.
+        val samples = listOf(start.plusSeconds(60) to 120L, start.plusSeconds(70) to 160L)
+        val (record, _) = WearOsWorkoutImport.activeCalories(run(), zone, body, samples, today)
+
+        assertEquals(379.2357536, record!!.energy.inKilocalories, 1e-6)
+    }
+
+    @Test
     fun `without heart rate a run at a running pace is counted from its distance`() {
         // 4200 m in 29 minutes is 145 m/min: ACSM, 0.2 * 4200 * 70 / 1000 * 4.9 = 288.12 kcal.
         val (record, result) = WearOsWorkoutImport.activeCalories(run(), zone, body, emptyList(), today)

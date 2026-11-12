@@ -5,7 +5,6 @@ import androidx.health.connect.client.records.RestingHeartRateRecord
 import java.time.Duration
 import java.time.ZoneId
 import tech.mmarca.openwatch.domain.insights.HeartRateZoneBasis
-import tech.mmarca.openwatch.domain.preferences.BiologicalSex
 import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.wearlink.HeartRateZones
@@ -38,17 +37,11 @@ internal class WearOsWorkoutFigures(
         val observed = healthConnect.readMaxHeartRate(workout.end.minus(Duration.ofDays(365)), workout.end.plusSeconds(1))?.toInt()
         val basis = HeartRateZoneBasis.of(body, day, observed, resting)
         val zones = basis.maxBpm?.let { HeartRateZones.Basis(it, basis.restingBpm ?: resting) }
-        val metricsBody = WorkoutMetrics.Body(
-            weightKg = body.weightKg,
-            heightCm = body.heightCm,
-            ageYears = body.ageYears(day),
-            female = body.sex?.let { it == BiologicalSex.FEMALE },
-        )
         val end = workout.end.toEpochMilli()
         val after = beats.count { it.epochMillis in (end + 1)..(end + RECOVERY_SPAN.toMillis()) }
         val recovery = if (after >= WorkoutMetrics.MIN_RECOVERY_READINGS) WorkoutMetrics.recovery(beats, end).first else null
         return WorkoutMetrics.summarize(
-            WearOsWorkoutMetrics.linkWorkout(workout), beats, zones, metricsBody, WorkoutSport.fromExerciseType(workout.exerciseType),
+            WearOsWorkoutMetrics.linkWorkout(workout), beats, zones, body, day, WorkoutSport.fromExerciseType(workout.exerciseType),
         ).copy(recoveryBpm = recovery)
     }
 
