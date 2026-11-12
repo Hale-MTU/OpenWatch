@@ -2,9 +2,25 @@ package tech.mmarca.openwatch.activityimport
 
 import java.time.Duration
 import java.time.Instant
+import java.time.ZoneId
+import kotlin.math.roundToInt
 import tech.mmarca.openwatch.domain.model.ActivityRecordSource
 import tech.mmarca.openwatch.domain.model.ActivityWriteRequest
+import tech.mmarca.openwatch.domain.insights.WorkoutEnergyResult
+import tech.mmarca.openwatch.domain.insights.estimateWorkoutEnergy
 import tech.mmarca.openwatch.domain.model.BleRecordingSampleBuffer
+import tech.mmarca.openwatch.domain.preferences.BodyProfile
+
+/**
+ * An imported file's write request, and what became of its calorie estimate:
+ * null when the file measured calories itself or no body profile was at hand,
+ * [WorkoutEnergyResult.MissingInputs] when the profile has no weight, so the
+ * caller can say so.
+ */
+internal data class ImportedActivityRequest(
+    val request: ActivityWriteRequest,
+    val energyEstimate: WorkoutEnergyResult?,
+)
 
 /**
  * The write request for a file imported with nobody to review it: a watch sync, a bulk
@@ -18,11 +34,17 @@ import tech.mmarca.openwatch.domain.model.BleRecordingSampleBuffer
  * Null when the file cannot stand alone as an activity: no time range, a span past the
  * limit, or a route on a type that takes none. A caller that has a form can still fall
  * back to it.
+ *
+ * A file that measured no calories gets an estimate from [estimateWorkoutEnergy] with the
+ * body [profile], as OpenVitals' entry form makes it: the mean heart rate the file
+ * recorded, the distance of a walk or run, or the activity's Compendium MET. Without a
+ * weight there is no estimate; a null [profile] (it could not be read) makes none either.
  */
 internal fun RouteFileImport.toImportWriteRequest(
     fallbackType: ActivityEntryType,
     source: ActivityRecordSource,
-): ActivityWriteRequest? {
+    profile: BodyProfile?,
+): ImportedActivityRequest? {
     if (!hasImportedTimeRange) return null
     val key = contentKey ?: return null
     val type = inferActivityType(this, fallbackType)
@@ -43,20 +65,28 @@ internal fun RouteFileImport.toImportWriteRequest(
 
     val active = activeCaloriesKcal?.takeIf { it > 0.0 }
     val total = totalCaloriesKcal?.takeIf { it > 0.0 }
+    val samples = bleSamples.within(start, end)
     // As the form does: estimate only for a file that measured no calories at all.
-    val estimate = if (active == null && total == null) {
-        activityCalorieEstimate(
-            activityType = type,
-            distanceMeters = distanceMeters,
-            durationMinutesText = minutes.coerceAtLeast(1).toString(),
+    val energy = if (active == null && total == null && profile != null) {
+        estimateWorkoutEnergy(
+            exerciseType = type.exerciseType,
+            // Whole minutes, as the form counts them, so both give the same number.
+            durationMinutes = minutes.coerceAtLeast(1).toDouble(),
+            meanHeartRateBpm = samples.heartRateSamples.takeIf { it.isNotEmpty() }
+                ?.map { it.beatsPerMinute }?.average(),
+            profile = profile,
+            // The age on the workout's day, not on the day of the import.
+            today = start.atZone(ZoneId.systemDefault()).toLocalDate(),
+            distanceMeters = distanceMeters.takeIf { it > 0.0 },
         )
     } else {
         null
     }
-    val activeKcal = active ?: estimate?.activeCaloriesText?.toDoubleOrNull()
-    val totalKcal = total ?: estimate?.totalCaloriesText?.toDoubleOrNull()
+    val estimate = energy as? WorkoutEnergyResult.Estimate
+    val activeKcal = active ?: estimate?.activeKcal?.toWholeKcal()
+    val totalKcal = total ?: estimate?.totalKcal?.toWholeKcal()
 
-    return ActivityWriteRequest(
+    val request = ActivityWriteRequest(
         exerciseType = type.exerciseType,
         startTime = start,
         endTime = end,
@@ -68,11 +98,15 @@ internal fun RouteFileImport.toImportWriteRequest(
         // Health Connect refuses a total below the active part.
         activeCaloriesKcal = activeKcal?.takeIf { totalKcal == null || it <= totalKcal },
         totalCaloriesKcal = totalKcal,
-        bleSamples = bleSamples.within(start, end),
+        bleSamples = samples,
         source = source,
         importKey = key,
     )
+    return ImportedActivityRequest(request, energy)
 }
+
+/** Whole kilocalories, at least 1, as the entry form stores an estimate. */
+private fun Double.toWholeKcal(): Double = roundToInt().coerceAtLeast(1).toDouble()
 
 private fun BleRecordingSampleBuffer.within(start: Instant, end: Instant): BleRecordingSampleBuffer {
     fun Instant.isInside(): Boolean = !isBefore(start) && isBefore(end)

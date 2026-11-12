@@ -3,14 +3,18 @@ package tech.mmarca.openwatch.devices.garmin
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
+import tech.mmarca.openwatch.data.repository.BodyProfileProvider
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.data.repository.contract.ActivityRepository
 import tech.mmarca.openwatch.domain.model.ActivityRecordSource
 import tech.mmarca.openwatch.domain.model.ActivityWriteRequest
 import tech.mmarca.openwatch.activityimport.DefaultActivityEntryTypes
+import tech.mmarca.openwatch.activityimport.ImportedActivityRequest
 import tech.mmarca.openwatch.activityimport.RouteElevationCorrector
 import tech.mmarca.openwatch.activityimport.RouteFileParser
 import tech.mmarca.openwatch.activityimport.toImportWriteRequest
+import tech.mmarca.openwatch.domain.insights.WorkoutEnergyResult
+import tech.mmarca.openwatch.domain.preferences.BodyProfile
 
 /**
  * What an activity import did with the files it was given. A file that did not convert is
@@ -22,6 +26,8 @@ data class GarminActivityImportResult(
     val missingPermission: List<GarminDownloadedFile> = emptyList(),
     /** Converted, but the Health Connect write failed. */
     val failedWrites: List<GarminDownloadedFile> = emptyList(),
+    /** Workouts written without calories: the file measured none and the body profile has no weight. */
+    val withoutCaloriesForWantOfWeight: Int = 0,
 ) {
     /** Files the next sync must fetch again, so their keys must not be recorded. */
     val retry: List<GarminDownloadedFile> get() = missingPermission + failedWrites
@@ -37,6 +43,7 @@ class GarminActivityImporter @Inject constructor(
     private val activityRepository: ActivityRepository,
     private val preferencesRepository: OpenWatchPreferences,
     private val elevationCorrector: RouteElevationCorrector,
+    private val bodyProfile: BodyProfileProvider,
 ) {
 
     /** Imports the activity files in [files] and says which ones must be fetched again. */
@@ -44,12 +51,14 @@ class GarminActivityImporter @Inject constructor(
         val activityFiles = files.filter { it.entry.type == GarminFileType.ACTIVITY }
         if (activityFiles.isEmpty()) return GarminActivityImportResult()
 
+        val profile = profile()
         val pending = mutableListOf<Pair<GarminDownloadedFile, ActivityWriteRequest>>()
         val missingPermission = mutableListOf<GarminDownloadedFile>()
         val failedWrites = mutableListOf<GarminDownloadedFile>()
+        var withoutCalories = 0
         for (file in activityFiles) {
-            val request = try {
-                buildRequest(file)
+            val imported = try {
+                buildRequest(file, profile)
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
@@ -59,6 +68,7 @@ class GarminActivityImporter @Inject constructor(
                 )
                 continue
             } ?: continue
+            val request = imported.request
             try {
                 if (!activityRepository.hasActivityWritePermission(request)) {
                     GarminLog.log(
@@ -76,6 +86,7 @@ class GarminActivityImporter @Inject constructor(
                 continue
             }
             pending += file to request
+            if (imported.energyEstimate is WorkoutEnergyResult.MissingInputs) withoutCalories += 1
         }
 
         var written = 0
@@ -106,10 +117,25 @@ class GarminActivityImporter @Inject constructor(
             preferencesRepository.lastActivityExerciseType = pending.last().second.exerciseType
             GarminLog.log("[GARMIN-IMPORT] wrote $written watch activities")
         }
-        return GarminActivityImportResult(written, missingPermission, failedWrites)
+        return GarminActivityImportResult(
+            written = written,
+            missingPermission = missingPermission,
+            failedWrites = failedWrites,
+            withoutCaloriesForWantOfWeight = withoutCalories,
+        )
     }
 
-    private suspend fun buildRequest(file: GarminDownloadedFile): ActivityWriteRequest? {
+    /** The body profile for the calorie estimates; null when it could not be read, and no estimate is made. */
+    private suspend fun profile(): BodyProfile? = try {
+        bodyProfile.resolve()
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Exception) {
+        GarminLog.log("[GARMIN-IMPORT] could not read the body profile, so no calorie estimates: $error")
+        null
+    }
+
+    private suspend fun buildRequest(file: GarminDownloadedFile, profile: BodyProfile?): ImportedActivityRequest? {
         // Indexed, not numbered: several files share the 65535 "unset" number.
         val routeImport = elevationCorrector.correct(
             RouteFileParser.parseFile(
@@ -122,6 +148,7 @@ class GarminActivityImporter @Inject constructor(
         return routeImport.toImportWriteRequest(
             fallbackType = preferredActivityType(requireGpsRoute = routeImport.points.isNotEmpty()),
             source = ActivityRecordSource.WATCH,
+            profile = profile,
         )
     }
 

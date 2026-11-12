@@ -409,6 +409,7 @@
     <string name="settings_watch_wearos_sync_now">Sync watch</string>
     <string name="settings_watch_wearos_syncing">Syncing watch…</string>
     <string name="settings_watch_wearos_synced_none">Nothing new on the watch</string>
+    <string name="settings_watch_garmin_needs_weight">Workout calories not estimated: add your weight in Body profile or record one in Health Connect.</string>
     <string name="settings_watch_wearos_needs_weight">Walking calories not estimated: add your weight in Body profile or record one in Health Connect.</string>
     <string name="settings_watch_wearos_needs_weight_read">Walking calories not estimated: add your weight in Body profile, or allow OpenWatch to read your weight in Health Connect.</string>
     <string name="settings_watch_wearos_needs_steps_write">Steps not written: allow OpenWatch to write steps in Health Connect, then sync again.</string>
