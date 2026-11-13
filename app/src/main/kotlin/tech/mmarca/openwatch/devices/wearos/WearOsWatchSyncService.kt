@@ -1,6 +1,5 @@
 package tech.mmarca.openwatch.devices.wearos
 
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.ElevationGainedRecord
@@ -37,6 +36,7 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.devices.core.sync.UnwrittenSeries
 import tech.mmarca.openwatch.data.repository.RecordWrite
 import tech.mmarca.openwatch.data.repository.insertWithOutcomes
+import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.domain.insights.sleepNightWindow
 import tech.mmarca.openwatch.domain.insights.WearSleepEstimator
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
@@ -101,6 +101,8 @@ class WearOsWatchSyncService(
     private val writeRespiratoryRate: () -> Boolean = { false },
     /** The body for a workout's calories: sex, age and weight. Strict like [weightKg]. */
     private val profile: suspend () -> BodyProfile = { BodyProfile(weightKg = weightKg()) },
+    /** The body profile the watch gets for its zones and its own figures. */
+    private val watchProfile: suspend () -> BodyProfile = { BodyProfile() },
 ) : DeviceSyncPort {
 
     @Inject
@@ -120,6 +122,7 @@ class WearOsWatchSyncService(
         Instant::now, ZoneId::systemDefault,
         { preferences.writeRespiratoryRate },
         { bodyProfile.resolve() },
+        { bodyProfile.resolve() },
     )
 
     private val syncMutex = Mutex()
@@ -134,11 +137,14 @@ class WearOsWatchSyncService(
         writeRespiratoryRate = writeRespiratoryRate,
     )
 
+    private val dayLink = WearOsDayLinkSync(importRepository, healthConnect, cursors, nodePort, clock, zone, watchProfile)
+
     private val workouts = WearOsWorkoutSync(
         importRepository = importRepository,
         cursors = cursors,
         granted = { healthConnect.grantedPermissions() },
         zone = zone,
+        summarize = WearOsWorkoutFigures(healthConnect, watchProfile, zone)::summarize,
     )
 
     private val workoutEnergy = WearOsWorkoutEnergy(
@@ -185,6 +191,7 @@ class WearOsWatchSyncService(
             progress.unwritten += night.unwritten
             progress.withheldPermissions += night.withheld
             if (!pullWorkouts(device, progress)) return notPaired(device)
+            dayLink.sync(device, linkRetry) ?: return notPaired(device)
         } catch (error: CancellationException) {
             throw error
         } catch (failure: WearOsLinkFailure) {

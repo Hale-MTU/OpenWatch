@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -17,7 +18,26 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
+import androidx.core.app.NotificationCompat
+import androidx.wear.ongoing.OngoingActivity
+import androidx.wear.ongoing.Status
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import tech.mmarca.openwatch.wear.workout.WorkoutPillKey
+import tech.mmarca.openwatch.wear.workout.WorkoutState
+import tech.mmarca.openwatch.wear.workout.pillKey
+import tech.mmarca.openwatch.wear.workout.sportName
+import tech.mmarca.openwatch.wear.workout.ActivityDetectionMonitor
+import tech.mmarca.openwatch.wear.workout.RecoveryAtStop
+import tech.mmarca.openwatch.wear.workout.stopwatchBaseMillis
+import tech.mmarca.openwatch.wear.features.quicklog.EntryLog
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
 import tech.mmarca.openwatch.wear.workout.MetricStoreWorkoutRows
 import tech.mmarca.openwatch.wear.workout.WorkoutRecorder
@@ -58,10 +78,12 @@ class WearAppService : Service() {
     private lateinit var debugSnapshots: DebugSnapshots
     private lateinit var wakeSync: SensorWakeSync
     private lateinit var workout: WorkoutRecorder
+    private lateinit var detectionMonitor: ActivityDetectionMonitor
     private lateinit var ppgLogger: PpgRawLogger
     private lateinit var trust: WearTrustStore
     private lateinit var link: WearLinkServerHost
     private val mainHandler = Handler(Looper.getMainLooper())
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     /** False while [WornMonitor] says the watch is off the wrist. Main thread only. */
     private var heartRateWanted = true
@@ -91,7 +113,7 @@ class WearAppService : Service() {
         super.onCreate()
         DebugProtocol.init(this)
         store = MetricStore(this)
-        samsungFeed = SamsungHeartRateFeed(this)
+        samsungFeed = SamsungHeartRateFeed.shared(this)
         wakeSync = SensorWakeSync(this)
         workout = WorkoutRecorder(this, store) {
             // The location type is held only while a workout reads the GPS; the heart rate runs at the full rate.
@@ -99,6 +121,11 @@ class WearAppService : Service() {
             reconcileRecorders()
         }
         Thread({ workout.recoverInterrupted() }, "WorkoutRecover").start()
+        detectionMonitor = ActivityDetectionMonitor(this, store, mainHandler) { workout.isActive || workout.isRecovering }
+        // A start, pause, resume or end changes the pill; the ticking of the clock does not.
+        serviceScope.launch {
+            WorkoutState.state.map { it.pillKey() }.distinctUntilChanged().collect { mainHandler.post(::refreshNotification) }
+        }
         // Off the main thread: a week of heart rate is tens of thousands of rows.
         Thread({ LegacyStoreImport.run(this, store) }, "LegacyStoreImport").start()
         ppgLogger = PpgRawLogger(this)
@@ -120,7 +147,7 @@ class WearAppService : Service() {
             onSourceChanged = { mainHandler.post { reconcileRecorders() } },
             onSample = { at, bpm ->
                 minuteRecorder.noteHeartRate(at, bpm)
-                if (workout.isActive) workout.noteHeartRate(at, bpm)
+                if (workout.isActive || workout.isRecovering) workout.noteHeartRate(at, bpm)
             },
             onContact = minuteRecorder::noteHeartRateContact,
         )
@@ -153,6 +180,8 @@ class WearAppService : Service() {
             heldPreferences = { WearPreferenceCodec.encode(WearSettings.read(this), abilities()) },
             setPreference = ::applyPhonePreference,
             workouts = WorkoutStore(MetricStoreWorkoutRows(store))::workoutsSince,
+            putDay = DaySummaryStore(this)::put,
+            entries = EntryLog(this)::entriesSince,
             localName = ::localName,
         )
         isForeground = startInForeground()
@@ -180,6 +209,7 @@ class WearAppService : Service() {
         ascentRecorder.start()
         wornMonitor.start()
         debugSnapshots.start()
+        detectionMonitor.start()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -198,12 +228,12 @@ class WearAppService : Service() {
             ACTION_WORKOUT_START -> {
                 val sport = WorkoutSport.fromId(intent.getStringExtra(EXTRA_SPORT)) ?: return START_STICKY
                 val gps = intent.getBooleanExtra(EXTRA_GPS, false) && WearPermissions.hasLocation(this)
-                workout.start(sport, gps)
+                workout.start(sport, gps, intent.getLongExtra(EXTRA_START, 0L).takeIf { it > 0L } ?: System.currentTimeMillis())
                 return START_STICKY
             }
             ACTION_WORKOUT_PAUSE -> { workout.pause(); return START_STICKY }
             ACTION_WORKOUT_RESUME -> { workout.resume(); return START_STICKY }
-            ACTION_WORKOUT_STOP -> { workout.stop(); return START_STICKY }
+            ACTION_WORKOUT_STOP -> { workout.stop(RecoveryAtStop.entries.getOrElse(intent.getIntExtra(EXTRA_RECOVERY, 0)) { RecoveryAtStop.NONE }); return START_STICKY }
             ACTION_SETTINGS_CHANGED -> {
                 recorder.resetFallBack()
                 nightHrv.resetFallBack()
@@ -232,12 +262,11 @@ class WearAppService : Service() {
         manager.createNotificationChannel(
             NotificationChannel(CHANNEL_ID, getString(R.string.link_channel_name), NotificationManager.IMPORTANCE_MIN),
         )
-        val notification = Notification.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_monochrome)
-            .setContentTitle(getString(R.string.app_name))
-            .setContentText(getString(R.string.link_notification_text))
-            .setOngoing(true)
-            .build()
+        // The watch face pill needs a channel that is not MIN; it is used only while a workout runs.
+        manager.createNotificationChannel(
+            NotificationChannel(WORKOUT_CHANNEL_ID, getString(R.string.workout_channel_name), NotificationManager.IMPORTANCE_LOW),
+        )
+        val notification = buildNotification()
         var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
         val sensing = WearPermissions.hasHeartRate(this) || WearPermissions.hasActivityRecognition(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && sensing) {
@@ -253,6 +282,75 @@ class WearAppService : Service() {
             // SecurityException for the missing grant, or a start from the background.
             Log.e(TAG, "Cannot run the phone link in the foreground", e)
             false
+        }
+    }
+
+    /** The foreground service's notification: the phone link. It never carries the pill. */
+    private fun buildNotification(): Notification =
+        NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_monochrome)
+            .setContentTitle(getString(R.string.app_name))
+            .setContentText(getString(R.string.link_notification_text))
+            .setOngoing(true)
+            .build()
+
+    /**
+     * The workout's own notification, which carries the ongoing activity: the
+     * pill on the watch face. Its own id, so cancelling it at the end takes the
+     * pill away while the link's notification stays.
+     */
+    private fun buildWorkoutNotification(key: WorkoutPillKey, activeSeconds: Long): Notification {
+        val base = stopwatchBaseMillis(key, activeSeconds, SystemClock.elapsedRealtime())
+        val builder = NotificationCompat.Builder(this, WORKOUT_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_launcher_monochrome)
+            .setContentTitle(getString(sportName(key.sport)))
+            .setOngoing(true)
+            .setCategory(NotificationCompat.CATEGORY_WORKOUT)
+        // The time also as the notification's own chronometer, for a surface that shows that rather than the status.
+        if (base == null) {
+            builder.setContentText(getString(R.string.recording_paused))
+        } else {
+            builder.setUsesChronometer(true).setShowWhen(true).setWhen(System.currentTimeMillis() - activeSeconds * 1000)
+        }
+        applyWorkoutPill(builder, key, activeSeconds)
+        return builder.build()
+    }
+
+    /** Adds the ongoing activity: sport and stopwatch, or sport and "Paused". A tap opens the workout screen. */
+    private fun applyWorkoutPill(builder: NotificationCompat.Builder, key: WorkoutPillKey, activeSeconds: Long) {
+        val base = stopwatchBaseMillis(key, activeSeconds, SystemClock.elapsedRealtime())
+        val status = Status.Builder().addPart("sport", Status.TextPart(getString(sportName(key.sport))))
+        if (base == null) {
+            status.addTemplate("#sport# · #state#").addPart("state", Status.TextPart(getString(R.string.recording_paused)))
+        } else {
+            status.addTemplate("#sport# · #time#").addPart("time", Status.StopwatchPart(base))
+        }
+        // MainActivity shows the workout screen by itself while a workout runs.
+        val open = PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        builder.setContentIntent(open)
+        OngoingActivity.Builder(applicationContext, WORKOUT_NOTIFICATION_ID, builder)
+            .setStaticIcon(R.drawable.ic_launcher_monochrome)
+            .setTitle(getString(sportName(key.sport)))
+            .setStatus(status.build())
+            .setTouchIntent(open)
+            .build()
+            .apply(applicationContext)
+    }
+
+    /** Shows, updates or removes the pill; on the main thread, when a workout starts, pauses, resumes or ends. */
+    private fun refreshNotification() {
+        val manager = getSystemService(NotificationManager::class.java)
+        val state = WorkoutState.state.value
+        val key = state.pillKey()
+        if (key == null) {
+            manager.cancel(WORKOUT_NOTIFICATION_ID)
+        } else {
+            manager.notify(WORKOUT_NOTIFICATION_ID, buildWorkoutNotification(key, state.snapshot?.activeSeconds ?: 0))
         }
     }
 
@@ -292,7 +390,7 @@ class WearAppService : Service() {
             !heartRateWanted -> Log.i(TAG, "Heart rate resting: not worn")
         }
         val day = WearSettings.heartRateDay(this)
-        val active = ::workout.isInitialized && workout.isActive
+        val active = ::workout.isInitialized && (workout.isActive || workout.isRecovering)
         val wanted = if (granted && (heartRateWanted || active)) {
             HeartRateSchedule.interval(
                 heartRate = true,
@@ -306,7 +404,7 @@ class WearAppService : Service() {
             HeartRateInterval.OFF
         }
         val before = recorder.interval to recorder.source
-        recorder.setPlan(wanted, WearSettings.heartRateSource(this))
+        recorder.setPlan(wanted, WearSettings.heartRateSource(this), workout = active)
         // Without the heart rate's wake-ups the step counter must wake the watch itself.
         stepRecorder.setHeartRateRunning(isHeartRateDense())
         // Skin temperature and SpO2 come only from the Samsung platform, at night, each switched on by itself.
@@ -383,11 +481,15 @@ class WearAppService : Service() {
     }
 
     override fun onDestroy() {
+        serviceScope.cancel()
+        // A pill must not outlive the service that records the workout.
+        getSystemService(NotificationManager::class.java).cancel(WORKOUT_NOTIFICATION_ID)
         if (isForeground) {
             unregisterReceiver(bluetoothReceiver)
             wornMonitor.stop()
             bedtimeMonitor.stop()
             debugSnapshots.stop()
+            detectionMonitor.stop()
             mainHandler.removeCallbacksAndMessages(null)
             recorder.stop()
             stepRecorder.stop()
@@ -408,7 +510,10 @@ class WearAppService : Service() {
     companion object {
         private const val TAG = "WearAppService"
         private const val CHANNEL_ID = "phone_link"
+        private const val WORKOUT_CHANNEL_ID = "workout"
         private const val NOTIFICATION_ID = 1
+        // 2 is WearPhoneRequests.NOTIFICATION_ID.
+        private const val WORKOUT_NOTIFICATION_ID = 3
         private const val ACTION_TOGGLE_PPG_LOG = "tech.mmarca.openwatch.wear.TOGGLE_PPG_LOG"
         const val ACTION_HEART_RATE_ALARM = "tech.mmarca.openwatch.wear.HEART_RATE_ALARM"
         private const val ACTION_SETTINGS_CHANGED = "tech.mmarca.openwatch.wear.SETTINGS_CHANGED"
@@ -418,16 +523,30 @@ class WearAppService : Service() {
         private const val ACTION_WORKOUT_STOP = "tech.mmarca.openwatch.wear.WORKOUT_STOP"
         private const val EXTRA_SPORT = "sport"
         private const val EXTRA_GPS = "gps"
+        private const val EXTRA_START = "start"
+        private const val EXTRA_RECOVERY = "recovery"
 
-        /** Starts a workout; [gps] only takes effect with the location grant. Called from the foreground app. */
-        fun startWorkout(context: Context, sport: WorkoutSport, gps: Boolean) =
-            sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_START).putExtra(EXTRA_SPORT, sport.id).putExtra(EXTRA_GPS, gps))
+        /**
+         * Starts a workout; [gps] only takes effect with the location grant. Called from the foreground app.
+         * With a [startMillis] in the past the workout begins then and is credited with the steps and heart rate since.
+         */
+        fun startWorkout(context: Context, sport: WorkoutSport, gps: Boolean, startMillis: Long = 0L) =
+            sendWorkout(
+                context,
+                Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_START)
+                    .putExtra(EXTRA_SPORT, sport.id).putExtra(EXTRA_GPS, gps).putExtra(EXTRA_START, startMillis),
+            )
 
         fun pauseWorkout(context: Context) = sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_PAUSE))
 
         fun resumeWorkout(context: Context) = sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_RESUME))
 
-        fun stopWorkout(context: Context) = sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_STOP))
+        /**
+         * Ends the workout. [recovery] says what becomes of the heart rate recovery: nothing, the fall read
+         * from a rest before the stop, or the heart rate kept live for the recovery's two minutes.
+         */
+        fun stopWorkout(context: Context, recovery: RecoveryAtStop = RecoveryAtStop.NONE) =
+            sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_STOP).putExtra(EXTRA_RECOVERY, recovery.ordinal))
 
         private fun sendWorkout(context: Context, intent: Intent) {
             runCatching { context.startForegroundService(intent) }

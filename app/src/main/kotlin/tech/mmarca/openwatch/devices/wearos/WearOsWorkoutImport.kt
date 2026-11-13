@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.devices.wearos
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.DistanceRecord
+import androidx.health.connect.client.records.ExerciseLap
 import androidx.health.connect.client.records.ExerciseRoute
 import androidx.health.connect.client.records.ExerciseSegment
 import androidx.health.connect.client.records.ExerciseSessionRecord
@@ -16,8 +17,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import tech.mmarca.openwatch.domain.insights.WorkoutEnergyResult
-import tech.mmarca.openwatch.domain.insights.estimateWorkoutEnergy
 import tech.mmarca.openwatch.domain.preferences.BodyProfile
+import tech.mmarca.openwatch.wearlink.WorkoutMetrics
 
 /**
  * Maps a workout the watch recorded to Health Connect: an
@@ -53,7 +54,7 @@ object WearOsWorkoutImport {
         if (distance(workout) != null) add(distancePermission)
     }
 
-    fun records(workout: WearOsWorkout, zone: ZoneId): List<Record> {
+    fun records(workout: WearOsWorkout, zone: ZoneId, laps: List<ExerciseLap> = emptyList(), notes: String? = null): List<Record> {
         val startOffset = zone.rules.getOffset(workout.start)
         val endOffset = zone.rules.getOffset(workout.end)
         val route = route(workout)
@@ -68,6 +69,8 @@ object WearOsWorkoutImport {
                 .filter { it.start >= workout.start && it.endInclusive <= workout.end && it.start < it.endInclusive }
                 .map { ExerciseSegment(it.start, it.endInclusive, ExerciseSegment.EXERCISE_SEGMENT_TYPE_PAUSE) },
             exerciseRoute = route.takeIf { it.isNotEmpty() }?.let(::ExerciseRoute),
+            laps = laps,
+            notes = notes,
         )
         val distance = distance(workout)?.let {
             DistanceRecord(
@@ -86,9 +89,11 @@ object WearOsWorkoutImport {
 
     /**
      * The workout's active calories, estimated, as an `ActiveCaloriesBurnedRecord`
-     * over the session: [estimateWorkoutEnergy] from the mean of the watch's
-     * heart rate [samples] outside the pauses, the walk or run's distance, or the
-     * activity's Compendium MET, with the body [profile]. The watch measures no
+     * over the session: [WorkoutMetrics.energy], the estimate the watch shows on
+     * its summary, from the time-weighted mean of the watch's heart rate
+     * [samples] outside the pauses (each reading counts until the next, at most
+     * 30 s), the walk or run's distance, or the activity's Compendium MET, with
+     * the body [profile]. The watch measures no
      * calories itself; minutes inside the session get no walking energy
      * ([WearOsStepsImport.outsideExerciseSessions]), so nothing counts twice.
      *
@@ -102,24 +107,9 @@ object WearOsWorkoutImport {
         samples: List<Pair<Instant, Long>>,
         today: LocalDate,
     ): Pair<ActiveCaloriesBurnedRecord?, WorkoutEnergyResult> {
-        val pauses = workout.pauses.filter { it.start < it.endInclusive }
-        val moving = Duration.between(workout.start, workout.end) - pauses.fold(Duration.ZERO) { sum, pause ->
-            val from = maxOf(pause.start, workout.start)
-            val to = minOf(pause.endInclusive, workout.end)
-            if (from < to) sum + Duration.between(from, to) else sum
-        }
-        val beats = samples
-            .filter { (time, _) -> !time.isBefore(workout.start) && time.isBefore(workout.end) }
-            .filter { (time, _) -> pauses.none { time >= it.start && time < it.endInclusive } }
-            .map { (_, bpm) -> bpm }
-        val result = estimateWorkoutEnergy(
-            exerciseType = workout.exerciseType,
-            durationMinutes = moving.seconds / 60.0,
-            meanHeartRateBpm = beats.takeIf { it.isNotEmpty() }?.average(),
-            profile = profile,
-            today = today,
-            distanceMeters = distance(workout),
-        )
+        val link = WearOsWorkoutMetrics.linkWorkout(workout).copy(distanceMetres = distance(workout)?.toInt())
+        val beats = samples.map { (time, bpm) -> WorkoutMetrics.Beat(time.toEpochMilli(), bpm.toInt()) }
+        val result = WorkoutMetrics.energy(link, beats, profile, today)
         val estimate = result as? WorkoutEnergyResult.Estimate ?: return null to result
         val record = ActiveCaloriesBurnedRecord(
             startTime = workout.start,

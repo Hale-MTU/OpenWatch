@@ -9,14 +9,21 @@ import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.HealthConnectFeatures
 import androidx.health.connect.client.PermissionController
 import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
+import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeightRecord
 import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.WeightRecord
+import androidx.health.connect.client.request.AggregateGroupByPeriodRequest
+import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Instant
+import java.time.LocalDate
+import java.time.Period
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.reflect.KClass
@@ -118,6 +125,52 @@ class HealthConnectGateway(
         return runCatching {
             clientProvider().features.getFeatureStatus(HealthConnectFeatures.FEATURE_SKIN_TEMPERATURE)
         }.getOrNull() == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
+    }
+
+    /** True when this Health Connect stores mindfulness sessions (a feature of newer versions). */
+    fun isMindfulnessAvailable(): Boolean {
+        if (availability() != HealthConnectAvailability.AVAILABLE) return false
+        return runCatching {
+            clientProvider().features.getFeatureStatus(HealthConnectFeatures.FEATURE_MINDFULNESS_SESSION)
+        }.getOrNull() == HealthConnectFeatures.FEATURE_STATUS_AVAILABLE
+    }
+
+    /**
+     * The active energy (kcal) and distance (m) per local day from [first] to [last], from
+     * any app. A metric whose read grant is missing is not asked for and stays null.
+     */
+    suspend fun readDayTotals(first: LocalDate, last: LocalDate): Map<LocalDate, Pair<Double?, Double?>> {
+        val granted = grantedPermissions()
+        val metrics = buildSet {
+            if (HealthPermission.getReadPermission(ActiveCaloriesBurnedRecord::class) in granted) add(ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL)
+            if (HealthPermission.getReadPermission(DistanceRecord::class) in granted) add(DistanceRecord.DISTANCE_TOTAL)
+        }
+        if (metrics.isEmpty()) return emptyMap()
+        val groups = withContext(Dispatchers.IO) {
+            clientProvider().aggregateGroupByPeriod(
+                AggregateGroupByPeriodRequest(
+                    metrics = metrics,
+                    timeRangeFilter = TimeRangeFilter.between(first.atStartOfDay(), last.plusDays(1).atStartOfDay()),
+                    timeRangeSlicer = Period.ofDays(1),
+                ),
+            )
+        }
+        return groups.associate { group ->
+            group.startTime.toLocalDate() to Pair(
+                group.result[ActiveCaloriesBurnedRecord.ACTIVE_CALORIES_TOTAL]?.inKilocalories,
+                group.result[DistanceRecord.DISTANCE_TOTAL]?.inMeters,
+            )
+        }
+    }
+
+    /** The highest heart rate Health Connect holds in `[start, end)`, from any app; null without the read grant or a sample. */
+    suspend fun readMaxHeartRate(start: Instant, end: Instant): Long? {
+        if (HealthPermission.getReadPermission(HeartRateRecord::class) !in grantedPermissions()) return null
+        return withContext(Dispatchers.IO) {
+            clientProvider().aggregate(
+                AggregateRequest(metrics = setOf(HeartRateRecord.BPM_MAX), timeRangeFilter = TimeRangeFilter.between(start, end)),
+            )[HeartRateRecord.BPM_MAX]
+        }
     }
 
     /** True when this Health Connect offers the background-read grant at all. */
