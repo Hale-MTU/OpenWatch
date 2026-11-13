@@ -44,7 +44,6 @@ import tech.mmarca.openwatch.wear.features.quicklog.LoggedEntry
 import tech.mmarca.openwatch.wear.SleepStage
 import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.MetricTile
-import tech.mmarca.openwatch.wear.DisplayPreferences
 import tech.mmarca.openwatch.wear.ui.components.BarChart
 import tech.mmarca.openwatch.wear.ui.components.BarSegment
 import tech.mmarca.openwatch.wear.ui.components.LegendRow
@@ -75,7 +74,7 @@ fun MetricDetailScreen(
     metric: MetricTile,
     state: MetricUiState,
     unitSystem: UnitSystem,
-    maxHeartRate: Int = DisplayPreferences().maxHeartRate,
+    zones: ZoneBasis? = null,
     restingHeartRate: Double? = null,
     sleepStages: Map<SleepStage, Double> = emptyMap(),
     /** Starts a spot measurement of this metric; null when the watch cannot measure it. */
@@ -87,8 +86,8 @@ fun MetricDetailScreen(
     val unit = stringResource(metricUnitLabel(metric, unitSystem))
     val stats = remember(metric, state, restingHeartRate) { metricStats(metric, state, restingHeartRate) }
     val recent = remember(metric, entries) { recentEntries(entries, metric, LocalDate.now(), ZoneId.systemDefault()) }
-    val zoneShares = remember(metric, state.today, maxHeartRate) {
-        if (metric == MetricTile.HEART_RATE) heartRateZoneShares(state.today, maxHeartRate) else emptyList()
+    val zoneShares = remember(metric, state.today, zones) {
+        if (metric == MetricTile.HEART_RATE && zones != null) heartRateZoneShares(state.today, zones) else emptyList()
     }
 
     ScreenScaffold(scrollState = listState) { contentPadding ->

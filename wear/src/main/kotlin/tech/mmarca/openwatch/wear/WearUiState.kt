@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.wear
 
 import androidx.annotation.StringRes
+import tech.mmarca.openwatch.wear.features.metric.ZoneBasis
 import tech.mmarca.openwatch.wear.features.quicklog.LoggedEntry
 import tech.mmarca.openwatch.wear.features.recording.ActivityType
 import tech.mmarca.openwatch.wear.health.WearCapabilities
@@ -43,8 +44,8 @@ data class MetricUiState(
  */
 data class DisplayPreferences(
     val unitSystem: UnitSystem = UnitSystem.METRIC,
-    /** Top of the heart rate zones. The phone will know the user's age; until then a fixed guess. */
-    val maxHeartRate: Int = 190,
+    /** What the heart rate zones rest on, from the phone; null until it sends a maximum, and then no zones are drawn. */
+    val zones: ZoneBasis? = null,
     /** Daily water goal in millilitres. */
     val waterGoalMl: Int = 2_000,
 )

@@ -1,9 +1,14 @@
 package tech.mmarca.openwatch.wear.features.metric
 
+import tech.mmarca.openwatch.wearlink.HeartRateZones
 import tech.mmarca.openwatch.wear.R
 
-/** Lower bound of each zone as a share of the maximum heart rate, zone 1 first. */
-private val ZoneLowerBounds = listOf(0.5, 0.6, 0.7, 0.8, 0.9)
+/**
+ * What the zones rest on; the ACSM classes and their sources are in [HeartRateZones].
+ * The phone sends it ([WearSettings.zoneBasis][tech.mmarca.openwatch.wear.WearSettings.zoneBasis]);
+ * without one the screens draw no zones rather than a guessed one.
+ */
+typealias ZoneBasis = HeartRateZones.Basis
 
 /** The five zones' names, light to maximum. */
 val HeartZoneLabels = listOf(
@@ -15,19 +20,16 @@ val HeartZoneLabels = listOf(
 )
 
 /** The zone index, 0 to 4, for [bpm]; null below zone 1. */
-fun heartRateZone(bpm: Double, maxHeartRate: Int): Int? {
-    val share = bpm / maxHeartRate
-    return ZoneLowerBounds.indexOfLast { share >= it }.takeIf { it >= 0 }
-}
+fun heartRateZone(bpm: Double, basis: ZoneBasis): Int? = HeartRateZones.zoneOf(bpm, basis)
 
 /** Where [bpm] sits across all five zones, 0 at the start of zone 1 and 1 at the maximum. */
-fun heartRateZoneProgress(bpm: Double, maxHeartRate: Int): Float =
-    ((bpm / maxHeartRate - ZoneLowerBounds.first()) / (1 - ZoneLowerBounds.first())).toFloat().coerceIn(0f, 1f)
+fun heartRateZoneProgress(bpm: Double, basis: ZoneBasis): Float =
+    ((basis.share(bpm) - basis.bounds.first()) / (1 - basis.bounds.first())).toFloat().coerceIn(0f, 1f)
 
 /** The share of [samples] in each of the five zones. Samples below zone 1 count towards none. */
-fun heartRateZoneShares(samples: List<Double>, maxHeartRate: Int): List<Float> {
-    if (samples.isEmpty()) return List(ZoneLowerBounds.size) { 0f }
-    val counts = IntArray(ZoneLowerBounds.size)
-    samples.forEach { bpm -> heartRateZone(bpm, maxHeartRate)?.let { counts[it]++ } }
+fun heartRateZoneShares(samples: List<Double>, basis: ZoneBasis): List<Float> {
+    if (samples.isEmpty()) return List(HeartRateZones.COUNT) { 0f }
+    val counts = IntArray(HeartRateZones.COUNT)
+    samples.forEach { bpm -> heartRateZone(bpm, basis)?.let { counts[it]++ } }
     return counts.map { it.toFloat() / samples.size }
 }

@@ -33,6 +33,7 @@ class WearAppViewModel(application: Application) : AndroidViewModel(application)
             initial.copy(
                 metrics = metrics,
                 sleepStages = readings.sleepStages,
+                preferences = initial.preferences.copy(zones = WearSettings.zoneBasis(application)),
                 capabilities = capabilities,
                 // Until the probe answers, keep offering what was on offer before.
                 availableMetrics = if (capabilities.probed) capabilities.availableMetrics(metrics.keys) else initial.availableMetrics,

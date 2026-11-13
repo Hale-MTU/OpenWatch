@@ -1,7 +1,7 @@
 package tech.mmarca.openwatch.wear
 
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
-import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Preferences
+import tech.mmarca.openwatch.wearlink.WearLinkPreferences as Preferences
 
 /** The watch's settings in one value, as [WearSettings] keeps them. */
 internal data class WatchPreferences(

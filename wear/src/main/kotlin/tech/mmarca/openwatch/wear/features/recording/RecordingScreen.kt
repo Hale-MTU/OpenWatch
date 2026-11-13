@@ -49,6 +49,7 @@ import tech.mmarca.openwatch.wear.RecordingUiState
 import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.MetricTile
 import tech.mmarca.openwatch.wear.features.metric.HeartZoneLabels
+import tech.mmarca.openwatch.wear.features.metric.ZoneBasis
 import tech.mmarca.openwatch.wear.features.metric.heartRateZone
 import tech.mmarca.openwatch.wear.features.metric.heartRateZoneProgress
 import tech.mmarca.openwatch.wear.ui.components.MetricValueRow
@@ -78,7 +79,7 @@ fun RecordingScreen(
     state: RecordingUiState,
     fields: Set<WorkoutField>,
     unitSystem: UnitSystem,
-    maxHeartRate: Int,
+    zones: ZoneBasis?,
     onTogglePause: () -> Unit,
     onStop: () -> Unit,
 ) {
@@ -100,8 +101,8 @@ fun RecordingScreen(
             ScreenScaffold {
                 when (pages[page]) {
                     WorkoutPage.CONTROLS -> ControlsPage(state, onTogglePause, onStop = { confirmStop = true })
-                    WorkoutPage.OVERVIEW -> OverviewPage(state, fields, unitSystem, maxHeartRate)
-                    WorkoutPage.HEART -> HeartPage(state, maxHeartRate)
+                    WorkoutPage.OVERVIEW -> OverviewPage(state, fields, unitSystem, zones)
+                    WorkoutPage.HEART -> HeartPage(state, zones)
                     WorkoutPage.PACE -> PacePage(state, fields, unitSystem)
                 }
             }
@@ -128,9 +129,9 @@ private fun OverviewPage(
     state: RecordingUiState,
     fields: Set<WorkoutField>,
     unitSystem: UnitSystem,
-    maxHeartRate: Int,
+    zones: ZoneBasis?,
 ) {
-    val zone = state.heartRateBpm?.let { heartRateZone(it.toDouble(), maxHeartRate) }
+    val zone = zones?.let { basis -> state.heartRateBpm?.let { heartRateZone(it.toDouble(), basis) } }
     PageColumn {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(state.activityType.icon, null, tint = WorkoutColor, modifier = Modifier.size(16.dp))
@@ -181,13 +182,13 @@ private fun OverviewPage(
 }
 
 @Composable
-private fun HeartPage(state: RecordingUiState, maxHeartRate: Int) {
+private fun HeartPage(state: RecordingUiState, zones: ZoneBasis?) {
     val bpm = state.heartRateBpm?.toDouble()
-    val zone = bpm?.let { heartRateZone(it, maxHeartRate) }
+    val zone = zones?.let { basis -> bpm?.let { heartRateZone(it, basis) } }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         HeartZoneArc(
             zone = zone,
-            progress = bpm?.let { heartRateZoneProgress(it, maxHeartRate) } ?: 0f,
+            progress = zones?.let { basis -> bpm?.let { heartRateZoneProgress(it, basis) } } ?: 0f,
             modifier = Modifier.fillMaxSize(),
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -309,7 +310,7 @@ private fun RecordingScreenPreview() {
                 state = SampleData.recording,
                 fields = SampleData.capabilities.workouts.getValue(ActivityType.RUN),
                 unitSystem = UnitSystem.METRIC,
-                maxHeartRate = 190,
+                zones = ZoneBasis(190),
                 onTogglePause = {},
                 onStop = {},
             )
@@ -326,7 +327,7 @@ private fun RecordingScreenPausedPreview() {
                 state = SampleData.recording.copy(paused = true),
                 fields = SampleData.capabilities.workouts.getValue(ActivityType.WORKOUT),
                 unitSystem = UnitSystem.IMPERIAL,
-                maxHeartRate = 190,
+                zones = ZoneBasis(190),
                 onTogglePause = {},
                 onStop = {},
             )
