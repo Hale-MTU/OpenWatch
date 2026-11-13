@@ -25,6 +25,7 @@ import tech.mmarca.openwatch.wear.features.quicklog.LoggedEntry
 import tech.mmarca.openwatch.wear.features.quicklog.QuickLogScreen
 import tech.mmarca.openwatch.wear.features.quicklog.WaterServingMl
 import tech.mmarca.openwatch.wear.features.quicklog.WeightEntryScreen
+import tech.mmarca.openwatch.wear.features.settings.SettingsScreen
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /** Starting weight on the weight stepper before anything was logged. */
@@ -47,6 +48,8 @@ fun OpenWatchWearApp(
     onStartWorkout: () -> Unit = {},
     /** Link and recorder status, permissions and paired phones; the activity owns its stores. */
     statusScreen: @Composable () -> Unit = {},
+    phoneScreen: @Composable () -> Unit = {},
+    sensorScreen: @Composable (onOpenDetails: () -> Unit) -> Unit = {},
 ) {
     // The nav graph is built once, so every destination reads the latest
     // state through this holder instead of a value captured at build time.
@@ -91,7 +94,7 @@ fun OpenWatchWearApp(
                         onQuickLog = { navController.navigate(WearRoutes.QUICK_LOG) },
                         onEditTiles = { navController.navigate(WearRoutes.TILE_EDITOR) },
                         onStartActivity = onStartWorkout,
-                        onOpenStatus = { navController.navigate(WearRoutes.STATUS) },
+                        onOpenSettings = { navController.navigate(WearRoutes.SETTINGS) },
                     )
                 }
                 composable(WearRoutes.METRIC) { entry ->
@@ -173,6 +176,17 @@ fun OpenWatchWearApp(
                         onClose = { navController.popBackStack() },
                     )
                 }
+                composable(WearRoutes.SETTINGS) {
+                    SettingsScreen(
+                        state = currentState.settings,
+                        unitSystem = currentState.preferences.unitSystem,
+                        onPhoneClick = { navController.navigate(WearRoutes.PHONE) },
+                        onSensorAccessClick = { navController.navigate(WearRoutes.SENSORS) },
+                        onUnitsClick = {},
+                    )
+                }
+                composable(WearRoutes.PHONE) { phoneScreen() }
+                composable(WearRoutes.SENSORS) { sensorScreen { navController.navigate(WearRoutes.STATUS) } }
                 composable(WearRoutes.STATUS) { statusScreen() }
             }
         }

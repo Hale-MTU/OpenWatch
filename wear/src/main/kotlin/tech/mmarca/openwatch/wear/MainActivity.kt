@@ -16,11 +16,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import tech.mmarca.openwatch.wear.features.settings.PhoneScreen
+import tech.mmarca.openwatch.wear.features.settings.SensorAccess
+import tech.mmarca.openwatch.wear.features.settings.SensorAccessScreen
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
  * The watch app: the dashboard, tiles' screens and quick log, with the link
- * and recorder status one step down. Asks for the permissions
+ * and recorder status one step down in Settings. Asks for the permissions
  * the link and the recorders need; each part starts on its own once
  * granted. The recording itself lives in [WearAppService], so closing the
  * app changes nothing.
@@ -53,6 +56,15 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            val link by WearLinkState.state.collectAsStateWithLifecycle()
+            // Read again on every resume: a grant can change in the system settings.
+            val settings = remember(link, permissionsVersion) {
+                SettingsUiState.from(
+                    link = link,
+                    sensorAccessGranted = WearPermissions.hasHeartRate(this) &&
+                        WearPermissions.hasHeartRateInBackground(this),
+                )
+            }
             // A running or just finished workout takes the screen.
             val workout by WorkoutState.state.collectAsStateWithLifecycle()
             var workoutOpen by remember { mutableStateOf(false) }
@@ -61,12 +73,14 @@ class MainActivity : ComponentActivity() {
                 return@setContent
             }
             OpenWatchWearApp(
-                state = uiState,
+                state = uiState.copy(settings = settings),
                 onLog = viewModel::log,
                 deepLinkRoute = pendingRoute,
                 onDeepLinkHandled = { pendingRoute = null },
                 onStartWorkout = { workoutOpen = true },
                 statusScreen = { StatusScreen(onOpenWorkout = { workoutOpen = true }) },
+                phoneScreen = { PhoneRoute() },
+                sensorScreen = { onOpenDetails -> SensorAccessRoute(onOpenDetails) },
             )
         }
     }
@@ -111,6 +125,39 @@ class MainActivity : ComponentActivity() {
             },
             onOpenBluetoothSettings = ::openBluetoothSettings,
         )
+    }
+
+    /** The phones that may read this watch, and the link they use. */
+    @Composable
+    private fun PhoneRoute() {
+        val link by WearLinkState.state.collectAsStateWithLifecycle()
+        PhoneScreen(
+            link = link,
+            bluetoothGranted = remember(permissionsVersion) { WearPermissions.hasBluetooth(this) },
+            onAllow = { pending ->
+                trust.trust(pending.address, pending.token, pending.name)
+                WearPhoneRequests.cancel(this)
+            },
+            onBlock = { pending ->
+                trust.block(pending.address)
+                WearPhoneRequests.cancel(this)
+            },
+            onOpenBluetoothSettings = ::openBluetoothSettings,
+        )
+    }
+
+    /** One row per grant the watch app uses. */
+    @Composable
+    private fun SensorAccessRoute(onOpenDetails: () -> Unit) {
+        val access = remember(permissionsVersion) {
+            SensorAccess(
+                heartRate = WearPermissions.hasHeartRate(this),
+                heartRateInBackground = WearPermissions.hasHeartRateInBackground(this),
+                steps = WearPermissions.hasActivityRecognition(this).takeIf { StepRecorder.hasStepCounter(this) },
+                nearbyDevices = WearPermissions.hasBluetooth(this),
+            )
+        }
+        SensorAccessScreen(access = access, onGrant = ::requestMissingPermissions, onOpenDetails = onOpenDetails)
     }
 
     private fun openBluetoothSettings() {

@@ -57,7 +57,7 @@ fun DashboardScreen(
     onQuickLog: () -> Unit,
     onEditTiles: () -> Unit,
     onStartActivity: () -> Unit,
-    onOpenStatus: () -> Unit,
+    onOpenSettings: () -> Unit,
 ) {
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
@@ -143,7 +143,7 @@ fun DashboardScreen(
             }
             item {
                 Button(
-                    onClick = onOpenStatus,
+                    onClick = onOpenSettings,
                     label = { Text(stringResource(R.string.settings_title)) },
                     icon = { Icon(Icons.Outlined.Settings, contentDescription = null) },
                     colors = ButtonDefaults.filledTonalButtonColors(),

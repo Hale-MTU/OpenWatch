@@ -2,6 +2,7 @@ package tech.mmarca.openwatch.wear.ui.preview
 
 import tech.mmarca.openwatch.wear.MetricUiState
 import tech.mmarca.openwatch.wear.RecordingUiState
+import tech.mmarca.openwatch.wear.SettingsUiState
 import tech.mmarca.openwatch.wear.SleepStage
 import tech.mmarca.openwatch.wear.MetricTile
 import tech.mmarca.openwatch.wear.WearUiState
@@ -127,10 +128,16 @@ object SampleData {
         averageHeartRateBpm = 131,
     )
 
+    val settings = SettingsUiState(
+        phoneConnected = true,
+        sensorAccessGranted = true,
+    )
+
     /** A watch with a barometer and no SpO2 sensor, so one metric is not on offer. */
     val uiState = WearUiState(
         availableMetrics = capabilities.availableMetrics(),
         metrics = metrics,
+        settings = settings,
         capabilities = capabilities,
         sleepStages = sleepStages,
         entries = entries,

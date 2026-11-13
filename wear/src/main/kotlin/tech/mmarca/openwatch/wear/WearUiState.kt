@@ -14,6 +14,7 @@ data class WearUiState(
     val availableMetrics: Set<MetricTile> = MetricTile.entries.toSet(),
     /** A metric without an entry renders as "no reading yet". */
     val metrics: Map<MetricTile, MetricUiState> = emptyMap(),
+    val settings: SettingsUiState = SettingsUiState(),
     val preferences: DisplayPreferences = DisplayPreferences(),
     /** What the watch can measure; gates measurement buttons and workouts. */
     val capabilities: WearCapabilities = WearCapabilities(),
@@ -63,3 +64,23 @@ data class RecordingUiState(
     /** A route sport without a usable GPS fix yet. */
     val waitingForFix: Boolean = false,
 )
+
+data class SettingsUiState(
+    val phoneConnected: Boolean = false,
+    val sensorAccessGranted: Boolean = false,
+) {
+    companion object {
+        /**
+         * A phone counts as connected while one is allowed, still paired and
+         * the link listens. Not while a request is open: the phone only holds
+         * a connection for as long as a pull takes, so no client at this
+         * moment says nothing about the link.
+         */
+        fun from(link: WearLinkUiState, sensorAccessGranted: Boolean): SettingsUiState =
+            SettingsUiState(
+                phoneConnected = link.listening &&
+                    link.trusted.any { phone -> link.bondLost.none { it.address == phone.address } },
+                sensorAccessGranted = sensorAccessGranted,
+            )
+    }
+}
