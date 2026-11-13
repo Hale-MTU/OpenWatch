@@ -39,9 +39,9 @@ class OpenWatchPreferences(
     /** Off pauses every Health Connect write; the devices keep what they heard until it is on again. */
     val healthConnectSyncEnabledFlow: StateFlow<Boolean> = _healthConnectSyncEnabled.asStateFlow()
 
-    private val _writeRespiratoryRate = MutableStateFlow(prefs.getBoolean(KEY_WRITE_RESPIRATORY_RATE, false))
+    private val _writeRespiratoryRate = MutableStateFlow(prefs.getBoolean(KEY_WRITE_RESPIRATORY_RATE, true))
 
-    /** Whether the watch's breathing rate is written to Health Connect. Off by default: not yet checked against a reference. */
+    /** Whether the watch's breathing rate is written to Health Connect. On by default; still marked experimental: not yet checked against a reference. */
     val writeRespiratoryRateFlow: StateFlow<Boolean> = _writeRespiratoryRate.asStateFlow()
 
     var writeRespiratoryRate: Boolean
@@ -49,6 +49,22 @@ class OpenWatchPreferences(
         set(value) {
             prefs.edit { putBoolean(KEY_WRITE_RESPIRATORY_RATE, value) }
             _writeRespiratoryRate.value = value
+        }
+
+    private val _writeSleepBesideOthers = MutableStateFlow(prefs.getBoolean(KEY_WRITE_SLEEP_BESIDE_OTHERS, true))
+
+    /**
+     * Whether the watch's night is written although another app (Samsung Health, Sleep as Android)
+     * already wrote one: Health Connect's data source priority then decides which one apps see.
+     * On by default; off leaves the other app's night alone.
+     */
+    val writeSleepBesideOthersFlow: StateFlow<Boolean> = _writeSleepBesideOthers.asStateFlow()
+
+    var writeSleepBesideOthers: Boolean
+        get() = _writeSleepBesideOthers.value
+        set(value) {
+            prefs.edit { putBoolean(KEY_WRITE_SLEEP_BESIDE_OTHERS, value) }
+            _writeSleepBesideOthers.value = value
         }
 
     var healthConnectSyncEnabled: Boolean
@@ -136,6 +152,7 @@ class OpenWatchPreferences(
         const val PREFS_FILE = "openwatch_prefs"
         private const val KEY_HEALTH_CONNECT_SYNC_ENABLED = "health_connect_sync_enabled"
         private const val KEY_WRITE_RESPIRATORY_RATE = "write_respiratory_rate"
+        private const val KEY_WRITE_SLEEP_BESIDE_OTHERS = "write_sleep_beside_others"
         private const val KEY_ONBOARDING_DONE = "onboarding_done"
         private const val KEY_BODY_PROFILE_BIRTH_YEAR = "body_profile_birth_year"
         private const val KEY_BODY_PROFILE_WEIGHT_KG = "body_profile_weight_kg"
