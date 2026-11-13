@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.wear
 
 import androidx.annotation.StringRes
+import tech.mmarca.openwatch.wear.features.quicklog.LoggedEntry
 import tech.mmarca.openwatch.wear.features.recording.ActivityType
 
 /** Everything the screens render. A null value means "no reading yet". */
@@ -15,6 +16,8 @@ data class WearUiState(
     val preferences: DisplayPreferences = DisplayPreferences(),
     /** Last night's minutes per stage, as synced from the phone. */
     val sleepStages: Map<SleepStage, Double> = emptyMap(),
+    /** Quick logs and spot measurements made on this watch, oldest first. */
+    val entries: List<LoggedEntry> = emptyList(),
 )
 
 /** One metric's readings, in the base unit documented on [MetricTile]. */
@@ -38,6 +41,8 @@ data class DisplayPreferences(
     val unitSystem: UnitSystem = UnitSystem.METRIC,
     /** Top of the heart rate zones. The phone will know the user's age; until then a fixed guess. */
     val maxHeartRate: Int = 190,
+    /** Daily water goal in millilitres. */
+    val waterGoalMl: Int = 2_000,
 )
 
 data class RecordingUiState(

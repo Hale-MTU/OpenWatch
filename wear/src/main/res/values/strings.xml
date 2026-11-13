@@ -132,12 +132,14 @@
     <string name="unit_steps">steps</string>
     <string name="unit_vo2_max">ml/kg/min</string>
 
+    <string name="unit_mmhg">mmHg</string>
     <string name="unit_kmh">km/h</string>
     <string name="unit_mph">mph</string>
     <string name="unit_pace_km">/km</string>
     <string name="unit_pace_mi">/mi</string>
     <string name="percent_value">%1$d %%</string>
     <string name="action_done">Done</string>
+    <string name="action_save">Save</string>
     <string name="detail_today">Today</string>
     <string name="detail_week">Last 7 days</string>
     <string name="detail_no_data">No data yet</string>
@@ -162,6 +164,20 @@
     <string name="sleep_light">Light</string>
     <string name="sleep_deep">Deep</string>
     <string name="measure_now">Measure now</string>
+    <string name="quicklog_title">Log</string>
+    <string name="quicklog_add_water">Water +%1$s %2$s</string>
+    <string name="quicklog_water_today">%1$s / %2$s %3$s</string>
+    <string name="quicklog_blood_pressure">Blood pressure</string>
+    <string name="quicklog_blood_pressure_value">%1$s/%2$s mmHg</string>
+    <string name="quicklog_systolic">Systolic</string>
+    <string name="quicklog_diastolic">Diastolic</string>
+    <string name="quicklog_minutes">%1$d min</string>
+    <string name="quicklog_not_logged">Not logged yet</string>
+    <string name="quicklog_recent">Recent</string>
+    <string name="breathe_title">Breathe</string>
+    <string name="breathe_description">1 minute guided breathing</string>
+    <string name="breathe_in">Breathe in</string>
+    <string name="breathe_out">Breathe out</string>
     <string name="activity_walk">Walk</string>
     <string name="activity_run">Run</string>
     <string name="activity_cycle">Cycling</string>

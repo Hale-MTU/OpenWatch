@@ -9,16 +9,28 @@ import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import tech.mmarca.openwatch.wear.features.dashboard.DashboardScreen
 import tech.mmarca.openwatch.wear.features.metric.MetricDetailScreen
+import tech.mmarca.openwatch.wear.features.quicklog.BloodPressureEntryScreen
+import tech.mmarca.openwatch.wear.features.quicklog.BreatheScreen
+import tech.mmarca.openwatch.wear.features.quicklog.EntryType
+import tech.mmarca.openwatch.wear.features.quicklog.LoggedEntry
+import tech.mmarca.openwatch.wear.features.quicklog.QuickLogScreen
+import tech.mmarca.openwatch.wear.features.quicklog.WaterServingMl
+import tech.mmarca.openwatch.wear.features.quicklog.WeightEntryScreen
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
+/** Starting weight on the weight stepper before anything was logged. */
+private const val DefaultWeightKg = 70.0
+
 /**
- * The whole watch UI: theme, scaffold and navigation. It renders [state];
- * nothing here reads a sensor. The dashboard opens the workout recorder's own
- * screen ([onStartWorkout]) and the link and recorder status ([statusScreen]).
+ * The whole watch UI: theme, scaffold and navigation. It renders [state] and
+ * hands entries to [onLog]; nothing here reads a sensor except through a
+ * screen's own ViewModel. A workout runs in the recorder's own screen
+ * ([onStartWorkout]).
  */
 @Composable
 fun OpenWatchWearApp(
     state: WearUiState,
+    onLog: (LoggedEntry) -> Unit = {},
     /** Opens the workout recorder's own screen, which picks the sport. */
     onStartWorkout: () -> Unit = {},
     /** Link and recorder status, permissions and paired phones; the activity owns its stores. */
@@ -32,6 +44,9 @@ fun OpenWatchWearApp(
         // AppScaffold draws the time once, above every screen.
         AppScaffold {
             val navController = rememberSwipeDismissableNavController()
+            fun log(type: EntryType, value: Double, value2: Double? = null) =
+                onLog(LoggedEntry(type, System.currentTimeMillis(), value, value2))
+
             SwipeDismissableNavHost(
                 navController = navController,
                 startDestination = WearRoutes.DASHBOARD,
@@ -42,6 +57,7 @@ fun OpenWatchWearApp(
                         metrics = currentState.metrics,
                         unitSystem = currentState.preferences.unitSystem,
                         onOpenMetric = { navController.navigate(WearRoutes.metric(it)) },
+                        onQuickLog = { navController.navigate(WearRoutes.QUICK_LOG) },
                         onStartActivity = onStartWorkout,
                         onOpenStatus = { navController.navigate(WearRoutes.STATUS) },
                     )
@@ -55,6 +71,44 @@ fun OpenWatchWearApp(
                         maxHeartRate = currentState.preferences.maxHeartRate,
                         restingHeartRate = currentState.metrics[MetricTile.RESTING_HEART_RATE]?.current,
                         sleepStages = currentState.sleepStages,
+                    )
+                }
+                composable(WearRoutes.QUICK_LOG) {
+                    QuickLogScreen(
+                        state = currentState,
+                        onAddWater = { log(EntryType.WATER, WaterServingMl) },
+                        onLogWeight = { navController.navigate(WearRoutes.LOG_WEIGHT) },
+                        onLogBloodPressure = { navController.navigate(WearRoutes.LOG_BLOOD_PRESSURE) },
+                        onBreathe = { navController.navigate(WearRoutes.BREATHE) },
+                    )
+                }
+                composable(WearRoutes.LOG_WEIGHT) {
+                    WeightEntryScreen(
+                        initialKg = currentState.entries.lastOrNull { it.type == EntryType.WEIGHT }?.value
+                            ?: currentState.metrics[MetricTile.WEIGHT]?.current
+                            ?: DefaultWeightKg,
+                        unitSystem = currentState.preferences.unitSystem,
+                        onSave = { kilograms ->
+                            log(EntryType.WEIGHT, kilograms)
+                            navController.popBackStack()
+                        },
+                    )
+                }
+                composable(WearRoutes.LOG_BLOOD_PRESSURE) {
+                    val last = currentState.entries.lastOrNull { it.type == EntryType.BLOOD_PRESSURE }
+                    BloodPressureEntryScreen(
+                        initialSystolic = last?.value?.toInt() ?: 120,
+                        initialDiastolic = last?.value2?.toInt() ?: 80,
+                        onSave = { systolic, diastolic ->
+                            log(EntryType.BLOOD_PRESSURE, systolic.toDouble(), diastolic.toDouble())
+                            navController.popBackStack()
+                        },
+                    )
+                }
+                composable(WearRoutes.BREATHE) {
+                    BreatheScreen(
+                        onFinished = { log(EntryType.MINDFULNESS, 1.0) },
+                        onClose = { navController.popBackStack() },
                     )
                 }
                 composable(WearRoutes.STATUS) { statusScreen() }

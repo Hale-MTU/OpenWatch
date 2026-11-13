@@ -5,6 +5,8 @@ import tech.mmarca.openwatch.wear.RecordingUiState
 import tech.mmarca.openwatch.wear.SleepStage
 import tech.mmarca.openwatch.wear.MetricTile
 import tech.mmarca.openwatch.wear.WearUiState
+import tech.mmarca.openwatch.wear.features.quicklog.EntryType
+import tech.mmarca.openwatch.wear.features.quicklog.LoggedEntry
 import tech.mmarca.openwatch.wear.features.recording.ActivityType
 import tech.mmarca.openwatch.wear.features.recording.WorkoutField
 
@@ -102,6 +104,12 @@ object SampleData {
         }
     }
 
+    val entries = listOf(
+        LoggedEntry(EntryType.WEIGHT, System.currentTimeMillis() - 3_600_000, 72.4),
+        LoggedEntry(EntryType.HEART_RATE, System.currentTimeMillis() - 1_800_000, 64.0),
+        LoggedEntry(EntryType.BLOOD_PRESSURE, System.currentTimeMillis() - 600_000, 121.0, 79.0),
+    )
+
     val recording = RecordingUiState(
         elapsedSeconds = 23 * 60 + 41,
         heartRateBpm = 138,
@@ -115,6 +123,7 @@ object SampleData {
     val uiState = WearUiState(
         metrics = metrics,
         sleepStages = sleepStages,
+        entries = entries,
     )
 
     private fun doubles(vararg values: Int): List<Double> = values.map(Int::toDouble)
