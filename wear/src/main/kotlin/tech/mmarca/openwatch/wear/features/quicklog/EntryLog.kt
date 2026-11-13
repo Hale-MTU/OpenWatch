@@ -3,9 +3,11 @@ package tech.mmarca.openwatch.wear.features.quicklog
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import androidx.wear.tiles.TileService
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import tech.mmarca.openwatch.wear.tiles.QuickLogTileService
 
 /** What a logged entry records, with the unit of [LoggedEntry.value]. */
 enum class EntryType {
@@ -47,9 +49,11 @@ class EntryLog(context: Context) {
 
     fun load(): List<LoggedEntry> = decodeEntries(prefs.getString(KEY_ENTRIES, null))
 
-    fun add(entry: LoggedEntry) {
+    /** [refreshTile] is false when the tile itself logs, as it renders the new total anyway. */
+    fun add(entry: LoggedEntry, refreshTile: Boolean = true) {
         val updated = (load() + entry).takeLast(MaxEntries)
         prefs.edit { putString(KEY_ENTRIES, encodeEntries(updated)) }
+        if (refreshTile) TileService.getUpdater(appContext).requestUpdate(QuickLogTileService::class.java)
     }
 
     /** The log now and after every change, including changes the tile makes. */

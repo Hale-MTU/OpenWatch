@@ -1,13 +1,19 @@
 package tech.mmarca.openwatch.wear
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import tech.mmarca.openwatch.wear.features.dashboard.DashboardScreen
+import tech.mmarca.openwatch.wear.features.dashboard.TileEditorScreen
 import tech.mmarca.openwatch.wear.features.measure.MeasureListScreen
 import tech.mmarca.openwatch.wear.features.measure.Measurement
 import tech.mmarca.openwatch.wear.features.measure.MeasurementRoute
@@ -28,12 +34,15 @@ private const val DefaultWeightKg = 70.0
  * The whole watch UI: theme, scaffold and navigation. It renders [state] and
  * hands entries to [onLog]; nothing here reads a sensor except through a
  * screen's own ViewModel. A workout runs in the recorder's own screen
- * ([onStartWorkout]).
+ * ([onStartWorkout]), and tile choices are persisted via
+ * [WearTilePreferences]. [deepLinkRoute] is a screen a tile asked for.
  */
 @Composable
 fun OpenWatchWearApp(
     state: WearUiState,
     onLog: (LoggedEntry) -> Unit = {},
+    deepLinkRoute: String? = null,
+    onDeepLinkHandled: () -> Unit = {},
     /** Opens the workout recorder's own screen, which picks the sport. */
     onStartWorkout: () -> Unit = {},
     /** Link and recorder status, permissions and paired phones; the activity owns its stores. */
@@ -46,9 +55,26 @@ fun OpenWatchWearApp(
     OpenWatchWearTheme {
         // AppScaffold draws the time once, above every screen.
         AppScaffold {
+            val context = LocalContext.current
+            val tilePrefs = remember(context) { WearTilePreferences(context) }
             val navController = rememberSwipeDismissableNavController()
+            var chosenTiles by remember { mutableStateOf(tilePrefs.loadTiles()) }
+            fun updateTiles(updated: List<MetricTile>) {
+                chosenTiles = updated
+                tilePrefs.saveTiles(updated)
+            }
+            // A chosen tile whose sensor is missing stays chosen but is not shown.
+            fun visibleTiles() = chosenTiles.filter { it in currentState.availableMetrics }
             fun log(type: EntryType, value: Double, value2: Double? = null) =
                 onLog(LoggedEntry(type, System.currentTimeMillis(), value, value2))
+
+            LaunchedEffect(deepLinkRoute) {
+                val route = deepLinkRoute ?: return@LaunchedEffect
+                if (WearRoutes.isDeepLinkable(route)) {
+                    navController.navigate(route) { popUpTo(WearRoutes.DASHBOARD) }
+                }
+                onDeepLinkHandled()
+            }
 
             SwipeDismissableNavHost(
                 navController = navController,
@@ -56,13 +82,14 @@ fun OpenWatchWearApp(
             ) {
                 composable(WearRoutes.DASHBOARD) {
                     DashboardScreen(
-                        tiles = MetricTile.DefaultTiles.filter { it in currentState.availableMetrics },
+                        tiles = visibleTiles(),
                         metrics = currentState.metrics,
                         unitSystem = currentState.preferences.unitSystem,
                         canMeasure = currentState.capabilities.measurements.isNotEmpty(),
                         onOpenMetric = { navController.navigate(WearRoutes.metric(it)) },
                         onMeasure = { navController.navigate(WearRoutes.MEASURE) },
                         onQuickLog = { navController.navigate(WearRoutes.QUICK_LOG) },
+                        onEditTiles = { navController.navigate(WearRoutes.TILE_EDITOR) },
                         onStartActivity = onStartWorkout,
                         onOpenStatus = { navController.navigate(WearRoutes.STATUS) },
                     )
@@ -78,6 +105,17 @@ fun OpenWatchWearApp(
                         restingHeartRate = currentState.metrics[MetricTile.RESTING_HEART_RATE]?.current,
                         sleepStages = currentState.sleepStages,
                         onMeasure = measurement?.let { { navController.navigate(WearRoutes.measurement(it)) } },
+                    )
+                }
+                composable(WearRoutes.TILE_EDITOR) {
+                    TileEditorScreen(
+                        available = MetricTile.entries.filter { it in currentState.availableMetrics },
+                        tiles = visibleTiles(),
+                        onToggle = { metric, checked ->
+                            updateTiles(if (checked) chosenTiles + metric else chosenTiles - metric)
+                        },
+                        onMove = { moved, target -> updateTiles(chosenTiles.withTileMoved(moved, target)) },
+                        onReset = { chosenTiles = tilePrefs.resetTiles() },
                     )
                 }
                 composable(WearRoutes.MEASURE) {

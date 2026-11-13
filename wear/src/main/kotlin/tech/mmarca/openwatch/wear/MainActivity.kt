@@ -19,7 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
- * The watch app: the dashboard and quick log, with the link
+ * The watch app: the dashboard, tiles' screens and quick log, with the link
  * and recorder status one step down. Asks for the permissions
  * the link and the recorders need; each part starts on its own once
  * granted. The recording itself lives in [WearAppService], so closing the
@@ -32,6 +32,9 @@ class MainActivity : ComponentActivity() {
     private val trust by lazy { WearTrustStore(this) }
 
     private var permissionsVersion by mutableStateOf(0)
+
+    /** A screen a tile asked for, opened once and then cleared. */
+    private var pendingRoute by mutableStateOf<String?>(null)
 
     private val requestPermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -46,6 +49,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         requestMissingPermissions()
 
+        pendingRoute = intent.getStringExtra(EXTRA_ROUTE)
+
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             // A running or just finished workout takes the screen.
@@ -58,10 +63,17 @@ class MainActivity : ComponentActivity() {
             OpenWatchWearApp(
                 state = uiState,
                 onLog = viewModel::log,
+                deepLinkRoute = pendingRoute,
+                onDeepLinkHandled = { pendingRoute = null },
                 onStartWorkout = { workoutOpen = true },
                 statusScreen = { StatusScreen(onOpenWorkout = { workoutOpen = true }) },
             )
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        pendingRoute = intent.getStringExtra(EXTRA_ROUTE)
     }
 
     override fun onResume() {
@@ -131,5 +143,10 @@ class MainActivity : ComponentActivity() {
         val background = WearPermissions.heartRateInBackground ?: return
         if (!WearPermissions.hasHeartRate(this) || WearPermissions.hasHeartRateInBackground(this)) return
         requestPermissions.launch(arrayOf(background))
+    }
+
+    companion object {
+        /** Extra a tile sets to open a screen; see [WearRoutes.isDeepLinkable]. */
+        const val EXTRA_ROUTE = "tech.mmarca.openwatch.wear.ROUTE"
     }
 }
