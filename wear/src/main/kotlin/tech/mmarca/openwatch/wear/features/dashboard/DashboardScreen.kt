@@ -45,6 +45,7 @@ fun DashboardScreen(
     tiles: List<MetricTile>,
     metrics: Map<MetricTile, MetricUiState>,
     unitSystem: UnitSystem,
+    onOpenMetric: (MetricTile) -> Unit,
     onStartActivity: () -> Unit,
     onOpenStatus: () -> Unit,
 ) {
@@ -85,8 +86,7 @@ fun DashboardScreen(
                     },
                     icon = metric.icon,
                     accentColor = metric.accentColor,
-                    // The metric detail screen comes with its own change; until then a tile opens nothing.
-                    onClick = {},
+                    onClick = { onOpenMetric(metric) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .transformedHeight(this, transformationSpec),
@@ -134,7 +134,7 @@ private fun activityRings(
 private fun DashboardScreenPreview() {
     OpenWatchWearTheme {
         AppScaffold {
-            DashboardScreen(MetricTile.DefaultTiles, SampleData.metrics, UnitSystem.METRIC, {}, {})
+            DashboardScreen(MetricTile.DefaultTiles, SampleData.metrics, UnitSystem.METRIC, {}, {}, {})
         }
     }
 }
@@ -144,7 +144,7 @@ private fun DashboardScreenPreview() {
 private fun DashboardScreenEmptyPreview() {
     OpenWatchWearTheme {
         AppScaffold {
-            DashboardScreen(MetricTile.DefaultTiles, emptyMap(), UnitSystem.METRIC, {}, {})
+            DashboardScreen(MetricTile.DefaultTiles, emptyMap(), UnitSystem.METRIC, {}, {}, {})
         }
     }
 }
@@ -154,7 +154,7 @@ private fun DashboardScreenEmptyPreview() {
 private fun DashboardScreenImperialPreview() {
     OpenWatchWearTheme {
         AppScaffold {
-            DashboardScreen(MetricTile.DefaultTiles, SampleData.metrics, UnitSystem.IMPERIAL, {}, {})
+            DashboardScreen(MetricTile.DefaultTiles, SampleData.metrics, UnitSystem.IMPERIAL, {}, {}, {})
         }
     }
 }

@@ -136,7 +136,20 @@
     <string name="unit_mph">mph</string>
     <string name="unit_pace_km">/km</string>
     <string name="unit_pace_mi">/mi</string>
+    <string name="percent_value">%1$d %%</string>
     <string name="action_done">Fertig</string>
+    <string name="detail_today">Heute</string>
+    <string name="detail_week">Letzte 7 Tage</string>
+    <string name="detail_no_data">Noch keine Daten</string>
+    <string name="stat_low">Tief</string>
+    <string name="stat_average">Durchschnitt</string>
+    <string name="stat_high">Hoch</string>
+    <string name="stat_remaining">Bis zum Ziel</string>
+    <string name="stat_daily_average">Tagesdurchschnitt</string>
+    <string name="stat_best_day">Bester Tag</string>
+    <string name="stat_resting">In Ruhe</string>
+    <string name="detail_heart_zones">Zonen heute</string>
+    <string name="detail_sleep_stages">Schlafphasen</string>
     <string name="zone_very_light">Sehr leicht</string>
     <string name="zone_light">Leicht</string>
     <string name="zone_moderate">Mittel</string>
@@ -144,6 +157,11 @@
     <string name="zone_maximum">Maximum</string>
     <string name="zone_label">Zone %1$d · %2$s</string>
     <string name="zone_below">Unter Zone 1</string>
+    <string name="sleep_awake">Wach</string>
+    <string name="sleep_rem">REM</string>
+    <string name="sleep_light">Leicht</string>
+    <string name="sleep_deep">Tief</string>
+    <string name="measure_now">Jetzt messen</string>
     <string name="activity_walk">Gehen</string>
     <string name="activity_run">Laufen</string>
     <string name="activity_cycle">Radfahren</string>
@@ -157,4 +175,9 @@
     <string name="recording_speed">Geschwindigkeit</string>
     <string name="summary_duration">Dauer</string>
     <string name="summary_average_heart_rate">Ø Herzfrequenz</string>
+    <string name="metric_skin_temperature">Hauttemperatur</string>
+    <string name="metric_respiratory_rate">Atemfrequenz</string>
+    <string name="unit_celsius">°C</string>
+    <string name="unit_fahrenheit">°F</string>
+    <string name="unit_breaths_per_minute">Atemzüge/min</string>
 </resources>

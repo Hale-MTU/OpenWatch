@@ -13,6 +13,8 @@ data class WearUiState(
     /** A metric without an entry renders as "no reading yet". */
     val metrics: Map<MetricTile, MetricUiState> = emptyMap(),
     val preferences: DisplayPreferences = DisplayPreferences(),
+    /** Last night's minutes per stage, as synced from the phone. */
+    val sleepStages: Map<SleepStage, Double> = emptyMap(),
 )
 
 /** One metric's readings, in the base unit documented on [MetricTile]. */
