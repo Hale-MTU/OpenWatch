@@ -44,11 +44,15 @@ import java.util.UUID
  * - `GET_PREF` → one `PREF <key> <value>` line per setting the watch holds,
  *   then `END <count> 0`. Only a watch announcing `pref` serves it.
  * - `SET_PREF <key> <value>` → `PREF_OK`, or `ERROR bad_request` for a key or
- *   value the watch does not take ([Preferences]).
+ *   value the watch does not take ([WearLinkPreferences]).
  * - `WO_SINCE <epochMillis> <limit>` → up to `limit` workouts, oldest first, each
  *   started after `epochMillis` (exclusive): its `WO` header, then its `WP`
  *   pauses and `WR` route points (see [WearLinkWorkout]), then one `END
  *   <count> <more>` that counts workouts. Only a watch announcing `wo` serves it.
+ * - `PUT_DAY …` → `DAY_OK`: the phone's figures for one day ([WearLinkDaily]).
+ *   Only a watch announcing `dy` serves it.
+ * - `LG_SINCE <epochMillis> <limit>` → `LG` lines, as `HV_SINCE`: the entries
+ *   made on the watch ([WatchEntry]). Only a watch announcing `lg` serves it.
  * - `PHONE_ACTIVE <epochMillis>` → `END 0 0`. The wearer unlocked the phone at
  *   that time: they are awake, so the watch ends a sleep hold it started by
  *   itself. Only a watch announcing `pa` serves it.
@@ -132,6 +136,10 @@ object WearLinkProtocol {
     const val GET_PREFERENCES: String = "GET_PREF"
     const val PREFERENCE: String = "PREF"
     const val END: String = "END"
+    const val PUT_DAY: String = "PUT_DAY"
+    const val DAY_OK: String = "DAY_OK"
+    const val ENTRIES_SINCE: String = "LG_SINCE"
+    const val ENTRY: String = "LG"
 
     /** Longer than this a line is a protocol violation; the reader closes rather than buffers. */
     const val MAX_LINE_LENGTH: Int = 512
@@ -163,50 +171,15 @@ object WearLinkProtocol {
     /** The watch records workouts and serves `WO_SINCE`. */
     const val CAP_WORKOUTS: String = "wo"
 
+    /** The watch takes `PUT_DAY`: it shows the phone's figures for a day. */
+    const val CAP_DAY_SUMMARY: String = "dy"
+
+    /** The watch serves `LG_SINCE`: entries made on it. */
+    const val CAP_ENTRIES: String = "lg"
+
     /** The watch takes `GET_PREF` and `SET_PREF`: the phone can show and change its settings. */
     const val CAP_PREFERENCES: String = "pref"
 
-    /**
-     * The settings the phone may read with `GET_PREF` and change with
-     * `SET_PREF`: the watch's own ([WearSettings] on the watch). Opaque
-     * tokens on the wire; the watch refuses an unknown key or value. The
-     * read-only keys say what the watch can offer.
-     */
-    object Preferences {
-        /** The heart rate outside bedtime mode. Values are `HeartRateInterval.wire` (`10`, `600`). */
-        const val HEART_RATE_DAY: String = "hr_day"
-
-        /** Where the heart rate comes from. [SENSOR] / [SAMSUNG]. */
-        const val HEART_RATE_SOURCE: String = "hr_source"
-
-        /** Where the night HRV windows' beats come from. [SENSOR] / [SAMSUNG]. */
-        const val HRV_SOURCE: String = "hrv_source"
-
-        /** How a sleep hold keeps the minutes whole. [LOCK] / [SYNCED]. */
-        const val SLEEP_HOLD: String = "sleep_hold"
-
-        /** Skin temperature at night from the Samsung platform. [OFF] / [ON]. */
-        const val SKIN_TEMPERATURE: String = "skin"
-
-        /** SpO2 spot measurements at night from the Samsung platform. [OFF] / [ON]. */
-        const val SPO2: String = "spo2"
-
-        /** Read only: whether the watch has the Samsung Health Platform. [OFF] / [ON]. */
-        const val SAMSUNG_AVAILABLE: String = "samsung"
-
-        /** Read only: whether the watch holds the permission its skin temperature needs. [OFF] / [ON]. */
-        const val SKIN_GRANTED: String = "skin_granted"
-
-        /** Read only: whether the watch holds the permission its SpO2 needs. [OFF] / [ON]. */
-        const val SPO2_GRANTED: String = "spo2_granted"
-
-        const val SENSOR: String = "sensor"
-        const val SAMSUNG: String = "samsung"
-        const val LOCK: String = "lock"
-        const val SYNCED: String = "synced"
-        const val OFF: String = "0"
-        const val ON: String = "1"
-    }
     const val NO_CAPABILITIES: String = "-"
 
     /** The phone's opening line. */
@@ -259,6 +232,8 @@ object WearLinkProtocol {
         data class SkinSince(val sinceEpochMillis: Long, val limit: Int) : Request()
         data class Spo2Since(val sinceEpochMillis: Long, val limit: Int) : Request()
         data class LiveHeartRate(val seconds: Int) : Request()
+        data class PutDay(val day: DaySummary) : Request()
+        data class EntriesSince(val sinceEpochMillis: Long, val limit: Int) : Request()
     }
 
     fun formatHello(hello: Hello): String =
@@ -324,6 +299,8 @@ object WearLinkProtocol {
         is Request.Spo2Since -> "$SPO2_SINCE ${request.sinceEpochMillis} ${request.limit.coerceIn(1, MAX_WINDOWS_PER_REQUEST)}"
         is Request.SkinSince -> "$SKIN_SINCE ${request.sinceEpochMillis} ${request.limit.coerceIn(1, MAX_SKIN_MINUTES_PER_REQUEST)}"
         is Request.LiveHeartRate -> "$HEART_RATE_LIVE ${request.seconds.coerceIn(1, MAX_LIVE_SECONDS)}"
+        is Request.PutDay -> WearLinkDaily.formatPutDay(request.day)
+        is Request.EntriesSince -> "$ENTRIES_SINCE ${request.sinceEpochMillis} ${request.limit.coerceIn(1, MAX_WINDOWS_PER_REQUEST)}"
     }
 
     /** Null unless [line] is a well-formed request. */
@@ -348,6 +325,8 @@ object WearLinkProtocol {
         parseSinceRequest(line, SPO2_SINCE, MAX_WINDOWS_PER_REQUEST)?.let { (since, limit) -> return Request.Spo2Since(since, limit) }
         parseSinceRequest(line, SKIN_SINCE, MAX_SKIN_MINUTES_PER_REQUEST)?.let { (since, limit) -> return Request.SkinSince(since, limit) }
         parseLiveRequest(line)?.let { return Request.LiveHeartRate(it) }
+        WearLinkDaily.parsePutDay(line)?.let { return Request.PutDay(it) }
+        parseSinceRequest(line, ENTRIES_SINCE, MAX_WINDOWS_PER_REQUEST)?.let { (since, limit) -> return Request.EntriesSince(since, limit) }
         return null
     }
 
