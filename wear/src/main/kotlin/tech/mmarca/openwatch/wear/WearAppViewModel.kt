@@ -13,7 +13,7 @@ class WearAppViewModel(application: Application) : AndroidViewModel(application)
 
     private val readings = WearReadingsSource(application.wearGraph.store)
 
-    private val initial = WearUiState()
+    private val initial = WearUiState(zoneBasis = WearSettings.zoneBasis(application))
 
     val uiState: StateFlow<WearUiState> =
         readings.metrics()

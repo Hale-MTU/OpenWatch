@@ -1,5 +1,7 @@
 package tech.mmarca.openwatch.wear
 
+import tech.mmarca.healthcalculations.insights.HeartRateZones
+
 /** Everything the screens render. A null value means "no reading yet". */
 data class WearUiState(
     /**
@@ -10,6 +12,10 @@ data class WearUiState(
     /** A metric without an entry renders as "no reading yet". */
     val metrics: Map<MetricTile, MetricUiState> = emptyMap(),
     val preferences: DisplayPreferences = DisplayPreferences(),
+    /** Last night's minutes per stage, as synced from the phone. */
+    val sleepStages: Map<SleepStage, Double> = emptyMap(),
+    /** What the heart rate zones rest on, as the phone sent it; null draws no zones. */
+    val zoneBasis: HeartRateZones.Basis? = null,
 )
 
 /** One metric's readings, in the base unit documented on [MetricTile]. */

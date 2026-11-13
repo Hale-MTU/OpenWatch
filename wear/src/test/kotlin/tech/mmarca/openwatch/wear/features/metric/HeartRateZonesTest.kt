@@ -35,4 +35,14 @@ class HeartRateZonesTest {
             assertTrue("$bpm bpm drawn outside zone ${zone + 1}", progress >= zone / 5f && progress <= (zone + 1) / 5f)
         }
     }
+
+    @Test
+    fun `the zones' shares count each sample in its zone and none below zone 1`() {
+        val basis = HeartRateZones.Basis(maxBpm = 200, restingBpm = 60)
+        val bounds = basis.boundsBpm
+        val samples = listOf(40.0, bounds[0].toDouble(), bounds[0].toDouble(), bounds[4].toDouble())
+        val shares = HeartZoneDisplay.zoneShares(samples, basis)
+        assertEquals(listOf(0.5f, 0f, 0f, 0f, 0.25f), shares)
+        assertEquals(List(5) { 0f }, HeartZoneDisplay.zoneShares(emptyList(), basis))
+    }
 }

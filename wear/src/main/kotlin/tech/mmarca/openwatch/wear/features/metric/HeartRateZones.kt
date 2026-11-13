@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.wear.features.metric
 
+import kotlin.math.roundToInt
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wear.R
 
@@ -34,5 +35,13 @@ object HeartZoneDisplay {
         val upper = bounds.getOrElse(zone + 1) { basis.maxBpm }
         val within = if (upper > lower) ((bpm - lower).toFloat() / (upper - lower)).coerceIn(0f, 1f) else 1f
         return (zone + within) / HeartRateZones.COUNT
+    }
+
+    /** The share of [samples] in each of the five zones; a sample below zone 1 counts towards none. */
+    fun zoneShares(samples: List<Double>, basis: HeartRateZones.Basis): List<Float> {
+        if (samples.isEmpty()) return List(HeartRateZones.COUNT) { 0f }
+        val counts = IntArray(HeartRateZones.COUNT)
+        samples.forEach { bpm -> zoneOf(bpm.roundToInt(), basis)?.let { counts[it]++ } }
+        return counts.map { it.toFloat() / samples.size }
     }
 }
