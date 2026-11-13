@@ -57,7 +57,7 @@ object PpgBeats {
         val grid = resample(timesMillis, values) ?: return null
         val filtered = bandPass(grid)
         val first = peaks(filtered, FIRST_PASS_MIN_MILLIS) ?: return null
-        val typical = median(DoubleArray(first.size - 1) { first[it + 1] - first[it] })
+        val typical = AccelerationMinuteFeatures.median(List(first.size - 1) { first[it + 1] - first[it] })
         val second = peaks(filtered, RHYTHM_SHARE * typical) ?: return null
         val edge = (EDGE_MILLIS / STEP_MILLIS)
         return second.filter { it > edge && it < filtered.size - 1 - edge }
@@ -123,12 +123,6 @@ object PpgBeats {
         val denominator = x[i - 1] - 2 * x[i] + x[i + 1]
         if (denominator == 0.0) return i.toDouble()
         return i + (0.5 * (x[i - 1] - x[i + 1]) / denominator).coerceIn(-0.5, 0.5)
-    }
-
-    private fun median(values: DoubleArray): Double {
-        val sorted = values.sorted()
-        val middle = sorted.size / 2
-        return if (sorted.size % 2 == 1) sorted[middle] else (sorted[middle - 1] + sorted[middle]) / 2
     }
 
     /** One second-order section, Butterworth shape, by the bilinear transform. */

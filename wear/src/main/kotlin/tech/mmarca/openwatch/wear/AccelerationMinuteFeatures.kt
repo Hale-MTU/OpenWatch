@@ -74,7 +74,7 @@ internal class AccelerationMinuteFeatures(private val startEpochMillis: Long) {
             return mean to if (variance > 0.0) sqrt(variance) else 0.0
         }
 
-        /** The middle value, or the mean of the two middle values. */
+        /** The middle value, or the mean of the two middle values. The watch's one median; [PpgBeats] uses it too. */
         fun median(values: List<Double>): Double {
             val ordered = values.sorted()
             val n = ordered.size
