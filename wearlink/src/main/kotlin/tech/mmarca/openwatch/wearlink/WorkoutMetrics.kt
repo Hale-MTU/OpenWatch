@@ -41,8 +41,14 @@ object WorkoutMetrics {
         val recoveryBpm: Int? = null,
     )
 
-    /** Readings further apart than this are a gap, not a reading that lasted. */
-    const val MAX_SAMPLE_GAP_MILLIS: Long = 30_000
+    /**
+     * Two readings further apart than this are a gap: the time between them
+     * counts for nothing. Five minutes, the same limit OpenVitals uses for cardio
+     * load, intensity minutes, workout calories and time in zones. App choice, no
+     * published source. The watch records a reading a second in a workout, so it
+     * only matters for sparse readings; a pause cuts whatever the gap.
+     */
+    const val MAX_SAMPLE_GAP_MILLIS: Long = 300_000
 
     /**
      * [profile] is the wearer's body profile; [today] the day its age is read on,
@@ -58,7 +64,7 @@ object WorkoutMetrics {
     ): Summary {
         val active = activeBeats(workout, beats)
         val spans = spans(active, workout)
-        val average = meanBpm(spans)?.toInt()
+        val average = meanBpm(workout, active)?.toInt()
         val estimate = energy(workout, beats, profile, today) as? WorkoutEnergyResult.Estimate
         val zoneSeconds = LongArray(HeartRateZones.COUNT)
         if (zones != null) {
@@ -87,27 +93,44 @@ object WorkoutMetrics {
         .sortedBy { it.epochMillis }
 
     /**
-     * Each reading with how long it stands: until the next one, a pause or the
-     * end of the session, at most [MAX_SAMPLE_GAP_MILLIS].
+     * Each reading with how long it stands: until the next one ([pairMillis]).
+     * The last reading counts for no time, as in OpenVitals' time in zones.
      */
     fun spans(beats: List<Beat>, workout: WearLinkWorkout): List<Pair<Beat, Long>> = beats.mapIndexed { i, beat ->
-        val next = beats.getOrNull(i + 1)?.epochMillis ?: workout.endMillis
-        val pause = workout.pauses.filter { it.startMillis > beat.epochMillis }.minOfOrNull { it.startMillis } ?: Long.MAX_VALUE
-        beat to (minOf(next, pause, workout.endMillis) - beat.epochMillis).coerceIn(0, MAX_SAMPLE_GAP_MILLIS)
+        val next = beats.getOrNull(i + 1) ?: return@mapIndexed beat to 0L
+        beat to pairMillis(workout, beat, next)
+    }
+
+    /**
+     * The time between two neighbouring readings; nothing when they are further
+     * apart than [MAX_SAMPLE_GAP_MILLIS] or a pause starts between them.
+     */
+    private fun pairMillis(workout: WearLinkWorkout, a: Beat, b: Beat): Long {
+        val ms = b.epochMillis - a.epochMillis
+        val paused = workout.pauses.any { it.startMillis in a.epochMillis..b.epochMillis }
+        return if (ms <= 0 || ms > MAX_SAMPLE_GAP_MILLIS || paused) 0L else ms
     }
 
     private fun activeMillis(workout: WearLinkWorkout): Long =
         (workout.endMillis - workout.startMillis) - workout.pauses.sumOf { (it.endMillis - it.startMillis).coerceAtLeast(0) }
 
     /**
-     * The time-weighted mean heart rate: each reading counts for its span
-     * ([spans]), so a stretch of sparse readings does not weigh less than a
-     * dense one. Null when the readings cover no time.
+     * The time-weighted mean heart rate, as OpenVitals' `timeWeightedMeanHeartRate`:
+     * each pair of neighbouring readings counts with its mean for the time
+     * between them ([pairMillis]), so a stretch of sparse readings does not weigh
+     * less than a dense one. The plain average when no pair counts; null
+     * without readings.
      */
-    fun meanBpm(spans: List<Pair<Beat, Long>>): Double? {
-        val total = spans.sumOf { it.second }
-        if (total <= 0) return null
-        return spans.sumOf { (beat, ms) -> beat.bpm * ms.toDouble() } / total
+    fun meanBpm(workout: WearLinkWorkout, active: List<Beat>): Double? {
+        if (active.isEmpty()) return null
+        var weighted = 0.0
+        var total = 0L
+        for ((a, b) in active.zipWithNext()) {
+            val ms = pairMillis(workout, a, b)
+            weighted += (a.bpm + b.bpm) / 2.0 * ms
+            total += ms
+        }
+        return if (total > 0) weighted / total else active.map { it.bpm }.average()
     }
 
     /**
@@ -115,13 +138,14 @@ object WorkoutMetrics {
      * the same OpenVitals uses): Keytel from the time-weighted [meanBpm] of the
      * readings outside the pauses, else ACSM from a walk or run's distance, else
      * the activity's Compendium MET, over the active time. The resting share is
-     * Mifflin-St Jeor when the profile has sex, age, weight and height, else 1 MET.
+     * Mifflin-St Jeor when the profile has age, weight and height (without a sex,
+     * the mean of both), else 1 MET.
      */
     fun energy(workout: WearLinkWorkout, beats: List<Beat>, profile: BodyProfile, today: LocalDate): WorkoutEnergyResult =
         estimateWorkoutEnergy(
             exerciseType = workout.exerciseType,
             durationMinutes = activeMillis(workout) / MINUTE_MILLIS.toDouble(),
-            meanHeartRateBpm = meanBpm(spans(activeBeats(workout, beats), workout)),
+            meanHeartRateBpm = meanBpm(workout, activeBeats(workout, beats)),
             profile = profile,
             today = today,
             distanceMeters = workout.distanceMetres?.toDouble()?.takeIf { it > 0.0 },
@@ -134,11 +158,9 @@ object WorkoutMetrics {
      * doi:10.1152/jappl.1990.69.3.1171. Each pair of neighbouring readings counts
      * for the time between them at their mean (the trapezoid rule), as OpenVitals'
      * cardio load does. A pair further apart than [MAX_SAMPLE_GAP_MILLIS], or with
-     * a pause between, counts for nothing: app choice, no source (OpenVitals
-     * allows 5 minutes).
-     *
-     * TODO(user decision): without a sex this takes the mean of the men's and the
-     * women's constants; OpenVitals takes the men's. Pick one for both apps.
+     * a pause between, counts for nothing ([pairMillis]). Without a sex, the mean
+     * of the men's and the women's weighting, as in OpenVitals: an app choice, the
+     * paper gives two separate weightings and none for an unknown sex.
      */
     fun banisterTrimp(
         workout: WearLinkWorkout,
@@ -149,9 +171,8 @@ object WorkoutMetrics {
     ): Double? {
         if (maxBpm <= restingBpm || active.size < 2) return null
         return active.zipWithNext().sumOf { (a, b) ->
-            val ms = b.epochMillis - a.epochMillis
-            val paused = workout.pauses.any { it.startMillis in a.epochMillis..b.epochMillis }
-            if (ms <= 0 || ms > MAX_SAMPLE_GAP_MILLIS || paused) return@sumOf 0.0
+            val ms = pairMillis(workout, a, b)
+            if (ms == 0L) return@sumOf 0.0
             val mean = (a.bpm + b.bpm) / 2.0
             val reserve = ((mean - restingBpm) / (maxBpm - restingBpm)).coerceIn(0.0, 1.0)
             val male = 0.64 * exp(1.92 * reserve)

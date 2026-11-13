@@ -23,12 +23,20 @@ class WorkoutMetricsTest {
     private val man = BodyProfile(birthYear = 1996, weightKg = 70.0, heightCm = 175.0, sex = BiologicalSex.MALE)
 
     @Test
-    fun `the mean heart rate weighs each reading by how long it stands`() {
-        // 100 bpm stands 10 s until the next reading; 160 bpm stands to the end, 30 s.
-        val beats = listOf(Beat(start, 100), Beat(start + 10_000, 160))
-        val spans = WorkoutMetrics.spans(beats, workout(1).copy(endMillis = start + 40_000))
-        // (100 * 10 + 160 * 30) / 40 = 145; a plain average would say 130.
-        assertEquals(145.0, WorkoutMetrics.meanBpm(spans)!!, 1e-9)
+    fun `the mean heart rate weighs each pair of readings by the time between them`() {
+        // 100 and 100 bpm 10 s apart, then 160 bpm 60 s later: (100 * 10 + 130 * 60) / 70
+        // = 125.71, as OpenVitals' timeWeightedMeanHeartRate; a plain average would say 120.
+        val beats = listOf(Beat(start, 100), Beat(start + 10_000, 100), Beat(start + 70_000, 160))
+        assertEquals(8800.0 / 70, WorkoutMetrics.meanBpm(workout(2), beats)!!, 1e-9)
+        // The last reading stands for no time.
+        assertEquals(listOf(10_000L, 60_000L, 0L), WorkoutMetrics.spans(beats, workout(2)).map { it.second })
+    }
+
+    @Test
+    fun `readings further apart than five minutes count for no time`() {
+        val beats = listOf(Beat(start, 100), Beat(start + minutes(5), 120), Beat(start + minutes(11), 180))
+        assertEquals(listOf(minutes(5), 0L, 0L), WorkoutMetrics.spans(beats, workout(12)).map { it.second })
+        assertEquals(110.0, WorkoutMetrics.meanBpm(workout(12), beats)!!, 1e-9)
     }
 
     @Test
@@ -45,14 +53,15 @@ class WorkoutMetricsTest {
     }
 
     @Test
-    fun `without a sex there is no mifflin, and the resting share is 1 MET`() {
-        // No sex: no Keytel, no Mifflin. Walking (Compendium 17190, 3.8 MET), 70 kg,
-        // 30 min: (3.8 - 1) * 3.5 * 70 * 30 * 5 / 1000 = 102.90 kcal above rest.
+    fun `without a sex keytel and mifflin take the mean of both, as OpenVitals does`() {
+        // Keytel at 120 bpm, 70 kg, 30 years: men 40.5781, women 26.6408 kJ/min, mean
+        // 33.6095 kJ/min = 8.0329 kcal/min, 240.99 in 30 min. Mifflin with the sex term
+        // at its mean, -78: 700 + 1093.75 - 150 - 78 = 1565.75 kcal/day, 32.62 in 30 min.
         val profile = BodyProfile(birthYear = 1996, weightKg = 70.0, heightCm = 175.0)
         val estimate = WorkoutMetrics.energy(workout(30), steady(120, 1800), profile, today) as WorkoutEnergyResult.Estimate
-        assertEquals(WorkoutEnergyMethod.COMPENDIUM_MET, estimate.method)
-        assertEquals(102.90, estimate.activeKcal, 0.01)
-        assertEquals(139.65, estimate.totalKcal, 0.01)
+        assertEquals(WorkoutEnergyMethod.HEART_RATE, estimate.method)
+        assertEquals(240.99, estimate.totalKcal, 0.01)
+        assertEquals(208.37, estimate.activeKcal, 0.01)
     }
 
     @Test
@@ -67,15 +76,15 @@ class WorkoutMetricsTest {
 
     @Test
     fun `trimp counts nothing across a gap or a pause`() {
-        val far = listOf(Beat(start, 120), Beat(start + 40_000, 120))
-        assertEquals(0.0, WorkoutMetrics.banisterTrimp(workout(1), far, 50, 190, BiologicalSex.MALE)!!, 0.0)
+        val far = listOf(Beat(start, 120), Beat(start + minutes(6), 120))
+        assertEquals(0.0, WorkoutMetrics.banisterTrimp(workout(7), far, 50, 190, BiologicalSex.MALE)!!, 0.0)
         val paused = workout(1, pauses = listOf(WearLinkWorkout.Pause(start + 2_000, start + 4_000)))
         val across = listOf(Beat(start, 120), Beat(start + 5_000, 120))
         assertEquals(0.0, WorkoutMetrics.banisterTrimp(paused, across, 50, 190, BiologicalSex.MALE)!!, 0.0)
     }
 
     @Test
-    fun `summary counts only active readings, gaps capped`() {
+    fun `summary counts only active readings, a pause cuts`() {
         val pause = WearLinkWorkout.Pause(start + 30_000, start + 60_000)
         val beats = steady(100, 30) + steady(160, 30, start + 30_000) + steady(120, 30, start + 60_000)
         val summary = WorkoutMetrics.summarize(workout(2, pauses = listOf(pause)).copy(endMillis = start + 90_000), beats, HeartRateZones.Basis(190, 50), BodyProfile(), today, null)
