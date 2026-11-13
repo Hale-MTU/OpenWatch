@@ -3,17 +3,20 @@ package tech.mmarca.openwatch.wear
 import androidx.annotation.StringRes
 import tech.mmarca.openwatch.wear.features.quicklog.LoggedEntry
 import tech.mmarca.openwatch.wear.features.recording.ActivityType
+import tech.mmarca.openwatch.wear.health.WearCapabilities
 
 /** Everything the screens render. A null value means "no reading yet". */
 data class WearUiState(
     /**
      * The metrics this watch has a sensor for. Only these are offered as
-     * tiles.
+     * tiles. Every metric until sensor discovery narrows it.
      */
     val availableMetrics: Set<MetricTile> = MetricTile.entries.toSet(),
     /** A metric without an entry renders as "no reading yet". */
     val metrics: Map<MetricTile, MetricUiState> = emptyMap(),
     val preferences: DisplayPreferences = DisplayPreferences(),
+    /** What the watch can measure; gates measurement buttons and workouts. */
+    val capabilities: WearCapabilities = WearCapabilities(),
     /** Last night's minutes per stage, as synced from the phone. */
     val sleepStages: Map<SleepStage, Double> = emptyMap(),
     /** Quick logs and spot measurements made on this watch, oldest first. */

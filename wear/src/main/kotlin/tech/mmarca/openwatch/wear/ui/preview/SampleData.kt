@@ -5,10 +5,12 @@ import tech.mmarca.openwatch.wear.RecordingUiState
 import tech.mmarca.openwatch.wear.SleepStage
 import tech.mmarca.openwatch.wear.MetricTile
 import tech.mmarca.openwatch.wear.WearUiState
+import tech.mmarca.openwatch.wear.features.measure.Measurement
 import tech.mmarca.openwatch.wear.features.quicklog.EntryType
 import tech.mmarca.openwatch.wear.features.quicklog.LoggedEntry
 import tech.mmarca.openwatch.wear.features.recording.ActivityType
 import tech.mmarca.openwatch.wear.features.recording.WorkoutField
+import tech.mmarca.openwatch.wear.health.WearCapabilities
 
 /**
  * Made-up values for previews and for debug builds, where nothing feeds the
@@ -91,18 +93,23 @@ object SampleData {
         SleepStage.DEEP to 84.0,
     )
 
-    /** The fields each workout shows on a watch with a heart rate sensor, GPS and a barometer. */
-    val workoutFields: Map<ActivityType, Set<WorkoutField>> = ActivityType.entries.associateWith { activity ->
-        buildSet {
-            add(WorkoutField.HEART_RATE)
-            add(WorkoutField.CALORIES)
-            if (activity != ActivityType.WORKOUT) {
-                add(WorkoutField.DISTANCE)
-                add(WorkoutField.ELEVATION)
-                add(if (activity == ActivityType.CYCLE) WorkoutField.SPEED else WorkoutField.PACE)
+    /** A watch with Health Services, a barometer and no single-beat sensor. */
+    val capabilities = WearCapabilities(
+        probed = true,
+        sensorMetrics = MetricTile.entries.toSet() - MetricTile.BLOOD_OXYGEN,
+        measurements = setOf(Measurement.HEART_RATE, Measurement.AIR_PRESSURE),
+        workouts = ActivityType.entries.associateWith { activity ->
+            buildSet {
+                add(WorkoutField.HEART_RATE)
+                add(WorkoutField.CALORIES)
+                if (activity != ActivityType.WORKOUT) {
+                    add(WorkoutField.DISTANCE)
+                    add(WorkoutField.ELEVATION)
+                    add(if (activity == ActivityType.CYCLE) WorkoutField.SPEED else WorkoutField.PACE)
+                }
             }
-        }
-    }
+        },
+    )
 
     val entries = listOf(
         LoggedEntry(EntryType.WEIGHT, System.currentTimeMillis() - 3_600_000, 72.4),
@@ -120,8 +127,11 @@ object SampleData {
         averageHeartRateBpm = 131,
     )
 
+    /** A watch with a barometer and no SpO2 sensor, so one metric is not on offer. */
     val uiState = WearUiState(
+        availableMetrics = capabilities.availableMetrics(),
         metrics = metrics,
+        capabilities = capabilities,
         sleepStages = sleepStages,
         entries = entries,
     )

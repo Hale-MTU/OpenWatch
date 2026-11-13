@@ -134,7 +134,7 @@ private fun WorkoutSummaryScreenPreview() {
         AppScaffold {
             WorkoutSummaryScreen(
                 state = SampleData.recording,
-                fields = SampleData.workoutFields.getValue(ActivityType.RUN),
+                fields = SampleData.capabilities.workouts.getValue(ActivityType.RUN),
                 unitSystem = UnitSystem.METRIC,
                 onDone = {},
             )

@@ -307,7 +307,7 @@ private fun RecordingScreenPreview() {
         AppScaffold {
             RecordingScreen(
                 state = SampleData.recording,
-                fields = SampleData.workoutFields.getValue(ActivityType.RUN),
+                fields = SampleData.capabilities.workouts.getValue(ActivityType.RUN),
                 unitSystem = UnitSystem.METRIC,
                 maxHeartRate = 190,
                 onTogglePause = {},
@@ -324,7 +324,7 @@ private fun RecordingScreenPausedPreview() {
         AppScaffold {
             RecordingScreen(
                 state = SampleData.recording.copy(paused = true),
-                fields = SampleData.workoutFields.getValue(ActivityType.WORKOUT),
+                fields = SampleData.capabilities.workouts.getValue(ActivityType.WORKOUT),
                 unitSystem = UnitSystem.IMPERIAL,
                 maxHeartRate = 190,
                 onTogglePause = {},
