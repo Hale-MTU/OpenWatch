@@ -6,6 +6,7 @@ import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
 import tech.mmarca.openwatch.domain.insights.HeartRateZoneBasis
+import tech.mmarca.openwatch.domain.insights.observedMaxHeartRateLookbackDays
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
@@ -30,7 +31,7 @@ internal class WearOsZoneSync(
     suspend fun sync(device: BleSensorDevice, retry: WearOsNightSeriesSync.Retry) {
         val basis = try {
             val now = clock()
-            val observed = healthConnect.readMaxHeartRate(now.minus(OBSERVED_MAX_SPAN), now)?.toInt()
+            val observed = healthConnect.readMaxHeartRate(now.minus(Duration.ofDays(observedMaxHeartRateLookbackDays)), now)?.toInt()
             HeartRateZoneBasis.of(profile(), now.atZone(zone()).toLocalDate(), observed, latestResting(now))
         } catch (error: CancellationException) {
             throw error
@@ -54,8 +55,6 @@ internal class WearOsZoneSync(
     }
 
     private companion object {
-        /** How far back the highest heart rate on record is looked for: a year of training. */
-        val OBSERVED_MAX_SPAN: Duration = Duration.ofDays(365)
         val RESTING_LOOKBACK: Duration = Duration.ofDays(7)
     }
 }
