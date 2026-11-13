@@ -17,10 +17,12 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
+import tech.mmarca.openwatch.data.repository.BodyProfileProvider
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.data.repository.contract.ActivityRepository
 import tech.mmarca.openwatch.domain.model.ActivityRecordSource
 import tech.mmarca.openwatch.domain.model.ActivityWriteRequest
+import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
 import tech.mmarca.openwatch.activityimport.FitTestFiles
 import tech.mmarca.openwatch.activityimport.FitTestPoint
@@ -37,6 +39,7 @@ class GarminActivityImporterTest {
 
     private val activityRepository = mockk<ActivityRepository>(relaxed = true)
     private val preferencesRepository = mockk<OpenWatchPreferences>(relaxed = true)
+    private val bodyProfileProvider = mockk<BodyProfileProvider>()
 
     private fun file(type: GarminFileType, bytes: ByteArray = byteArrayOf(1, 2, 3)) =
         GarminDownloadedFile(
@@ -154,17 +157,42 @@ class GarminActivityImporterTest {
         assertEquals(listOf(ride), result.retry)
     }
 
-    private fun importer(): GarminActivityImporter {
+@Test
+    fun `a workout without calories and a profile without weight is counted, so the sync can say so`() = runTest {
+        val result = importer(profile = BodyProfile())
+            .import(listOf(file(GarminFileType.ACTIVITY, rideWithAscent(totalAscentMeters = 12))))
+
+        assertEquals(1, result.written)
+        assertEquals(1, result.withoutCaloriesForWantOfWeight)
+    }
+
+    @Test
+    fun `a profile that cannot be read makes no estimate and blames no weight`() = runTest {
+        val importer = importer()
+        coEvery { bodyProfileProvider.resolve() } throws IllegalStateException("read failed")
+        val written = slot<List<ActivityWriteRequest>>()
+        coEvery { activityRepository.writeActivityEntries(capture(written)) } returns listOf("id")
+
+        val result = importer.import(listOf(file(GarminFileType.ACTIVITY, rideWithAscent(totalAscentMeters = 12))))
+
+        assertEquals(1, result.written)
+        assertEquals(0, result.withoutCaloriesForWantOfWeight)
+        assertEquals(null, written.captured.single().activeCaloriesKcal)
+    }
+
+        private fun importer(profile: BodyProfile = BodyProfile(weightKg = 70.0)): GarminActivityImporter {
         every { preferencesRepository.unitSystem } returns UnitSystem.METRIC
         every { preferencesRepository.favoriteActivityExerciseType } returns null
         every { preferencesRepository.lastActivityExerciseType } returns null
         every { activityRepository.activityWritePermissions(any<ActivityWriteRequest>()) } returns emptySet()
         coEvery { activityRepository.hasActivityWritePermission(any<ActivityWriteRequest>()) } returns true
 
+        coEvery { bodyProfileProvider.resolve() } returns profile
         return GarminActivityImporter(
             activityRepository,
             preferencesRepository,
             RouteElevationCorrector(),
+            bodyProfileProvider,
         )
     }
 

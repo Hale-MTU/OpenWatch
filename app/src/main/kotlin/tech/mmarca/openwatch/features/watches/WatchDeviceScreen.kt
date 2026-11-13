@@ -491,6 +491,14 @@ private fun StatusCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                // A workout without calories says why, rather than a guessed weight filling the gap.
+                if (isGarmin && sync.lastMissingBodyWeight && sync.lastDeviceId == device.id) {
+                    Text(
+                        text = stringResource(R.string.settings_watch_garmin_needs_weight),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
             device.batteryPercent?.let { battery ->
                 Spacer(modifier = Modifier.width(Spacing.md))
