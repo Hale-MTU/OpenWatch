@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.wear
 
+import tech.mmarca.openwatch.wearlink.HeartRateZones
 import android.content.Context
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
 
@@ -24,9 +25,16 @@ internal object WearSettings {
     private const val KEY_HEART_RATE_DAY = "heart_rate_day"
     private const val KEY_HEART_RATE_SOURCE = "heart_rate_source"
     private const val KEY_HRV_SOURCE = "hrv_source"
-    private const val KEY_SYNCED_SLEEP_HOLD = "synced_sleep_hold"
     private const val KEY_SKIN_TEMPERATURE = "skin_temperature"
     private const val KEY_SPO2 = "spo2_at_night"
+    private const val KEY_MAX_HEART_RATE = "max_heart_rate"
+    private const val KEY_RESTING_HEART_RATE = "resting_heart_rate"
+    private const val KEY_WEIGHT_HG = "body_weight_hg"
+    private const val KEY_HEIGHT_CM = "body_height_cm"
+    private const val KEY_BIRTH_YEAR = "birth_year"
+    private const val KEY_SEX = "sex"
+    private const val KEY_AUTO_PAUSE = "auto_pause"
+    private const val KEY_AUTO_DETECT = "auto_detect"
 
     fun heartRateDay(context: Context): HeartRateInterval =
         prefs(context).getString(KEY_HEART_RATE_DAY, null)?.let(HeartRateInterval::fromWire)
@@ -34,6 +42,20 @@ internal object WearSettings {
 
     fun setHeartRateDay(context: Context, interval: HeartRateInterval) {
         prefs(context).edit().putString(KEY_HEART_RATE_DAY, interval.wire).apply()
+    }
+
+    /** Whether a running or cycling workout pauses by itself when the wearer stops. On by default. */
+    fun autoPause(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_PAUSE, true)
+
+    fun setAutoPause(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean(KEY_AUTO_PAUSE, on).apply()
+    }
+
+    /** Whether the watch offers a walk or a run it sees in the step minutes. On by default. */
+    fun autoDetect(context: Context): Boolean = prefs(context).getBoolean(KEY_AUTO_DETECT, true)
+
+    fun setAutoDetect(context: Context, on: Boolean) {
+        prefs(context).edit().putBoolean(KEY_AUTO_DETECT, on).apply()
     }
 
     fun heartRateSource(context: Context): Source = source(context, KEY_HEART_RATE_SOURCE)
@@ -45,17 +67,13 @@ internal object WearSettings {
     fun setHrvSource(context: Context, source: Source) = setSource(context, KEY_HRV_SOURCE, source)
 
     /**
-     * How a sleep hold keeps every minute whole: false (the default) with a
-     * lasting wake lock, true with the heart rate's wake-ups and a flush of
-     * every sensor at each ([SensorWakeSync]), which lets the processor sleep
-     * in between. The second is the one to measure; it falls back to the
-     * lock while the heart rate is not dense from the sensor.
+     * Whether a sleep hold rests on the heart rate's wake-ups ([SensorWakeSync])
+     * instead of a lasting wake lock: only in power save. On a Galaxy Watch7 the
+     * hub held the batches up to 107 s in Doze, and the night of 2026-11-09/10
+     * kept 12 % of the accelerometer's readings (8.9 against 10.6 mAh an hour),
+     * so it is a way to save power, not a way to keep every minute whole.
      */
-    fun syncedSleepHold(context: Context): Boolean = prefs(context).getBoolean(KEY_SYNCED_SLEEP_HOLD, false)
-
-    fun setSyncedSleepHold(context: Context, synced: Boolean) {
-        prefs(context).edit().putBoolean(KEY_SYNCED_SLEEP_HOLD, synced).apply()
-    }
+    fun syncedSleepHold(context: Context): Boolean = heartRateDay(context) == HeartRateInterval.POWER_SAVE
 
     /** Skin temperature at night from the Samsung platform, the only source. Off by default. */
     fun skinTemperature(context: Context): Boolean = prefs(context).getBoolean(KEY_SKIN_TEMPERATURE, false)
@@ -71,14 +89,35 @@ internal object WearSettings {
         prefs(context).edit().putBoolean(KEY_SPO2, on).apply()
     }
 
+    /** The maximum heart rate the phone sent for the zones; null for none. */
+    fun maxHeartRate(context: Context): Int? = prefs(context).getInt(KEY_MAX_HEART_RATE, 0).takeIf { it > 0 }
+
+    /** The resting heart rate the phone sent for the zones; null for none. */
+    fun restingHeartRate(context: Context): Int? = prefs(context).getInt(KEY_RESTING_HEART_RATE, 0).takeIf { it > 0 }
+
+    /**
+     * What the heart rate zones rest on: the phone's figures. The phone sends an
+     * age-predicted maximum when the body profile has a birth year; with none it
+     * sends no maximum, and the watch shows no zones rather than a guessed one.
+     */
+    fun zoneBasis(context: Context): HeartRateZones.Basis? =
+        HeartRateZones.Basis.of(maxHeartRate(context), restingHeartRate(context))
+
+    private fun positive(context: Context, key: String): Int? = prefs(context).getInt(key, 0).takeIf { it > 0 }
+
     /** Every setting in one value, for the phone's `GET_PREF`. */
     fun read(context: Context): WatchPreferences = WatchPreferences(
         heartRateDay = heartRateDay(context),
         heartRateSource = heartRateSource(context),
         hrvSource = hrvSource(context),
-        syncedSleepHold = syncedSleepHold(context),
         skinTemperature = skinTemperature(context),
         spo2AtNight = spo2AtNight(context),
+        maxHeartRate = maxHeartRate(context),
+        restingHeartRate = restingHeartRate(context),
+        weightHectograms = positive(context, KEY_WEIGHT_HG),
+        heightCm = positive(context, KEY_HEIGHT_CM),
+        birthYear = positive(context, KEY_BIRTH_YEAR),
+        female = when (prefs(context).getString(KEY_SEX, null)) { "f" -> true; "m" -> false; else -> null },
     )
 
     /** Stores every setting of [preferences], for the phone's `SET_PREF`. */
@@ -86,9 +125,16 @@ internal object WearSettings {
         setHeartRateDay(context, preferences.heartRateDay)
         setHeartRateSource(context, preferences.heartRateSource)
         setHrvSource(context, preferences.hrvSource)
-        setSyncedSleepHold(context, preferences.syncedSleepHold)
         setSkinTemperature(context, preferences.skinTemperature)
         setSpo2AtNight(context, preferences.spo2AtNight)
+        prefs(context).edit()
+            .putInt(KEY_MAX_HEART_RATE, preferences.maxHeartRate ?: 0)
+            .putInt(KEY_RESTING_HEART_RATE, preferences.restingHeartRate ?: 0)
+            .putInt(KEY_WEIGHT_HG, preferences.weightHectograms ?: 0)
+            .putInt(KEY_HEIGHT_CM, preferences.heightCm ?: 0)
+            .putInt(KEY_BIRTH_YEAR, preferences.birthYear ?: 0)
+            .putString(KEY_SEX, when (preferences.female) { true -> "f"; false -> "m"; null -> null })
+            .apply()
     }
 
     private fun source(context: Context, key: String): Source {

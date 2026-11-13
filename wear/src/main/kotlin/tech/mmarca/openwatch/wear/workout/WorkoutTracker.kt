@@ -10,6 +10,7 @@ import tech.mmarca.openwatch.wearlink.AscentCredit
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 import tech.mmarca.openwatch.wearlink.WearLinkWorkout
 import tech.mmarca.openwatch.wearlink.WearLinkWorkoutLines
+import tech.mmarca.openwatch.wearlink.WorkoutMetrics
 
 /** One position from the GPS. Speed, altitude and accuracy are null when the fix has none. */
 data class WorkoutFix(
@@ -40,6 +41,22 @@ data class WorkoutSnapshot(
     val maxHeartRateBpm: Int?,
     /** True for a GPS sport that has no usable fix yet. */
     val waitingForFix: Boolean,
+    /** The arm has rested for a minute or more with the workout still running; null otherwise. */
+    val rest: RestRecovery? = null,
+    /** The workout is paused because the wearer stopped, not by a tap. */
+    val autoPaused: Boolean = false,
+)
+
+/**
+ * A rest at the end of a workout and the heart rate fall in it, as [WorkoutMetrics.recovery] reads it:
+ * [startMillis] is when the arm came to rest, [endBpm] the heart rate then, the falls [oneMinuteBpm]
+ * and [twoMinutesBpm] once the readings reach that far.
+ */
+data class RestRecovery(
+    val startMillis: Long,
+    val endBpm: Int,
+    val oneMinuteBpm: Int?,
+    val twoMinutesBpm: Int?,
 )
 
 /**
@@ -59,6 +76,8 @@ class WorkoutTracker(
     val startMillis: Long,
     /** False when the wearer declined location: the workout then has no route or distance. */
     val useGps: Boolean = sport.gps,
+    /** False when the wearer switched auto-pause off; it also needs a sport that pauses by itself and the GPS. */
+    useAutoPause: Boolean = true,
 ) {
     private val pauses = ArrayList<WearLinkWorkout.Pause>()
     private var pausedSince: Long? = null
@@ -75,6 +94,9 @@ class WorkoutTracker(
     private var stepBaselineStale = false
     private var lastStepTotal = 0L
     private var steps = 0
+
+    /** Steps taken before the workout was started, from [credit]; the live total counts on top of them. */
+    private var creditedSteps = 0
     private val stepsByMinute = HashMap<Long, Int>()
     private val ascentByMinute = HashMap<Long, Int>()
 
@@ -84,17 +106,46 @@ class WorkoutTracker(
     private var hrNow: Int? = null
     private var hrNowAt = 0L
 
+    private val rest = RestDetector()
+    private val recentBeats = ArrayDeque<WorkoutMetrics.Beat>()
+
     val isPaused: Boolean get() = pausedSince != null
+
+    private val autoPause = if (useAutoPause && useGps && AutoPause.appliesTo(sport)) AutoPause(sport) else null
+    private var autoPaused = false
 
     val route: List<WearLinkWorkout.RoutePoint> get() = points
 
     fun pauseList(): List<WearLinkWorkout.Pause> = pauses.toList()
 
     fun pause(now: Long) {
+        autoPaused = false
         if (pausedSince == null) pausedSince = now.coerceAtLeast(startMillis)
     }
 
+    /**
+     * Pauses or resumes by itself when the sport allows it and the GPS shows the wearer stopped or moving on.
+     * True when the state changed. A pause the wearer made is never undone here.
+     */
+    fun autoPauseStep(now: Long): Boolean {
+        val auto = autoPause ?: return false
+        if (isPaused && !autoPaused) return false
+        when (auto.verdict(now, pausedByThis = autoPaused)) {
+            AutoPause.Verdict.PAUSE -> {
+                pause(auto.pauseAt ?: now)
+                autoPaused = true
+            }
+            AutoPause.Verdict.RESUME -> {
+                resume(now)
+                auto.restart(now)
+            }
+            null -> return false
+        }
+        return true
+    }
+
     fun resume(now: Long) {
+        autoPaused = false
         val since = pausedSince ?: return
         pausedSince = null
         // The first fix after a pause only sets the new starting point.
@@ -114,6 +165,8 @@ class WorkoutTracker(
      * is dropped or only counted. A paused workout drops every fix.
      */
     fun onFix(fix: WorkoutFix): WearLinkWorkout.RoutePoint? {
+        // The speed of a fix tells a stop from a run even while paused, so it is read before anything is dropped.
+        if (fix.epochMillis >= startMillis) autoPause?.onFix(fix)
         if (!useGps || isPaused || fix.epochMillis < startMillis) return null
         val accuracy = fix.accuracyMetres
         if (accuracy != null && accuracy > MAX_ACCURACY_METRES) return null
@@ -195,7 +248,7 @@ class WorkoutTracker(
             return
         }
         if (total < base) return
-        val now = (total - base).toInt().coerceAtMost(WearLinkWorkoutLines.MAX_STEPS)
+        val now = ((total - base).toInt() + creditedSteps).coerceAtMost(WearLinkWorkoutLines.MAX_STEPS)
         val delta = now - steps
         if (delta <= 0) return
         steps = now
@@ -208,7 +261,39 @@ class WorkoutTracker(
         ascentByMinute[row.epochMillis] = row.decimetres
     }
 
+    /**
+     * Takes what the watch kept before a workout that began in the past: the step minutes and heart rate readings
+     * since the start. The step counter's live total starts counting when the workout is started, so these
+     * minutes do not overlap with it.
+     */
+    fun credit(stepRows: List<WearLinkProtocol.StepMinute>, beats: List<WorkoutMetrics.Beat>) {
+        for (row in stepRows) {
+            if (row.epochMillis + MINUTE_MILLIS <= startMillis || row.steps <= 0) continue
+            steps += row.steps
+            creditedSteps += row.steps
+            stepsByMinute.merge(row.epochMillis, row.steps, Int::plus)
+        }
+        for (beat in beats.sortedBy { it.epochMillis }) onHeartRate(beat.epochMillis, beat.bpm)
+    }
+
+    fun onAcceleration(epochMillis: Long, magnitude: Double) = rest.onAcceleration(epochMillis, magnitude)
+
+    /**
+     * The rest at the end of the workout, if the arm has been still for a minute and the heart rate
+     * around its start is known. Kept to the last [REST_LOOKBACK_MILLIS] of readings, so a rest that
+     * began longer ago has none.
+     */
+    fun restRecovery(now: Long): RestRecovery? {
+        val start = rest.restStartMillis(now) ?: return null
+        val beats = recentBeats.toList()
+        val end = WorkoutMetrics.meanBpmAround(beats, start) ?: return null
+        val (one, two) = WorkoutMetrics.recovery(beats, start)
+        return RestRecovery(start, end.roundToInt(), one, two)
+    }
+
     fun onHeartRate(epochMillis: Long, bpm: Int) {
+        recentBeats.addLast(WorkoutMetrics.Beat(epochMillis, bpm))
+        while (recentBeats.first().epochMillis < epochMillis - REST_LOOKBACK_MILLIS) recentBeats.removeFirst()
         hrNow = bpm
         hrNowAt = epochMillis
         if (isPaused) return
@@ -252,6 +337,8 @@ class WorkoutTracker(
             averageHeartRateBpm = if (hrCount > 0) (hrSum.toDouble() / hrCount).roundToInt() else null,
             maxHeartRateBpm = hrMax.takeIf { hrCount > 0 },
             waitingForFix = gps && !hadFix,
+            rest = restRecovery(now),
+            autoPaused = autoPaused,
         )
     }
 
@@ -315,6 +402,7 @@ class WorkoutTracker(
         private const val HEART_RATE_STALE_MILLIS = 30_000L
         private const val MIN_CADENCE_SECONDS = 20
         private const val MINUTE_MILLIS = 60_000L
+        private const val REST_LOOKBACK_MILLIS = 15 * MINUTE_MILLIS
         private const val EARTH_RADIUS_METRES = 6_371_000.0
 
         /** [endMillis], but no later than the longest workout the link carries. */

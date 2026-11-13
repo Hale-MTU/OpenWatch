@@ -25,6 +25,7 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.devices.core.sync.UnwrittenSeries
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.domain.model.WearSleepMinute
@@ -146,6 +147,10 @@ class WearOsWatchSyncServiceTest {
         override suspend fun pullWorkouts(targetAddress: String?, targetName: String?, since: Instant): WearOsWorkoutPage? =
             WearOsWorkoutPage(emptyList(), hasMore = false)
 
+        override suspend fun pushDays(targetAddress: String?, targetName: String?, days: List<tech.mmarca.openwatch.wearlink.DaySummary>): Boolean = false
+
+        override suspend fun pullEntries(targetAddress: String?, targetName: String?, since: Instant): WearOsEntryPage? = WearOsEntryPage(emptyList(), false)
+
         override suspend fun notifyPhoneActive(targetAddress: String?, targetName: String?, at: Instant): Boolean = false
     }
 
@@ -186,6 +191,9 @@ class WearOsWatchSyncServiceTest {
     /** The user's breathing rate switch; off as in a fresh install. */
     private var writeBreathing = false
 
+    /** Whether the watch's night is written beside another app's; the user's setting, on by default. */
+    private var sleepBesideOthers = true
+
     private fun service() = WearOsWatchSyncService(
         nodePort = nodePort,
         cursors = cursors,
@@ -197,6 +205,7 @@ class WearOsWatchSyncServiceTest {
         clock = { t0 },
         zone = { ZoneId.of("+02:00") },
         writeRespiratoryRate = { writeBreathing },
+        writeSleepBesideOthers = { sleepBesideOthers },
     )
 
     private fun raw(time: Instant, movement: Float, heartRate: Float) =
@@ -376,6 +385,8 @@ class WearOsWatchSyncServiceTest {
             weightKg = { weightReads++; null },
             clock = { t0 },
             zone = { ZoneId.of("+02:00") },
+            // The profile sent to the watch for its workout energy is read on its own; this counts the walking energy's.
+            profile = { BodyProfile() },
         )
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 12)
@@ -614,7 +625,8 @@ class WearOsWatchSyncServiceTest {
     }
 
     @Test
-    fun `a night that already holds a session from elsewhere is left alone`() = runTest {
+    fun `a night that already holds a session from elsewhere is left alone when the user chose so`() = runTest {
+        sleepBesideOthers = false
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         sleepPages += WearOsSleepMinutePage(nightMinutes(), hasMore = false)
         val foreign = mockk<SleepSessionRecord> {
@@ -649,7 +661,24 @@ class WearOsWatchSyncServiceTest {
     }
 
     @Test
-    fun `a nap whose time already holds a session from elsewhere is left alone`() = runTest {
+    fun `by default the night is written beside another app's, and Health Connect's priority decides`() = runTest {
+        pages += WearOsHeartRatePage(emptyList(), hasMore = false)
+        sleepPages += WearOsSleepMinutePage(nightMinutes(), hasMore = false)
+        val foreign = mockk<SleepSessionRecord> {
+            every { metadata } returns Metadata.manualEntry(clientRecordId = "samsung_sleep_1")
+        }
+        coEvery { healthConnect.forEachSyncRecordPage(SleepSessionRecord::class, any(), any(), any()) } coAnswers {
+            arg<suspend (List<androidx.health.connect.client.records.Record>) -> Unit>(3).invoke(listOf(foreign))
+        }
+
+        service().sync(WATCH, Duration.ZERO, null)
+
+        assertEquals(1, insertedOf<SleepSessionRecord>().size)
+    }
+
+    @Test
+    fun `a nap whose time already holds a session from elsewhere is left alone when the user chose so`() = runTest {
+        sleepBesideOthers = false
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         sleepPages += WearOsSleepMinutePage(napDayMinutes(), hasMore = false)
         val foreign = mockk<SleepSessionRecord> {
