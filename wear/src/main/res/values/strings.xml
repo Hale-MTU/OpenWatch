@@ -133,12 +133,15 @@
     <string name="unit_vo2_max">ml/kg/min</string>
 
     <string name="unit_mmhg">mmHg</string>
+    <string name="unit_hpa">hPa</string>
     <string name="unit_kmh">km/h</string>
     <string name="unit_mph">mph</string>
     <string name="unit_pace_km">/km</string>
     <string name="unit_pace_mi">/mi</string>
     <string name="percent_value">%1$d %%</string>
     <string name="action_done">Done</string>
+    <string name="action_back">Back</string>
+    <string name="action_retry">Try again</string>
     <string name="action_save">Save</string>
     <string name="detail_today">Today</string>
     <string name="detail_week">Last 7 days</string>
@@ -163,7 +166,12 @@
     <string name="sleep_rem">REM</string>
     <string name="sleep_light">Light</string>
     <string name="sleep_deep">Deep</string>
+    <string name="measure_title">Measure</string>
     <string name="measure_now">Measure now</string>
+    <string name="measure_start">Start</string>
+    <string name="measure_grant">Allow</string>
+    <string name="measure_open_settings">Open settings</string>
+    <string name="measure_none_supported">This watch has no sensor for spot measurements.</string>
     <string name="measure_heart_rate">Heart rate</string>
     <string name="measure_heart_rate_description">About 15 seconds</string>
     <string name="measure_hrv">Heart rate variability</string>
@@ -173,6 +181,9 @@
     <string name="measure_instruction_still">Keep the watch snug on your wrist and hold still.</string>
     <string name="measure_instruction_still_minute">Sit down, rest your arm and stay still for a minute.</string>
     <string name="measure_instruction_none">Takes a few seconds.</string>
+    <string name="measure_hint_detecting">Detecting…</string>
+    <string name="measure_hint_off_body">Put the watch on your wrist</string>
+    <string name="measure_altitude">≈ %1$s %2$s altitude</string>
     <string name="measure_error_not_supported">This watch cannot take this measurement.</string>
     <string name="measure_error_permission">OpenWatch needs access to heart rate data.</string>
     <string name="measure_error_off_body">The watch is not on your wrist.</string>

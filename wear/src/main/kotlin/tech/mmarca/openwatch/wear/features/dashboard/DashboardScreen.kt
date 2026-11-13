@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -35,19 +36,23 @@ import tech.mmarca.openwatch.wear.ui.components.formatMetricValue
 import tech.mmarca.openwatch.wear.ui.components.metricUnitLabel
 import tech.mmarca.openwatch.wear.ui.preview.SampleData
 import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
+import tech.mmarca.openwatch.wear.ui.theme.HeartColor
 import tech.mmarca.openwatch.wear.ui.theme.HydrationColor
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
  * Today's [tiles], in order. The first three of them with a daily goal also
- * show as activity rings at the top.
+ * show as activity rings at the top. The measure
+ * button only appears when the watch supports at least one measurement.
  */
 @Composable
 fun DashboardScreen(
     tiles: List<MetricTile>,
     metrics: Map<MetricTile, MetricUiState>,
     unitSystem: UnitSystem,
+    canMeasure: Boolean,
     onOpenMetric: (MetricTile) -> Unit,
+    onMeasure: () -> Unit,
     onQuickLog: () -> Unit,
     onStartActivity: () -> Unit,
     onOpenStatus: () -> Unit,
@@ -77,6 +82,20 @@ fun DashboardScreen(
             }
             if (rings.isNotEmpty()) {
                 item { ActivityRings(rings, modifier = Modifier.padding(bottom = 4.dp)) }
+            }
+            if (canMeasure) {
+                item {
+                    Button(
+                        onClick = onMeasure,
+                        label = { Text(stringResource(R.string.measure_title)) },
+                        icon = { Icon(Icons.Outlined.MonitorHeart, contentDescription = null, tint = HeartColor) },
+                        colors = ButtonDefaults.filledTonalButtonColors(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .transformedHeight(this, transformationSpec),
+                        transformation = SurfaceTransformation(transformationSpec),
+                    )
+                }
             }
             item {
                 Button(
@@ -149,7 +168,7 @@ private fun activityRings(
 private fun DashboardScreenPreview() {
     OpenWatchWearTheme {
         AppScaffold {
-            DashboardScreen(MetricTile.DefaultTiles, SampleData.metrics, UnitSystem.METRIC, {}, {}, {}, {})
+            DashboardScreen(MetricTile.DefaultTiles, SampleData.metrics, UnitSystem.METRIC, true, {}, {}, {}, {}, {})
         }
     }
 }
@@ -159,7 +178,7 @@ private fun DashboardScreenPreview() {
 private fun DashboardScreenEmptyPreview() {
     OpenWatchWearTheme {
         AppScaffold {
-            DashboardScreen(MetricTile.DefaultTiles, emptyMap(), UnitSystem.METRIC, {}, {}, {}, {})
+            DashboardScreen(MetricTile.DefaultTiles, emptyMap(), UnitSystem.METRIC, false, {}, {}, {}, {}, {})
         }
     }
 }
@@ -169,7 +188,7 @@ private fun DashboardScreenEmptyPreview() {
 private fun DashboardScreenImperialPreview() {
     OpenWatchWearTheme {
         AppScaffold {
-            DashboardScreen(MetricTile.DefaultTiles, SampleData.metrics, UnitSystem.IMPERIAL, {}, {}, {}, {})
+            DashboardScreen(MetricTile.DefaultTiles, SampleData.metrics, UnitSystem.IMPERIAL, true, {}, {}, {}, {}, {})
         }
     }
 }

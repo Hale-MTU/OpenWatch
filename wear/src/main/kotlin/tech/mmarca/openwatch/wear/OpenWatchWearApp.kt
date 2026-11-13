@@ -8,6 +8,9 @@ import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import tech.mmarca.openwatch.wear.features.dashboard.DashboardScreen
+import tech.mmarca.openwatch.wear.features.measure.MeasureListScreen
+import tech.mmarca.openwatch.wear.features.measure.Measurement
+import tech.mmarca.openwatch.wear.features.measure.MeasurementRoute
 import tech.mmarca.openwatch.wear.features.metric.MetricDetailScreen
 import tech.mmarca.openwatch.wear.features.quicklog.BloodPressureEntryScreen
 import tech.mmarca.openwatch.wear.features.quicklog.BreatheScreen
@@ -56,7 +59,9 @@ fun OpenWatchWearApp(
                         tiles = MetricTile.DefaultTiles.filter { it in currentState.availableMetrics },
                         metrics = currentState.metrics,
                         unitSystem = currentState.preferences.unitSystem,
+                        canMeasure = currentState.capabilities.measurements.isNotEmpty(),
                         onOpenMetric = { navController.navigate(WearRoutes.metric(it)) },
+                        onMeasure = { navController.navigate(WearRoutes.MEASURE) },
                         onQuickLog = { navController.navigate(WearRoutes.QUICK_LOG) },
                         onStartActivity = onStartWorkout,
                         onOpenStatus = { navController.navigate(WearRoutes.STATUS) },
@@ -64,6 +69,7 @@ fun OpenWatchWearApp(
                 }
                 composable(WearRoutes.METRIC) { entry ->
                     val metric = MetricTile.valueOf(checkNotNull(entry.arguments?.getString(WearRoutes.METRIC_ARG)))
+                    val measurement = metric.spotMeasurement?.takeIf { it in currentState.capabilities.measurements }
                     MetricDetailScreen(
                         metric = metric,
                         state = currentState.metrics[metric] ?: MetricUiState(),
@@ -71,6 +77,24 @@ fun OpenWatchWearApp(
                         maxHeartRate = currentState.preferences.maxHeartRate,
                         restingHeartRate = currentState.metrics[MetricTile.RESTING_HEART_RATE]?.current,
                         sleepStages = currentState.sleepStages,
+                        onMeasure = measurement?.let { { navController.navigate(WearRoutes.measurement(it)) } },
+                    )
+                }
+                composable(WearRoutes.MEASURE) {
+                    MeasureListScreen(
+                        capabilities = currentState.capabilities,
+                        onMeasure = { navController.navigate(WearRoutes.measurement(it)) },
+                    )
+                }
+                composable(WearRoutes.MEASUREMENT) { entry ->
+                    val name = entry.arguments?.getString(WearRoutes.MEASUREMENT_ARG)
+                    val measurement = Measurement.entries.firstOrNull { it.name == name } ?: Measurement.HEART_RATE
+                    val capabilities = currentState.capabilities
+                    MeasurementRoute(
+                        measurement = measurement,
+                        supported = if (capabilities.probed) measurement in capabilities.measurements else null,
+                        unitSystem = currentState.preferences.unitSystem,
+                        onDone = { navController.popBackStack() },
                     )
                 }
                 composable(WearRoutes.QUICK_LOG) {
@@ -116,3 +140,11 @@ fun OpenWatchWearApp(
         }
     }
 }
+
+/** The spot measurement that refreshes this metric, if there is one. */
+private val MetricTile.spotMeasurement: Measurement?
+    get() = when (this) {
+        MetricTile.HEART_RATE -> Measurement.HEART_RATE
+        MetricTile.HRV -> Measurement.HRV
+        else -> null
+    }

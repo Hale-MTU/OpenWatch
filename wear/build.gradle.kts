@@ -157,6 +157,7 @@ dependencies {
     implementation(libs.androidx.wear.protolayout.material3)
     // A suspend function as the ListenableFuture a TileService returns.
     implementation(libs.androidx.concurrent.futures.ktx)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     // Real org.json for local tests (the android.jar copy is a throwing stub): the feature vector is JSON.
