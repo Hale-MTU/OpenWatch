@@ -85,7 +85,7 @@ Verified on 2026-10-07 with a Galaxy Watch8 (Wear OS on Android 16) and a Graphe
 While sleep is held, the watch can measure more than the minutes:
 
 - **Heart rate variability (HRV)**: a five-minute window once the arm was still for ten minutes, at most every half hour, written as RMSSD to Health Connect. The beats come from the raw pulse signal by default, or from the Samsung platform's own beat intervals.
-- **Breathing rate**: from the same windows, written only when you switch on *Breathing rate from the watch (experimental)* in the phone's settings; it is not yet checked against a reference.
+- **Breathing rate**: from the same windows, written unless you switch off *Breathing rate from the watch (experimental)* in the phone's settings; it is not yet checked against a reference.
 - **SpO2** (Samsung watches): a spot measurement once an hour while the arm is still, written as oxygen saturation.
 - **Skin temperature** (Samsung watches): one value a minute, written per night as the difference from your own usual night.
 
@@ -95,7 +95,7 @@ None of these is checked against a reference device yet. Each needs its Health C
 
 The watch app's screen has a **Workout** button: pick a sport (walking, running, hiking, cycling and twelve indoor ones), then the watch shows the time, heart rate, distance, steps and climb, with pause, resume and stop. Sports with a route ask for location once and use the watch's GPS directly (no Google Play services); refused, they record without a route. The heart rate runs every second-or-so during the workout, and the watch keeps a workout for a month. A workout shorter than half a minute is dropped; one the watch app lost to a crash is saved at the next start.
 
-The phone writes each workout as an exercise session with its route and pauses, and a distance for one with GPS. Steps, climbed height and heart rate are not written again: the watch's all-day series already carry them minute by minute. This needs the Health Connect grants for exercise, exercise routes and distance; without them the workouts wait on the watch. Each workout also gets its active calories, as an estimate, once your weight is known from Health Connect or the body profile: from the watch's heart rate during the workout (Keytel and colleagues, J Sports Sci 2005, which needs sex and birth year and holds at 57 to 90 % of the maximum heart rate), else for a walk or run from its distance at the pace ACSM's metabolic equations cover, else from the sport's value in the 2024 Adult Compendium of Physical Activities. The resting share, from the basal metabolic rate, is taken off. Without a weight, or without the grant to write active calories, the workout is written without them and the card says what is missing. Not yet tried on a watch; the ambient screen and the watch face indicator OpenVitals has are not ported.
+The phone writes each workout as an exercise session with its route and pauses, and a distance for one with GPS. Steps, climbed height and heart rate are not written again: the watch's all-day series already carry them minute by minute. This needs the Health Connect grants for exercise, exercise routes and distance; without them the workouts wait on the watch. Each workout also gets its active calories, as an estimate, once your weight is known from Health Connect or the body profile: from the watch's mean heart rate during the workout, each reading counted for the time it stands, at most 30 seconds (Keytel and colleagues, J Sports Sci 2005, which needs sex and birth year and holds at 57 to 90 % of the maximum heart rate), else for a walk or run from its distance at the pace ACSM's metabolic equations cover, else from the sport's value in the 2024 Adult Compendium of Physical Activities. The resting share, from the basal metabolic rate (or 1 MET when the body profile has no sex), is taken off. The watch's own summary shows the same number: both use one estimate. Without a weight, or without the grant to write active calories, the workout is written without them and the card says what is missing. Not yet tried on a watch; the ambient screen and the watch face indicator OpenVitals has are not ported.
 
 ### Settings on the watch and from the phone
 
@@ -232,6 +232,29 @@ A gap between the live step count and the synced total is normal and is not
 either of the above: the live reading is the wrist's current number, and the
 minutes since the watch last closed a monitoring file have not been handed over
 yet. They arrive on the next sync.
+
+### Heart rate zones on the watch
+
+The watch's heart rate zones are the
+American College of Sports Medicine's five intensity classes: very light, light,
+moderate, vigorous and near-maximal (Garber et al., Med Sci Sports Exerc 2011;
+43(7):1334-1359, doi:10.1249/MSS.0b013e318213fefb, table 4). With a resting heart
+rate they are shares of the heart rate reserve (Karvonen): below 30, 30 to 39, 40
+to 59, 60 to 89 and from 90 percent. Without one, shares of the maximum: below 57,
+57 to 63, 64 to 76, 77 to 95 and from 96 percent.
+
+After each sync the phone sends the watch the maximum and the resting heart rate
+from the body profile, which OpenLink shares with OpenVitals. The maximum is the
+one entered; else the highest heart rate Health Connect holds for the last year,
+when it is at least 150 bpm and 60 above resting (OpenVitals' heuristic, no
+published source); else 208 - 0.7 x age (Tanaka et al., JACC 2001,
+doi:10.1016/S0735-1097(00)01054-8), 206 - 0.88 x age for women (Gulati et al.,
+Circulation 2010, doi:10.1161/CIRCULATIONAHA.110.939249). The resting rate is the
+one entered, else the latest night's. Without either the watch assumes 190 bpm.
+
+OpenVitals is meant to work the zones out, since it holds more of the wearer's data, and to share
+them over OpenLink; until it does, the profile's values it shares win, and the rest above is
+OpenWatch's fallback.
 
 ## Watch Data Screen
 
@@ -409,7 +432,7 @@ See [Privacy](../../PRIVACY.md) and [Permissions](../app/permissions.md) for the
 - Verified end to end against one Garmin model. Other recent models are expected to work, but are untested.
 - Older single-link transport watches cannot sync.
 - The Connected and Not connected labels reflect whether the watch is switched on in OpenWatch, not whether a Bluetooth link is open right now.
-- Wear OS watches sync heart rate, steps, floors, an estimated sleep session per night and per nap, the night's resting heart rate, and, from the night measurements, HRV, the breathing rate (opt-in), SpO2 and skin temperature, by hand or on the automatic schedule. Workouts recorded on the watch are written as sessions with their route. Notification forwarding, find and sending a point are Garmin-only.
+- Wear OS watches sync heart rate, steps, floors, an estimated sleep session per night and per nap, the night's resting heart rate, and, from the night measurements, HRV, the breathing rate (on by default, can be switched off), SpO2 and skin temperature, by hand or on the automatic schedule. Workouts recorded on the watch are written as sessions with their route. Notification forwarding, find and sending a point are Garmin-only.
 - Music controls are confirmed on one Garmin model. A volume change made on the phone reaches the watch only with the next player change.
 - Sending the alarm list has not yet been confirmed on a watch. Whether an empty list clears the watch's alarms is unknown.
 - Sending a point has not yet been confirmed on a watch. Only one point is sent at a time, and points already on the watch cannot be listed, edited, or removed from the phone.

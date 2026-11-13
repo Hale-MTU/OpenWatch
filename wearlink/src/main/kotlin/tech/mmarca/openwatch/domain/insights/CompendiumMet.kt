@@ -1,7 +1,5 @@
 package tech.mmarca.openwatch.domain.insights
 
-import androidx.health.connect.client.records.ExerciseSessionRecord
-
 /** One activity of the Compendium: its five-digit code and MET value. */
 data class CompendiumActivity(val code: String, val met: Double)
 

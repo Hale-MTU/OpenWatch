@@ -108,6 +108,22 @@ class WearOsWorkoutImportTest {
     }
 
     @Test
+    fun `the mean heart rate is weighted by time, as the watch's summary weighs it`() {
+        // Each pair of readings counts at its mean for the time between them: 120 and 120
+        // for 10 s, 120 and 160 for 60 s: (120 * 10 + 140 * 60) / 70 = 137.14 bpm. A plain
+        // average, 133.33 bpm, would give fewer. Keytel over the 29 active minutes less
+        // Mifflin-St Jeor: 323.01 kcal.
+        val samples = listOf(
+            start.plusSeconds(60) to 120L,
+            start.plusSeconds(70) to 120L,
+            start.plusSeconds(130) to 160L,
+        )
+        val (record, _) = WearOsWorkoutImport.activeCalories(run(), zone, body, samples, today)
+
+        assertEquals(323.0131027, record!!.energy.inKilocalories, 1e-6)
+    }
+
+    @Test
     fun `without heart rate a run at a running pace is counted from its distance`() {
         // 4200 m in 29 minutes is 145 m/min: ACSM, 0.2 * 4200 * 70 / 1000 * 4.9 = 288.12 kcal.
         val (record, result) = WearOsWorkoutImport.activeCalories(run(), zone, body, emptyList(), today)
