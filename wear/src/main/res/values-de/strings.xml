@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">OpenWatch Wear</string>
+    <string name="workout_channel_name">Laufendes Training</string>
+    <string name="recording_paused">Pausiert</string>
     <string name="link_channel_name">Telefonverbindung</string>
     <string name="link_notification_text">Zeichnet Puls und Schlaf auf · erreichbar für OpenWatch auf deinem Telefon</string>
     <string name="status_heart_rate_not_granted">Pulszugriff ist aus</string>
@@ -105,4 +107,39 @@
         <item quantity="one">%1$d bpm, vor %2$d Minute</item>
         <item quantity="other">%1$d bpm, vor %2$d Minuten</item>
     </plurals>
+    <!-- The dashboard -->
+    <string name="dashboard_start_activity">Training starten</string>
+    <string name="dashboard_today">Heute</string>
+    <string name="metric_active_calories">Aktivkalorien</string>
+    <string name="metric_blood_oxygen">Blutsauerstoff</string>
+    <string name="metric_distance">Strecke</string>
+    <string name="metric_elevation">Höhenmeter</string>
+    <string name="metric_floors">Stockwerke</string>
+    <string name="metric_goal">von %1$s</string>
+    <string name="metric_heart_rate">Herzfrequenz</string>
+    <string name="metric_hrv">Herzfrequenzvariabilität</string>
+    <string name="metric_hydration">Wasser</string>
+    <string name="metric_no_value">--</string>
+    <string name="metric_resting_heart_rate">Ruheherzfrequenz</string>
+    <string name="metric_sleep">Schlaf</string>
+    <string name="metric_steps">Schritte</string>
+    <string name="metric_vo2_max">VO₂max</string>
+    <string name="metric_weight">Gewicht</string>
+    <string name="settings_title">Einstellungen</string>
+    <string name="unit_bpm">bpm</string>
+    <string name="unit_floors">Stockwerke</string>
+    <string name="unit_fl_oz">fl oz</string>
+    <string name="unit_ft">ft</string>
+    <string name="unit_hours">h</string>
+    <string name="unit_kcal">kcal</string>
+    <string name="unit_kg">kg</string>
+    <string name="unit_km">km</string>
+    <string name="unit_lb">lb</string>
+    <string name="unit_m">m</string>
+    <string name="unit_mi">mi</string>
+    <string name="unit_ml">ml</string>
+    <string name="unit_ms">ms</string>
+    <string name="unit_percent">%</string>
+    <string name="unit_steps">Schritte</string>
+    <string name="unit_vo2_max">ml/kg/min</string>
 </resources>
