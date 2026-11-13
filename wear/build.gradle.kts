@@ -140,8 +140,14 @@ dependencies {
     val composeBom = platform(libs.androidx.compose.bom)
     implementation(composeBom)
     implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    // Same icon set as the phone app, so a metric keeps its glyph on the watch.
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.wear.compose.material3)
+    implementation(libs.androidx.wear.compose.navigation)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
     // The metric tiles: Material 3 tile layouts, no Play Services.
     implementation(libs.androidx.wear.tiles)
     implementation(libs.androidx.wear.protolayout)
@@ -149,6 +155,7 @@ dependencies {
     // A suspend function as the ListenableFuture a TileService returns.
     implementation(libs.androidx.concurrent.futures.ktx)
     testImplementation(libs.junit4)
+    debugImplementation(libs.androidx.compose.ui.tooling)
     // Real org.json for local tests (the android.jar copy is a throwing stub): the feature vector is JSON.
     testImplementation(libs.org.json)
     // The metric store against real SQLite, on a watch or emulator; CI compiles it.
