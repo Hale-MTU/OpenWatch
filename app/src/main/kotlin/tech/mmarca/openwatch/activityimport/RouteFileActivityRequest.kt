@@ -6,6 +6,7 @@ import java.time.ZoneId
 import kotlin.math.roundToInt
 import tech.mmarca.healthcalculations.insights.WorkoutEnergyResult
 import tech.mmarca.healthcalculations.insights.estimateWorkoutEnergy
+import tech.mmarca.healthcalculations.insights.timeWeightedMeanHeartRate
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.domain.model.ActivityRecordSource
 import tech.mmarca.openwatch.domain.model.ActivityWriteRequest
@@ -36,7 +37,7 @@ internal data class ImportedActivityRequest(
  * back to it.
  *
  * A file that measured no calories gets an estimate from [estimateWorkoutEnergy] with the
- * body [profile], as OpenVitals' entry form makes it: the mean heart rate the file
+ * body [profile], as OpenVitals' entry form makes it: the time-weighted mean heart rate the file
  * recorded, the distance of a walk or run, or the activity's Compendium MET. Without a
  * weight there is no estimate; a null [profile] (it could not be read) makes none either.
  */
@@ -72,8 +73,8 @@ internal fun RouteFileImport.toImportWriteRequest(
             exerciseType = type.exerciseType,
             // Whole minutes, as the form counts them, so both give the same number.
             durationMinutes = minutes.coerceAtLeast(1).toDouble(),
-            meanHeartRateBpm = samples.heartRateSamples.takeIf { it.isNotEmpty() }
-                ?.map { it.beatsPerMinute }?.average(),
+            // Each pair of readings counts for the time between them, as the form does.
+            meanHeartRateBpm = timeWeightedMeanHeartRate(samples.heartRateSamples.map { it.time to it.beatsPerMinute }),
             profile = profile,
             // The age on the workout's day, not on the day of the import.
             today = start.atZone(ZoneId.systemDefault()).toLocalDate(),
