@@ -14,7 +14,7 @@ import androidx.room.PrimaryKey
 data class GarminSleepMinuteEntity(
     /** Minute instant, UTC milliseconds since the epoch. One row per minute. */
     @PrimaryKey @ColumnInfo(name = "time_millis") val timeMillis: Long,
-    /** A [tech.mmarca.openwatch.domain.model.SleepMinuteKind.storageName]. */
+    /** A [tech.mmarca.healthcalculations.model.SleepMinuteKind.storageName]. */
     @ColumnInfo(name = "kind") val kind: String,
     @ColumnInfo(name = "heart_rate") val heartRate: Double?,
     @ColumnInfo(name = "movement") val movement: Double?,

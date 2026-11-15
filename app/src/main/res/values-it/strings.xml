@@ -355,11 +355,15 @@
     <string name="settings_watch_wearos_sync_now">Sincronizza orologio</string>
     <string name="settings_watch_wearos_syncing">Sincronizzazione dell’orologio…</string>
     <string name="settings_watch_wearos_synced_none">Niente di nuovo sull’orologio</string>
+    <string name="settings_watch_garmin_needs_weight">Calorie dell\'allenamento non stimate: aggiungi il tuo peso in Profilo corporeo o registralo in Health Connect.</string>
     <string name="settings_watch_wearos_needs_weight">Calorie della camminata non stimate: aggiungi il tuo peso in Profilo corporeo o registralo in Health Connect.</string>
     <string name="settings_watch_wearos_needs_weight_read">Calorie della camminata non stimate: aggiungi il tuo peso in Profilo corporeo o consenti a OpenWatch di leggere il tuo peso in Health Connect.</string>
     <string name="settings_watch_wearos_needs_steps_write">Passi non scritti: consenti a OpenWatch di scrivere i passi in Health Connect, poi sincronizza di nuovo.</string>
     <string name="settings_watch_wearos_needs_calories_write">Calorie della camminata non scritte: consenti a OpenWatch di scrivere le calorie attive e leggere gli allenamenti in Health Connect per stimarle dalla prossima sincronizzazione.</string>
     <string name="settings_watch_wearos_needs_hrv_write">Variabilità della frequenza cardiaca non scritta: consenti a OpenWatch di scriverla in Health Connect, poi sincronizza di nuovo.</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">Frequenza respiratoria non scritta: consenti a OpenWatch di scriverla in Health Connect, poi sincronizza di nuovo.</string>
+    <string name="settings_watch_wearos_needs_spo2_write">Ossigeno nel sangue non scritto: consenti a OpenWatch di scriverlo in Health Connect, poi sincronizza di nuovo.</string>
+    <string name="settings_watch_wearos_needs_skin_write">Temperatura cutanea non scritta: consenti a OpenWatch di scriverla in Health Connect, poi sincronizza di nuovo.</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">Frequenza cardiaca a riposo non scritta: consenti a OpenWatch di leggere e scrivere la frequenza cardiaca a riposo in Health Connect per stimarla dalla prossima sincronizzazione.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">%1$d campione di frequenza cardiaca sincronizzato</item>
@@ -492,6 +496,7 @@
     <string name="connected_apps_settings_body">App che usano orologi, bilancia e profilo corporeo tramite OpenWatch, e cosa può fare ciascuna</string>
     <string name="connected_apps_intro">Queste app hanno chiesto di usare OpenWatch. Ognuna vede solo ciò che consenti qui, e nulla lascia il telefono.</string>
     <string name="connected_apps_empty">Nessuna app lo ha ancora chiesto. OpenVitals si collega quando entrambe le app sono installate.</string>
+    <string name="connected_apps_unknown_signer">Questa app si presenta come %1$s, ma non è stata firmata dal progetto OpenVitals. Consentila solo se l\'hai compilata o installata tu e ti fidi della sua provenienza.</string>
     <string name="connected_apps_state_pending">Chiede di collegarsi</string>
     <string name="connected_apps_state_trusted">Collegata</string>
     <string name="connected_apps_state_blocked">Bloccata</string>
@@ -511,6 +516,8 @@
     <string name="settings_watch_wearos_companion_required">Android non ha collegato l\'orologio a OpenWatch, quindi non è stato aggiunto. OpenWatch ha bisogno di questo collegamento per registrare gli allenamenti che un\'altra app avvia sull\'orologio. Tocca di nuovo Associa e consenti la richiesta.</string>
     <string name="settings_watch_wearos_companion_missing">Android non ha collegato questo orologio a OpenWatch. Senza il collegamento, OpenWatch non può registrare gli allenamenti che un\'altra app avvia sull\'orologio.</string>
     <string name="settings_watch_wearos_companion_link">Collega orologio</string>
+    <string name="settings_respiratory_rate_title">Frequenza respiratoria dall\'orologio (sperimentale)</string>
+    <string name="settings_respiratory_rate_body">Scrive in Health Connect la frequenza respiratoria delle finestre HRV notturne dell\'orologio. Non ancora verificata con un dispositivo di riferimento.</string>
     <string name="watch_settings_section">Impostazioni dell\'orologio</string>
     <string name="watch_settings_not_read">L\'orologio conserva queste impostazioni. Leggile per modificarle qui.</string>
     <string name="watch_settings_unreachable">L\'orologio non ha risposto. È vicino e la sua app OpenWatch è in esecuzione?</string>

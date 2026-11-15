@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Test
+import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.WorkoutMetrics.Beat
 import tech.mmarca.openwatch.wearlink.WorkoutMetrics.Body
 
@@ -87,7 +88,7 @@ class WorkoutMetricsTest {
     @Test
     fun `acsm zones on the reserve`() {
         val basis = HeartRateZones.Basis(190, 50)
-        assertEquals(1, HeartRateZones.zoneOf(92.0, basis))
-        assertEquals(4, HeartRateZones.zoneOf(176.0, basis))
+        assertEquals(1, HeartRateZones.zoneOf(92, basis.boundsBpm))
+        assertEquals(4, HeartRateZones.zoneOf(176, basis.boundsBpm))
     }
 }

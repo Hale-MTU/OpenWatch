@@ -2,11 +2,13 @@ package tech.mmarca.openwatch.wear.samsung
 
 import android.os.Handler
 import android.os.SystemClock
+import tech.mmarca.healthcalculations.signal.HrvRmssd
+import tech.mmarca.healthcalculations.signal.IbiPoint
+import tech.mmarca.healthcalculations.signal.RespiratoryRate
+import tech.mmarca.healthcalculations.signal.SamsungIbiWindow
 import tech.mmarca.openwatch.wear.DebugProtocol
-import tech.mmarca.openwatch.wear.HrvRmssd
 import tech.mmarca.openwatch.wear.HrvWindowSource
 import tech.mmarca.openwatch.wear.NightWindowResult
-import tech.mmarca.openwatch.wear.RespiratoryRate
 
 /**
  * The beat-to-beat intervals the Samsung Health Platform computes itself,

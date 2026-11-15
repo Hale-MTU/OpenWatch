@@ -7,11 +7,11 @@ import java.time.ZoneOffset
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import tech.mmarca.openwatch.domain.insights.ageMaxHeartRate
+import tech.mmarca.healthcalculations.insights.ageMaxHeartRate
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 
 class WearOsZoneSyncTest {

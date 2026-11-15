@@ -10,9 +10,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import tech.mmarca.healthcalculations.preferences.BiologicalSex
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
-import tech.mmarca.openwatch.domain.preferences.BiologicalSex
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.domain.preferences.SystemUnitSystemProvider
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
 
