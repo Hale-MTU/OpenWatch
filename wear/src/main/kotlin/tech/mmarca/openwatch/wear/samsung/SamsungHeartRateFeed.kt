@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.SystemClock
+import tech.mmarca.healthcalculations.signal.IbiPoint
 import tech.mmarca.openwatch.wear.DebugProtocol
 
 /**

@@ -2,6 +2,7 @@ package tech.mmarca.openwatch.activityimport
 
 import java.time.Instant
 import kotlin.math.roundToLong
+import tech.mmarca.healthcalculations.model.ExerciseRoutePoint
 import tech.mmarca.openwatch.core.fit.FitDecoder
 import tech.mmarca.openwatch.core.fit.FitMessage
 import tech.mmarca.openwatch.core.fit.fitInstant
@@ -10,7 +11,6 @@ import tech.mmarca.openwatch.domain.model.BleHeartRateSample
 import tech.mmarca.openwatch.domain.model.BleRecordingSampleBuffer
 import tech.mmarca.openwatch.domain.model.BleSpeedSample
 import tech.mmarca.openwatch.domain.model.BleStepsCadenceSample
-import tech.mmarca.openwatch.domain.model.ExerciseRoutePoint
 
 /** A nightly HRV figure from a Garmin wellness FIT file: the watch's own average. */
 internal data class FitHrvReading(

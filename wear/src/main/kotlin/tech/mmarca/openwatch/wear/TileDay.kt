@@ -4,7 +4,7 @@ import java.time.Instant
 import java.time.ZoneId
 import kotlin.math.floor
 import kotlin.math.roundToInt
-import tech.mmarca.openwatch.wearlink.AscentCredit
+import tech.mmarca.healthcalculations.insights.AscentCredit
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.AscentMinute
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HeartRateSample
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.StepMinute

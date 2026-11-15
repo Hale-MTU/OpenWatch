@@ -8,7 +8,7 @@ import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.units.Length
 import java.time.Instant
 import kotlin.math.roundToLong
-import tech.mmarca.openwatch.wearlink.AscentCredit
+import tech.mmarca.healthcalculations.insights.AscentCredit
 
 /**
  * Maps the watch's ascent minutes to Health Connect records, one per minute
