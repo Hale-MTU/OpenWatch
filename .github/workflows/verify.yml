@@ -1,7 +1,8 @@
 # The gate. A pull request and a push to main run it; the release workflow
 # (release.yml) looks its result up instead of running it again.
 #
-# Three jobs. app-test on every pull request and push; lint on pushes to main
+# submodule-pointers on every pull request and push, and three jobs that
+# build. app-test on every pull request and push; lint on pushes to main
 # only (lint alone is half of the gate's task time, and a finding is rarely
 # what a review turns on; main catches it before a nightly ships); wear-test
 # when the watch app or the build plumbing it shares with the phone changed.
@@ -84,6 +85,16 @@ jobs:
             echo "run_tests=$PHONE"; echo "run_lint=$run_lint"; echo "run_wear=$WEAR"
           } >> "$GITHUB_OUTPUT"
           echo "plan: tests=$PHONE lint=$run_lint wear=$WEAR"
+
+  # A submodule pointer that names a commit only a pull request branch holds
+  # builds until that branch is deleted, and then no fresh clone can check it
+  # out. So each pointer must be on its library's default branch: the library's
+  # pull request merges first. Until it has, this job is red on purpose.
+  submodule-pointers:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@v5
+      - run: scripts/ci-submodule-pointers.sh
 
   # The stock runner ships JDK 17 and the Android SDK; scripts/ci-android-setup.sh
   # installs the platform and build-tools when the image lacks them. Each job
