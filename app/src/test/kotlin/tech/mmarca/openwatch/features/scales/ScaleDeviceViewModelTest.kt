@@ -25,7 +25,7 @@ import tech.mmarca.openwatch.devices.xiaomi.ScaleWeighInWriter
 import tech.mmarca.openwatch.devices.xiaomi.ScaleWritePermissions
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleListener
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleStore
-import tech.mmarca.openwatch.domain.insights.BodyCompositionInput
+import tech.mmarca.healthcalculations.insights.BodyCompositionInput
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
 import tech.mmarca.openwatch.util.MainDispatcherRule
 

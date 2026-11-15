@@ -1,7 +1,7 @@
 package tech.mmarca.openwatch.data.repository.contract
 
 import kotlinx.coroutines.flow.Flow
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 
 /** The user's age, size and heart rates. Calculations read it; Settings writes it. */
 interface BodyProfilePreferences {

@@ -18,8 +18,12 @@ travels over Bluetooth between the device and the phone. Open source under AGPL-
   sleep score and the like) stay in OpenWatch's own database and its Watch Data screen.
 - **Wear OS watches**, through the OpenWatch watch app in `wear/`: heart rate, steps and
   floors recorded on the watch, synced to Health Connect on a tap or a schedule, with an
-  estimated sleep session per night and the night's resting heart rate. The watch app also
-  offers three tiles.
+  estimated sleep session per night, naps as their own sessions and the night's resting heart
+  rate. At night the watch also measures heart rate variability and, when you switch it on,
+  the breathing rate; on a Samsung watch, SpO2 and skin temperature too. Workouts recorded on
+  the watch, with GPS, heart rate, distance and climb, reach Health Connect with their route
+  and an estimate of their active calories. The watch app opens on today's dashboard and
+  offers three tiles, and its settings can be changed from the phone.
 - **Xiaomi Body Composition Scale S400 and S400 Pro**: every weigh-in saved to Health Connect
   as it happens, with the app open or closed, decoded from the scale's own broadcast with the
   key from your Xiaomi account. Weight and heart rate as measured; body fat, lean mass and
@@ -39,7 +43,8 @@ seams allowed; [docs/features/watches.md](docs/features/watches.md) describes th
 | Module | What |
 | --- | --- |
 | `app/` | The phone app: `devices/` (the Garmin stack, the Wear OS phone side, the scale listener), `features/` (the screens), `healthconnect/` (the one gateway to Health Connect), `activityimport/` (FIT activity files), `data/` (Room and the preference stores) |
-| `domain/` | The pure code the app depends on: FIT decoding, the sleep and walking-energy estimators, the device models, the body profile |
+| `domain/` | The pure code the app depends on: FIT decoding, the device models |
+| `health-calculations/` | The calculations shared with OpenVitals, from [Hale-MTU/health-calculations](https://github.com/Hale-MTU/health-calculations), a submodule taken as a composite build: the sleep estimate, energy, heart rate, the night HRV and breathing rate, the body profile |
 | `wear/` | The Wear OS watch app |
 | `wearlink/` | The line protocol between the two, pure Kotlin, compiled into both apps |
 
@@ -74,8 +79,8 @@ Play listing text is under `fastlane/metadata/android/`. The privacy policy is
 
 ## Coming from OpenVitals
 
-OpenVitals 2.16.0 and earlier synced watches and the scale themselves; from the next version
-that is OpenWatch's job, and an updated OpenVitals says so once, with a link here. Three things
+OpenVitals 2.16.0 and earlier synced watches and the scale themselves; from 2.17.0 that is
+OpenWatch's job, and an updated OpenVitals says so once, with a link here. Three things
 to know:
 
 - **Health Connect records belong to the app that wrote them.** OpenWatch cannot update or

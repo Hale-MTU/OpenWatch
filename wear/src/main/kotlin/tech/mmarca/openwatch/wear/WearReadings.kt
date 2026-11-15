@@ -1,10 +1,10 @@
 package tech.mmarca.openwatch.wear
 
-import kotlin.math.roundToInt
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import tech.mmarca.openwatch.wearlink.AscentCredit
+import kotlin.math.roundToInt
+import tech.mmarca.healthcalculations.insights.AscentCredit
 import tech.mmarca.openwatch.wearlink.DaySummary
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.AscentMinute
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HeartRateSample

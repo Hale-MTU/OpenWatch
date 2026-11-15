@@ -11,8 +11,8 @@ import android.os.PowerManager
 import android.util.Log
 import kotlin.math.sqrt
 import kotlinx.coroutines.delay
-import tech.mmarca.openwatch.wear.HrvWindowResult
-import tech.mmarca.openwatch.wear.NightHrv
+import tech.mmarca.healthcalculations.signal.HrvWindowResult
+import tech.mmarca.healthcalculations.signal.NightHrv
 import tech.mmarca.openwatch.wear.PpgRawLogger
 import tech.mmarca.openwatch.wear.SensorTime
 

@@ -359,11 +359,15 @@
     <string name="settings_watch_wearos_sync_now">Синхронизировать часы</string>
     <string name="settings_watch_wearos_syncing">Синхронизация часов…</string>
     <string name="settings_watch_wearos_synced_none">На часах нет ничего нового</string>
+    <string name="settings_watch_garmin_needs_weight">Калории тренировки не оценены: укажите вес в профиле тела или запишите его в Health Connect.</string>
     <string name="settings_watch_wearos_needs_weight">Калории при ходьбе не оценены: укажите вес в профиле тела или запишите его в Health Connect.</string>
     <string name="settings_watch_wearos_needs_weight_read">Калории при ходьбе не оценены: укажите вес в профиле тела или разрешите OpenWatch читать ваш вес в Health Connect.</string>
     <string name="settings_watch_wearos_needs_steps_write">Шаги не записаны: разрешите OpenWatch записывать шаги в Health Connect, затем синхронизируйте снова.</string>
     <string name="settings_watch_wearos_needs_calories_write">Калории при ходьбе не записаны: разрешите OpenWatch записывать активные калории и читать тренировки в Health Connect, чтобы они оценивались со следующей синхронизации.</string>
     <string name="settings_watch_wearos_needs_hrv_write">Вариабельность сердечного ритма не записана: разрешите OpenWatch записывать её в Health Connect, затем синхронизируйте снова.</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">Частота дыхания не записана: разрешите OpenWatch записывать её в Health Connect, затем синхронизируйте снова.</string>
+    <string name="settings_watch_wearos_needs_spo2_write">Кислород в крови не записан: разрешите OpenWatch записывать его в Health Connect, затем синхронизируйте снова.</string>
+    <string name="settings_watch_wearos_needs_skin_write">Температура кожи не записана: разрешите OpenWatch записывать её в Health Connect, затем синхронизируйте снова.</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">Частота сердечных сокращений в покое не записана: разрешите OpenWatch читать и записывать её в Health Connect, чтобы она оценивалась со следующей синхронизации.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">Синхронизировано %1$d значение пульса</item>
@@ -502,6 +506,7 @@
     <string name="connected_apps_settings_body">Приложения, которые используют ваши часы, весы и профиль тела через OpenWatch, и что разрешено каждому</string>
     <string name="connected_apps_intro">Эти приложения запросили доступ к OpenWatch. Каждое видит только то, что вы разрешите здесь, и ничто не покидает телефон.</string>
     <string name="connected_apps_empty">Пока ни одно приложение не запросило доступ. OpenVitals подключится, когда оба приложения будут установлены.</string>
+    <string name="connected_apps_unknown_signer">Это приложение называет себя %1$s, но оно не подписано проектом OpenVitals. Разрешайте его, только если вы сами собрали или установили его и доверяете его источнику.</string>
     <string name="connected_apps_state_pending">Запрашивает подключение</string>
     <string name="connected_apps_state_trusted">Подключено</string>
     <string name="connected_apps_state_blocked">Заблокировано</string>
@@ -523,6 +528,8 @@
     <string name="settings_watch_wearos_companion_required">Android не связал часы с OpenWatch, поэтому они не были добавлены. Эта связь нужна OpenWatch, чтобы записывать тренировки, которые другое приложение запускает на часах. Нажмите «Сопрячь» ещё раз и разрешите запрос.</string>
     <string name="settings_watch_wearos_companion_missing">Android не связал эти часы с OpenWatch. Без этой связи OpenWatch не может записывать тренировки, которые другое приложение запускает на часах.</string>
     <string name="settings_watch_wearos_companion_link">Связать часы</string>
+    <string name="settings_respiratory_rate_title">Частота дыхания с часов (экспериментально)</string>
+    <string name="settings_respiratory_rate_body">Записывает в Health Connect частоту дыхания из ночных окон ВСР часов. Ещё не сверена с эталонным устройством.</string>
     <string name="watch_settings_section">Настройки часов</string>
     <string name="watch_settings_not_read">Часы хранят эти настройки сами. Прочитайте их, чтобы изменить здесь.</string>
     <string name="watch_settings_unreachable">Часы не ответили. Они рядом и приложение OpenWatch на них запущено?</string>
