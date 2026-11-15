@@ -2,9 +2,9 @@ package tech.mmarca.openwatch.devices.wearos
 
 import java.time.Instant
 import java.time.ZoneOffset
-import tech.mmarca.openwatch.domain.model.SleepMinuteKind
-import tech.mmarca.openwatch.domain.model.WearMinuteFlags
-import tech.mmarca.openwatch.domain.model.WearSleepMinute
+import tech.mmarca.healthcalculations.model.SleepMinuteKind
+import tech.mmarca.healthcalculations.model.WearMinuteFlags
+import tech.mmarca.healthcalculations.model.WearSleepMinute
 
 /** Builders for worn, well-recorded minutes, so tests only name what they vary. */
 object WearSleepMinutes {

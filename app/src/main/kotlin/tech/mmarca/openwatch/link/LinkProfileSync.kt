@@ -8,11 +8,11 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import tech.mmarca.healthcalculations.preferences.BiologicalSex
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openlink.OpenLinkProfile
 import tech.mmarca.openlink.OpenLinkSex
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
-import tech.mmarca.openwatch.domain.preferences.BiologicalSex
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
 
 /**
  * The body profile across the link, last writer wins. OpenWatch keeps the time of its last

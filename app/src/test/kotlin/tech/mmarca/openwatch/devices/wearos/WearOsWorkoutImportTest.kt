@@ -15,12 +15,12 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.healthcalculations.insights.WorkoutEnergyMethod
+import tech.mmarca.healthcalculations.insights.WorkoutEnergyResult
+import tech.mmarca.healthcalculations.preferences.BiologicalSex
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
-import tech.mmarca.openwatch.domain.insights.WorkoutEnergyMethod
-import tech.mmarca.openwatch.domain.insights.WorkoutEnergyResult
-import tech.mmarca.openwatch.domain.preferences.BiologicalSex
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
 
 class WearOsWorkoutImportTest {
 

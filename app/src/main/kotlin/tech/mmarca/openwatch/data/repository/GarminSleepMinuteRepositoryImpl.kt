@@ -6,11 +6,11 @@ import java.time.Instant
 import java.time.ZoneOffset
 import javax.inject.Inject
 import javax.inject.Singleton
+import tech.mmarca.healthcalculations.model.GarminSleepMinute
+import tech.mmarca.healthcalculations.model.SleepMinuteKind
 import tech.mmarca.openwatch.data.local.garmin.GarminSleepMinuteDao
 import tech.mmarca.openwatch.data.local.garmin.GarminSleepMinuteEntity
 import tech.mmarca.openwatch.data.repository.contract.GarminSleepMinuteRepository
-import tech.mmarca.openwatch.domain.model.GarminSleepMinute
-import tech.mmarca.openwatch.domain.model.SleepMinuteKind
 
 @Singleton
 class GarminSleepMinuteRepositoryImpl @Inject constructor(

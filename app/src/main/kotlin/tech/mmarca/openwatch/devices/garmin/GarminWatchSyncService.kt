@@ -161,7 +161,10 @@ class GarminWatchSyncService @Inject constructor(
         bleDeviceRepository.markSynced(device.id, Instant.now())
         // Saying "synced" here hid workouts that never reached Health Connect.
         notImportedMessage(activities)?.let { return DeviceSyncResult.Failed(it) }
-        return DeviceSyncResult.Succeeded(downloaded.size)
+        return DeviceSyncResult.Succeeded(
+            fileCount = downloaded.size,
+            missingBodyWeight = activities.withoutCaloriesForWantOfWeight > 0,
+        )
     }
 
     /**

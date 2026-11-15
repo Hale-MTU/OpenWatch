@@ -26,10 +26,10 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.util.Locale
 import kotlin.math.roundToInt
+import tech.mmarca.healthcalculations.preferences.BiologicalSex
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
-import tech.mmarca.openwatch.domain.preferences.BiologicalSex
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
 import tech.mmarca.openwatch.features.connectedapps.isRealTime
 import tech.mmarca.openwatch.features.connectedapps.relativeTime
