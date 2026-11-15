@@ -12,7 +12,7 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import tech.mmarca.openwatch.domain.insights.BodyCompositionEstimate
+import tech.mmarca.healthcalculations.insights.BodyCompositionEstimate
 import tech.mmarca.openwatch.domain.model.ScaleReading
 import tech.mmarca.openwatch.domain.model.ScaleWeighIn
 

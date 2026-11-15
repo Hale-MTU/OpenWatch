@@ -14,10 +14,10 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.healthcalculations.model.GarminSleepMinute
+import tech.mmarca.healthcalculations.model.SleepMinuteKind
 import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminSleepMinuteRepository
-import tech.mmarca.openwatch.domain.model.GarminSleepMinute
-import tech.mmarca.openwatch.domain.model.SleepMinuteKind
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 
 /** One record per night, replaced as the night grows; the watch's own stages always win. */

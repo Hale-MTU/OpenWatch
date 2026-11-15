@@ -49,8 +49,7 @@ import java.util.UUID
  *   started after `epochMillis` (exclusive): its `WO` header, then its `WP`
  *   pauses and `WR` route points (see [WearLinkWorkout]), then one `END
  *   <count> <more>` that counts workouts. Only a watch announcing `wo` serves it.
- * - `PUT_DAY …` → `DAY_OK`: the phone's figures for one day ([WearLinkDaily]).
- *   Only a watch announcing `dy` serves it.
+ * - `PUT_DAY …` → `DAY_OK`: the phone's figures for one day ([WearLinkDaily]). Only a watch announcing `dy` serves it.
  * - `LG_SINCE <epochMillis> <limit>` → `LG` lines, as `HV_SINCE`: the entries
  *   made on the watch ([WatchEntry]). Only a watch announcing `lg` serves it.
  * - `PHONE_ACTIVE <epochMillis>` → `END 0 0`. The wearer unlocked the phone at
@@ -173,7 +172,6 @@ object WearLinkProtocol {
 
     /** The watch takes `PUT_DAY`: it shows the phone's figures for a day. */
     const val CAP_DAY_SUMMARY: String = "dy"
-
     /** The watch serves `LG_SINCE`: entries made on it. */
     const val CAP_ENTRIES: String = "lg"
 

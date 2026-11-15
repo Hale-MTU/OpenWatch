@@ -2,9 +2,9 @@ package tech.mmarca.openwatch.devices.wearos
 
 import java.time.Instant
 import java.time.ZoneOffset
-import tech.mmarca.openwatch.domain.model.SleepMinuteKind
-import tech.mmarca.openwatch.domain.model.WearMinuteFlags
-import tech.mmarca.openwatch.domain.model.WearSleepMinute
+import tech.mmarca.healthcalculations.model.SleepMinuteKind
+import tech.mmarca.healthcalculations.model.WearMinuteFlags
+import tech.mmarca.healthcalculations.model.WearSleepMinute
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
 /** The wire row in physical units. Pure. */

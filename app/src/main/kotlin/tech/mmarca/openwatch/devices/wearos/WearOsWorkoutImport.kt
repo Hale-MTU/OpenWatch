@@ -16,9 +16,9 @@ import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
-import tech.mmarca.openwatch.domain.insights.WorkoutEnergyResult
-import tech.mmarca.openwatch.domain.insights.estimateWorkoutEnergy
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
+import tech.mmarca.healthcalculations.insights.WorkoutEnergyResult
+import tech.mmarca.healthcalculations.insights.estimateWorkoutEnergy
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 
 /**
  * Maps a workout the watch recorded to Health Connect: an

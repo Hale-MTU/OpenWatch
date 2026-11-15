@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.devices.wearos
 
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.ElevationGainedRecord
@@ -36,14 +37,13 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.devices.core.sync.UnwrittenSeries
 import tech.mmarca.openwatch.data.repository.RecordWrite
 import tech.mmarca.openwatch.data.repository.insertWithOutcomes
-import tech.mmarca.openwatch.domain.insights.sleepNightWindow
-import tech.mmarca.openwatch.domain.insights.WearSleepEstimator
+import tech.mmarca.healthcalculations.insights.sleepNightWindow
+import tech.mmarca.healthcalculations.insights.WearSleepEstimator
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
-import tech.mmarca.openwatch.domain.model.WearSleepMinute
+import tech.mmarca.healthcalculations.model.WearSleepMinute
 import tech.mmarca.openwatch.data.repository.isDuplicateClientRecordFailure
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
-import tech.mmarca.openwatch.wearlink.AscentCredit
+import tech.mmarca.healthcalculations.insights.AscentCredit
 
 /**
  * Pulls what the OpenWatch Wear OS app recorded and writes it to Health
@@ -101,7 +101,10 @@ class WearOsWatchSyncService(
     private val writeRespiratoryRate: () -> Boolean = { false },
     /** The body for a workout's calories: sex, age and weight. Strict like [weightKg]. */
     private val profile: suspend () -> BodyProfile = { BodyProfile(weightKg = weightKg()) },
-    /** The body profile for the watch's heart rate zones: what was entered, no Health Connect read. */
+    /**
+     * The body for the watch's heart rate zones: the declared profile, no Health Connect
+     * read, since the zones take no weight and a sync with nothing to estimate reads none.
+     */
     private val zoneProfile: suspend () -> BodyProfile = { BodyProfile() },
 ) : DeviceSyncPort {
 
@@ -154,6 +157,7 @@ class WearOsWatchSyncService(
         clock = clock,
         zone = zone,
     )
+
     private val zones by lazy { WearOsZoneSync(healthConnect, nodePort, zoneProfile, clock, zone) }
 
     private val linkRetry = object : WearOsNightSeriesSync.Retry {
