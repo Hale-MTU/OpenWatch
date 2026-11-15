@@ -29,7 +29,13 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   - `comaps/`, `sensors/ble/` — the CoMaps guidance feed and the BLE discovery scan.
   - `di/` — the Hilt modules. `DevicesModule` is the only place a `devices/` class is bound.
 - `domain/` — pure code with the same package names: `core/fit`, `core/geo`, `domain/model`,
-  `domain/insights` (the sleep and walking-energy estimators), `domain/preferences`.
+  `domain/preferences`.
+- `health-calculations/` — a git submodule and composite build, like `openlink/`: the health
+  calculations OpenWatch and OpenVitals share (the Wear OS night and resting heart rate, body
+  composition, workout and walking energy, the watch's HRV and respiratory rate from the raw
+  PPG, the floors credit) and the models they read, as plain Kotlin under
+  `tech.mmarca.healthcalculations`. `:domain` and `:wear` depend on it; its own `AGENTS.md`
+  holds its rules.
 - `wear/` — the watch app, no DI. `wearlink/` — the protocol, pure JVM.
 
 ## Invariants
@@ -84,6 +90,9 @@ Do not break these without an explicit decision.
 - Protocol changes for the Wear OS link go in `:wearlink`, never into a copy.
 - A new device integration implements the `devices/core` ports, takes a radio lease around
   every BLE link, keeps its protocol code transport-free, and is bound in `di/DevicesModule`.
+- A health calculation goes into health-calculations, not into `:domain`, `:wear` or a
+  feature: one copy, so both apps give the same number. Moving the submodule changes
+  OpenVitals' numbers too, so it moves in both apps together.
 - Keep the copied code close to OpenVitals where it can be: a fix that applies to both
   repositories is easier to carry across when the files still read the same.
 - Prefer one ViewModel per screen; ViewModels own loading state and call repositories.

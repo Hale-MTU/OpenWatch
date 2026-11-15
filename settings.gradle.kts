@@ -25,6 +25,8 @@ dependencyResolutionManagement {
 rootProject.name = "OpenWatch"
 // The OpenLink control channel (git submodule at openlink/): OpenWatch hosts it.
 includeBuild("openlink")
+// The health formulas OpenWatch and OpenVitals share (git submodule at health-calculations/).
+includeBuild("health-calculations")
 include(":app")
 include(":domain")
 include(":wear")

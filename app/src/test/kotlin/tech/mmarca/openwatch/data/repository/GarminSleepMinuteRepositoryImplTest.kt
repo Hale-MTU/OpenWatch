@@ -7,10 +7,10 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import tech.mmarca.healthcalculations.model.GarminSleepMinute
+import tech.mmarca.healthcalculations.model.SleepMinuteKind
 import tech.mmarca.openwatch.data.local.garmin.GarminSleepMinuteDao
 import tech.mmarca.openwatch.data.local.garmin.GarminSleepMinuteEntity
-import tech.mmarca.openwatch.domain.model.GarminSleepMinute
-import tech.mmarca.openwatch.domain.model.SleepMinuteKind
 
 class GarminSleepMinuteRepositoryImplTest {
 

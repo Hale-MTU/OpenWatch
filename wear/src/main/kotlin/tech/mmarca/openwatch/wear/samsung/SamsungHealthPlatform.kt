@@ -11,6 +11,7 @@ import android.os.Parcel
 import android.os.RemoteException
 import android.util.Log
 import java.util.concurrent.Executor
+import tech.mmarca.healthcalculations.signal.IbiPoint
 
 /** One point as the platform sends it: a time and, per value, its int and its float. */
 internal class RawPoint(val epochMillis: Long, val ints: IntArray, val floats: FloatArray)

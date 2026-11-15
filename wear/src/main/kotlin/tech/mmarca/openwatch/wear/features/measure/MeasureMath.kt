@@ -1,6 +1,6 @@
 package tech.mmarca.openwatch.wear.features.measure
 
-import tech.mmarca.openwatch.wear.HrvRmssd
+import tech.mmarca.healthcalculations.signal.HrvRmssd
 
 /** Readings a heart rate measurement needs before it settles. */
 internal const val HeartRateReadingsNeeded = 8

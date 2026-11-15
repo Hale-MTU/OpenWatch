@@ -5,20 +5,22 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
-import tech.mmarca.openwatch.domain.insights.HeartRateZoneBasis
-import tech.mmarca.openwatch.domain.insights.observedMaxHeartRateLookbackDays
+import tech.mmarca.healthcalculations.insights.HeartRateZoneBasis
+import tech.mmarca.healthcalculations.insights.observedMaxHeartRateLookbackDays
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.wearlink.WearLinkPreferences as Preferences
 
 /**
- * Hands the watch what its heart rate zones rest on ([HeartRateZoneBasis]):
- * the maximum and the resting heart rate, as two watch settings, after each
- * sync. From the body profile (shared with OpenVitals over OpenLink), the
- * highest heart rate Health Connect holds for the last year and the latest
- * night's resting rate. An extra: a failed read or an old watch app skips
- * it, and it never fails the sync.
+ * Hands the watch what its heart rate zones rest on ([HeartRateZoneBasis],
+ * from health-calculations, the same as OpenVitals'): the maximum and the
+ * resting heart rate, as two watch settings, after each sync. From the body
+ * profile (shared with OpenVitals over OpenLink), the highest heart rate
+ * Health Connect holds for the year before and the latest night's resting
+ * rate, which only decides whether that maximum is believable. Without a
+ * basis both are `0`. An extra: a failed read or an old watch app skips it,
+ * and it never fails the sync.
  */
 internal class WearOsZoneSync(
     private val healthConnect: HealthConnectGateway,
@@ -39,7 +41,7 @@ internal class WearOsZoneSync(
             WearOsLog.log("zones: not read: ${error.javaClass.simpleName}")
             return
         }
-        for ((key, bpm) in listOf(Preferences.HEART_RATE_MAX to basis.maxBpm, Preferences.HEART_RATE_REST to basis.restingBpm)) {
+        for ((key, bpm) in listOf(Preferences.HEART_RATE_MAX to basis?.maxBpm, Preferences.HEART_RATE_REST to basis?.restingBpm)) {
             retry.run { nodePort.setWatchSetting(device.address, device.bluetoothName, key, (bpm ?: 0).toString()) }
         }
         WearOsLog.log("zones: sent")
