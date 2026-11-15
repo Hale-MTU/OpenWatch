@@ -1,6 +1,6 @@
 package tech.mmarca.openwatch.wear
 
-import tech.mmarca.openwatch.wearlink.AscentCredit
+import tech.mmarca.healthcalculations.insights.AscentCredit
 
 /*
  * The three metric tiles. Each reads today's rows for its metric and says

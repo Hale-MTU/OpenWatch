@@ -26,8 +26,8 @@ import tech.mmarca.openwatch.data.repository.contract.FakeBodyProfilePreferences
 import tech.mmarca.openwatch.data.repository.contract.FakeScaleWeighInRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.domain.model.ScaleReading
-import tech.mmarca.openwatch.domain.preferences.BiologicalSex
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
+import tech.mmarca.healthcalculations.preferences.BiologicalSex
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 
