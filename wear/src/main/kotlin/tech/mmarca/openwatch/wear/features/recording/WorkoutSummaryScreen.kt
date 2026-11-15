@@ -128,7 +128,13 @@ private fun SummaryRow(label: String, value: String?, unit: String? = null) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        // The label takes what the value leaves and wraps; the value stays on one line.
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f).padding(end = 8.dp),
+        )
         MetricValueRow(value = value, unit = unit, valueStyle = MaterialTheme.typography.titleMedium)
     }
 }

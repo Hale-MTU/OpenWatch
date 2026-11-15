@@ -291,9 +291,9 @@
     <string name="summary_split">Km %1$d</string>
     <string name="recovery_one_minute">Recovery after 1 min</string>
     <string name="recovery_two_minutes">Recovery after 2 min</string>
-    <string name="recovery_approximate">Approximate</string>
-    <string name="recovery_not_comparable">Effort not near-maximal</string>
-    <string name="recovery_invalid">Not usable</string>
+    <string name="recovery_approximate">Recovery approximate</string>
+    <string name="recovery_not_comparable">Recovery not comparable</string>
+    <string name="recovery_invalid">Recovery not usable</string>
     <string name="settings_recording">Recording</string>
     <string name="settings_recording_description">Power save, sleep, sources</string>
     <string name="settings_power_save_off_explained">Off: heart rate every 10 s, every sleep minute whole (the watch stays awake while you sleep). No data lost; about 9 to 11 mAh an hour at night.</string>

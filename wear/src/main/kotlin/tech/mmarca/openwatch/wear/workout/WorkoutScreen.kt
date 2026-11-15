@@ -37,7 +37,12 @@ import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.WearAppService
 import tech.mmarca.openwatch.wear.WearPermissions
 import tech.mmarca.openwatch.wear.features.recording.RecordingScreen
+import tech.mmarca.openwatch.wear.features.recording.ActivityType
 import tech.mmarca.openwatch.wear.features.recording.WorkoutSummaryScreen
+import tech.mmarca.openwatch.wear.ui.preview.SampleData
+import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
+import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
+import androidx.wear.compose.material3.AppScaffold
 import tech.mmarca.openwatch.wear.ui.theme.WorkoutColor
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
@@ -195,7 +200,8 @@ private fun summaryExtras(figures: WorkoutMetrics.Summary?, recovery: RecoverySt
     figures?.vo2Max?.let { add(stringResource(R.string.metric_vo2_max) to "%.1f".format(it)) }
     recovery?.oneMinuteBpm?.let { add(stringResource(R.string.recovery_one_minute) to "−$it $bpm") }
     recovery?.twoMinutesBpm?.let { add(stringResource(R.string.recovery_two_minutes) to "−$it $bpm") }
-    recoveryVerdict(recovery?.quality)?.let { add(stringResource(R.string.recovery_title) to stringResource(it)) }
+    // A sentence of its own under the falls: as a value it would crowd the row.
+    recoveryVerdict(recovery?.quality)?.let { add(stringResource(it) to "") }
 }
 
 /**
@@ -209,3 +215,27 @@ private fun recoveryVerdict(quality: HeartRateRecoveryQuality?): Int? = when (qu
     HeartRateRecoveryQuality.INVALID -> R.string.recovery_invalid
     HeartRateRecoveryQuality.CLEAN, HeartRateRecoveryQuality.NO_DATA, null -> null
 }
+
+@WearPreviews
+@Composable
+private fun WorkoutSummaryFiguresPreview() {
+    val figures = WorkoutMetrics.Summary(
+        averageBpm = 148, maxBpm = 171, zoneSeconds = listOf(120L, 540L, 900L, 1260L, 180L), trimp = 74.6,
+        activeKcal = 412.0, totalKcal = 468.0,
+        splits = listOf(WorkoutMetrics.Split(0, 0, 0, 331), WorkoutMetrics.Split(1, 0, 0, 324)),
+        paceSecondsPerKm = 328.0, vo2Max = 47.3,
+    )
+    val recovery = RecoveryState(0, 0, oneMinuteBpm = 24, twoMinutesBpm = 41, quality = HeartRateRecoveryQuality.NOT_COMPARABLE)
+    OpenWatchWearTheme {
+        AppScaffold {
+            WorkoutSummaryScreen(
+                state = SampleData.recording,
+                fields = SampleData.capabilities.workouts.getValue(ActivityType.RUN),
+                unitSystem = UnitSystem.METRIC,
+                extras = summaryExtras(figures, recovery),
+                onDone = {},
+            )
+        }
+    }
+}
+
