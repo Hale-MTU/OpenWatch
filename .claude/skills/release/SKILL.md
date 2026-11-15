@@ -56,6 +56,12 @@ notes, and pushes in one motion.
   nothing, and enabling it afterwards does not replay the push (OpenVitals
   2.14.0). Check `state` is `active`:
   `gh api repos/Hale-MTU/OpenWatch/actions/workflows/release.yml --jq .state`.
+- No branch ruleset refuses the push. The script pushes `main` and the tag
+  atomically, so a refused `main` takes the tag with it. Every ruleset that
+  asks `main` for a pull request must say `always`:
+  `for id in $(gh api repos/Hale-MTU/OpenWatch/rules/branches/main --jq '[.[] | select(.type=="pull_request") | .ruleset_id] | unique[]'); do gh api repos/Hale-MTU/OpenWatch/rulesets/$id --jq '"\(.name): \(.current_user_can_bypass)"'; done`.
+  One that says `never` (OpenVitals 2.17.0: `main-1`, added 2026-11-13 with
+  no bypass list) is the maintainer's to lift; ask before running the script.
 - The Play variables say where the uploads go, and the footer of the notes
   depends on them: `gh variable list` shows `OPENWATCH_PLAY_PAUSED`,
   `OPENWATCH_PLAY_INTERNAL_ONLY` and `OPENWATCH_PLAY_TESTING_TRACK` when they
@@ -250,6 +256,10 @@ well on its own and front-load it.
   doc, while `CONNECT_ATTEMPTS = 3` means two redials. The tag kept the wrong
   count.
 - A fix that was hidden rather than announced can need announcing later.
+- OpenVitals 2.17.0's push was refused by a ruleset without a bypass list;
+  the commit and the tag waited locally until it was disabled, then
+  `git push --atomic origin main vX.Y.Z` finished what the script started.
+  Check the rulesets in pre-flight.
 
 - Unescaped `&` in a translated string breaks `verifyTranslations` (XML parse).
 - A locale that slips under 70% drops out of the picker silently.
