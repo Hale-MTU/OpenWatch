@@ -24,7 +24,7 @@ import tech.mmarca.openwatch.domain.model.ActivityRecordSource
 import tech.mmarca.openwatch.domain.model.ActivityWriteRequest
 import tech.mmarca.openwatch.domain.model.BleHeartRateSample
 import tech.mmarca.openwatch.domain.model.BleRecordingSampleBuffer
-import tech.mmarca.openwatch.domain.model.ExerciseRoutePoint
+import tech.mmarca.healthcalculations.model.ExerciseRoutePoint
 import tech.mmarca.openwatch.domain.model.importSessionClientRecordId
 
 /**

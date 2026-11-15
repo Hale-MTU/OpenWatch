@@ -9,12 +9,12 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.healthcalculations.preferences.BiologicalSex
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openlink.OpenLinkProfile
 import tech.mmarca.openlink.OpenLinkSex
 import tech.mmarca.openwatch.data.repository.contract.FakeBodyProfilePreferences
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
-import tech.mmarca.openwatch.domain.preferences.BiologicalSex
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
 
 class LinkProfileSyncTest {
 

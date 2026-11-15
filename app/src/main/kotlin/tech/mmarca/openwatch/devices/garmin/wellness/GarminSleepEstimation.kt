@@ -12,10 +12,10 @@ import tech.mmarca.openwatch.data.repository.contract.GarminSleepMinuteRepositor
 import tech.mmarca.openwatch.devices.core.sync.estimatedSleepSessionRecord
 import tech.mmarca.openwatch.devices.core.sync.sleepNightWindow
 import tech.mmarca.openwatch.devices.garmin.GarminLog
-import tech.mmarca.openwatch.domain.insights.EstimatedSleepSession
-import tech.mmarca.openwatch.domain.insights.SleepStageEstimator
-import tech.mmarca.openwatch.domain.model.GarminSleepMinute
-import tech.mmarca.openwatch.domain.model.SleepMinuteKind
+import tech.mmarca.healthcalculations.insights.EstimatedSleepSession
+import tech.mmarca.healthcalculations.insights.SleepStageEstimator
+import tech.mmarca.healthcalculations.model.GarminSleepMinute
+import tech.mmarca.healthcalculations.model.SleepMinuteKind
 import tech.mmarca.openwatch.data.repository.isDuplicateClientRecordFailure
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 

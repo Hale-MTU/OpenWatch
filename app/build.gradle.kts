@@ -255,7 +255,8 @@ dependencies {
 
     // Testing
     // The Wear OS sleep-minute fixtures live with the domain module.
-    testImplementation(testFixtures(project(":domain")))
+    // The Wear OS sleep-minute fixtures, for the sync tests.
+    testImplementation(testFixtures("tech.mmarca.healthcalculations:health-calculations"))
     testImplementation(libs.junit4)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)

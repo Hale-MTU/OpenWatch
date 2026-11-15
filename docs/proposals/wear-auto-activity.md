@@ -113,6 +113,6 @@ OpenWatch's workout (`wear/workout/WorkoutScreen.kt`) is one screen: time, heart
 ## Order of work
 
 1. Collect labelled minute rows on the wearer's own watch for a few weeks (the opt-in recorder).
-2. Write the detector as pure Kotlin in `:wear`, beside `AccelerationMinuteFeatures`, tuned on that data and CAPTURE-24, and its tests.
+2. Write the detector as pure Kotlin in health-calculations' `signal` package, beside `AccelerationMinuteFeatures`, tuned on that data and CAPTURE-24, and its tests.
 3. The notification first; recording by itself only after the detector has run silently for a while.
 4. The metrics above one at a time, each after its source is checked and listed.

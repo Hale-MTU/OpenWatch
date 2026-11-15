@@ -14,7 +14,7 @@ import android.os.HandlerThread
 import android.os.PowerManager
 import android.os.SystemClock
 import android.util.Log
-import tech.mmarca.openwatch.wear.samsung.IbiPoint
+import tech.mmarca.healthcalculations.signal.IbiPoint
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
