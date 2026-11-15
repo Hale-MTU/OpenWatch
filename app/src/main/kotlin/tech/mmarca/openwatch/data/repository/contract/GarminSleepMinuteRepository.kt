@@ -1,7 +1,7 @@
 package tech.mmarca.openwatch.data.repository.contract
 
 import java.time.Instant
-import tech.mmarca.openwatch.domain.model.GarminSleepMinute
+import tech.mmarca.healthcalculations.model.GarminSleepMinute
 
 /**
  * Per-minute sleep input from watches that do not stage sleep. A thin seam

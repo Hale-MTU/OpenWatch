@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.wear
 import java.util.TreeMap
 import kotlin.math.abs
 import kotlin.math.sqrt
+import tech.mmarca.healthcalculations.signal.AccelerationMinuteFeatures
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
 /**

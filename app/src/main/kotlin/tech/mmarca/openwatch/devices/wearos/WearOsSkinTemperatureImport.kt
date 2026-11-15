@@ -9,6 +9,7 @@ import androidx.health.connect.client.units.TemperatureDelta
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
+import tech.mmarca.healthcalculations.stats.median
 
 /**
  * Turns the watch's skin temperature minutes (the Samsung platform's, recorded
@@ -100,10 +101,4 @@ object WearOsSkinTemperatureImport {
     }
 
     fun clientRecordId(run: Run): String = "$CLIENT_ID_PREFIX${run.start.toEpochMilli()}"
-
-    private fun median(values: List<Double>): Double {
-        val sorted = values.sorted()
-        val middle = sorted.size / 2
-        return if (sorted.size % 2 == 1) sorted[middle] else (sorted[middle - 1] + sorted[middle]) / 2
-    }
 }

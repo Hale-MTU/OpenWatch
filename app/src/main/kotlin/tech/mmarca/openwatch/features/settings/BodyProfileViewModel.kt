@@ -13,12 +13,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openlink.OpenLink
 import tech.mmarca.openlink.OpenLinkTrust
 import tech.mmarca.openlink.host.OpenLinkHostCore
 import tech.mmarca.openwatch.data.repository.BodyProfileProvider
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
 import tech.mmarca.openwatch.features.connectedapps.appLabel
 import tech.mmarca.openwatch.link.LinkProfileSync
