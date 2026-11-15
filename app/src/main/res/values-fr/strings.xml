@@ -348,21 +348,25 @@
     <string name="settings_watch_wearos_status_protocol">La montre a répondu quelque chose qu’OpenWatch n’a pas pu lire. Mettez à jour les deux apps et réessayez.</string>
     <string name="settings_watch_wearos_linked_to">Lié à %1$s</string>
     <string name="settings_watch_wearos_fail_partial">La montre a cessé de répondre en cours de route. Ce qui est arrivé a été enregistré ; synchronisez à nouveau pour continuer.</string>
-    <string name="settings_watch_wearos_fail_health_connect">Autorisez OpenWatch à écrire la fréquence cardiaque et le sommeil dans Health Connect, puis synchronisez à nouveau.</string>
+    <string name="settings_watch_wearos_fail_health_connect">Autorisez OpenWatch à écrire la fréquence cardiaque et le sommeil dans Santé Connect, puis synchronisez à nouveau.</string>
     <string name="settings_watch_wearos_fail_generic">La montre n’a pas pu être synchronisée. Réessayez.</string>
     <string name="settings_watch_wearos_check_app">Vérifier l\'appli Wear OS</string>
     <string name="settings_watch_wearos_checking">Vérification de l\'appli Wear OS…</string>
     <string name="settings_watch_wearos_sync_section">Synchronisation de la montre</string>
-    <string name="settings_watch_wearos_sync_body">L’app OpenWatch de la montre enregistre la fréquence cardiaque et ce qu’il faut pour estimer le sommeil, et en garde une semaine. La synchronisation copie la nouvelle fréquence cardiaque dans Health Connect et écrit une session de sommeil estimée par nuit.</string>
+    <string name="settings_watch_wearos_sync_body">L’app OpenWatch de la montre enregistre la fréquence cardiaque et ce qu’il faut pour estimer le sommeil, et en garde une semaine. La synchronisation copie la nouvelle fréquence cardiaque dans Santé Connect et écrit une session de sommeil estimée par nuit.</string>
     <string name="settings_watch_wearos_sync_now">Synchroniser la montre</string>
     <string name="settings_watch_wearos_syncing">Synchronisation de la montre…</string>
     <string name="settings_watch_wearos_synced_none">Rien de nouveau sur la montre</string>
-    <string name="settings_watch_wearos_needs_weight">Calories de marche non estimées : ajoutez votre poids dans Profil corporel ou enregistrez-le dans Health Connect.</string>
-    <string name="settings_watch_wearos_needs_weight_read">Calories de marche non estimées : ajoutez votre poids dans Profil corporel ou autorisez OpenWatch à lire votre poids dans Health Connect.</string>
-    <string name="settings_watch_wearos_needs_steps_write">Pas non écrits : autorisez OpenWatch à écrire les pas dans Health Connect, puis synchronisez à nouveau.</string>
-    <string name="settings_watch_wearos_needs_calories_write">Calories de marche non écrites : autorisez OpenWatch à écrire les calories actives et à lire les entraînements dans Health Connect pour les estimer dès la prochaine synchronisation.</string>
-    <string name="settings_watch_wearos_needs_hrv_write">Variabilité de la fréquence cardiaque non écrite : autorisez OpenWatch à l\'écrire dans Health Connect, puis synchronisez à nouveau.</string>
-    <string name="settings_watch_wearos_needs_resting_heart_rate">Fréquence cardiaque au repos non écrite : autorisez OpenWatch à lire et à écrire la fréquence cardiaque au repos dans Health Connect pour l\'estimer dès la prochaine synchronisation.</string>
+    <string name="settings_watch_garmin_needs_weight">Calories d\'entraînement non estimées : ajoutez votre poids dans Profil corporel ou enregistrez-le dans Santé Connect.</string>
+    <string name="settings_watch_wearos_needs_weight">Calories de marche non estimées : ajoutez votre poids dans Profil corporel ou enregistrez-le dans Santé Connect.</string>
+    <string name="settings_watch_wearos_needs_weight_read">Calories de marche non estimées : ajoutez votre poids dans Profil corporel ou autorisez OpenWatch à lire votre poids dans Santé Connect.</string>
+    <string name="settings_watch_wearos_needs_steps_write">Pas non écrits : autorisez OpenWatch à écrire les pas dans Santé Connect, puis synchronisez à nouveau.</string>
+    <string name="settings_watch_wearos_needs_calories_write">Calories de marche non écrites : autorisez OpenWatch à écrire les calories actives et à lire les entraînements dans Santé Connect pour les estimer dès la prochaine synchronisation.</string>
+    <string name="settings_watch_wearos_needs_hrv_write">Variabilité de la fréquence cardiaque non écrite : autorisez OpenWatch à l\'écrire dans Santé Connect, puis synchronisez à nouveau.</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">Fréquence respiratoire non écrite : autorisez OpenWatch à l\'écrire dans Santé Connect, puis synchronisez à nouveau.</string>
+    <string name="settings_watch_wearos_needs_spo2_write">Oxygène sanguin non écrit : autorisez OpenWatch à l\'écrire dans Santé Connect, puis synchronisez à nouveau.</string>
+    <string name="settings_watch_wearos_needs_skin_write">Température cutanée non écrite : autorisez OpenWatch à l\'écrire dans Santé Connect, puis synchronisez à nouveau.</string>
+    <string name="settings_watch_wearos_needs_resting_heart_rate">Fréquence cardiaque au repos non écrite : autorisez OpenWatch à lire et à écrire la fréquence cardiaque au repos dans Santé Connect pour l\'estimer dès la prochaine synchronisation.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">%1$d échantillon de fréquence cardiaque synchronisé</item>
         <item quantity="many">%1$d échantillons de fréquence cardiaque synchronisés</item>
@@ -497,6 +501,7 @@
     <string name="connected_apps_settings_body">Les applications qui utilisent vos montres, votre balance et votre profil corporel via OpenWatch, et ce que chacune peut faire</string>
     <string name="connected_apps_intro">Ces applications ont demandé à utiliser OpenWatch. Chacune ne voit que ce que vous autorisez ici, et rien ne quitte le téléphone.</string>
     <string name="connected_apps_empty">Aucune application ne l\'a encore demandé. OpenVitals se connecte dès que les deux applications sont installées.</string>
+    <string name="connected_apps_unknown_signer">Cette app se présente comme %1$s, mais elle n\'a pas été signée par le projet OpenVitals. Ne l\'autorisez que si vous l\'avez compilée ou installée vous-même et faites confiance à sa provenance.</string>
     <string name="connected_apps_state_pending">Demande à se connecter</string>
     <string name="connected_apps_state_trusted">Connectée</string>
     <string name="connected_apps_state_blocked">Bloquée</string>
@@ -517,6 +522,8 @@
     <string name="settings_watch_wearos_companion_required">Android n\'a pas associé la montre à OpenWatch, elle n\'a donc pas été ajoutée. OpenWatch a besoin de cette association pour enregistrer les entraînements qu\'une autre application lance sur la montre. Appuyez de nouveau sur Appairer et acceptez la demande.</string>
     <string name="settings_watch_wearos_companion_missing">Android n\'a pas associé cette montre à OpenWatch. Sans cette association, OpenWatch ne peut pas enregistrer les entraînements qu\'une autre application lance sur la montre.</string>
     <string name="settings_watch_wearos_companion_link">Associer la montre</string>
+    <string name="settings_respiratory_rate_title">Fréquence respiratoire de la montre (expérimental)</string>
+    <string name="settings_respiratory_rate_body">Écrit dans Santé Connect la fréquence respiratoire des fenêtres VFC nocturnes de la montre. Pas encore vérifiée par rapport à un appareil de référence.</string>
     <string name="watch_settings_section">Réglages de la montre</string>
     <string name="watch_settings_not_read">La montre conserve ces réglages elle-même. Lisez-les pour les modifier ici.</string>
     <string name="watch_settings_unreachable">La montre n\'a pas répondu. Est-elle à proximité et son application OpenWatch est-elle lancée ?</string>
@@ -531,5 +538,5 @@
     <string name="watch_settings_skin">Température cutanée la nuit</string>
     <string name="watch_settings_spo2">SpO2 toutes les heures la nuit</string>
     <string name="watch_settings_allow_on_watch">Autorisez-le sur la montre : ouvrez OpenWatch dessus et activez-le une fois.</string>
-    <string name="settings_watch_wearos_needs_workout_write">Entraînements non enregistrés : autorisez OpenWatch à écrire les entraînements, itinéraires et distances dans Health Connect, puis synchronisez à nouveau.</string>
+    <string name="settings_watch_wearos_needs_workout_write">Entraînements non enregistrés : autorisez OpenWatch à écrire les entraînements, itinéraires et distances dans Santé Connect, puis synchronisez à nouveau.</string>
 </resources>
