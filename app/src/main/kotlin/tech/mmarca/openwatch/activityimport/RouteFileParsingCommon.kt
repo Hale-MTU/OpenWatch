@@ -1,9 +1,9 @@
 package tech.mmarca.openwatch.activityimport
 
 import java.time.Instant
-import tech.mmarca.openwatch.core.geo.haversineMeters
-import tech.mmarca.openwatch.domain.insights.RouteElevation
-import tech.mmarca.openwatch.domain.model.ExerciseRoutePoint
+import tech.mmarca.healthcalculations.geo.haversineMeters
+import tech.mmarca.healthcalculations.insights.RouteElevation
+import tech.mmarca.healthcalculations.model.ExerciseRoutePoint
 
 internal data class RouteFileMetadata(
     val name: String?,

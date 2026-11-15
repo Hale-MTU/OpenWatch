@@ -10,10 +10,10 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.healthcalculations.insights.EstimatedSleepSession
+import tech.mmarca.healthcalculations.insights.EstimatedStage
+import tech.mmarca.healthcalculations.insights.EstimatedStageSpan
 import tech.mmarca.openwatch.devices.core.sync.sleepNightWindow
-import tech.mmarca.openwatch.domain.insights.EstimatedSleepSession
-import tech.mmarca.openwatch.domain.insights.EstimatedStage
-import tech.mmarca.openwatch.domain.insights.EstimatedStageSpan
 
 class GarminSleepEstimationTest {
 
