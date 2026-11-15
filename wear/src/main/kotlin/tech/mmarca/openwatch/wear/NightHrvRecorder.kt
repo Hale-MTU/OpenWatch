@@ -5,6 +5,7 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.PowerManager
 import android.util.Log
+import tech.mmarca.healthcalculations.signal.NightHrv
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
 import tech.mmarca.openwatch.wear.samsung.SamsungIbiSource
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
