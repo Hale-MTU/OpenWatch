@@ -282,6 +282,9 @@
     <string name="summary_split">Km %1$d</string>
     <string name="recovery_one_minute">Erholung nach 1 min</string>
     <string name="recovery_two_minutes">Erholung nach 2 min</string>
+    <string name="recovery_approximate">Näherungsweise</string>
+    <string name="recovery_not_comparable">Belastung nicht nahe am Maximum</string>
+    <string name="recovery_invalid">Nicht verwertbar</string>
     <string name="settings_recording">Aufzeichnung</string>
     <string name="settings_recording_description">Stromsparen, Schlaf, Quellen</string>
     <string name="settings_power_save_off_explained">Aus: Puls alle 10 s, jede Schlafminute vollständig (die Uhr bleibt im Schlaf wach). Kein Datenverlust; nachts etwa 9–11 mAh pro Stunde.</string>

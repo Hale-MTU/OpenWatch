@@ -1,10 +1,9 @@
 package tech.mmarca.openwatch.wear.workout
 
-import kotlin.math.atan2
-import kotlin.math.cos
 import kotlin.math.roundToInt
-import kotlin.math.sin
-import kotlin.math.sqrt
+import tech.mmarca.healthcalculations.geo.haversineMeters
+import tech.mmarca.healthcalculations.insights.HeartRateRecoveryQuality
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 import tech.mmarca.healthcalculations.insights.AscentCredit
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
@@ -49,14 +48,15 @@ data class WorkoutSnapshot(
 
 /**
  * A rest at the end of a workout and the heart rate fall in it, as [WorkoutMetrics.recovery] reads it:
- * [startMillis] is when the arm came to rest, [endBpm] the heart rate then, the falls [oneMinuteBpm]
- * and [twoMinutesBpm] once the readings reach that far.
+ * [startMillis] is when the arm came to rest, [endBpm] the peak heart rate just before, the falls
+ * [oneMinuteBpm] and [twoMinutesBpm] once the readings reach that far, and the reading's [quality].
  */
 data class RestRecovery(
     val startMillis: Long,
     val endBpm: Int,
     val oneMinuteBpm: Int?,
     val twoMinutesBpm: Int?,
+    val quality: HeartRateRecoveryQuality? = null,
 )
 
 /**
@@ -78,6 +78,9 @@ class WorkoutTracker(
     val useGps: Boolean = sport.gps,
     /** False when the wearer switched auto-pause off; it also needs a sport that pauses by itself and the GPS. */
     useAutoPause: Boolean = true,
+    /** The wearer's profile and resting heart rate, which judge a recovery's effort ([WorkoutMetrics.recovery]). */
+    val profile: BodyProfile = BodyProfile(),
+    val restingBpm: Int? = null,
 ) {
     private val pauses = ArrayList<WearLinkWorkout.Pause>()
     private var pausedSince: Long? = null
@@ -285,10 +288,9 @@ class WorkoutTracker(
      */
     fun restRecovery(now: Long): RestRecovery? {
         val start = rest.restStartMillis(now) ?: return null
-        val beats = recentBeats.toList()
-        val end = WorkoutMetrics.meanBpmAround(beats, start) ?: return null
-        val (one, two) = WorkoutMetrics.recovery(beats, start)
-        return RestRecovery(start, end.roundToInt(), one, two)
+        val reading = WorkoutMetrics.recovery(recentBeats.toList(), start, profile, restingBpm, WorkoutFigures.dayOf(start))
+        val peak = reading.peakBpm ?: return null
+        return RestRecovery(start, peak, reading.oneMinuteBpm, reading.twoMinutesBpm, reading.quality)
     }
 
     fun onHeartRate(epochMillis: Long, bpm: Int) {
@@ -403,7 +405,6 @@ class WorkoutTracker(
         private const val MIN_CADENCE_SECONDS = 20
         private const val MINUTE_MILLIS = 60_000L
         private const val REST_LOOKBACK_MILLIS = 15 * MINUTE_MILLIS
-        private const val EARTH_RADIUS_METRES = 6_371_000.0
 
         /** [endMillis], but no later than the longest workout the link carries. */
         fun limitedEnd(startMillis: Long, endMillis: Long): Long =
@@ -413,14 +414,8 @@ class WorkoutTracker(
         fun clipPauses(pauses: List<WearLinkWorkout.Pause>, endMillis: Long): List<WearLinkWorkout.Pause> =
             pauses.filter { it.startMillis < endMillis }.map { it.copy(endMillis = minOf(it.endMillis, endMillis)) }
 
-        /** Great-circle distance in metres. */
-        fun distanceBetween(a: WorkoutFix, b: WorkoutFix): Double {
-            val lat1 = Math.toRadians(a.latitude)
-            val lat2 = Math.toRadians(b.latitude)
-            val dLat = lat2 - lat1
-            val dLon = Math.toRadians(b.longitude - a.longitude)
-            val h = sin(dLat / 2) * sin(dLat / 2) + cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2)
-            return 2 * EARTH_RADIUS_METRES * atan2(sqrt(h), sqrt(1 - h))
-        }
+        /** Great-circle distance in metres, by health-calculations' haversine ([haversineMeters]). */
+        fun distanceBetween(a: WorkoutFix, b: WorkoutFix): Double =
+            haversineMeters(a.latitude, a.longitude, b.latitude, b.longitude)
     }
 }

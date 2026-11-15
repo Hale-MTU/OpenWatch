@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.wear.workout
 
+import tech.mmarca.healthcalculations.insights.HeartRateRecoveryQuality
 import tech.mmarca.openwatch.wearlink.WorkoutMetrics
 import tech.mmarca.openwatch.wear.features.metric.HeartZoneLabels
 import kotlinx.coroutines.withContext
@@ -194,4 +195,17 @@ private fun summaryExtras(figures: WorkoutMetrics.Summary?, recovery: RecoverySt
     figures?.vo2Max?.let { add(stringResource(R.string.metric_vo2_max) to "%.1f".format(it)) }
     recovery?.oneMinuteBpm?.let { add(stringResource(R.string.recovery_one_minute) to "−$it $bpm") }
     recovery?.twoMinutesBpm?.let { add(stringResource(R.string.recovery_two_minutes) to "−$it $bpm") }
+    recoveryVerdict(recovery?.quality)?.let { add(stringResource(R.string.recovery_title) to stringResource(it)) }
+}
+
+/**
+ * What a measured recovery's verdict adds beside its falls: nothing for a clean one,
+ * a word for one that is approximate or follows too easy an effort, and why there is
+ * no fall for one that would mislead.
+ */
+private fun recoveryVerdict(quality: HeartRateRecoveryQuality?): Int? = when (quality) {
+    HeartRateRecoveryQuality.APPROXIMATE -> R.string.recovery_approximate
+    HeartRateRecoveryQuality.NOT_COMPARABLE -> R.string.recovery_not_comparable
+    HeartRateRecoveryQuality.INVALID -> R.string.recovery_invalid
+    HeartRateRecoveryQuality.CLEAN, HeartRateRecoveryQuality.NO_DATA, null -> null
 }

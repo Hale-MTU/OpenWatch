@@ -6,12 +6,9 @@ import java.time.Duration
 import java.time.ZoneId
 import tech.mmarca.healthcalculations.insights.HeartRateZoneBasis
 import tech.mmarca.healthcalculations.insights.observedMaxHeartRateLookbackDays
-import tech.mmarca.healthcalculations.preferences.BiologicalSex
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
-import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.WorkoutMetrics
-import tech.mmarca.openwatch.wearlink.WorkoutSport
 
 /**
  * Works out a workout's [WorkoutMetrics.Summary] on the phone: the heart rate
@@ -41,18 +38,14 @@ internal class WearOsWorkoutFigures(
         )?.toInt()
         // The same zones the watch draws: the night's resting rate only judges the observed maximum.
         val zones = HeartRateZoneBasis.of(body, day, observed, resting)
-        val metricsBody = WorkoutMetrics.Body(
-            weightKg = body.weightKg,
-            heightCm = body.heightCm,
-            ageYears = body.ageYears(day),
-            female = body.sex?.let { it == BiologicalSex.FEMALE },
-        )
         val end = workout.end.toEpochMilli()
         val after = beats.count { it.epochMillis in (end + 1)..(end + RECOVERY_SPAN.toMillis()) }
-        val recovery = if (after >= WorkoutMetrics.MIN_RECOVERY_READINGS) WorkoutMetrics.recovery(beats, end).first else null
-        return WorkoutMetrics.summarize(
-            WearOsWorkoutMetrics.linkWorkout(workout), beats, zones, metricsBody, WorkoutSport.fromExerciseType(workout.exerciseType),
-        ).copy(recoveryBpm = recovery)
+        val recovery = if (after >= WorkoutMetrics.MIN_RECOVERY_READINGS) {
+            WorkoutMetrics.recovery(beats, end, body, zones?.restingBpm, day)
+        } else {
+            null
+        }
+        return WorkoutMetrics.summarize(WearOsWorkoutMetrics.linkWorkout(workout), beats, zones, body, day).copy(recovery = recovery)
     }
 
     /** The latest night's resting heart rate before the workout, from any app. */

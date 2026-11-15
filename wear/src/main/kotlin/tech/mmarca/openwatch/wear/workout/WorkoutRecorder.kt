@@ -83,7 +83,10 @@ class WorkoutRecorder(
         thread = worker
         handler = h
         val now = System.currentTimeMillis()
-        val t = WorkoutTracker(sport, minOf(startMillis, now), usesGps, useAutoPause = WearSettings.autoPause(context))
+        val t = WorkoutTracker(
+            sport, minOf(startMillis, now), usesGps, useAutoPause = WearSettings.autoPause(context),
+            profile = WorkoutFigures.profile(context), restingBpm = WearSettings.restingHeartRate(context),
+        )
         tracker = t
         ascent = AscentMinuteCounter(null)
         wakeLock = context.getSystemService(PowerManager::class.java)
@@ -178,7 +181,7 @@ class WorkoutRecorder(
                 // Revoked between the check and now: the workout goes on without a route.
                 Log.w(TAG, "Location refused", e)
                 usesGps = false
-                tracker = tracker?.let { WorkoutTracker(it.sport, it.startMillis, useGps = false) }
+                tracker = tracker?.let { WorkoutTracker(it.sport, it.startMillis, useGps = false, profile = it.profile, restingBpm = it.restingBpm) }
             } catch (e: IllegalArgumentException) {
                 Log.w(TAG, "No GPS provider", e)
             }
@@ -262,7 +265,10 @@ class WorkoutRecorder(
             !kept -> null
             rest != null -> {
                 DebugProtocol.event("Workout", "recovery", "oneMinute" to rest.oneMinuteBpm, "twoMinutes" to rest.twoMinutesBpm, "fromRest" to true)
-                RecoveryState(rest.startMillis, rest.startMillis, oneMinuteBpm = rest.oneMinuteBpm, twoMinutesBpm = rest.twoMinutesBpm)
+                RecoveryState(
+                    rest.startMillis, rest.startMillis,
+                    oneMinuteBpm = rest.oneMinuteBpm, twoMinutesBpm = rest.twoMinutesBpm, quality = rest.quality,
+                )
             }
             atStop == RecoveryAtStop.LIVE -> RecoveryState(end, end + RECOVERY_MILLIS)
             else -> null
@@ -281,11 +287,26 @@ class WorkoutRecorder(
             val beats = metricStore.since(
                 WearMetrics.HEART_RATE, recovery.stopMillis - RECOVERY_LOOKBACK_MILLIS, RECOVERY_ROWS, recovery.untilMillis + RECOVERY_SETTLE_MILLIS,
             ).map { WorkoutMetrics.Beat(it.epochMillis, it.bpm) }
-            val (one, two) = WorkoutMetrics.recovery(beats, recovery.stopMillis)
-            DebugProtocol.event("Workout", "recovery", "oneMinute" to one, "twoMinutes" to two, "readings" to beats.size)
+            val reading = WorkoutMetrics.recovery(
+                beats, recovery.stopMillis, WorkoutFigures.profile(context), WearSettings.restingHeartRate(context),
+                WorkoutFigures.dayOf(recovery.stopMillis),
+            )
+            DebugProtocol.event(
+                "Workout", "recovery",
+                "oneMinute" to reading.oneMinuteBpm, "twoMinutes" to reading.twoMinutesBpm, "quality" to reading.quality.name,
+                "readings" to beats.size,
+            )
             WorkoutState.update { state ->
-                if (state.recovery?.stopMillis != recovery.stopMillis) state
-                else state.copy(recovery = recovery.copy(bpm = state.recovery.bpm, oneMinuteBpm = one, twoMinutesBpm = two))
+                if (state.recovery?.stopMillis != recovery.stopMillis) {
+                    state
+                } else {
+                    state.copy(
+                        recovery = recovery.copy(
+                            bpm = state.recovery.bpm, oneMinuteBpm = reading.oneMinuteBpm,
+                            twoMinutesBpm = reading.twoMinutesBpm, quality = reading.quality,
+                        ),
+                    )
+                }
             }
             isRecovering = false
             mainHandler.post(onActiveChange)

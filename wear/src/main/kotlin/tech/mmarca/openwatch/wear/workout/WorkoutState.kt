@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.wear.workout
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import tech.mmarca.healthcalculations.insights.HeartRateRecoveryQuality
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
 /** What the screens know of the workout: running, or the last one finished. */
@@ -20,7 +21,8 @@ data class WorkoutUiState(
 /**
  * Two minutes of heart rate after a workout, as Cole et al. measured
  * recovery (`WorkoutMetrics.recovery`): [untilMillis] is when it ends,
- * [oneMinuteBpm] and [twoMinutesBpm] the falls once known.
+ * [oneMinuteBpm] and [twoMinutesBpm] the falls once known, and [quality]
+ * whether the effort before makes them comparable; null while measuring.
  */
 data class RecoveryState(
     val stopMillis: Long,
@@ -28,8 +30,9 @@ data class RecoveryState(
     val bpm: Int? = null,
     val oneMinuteBpm: Int? = null,
     val twoMinutesBpm: Int? = null,
+    val quality: HeartRateRecoveryQuality? = null,
 ) {
-    val running: Boolean get() = oneMinuteBpm == null && twoMinutesBpm == null && !done
+    val running: Boolean get() = quality == null && oneMinuteBpm == null && twoMinutesBpm == null && !done
     val done: Boolean get() = System.currentTimeMillis() >= untilMillis
 }
 
