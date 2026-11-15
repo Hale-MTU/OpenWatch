@@ -9,6 +9,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.CancellationException
+import tech.mmarca.healthcalculations.insights.SleepStageEstimator
+import tech.mmarca.healthcalculations.model.GarminSleepMinute
 import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminSleepMinuteRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminWellnessRepository
@@ -16,8 +18,6 @@ import tech.mmarca.openwatch.data.repository.insertSkippingPresent
 import tech.mmarca.openwatch.devices.garmin.GarminCounterWatermarkStore
 import tech.mmarca.openwatch.devices.garmin.GarminDownloadedFile
 import tech.mmarca.openwatch.devices.garmin.GarminLog
-import tech.mmarca.openwatch.domain.insights.SleepStageEstimator
-import tech.mmarca.openwatch.domain.model.GarminSleepMinute
 import tech.mmarca.openwatch.domain.model.GarminWellnessMetric
 import tech.mmarca.openwatch.domain.model.GarminWellnessSample
 

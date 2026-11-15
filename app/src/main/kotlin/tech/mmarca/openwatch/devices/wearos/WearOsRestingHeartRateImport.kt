@@ -7,9 +7,9 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
-import tech.mmarca.openwatch.domain.insights.WearNight
-import tech.mmarca.openwatch.domain.insights.WearSleepEstimator
-import tech.mmarca.openwatch.domain.model.WearSleepMinute
+import tech.mmarca.healthcalculations.insights.WearNight
+import tech.mmarca.healthcalculations.insights.WearSleepEstimator
+import tech.mmarca.healthcalculations.model.WearSleepMinute
 
 /**
  * One nocturnal resting heart rate per estimated night, from the minutes the

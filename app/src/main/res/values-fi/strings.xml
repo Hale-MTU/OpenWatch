@@ -355,11 +355,15 @@
     <string name="settings_watch_wearos_sync_now">Synkronoi kello</string>
     <string name="settings_watch_wearos_syncing">Synkronoidaan kelloa…</string>
     <string name="settings_watch_wearos_synced_none">Kellossa ei ole mitään uutta</string>
+    <string name="settings_watch_garmin_needs_weight">Treenikaloreita ei arvioitu: lisää painosi Kehoprofiiliin tai kirjaa se Health Connectiin.</string>
     <string name="settings_watch_wearos_needs_weight">Kävelykaloreita ei arvioitu: lisää painosi Kehoprofiiliin tai kirjaa se Health Connectiin.</string>
     <string name="settings_watch_wearos_needs_weight_read">Kävelykaloreita ei arvioitu: lisää painosi Kehoprofiiliin tai salli OpenWatchin lukea painosi Health Connectista.</string>
     <string name="settings_watch_wearos_needs_steps_write">Askeleita ei kirjoitettu: salli OpenWatchin kirjoittaa askeleet Health Connectiin ja synkronoi uudelleen.</string>
     <string name="settings_watch_wearos_needs_calories_write">Kävelykaloreita ei kirjoitettu: salli OpenWatchin kirjoittaa aktiiviset kalorit ja lukea harjoitukset Health Connectissa, niin ne arvioidaan seuraavasta synkronoinnista alkaen.</string>
     <string name="settings_watch_wearos_needs_hrv_write">Sykevälivaihtelua ei kirjoitettu: salli OpenWatchin kirjoittaa se Health Connectiin ja synkronoi sitten uudelleen.</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">Hengitystiheyttä ei kirjoitettu: salli OpenWatchin kirjoittaa se Health Connectiin ja synkronoi sitten uudelleen.</string>
+    <string name="settings_watch_wearos_needs_spo2_write">Veren happipitoisuutta ei kirjoitettu: salli OpenWatchin kirjoittaa se Health Connectiin ja synkronoi sitten uudelleen.</string>
+    <string name="settings_watch_wearos_needs_skin_write">Ihon lämpötilaa ei kirjoitettu: salli OpenWatchin kirjoittaa se Health Connectiin ja synkronoi sitten uudelleen.</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">Leposykettä ei kirjoitettu: salli OpenWatchin lukea ja kirjoittaa leposyke Health Connectissa, niin se arvioidaan seuraavasta synkronoinnista alkaen.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">%1$d sykenäyte synkronoitu</item>
@@ -492,6 +496,7 @@
     <string name="connected_apps_settings_body">Sovellukset, jotka käyttävät kellojasi, vaakaasi ja kehoprofiiliasi OpenWatchin kautta, ja mitä kukin saa tehdä</string>
     <string name="connected_apps_intro">Nämä sovellukset pyysivät lupaa käyttää OpenWatchia. Kukin näkee vain sen, minkä sallit tässä, eikä mikään poistu puhelimesta.</string>
     <string name="connected_apps_empty">Yksikään sovellus ei ole vielä pyytänyt. OpenVitals yhdistää, kun molemmat sovellukset on asennettu.</string>
+    <string name="connected_apps_unknown_signer">Tämä sovellus kutsuu itseään nimellä %1$s, mutta OpenVitals-projekti ei ole allekirjoittanut sitä. Salli se vain, jos olet itse koonnut tai asentanut sen ja luotat sen alkuperään.</string>
     <string name="connected_apps_state_pending">Pyytää yhteyttä</string>
     <string name="connected_apps_state_trusted">Yhdistetty</string>
     <string name="connected_apps_state_blocked">Estetty</string>
@@ -511,6 +516,8 @@
     <string name="settings_watch_wearos_companion_required">Android ei linkittänyt kelloa OpenWatchiin, joten sitä ei lisätty. OpenWatch tarvitsee tämän linkin tallentaakseen harjoitukset, jotka toinen sovellus käynnistää kellossa. Napauta Pariliitä uudelleen ja hyväksy pyyntö.</string>
     <string name="settings_watch_wearos_companion_missing">Android ei ole linkittänyt tätä kelloa OpenWatchiin. Ilman linkkiä OpenWatch ei voi tallentaa harjoituksia, jotka toinen sovellus käynnistää kellossa.</string>
     <string name="settings_watch_wearos_companion_link">Linkitä kello</string>
+    <string name="settings_respiratory_rate_title">Hengitystiheys kellosta (kokeellinen)</string>
+    <string name="settings_respiratory_rate_body">Kirjoittaa kellon yöllisten HRV-ikkunoiden hengitystiheyden Health Connectiin. Ei vielä verrattu viitelaitteeseen.</string>
     <string name="watch_settings_section">Kellon asetukset</string>
     <string name="watch_settings_not_read">Kello säilyttää nämä asetukset itse. Lue ne muuttaaksesi niitä täällä.</string>
     <string name="watch_settings_unreachable">Kello ei vastannut. Onko se lähellä ja onko sen OpenWatch-sovellus käynnissä?</string>
