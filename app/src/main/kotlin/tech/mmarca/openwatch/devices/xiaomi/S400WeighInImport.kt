@@ -15,7 +15,7 @@ import java.time.Instant
 import java.time.ZoneId
 import kotlin.math.abs
 import kotlin.reflect.KClass
-import tech.mmarca.openwatch.domain.insights.BodyCompositionEstimate
+import tech.mmarca.healthcalculations.insights.BodyCompositionEstimate
 import tech.mmarca.openwatch.domain.model.ScaleWeighIn
 
 /**

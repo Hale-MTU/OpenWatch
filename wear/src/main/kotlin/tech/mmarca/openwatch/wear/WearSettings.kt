@@ -1,7 +1,7 @@
 package tech.mmarca.openwatch.wear
 
-import tech.mmarca.openwatch.wearlink.HeartRateZones
 import android.content.Context
+import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
 
 /**
@@ -85,7 +85,7 @@ internal object WearSettings {
      * sends no maximum, and the watch shows no zones rather than a guessed one.
      */
     fun zoneBasis(context: Context): HeartRateZones.Basis? =
-        HeartRateZones.Basis.of(maxHeartRate(context), restingHeartRate(context))
+        maxHeartRate(context)?.let { HeartRateZones.Basis(it, restingHeartRate(context)) }
 
     private fun positive(context: Context, key: String): Int? = prefs(context).getInt(key, 0).takeIf { it > 0 }
 

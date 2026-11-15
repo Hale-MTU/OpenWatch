@@ -359,11 +359,15 @@ Podes desactivalo cando queiras e revogar o acceso ás notificacións desde os a
     <string name="settings_watch_wearos_sync_now">Sincronizar reloxo</string>
     <string name="settings_watch_wearos_syncing">Sincronizando reloxo…</string>
     <string name="settings_watch_wearos_synced_none">Non hai nada novo no reloxo</string>
+    <string name="settings_watch_garmin_needs_weight">Calorías de adestramento sen estimar: engade o teu peso en Perfil corporal ou rexístrao en Health Connect.</string>
     <string name="settings_watch_wearos_needs_weight">Calorías ao camiñar sen estimar: engade o teu peso en Perfil corporal ou rexístrao en Health Connect.</string>
     <string name="settings_watch_wearos_needs_weight_read">Calorías ao camiñar sen estimar: engade o teu peso en Perfil corporal ou permite que OpenWatch lea o teu peso en Health Connect.</string>
     <string name="settings_watch_wearos_needs_steps_write">Pasos sen escribir: permite que OpenWatch escriba pasos en Health Connect e volve sincronizar.</string>
     <string name="settings_watch_wearos_needs_calories_write">Calorías ao camiñar sen escribir: permite que OpenWatch escriba calorías activas e lea adestramentos en Health Connect para estimalas desde a próxima sincronización.</string>
     <string name="settings_watch_wearos_needs_hrv_write">Variabilidade da frecuencia cardíaca sen escribir: permite que OpenWatch a escriba en Health Connect e sincroniza de novo.</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">Frecuencia respiratoria sen escribir: permite que OpenWatch a escriba en Health Connect e sincroniza de novo.</string>
+    <string name="settings_watch_wearos_needs_spo2_write">Osíxeno en sangue sen escribir: permite que OpenWatch o escriba en Health Connect e sincroniza de novo.</string>
+    <string name="settings_watch_wearos_needs_skin_write">Temperatura da pel sen escribir: permite que OpenWatch a escriba en Health Connect e sincroniza de novo.</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">Frecuencia cardíaca en repouso sen escribir: permite que OpenWatch lea e escriba a frecuencia cardíaca en repouso en Health Connect para estimala desde a próxima sincronización.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">%1$d mostra de frecuencia cardíaca sincronizada</item>
@@ -496,6 +500,7 @@ Podes desactivalo cando queiras e revogar o acceso ás notificacións desde os a
     <string name="connected_apps_settings_body">Apps que usan os teus reloxos, a túa báscula e o teu perfil corporal a través de OpenWatch, e o que pode facer cada unha</string>
     <string name="connected_apps_intro">Estas apps pediron usar OpenWatch. Cada unha ve só o que permitas aquí, e nada sae do teléfono.</string>
     <string name="connected_apps_empty">Ningunha app o pediu aínda. OpenVitals conéctase cando as dúas apps están instaladas.</string>
+    <string name="connected_apps_unknown_signer">Esta app di ser %1$s, pero non foi asinada polo proxecto OpenVitals. Permítea só se a compilaches ou instalaches ti e confías na súa orixe.</string>
     <string name="connected_apps_state_pending">Pide conectarse</string>
     <string name="connected_apps_state_trusted">Conectada</string>
     <string name="connected_apps_state_blocked">Bloqueada</string>
@@ -515,6 +520,8 @@ Podes desactivalo cando queiras e revogar o acceso ás notificacións desde os a
     <string name="settings_watch_wearos_companion_required">Android non vinculou o reloxo con OpenWatch, así que non se engadiu. OpenWatch precisa este vínculo para gravar os adestramentos que outra app inicia no reloxo. Toca Emparellar de novo e acepta a solicitude.</string>
     <string name="settings_watch_wearos_companion_missing">Android non vinculou este reloxo con OpenWatch. Sen o vínculo, OpenWatch non pode gravar os adestramentos que outra app inicia no reloxo.</string>
     <string name="settings_watch_wearos_companion_link">Vincular reloxo</string>
+    <string name="settings_respiratory_rate_title">Frecuencia respiratoria do reloxo (experimental)</string>
+    <string name="settings_respiratory_rate_body">Escribe en Health Connect a frecuencia respiratoria das xanelas nocturnas de VFC do reloxo. Aínda non se comparou cun dispositivo de referencia.</string>
     <string name="watch_settings_section">Axustes do reloxo</string>
     <string name="watch_settings_not_read">O reloxo garda estes axustes. Leos para cambialos aquí.</string>
     <string name="watch_settings_unreachable">O reloxo non respondeu. Está preto e coa app OpenWatch en marcha?</string>

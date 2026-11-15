@@ -5,8 +5,8 @@ import androidx.health.connect.client.records.HeightRecord
 import androidx.health.connect.client.records.WeightRecord
 import javax.inject.Inject
 import javax.inject.Singleton
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 
 /**

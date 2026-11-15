@@ -1,8 +1,8 @@
 package tech.mmarca.openwatch.activityimport
 
 import java.time.Instant
+import tech.mmarca.healthcalculations.model.ExerciseRoutePoint
 import tech.mmarca.openwatch.domain.model.BleRecordingSampleBuffer
-import tech.mmarca.openwatch.domain.model.ExerciseRoutePoint
 
 data class RouteFileImport(
     val fileName: String?,

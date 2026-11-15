@@ -1,8 +1,8 @@
 # Sleep minute features (SM line, version 3)
 
-The OpenWatch Wear OS app records one row per clock minute as the input of the phone's sleep pipeline. The row is computed in Kotlin on the watch (`wear/.../MinuteAggregator.kt` and `AccelerationMinuteFeatures.kt`) from this specification.
+The OpenWatch Wear OS app records one row per clock minute as the input of the phone's sleep pipeline. The row is computed in Kotlin on the watch (`wear/.../MinuteAggregator.kt`, and `AccelerationMinuteFeatures.kt` in health-calculations' `signal` package) from this specification.
 
-The pipeline that consumes the rows is described in [architecture.md](architecture.md) under `devices/wearos` and `domain/insights`; the research behind each rule is in [watches.md](../features/watches.md).
+The pipeline that consumes the rows is described in [architecture.md](architecture.md) under `devices/wearos` and health-calculations; the research behind each rule is in [watches.md](../features/watches.md).
 
 ## The line
 

@@ -31,12 +31,12 @@ import java.time.ZoneId
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import tech.mmarca.healthcalculations.model.ExerciseRoutePoint
 import tech.mmarca.openwatch.domain.model.ActivityExerciseSegmentWrite
 import tech.mmarca.openwatch.domain.model.ActivityRecordSource
 import tech.mmarca.openwatch.domain.model.ActivityWriteLimits
 import tech.mmarca.openwatch.domain.model.ActivityWriteRequest
 import tech.mmarca.openwatch.domain.model.BleRecordingSampleBuffer
-import tech.mmarca.openwatch.domain.model.ExerciseRoutePoint
 import tech.mmarca.openwatch.domain.model.importSessionClientRecordId
 
 /**

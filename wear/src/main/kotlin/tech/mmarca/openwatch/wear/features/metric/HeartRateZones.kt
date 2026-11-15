@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.wear.features.metric
 
-import tech.mmarca.openwatch.wearlink.HeartRateZones
+import kotlin.math.floor
+import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wear.R
 
 /**
@@ -19,12 +20,17 @@ val HeartZoneLabels = listOf(
     R.string.zone_maximum,
 )
 
-/** The zone index, 0 to 4, for [bpm]; null below zone 1. */
-fun heartRateZone(bpm: Double, basis: ZoneBasis): Int? = HeartRateZones.zoneOf(bpm, basis)
+/**
+ * The zone index, 0 to 4, for [bpm]; null below zone 1. A zone starts at a whole bpm
+ * ([HeartRateZones.Basis.boundsBpm]), so a fractional mean counts by its whole part.
+ */
+fun heartRateZone(bpm: Double, basis: ZoneBasis): Int? = HeartRateZones.zoneOf(floor(bpm).toLong(), basis.boundsBpm)
 
 /** Where [bpm] sits across all five zones, 0 at the start of zone 1 and 1 at the maximum. */
-fun heartRateZoneProgress(bpm: Double, basis: ZoneBasis): Float =
-    ((basis.share(bpm) - basis.bounds.first()) / (1 - basis.bounds.first())).toFloat().coerceIn(0f, 1f)
+fun heartRateZoneProgress(bpm: Double, basis: ZoneBasis): Float {
+    val start = basis.boundsBpm.first().toDouble()
+    return ((bpm - start) / (basis.maxBpm - start)).toFloat().coerceIn(0f, 1f)
+}
 
 /** The share of [samples] in each of the five zones. Samples below zone 1 count towards none. */
 fun heartRateZoneShares(samples: List<Double>, basis: ZoneBasis): List<Float> {

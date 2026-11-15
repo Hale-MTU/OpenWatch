@@ -359,11 +359,15 @@
     <string name="settings_watch_wearos_sync_now">Synchronizuj zegarek</string>
     <string name="settings_watch_wearos_syncing">Synchronizowanie zegarka…</string>
     <string name="settings_watch_wearos_synced_none">Brak nowych danych na zegarku</string>
+    <string name="settings_watch_garmin_needs_weight">Nie oszacowano kalorii z treningu: dodaj swoją wagę w Profilu ciała lub zapisz ją w Health Connect.</string>
     <string name="settings_watch_wearos_needs_weight">Nie oszacowano kalorii z chodzenia: dodaj swoją wagę w Profilu ciała lub zapisz ją w Health Connect.</string>
     <string name="settings_watch_wearos_needs_weight_read">Nie oszacowano kalorii z chodzenia: dodaj swoją wagę w Profilu ciała lub zezwól OpenWatch na odczyt wagi w Health Connect.</string>
     <string name="settings_watch_wearos_needs_steps_write">Nie zapisano kroków: zezwól OpenWatch na zapisywanie kroków w Health Connect, a następnie zsynchronizuj ponownie.</string>
     <string name="settings_watch_wearos_needs_calories_write">Nie zapisano kalorii z chodzenia: zezwól OpenWatch na zapisywanie aktywnych kalorii i odczyt treningów w Health Connect, aby były szacowane od następnej synchronizacji.</string>
     <string name="settings_watch_wearos_needs_hrv_write">Nie zapisano zmienności rytmu serca: zezwól OpenWatch na zapisywanie jej w Health Connect, a potem zsynchronizuj ponownie.</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">Nie zapisano częstości oddechu: zezwól OpenWatch na zapisywanie jej w Health Connect, a potem zsynchronizuj ponownie.</string>
+    <string name="settings_watch_wearos_needs_spo2_write">Nie zapisano natlenienia krwi: zezwól OpenWatch na zapisywanie go w Health Connect, a potem zsynchronizuj ponownie.</string>
+    <string name="settings_watch_wearos_needs_skin_write">Nie zapisano temperatury skóry: zezwól OpenWatch na zapisywanie jej w Health Connect, a potem zsynchronizuj ponownie.</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">Nie zapisano tętna spoczynkowego: zezwól OpenWatch na odczyt i zapisywanie tętna spoczynkowego w Health Connect, aby było szacowane od następnej synchronizacji.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">Zsynchronizowano %1$d próbkę tętna</item>
@@ -502,6 +506,7 @@
     <string name="connected_apps_settings_body">Aplikacje, które przez OpenWatch korzystają z zegarków, wagi i profilu ciała, oraz co każda może robić</string>
     <string name="connected_apps_intro">Te aplikacje poprosiły o korzystanie z OpenWatch. Każda widzi tylko to, na co tutaj pozwolisz, i nic nie opuszcza telefonu.</string>
     <string name="connected_apps_empty">Żadna aplikacja jeszcze o to nie poprosiła. OpenVitals połączy się, gdy obie aplikacje będą zainstalowane.</string>
+    <string name="connected_apps_unknown_signer">Ta aplikacja podaje się za %1$s, ale nie została podpisana przez projekt OpenVitals. Zezwól na nią tylko wtedy, gdy sam ją zbudowałeś lub zainstalowałeś i ufasz jej pochodzeniu.</string>
     <string name="connected_apps_state_pending">Prosi o połączenie</string>
     <string name="connected_apps_state_trusted">Połączono</string>
     <string name="connected_apps_state_blocked">Zablokowano</string>
@@ -523,6 +528,8 @@
     <string name="settings_watch_wearos_companion_required">Android nie powiązał zegarka z OpenWatch, więc nie został dodany. OpenWatch potrzebuje tego powiązania, aby nagrywać treningi, które inna aplikacja uruchamia na zegarku. Dotknij ponownie Sparuj i zezwól na żądanie.</string>
     <string name="settings_watch_wearos_companion_missing">Android nie powiązał tego zegarka z OpenWatch. Bez powiązania OpenWatch nie może nagrywać treningów, które inna aplikacja uruchamia na zegarku.</string>
     <string name="settings_watch_wearos_companion_link">Powiąż zegarek</string>
+    <string name="settings_respiratory_rate_title">Częstość oddechu z zegarka (eksperymentalne)</string>
+    <string name="settings_respiratory_rate_body">Zapisuje w Health Connect częstość oddechu z nocnych okien HRV zegarka. Jeszcze nie porównano jej z urządzeniem referencyjnym.</string>
     <string name="watch_settings_section">Ustawienia zegarka</string>
     <string name="watch_settings_not_read">Zegarek sam przechowuje te ustawienia. Odczytaj je, aby zmienić je tutaj.</string>
     <string name="watch_settings_unreachable">Zegarek nie odpowiedział. Czy jest w pobliżu i działa na nim aplikacja OpenWatch?</string>

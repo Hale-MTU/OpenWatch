@@ -9,6 +9,7 @@ import androidx.health.connect.client.units.TemperatureDelta
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
+import tech.mmarca.healthcalculations.stats.medianOrNull
 
 /**
  * Turns the watch's skin temperature minutes (the Samsung platform's, recorded
@@ -48,7 +49,7 @@ object WearOsSkinTemperatureImport {
     data class Run(val minutes: List<WearOsSkinMinute>) {
         val start: Instant get() = minutes.first().time
         val end: Instant get() = minutes.last().time
-        val median: Double get() = median(minutes.map { it.celsius })
+        val median: Double get() = checkNotNull(minutes.map { it.celsius }.medianOrNull())
     }
 
     /** The minutes cut into runs at every gap over [MAX_GAP]. */
@@ -74,7 +75,7 @@ object WearOsSkinTemperatureImport {
 
     /** The baseline for a run: the median of [earlierMedians] once there are enough, else the run's own. */
     fun baseline(run: Run, earlierMedians: List<Double>): Double =
-        if (earlierMedians.size >= MIN_BASELINE_NIGHTS) median(earlierMedians) else run.median
+        if (earlierMedians.size >= MIN_BASELINE_NIGHTS) checkNotNull(earlierMedians.medianOrNull()) else run.median
 
     /** The record for [run] against [baselineCelsius], or null when Health Connect would refuse it. */
     fun record(run: Run, baselineCelsius: Double, zone: ZoneId, version: Long): SkinTemperatureRecord? = try {
@@ -100,10 +101,4 @@ object WearOsSkinTemperatureImport {
     }
 
     fun clientRecordId(run: Run): String = "$CLIENT_ID_PREFIX${run.start.toEpochMilli()}"
-
-    private fun median(values: List<Double>): Double {
-        val sorted = values.sorted()
-        val middle = sorted.size / 2
-        return if (sorted.size % 2 == 1) sorted[middle] else (sorted[middle - 1] + sorted[middle]) / 2
-    }
 }
