@@ -5,20 +5,22 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
-import tech.mmarca.openwatch.domain.insights.HeartRateZoneBasis
-import tech.mmarca.openwatch.domain.insights.observedMaxHeartRateLookbackDays
+import tech.mmarca.healthcalculations.insights.HeartRateZoneBasis
+import tech.mmarca.healthcalculations.insights.observedMaxHeartRateLookbackDays
+import tech.mmarca.healthcalculations.preferences.BiologicalSex
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
-import tech.mmarca.openwatch.domain.preferences.BiologicalSex
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.wearlink.WearLinkPreferences as Preferences
 
 /**
- * Hands the watch what its heart rate zones rest on ([HeartRateZoneBasis]):
- * the maximum and the resting heart rate, as two watch settings, after each
- * sync. From the body profile (shared with OpenVitals over OpenLink), the
- * highest heart rate Health Connect holds for the last year and the latest
- * night's resting rate. Beside them the profile a workout's energy needs
+ * Hands the watch what its heart rate zones rest on ([HeartRateZoneBasis],
+ * from health-calculations, the same as OpenVitals'): the maximum and the
+ * resting heart rate, as two watch settings, after each sync. From the body
+ * profile (shared with OpenVitals over OpenLink), the highest heart rate
+ * Health Connect holds for the year before and the latest night's resting
+ * rate, which only decides whether that maximum is believable. Without a
+ * basis both are `0`. Beside them the profile a workout's energy needs
  * (weight, height, birth year, sex), from [energyProfile]. Extras: a failed
  * read skips only what it was for (a missing weight grant still sends the
  * zones), an old watch app skips both, and neither ever fails the sync.
@@ -38,8 +40,8 @@ internal class WearOsZoneSync(
             val observed = healthConnect.readMaxHeartRate(now.minus(Duration.ofDays(observedMaxHeartRateLookbackDays)), now)?.toInt()
             val basis = HeartRateZoneBasis.of(profile(), now.atZone(zone()).toLocalDate(), observed, latestResting(now))
             listOf(
-                Preferences.HEART_RATE_MAX to (basis.maxBpm ?: 0).toString(),
-                Preferences.HEART_RATE_REST to (basis.restingBpm ?: 0).toString(),
+                Preferences.HEART_RATE_MAX to (basis?.maxBpm ?: 0).toString(),
+                Preferences.HEART_RATE_REST to (basis?.restingBpm ?: 0).toString(),
             )
         }
         val body = read("profile") {

@@ -27,7 +27,7 @@ import tech.mmarca.openwatch.devices.xiaomi.ScaleWriteFailure
 import tech.mmarca.openwatch.devices.xiaomi.ScaleWritePermissions
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleListener
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleStore
-import tech.mmarca.openwatch.domain.insights.BodyCompositionInput
+import tech.mmarca.healthcalculations.insights.BodyCompositionInput
 import tech.mmarca.openwatch.domain.model.ScaleWeighIn
 
 /** The last weigh-in, ready to show. A null line was not measured, or could not be estimated. */

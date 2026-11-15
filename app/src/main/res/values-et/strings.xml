@@ -355,11 +355,15 @@
     <string name="settings_watch_wearos_sync_now">Sünkrooni kell</string>
     <string name="settings_watch_wearos_syncing">Kella sünkroonimine…</string>
     <string name="settings_watch_wearos_synced_none">Kellas pole midagi uut</string>
+    <string name="settings_watch_garmin_needs_weight">Treeningu kaloreid ei hinnatud: lisa oma kaal Kehaprofiili või salvesta see Health Connecti.</string>
     <string name="settings_watch_wearos_needs_weight">Kõndimise kaloreid ei hinnatud: lisa oma kaal Kehaprofiili või salvesta see Health Connecti.</string>
     <string name="settings_watch_wearos_needs_weight_read">Kõndimise kaloreid ei hinnatud: lisa oma kaal Kehaprofiili või luba OpenWatchil lugeda sinu kaalu Health Connectist.</string>
     <string name="settings_watch_wearos_needs_steps_write">Samme ei kirjutatud: luba OpenWatchil kirjutada Health Connecti samme ja sünkrooni uuesti.</string>
     <string name="settings_watch_wearos_needs_calories_write">Kõndimise kaloreid ei kirjutatud: luba OpenWatchil Health Connectis aktiivseid kaloreid kirjutada ja treeninguid lugeda, et neid järgmisest sünkroonimisest alates hinnata.</string>
     <string name="settings_watch_wearos_needs_hrv_write">Südame löögisageduse varieeruvust ei kirjutatud: luba OpenWatchil see Health Connectis kirjutada ja sünkrooni siis uuesti.</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">Hingamissagedust ei kirjutatud: luba OpenWatchil see Health Connectis kirjutada ja sünkrooni siis uuesti.</string>
+    <string name="settings_watch_wearos_needs_spo2_write">Vere hapnikusisaldust ei kirjutatud: luba OpenWatchil see Health Connectis kirjutada ja sünkrooni siis uuesti.</string>
+    <string name="settings_watch_wearos_needs_skin_write">Naha temperatuuri ei kirjutatud: luba OpenWatchil see Health Connectis kirjutada ja sünkrooni siis uuesti.</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">Puhkeoleku pulssi ei kirjutatud: luba OpenWatchil Health Connectis puhkeoleku pulssi lugeda ja kirjutada, et seda järgmisest sünkroonimisest alates hinnata.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">%1$d pulsinäit sünkroonitud</item>
@@ -492,6 +496,7 @@
     <string name="connected_apps_settings_body">Rakendused, mis kasutavad OpenWatchi kaudu sinu kelli, kaalu ja kehaprofiili, ning mida igaüks tohib teha</string>
     <string name="connected_apps_intro">Need rakendused küsisid OpenWatchi kasutamist. Igaüks näeb ainult seda, mida siin lubad, ja miski ei lahku telefonist.</string>
     <string name="connected_apps_empty">Ükski rakendus pole veel küsinud. OpenVitals ühendub, kui mõlemad rakendused on paigaldatud.</string>
+    <string name="connected_apps_unknown_signer">See rakendus nimetab end %1$s, kuid OpenVitalsi projekt pole seda allkirjastanud. Luba see ainult siis, kui ehitasid või paigaldasid selle ise ja usaldad selle päritolu.</string>
     <string name="connected_apps_state_pending">Küsib ühendust</string>
     <string name="connected_apps_state_trusted">Ühendatud</string>
     <string name="connected_apps_state_blocked">Blokeeritud</string>
@@ -511,6 +516,8 @@
     <string name="settings_watch_wearos_companion_required">Android ei sidunud kella OpenWatchiga, seega seda ei lisatud. OpenWatch vajab seda seost, et salvestada treeninguid, mille mõni teine rakendus kellas käivitab. Puuduta uuesti Seo ja luba taotlus.</string>
     <string name="settings_watch_wearos_companion_missing">Android pole seda kella OpenWatchiga sidunud. Ilma seoseta ei saa OpenWatch salvestada treeninguid, mille mõni teine rakendus kellas käivitab.</string>
     <string name="settings_watch_wearos_companion_link">Seo kell</string>
+    <string name="settings_respiratory_rate_title">Hingamissagedus kellalt (katseline)</string>
+    <string name="settings_respiratory_rate_body">Kirjutab kella öiste HRV-akende hingamissageduse Health Connecti. Pole veel võrdlusseadmega kontrollitud.</string>
     <string name="watch_settings_section">Kella seaded</string>
     <string name="watch_settings_not_read">Kell hoiab neid seadeid ise. Loe need, et neid siin muuta.</string>
     <string name="watch_settings_unreachable">Kell ei vastanud. Kas see on lähedal ja OpenWatchi rakendus töötab?</string>

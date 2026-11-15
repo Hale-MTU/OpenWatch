@@ -359,11 +359,15 @@
     <string name="settings_watch_wearos_sync_now">ウォッチを同期</string>
     <string name="settings_watch_wearos_syncing">ウォッチを同期しています…</string>
     <string name="settings_watch_wearos_synced_none">ウォッチに新しいデータはありません</string>
+    <string name="settings_watch_garmin_needs_weight">ワークアウトのカロリーは推定されていません。体のプロフィールに体重を追加するか、Health Connect に記録してください。</string>
     <string name="settings_watch_wearos_needs_weight">歩行カロリーは推定されていません。体のプロフィールに体重を追加するか、Health Connect に記録してください。</string>
     <string name="settings_watch_wearos_needs_weight_read">歩行カロリーは推定されていません。体のプロフィールに体重を追加するか、OpenWatch に Health Connect の体重の読み取りを許可してください。</string>
     <string name="settings_watch_wearos_needs_steps_write">歩数を書き込めませんでした。OpenWatch に Health Connect への歩数の書き込みを許可してから、もう一度同期してください。</string>
     <string name="settings_watch_wearos_needs_calories_write">歩行カロリーを書き込めませんでした。OpenWatch に Health Connect でのアクティブカロリーの書き込みとワークアウトの読み取りを許可すると、次回の同期から推定されます。</string>
     <string name="settings_watch_wearos_needs_hrv_write">心拍変動を書き込めませんでした。OpenWatch に Health Connect への書き込みを許可してから、もう一度同期してください。</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">呼吸数を書き込めませんでした。OpenWatch に Health Connect への書き込みを許可してから、もう一度同期してください。</string>
+    <string name="settings_watch_wearos_needs_spo2_write">血中酸素を書き込めませんでした。OpenWatch に Health Connect への書き込みを許可してから、もう一度同期してください。</string>
+    <string name="settings_watch_wearos_needs_skin_write">皮膚温度を書き込めませんでした。OpenWatch に Health Connect への書き込みを許可してから、もう一度同期してください。</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">安静時心拍数を書き込めませんでした。OpenWatch に Health Connect での安静時心拍数の読み取りと書き込みを許可すると、次回の同期から推定されます。</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">%1$d 件の心拍数サンプルを同期しました</item>
@@ -496,6 +500,7 @@
     <string name="connected_apps_settings_body">OpenWatch を通じてウォッチ、体重計、体のプロフィールを使うアプリと、それぞれに許可する内容</string>
     <string name="connected_apps_intro">これらのアプリが OpenWatch の利用を求めました。各アプリが見られるのはここで許可したものだけで、データがスマートフォンの外に出ることはありません。</string>
     <string name="connected_apps_empty">まだどのアプリからも要求がありません。両方のアプリをインストールすると OpenVitals が接続します。</string>
+    <string name="connected_apps_unknown_signer">このアプリは %1$s を名乗っていますが、OpenVitals プロジェクトによる署名がありません。自分でビルドまたはインストールし、入手元を信頼できる場合にのみ許可してください。</string>
     <string name="connected_apps_state_pending">接続を要求中</string>
     <string name="connected_apps_state_trusted">接続済み</string>
     <string name="connected_apps_state_blocked">ブロック中</string>
@@ -515,6 +520,8 @@
     <string name="settings_watch_wearos_companion_required">Android がウォッチを OpenWatch にリンクしなかったため、追加されませんでした。別のアプリがウォッチで開始したワークアウトを記録するには、このリンクが必要です。もう一度「ペアリング」をタップして、リクエストを許可してください。</string>
     <string name="settings_watch_wearos_companion_missing">Android はこのウォッチを OpenWatch にリンクしていません。リンクがないと、別のアプリがウォッチで開始したワークアウトを OpenWatch は記録できません。</string>
     <string name="settings_watch_wearos_companion_link">ウォッチをリンク</string>
+    <string name="settings_respiratory_rate_title">ウォッチからの呼吸数（試験運用）</string>
+    <string name="settings_respiratory_rate_body">ウォッチの夜間 HRV ウィンドウから得た呼吸数を Health Connect に書き込みます。基準となるデバイスとの比較はまだ行っていません。</string>
     <string name="watch_settings_section">ウォッチの設定</string>
     <string name="watch_settings_not_read">これらの設定はウォッチ自体が保持します。ここで変更するには読み込んでください。</string>
     <string name="watch_settings_unreachable">ウォッチが応答しませんでした。近くにあり、OpenWatch アプリが動作していますか？</string>

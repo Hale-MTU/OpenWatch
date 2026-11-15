@@ -355,11 +355,15 @@
     <string name="settings_watch_wearos_sync_now">Sincronizar relógio</string>
     <string name="settings_watch_wearos_syncing">A sincronizar relógio…</string>
     <string name="settings_watch_wearos_synced_none">Nada de novo no relógio</string>
+    <string name="settings_watch_garmin_needs_weight">Calorias do treino não estimadas: adicione o seu peso em Perfil corporal ou registe-o no Health Connect.</string>
     <string name="settings_watch_wearos_needs_weight">Calorias de caminhada não estimadas: adicione o seu peso em Perfil corporal ou registe-o no Health Connect.</string>
     <string name="settings_watch_wearos_needs_weight_read">Calorias de caminhada não estimadas: adicione o seu peso em Perfil corporal ou permita que o OpenWatch leia o seu peso no Health Connect.</string>
     <string name="settings_watch_wearos_needs_steps_write">Passos não gravados: permita que o OpenWatch grave passos no Health Connect e sincronize novamente.</string>
     <string name="settings_watch_wearos_needs_calories_write">Calorias de caminhada não gravadas: permita que o OpenWatch grave calorias ativas e leia treinos no Health Connect para as estimar a partir da próxima sincronização.</string>
     <string name="settings_watch_wearos_needs_hrv_write">Variabilidade da frequência cardíaca não gravada: permita que o OpenWatch a grave no Health Connect e sincronize novamente.</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">Frequência respiratória não gravada: permita que o OpenWatch a grave no Health Connect e sincronize novamente.</string>
+    <string name="settings_watch_wearos_needs_spo2_write">Oxigénio no sangue não gravado: permita que o OpenWatch o grave no Health Connect e sincronize novamente.</string>
+    <string name="settings_watch_wearos_needs_skin_write">Temperatura da pele não gravada: permita que o OpenWatch a grave no Health Connect e sincronize novamente.</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">Frequência cardíaca em repouso não gravada: permita que o OpenWatch leia e grave a frequência cardíaca em repouso no Health Connect para a estimar a partir da próxima sincronização.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">%1$d amostra de frequência cardíaca sincronizada</item>
@@ -492,6 +496,7 @@
     <string name="connected_apps_settings_body">Apps que usam os relógios, a balança e o perfil corporal através do OpenWatch, e o que cada uma pode fazer</string>
     <string name="connected_apps_intro">Estas apps pediram para usar o OpenWatch. Cada uma vê apenas o que permitir aqui, e nada sai do telemóvel.</string>
     <string name="connected_apps_empty">Nenhuma app pediu ainda. O OpenVitals liga-se assim que as duas apps estiverem instaladas.</string>
+    <string name="connected_apps_unknown_signer">Esta app apresenta-se como %1$s, mas não foi assinada pelo projeto OpenVitals. Permita-a apenas se a compilou ou instalou você mesmo e confia na sua origem.</string>
     <string name="connected_apps_state_pending">Pede para se ligar</string>
     <string name="connected_apps_state_trusted">Ligada</string>
     <string name="connected_apps_state_blocked">Bloqueada</string>
@@ -511,6 +516,8 @@
     <string name="settings_watch_wearos_companion_required">O Android não associou o relógio ao OpenWatch, por isso não foi adicionado. O OpenWatch precisa desta associação para gravar os treinos que outra app inicia no relógio. Toque de novo em Emparelhar e aceite o pedido.</string>
     <string name="settings_watch_wearos_companion_missing">O Android não associou este relógio ao OpenWatch. Sem a associação, o OpenWatch não consegue gravar os treinos que outra app inicia no relógio.</string>
     <string name="settings_watch_wearos_companion_link">Associar relógio</string>
+    <string name="settings_respiratory_rate_title">Frequência respiratória do relógio (experimental)</string>
+    <string name="settings_respiratory_rate_body">Grava no Health Connect a frequência respiratória das janelas noturnas de VFC do relógio. Ainda não foi comparada com um dispositivo de referência.</string>
     <string name="watch_settings_section">Configurações do relógio</string>
     <string name="watch_settings_not_read">O relógio guarda estas configurações. Leia-as para alterá-las aqui.</string>
     <string name="watch_settings_unreachable">O relógio não respondeu. Ele está perto e com o app OpenWatch em execução?</string>

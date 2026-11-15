@@ -1,7 +1,7 @@
 package tech.mmarca.openwatch.wear.workout
 
 import tech.mmarca.openwatch.wear.features.metric.ZoneBasis
-import tech.mmarca.openwatch.wearlink.HeartRateZones
+import tech.mmarca.healthcalculations.insights.HeartRateZones
 
 /** What a stop does about the heart rate recovery. */
 enum class RecoveryAtStop {
@@ -33,5 +33,5 @@ internal object RecoveryPlan {
     }
 
     private fun worthMeasuring(bpm: Int, zones: ZoneBasis?): Boolean =
-        zones != null && (HeartRateZones.zoneOf(bpm.toDouble(), zones) ?: -1) >= MIN_ZONE
+        zones != null && (HeartRateZones.zoneOf(bpm.toLong(), zones.boundsBpm) ?: -1) >= MIN_ZONE
 }

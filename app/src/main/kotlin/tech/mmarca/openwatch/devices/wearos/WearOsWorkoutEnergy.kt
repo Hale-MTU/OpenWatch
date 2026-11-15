@@ -7,8 +7,8 @@ import androidx.health.connect.client.records.WeightRecord
 import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
-import tech.mmarca.openwatch.domain.insights.WorkoutEnergyResult
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
+import tech.mmarca.healthcalculations.insights.WorkoutEnergyResult
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 
 /**

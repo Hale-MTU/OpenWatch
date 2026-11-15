@@ -2,7 +2,7 @@ package tech.mmarca.openwatch.wear.workout
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import tech.mmarca.openwatch.wearlink.HeartRateZones
+import tech.mmarca.healthcalculations.insights.HeartRateZones
 
 class RecoveryPlanTest {
 

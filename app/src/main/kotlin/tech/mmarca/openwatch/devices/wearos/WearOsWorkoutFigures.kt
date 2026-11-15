@@ -4,12 +4,12 @@ import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import java.time.Duration
 import java.time.ZoneId
-import tech.mmarca.openwatch.domain.insights.HeartRateZoneBasis
-import tech.mmarca.openwatch.domain.insights.observedMaxHeartRateLookbackDays
-import tech.mmarca.openwatch.domain.preferences.BiologicalSex
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
+import tech.mmarca.healthcalculations.insights.HeartRateZoneBasis
+import tech.mmarca.healthcalculations.insights.observedMaxHeartRateLookbackDays
+import tech.mmarca.healthcalculations.preferences.BiologicalSex
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
-import tech.mmarca.openwatch.wearlink.HeartRateZones
+import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.WorkoutMetrics
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
@@ -40,8 +40,7 @@ internal class WearOsWorkoutFigures(
             workout.end.minus(Duration.ofDays(observedMaxHeartRateLookbackDays)), workout.end.plusSeconds(1),
         )?.toInt()
         // The same zones the watch draws: the night's resting rate only judges the observed maximum.
-        val basis = HeartRateZoneBasis.of(body, day, observed, resting)
-        val zones = HeartRateZones.Basis.of(basis.maxBpm, basis.restingBpm)
+        val zones = HeartRateZoneBasis.of(body, day, observed, resting)
         val metricsBody = WorkoutMetrics.Body(
             weightKg = body.weightKg,
             heightCm = body.heightCm,

@@ -359,11 +359,15 @@
     <string name="settings_watch_wearos_sync_now">Synchronizovat hodinky</string>
     <string name="settings_watch_wearos_syncing">Synchronizace hodinek…</string>
     <string name="settings_watch_wearos_synced_none">V hodinkách není nic nového</string>
+    <string name="settings_watch_garmin_needs_weight">Kalorie z tréninku nebyly odhadnuty: zadejte svou hmotnost v Tělesném profilu nebo ji zaznamenejte v Health Connect.</string>
     <string name="settings_watch_wearos_needs_weight">Kalorie z chůze nebyly odhadnuty: zadejte svou hmotnost v Tělesném profilu nebo ji zaznamenejte v Health Connect.</string>
     <string name="settings_watch_wearos_needs_weight_read">Kalorie z chůze nebyly odhadnuty: zadejte svou hmotnost v Tělesném profilu nebo povolte OpenWatch číst vaši hmotnost v Health Connect.</string>
     <string name="settings_watch_wearos_needs_steps_write">Kroky nebyly zapsány: povolte OpenWatch zapisovat kroky do Health Connect a synchronizujte znovu.</string>
     <string name="settings_watch_wearos_needs_calories_write">Kalorie z chůze nebyly zapsány: povolte OpenWatch zapisovat aktivní kalorie a číst tréninky v Health Connect, aby se od příští synchronizace odhadovaly.</string>
     <string name="settings_watch_wearos_needs_hrv_write">Variabilita srdeční frekvence nebyla zapsána: povolte OpenWatch zapisovat ji do Health Connect a pak synchronizujte znovu.</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">Dechová frekvence nebyla zapsána: povolte OpenWatch zapisovat ji do Health Connect a pak synchronizujte znovu.</string>
+    <string name="settings_watch_wearos_needs_spo2_write">Okysličení krve nebylo zapsáno: povolte OpenWatch zapisovat ho do Health Connect a pak synchronizujte znovu.</string>
+    <string name="settings_watch_wearos_needs_skin_write">Teplota kůže nebyla zapsána: povolte OpenWatch zapisovat ji do Health Connect a pak synchronizujte znovu.</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">Klidový srdeční tep nebyl zapsán: povolte OpenWatch číst a zapisovat klidový srdeční tep v Health Connect, aby se od příští synchronizace odhadoval.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">%1$d vzorek tepu synchronizován</item>
@@ -502,6 +506,7 @@
     <string name="connected_apps_settings_body">Aplikace, které přes OpenWatch používají vaše hodinky, váhu a tělesný profil, a co která smí</string>
     <string name="connected_apps_intro">Tyto aplikace požádaly o používání OpenWatch. Každá vidí jen to, co zde povolíte, a nic neopouští telefon.</string>
     <string name="connected_apps_empty">Zatím nepožádala žádná aplikace. OpenVitals se připojí, jakmile budou nainstalovány obě aplikace.</string>
+    <string name="connected_apps_unknown_signer">Tato aplikace se vydává za %1$s, ale nepodepsal ji projekt OpenVitals. Povolte ji jen tehdy, pokud jste ji sami sestavili nebo nainstalovali a důvěřujete jejímu původu.</string>
     <string name="connected_apps_state_pending">Žádá o připojení</string>
     <string name="connected_apps_state_trusted">Připojeno</string>
     <string name="connected_apps_state_blocked">Blokováno</string>
@@ -523,6 +528,8 @@
     <string name="settings_watch_wearos_companion_required">Android hodinky s OpenWatch nepropojil, takže nebyly přidány. OpenWatch toto propojení potřebuje k záznamu tréninků, které na hodinkách spustí jiná aplikace. Klepněte znovu na Spárovat a žádost povolte.</string>
     <string name="settings_watch_wearos_companion_missing">Android tyto hodinky s OpenWatch nepropojil. Bez propojení nemůže OpenWatch zaznamenávat tréninky, které na hodinkách spustí jiná aplikace.</string>
     <string name="settings_watch_wearos_companion_link">Propojit hodinky</string>
+    <string name="settings_respiratory_rate_title">Dechová frekvence z hodinek (experimentální)</string>
+    <string name="settings_respiratory_rate_body">Zapisuje do Health Connect dechovou frekvenci z nočních oken HRV hodinek. Zatím nebyla ověřena proti referenčnímu zařízení.</string>
     <string name="watch_settings_section">Nastavení hodinek</string>
     <string name="watch_settings_not_read">Hodinky si tato nastavení ukládají samy. Načtěte je, abyste je zde mohli změnit.</string>
     <string name="watch_settings_unreachable">Hodinky neodpověděly. Jsou poblíž a běží na nich aplikace OpenWatch?</string>

@@ -6,6 +6,7 @@ import kotlin.math.exp
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
+import tech.mmarca.healthcalculations.insights.HeartRateZones
 
 /**
  * What a workout comes to, worked out from its heart rate, its route and the
@@ -65,7 +66,7 @@ object WorkoutMetrics {
         val average = if (total > 0) (spans.sumOf { (beat, ms) -> beat.bpm * ms.toDouble() } / total).toInt() else null
         val zoneSeconds = LongArray(HeartRateZones.COUNT)
         if (zones != null) {
-            for ((beat, ms) in spans) HeartRateZones.zoneOf(beat.bpm.toDouble(), zones)?.let { zoneSeconds[it] += ms / 1000 }
+            for ((beat, ms) in spans) HeartRateZones.zoneOf(beat.bpm.toLong(), zones.boundsBpm)?.let { zoneSeconds[it] += ms / 1000 }
         }
         val splits = splits(workout)
         val distance = workout.distanceMetres
