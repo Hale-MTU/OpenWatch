@@ -51,7 +51,6 @@ internal fun WatchStatusScreen(
     onAllow: (PendingPhone) -> Unit,
     onBlock: (PendingPhone) -> Unit,
     onOpenBluetoothSettings: () -> Unit,
-    onOpenWorkout: () -> Unit,
 ) {
     var latest by remember { mutableStateOf<WearLinkProtocol.HeartRateSample?>(null) }
     var count by remember { mutableStateOf(0L) }
@@ -138,10 +137,6 @@ internal fun WatchStatusScreen(
         samsungDiagnostics?.let { on ->
             Line(stringResource(if (on) R.string.status_samsung_diagnostics_on else R.string.status_samsung_diagnostics_off))
         }
-        Button(onClick = onOpenWorkout, modifier = Modifier.padding(top = 8.dp)) {
-            Text(stringResource(R.string.workout_open))
-        }
-        WatchSettingsSection(LocalContext.current)
         PhoneCards(link, onAllow, onBlock, onOpenBluetoothSettings)
         if (link.ppgLogging) Line(stringResource(R.string.status_ppg_logging))
     }

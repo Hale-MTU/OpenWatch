@@ -1,5 +1,8 @@
 package tech.mmarca.openwatch.wear
 
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.conflate
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneId
@@ -8,6 +11,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.Dispatchers
+import tech.mmarca.openwatch.wearlink.DaySummary
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol.SkinMinute
 
 /**
  * What the watch itself recorded, as the dashboard and the detail screens
@@ -19,19 +24,31 @@ import kotlinx.coroutines.Dispatchers
  */
 internal class WearReadingsSource(
     private val store: MetricStore,
+    private val phoneDays: () -> Map<Long, DaySummary> = { emptyMap() },
     private val clock: Clock = Clock.systemDefaultZone(),
 ) {
     private val pastDays = HashMap<LocalDate, DayReadings>()
 
-    /** The tiles' values now, read again every [REFRESH_MILLIS] while someone collects. */
-    fun metrics(): Flow<Map<MetricTile, MetricUiState>> = flow {
-        while (true) {
-            emit(load())
-            delay(REFRESH_MILLIS)
-        }
+    /** The tiles' values and the last night's stages. */
+    data class Readings(val metrics: Map<MetricTile, MetricUiState>, val sleepStages: Map<SleepStage, Double>)
+
+    /** The tiles' values now, read again every [REFRESH_MILLIS] and soon after new rows, while someone collects. */
+    fun metrics(): Flow<Readings> = merge(
+        flow {
+            while (true) {
+                emit(Unit)
+                delay(REFRESH_MILLIS)
+            }
+        },
+        // New rows, such as steps while the app is open: read again, but at most every MIN_REFRESH_MILLIS.
+        MetricStore.updates,
+    ).conflate().map {
+        val readings = load()
+        delay(MIN_REFRESH_MILLIS)
+        readings
     }.flowOn(Dispatchers.IO)
 
-    internal fun load(): Map<MetricTile, MetricUiState> {
+    internal fun load(): Readings {
         val zone = clock.zone
         val today = LocalDate.now(clock)
         val days = (DAYS - 1 downTo 0).map { back ->
@@ -39,7 +56,8 @@ internal class WearReadingsSource(
             if (back == 0) read(date, zone) else pastDays.getOrPut(date) { read(date, zone) }
         }
         pastDays.keys.retainAll { it >= today.minusDays(DAYS.toLong()) }
-        return WearReadings.metrics(days, clock.instant(), zone)
+        val phone = phoneDays()
+        return Readings(WearReadings.metrics(days, clock.instant(), zone, phone), WearReadings.sleepStages(phone))
     }
 
     /** Today only, read now: what the Today tile shows. */
@@ -55,14 +73,27 @@ internal class WearReadingsSource(
             heartRate = store.since(WearMetrics.HEART_RATE, from, ROW_LIMIT, until),
             steps = store.since(WearMetrics.STEPS, from, ROW_LIMIT, until),
             ascent = store.since(WearMetrics.ASCENT, from, ROW_LIMIT, until),
+            night = mapOf(
+                MetricTile.HRV to store.since(WearMetrics.HRV, from, ROW_LIMIT, until).map { it.rmssdMillis },
+                MetricTile.BLOOD_OXYGEN to store.since(WearMetrics.SPO2, from, ROW_LIMIT, until).map { it.percent.toDouble() },
+                MetricTile.SKIN_TEMPERATURE to skinByQuarterHour(store.since(WearMetrics.SKIN_TEMPERATURE, from, ROW_LIMIT, until)),
+                MetricTile.RESPIRATORY_RATE to store.since(WearMetrics.RESPIRATORY_RATE, from, ROW_LIMIT, until)
+                    .map { it.breathsPerMinute },
+            ),
         )
     }
 
+    /** A night of skin temperature is a reading a minute; the chart takes the mean of each quarter hour. */
+    private fun skinByQuarterHour(minutes: List<SkinMinute>): List<Double> =
+        minutes.groupBy { it.epochMillis / QUARTER_HOUR_MILLIS }.toSortedMap().values.map { q -> q.map { it.skinCelsius }.average() }
+
     private companion object {
+        const val QUARTER_HOUR_MILLIS = 15 * 60_000L
         const val DAYS = 7
         const val REFRESH_MILLIS = 30_000L
+        const val MIN_REFRESH_MILLIS = 2_000L
 
-        /** Above a day's most: a heart rate sample every ten seconds is 8 640. */
-        const val ROW_LIMIT = 10_000
+        /** Above a day's most: a sample every ten seconds is 8 640, and a workout keeps one a second. */
+        const val ROW_LIMIT = 30_000
     }
 }
