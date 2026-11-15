@@ -256,6 +256,13 @@ well on its own and front-load it.
   doc, while `CONNECT_ATTEMPTS = 3` means two redials. The tag kept the wrong
   count.
 - A fix that was hidden rather than announced can need announcing later.
+- 0.4.0's watch promotion failed with "You must let us know whether your app
+  uses any Foreground Service permissions": the watch app had added
+  `FOREGROUND_SERVICE_LOCATION` for workout GPS. A new foreground service
+  type in either manifest (`git diff vLAST..HEAD -- '*AndroidManifest.xml'`)
+  needs Play Console's App content, Foreground service permissions
+  declaration before the production run. Afterwards `gh run rerun <run>
+  --failed` is safe: a lane skips a track that already holds the version.
 - OpenVitals 2.17.0's push was refused by a ruleset without a bypass list;
   the commit and the tag waited locally until it was disabled, then
   `git push --atomic origin main vX.Y.Z` finished what the script started.
