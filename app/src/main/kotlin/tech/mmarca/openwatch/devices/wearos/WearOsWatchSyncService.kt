@@ -99,6 +99,8 @@ class WearOsWatchSyncService(
     private val zone: () -> ZoneId,
     /** Whether the user chose to write the watch's breathing rate; off by default, not yet checked against a reference. */
     private val writeRespiratoryRate: () -> Boolean = { false },
+    /** Whether the watch's night is written although another app wrote one; Health Connect's priority then decides. */
+    private val writeSleepBesideOthers: () -> Boolean = { true },
     /** The body for a workout's calories: sex, age and weight. Strict like [weightKg]. */
     private val profile: suspend () -> BodyProfile = { BodyProfile(weightKg = weightKg()) },
     /**
@@ -124,6 +126,7 @@ class WearOsWatchSyncService(
         { bodyProfile.resolve().weightKg },
         Instant::now, ZoneId::systemDefault,
         { preferences.writeRespiratoryRate },
+        { preferences.writeSleepBesideOthers },
         { bodyProfile.resolve() },
         { bodyProfile.declared() },
     )
@@ -140,11 +143,14 @@ class WearOsWatchSyncService(
         writeRespiratoryRate = writeRespiratoryRate,
     )
 
+    private val dayLink = WearOsDayLinkSync(importRepository, healthConnect, cursors, nodePort, clock, zone)
+
     private val workouts = WearOsWorkoutSync(
         importRepository = importRepository,
         cursors = cursors,
         granted = { healthConnect.grantedPermissions() },
         zone = zone,
+        summarize = WearOsWorkoutFigures(healthConnect, profile, zone)::summarize,
     )
 
     private val workoutEnergy = WearOsWorkoutEnergy(
@@ -155,7 +161,7 @@ class WearOsWatchSyncService(
         zone = zone,
     )
 
-    private val zones by lazy { WearOsZoneSync(healthConnect, nodePort, zoneProfile, clock, zone) }
+    private val zones by lazy { WearOsZoneSync(healthConnect, nodePort, zoneProfile, profile, clock, zone) }
 
     private val linkRetry = object : WearOsNightSeriesSync.Retry {
         override suspend fun <T> run(pull: suspend () -> T): T = retryOnce(pull)
@@ -193,6 +199,7 @@ class WearOsWatchSyncService(
             progress.unwritten += night.unwritten
             progress.withheldPermissions += night.withheld
             if (!pullWorkouts(device, progress)) return notPaired(device)
+            dayLink.sync(device, linkRetry) ?: return notPaired(device)
             zones.sync(device, linkRetry)
         } catch (error: CancellationException) {
             throw error
@@ -510,7 +517,7 @@ class WearOsWatchSyncService(
             }
             // Before the session check: a vendor that owns the session may not own the resting heart rate.
             writeRestingHeartRate(minutes, estimated, night, offset, restingHeartRate, progress)
-            if (hasForeignRecord(SleepSessionRecord::class, from, to, WearOsSleepImport::isOwnRecordId)) {
+            if (!writeSleepBesideOthers() && hasForeignRecord(SleepSessionRecord::class, from, to, WearOsSleepImport::isOwnRecordId)) {
                 WearOsLog.log("$night: Health Connect already holds a session from elsewhere, skipping")
                 continue
             }
@@ -533,7 +540,7 @@ class WearOsWatchSyncService(
         var written = 0
         for ((nap, offset) in WearOsSleepImport.naps(minutes, cursor)) {
             val record = WearOsSleepImport.napRecord(nap, offset, version = clock().toEpochMilli()) ?: continue
-            if (hasForeignRecord(SleepSessionRecord::class, nap.onset, nap.end, WearOsSleepImport::isOwnRecordId)) {
+            if (!writeSleepBesideOthers() && hasForeignRecord(SleepSessionRecord::class, nap.onset, nap.end, WearOsSleepImport::isOwnRecordId)) {
                 WearOsLog.log("nap: Health Connect already holds a session from elsewhere, skipping")
                 continue
             }

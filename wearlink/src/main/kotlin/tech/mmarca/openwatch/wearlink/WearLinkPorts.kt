@@ -69,7 +69,7 @@ interface WearLinkRequestHandler {
      */
     fun workoutsSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkWorkout>
 
-    /** Every setting the watch holds, by key ([WearLinkProtocol.Preferences]). Only called when the watch advertised [WearLinkProtocol.CAP_PREFERENCES]. */
+    /** Every setting the watch holds, by key ([WearLinkPreferences]). Only called when the watch advertised [WearLinkProtocol.CAP_PREFERENCES]. */
     fun heldPreferences(): Map<String, String>
 
     /** Applies a setting the phone pushed. False for a key or value the watch does not take, which the phone sees as `ERROR bad_request`. */
@@ -83,6 +83,12 @@ interface WearLinkRequestHandler {
     fun spo2Since(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.Spo2Measurement>
 
     fun skinSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.SkinMinute>
+
+    /** Keeps the phone's figures for a day. False when the watch cannot keep them. Only called when the watch advertised [WearLinkProtocol.CAP_DAY_SUMMARY]. */
+    fun putDay(day: DaySummary): Boolean = false
+
+    /** The entries made on the watch after [sinceEpochMillis], oldest first. Only called when the watch advertised [WearLinkProtocol.CAP_ENTRIES]. */
+    fun entriesSince(sinceEpochMillis: Long, limit: Int): Page<WatchEntry> = Page(emptyList(), more = false)
 
     /**
      * Blocks for up to [seconds], handing each heart rate reading to [emit]
