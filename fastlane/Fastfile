@@ -11,7 +11,7 @@ OPENWATCH_PROJECT_ROOT = File.expand_path("..", __dir__)
 
 # The phone app and the watch app share the listing and the applicationId.
 # Play keeps the watch on its own form-factor tracks, named "wear:<track>" in
-# the Play Developer API; supply and google_play_track_version_codes pass the
+# the Play Developer API; supply and the Play client pass the
 # name through. The phone's tracks keep the plain names.
 def openwatch_track(form_factor, track)
   form_factor.to_s == "wear" ? "wear:#{track}" : track
@@ -31,37 +31,40 @@ def openwatch_project_path(path)
   pathname.absolute? ? value : File.expand_path(value, OPENWATCH_PROJECT_ROOT)
 end
 
-# The tracks of a form factor that already hold a versionCode, among the
-# ones this pipeline uses.
-def openwatch_tracks_holding(form_factor, version_code, json_key)
-  %w[internal beta production].map { |track| openwatch_track(form_factor, track) }.select do |track|
-    google_play_track_version_codes(
-      package_name: OPENWATCH_PACKAGE_NAME,
-      json_key: json_key,
-      track: track
-    ).map(&:to_i).include?(version_code.to_i)
-  end
-end
+# What Google Play holds for the app, read in one edit: the versionCodes on
+# each track of the form factor this pipeline uses, and the bundles of its App
+# Bundle Explorer as versionCode => sha256 of the uploaded file. A code Play
+# refuses with "Version code N has already been used" is among the bundles, on
+# a track or not: a bundle uploaded by hand and left as a draft, say.
+# One edit, not one per question: Play caps the edits an app may open in a
+# day ("Daily edit creation quota exceeded"), and supply needs one of its own.
+def openwatch_play_state(form_factor, json_key)
+  require "supply"
 
-# The bundles Google Play already holds for the app, its App Bundle Explorer,
-# as versionCode => sha256 of the uploaded file. A code Play refuses with
-# "Version code N has already been used" is in here, on a track or not: a
-# bundle uploaded by hand and left as a draft, say.
-def openwatch_bundle_library(json_key)
+  tracks = %w[internal beta production].map { |track| openwatch_track(form_factor, track) }
   client = Supply::Client.make_from_config(params: { json_key: json_key, package_name: OPENWATCH_PACKAGE_NAME, timeout: 600 })
   client.begin_edit(package_name: OPENWATCH_PACKAGE_NAME)
-  bundles = Array(client.client.list_edit_bundles(OPENWATCH_PACKAGE_NAME, client.current_edit.id).bundles)
-  client.abort_current_edit
-  bundles.to_h { |bundle| [bundle.version_code.to_i, bundle.sha256.to_s] }
+  begin
+    # The API returns the codes as strings.
+    track_codes = tracks.to_h { |track| [track, client.track_version_codes(track).compact.map(&:to_i)] }
+    bundles = Array(client.client.list_edit_bundles(OPENWATCH_PACKAGE_NAME, client.current_edit.id).bundles)
+  ensure
+    client.abort_current_edit
+  end
+
+  track_codes.each do |track, codes|
+    UI.message(codes.empty? ? "No version codes on Google Play track '#{track}'." : "Google Play track '#{track}' holds version codes #{codes.join(', ')}.")
+  end
+  { tracks: track_codes, bundles: bundles.to_h { |bundle| [bundle.version_code.to_i, bundle.sha256.to_s] } }
 end
 
 # Releases a bundle Play already holds to a track, with no new upload: supply
 # builds the release from version_codes_to_retain when it uploads nothing.
 # Refuses a bundle whose bytes are not this run's, so a stray upload under
-# the same code never ships. Returns false when Play holds no such bundle.
-def openwatch_release_held_bundle(aab, version_code, track, json_key, **supply_options)
-  library = openwatch_bundle_library(json_key)
-  held_sha256 = library[version_code.to_i]
+# the same code never ships. Returns false when Play holds no such bundle,
+# going by the bundles openwatch_play_state read.
+def openwatch_release_held_bundle(aab, version_code, track, json_key, bundles, **supply_options)
+  held_sha256 = bundles[version_code.to_i]
   return false if held_sha256.nil?
 
   local_sha256 = Digest::SHA256.file(aab).hexdigest
@@ -111,11 +114,8 @@ def openwatch_upload_to_testing(options, track)
   UI.user_error!("aab does not exist: #{aab}") unless File.file?(aab)
 
   if version_code.to_s.length > 0
-    existing_codes = google_play_track_version_codes(
-      package_name: OPENWATCH_PACKAGE_NAME,
-      json_key: json_key,
-      track: testing_track
-    ).map(&:to_i)
+    play = openwatch_play_state(form_factor, json_key)
+    existing_codes = play[:tracks].fetch(testing_track)
 
     if existing_codes.include?(version_code.to_i)
       UI.message("Version code #{version_code} is already on Google Play track '#{testing_track}'; skipping upload.")
@@ -126,7 +126,7 @@ def openwatch_upload_to_testing(options, track)
     # already been used"): a bundle uploaded by hand to another track, say.
     # Nothing to upload then; the production lane promotes from wherever the
     # code sits.
-    elsewhere = openwatch_tracks_holding(form_factor, version_code, json_key) - [testing_track]
+    elsewhere = play[:tracks].select { |_, codes| codes.include?(version_code.to_i) }.keys - [testing_track]
     unless elsewhere.empty?
       UI.message("Version code #{version_code} is already on Google Play track(s) #{elsewhere.join(', ')}; skipping the '#{testing_track}' upload.")
       return
@@ -148,7 +148,7 @@ def openwatch_upload_to_testing(options, track)
   end
 
   testing_metadata_options = { skip_upload_metadata: true, skip_upload_changelogs: true, skip_upload_images: true, skip_upload_screenshots: true }
-  if version_code.to_s.length > 0 && openwatch_release_held_bundle(aab, version_code, testing_track, json_key, **testing_metadata_options)
+  if version_code.to_s.length > 0 && openwatch_release_held_bundle(aab, version_code, testing_track, json_key, play[:bundles], **testing_metadata_options)
     return
   end
 
@@ -206,11 +206,8 @@ platform :android do
     UI.user_error!("aab does not exist: #{aab}") unless File.file?(aab)
 
     if version_code.to_s.length > 0
-      existing_codes = google_play_track_version_codes(
-        package_name: OPENWATCH_PACKAGE_NAME,
-        json_key: json_key,
-        track: production_track
-      ).map(&:to_i)
+      play = openwatch_play_state(form_factor, json_key)
+      existing_codes = play[:tracks].fetch(production_track)
 
       if existing_codes.include?(version_code.to_i)
         UI.message("Version code #{version_code} is already on Google Play track '#{production_track}'; skipping production upload.")
@@ -233,13 +230,7 @@ platform :android do
       # is then a promotion of that same release, with the store metadata, not
       # a second upload. A version no testing track had (Play was paused at the
       # time) falls through to the upload below.
-      source_track = testing_tracks.find do |track|
-        google_play_track_version_codes(
-          package_name: OPENWATCH_PACKAGE_NAME,
-          json_key: json_key,
-          track: track
-        ).map(&:to_i).include?(version_code.to_i)
-      end
+      source_track = testing_tracks.find { |track| play[:tracks].fetch(track).include?(version_code.to_i) }
       if source_track
         UI.message("Promoting version code #{version_code} from '#{source_track}' to '#{production_track}'.")
         supply(
@@ -259,7 +250,7 @@ platform :android do
       end
       # On no track, but maybe in Play's bundle library already (a hand upload
       # left as a draft): then the release is made from that bundle.
-      next if openwatch_release_held_bundle(aab, version_code, production_track, json_key, **metadata_options)
+      next if openwatch_release_held_bundle(aab, version_code, production_track, json_key, play[:bundles], **metadata_options)
       UI.message("Version code #{version_code} is on no testing track (#{testing_tracks.join(', ')}) and not on Google Play; uploading the bundle to '#{production_track}'.")
     end
 

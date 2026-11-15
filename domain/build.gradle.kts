@@ -1,7 +1,7 @@
-// App-local code with no dependency on the rest of the phone app: the device
-// and sleep models, the sleep and walking estimators and the body profile under
-// `domain`, and the FIT and geo primitives under `core`. Packages keep their
-// names; :app depends on this module.
+// App-local code with no dependency on the rest of the phone app: the device,
+// sleep-minute and scale models and the unit preferences under `domain`, and the
+// FIT and geo primitives under `core`. Packages keep their names; :app depends on
+// this module. The calculations are health-calculations', shared with OpenVitals.
 //
 // An Android library rather than plain Kotlin: a handful of files use Health
 // Connect record constants and the platform's locale data, and Android lint
@@ -40,27 +40,20 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    // The Wear OS sleep-minute fixtures, used by this module's tests and by the
-    // app's Wear OS sync tests.
-    testFixtures {
-        enable = true
-    }
-
     lint {
         ignoreTestSources = true
         // As in the app: the full lint already ran on the commit.
         checkReleaseBuilds = false
-        // The fixtures do not ship either.
-        ignoreTestFixturesSources = true
     }
 }
 
 dependencies {
-    // Public types of this module reference both.
+    // Public types of this module reference these.
     api(project(":wearlink"))
     api(libs.health.connect.client)
-
-    testFixturesImplementation(libs.truth)
+    // The calculations and the models they read, shared with OpenVitals
+    // (the health-calculations/ submodule, a composite build). The app uses them too.
+    api("tech.mmarca.healthcalculations:health-calculations")
 
     testImplementation(libs.junit4)
     testImplementation(libs.truth)

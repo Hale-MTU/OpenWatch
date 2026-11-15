@@ -1,3 +1,6 @@
 [submodule "openlink"]
 	path = openlink
 	url = https://github.com/Hale-MTU/openlink
+[submodule "health-calculations"]
+	path = health-calculations
+	url = https://github.com/Hale-MTU/health-calculations

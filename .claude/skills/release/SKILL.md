@@ -24,8 +24,9 @@ notes, and pushes in one motion.
   `main`, so release from `main`.
 - Gates are green: `./gradlew verifyCi verifyWearCi`, the phone gate and the
   watch gate. The phone app builds the OpenLink library from the `openlink/`
-  submodule: `git submodule update --init` first if `git submodule status`
-  starts with `-`. On this laptop the run needs `JAVA_HOME=~/.jdks/jbr-21.0.11`,
+  submodule, and both apps build the health-calculations library from
+  `health-calculations/`: `git submodule update --init` first if
+  `git submodule status` starts with `-`. On this laptop the run needs `JAVA_HOME=~/.jdks/jbr-21.0.11`,
   `ANDROID_HOME=~/Android/Sdk`, `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8`
   (`./gradlew --stop` first if a daemon was started without it) and an init
   script that pins the test workers to English, since they default to Spanish:
@@ -34,9 +35,11 @@ notes, and pushes in one motion.
 - Scope the release: `git log --oneline vLAST..HEAD` is the list of what the notes must cover.
   Read the commit bodies, not only the subjects; the user-facing behaviour is
   usually described there. Translation merges are in scope too (which locales
-  moved, whether a new one started). A change in the `openlink/` submodule
-  ships with the phone app: read `git diff vLAST..HEAD -- openlink` and that
-  repository's log between the two commits.
+  moved, whether a new one started). A change in the `openlink/` or
+  `health-calculations/` submodule ships with the apps: read
+  `git diff vLAST..HEAD -- openlink health-calculations` and that repository's
+  log between the two commits. A moved `health-calculations/` changes the numbers
+  the apps show, and OpenVitals' release carries the same move.
 - Translations: count the keys each `values-*/strings.xml` is missing against
   `values/strings.xml` (translatable ones only) before writing the notes;
   `verifyTranslations` only enforces 70%. The thirteen shipping locales are at
@@ -53,6 +56,12 @@ notes, and pushes in one motion.
   nothing, and enabling it afterwards does not replay the push (OpenVitals
   2.14.0). Check `state` is `active`:
   `gh api repos/Hale-MTU/OpenWatch/actions/workflows/release.yml --jq .state`.
+- No branch ruleset refuses the push. The script pushes `main` and the tag
+  atomically, so a refused `main` takes the tag with it. Every ruleset that
+  asks `main` for a pull request must say `always`:
+  `for id in $(gh api repos/Hale-MTU/OpenWatch/rules/branches/main --jq '[.[] | select(.type=="pull_request") | .ruleset_id] | unique[]'); do gh api repos/Hale-MTU/OpenWatch/rulesets/$id --jq '"\(.name): \(.current_user_can_bypass)"'; done`.
+  One that says `never` (OpenVitals 2.17.0: `main-1`, added 2026-11-13 with
+  no bypass list) is the maintainer's to lift; ask before running the script.
 - The Play variables say where the uploads go, and the footer of the notes
   depends on them: `gh variable list` shows `OPENWATCH_PLAY_PAUSED`,
   `OPENWATCH_PLAY_INTERNAL_ONLY` and `OPENWATCH_PLAY_TESTING_TRACK` when they
@@ -247,6 +256,17 @@ well on its own and front-load it.
   doc, while `CONNECT_ATTEMPTS = 3` means two redials. The tag kept the wrong
   count.
 - A fix that was hidden rather than announced can need announcing later.
+- 0.4.0's watch promotion failed with "You must let us know whether your app
+  uses any Foreground Service permissions": the watch app had added
+  `FOREGROUND_SERVICE_LOCATION` for workout GPS. A new foreground service
+  type in either manifest (`git diff vLAST..HEAD -- '*AndroidManifest.xml'`)
+  needs Play Console's App content, Foreground service permissions
+  declaration before the production run. Afterwards `gh run rerun <run>
+  --failed` is safe: a lane skips a track that already holds the version.
+- OpenVitals 2.17.0's push was refused by a ruleset without a bypass list;
+  the commit and the tag waited locally until it was disabled, then
+  `git push --atomic origin main vX.Y.Z` finished what the script started.
+  Check the rulesets in pre-flight.
 
 - Unescaped `&` in a translated string breaks `verifyTranslations` (XML parse).
 - A locale that slips under 70% drops out of the picker silently.

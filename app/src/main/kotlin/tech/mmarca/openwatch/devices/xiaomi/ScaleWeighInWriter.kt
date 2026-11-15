@@ -11,12 +11,12 @@ import tech.mmarca.openwatch.core.presentation.isPermissionFailure
 import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
 import tech.mmarca.openwatch.data.repository.BodyProfileProvider
 import tech.mmarca.openwatch.data.repository.contract.ScaleWeighInRepository
-import tech.mmarca.openwatch.domain.insights.BodyCompositionEstimate
-import tech.mmarca.openwatch.domain.insights.BodyCompositionInput
-import tech.mmarca.openwatch.domain.insights.bodyComposition
-import tech.mmarca.openwatch.domain.insights.bodyCompositionMissingInputs
+import tech.mmarca.healthcalculations.insights.BodyCompositionEstimate
+import tech.mmarca.healthcalculations.insights.BodyCompositionInput
+import tech.mmarca.healthcalculations.insights.bodyComposition
+import tech.mmarca.healthcalculations.insights.bodyCompositionMissingInputs
 import tech.mmarca.openwatch.domain.model.ScaleWeighIn
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.data.repository.isDuplicateClientRecordFailure
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException

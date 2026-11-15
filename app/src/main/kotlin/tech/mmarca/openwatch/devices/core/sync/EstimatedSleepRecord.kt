@@ -7,8 +7,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneOffset
-import tech.mmarca.openwatch.domain.insights.EstimatedSleepSession
-import tech.mmarca.openwatch.domain.insights.EstimatedStage
+import tech.mmarca.healthcalculations.insights.EstimatedSleepSession
+import tech.mmarca.healthcalculations.insights.EstimatedStage
 
 /**
  * The Health Connect shape of a night the phone estimated from per-minute
