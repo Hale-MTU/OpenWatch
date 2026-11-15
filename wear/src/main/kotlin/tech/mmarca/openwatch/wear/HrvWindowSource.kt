@@ -7,6 +7,8 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Handler
 import android.util.Log
+import tech.mmarca.healthcalculations.signal.HrvWindowResult
+import tech.mmarca.healthcalculations.signal.NightHrv
 
 /**
  * What one night window gave: its RMSSD and its breathing rate, either may

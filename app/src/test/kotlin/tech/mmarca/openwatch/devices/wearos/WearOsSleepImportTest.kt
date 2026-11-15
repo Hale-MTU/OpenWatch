@@ -9,8 +9,8 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import tech.mmarca.openwatch.domain.insights.sleepNightWindow
-import tech.mmarca.openwatch.domain.model.WearSleepMinute
+import tech.mmarca.healthcalculations.insights.sleepNightWindow
+import tech.mmarca.healthcalculations.model.WearSleepMinute
 
 /**
  * The night bookkeeping around the estimator: which nights a pull touched,
