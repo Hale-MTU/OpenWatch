@@ -101,6 +101,11 @@ class WearOsWatchSyncService(
     private val writeRespiratoryRate: () -> Boolean = { false },
     /** The body for a workout's calories: sex, age and weight. Strict like [weightKg]. */
     private val profile: suspend () -> BodyProfile = { BodyProfile(weightKg = weightKg()) },
+    /**
+     * The body for the watch's heart rate zones: the declared profile, no Health Connect
+     * read, since the zones take no weight and a sync with nothing to estimate reads none.
+     */
+    private val zoneProfile: suspend () -> BodyProfile = { BodyProfile() },
 ) : DeviceSyncPort {
 
     @Inject
@@ -120,6 +125,7 @@ class WearOsWatchSyncService(
         Instant::now, ZoneId::systemDefault,
         { preferences.writeRespiratoryRate },
         { bodyProfile.resolve() },
+        { bodyProfile.declared() },
     )
 
     private val syncMutex = Mutex()
@@ -148,6 +154,8 @@ class WearOsWatchSyncService(
         clock = clock,
         zone = zone,
     )
+
+    private val zones by lazy { WearOsZoneSync(healthConnect, nodePort, zoneProfile, clock, zone) }
 
     private val linkRetry = object : WearOsNightSeriesSync.Retry {
         override suspend fun <T> run(pull: suspend () -> T): T = retryOnce(pull)
@@ -185,6 +193,7 @@ class WearOsWatchSyncService(
             progress.unwritten += night.unwritten
             progress.withheldPermissions += night.withheld
             if (!pullWorkouts(device, progress)) return notPaired(device)
+            zones.sync(device, linkRetry)
         } catch (error: CancellationException) {
             throw error
         } catch (failure: WearOsLinkFailure) {
