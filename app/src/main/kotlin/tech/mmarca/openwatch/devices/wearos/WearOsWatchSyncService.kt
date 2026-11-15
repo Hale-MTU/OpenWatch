@@ -1,6 +1,6 @@
 package tech.mmarca.openwatch.devices.wearos
 
-import tech.mmarca.openwatch.domain.preferences.BodyProfile
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.ElevationGainedRecord
@@ -37,13 +37,13 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.devices.core.sync.UnwrittenSeries
 import tech.mmarca.openwatch.data.repository.RecordWrite
 import tech.mmarca.openwatch.data.repository.insertWithOutcomes
-import tech.mmarca.openwatch.domain.insights.sleepNightWindow
-import tech.mmarca.openwatch.domain.insights.WearSleepEstimator
+import tech.mmarca.healthcalculations.insights.sleepNightWindow
+import tech.mmarca.healthcalculations.insights.WearSleepEstimator
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
-import tech.mmarca.openwatch.domain.model.WearSleepMinute
+import tech.mmarca.healthcalculations.model.WearSleepMinute
 import tech.mmarca.openwatch.data.repository.isDuplicateClientRecordFailure
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
-import tech.mmarca.openwatch.wearlink.AscentCredit
+import tech.mmarca.healthcalculations.insights.AscentCredit
 
 /**
  * Pulls what the OpenWatch Wear OS app recorded and writes it to Health

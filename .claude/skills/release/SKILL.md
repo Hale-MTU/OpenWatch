@@ -24,8 +24,9 @@ notes, and pushes in one motion.
   `main`, so release from `main`.
 - Gates are green: `./gradlew verifyCi verifyWearCi`, the phone gate and the
   watch gate. The phone app builds the OpenLink library from the `openlink/`
-  submodule: `git submodule update --init` first if `git submodule status`
-  starts with `-`. On this laptop the run needs `JAVA_HOME=~/.jdks/jbr-21.0.11`,
+  submodule, and both apps build the health-calculations library from
+  `health-calculations/`: `git submodule update --init` first if
+  `git submodule status` starts with `-`. On this laptop the run needs `JAVA_HOME=~/.jdks/jbr-21.0.11`,
   `ANDROID_HOME=~/Android/Sdk`, `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8`
   (`./gradlew --stop` first if a daemon was started without it) and an init
   script that pins the test workers to English, since they default to Spanish:
@@ -34,9 +35,11 @@ notes, and pushes in one motion.
 - Scope the release: `git log --oneline vLAST..HEAD` is the list of what the notes must cover.
   Read the commit bodies, not only the subjects; the user-facing behaviour is
   usually described there. Translation merges are in scope too (which locales
-  moved, whether a new one started). A change in the `openlink/` submodule
-  ships with the phone app: read `git diff vLAST..HEAD -- openlink` and that
-  repository's log between the two commits.
+  moved, whether a new one started). A change in the `openlink/` or
+  `health-calculations/` submodule ships with the apps: read
+  `git diff vLAST..HEAD -- openlink health-calculations` and that repository's
+  log between the two commits. A moved `health-calculations/` changes the numbers
+  the apps show, and OpenVitals' release carries the same move.
 - Translations: count the keys each `values-*/strings.xml` is missing against
   `values/strings.xml` (translatable ones only) before writing the notes;
   `verifyTranslations` only enforces 70%. The thirteen shipping locales are at

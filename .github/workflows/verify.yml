@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          # The OpenLink library is a submodule the phone app builds from.
+          # The OpenLink and health-calculations libraries are submodules the apps build from.
           submodules: true
           fetch-depth: 0
       # The wiki is built from the Markdown (wiki.yml); a relative link to a
@@ -102,7 +102,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          # The OpenLink library is a submodule the phone app builds from.
+          # The OpenLink and health-calculations libraries are submodules the apps build from.
           submodules: true
       - run: echo "GRADLE_USER_HOME=$RUNNER_TEMP/gradle-user-home" >> "$GITHUB_ENV"
       - uses: gradle/actions/setup-gradle@v5
@@ -117,7 +117,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          # The OpenLink library is a submodule the phone app builds from.
+          # The OpenLink and health-calculations libraries are submodules the apps build from.
           submodules: true
       - run: echo "GRADLE_USER_HOME=$RUNNER_TEMP/gradle-user-home" >> "$GITHUB_ENV"
       - uses: gradle/actions/setup-gradle@v5
@@ -135,7 +135,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-          # The OpenLink library is a submodule the phone app builds from.
+          # The OpenLink and health-calculations libraries are submodules the apps build from.
           submodules: true
       - run: echo "GRADLE_USER_HOME=$RUNNER_TEMP/gradle-user-home" >> "$GITHUB_ENV"
       - uses: gradle/actions/setup-gradle@v5

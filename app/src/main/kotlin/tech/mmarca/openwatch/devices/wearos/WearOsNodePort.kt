@@ -1,7 +1,7 @@
 package tech.mmarca.openwatch.devices.wearos
 
 import java.time.Instant
-import tech.mmarca.openwatch.domain.model.WearSleepMinute
+import tech.mmarca.healthcalculations.model.WearSleepMinute
 
 /**
  * What the phone can tell about the OpenWatch Wear OS app on a watch.

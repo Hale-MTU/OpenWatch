@@ -4,14 +4,14 @@ import androidx.health.connect.client.records.SleepSessionRecord
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
+import tech.mmarca.healthcalculations.insights.SleepStageEstimator
+import tech.mmarca.healthcalculations.insights.WearNap
+import tech.mmarca.healthcalculations.insights.WearNaps
+import tech.mmarca.healthcalculations.insights.WearNight
+import tech.mmarca.healthcalculations.insights.WearSleepEstimator
+import tech.mmarca.healthcalculations.insights.sleepNightWindow
+import tech.mmarca.healthcalculations.model.WearSleepMinute
 import tech.mmarca.openwatch.devices.core.sync.estimatedSleepSessionRecord
-import tech.mmarca.openwatch.domain.insights.SleepStageEstimator
-import tech.mmarca.openwatch.domain.insights.WearNap
-import tech.mmarca.openwatch.domain.insights.WearNaps
-import tech.mmarca.openwatch.domain.insights.WearNight
-import tech.mmarca.openwatch.domain.insights.WearSleepEstimator
-import tech.mmarca.openwatch.domain.insights.sleepNightWindow
-import tech.mmarca.openwatch.domain.model.WearSleepMinute
 
 /**
  * Turns the per-minute rows the watch recorded into one estimated sleep
