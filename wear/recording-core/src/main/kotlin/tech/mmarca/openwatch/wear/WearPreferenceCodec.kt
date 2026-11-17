@@ -27,7 +27,10 @@ data class WatchPreferences(
     val sex: BiologicalSex? = null,
     /** A run or a ride with a route pauses by itself when the wearer stops (`AutoPause`). On the watch only, not a link token. */
     val autoPause: Boolean = true,
-    /** The watch offers to record a walk or a run it sees in the step minutes (`ActivityDetector`). On the watch only. */
+    /**
+     * The watch offers to record a walk or a run it sees in the step minutes, or a ride it sees in the heart rate
+     * (only with a maximum from the phone, for the zones), `ActivityDetector`. On the watch only.
+     */
     val autoDetect: Boolean = true,
     /**
      * The daily goals the rings, the steps complication and the quick log tile are drawn against,
