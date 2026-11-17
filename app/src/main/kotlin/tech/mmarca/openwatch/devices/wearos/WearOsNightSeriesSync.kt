@@ -138,13 +138,14 @@ internal class WearOsNightSeriesSync(
         }
         var medians = cursors.skinNightMedians(device.id)
         var written = 0
+        var withoutBaseline = 0
         for (run in finished) {
-            val record = WearOsSkinTemperatureImport.record(
-                run,
-                WearOsSkinTemperatureImport.baseline(run, medians),
-                zone(),
-                version = clock().toEpochMilli(),
-            )
+            // Too few earlier nights: the night only joins the baseline, see WearOsSkinTemperatureImport.
+            val baseline = WearOsSkinTemperatureImport.baseline(medians)
+            if (baseline == null) withoutBaseline++
+            val record = baseline?.let {
+                WearOsSkinTemperatureImport.record(run, it, zone(), version = clock().toEpochMilli())
+            }
             if (record != null) {
                 written += try {
                     importRepository.insertWithOutcomes(listOf(record)).count { it == RecordWrite.WRITTEN }
@@ -161,7 +162,7 @@ internal class WearOsNightSeriesSync(
         }
         cursors.setSkinNightMedians(device.id, medians)
         cursors.setSkinCursor(device.id, finished.last().end)
-        WearOsLog.log("skin: $written night(s) written")
+        WearOsLog.log("skin: $written night(s) written, $withoutBaseline without a baseline yet")
         return true
     }
 

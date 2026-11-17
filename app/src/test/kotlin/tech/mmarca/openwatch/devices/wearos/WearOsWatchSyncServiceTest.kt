@@ -33,6 +33,7 @@ import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.RespiratoryRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
+import androidx.health.connect.client.records.SkinTemperatureRecord
 import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.metadata.Metadata
 import io.mockk.slot
@@ -86,6 +87,9 @@ class WearOsWatchSyncServiceTest {
 
     /** SpO2 pages; with none queued the watch answers an empty page. */
     private val spo2Pages = ArrayDeque<WearOsSpo2Page>()
+
+    /** Skin temperature pages; with none queued the watch answers an empty page. */
+    private val skinPages = ArrayDeque<WearOsSkinPage>()
     private val nodePort = object : WearOsNodePort {
         override suspend fun checkStatus(targetAddress: String?, targetName: String?) = WearOsCompanionStatus()
         override suspend fun pullHeartRate(targetAddress: String?, targetName: String?, since: Instant): WearOsHeartRatePage? {
@@ -137,7 +141,7 @@ class WearOsWatchSyncServiceTest {
             spo2Pages.removeFirstOrNull() ?: WearOsSpo2Page(emptyList(), hasMore = false)
 
         override suspend fun pullSkin(targetAddress: String?, targetName: String?, since: Instant): WearOsSkinPage? =
-            WearOsSkinPage(emptyList(), hasMore = false)
+            skinPages.removeFirstOrNull() ?: WearOsSkinPage(emptyList(), hasMore = false)
 
         override suspend fun pullWatchSettings(targetAddress: String?, targetName: String?): Map<String, String>? = null
 
@@ -583,6 +587,27 @@ class WearOsWatchSyncServiceTest {
 
         assertEquals(emptyList<Instant>(), ascentPullsSince)
         assertEquals(Instant.EPOCH, cursors.ascentCursor(WATCH.id))
+    }
+
+    @Test
+    fun `skin temperature nights before the baseline are not written but still build it`() = runTest {
+        pages += WearOsHeartRatePage(emptyList(), hasMore = false)
+        every { healthConnect.isSkinTemperatureAvailable() } returns true
+        coEvery { healthConnect.grantedPermissions() } returns setOf(WearOsSkinTemperatureImport.writePermission)
+        // Four hour-long nights, two hours apart, all settled by t0, each a tenth of a degree warmer.
+        val firstNight = t0.minus(java.time.Duration.ofHours(9))
+        val minutes = (0 until 4).flatMap { night ->
+            List(60) { WearOsSkinMinute(firstNight.plus(java.time.Duration.ofHours(2L * night)).plusSeconds(60L * it), 34.0 + night * 0.1) }
+        }
+        skinPages += WearOsSkinPage(minutes, hasMore = false)
+
+        service().sync(WATCH, Duration.ZERO, null)
+
+        // Only the fourth night has three earlier ones; its baseline is their median.
+        val record = insertedOf<SkinTemperatureRecord>().single()
+        assertEquals(firstNight.plus(java.time.Duration.ofHours(6)), record.startTime)
+        assertEquals(34.1, record.baseline!!.inCelsius, 1e-9)
+        assertEquals(listOf(34.0, 34.1, 34.2, 34.3), cursors.skinNightMedians(WATCH.id).map { Math.round(it * 10) / 10.0 })
     }
 
     @Test
