@@ -28,7 +28,9 @@ module's tests, since both apps compile it.
 
 The verify workflow (`.github/workflows/verify.yml`) diffs a pull request or push against
 its base and runs the phone jobs for anything outside `wear/` and the watch job for `wear/`,
-`wearlink/` and the shared build files. A change to the root Gradle files runs both.
+`wearlink/` and the shared build files. A change to the root Gradle files, to
+`gradle.properties` or to the health-calculations pointer runs both: the watch app compiles
+that library too.
 
 ## Dependency Locks
 
