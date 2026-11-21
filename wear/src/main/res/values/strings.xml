@@ -141,4 +141,5 @@
     <string name="unit_percent">%</string>
     <string name="unit_steps">steps</string>
     <string name="unit_vo2_max">ml/kg/min</string>
+    <string name="phone_request_address">Address ending %1$s</string>
 </resources>
