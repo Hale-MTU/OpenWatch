@@ -20,7 +20,7 @@ module's tests, since both apps compile it.
 
 ```bash
 ./gradlew verifyCi        # the phone app and the domain module: unit tests, translations, duplicate classes, android-test compile, lint
-./gradlew verifyWearCi    # the watch app: unit tests, lint, build, android-test compile
+./gradlew verifyWearCi    # the watch app: unit tests, lint, build, android-test compile, and :app's architecture tests
 ```
 
 `verifyCi` is three tasks that CI runs as separate jobs: `verifyCiUnitTest`,

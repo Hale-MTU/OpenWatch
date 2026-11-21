@@ -311,3 +311,14 @@ tasks.withType<Test>().configureEach {
         inputs.file(repository.file(path)).withPropertyName(name).withPathSensitivity(PathSensitivity.RELATIVE)
     }
 }
+
+// The architecture tests alone. They read the watch app's and the link's sources too, and a
+// change to those alone runs only the watch gate, so that gate runs this.
+tasks.register<Test>("architectureTest") {
+    description = "The architecture and ratchet tests of :app, on the ci variant."
+    group = "verification"
+    val unitTests = tasks.named<Test>("testCiUnitTest").get()
+    testClassesDirs = unitTests.testClassesDirs
+    classpath = unitTests.classpath
+    filter.includeTestsMatching("tech.mmarca.openwatch.architecture.*")
+}

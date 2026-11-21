@@ -100,6 +100,8 @@ tasks.register("verifyWearCi") {
         ":wear:lintDebug",
         ":wear:assembleDebug",
         ":wear:compileDebugAndroidTestKotlin",
+        // The ratchets over the watch's sources live in :app.
+        ":app:architectureTest",
     )
 }
 
