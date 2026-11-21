@@ -109,7 +109,7 @@ class ScaleWeighInIngest(
             store.noteIgnoredProfile(frame.profile, now().toEpochMilli())
             return false
         }
-        if (frame.scaleTimestamp == config.deletedScaleTimestamp) return false
+        if (frame.scaleTimestamp in config.deletedScaleTimestamps) return false
 
         val heardAt = now()
         return weighIns.merge(

@@ -29,8 +29,12 @@ data class XiaomiScaleConfig(
     val keyRejected: Boolean = false,
     val writeFailure: ScaleWriteFailure? = null,
     val ignoredProfile: IgnoredScaleProfile? = null,
-    /** The weigh-in the user deleted last. The scale may still be repeating it. */
-    val deletedScaleTimestamp: Long? = null,
+    /**
+     * The weigh-ins the user deleted, by the scale's timestamp, newest [MAX_DELETED] kept. The
+     * scale may still be repeating one, and a recorded broadcast of an older one may come
+     * back; neither may restore it.
+     */
+    val deletedScaleTimestamps: Set<Long> = emptySet(),
 ) {
     /** A scale was added: its address and key are known. */
     val isSetUp: Boolean
@@ -116,7 +120,8 @@ class XiaomiScaleStore(private val prefs: SharedPreferences) {
     }
 
     fun setDeletedScaleTimestamp(scaleTimestamp: Long) {
-        prefs.edit { putLong(KEY_DELETED_TIMESTAMP, scaleTimestamp) }
+        val kept = (read().deletedScaleTimestamps + scaleTimestamp).sorted().takeLast(MAX_DELETED)
+        prefs.edit { putString(KEY_DELETED_TIMESTAMPS, kept.joinToString(",")) }
         publish()
     }
 
@@ -140,7 +145,10 @@ class XiaomiScaleStore(private val prefs: SharedPreferences) {
             ?.let { name -> ScaleWriteFailure.entries.firstOrNull { it.name == name } },
         ignoredProfile = prefs.getInt(KEY_IGNORED_PROFILE, NONE).takeIf { it != NONE }
             ?.let { IgnoredScaleProfile(it, prefs.getLong(KEY_IGNORED_AT, 0L)) },
-        deletedScaleTimestamp = prefs.getLong(KEY_DELETED_TIMESTAMP, NONE.toLong()).takeIf { it != NONE.toLong() },
+        // Before the list, only the last deletion was kept, under its own key.
+        deletedScaleTimestamps = prefs.getString(KEY_DELETED_TIMESTAMPS, null).orEmpty()
+            .split(',').mapNotNull { it.toLongOrNull() }.toSet() +
+            listOfNotNull(prefs.getLong(KEY_DELETED_TIMESTAMP, NONE.toLong()).takeIf { it != NONE.toLong() }),
     )
 
     companion object {
@@ -156,6 +164,10 @@ class XiaomiScaleStore(private val prefs: SharedPreferences) {
         private const val KEY_IGNORED_PROFILE = "ignored_profile"
         private const val KEY_IGNORED_AT = "ignored_at"
         private const val KEY_DELETED_TIMESTAMP = "deleted_scale_timestamp"
+        private const val KEY_DELETED_TIMESTAMPS = "deleted_scale_timestamps"
+
+        /** About two years of a weigh-in a week deleted; each entry is a dozen characters. */
+        const val MAX_DELETED = 100
         private const val NONE = -1
 
         private val BindKeyText = Regex("[0-9a-fA-F]{${BIND_KEY_BYTES * 2}}")

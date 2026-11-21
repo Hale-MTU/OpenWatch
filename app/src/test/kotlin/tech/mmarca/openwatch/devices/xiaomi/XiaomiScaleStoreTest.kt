@@ -2,6 +2,7 @@ package tech.mmarca.openwatch.devices.xiaomi
 
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Test
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
@@ -33,7 +34,7 @@ class XiaomiScaleStoreTest {
                 keyRejected = true,
                 writeFailure = ScaleWriteFailure.PERMISSION,
                 ignoredProfile = IgnoredScaleProfile(profile = 2, atMillis = 5_000),
-                deletedScaleTimestamp = 1744250605,
+                deletedScaleTimestamps = setOf(1744250605),
             ),
             restarted.config.value,
         )
@@ -107,5 +108,18 @@ class XiaomiScaleStoreTest {
 
         assertEquals(accepted.map { key.toList() }, accepted.map { XiaomiScaleStore.parseBindKey(it)?.toList() })
         assertEquals(refused.map { null }, refused.map { XiaomiScaleStore.parseBindKey(it) })
+    }
+
+    @Test
+    fun `every deleted weigh-in is remembered, not only the last, up to a bound`() {
+        store.setUp("8C:D0:B2:F6:BE:EF", "Bathroom scale", key)
+        store.setDeletedScaleTimestamp(1_000)
+        store.setDeletedScaleTimestamp(2_000)
+
+        assertEquals(setOf(1_000L, 2_000L), store.config.value.deletedScaleTimestamps)
+
+        repeat(XiaomiScaleStore.MAX_DELETED + 5) { store.setDeletedScaleTimestamp(10_000L + it) }
+        assertEquals(XiaomiScaleStore.MAX_DELETED, store.config.value.deletedScaleTimestamps.size)
+        assertFalse(1_000L in store.config.value.deletedScaleTimestamps)
     }
 }
