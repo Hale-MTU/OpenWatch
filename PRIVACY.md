@@ -1,6 +1,6 @@
 # OpenWatch Privacy Policy
 
-Last updated: November 9, 2026
+Last updated: November 21, 2026
 
 OpenWatch is a local-first Android app that pairs a Garmin or Wear OS watch and a Xiaomi body composition scale with your phone and writes what they record to Health Connect.
 
@@ -30,14 +30,14 @@ OpenWatch uses Bluetooth to reach the devices you add in the app, and nothing el
 - A Wear OS watch running the OpenWatch watch app, over Bluetooth. The first time a phone connects, the watch asks you to allow or block it; an allowed phone's token is kept on the watch, and no other phone is answered.
 - A Xiaomi Body Composition Scale S400 or S400 Pro. The scale broadcasts each weigh-in; OpenWatch decodes the broadcast with the key you take from your Xiaomi account and type into the app. The key is stored in the app's private preferences and is used for nothing else.
 
-The app asks for Bluetooth and, on older Android versions, location permissions because Android requires them to scan for and connect to Bluetooth devices. OpenWatch does not use location for anything else and keeps no location history.
+The app asks for Bluetooth and, on Android 11 and older, the location permission, because Android requires them to scan for and connect to Bluetooth devices. On those older versions, where the phone app holds that permission, a Garmin watch that asks for the phone's position is given the last one Android already has; OpenWatch requests no position fix of its own. It keeps no location history.
 
 ## What OpenWatch Writes To Health Connect
 
 What a paired device recorded, when you sync it or when a sync runs on a schedule you chose:
 
 - From a Garmin watch: activities with their route and sensor samples, steps, distance, calories, heart rate, resting heart rate, heart rate variability, oxygen saturation, respiratory rate, VO2 max, basal metabolic rate, sleep, and the weight a Garmin scale relays through the watch.
-- From a Wear OS watch: heart rate, steps (with their cadence and an estimate of the calories walking cost), floors and elevation gained recorded on the watch, an estimated sleep session per night, and the night's resting heart rate.
+- From a Wear OS watch: heart rate, steps (with their cadence and an estimate of the calories walking cost), floors and elevation gained recorded on the watch, an estimated sleep session per night, the night's resting heart rate and, where the watch can measure it, heart rate variability, and workouts recorded on the watch with their route, distance and calories. If you switch them on: the breathing rate at night, and, on a Samsung watch, blood oxygen and skin temperature at night. Skin temperature is written as the difference from your own usual night.
 - From the scale: weight and heart rate as the scale measured them, and the body fat, lean mass and body water the app estimates from the scale's measurement and your body profile.
 
 Each record names OpenWatch as its source. Records OpenWatch wrote can be deleted from Health Connect's own settings at any time. Records written by other apps are never changed.
@@ -47,7 +47,8 @@ Each record names OpenWatch as its source. Records OpenWatch wrote can be delete
 OpenWatch is not a dashboard; it shows no history. It reads, with your permission:
 
 - Your weight and height, to estimate body composition from the scale and to let the Wear OS watch app estimate calories.
-- Steps, heart rate, resting heart rate, sleep and exercise sessions, only to avoid writing a record a sync already wrote, and to send the watch what it needs for its own display.
+- Heart rate, resting heart rate, sleep and exercise sessions: to leave alone a night or a day another source already covers, to keep a workout's calories from being counted twice, to estimate a workout's energy, and to send the watch what it needs for its own display, such as your heart rate zones.
+- Records older than 30 days, only to find your latest weight and height when they were entered longer ago than that.
 
 Background reading is used only for a scheduled sync.
 
@@ -55,12 +56,22 @@ Background reading is used only for a scheduled sync.
 
 If you switch them on, and only then:
 
-- **Notifications.** With notification access granted, OpenWatch forwards the notifications you choose to a Garmin watch. They are held in memory while they are shown and are never written to storage or sent anywhere else.
+- **Notifications.** With notification access granted, OpenWatch forwards your phone's notifications to a Garmin watch, title and text, except those of the apps you switch off in the app. The phone's Do Not Disturb is respected. They are held in memory while they are shown and are never written to storage or sent anywhere else.
 - **Calendar.** With calendar permission granted, upcoming events are sent to a Garmin watch's calendar view. Nothing is stored.
 - **Music.** The title, artist and album of what your phone is playing are sent to the watch for its music controls. Nothing is stored.
 - **Navigation.** If you use the CoMaps app, its turn-by-turn guidance can be shown on a Garmin watch. OpenWatch reads the guidance from CoMaps and passes it on; it keeps none of it.
 - **Weather.** Weather another app broadcasts on the phone can be passed to the watch. OpenWatch fetches no weather itself.
 - **Find my watch, alarms, watch settings, saved locations.** Sent to the watch at your request.
+
+## The Wear OS Watch App
+
+The watch app records with the watch's own sensors and keeps what it records on the watch until the phone collects it. Like the phone app, it has no internet permission. It asks, on the watch:
+
+- The heart rate sensor (Android's body sensors or heart rate permission, and its background form), for heart rate, the night's heart rate variability and the sleep estimate.
+- Physical activity, for steps.
+- Location, only while you record a workout with GPS on the watch, for its route.
+- On a Samsung watch, and only if you switch the option on: skin temperature and blood oxygen at night. For these, and optionally for heart rate, the watch app asks the health service Samsung ships on the watch for the reading. OpenWatch sends nothing to Samsung.
+- Bluetooth, to answer the phone you allowed, and notifications, for its own status.
 
 ## Local Storage
 
@@ -70,13 +81,13 @@ Health Connect is the source of truth for every record it has a type for. OpenWa
 - A small database of the watch measurements Health Connect has no record type for (such as stress, Body Battery and sleep scores from a Garmin watch), shown on the Watch Data screen.
 - Sync cursors and file watermarks, so a sync fetches only what is new.
 
-The Wear OS watch app keeps the sensor readings it has not yet synced in its own private storage on the watch, and drops them once the phone has them.
+The Wear OS watch app keeps a week of sensor readings and a month of recorded workouts in its own private storage on the watch, whether or not the phone has collected them, and deletes them after that.
 
 OpenWatch opts out of Android's cloud backup. When you move to a new phone, Android can copy the app's data across. The phone app's manifest removes inherited Android network permissions, including `INTERNET`.
 
 ## Diagnostics
 
-OpenWatch sends no reports by itself. Its logs hold counts, types and reasons, never a value, a record's time, a name or a device address.
+OpenWatch sends no reports by itself. What it logs stays in Android's own log on the device. The phone app's release builds log counts, types and reasons, never a value, a record's time, a name or a device address. The watch app and debug builds can also log a reading with its time, for diagnosis; a log reaches no one unless you export it yourself.
 
 ## Apps You Connect On Your Phone
 
