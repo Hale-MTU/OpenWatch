@@ -80,14 +80,20 @@ data class BleSensorDevice(
     val isBikeComputer: Boolean
         get() = kind == BleDeviceKind.BIKE_COMPUTER
 
-    /** Driven over GFDI: a Garmin watch or bike computer, never WearOS. The file-sync concept. */
+    /**
+     * Driven over GFDI: a Garmin watch or bike computer. The file-sync concept. Named, not
+     * "not Wear OS": another watch family added later must not be synced as a Garmin.
+     */
     val isGarminGfdi: Boolean
-        get() = (kind == BleDeviceKind.WATCH || kind == BleDeviceKind.BIKE_COMPUTER) &&
-            integration != DeviceIntegration.WEAROS
+        get() = (kind == BleDeviceKind.WATCH || kind == BleDeviceKind.BIKE_COMPUTER) && isGarminIntegration
 
     /** A Garmin watch. For file-sync eligibility use [isGarminGfdi]. */
     val isGarminWatch: Boolean
-        get() = isWatch && integration != DeviceIntegration.WEAROS
+        get() = isWatch && isGarminIntegration
+
+    /** Garmin, or a watch stored before the integration was recorded, which was always a Garmin. */
+    private val isGarminIntegration: Boolean
+        get() = integration == DeviceIntegration.GARMIN || integration == null
 
     /** A WearOS watch: live heart rate over BLE, recorded data via Health Connect. */
     val isWearosWatch: Boolean

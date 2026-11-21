@@ -382,7 +382,7 @@ class BleDeviceRepositoryTest {
             [{"id":"x","displayName":"Future Device","address":"AA:BB:CC:DD:EE:09",
               "bluetoothName":null,"capabilities":[],"enabled":true,
               "wheelCircumferenceMm":null,"addedAt":1753000000000,
-              "kind":"HOLOGRAPH","integration":"NEURALINK"}]
+              "kind":"HOLOGRAPH"}]
         """.trimIndent()
 
         val decoded = BleDeviceRegistryJson.decode(futureJson)
@@ -449,5 +449,16 @@ class BleDeviceRepositoryTest {
 
         assertEquals(8, newRepository().devices.size)
         assertTrue(newRepository().devices.all { it.batteryPercent == 49 && it.lastSyncedAt != null })
+    }
+
+    @Test
+    fun registryJson_aWatchOfAnUnknownIntegrationIsKeptUnreadNotTakenForAGarmin() {
+        val future = """{"id":"w9","displayName":"Ring","address":"AA:BB:CC:DD:EE:09","addedAt":1000,""" +
+            """"kind":"WATCH","integration":"SOMEVENDOR"}"""
+
+        val decoded = BleDeviceRegistryJson.decodeKeepingUnreadable("[$future]")!!
+
+        assertTrue(decoded.devices.isEmpty())
+        assertEquals(1, decoded.unreadable.size)
     }
 }

@@ -299,9 +299,11 @@ internal object BleDeviceRegistryJson {
             kind = item.optString("kind")
                 .let { BleDeviceKind.fromStorage(it) }
                 ?: BleDeviceKind.SENSOR,
-            // Null reads back as Garmin via `isGarminWatch`.
-            integration = item.optString("integration")
-                .let { DeviceIntegration.fromStorage(it) },
+            // Absent (null) reads back as Garmin via `isGarminWatch`. A name this version does not
+            // know is a device from a newer build: the entry is kept unread, never taken for a Garmin.
+            integration = item.optString("integration").takeIf { it.isNotBlank() }?.let { name ->
+                requireNotNull(DeviceIntegration.fromStorage(name)) { "unknown integration" }
+            },
             lastSyncedAt = item.opt("lastSyncedAt")
                 .takeIf { it != null && it != JSONObject.NULL }
                 ?.let { Instant.ofEpochMilli((it as Number).toLong()) },
