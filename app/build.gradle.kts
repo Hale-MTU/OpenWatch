@@ -144,6 +144,9 @@ android {
         compose = true
     }
 
+    // Robolectric reads the merged manifest and resources for the Hilt graph test.
+    testOptions.unitTests.isIncludeAndroidResources = true
+
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
@@ -264,6 +267,11 @@ dependencies {
     testImplementation(libs.truth)
     // Real org.json for local tests (the android.jar copy is a throwing stub).
     testImplementation(libs.org.json)
+    // The Hilt graph test builds the real graph on the JVM.
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.hilt.android.testing)
+    kspTest(libs.hilt.android.compiler)
     androidTestImplementation(composeBom)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.test.core)
