@@ -38,6 +38,7 @@ class GarminWatchActionsControllerTest {
     /** Records a find, so the toggle can be asserted without a radio. */
     private var seenFindAddress: String? = null
     private var findAccepted = true
+    private var findThrows: Exception? = null
 
     /** Records a send, and holds it until released so its running state can be seen. */
     private var seenPoint: GarminWaypoint? = null
@@ -83,6 +84,7 @@ class GarminWatchActionsControllerTest {
             syncController = syncController,
             findWatch = { address, cancelled ->
                 seenFindAddress = address
+                findThrows?.let { throw it }
                 // Ends when the caller cancels, as the real one does.
                 cancelled.await()
                 findAccepted
@@ -138,6 +140,17 @@ class GarminWatchActionsControllerTest {
     }
 
     @Test
+    fun `a find that throws is shown as a failed find, not dropped`() = runTest {
+        val watch = addWatch()
+        findThrows = IllegalStateException("link lost")
+        val (controller, _) = harness()
+
+        controller.toggleFind(watch.id)!!.join()
+
+        assertTrue(controller.state.value.findFailed)
+    }
+
+    @Test
     fun `a refused find is reported as a flag, not a message`() = runTest {
         // The wording belongs to the screen; this layer has no localizations.
         val watch = addWatch()
@@ -150,7 +163,6 @@ class GarminWatchActionsControllerTest {
         running!!.join()
 
         assertTrue(controller.state.value.findFailed)
-        assertNull(controller.state.value.errorMessage)
     }
 
     @Test

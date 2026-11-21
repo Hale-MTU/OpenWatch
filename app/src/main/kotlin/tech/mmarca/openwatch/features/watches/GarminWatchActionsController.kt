@@ -32,7 +32,6 @@ data class WatchFindUiState(
     val findingDeviceId: String? = null,
     /** The last find was refused. A flag; the wording is the screen's. */
     val findFailed: Boolean = false,
-    val errorMessage: String? = null,
 ) {
     fun isFindingDevice(deviceId: String): Boolean = findingDeviceId == deviceId
 }
@@ -139,7 +138,8 @@ class GarminWatchActionsController(
                 throw error
             } catch (error: Exception) {
                 GarminLog.log("[GARMIN-FIND] failed: $error")
-                _state.value = WatchFindUiState(errorMessage = describe(error))
+                // A find that threw failed like one the watch refused; the screen says so.
+                _state.value = WatchFindUiState(findFailed = true)
             } finally {
                 findCancel = null
             }
@@ -198,9 +198,4 @@ class GarminWatchActionsController(
             _state.value.findingDeviceId != null ||
             _pointState.value.isSending ||
             _alarmsState.value.isSending
-
-    private fun describe(error: Throwable): String {
-        val text = error.message ?: error.toString()
-        return text.ifBlank { "The watch could not be reached." }
-    }
 }

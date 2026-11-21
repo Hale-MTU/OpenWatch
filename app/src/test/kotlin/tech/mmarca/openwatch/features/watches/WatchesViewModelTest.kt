@@ -367,7 +367,7 @@ class WatchesViewModelTest {
         assertNotNull(vm.uiState.value.selectedDevice)
         assertTrue(vm.uiState.value.showAddFlow)
         assertFalse(vm.uiState.value.isOnboarding)
-        assertNotNull(vm.uiState.value.errorMessage)
+        assertNotNull(vm.uiState.value.error)
     }
 
     private val wearOsWatch = BleDiscoveredDevice(

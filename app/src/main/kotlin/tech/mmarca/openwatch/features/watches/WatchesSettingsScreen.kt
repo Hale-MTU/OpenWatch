@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import tech.mmarca.openwatch.core.presentation.resolve
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.devices.garmin.GarminOnboardStep
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
@@ -340,7 +341,7 @@ private fun AddWatchDialog(
                     if (state.addingIntegration != DeviceIntegration.WEAROS) {
                         WatchPairSteps(step = state.onboardStep)
                     }
-                    state.errorMessage?.let { message ->
+                    state.error.resolve()?.let { message ->
                         Text(
                             text = message,
                             style = MaterialTheme.typography.bodySmall,

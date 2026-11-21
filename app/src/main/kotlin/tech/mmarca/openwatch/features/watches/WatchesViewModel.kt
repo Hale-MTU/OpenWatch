@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.permissions.OsPermissionsService
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.DeviceClassification
@@ -30,6 +31,7 @@ import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.domain.model.OsPermissionCatalog
 import tech.mmarca.openwatch.domain.model.OsPermissionId
 import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
+import tech.mmarca.openwatch.core.presentation.ScreenError
 
 /** What the last onboarding wants the list screen to say. An unsupported transport outranks a missing association. */
 enum class WatchOnboardNotice { UNSUPPORTED_TRANSPORT, NO_COMPANION }
@@ -48,7 +50,8 @@ data class WatchesUiState(
     val isOnboarding: Boolean = false,
     val onboardStep: GarminOnboardStep? = null,
     val onboardNotice: WatchOnboardNotice? = null,
-    val errorMessage: String? = null,
+    /** Why the last pairing did not finish; translated when shown. */
+    val error: ScreenError? = null,
     /** The last WearOS onboarding ended without the companion association; nothing was added. */
     val companionRequired: Boolean = false,
     /** Android's own permissions for watch pairing and background sync. */
@@ -120,7 +123,7 @@ class WatchesViewModel @Inject constructor(
         if (catalog.allGranted) {
             openAddFlow()
         } else {
-            localState.update { it.copy(showPermissionsGate = true, errorMessage = null) }
+            localState.update { it.copy(showPermissionsGate = true, error = null) }
         }
     }
 
@@ -163,7 +166,7 @@ class WatchesViewModel @Inject constructor(
                 selectedDevice = null,
                 selectedClassification = null,
                 addDisplayName = "",
-                errorMessage = null,
+                error = null,
                 companionRequired = false,
                 // Describes the last onboarding; cleared when a new flow starts.
                 onboardNotice = null,
@@ -179,7 +182,7 @@ class WatchesViewModel @Inject constructor(
                 showAddFlow = false,
                 selectedDevice = null,
                 selectedClassification = null,
-                errorMessage = null,
+                error = null,
                 companionRequired = false,
             )
         }
@@ -190,7 +193,7 @@ class WatchesViewModel @Inject constructor(
     }
 
     fun startScan() {
-        localState.update { it.copy(isScanning = true, errorMessage = null) }
+        localState.update { it.copy(isScanning = true, error = null) }
         sensorCoordinator.startScan(showAllDevices = false)
     }
 
@@ -207,7 +210,7 @@ class WatchesViewModel @Inject constructor(
                 selectedDevice = device,
                 selectedClassification = classification,
                 addDisplayName = device.name ?: device.address,
-                errorMessage = null,
+                error = null,
             )
         }
         stopScan()
@@ -231,7 +234,7 @@ class WatchesViewModel @Inject constructor(
         // WearOS: no bond, no GFDI probe, only the association, which is required.
         if (state.addingIntegration == DeviceIntegration.WEAROS) {
             localState.update {
-                it.copy(isOnboarding = true, errorMessage = null, companionRequired = false, onboardNotice = null)
+                it.copy(isOnboarding = true, error = null, companionRequired = false, onboardNotice = null)
             }
             viewModelScope.launch {
                 when (onboardWearOsWatch(selected, displayName = displayName)) {
@@ -256,7 +259,7 @@ class WatchesViewModel @Inject constructor(
             it.copy(
                 isOnboarding = true,
                 onboardStep = GarminOnboardStep.BONDING,
-                errorMessage = null,
+                error = null,
                 onboardNotice = null,
             )
         }
@@ -278,13 +281,12 @@ class WatchesViewModel @Inject constructor(
                         it.copy(
                             isOnboarding = false,
                             onboardStep = null,
-                            errorMessage = when (outcome.reason) {
-                                WatchBondResult.UNREACHABLE ->
-                                    "Could not reach the watch. Wake it up and keep it close, then try again."
-
-                                else ->
-                                    "Pairing was not completed. Confirm the code on the watch to finish."
-                            },
+                            error = ScreenError.Text(
+                                when (outcome.reason) {
+                                    WatchBondResult.UNREACHABLE -> R.string.settings_watch_pair_unreachable
+                                    else -> R.string.settings_watch_pair_not_completed
+                                },
+                            ),
                         )
                     }
                     onDone(false)
