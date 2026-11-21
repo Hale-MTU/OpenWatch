@@ -43,6 +43,91 @@ often older than the 30 days Health Connect shows without it.
 apps' weights, workouts and sleep with this grant. Without it the sync still writes the
 samples, but no estimate that depends on another app's data.
 
+## Every Health Permission, By Source
+
+The list the app itself shows (Settings, "What OpenWatch reads and writes"). It is
+`healthconnect/HealthDataCatalog`; a manifest that declares a health permission missing from
+it fails `HealthPermissionsTest`.
+
+<!-- health-data:begin (generated from HealthDataCatalog; HealthPermissionsTest checks it) -->
+
+**Written from a Garmin watch**
+
+| Permission | When, or what for |
+| --- | --- |
+| `WRITE_EXERCISE` |  |
+| `WRITE_EXERCISE_ROUTE` |  |
+| `WRITE_DISTANCE` |  |
+| `WRITE_SPEED` |  |
+| `WRITE_POWER` |  |
+| `WRITE_ELEVATION_GAINED` |  |
+| `WRITE_FLOORS_CLIMBED` |  |
+| `WRITE_STEPS` |  |
+| `WRITE_ACTIVE_CALORIES_BURNED` |  |
+| `WRITE_TOTAL_CALORIES_BURNED` |  |
+| `WRITE_BASAL_METABOLIC_RATE` |  |
+| `WRITE_HEART_RATE` |  |
+| `WRITE_RESTING_HEART_RATE` |  |
+| `WRITE_HEART_RATE_VARIABILITY` |  |
+| `WRITE_OXYGEN_SATURATION` |  |
+| `WRITE_RESPIRATORY_RATE` |  |
+| `WRITE_VO2_MAX` |  |
+| `WRITE_SLEEP` |  |
+| `WRITE_WEIGHT` | A weight a Garmin scale relays through the watch. |
+
+**Written from a Wear OS watch**
+
+| Permission | When, or what for |
+| --- | --- |
+| `WRITE_HEART_RATE` |  |
+| `WRITE_STEPS` |  |
+| `WRITE_ACTIVE_CALORIES_BURNED` | An estimate of what walking cost, from your steps and your weight, and a workout's calories. |
+| `WRITE_FLOORS_CLIMBED` |  |
+| `WRITE_ELEVATION_GAINED` |  |
+| `WRITE_SLEEP` | One estimated session per night and per nap. |
+| `WRITE_RESTING_HEART_RATE` |  |
+| `WRITE_HEART_RATE_VARIABILITY` | At night, on a watch that can measure it. |
+| `WRITE_EXERCISE` | A workout you record on the watch, with its route and distance. |
+| `WRITE_EXERCISE_ROUTE` |  |
+| `WRITE_DISTANCE` |  |
+| `WRITE_RESPIRATORY_RATE` | Only with “Breathing rate from the watch” switched on in Settings. |
+| `WRITE_OXYGEN_SATURATION` | Only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch. |
+| `WRITE_SKIN_TEMPERATURE` | Only from a Samsung watch, with “Skin temperature at night” switched on for that watch. One record per night: the difference from your own usual night. |
+
+**Written from the scale**
+
+| Permission | When, or what for |
+| --- | --- |
+| `WRITE_WEIGHT` |  |
+| `WRITE_HEART_RATE` |  |
+| `WRITE_BODY_FAT` | Estimated on the phone from the scale's measurement and your body profile. |
+| `WRITE_LEAN_BODY_MASS` | Estimated on the phone from the scale's measurement and your body profile. |
+| `WRITE_BODY_WATER_MASS` | Estimated on the phone from the scale's measurement and your body profile. |
+
+**Read from Health Connect**
+
+| Permission | When, or what for |
+| --- | --- |
+| `READ_WEIGHT` | For the walking calories and the scale's body composition. |
+| `READ_HEIGHT` | For the scale's body composition. |
+| `READ_EXERCISE` | So a minute inside a workout gets no second calorie estimate. |
+| `READ_SLEEP` | So a night that already holds a sleep session is left alone. |
+| `READ_RESTING_HEART_RATE` | So a day that already holds a resting heart rate is left alone, and for the heart rate zones the watch shows. |
+| `READ_HEART_RATE` | Your highest heart rate, for those zones, and a workout's energy. |
+| `READ_HEALTH_DATA_HISTORY` | Your latest weight and height are often older than the 30 days Health Connect shows without it. |
+| `READ_HEALTH_DATA_IN_BACKGROUND` | A sync that runs on a schedule, with the app closed, can only see another app's weights and workouts with it. |
+
+**Asked by the watch app, on the watch**
+
+| Permission | When, or what for |
+| --- | --- |
+| `READ_HEART_RATE` | The watch's heart rate sensor: heart rate, the night's heart rate variability and the sleep estimate. |
+| `READ_HEALTH_DATA_IN_BACKGROUND` | To keep recording with the watch's screen off. |
+| `READ_SKIN_TEMPERATURE` | Only on a Samsung watch, and only when you switch on skin temperature at night. |
+| `READ_OXYGEN_SATURATION` | Only on a Samsung watch, and only when you switch on SpO2 at night. |
+
+<!-- health-data:end -->
+
 ## The Watch App's Permissions
 
 The Wear OS app records with the watch's own sensors, so its permissions are the watch's,

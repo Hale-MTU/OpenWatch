@@ -73,6 +73,44 @@ class HealthPermissionsTest {
         }
     }
 
+    @Test
+    fun `the privacy policy and the permissions page carry the catalog's table`() {
+        val table = catalogTable()
+        File("build/health-data-table.md").apply { parentFile.mkdirs() }.writeText(table)
+
+        for (document in listOf("../PRIVACY.md", "../docs/app/permissions.md")) {
+            val text = File(document).readText()
+            val block = text.substringAfter(TableBegin, "").substringBefore(TableEnd, "").trim()
+
+            assertWithMessage(
+                "$document: the block between \"$TableBegin\" and \"$TableEnd\" is not the catalog's table. " +
+                    "Paste app/build/health-data-table.md there.",
+            )
+                .that(block)
+                .isEqualTo(table.trim())
+        }
+    }
+
+    /** The catalog as the Markdown the two documents carry, in English. */
+    private fun catalogTable(): String {
+        val names = tech.mmarca.openwatch.R.string::class.java.fields.associate { it.getInt(null) to it.name }
+        val english = StringResource.findAll(File("src/main/res/values/strings.xml").readText())
+            .associate { it.groupValues[1] to it.groupValues[2].replace("\\'", "'") }
+        fun text(id: Int) = english.getValue(names.getValue(id))
+        return buildString {
+            HealthDataCatalog.sections.forEach { (section, entries) ->
+                appendLine("**${text(section.titleRes)}**")
+                appendLine()
+                appendLine("| Permission | When, or what for |")
+                appendLine("| --- | --- |")
+                entries.forEach { entry ->
+                    appendLine("| `${entry.permission.substringAfterLast('.')}` | ${entry.noteRes?.let(::text).orEmpty()} |")
+                }
+                appendLine()
+            }
+        }
+    }
+
     /** The Health Connect record classes a file under [roots] imports and constructs. */
     private fun recordsBuiltUnder(roots: List<String>): Set<String> =
         roots.asSequence()
@@ -89,6 +127,9 @@ class HealthPermissionsTest {
         const val WatchManifest = "../wear/src/main/AndroidManifest.xml"
         const val SourceRoot = "src/main/kotlin/tech/mmarca/openwatch"
         const val RecordsPackage = "androidx.health.connect.client.records"
+        const val TableBegin = "<!-- health-data:begin (generated from HealthDataCatalog; HealthPermissionsTest checks it) -->"
+        const val TableEnd = "<!-- health-data:end -->"
+        val StringResource = Regex("""<string name="(\w+)">(.*?)</string>""")
         val RecordImport = Regex("""import androidx\.health\.connect\.client\.records\.(\w+Record)\b""")
 
         /** Where each integration's Health Connect records are built. */
