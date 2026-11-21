@@ -147,6 +147,11 @@ android {
     // Robolectric reads the merged manifest and resources for the Hilt graph test.
     testOptions.unitTests.isIncludeAndroidResources = true
 
+    // The exported Room schemas, for the migration tests. Robolectric reads the tested variant's
+    // merged assets, not the test source set's, so they go into the ci variant, which only CI
+    // tests and nothing ships.
+    sourceSets.getByName("ci").assets.directories.add("$projectDir/schemas")
+
     dependenciesInfo {
         includeInApk = false
         includeInBundle = false
@@ -271,6 +276,7 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.hilt.android.testing)
+    testImplementation(libs.androidx.room.testing)
     kspTest(libs.hilt.android.compiler)
     androidTestImplementation(composeBom)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
