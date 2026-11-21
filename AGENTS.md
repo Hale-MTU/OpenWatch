@@ -37,6 +37,8 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   `tech.mmarca.healthcalculations`. `:domain` and `:wear` depend on it; its own `AGENTS.md`
   holds its rules.
 - `wear/` — the watch app, no DI. `wearlink/` — the protocol, pure JVM.
+- `build-logic/` — the convention plugins (SDK levels, signing, build types, lint, locking) the
+  modules apply by id; an included build.
 
 ## Invariants
 

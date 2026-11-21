@@ -10,6 +10,7 @@ OpenWatch seams noted.
 ## Current Snapshot
 
 - App namespace: `tech.mmarca.openwatch`
+- Build logic: `build-logic/`, an included build with the convention plugins every module applies (`openwatch.android.application`, `openwatch.android.library`, `openwatch.jvm.library`): SDK levels, Java 17, signing from the environment, the debug, release and nightly build types, lint and dependency locking. A module's own file holds only what is its own (version codes, the `ci` type, the diagnostics flag). A change there must leave the release APKs byte-identical; compare their hashes before and after.
 - Project shape: four Gradle modules. The phone app is `:app`; `:domain` holds the pure code
   the app depends on; `:wear` is the Wear OS watch app with its own CI gate; `:wearlink` is
   the pure-Kotlin link both apps depend on. Package names are the same across `:app` and

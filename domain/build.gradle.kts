@@ -9,41 +9,15 @@
 // exists for build time: lint and the unit tests run here in parallel with
 // the app's, and a change elsewhere leaves this module's results cached.
 plugins {
-    alias(libs.plugins.android.library)
+    id("openwatch.android.library")
 }
 
 android {
     namespace = "tech.mmarca.openwatch.domain"
-    compileSdk = 37
-    buildToolsVersion = "37.0.0"
-    // Same build types as the app, so the app's ci variant takes this module's
-    // ci variant and the tests and lint here run on the one compile. A fallback
-    // to debug would instead change how a multiplatform dependency resolves,
-    // against the app's lockfile.
-    testBuildType = "ci"
+    // SDK levels, the ci and nightly build types and test sizing: openwatch.android.library.
 
     defaultConfig {
         minSdk = 26
-    }
-
-    buildTypes {
-        create("ci") {
-            initWith(getByName("debug"))
-        }
-        create("nightly") {
-            initWith(getByName("release"))
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    lint {
-        ignoreTestSources = true
-        // As in the app: the full lint already ran on the commit.
-        checkReleaseBuilds = false
     }
 }
 
@@ -60,10 +34,3 @@ dependencies {
     testImplementation(libs.org.json)
 }
 
-tasks.withType<Test>().configureEach {
-    // Same sizing as the app's tests: half the cores, every core on a
-    // tests-only CI job.
-    maxParallelForks = providers.gradleProperty("openwatch.testForks").orNull?.toInt()
-        ?: (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
-    maxHeapSize = "1g"
-}

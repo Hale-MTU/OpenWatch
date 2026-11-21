@@ -10,19 +10,9 @@ plugins {
     alias(libs.plugins.ksp) apply false
 }
 
-val openWatchGroup = providers.gradleProperty("openWatchGroup")
-    .orElse("tech.mmarca.openwatch")
-val openWatchArtifactVersion = providers.gradleProperty("openWatchArtifactVersion")
-    .orElse(providers.environmentVariable("OPENWATCH_ARTIFACT_VERSION"))
-    .orElse(providers.gradleProperty("openwatch.versionName").map { "$it-SNAPSHOT" })
-
-allprojects {
-    group = openWatchGroup.get()
-    version = openWatchArtifactVersion.get()
-
-    dependencyLocking {
-        lockAllConfigurations()
-    }
+// Each module's coordinates and lockfile come from its convention plugin (build-logic/).
+dependencyLocking {
+    lockAllConfigurations()
 }
 
 tasks.named<UpdateDaemonJvm>("updateDaemonJvm") {

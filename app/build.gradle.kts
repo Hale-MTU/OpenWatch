@@ -3,7 +3,7 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.process.CommandLineArgumentProvider
 
 plugins {
-    alias(libs.plugins.android.application)
+    id("openwatch.android.application")
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
@@ -15,33 +15,7 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
-val releaseStoreFilePath = System.getenv("OPENWATCH_RELEASE_STORE_FILE")
-val releaseStorePassword = System.getenv("OPENWATCH_RELEASE_STORE_PASSWORD")
-val releaseKeyAlias = System.getenv("OPENWATCH_RELEASE_KEY_ALIAS")
-val releaseKeyPassword = System.getenv("OPENWATCH_RELEASE_KEY_PASSWORD")
-val isPkcs12ReleaseStore = releaseStoreFilePath
-    ?.lowercase()
-    ?.let { it.endsWith(".p12") || it.endsWith(".pfx") || it.endsWith(".pkcs12") }
-    ?: false
-val effectiveReleaseKeyPassword = if (isPkcs12ReleaseStore) {
-    releaseStorePassword
-} else {
-    releaseKeyPassword
-}
-
-val hasReleaseSigning = listOf(
-    releaseStoreFilePath,
-    releaseStorePassword,
-    releaseKeyAlias,
-    effectiveReleaseKeyPassword,
-).all { !it.isNullOrBlank() }
-
-val signDebugWithReleaseKey = System.getenv("OPENWATCH_SIGN_DEBUG_WITH_RELEASE_KEY") == "true"
-// The release pipeline publishes a debug APK: not debuggable, since it is
-// public, but not run through R8 either. It was until 2026-10, to match the
-// release build's size and shape; that second R8 pass was six minutes of
-// every nightly build, and nothing needed the shape.
-val publishedDebugApk = System.getenv("OPENWATCH_PUBLISHED_DEBUG_APK") == "true"
+// Signing, R8 and the shared build types: openwatch.android.application (build-logic/).
 val apkAbiFilters = System.getenv("OPENWATCH_APK_ABI_FILTERS")
     ?.split(',')
     ?.map { it.trim() }
@@ -66,8 +40,6 @@ require(phoneVersionCode in 1..99_999_999) {
 }
 android {
     namespace = "tech.mmarca.openwatch"
-    compileSdk = 37
-    buildToolsVersion = "37.0.0"
     testBuildType = "ci"
 
     defaultConfig {
@@ -86,28 +58,9 @@ android {
         }
     }
 
-    signingConfigs {
-        if (hasReleaseSigning) {
-            create("release") {
-                storeFile = file(checkNotNull(releaseStoreFilePath))
-                storePassword = checkNotNull(releaseStorePassword)
-                keyAlias = checkNotNull(releaseKeyAlias)
-                keyPassword = checkNotNull(effectiveReleaseKeyPassword)
-            }
-        }
-    }
-
     buildTypes {
         debug {
-            applicationIdSuffix = ".debug"
-            versionNameSuffix = "-debug"
             buildConfigField("boolean", "OPENWATCH_DIAGNOSTICS", "true")
-            if (signDebugWithReleaseKey && hasReleaseSigning) {
-                signingConfig = signingConfigs.getByName("release")
-            }
-            if (publishedDebugApk) {
-                isDebuggable = false
-            }
         }
 
         create("ci") {
@@ -116,29 +69,10 @@ android {
             versionNameSuffix = "-ci"
         }
 
-        release {
-            if (hasReleaseSigning) {
-                signingConfig = signingConfigs.getByName("release")
-            }
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-
-        create("nightly") {
-            initWith(getByName("release"))
+        getByName("nightly") {
             versionNameSuffix = nightlyVersionNameSuffix.get()
             buildConfigField("boolean", "OPENWATCH_DIAGNOSTICS", "true")
-            matchingFallbacks += listOf("release")
         }
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 
     buildFeatures {
@@ -154,18 +88,9 @@ android {
     // tests and nothing ships.
     sourceSets.getByName("ci").assets.directories.add("$projectDir/schemas")
 
-    dependenciesInfo {
-        includeInApk = false
-        includeInBundle = false
-    }
-
     lint {
         // Tests do not ship. Analysing them cost as much as the app itself.
         ignoreTestSources = true
-        // No lint vital on release-type builds: the pipeline's lint job already
-        // ran the full lint on the commit, and the two analyses it added to a
-        // nightly build ran beside R8 (five minutes, 2026-10).
-        checkReleaseBuilds = false
         disable += setOf(
             "LogNotTimber",
             // Partial Weblate languages are allowed once scripts/verify-translations.py

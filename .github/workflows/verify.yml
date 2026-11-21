@@ -63,7 +63,7 @@ jobs:
             while IFS= read -r f; do
               case "$f" in
                 wear/*) wear=true ;;
-                wearlink/*|health-calculations|.gitmodules|build.gradle.kts|settings.gradle.kts|settings-gradle.lockfile|gradle.properties|gradle/*|gradlew|scripts/ci-*|.github/workflows/verify.yml) wear=true; phone=true ;;
+                wearlink/*|build-logic/*|health-calculations|.gitmodules|build.gradle.kts|settings.gradle.kts|settings-gradle.lockfile|gradle.properties|gradle/*|gradlew|scripts/ci-*|.github/workflows/verify.yml) wear=true; phone=true ;;
                 *) phone=true ;;
               esac
             done < changed.txt

@@ -1,4 +1,6 @@
 pluginManagement {
+    // The convention plugins the modules apply (openwatch.android.application and the rest).
+    includeBuild("build-logic")
     repositories {
         google {
             content {
