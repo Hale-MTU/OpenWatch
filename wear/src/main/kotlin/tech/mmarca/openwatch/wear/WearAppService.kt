@@ -237,7 +237,8 @@ class WearAppService : Service() {
         // A grant made after the start: the type set grows to include health.
         val newHeartRate = !recorder.isRunning && heartRateWanted && WearPermissions.hasHeartRate(this)
         val newSteps = !stepRecorder.isRunning && stepRecorder.hasSensor && WearPermissions.hasActivityRecognition(this)
-        if (newHeartRate || newSteps) {
+        // A service that fell back to the link alone takes health back once a start allows it.
+        if (newHeartRate || newSteps || ForegroundStart.healthMissing(foregroundTypes, sensing(), healthTypeAvailable)) {
             startInForeground()
             startRecordingIfPermitted()
         }
@@ -259,23 +260,37 @@ class WearAppService : Service() {
             NotificationChannel(WORKOUT_CHANNEL_ID, getString(R.string.workout_channel_name), NotificationManager.IMPORTANCE_LOW),
         )
         val notification = buildNotification()
-        var types = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
-        val sensing = WearPermissions.hasHeartRate(this) || WearPermissions.hasActivityRecognition(this)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE && sensing) {
+        var types = ForegroundStart.LINK
+        if (healthTypeAvailable && sensing()) {
             types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH
         }
         if (::workout.isInitialized && workout.usesGps && WearPermissions.hasLocation(this)) {
             types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
         }
-        return try {
-            startForeground(NOTIFICATION_ID, notification, types)
-            true
-        } catch (e: Exception) {
-            // SecurityException for the missing grant, or a start from the background.
-            Log.e(TAG, "Cannot run the phone link in the foreground", e)
-            false
+        var refusal: Exception? = null
+        for (attempt in ForegroundStart.attempts(types)) {
+            try {
+                startForeground(NOTIFICATION_ID, notification, attempt)
+                foregroundTypes = attempt
+                if (attempt != types) Log.w(TAG, "Foreground start refused; running the phone link alone", refusal)
+                return true
+            } catch (e: Exception) {
+                // SecurityException for the missing grant, or a start from the background.
+                refusal = e
+            }
         }
+        Log.e(TAG, "Cannot run the phone link in the foreground", refusal)
+        return false
     }
+
+    /** The foreground types the service runs with; 0 before it is in the foreground. */
+    private var foregroundTypes = 0
+
+    private val healthTypeAvailable: Boolean
+        get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE
+
+    private fun sensing(): Boolean =
+        WearPermissions.hasHeartRate(this) || WearPermissions.hasActivityRecognition(this)
 
     /** The foreground service's notification: the phone link. It never carries the pill. */
     private fun buildNotification(): Notification =
