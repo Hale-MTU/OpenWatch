@@ -67,6 +67,26 @@ dependency change, regenerate the module's lockfile and commit it:
 ./gradlew :app:dependencies :domain:dependencies :wear:dependencies :wearlink:dependencies --write-locks
 ```
 
+## Dependency Verification
+
+`gradle/verification-metadata.xml` holds the SHA-256 of every artifact the build downloads,
+the submodules' and `build-logic/`'s included; a jar or POM that does not match fails the
+build. A lock pins the version, this pins the bytes. After a dependency or plugin change,
+rerun the gates and the release builds with `--write-verification-metadata`, so the tasks
+that resolve their own tools (lint, R8, aapt2) are covered too, and review the diff:
+
+```bash
+./gradlew --no-configuration-cache --write-verification-metadata sha256 \
+  verifyCi verifyWearCi :app:assembleRelease :app:bundleRelease :app:assembleNightly \
+  :app:bundleNightly :app:assembleDebug :wear:assembleRelease :wear:bundleRelease \
+  :wear:assembleNightly :wear:bundleNightly
+```
+
+Gradle writes the aapt2 jar of the machine it runs on only. The macOS and Windows jars
+are added by hand from Google's Maven, so a contributor on either can build; when AGP
+moves, hash the new version's `aapt2-<version>-osx.jar` and `-windows.jar` again. Source
+and javadoc jars, which only an IDE sync downloads, are trusted by name.
+
 ## Strings
 
 `app/src/main/res/values*/strings.xml` came from OpenVitals, trimmed to the keys this code
