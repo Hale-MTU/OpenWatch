@@ -44,9 +44,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (redirectHealthConnectOnboardingIfNeeded(intent)) {
-            return
-        }
         enableEdgeToEdge()
         // The companion association dialog needs an Activity launcher. Without this
         // attach, no watch or scale is ever associated.
@@ -129,23 +126,7 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        if (redirectHealthConnectOnboardingIfNeeded(intent)) {
-            return
-        }
         updateExternalNavigationRoute(intent)
-    }
-
-    private fun redirectHealthConnectOnboardingIfNeeded(intent: Intent?): Boolean {
-        if (intent?.isHealthConnectOnboardingIntent() != true) return false
-        startActivity(
-            Intent(this, HealthConnectOnboardingActivity::class.java).apply {
-                action = intent.action
-                data = intent.data
-                putExtras(intent)
-            },
-        )
-        finish()
-        return true
     }
 
     private fun updateExternalNavigationRoute(intent: Intent?) {
@@ -157,12 +138,6 @@ class MainActivity : AppCompatActivity() {
         /** The consent screen an OpenLink client opens for a pending request. */
         const val ACTION_OPENLINK_CONSENT = "tech.mmarca.openwatch.action.OPENLINK_CONSENT"
     }
-}
-
-private fun Intent.isHealthConnectOnboardingIntent(): Boolean {
-    val action = action ?: return false
-    return action == "androidx.health.ACTION_SHOW_ONBOARDING" ||
-        action == "android.health.connect.action.SHOW_ONBOARDING"
 }
 
 /**
