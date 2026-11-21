@@ -2,6 +2,10 @@ package tech.mmarca.openwatch.wear.ui.components
 
 import androidx.annotation.StringRes
 import java.text.NumberFormat
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.Locale
 import kotlin.math.roundToInt
 import tech.mmarca.openwatch.wear.R
@@ -14,6 +18,8 @@ private const val FeetPerMeter = 3.28084
 private const val PoundsPerKilogram = 2.20462
 private const val MillilitresPerFluidOunce = 29.5735
 private const val MinutesPerHour = 60
+private const val FahrenheitPerCelsius = 1.8
+private const val FahrenheitAtZeroCelsius = 32.0
 
 fun formatCount(value: Int): String = NumberFormat.getIntegerInstance().format(value)
 
@@ -32,6 +38,11 @@ fun formatMetricValue(metric: MetricTile, value: Double, unitSystem: UnitSystem)
             UnitSystem.IMPERIAL -> formatCount((value * FeetPerMeter).roundToInt())
         }
         MetricTile.SLEEP -> formatHoursMinutes(value)
+        MetricTile.SKIN_TEMPERATURE -> when (unitSystem) {
+            UnitSystem.METRIC -> formatOneDecimal(value)
+            UnitSystem.IMPERIAL -> formatOneDecimal(value * FahrenheitPerCelsius + FahrenheitAtZeroCelsius)
+        }
+        MetricTile.RESPIRATORY_RATE -> formatOneDecimal(value)
         MetricTile.WEIGHT -> when (unitSystem) {
             UnitSystem.METRIC -> formatOneDecimal(value)
             UnitSystem.IMPERIAL -> formatOneDecimal(value * PoundsPerKilogram)
@@ -55,6 +66,10 @@ fun formatHoursMinutes(minutes: Double): String {
 
 fun formatOneDecimal(value: Double): String = String.format(Locale.getDefault(), "%.1f", value)
 
+/** A clock time in the watch's zone and locale, e.g. "23:47" or "11:47 PM". */
+fun formatClockTime(instant: Instant, zone: ZoneId = ZoneId.systemDefault()): String =
+    DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(Locale.getDefault()).format(instant.atZone(zone))
+
 @StringRes
 fun metricUnitLabel(metric: MetricTile, unitSystem: UnitSystem): Int =
     when (metric) {
@@ -75,6 +90,11 @@ fun metricUnitLabel(metric: MetricTile, unitSystem: UnitSystem): Int =
         MetricTile.RESTING_HEART_RATE -> R.string.unit_bpm
         MetricTile.HRV -> R.string.unit_ms
         MetricTile.SLEEP -> R.string.unit_hours
+        MetricTile.SKIN_TEMPERATURE -> when (unitSystem) {
+            UnitSystem.METRIC -> R.string.unit_celsius
+            UnitSystem.IMPERIAL -> R.string.unit_fahrenheit
+        }
+        MetricTile.RESPIRATORY_RATE -> R.string.unit_breaths
         MetricTile.HYDRATION -> when (unitSystem) {
             UnitSystem.METRIC -> R.string.unit_ml
             UnitSystem.IMPERIAL -> R.string.unit_fl_oz

@@ -152,12 +152,17 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     // The watch face pill of a running workout.
     implementation(libs.androidx.wear.ongoing)
+    implementation(libs.androidx.core.ktx)
+    // Same drag-to-reorder library as the phone dashboard.
+    implementation(libs.reorderable)
     // The metric tiles: Material 3 tile layouts, no Play Services.
     implementation(libs.androidx.wear.tiles)
     implementation(libs.androidx.wear.protolayout)
     implementation(libs.androidx.wear.protolayout.material3)
+    implementation(libs.androidx.wear.protolayout.material)
     // A suspend function as the ListenableFuture a TileService returns.
     implementation(libs.androidx.concurrent.futures.ktx)
+    testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     // Real org.json for local tests (the android.jar copy is a throwing stub): the feature vector is JSON.
