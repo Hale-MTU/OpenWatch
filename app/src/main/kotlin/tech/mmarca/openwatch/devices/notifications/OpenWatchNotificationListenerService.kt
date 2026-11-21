@@ -137,7 +137,7 @@ class OpenWatchNotificationListenerService : NotificationListenerService() {
         cancelNotification(key)
         true
     } catch (error: Throwable) {
-        Log.w(TAG, "could not dismiss: $error")
+        Log.w(TAG, "could not dismiss", error)
         false
     }
 
@@ -180,8 +180,8 @@ class OpenWatchNotificationListenerService : NotificationListenerService() {
                 interruptionFilter = interruptionFilterOrUnknown(),
             )
             if (verdict != NotificationFilter.Verdict.KEEP) {
-                // Debug only, and never the content.
-                Diagnostics.d(TAG, "dropped ${sbn.packageName}: $verdict")
+                // Debug only, and never the content or the app: the published debug APK logs this.
+                Diagnostics.d(TAG, "dropped: $verdict")
                 return
             }
 
@@ -217,7 +217,7 @@ class OpenWatchNotificationListenerService : NotificationListenerService() {
             sink.onNotificationsPending()
         } catch (error: Throwable) {
             // A listener that throws is unbound, and the user must re-grant access.
-            Log.w(TAG, "failed to handle a notification: $error")
+            Log.w(TAG, "failed to handle a notification", error)
         }
     }
 
@@ -258,9 +258,7 @@ class OpenWatchNotificationListenerService : NotificationListenerService() {
                 "(using ${if (wearable.isNotEmpty()) "wearable" else "standard"})",
         )
         wristActions(notification).forEachIndexed { index, action ->
-            val keys = action.remoteInputs
-                ?.joinToString(",") { it.resultKey }
-                ?: ""
+            val keys = action.remoteInputs?.size ?: 0
             val intent = action.actionIntent
             val mutability = when {
                 intent == null -> "no-intent"
@@ -281,8 +279,9 @@ class OpenWatchNotificationListenerService : NotificationListenerService() {
             }
             Log.d(
                 TAG,
-                "  [$index] \"${action.title}\" reply=${!action.remoteInputs.isNullOrEmpty()} " +
-                    "keys=[$keys] intent=$mutability kind=$kind " +
+                // The title and the reply keys are the posting app's words: not logged.
+                "  [$index] reply=${!action.remoteInputs.isNullOrEmpty()} " +
+                    "keys=$keys intent=$mutability kind=$kind " +
                     "allowFreeForm=${action.allowGeneratedReplies} " +
                     "semantic=${action.semanticAction}",
             )
