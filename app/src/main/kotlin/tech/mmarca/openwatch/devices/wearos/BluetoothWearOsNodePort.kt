@@ -301,7 +301,7 @@ class BluetoothWearOsNodePort @Inject constructor(
         val socket = try {
             device.createRfcommSocketToServiceRecord(WearLinkProtocol.SERVICE_UUID)
         } catch (e: IOException) {
-            Log.d(TAG, "No RFCOMM socket for ${device.address}: ${e.message}")
+            Log.d(TAG, "No RFCOMM socket for the watch", e)
             throw WearOsLinkFailure.NoAnswer(e)
         }
         val watchdog = launch {
@@ -319,7 +319,7 @@ class BluetoothWearOsNodePort @Inject constructor(
                 socket.connect()
             } catch (e: IOException) {
                 // Off, out of range, app not listening, or the watchdog closed the socket.
-                Log.d(TAG, "No answer from ${device.address}: ${e.message}")
+                Log.d(TAG, "No answer from the watch", e)
                 throw WearOsLinkFailure.NoAnswer(e)
             }
             val connection = WearLinkConnection(socket.inputStream, socket.outputStream, match.address) {
