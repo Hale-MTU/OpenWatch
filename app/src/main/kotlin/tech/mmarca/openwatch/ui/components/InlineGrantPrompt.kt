@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 /**
  * A grant missing for one part of a card: what the card could not do, and a
  * button that asks for it. A screen that needs the grant as a whole uses
- * [PermissionCallout] or the Health Connect screen shell instead.
+ * [PermissionCallout] instead.
  */
 @Composable
 fun InlineGrantPrompt(

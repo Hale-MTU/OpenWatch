@@ -37,14 +37,6 @@ object Radii {
     val xl: Dp = 32.dp
 }
 
-object Emphasis {
-    const val wash = 0.12f
-    const val subtle = 0.22f
-    const val disabled = 0.38f
-    const val fill = 0.55f
-    const val strong = 0.8f
-}
-
 /**
  * The animation durations, and nothing else. Motion is minimal: press
  * feedback and charts drawing in. No decorative or looping animation, bar

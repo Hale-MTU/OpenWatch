@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -16,14 +15,6 @@ import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.resolve
 import tech.mmarca.openwatch.healthconnect.openHealthConnectPermissionSettings
-
-/** The grant request the Health Connect shell owns. Null outside a shell; the callout then opens settings. */
-class HealthConnectGrantAccess(
-    val permissions: Set<String>,
-    val onGrant: (Set<String>) -> Unit,
-)
-
-val LocalHealthConnectGrantAccess = compositionLocalOf<HealthConnectGrantAccess?> { null }
 
 /** Renders a [ScreenError]. A missing permission gets the [PermissionCallout], not red text. */
 @Composable
@@ -45,18 +36,11 @@ fun ScreenErrorContent(
 @Composable
 fun HealthConnectPermissionDeniedCallout(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val grantAccess = LocalHealthConnectGrantAccess.current
+    // Health Connect's own page: the error does not say which grant is missing.
     PermissionCallout(
         title = stringResource(R.string.message_missing_permissions_title),
         body = stringResource(R.string.screen_error_permission_denied),
-        onGrant = {
-            val permissions = grantAccess?.permissions.orEmpty()
-            if (grantAccess != null && permissions.isNotEmpty()) {
-                grantAccess.onGrant(permissions)
-            } else {
-                openHealthConnectPermissionSettings(context)
-            }
-        },
+        onGrant = { openHealthConnectPermissionSettings(context) },
         modifier = modifier,
     )
 }

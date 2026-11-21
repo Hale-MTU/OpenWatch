@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -28,9 +27,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -50,22 +48,6 @@ import tech.mmarca.openwatch.ui.components.OsPermissionsDialog
 import tech.mmarca.openwatch.ui.components.formatDeviceTime
 import tech.mmarca.openwatch.ui.theme.Spacing
 import tech.mmarca.openwatch.ui.components.OpenWatchOutlinedButton
-
-/** The section on its own screen: the home screen embeds [WatchesSection] in its own scroll column. */
-@Composable
-fun WatchesSettingsScreen(
-    viewModel: WatchesViewModel,
-    onOpenWatch: (String) -> Unit,
-) {
-    WatchesSection(
-        viewModel = viewModel,
-        onOpenWatch = onOpenWatch,
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(vertical = Spacing.md),
-    )
-}
 
 /**
  * The Watches settings screen: the paired list plus the add flow. A watch

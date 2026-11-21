@@ -8,13 +8,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Add
@@ -42,22 +39,6 @@ import tech.mmarca.openwatch.ui.components.OpenWatchTextButton
 import tech.mmarca.openwatch.ui.components.OsPermissionsDialog
 import tech.mmarca.openwatch.ui.components.formatDeviceTime
 import tech.mmarca.openwatch.ui.theme.Spacing
-
-/** The section on its own screen: the home screen embeds [ScalesSection] in its own scroll column. */
-@Composable
-fun ScalesSettingsScreen(
-    viewModel: ScalesViewModel,
-    onOpenScale: () -> Unit,
-) {
-    ScalesSection(
-        viewModel = viewModel,
-        onOpenScale = onOpenScale,
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(vertical = Spacing.md),
-    )
-}
 
 /** The scale's card, or the way to add one. Everything about the scale lives in its device view. */
 @Composable

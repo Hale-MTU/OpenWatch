@@ -1,7 +1,5 @@
 package tech.mmarca.openwatch.features.watches
 
-import android.Manifest
-import android.os.Build
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -96,16 +94,6 @@ class WatchesViewModel @Inject constructor(
         )
     }.stateInViewModel(initial = WatchesUiState())
 
-    val requiredBluetoothPermissions: Array<String> =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            arrayOf(
-                Manifest.permission.BLUETOOTH_SCAN,
-                Manifest.permission.BLUETOOTH_CONNECT,
-            )
-        } else {
-            // Below API 31 a BLE scan finds nothing without fine location.
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
-        }
 
     fun refresh() {
         deviceRepository.refresh()
