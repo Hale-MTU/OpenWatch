@@ -391,4 +391,63 @@ class BleDeviceRepositoryTest {
         assertEquals(BleDeviceKind.SENSOR, decoded.single().kind)
         assertNull(decoded.single().integration)
     }
+
+    @Test
+    fun registryJson_oneUnreadableEntryForgetsNothingAndIsWrittenBack() {
+        val good = """{"id":"w1","displayName":"Watch","address":"AA:BB:CC:DD:EE:01","addedAt":1000,"kind":"WATCH"}"""
+        val broken = """{"id":"w2","displayName":"Lost","address":"AA:BB:CC:DD:EE:02"}"""
+
+        val decoded = BleDeviceRegistryJson.decodeKeepingUnreadable("[$good,$broken]")!!
+
+        assertEquals(listOf("w1"), decoded.devices.map { it.id })
+        assertEquals(1, decoded.unreadable.size)
+        val rewritten = BleDeviceRegistryJson.decodeKeepingUnreadable(
+            BleDeviceRegistryJson.encode(decoded.devices, decoded.unreadable),
+        )!!
+        assertEquals(listOf("w1"), rewritten.devices.map { it.id })
+        assertEquals("w2", org.json.JSONObject(rewritten.unreadable.single()).getString("id"))
+    }
+
+    @Test
+    fun aChangeKeepsTheEntriesItCannotRead() {
+        val prefs = FakeSharedPreferences()
+        val ctx = mockk<Context>().also { every { it.getSharedPreferences(any(), any()) } returns prefs }
+        val broken = """{"id":"w2","displayName":"Lost","address":"AA:BB:CC:DD:EE:02"}"""
+        prefs.edit().putString("devices", "[$broken]").apply()
+
+        val repo = BleDeviceRepository(ctx)
+        assertTrue(repo.devices.isEmpty())
+        repo.addStrap()
+
+        val stored = BleDeviceRegistryJson.decodeKeepingUnreadable(prefs.getString("devices", null)!!)!!
+        assertEquals(1, stored.devices.size)
+        assertEquals(1, stored.unreadable.size)
+    }
+
+    @Test
+    fun aListThatDoesNotParseIsCopiedAsideBeforeItIsReplaced() {
+        val prefs = FakeSharedPreferences()
+        val ctx = mockk<Context>().also { every { it.getSharedPreferences(any(), any()) } returns prefs }
+        prefs.edit().putString("devices", "[{\"id\":").apply()
+
+        BleDeviceRepository(ctx).addStrap()
+
+        assertEquals("[{\"id\":", prefs.getString("devices_unparseable", null))
+    }
+
+    @Test
+    fun concurrentChangesAreAllKept() {
+        val repo = newRepository()
+        val ids = (0 until 8).map { n ->
+            repo.addDevice("D$n", "AA:BB:CC:DD:EE:%02X".format(n), null, emptySet()).id
+        }
+        val threads = ids.map { id ->
+            Thread { repeat(50) { repo.updateBatteryLevel(id, it % 100) } }
+        } + Thread { repeat(50) { ids.forEach { repo.markSynced(it, Instant.ofEpochMilli(it.hashCode().toLong())) } } }
+        threads.forEach(Thread::start)
+        threads.forEach(Thread::join)
+
+        assertEquals(8, newRepository().devices.size)
+        assertTrue(newRepository().devices.all { it.batteryPercent == 49 && it.lastSyncedAt != null })
+    }
 }

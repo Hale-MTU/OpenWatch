@@ -17,11 +17,24 @@ import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 
+/**
+ * The paired devices, one JSON list in preferences.
+ *
+ * Every change reads and rewrites the whole list, from the UI, a sync and a Bluetooth
+ * callback at once, so changes run one at a time under [lock]. An entry this version
+ * cannot read is kept as it was and written back, and a list that does not parse at all
+ * is copied aside before anything replaces it: one bad entry must not forget every device.
+ */
 @Singleton
 class BleDeviceRepository @Inject constructor(
     @ApplicationContext context: Context,
 ) {
     private val prefs = context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+    private val lock = Any()
+
+    /** Entries this version could not read, as stored. Written back with every change. */
+    @Volatile
+    private var unreadable: List<String> = emptyList()
     private val _devices = MutableStateFlow(readDevices())
     val devicesFlow: StateFlow<List<BleSensorDevice>> = _devices.asStateFlow()
 
@@ -31,7 +44,7 @@ class BleDeviceRepository @Inject constructor(
     val enabledDevices: List<BleSensorDevice>
         get() = devices.filter { it.enabled }
 
-    fun refresh() {
+    fun refresh() = synchronized(lock) {
         _devices.value = readDevices()
     }
 
@@ -69,7 +82,7 @@ class BleDeviceRepository @Inject constructor(
         wheelCircumferenceMm: Int? = null,
         kind: BleDeviceKind? = null,
         integration: DeviceIntegration? = null,
-    ): BleSensorDevice {
+    ): BleSensorDevice = synchronized(lock) {
         val normalizedAddress = address.uppercase()
         val existing = devices.firstOrNull { it.address.equals(normalizedAddress, ignoreCase = true) }
         if (existing != null) {
@@ -97,7 +110,7 @@ class BleDeviceRepository @Inject constructor(
             integration = integration,
         ).normalized()
         persist(devices + device)
-        return device
+        device
     }
 
     fun updateDevice(
@@ -110,7 +123,7 @@ class BleDeviceRepository @Inject constructor(
         wheelCircumferenceMm: Int? = null,
         kind: BleDeviceKind? = null,
         integration: DeviceIntegration? = null,
-    ): BleSensorDevice {
+    ): BleSensorDevice = synchronized(lock) {
         val current = devices.firstOrNull { it.id == deviceId }
             ?: error("Unknown BLE device: $deviceId")
         val updated = current.copy(
@@ -123,10 +136,10 @@ class BleDeviceRepository @Inject constructor(
             integration = integration ?: current.integration,
         ).normalized()
         persist(devices.map { if (it.id == deviceId) updated else it })
-        return updated
+        updated
     }
 
-    fun removeDevice(deviceId: String) {
+    fun removeDevice(deviceId: String) = synchronized(lock) {
         // Garmin-specific state is cleared by whoever forgets the watch.
         persist(devices.filterNot { it.id == deviceId })
     }
@@ -135,11 +148,11 @@ class BleDeviceRepository @Inject constructor(
         updateDevice(deviceId = deviceId, enabled = enabled)
     }
 
-    fun updateBatteryLevel(deviceId: String, batteryPercent: Int) {
+    fun updateBatteryLevel(deviceId: String, batteryPercent: Int) = synchronized(lock) {
         val percent = batteryPercent.coerceIn(0, 100)
         // Only a changed reading is written; the stamp says when the level moved.
-        val current = devices.firstOrNull { it.id == deviceId } ?: return
-        if (current.batteryPercent == percent) return
+        val current = devices.firstOrNull { it.id == deviceId } ?: return@synchronized
+        if (current.batteryPercent == percent) return@synchronized
         persist(
             devices.map { device ->
                 if (device.id == deviceId) {
@@ -155,8 +168,8 @@ class BleDeviceRepository @Inject constructor(
     }
 
     /** Stamps a watch's last completed file pull. A no-op for an unknown id. */
-    fun markSynced(deviceId: String, at: Instant) {
-        if (devices.none { it.id == deviceId }) return
+    fun markSynced(deviceId: String, at: Instant) = synchronized(lock) {
+        if (devices.none { it.id == deviceId }) return@synchronized
         persist(
             devices.map { device ->
                 if (device.id == deviceId) device.copy(lastSyncedAt = at) else device
@@ -164,21 +177,31 @@ class BleDeviceRepository @Inject constructor(
         )
     }
 
+    /** Called under [lock]. */
     private fun persist(nextDevices: List<BleSensorDevice>) {
         prefs.edit {
-            putString(KEY_DEVICES, BleDeviceRegistryJson.encode(nextDevices))
+            putString(KEY_DEVICES, BleDeviceRegistryJson.encode(nextDevices, unreadable))
         }
         _devices.value = nextDevices
     }
 
-    private fun readDevices(): List<BleSensorDevice> =
-        prefs.getString(KEY_DEVICES, null)
-            ?.let(BleDeviceRegistryJson::decode)
-            .orEmpty()
+    private fun readDevices(): List<BleSensorDevice> {
+        val stored = prefs.getString(KEY_DEVICES, null) ?: return emptyList()
+        val registry = BleDeviceRegistryJson.decodeKeepingUnreadable(stored)
+        if (registry == null) {
+            // Not a list at all. Keep the first copy aside, so the next change cannot erase it.
+            if (!prefs.contains(KEY_UNPARSEABLE_COPY)) prefs.edit { putString(KEY_UNPARSEABLE_COPY, stored) }
+            unreadable = emptyList()
+            return emptyList()
+        }
+        unreadable = registry.unreadable
+        return registry.devices
+    }
 
     private companion object {
         const val PREFS_FILE = "ble_sensor_devices"
         const val KEY_DEVICES = "devices"
+        const val KEY_UNPARSEABLE_COPY = "devices_unparseable"
     }
 }
 
@@ -188,7 +211,11 @@ class BleDeviceRepository @Inject constructor(
  */
 internal object BleDeviceRegistryJson {
 
-    fun encode(devices: List<BleSensorDevice>): String =
+    /** The registry read back: what this version understands, and the rest as stored. */
+    data class Decoded(val devices: List<BleSensorDevice>, val unreadable: List<String>)
+
+    /** [devices] as JSON, followed by the [unreadable] entries exactly as they were read. */
+    fun encode(devices: List<BleSensorDevice>, unreadable: List<String> = emptyList()): String =
         JSONArray(
             devices.map { device ->
                 JSONObject()
@@ -214,56 +241,70 @@ internal object BleDeviceRegistryJson {
                     .put("kind", device.kind.storageName)
                     .put("integration", device.integration?.storageName ?: JSONObject.NULL)
                     .put("lastSyncedAt", device.lastSyncedAt?.toEpochMilli() ?: JSONObject.NULL)
-            },
+            } + unreadable.map { JSONObject(it) },
         ).toString()
 
-    fun decode(json: String): List<BleSensorDevice> =
-        runCatching {
-            val array = JSONArray(json)
-            buildList {
-                for (index in 0 until array.length()) {
-                    val item = array.getJSONObject(index)
-                    val capabilities = buildSet {
-                        val caps = item.optJSONArray("capabilities")
-                        if (caps != null) {
-                            for (capIndex in 0 until caps.length()) {
-                                val name = caps.optString(capIndex)
-                                runCatching { add(BleSensorCapability.valueOf(name)) }
-                            }
-                        }
-                    }
-                    add(
-                        BleSensorDevice(
-                            id = item.getString("id"),
-                            displayName = item.getString("displayName"),
-                            address = item.getString("address"),
-                            bluetoothName = item.optString("bluetoothName").takeIf { it.isNotBlank() },
-                            capabilities = capabilities,
-                            enabled = item.optBoolean("enabled", true),
-                            wheelCircumferenceMm = item.opt("wheelCircumferenceMm")
-                                .takeIf { it != JSONObject.NULL }
-                                ?.let { (it as Number).toInt() }
-                                ?.takeIf { it > 0 },
-                            batteryPercent = item.opt("batteryPercent")
-                                .takeIf { it != null && it != JSONObject.NULL }
-                                ?.let { (it as Number).toInt() },
-                            batteryUpdatedAt = item.opt("batteryUpdatedAt")
-                                .takeIf { it != null && it != JSONObject.NULL }
-                                ?.let { Instant.ofEpochMilli((it as Number).toLong()) },
-                            addedAt = Instant.ofEpochMilli(item.getLong("addedAt")),
-                            // Absent before watches existed; unknown values degrade the same way.
-                            kind = item.optString("kind")
-                                .let { BleDeviceKind.fromStorage(it) }
-                                ?: BleDeviceKind.SENSOR,
-                            // Null reads back as Garmin via `isGarminWatch`.
-                            integration = item.optString("integration")
-                                .let { DeviceIntegration.fromStorage(it) },
-                            lastSyncedAt = item.opt("lastSyncedAt")
-                                .takeIf { it != null && it != JSONObject.NULL }
-                                ?.let { Instant.ofEpochMilli((it as Number).toLong()) },
-                        ).normalized(),
-                    )
+    /** The devices in [json]; an entry this version cannot read is left out. */
+    fun decode(json: String): List<BleSensorDevice> = decodeKeepingUnreadable(json)?.devices.orEmpty()
+
+    /**
+     * Each entry on its own: one this version cannot read goes to [Decoded.unreadable] as it
+     * was stored, and the rest are still read. Null when [json] is not a list at all.
+     */
+    fun decodeKeepingUnreadable(json: String): Decoded? {
+        val array = runCatching { JSONArray(json) }.getOrNull() ?: return null
+        val devices = mutableListOf<BleSensorDevice>()
+        val unreadable = mutableListOf<String>()
+        for (index in 0 until array.length()) {
+            val item = array.optJSONObject(index)
+            val device = item?.let { runCatching { decodeEntry(it) }.getOrNull() }
+            when {
+                device != null -> devices += device
+                item != null -> unreadable += item.toString()
+                // Not an object at all: nothing that could be a device to keep.
+            }
+        }
+        return Decoded(devices, unreadable)
+    }
+
+    private fun decodeEntry(item: JSONObject): BleSensorDevice {
+        val capabilities = buildSet {
+            val caps = item.optJSONArray("capabilities")
+            if (caps != null) {
+                for (capIndex in 0 until caps.length()) {
+                    val name = caps.optString(capIndex)
+                    runCatching { add(BleSensorCapability.valueOf(name)) }
                 }
             }
-        }.getOrDefault(emptyList())
+        }
+        return BleSensorDevice(
+            id = item.getString("id"),
+            displayName = item.getString("displayName"),
+            address = item.getString("address"),
+            bluetoothName = item.optString("bluetoothName").takeIf { it.isNotBlank() },
+            capabilities = capabilities,
+            enabled = item.optBoolean("enabled", true),
+            wheelCircumferenceMm = item.opt("wheelCircumferenceMm")
+                .takeIf { it != JSONObject.NULL }
+                ?.let { (it as Number).toInt() }
+                ?.takeIf { it > 0 },
+            batteryPercent = item.opt("batteryPercent")
+                .takeIf { it != null && it != JSONObject.NULL }
+                ?.let { (it as Number).toInt() },
+            batteryUpdatedAt = item.opt("batteryUpdatedAt")
+                .takeIf { it != null && it != JSONObject.NULL }
+                ?.let { Instant.ofEpochMilli((it as Number).toLong()) },
+            addedAt = Instant.ofEpochMilli(item.getLong("addedAt")),
+            // Absent before watches existed; unknown values degrade the same way.
+            kind = item.optString("kind")
+                .let { BleDeviceKind.fromStorage(it) }
+                ?: BleDeviceKind.SENSOR,
+            // Null reads back as Garmin via `isGarminWatch`.
+            integration = item.optString("integration")
+                .let { DeviceIntegration.fromStorage(it) },
+            lastSyncedAt = item.opt("lastSyncedAt")
+                .takeIf { it != null && it != JSONObject.NULL }
+                ?.let { Instant.ofEpochMilli((it as Number).toLong()) },
+        ).normalized()
+    }
 }
