@@ -45,4 +45,25 @@ class AppStartupActorsTest {
         verify(exactly = 1) { linkPublisher.start() }
         verify(exactly = 1) { phoneActivity.start() }
     }
+
+    @Test
+    fun `one actor that throws neither stops the others nor reaches the caller`() {
+        io.mockk.every { autoSyncScheduler.restoreAll() } throws IllegalStateException("WorkManager not ready")
+        io.mockk.every { notificationBridge.onAppStart() } throws SecurityException("no Bluetooth grant")
+
+        AppStartupActors(
+            notificationBridge,
+            navigationRelay,
+            musicRelay,
+            autoSyncScheduler,
+            garminLocalData,
+            scaleListener,
+            linkPublisher,
+            phoneActivity,
+        ).start()
+
+        verify(exactly = 1) { garminLocalData.pruneOnAppStart() }
+        verify(exactly = 1) { scaleListener.onAppStart() }
+        verify(exactly = 1) { phoneActivity.start() }
+    }
 }
