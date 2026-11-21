@@ -1,8 +1,11 @@
 package tech.mmarca.openwatch.wear.ui.preview
 
 import tech.mmarca.openwatch.wear.MetricUiState
+import tech.mmarca.openwatch.wear.RecordingUiState
 import tech.mmarca.openwatch.wear.MetricTile
 import tech.mmarca.openwatch.wear.WearUiState
+import tech.mmarca.openwatch.wear.features.recording.ActivityType
+import tech.mmarca.openwatch.wear.features.recording.WorkoutField
 
 /**
  * Made-up values for previews and for debug builds, where nothing feeds the
@@ -77,7 +80,33 @@ object SampleData {
         ),
     )
 
-    val uiState = WearUiState(metrics = metrics)
+
+    /** The fields each workout shows on a watch with a heart rate sensor, GPS and a barometer. */
+    val workoutFields: Map<ActivityType, Set<WorkoutField>> = ActivityType.entries.associateWith { activity ->
+        buildSet {
+            add(WorkoutField.HEART_RATE)
+            add(WorkoutField.CALORIES)
+            if (activity != ActivityType.WORKOUT) {
+                add(WorkoutField.DISTANCE)
+                add(WorkoutField.ELEVATION)
+                add(if (activity == ActivityType.CYCLE) WorkoutField.SPEED else WorkoutField.PACE)
+            }
+        }
+    }
+
+    val recording = RecordingUiState(
+        elapsedSeconds = 23 * 60 + 41,
+        heartRateBpm = 138,
+        distanceMeters = 3_240,
+        caloriesKcal = 214,
+        elevationGainMeters = 38,
+        speedMetersPerSecond = 2.28,
+        averageHeartRateBpm = 131,
+    )
+
+    val uiState = WearUiState(
+        metrics = metrics,
+    )
 
     private fun doubles(vararg values: Int): List<Double> = values.map(Int::toDouble)
 }

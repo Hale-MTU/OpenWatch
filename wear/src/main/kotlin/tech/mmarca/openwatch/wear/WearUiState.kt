@@ -1,8 +1,14 @@
 package tech.mmarca.openwatch.wear
 
+import androidx.annotation.StringRes
+import tech.mmarca.openwatch.wear.features.recording.ActivityType
+
 /** Everything the screens render. A null value means "no reading yet". */
 data class WearUiState(
-    /** The metrics the dashboard may show. */
+    /**
+     * The metrics this watch has a sensor for. Only these are offered as
+     * tiles.
+     */
     val availableMetrics: Set<MetricTile> = MetricTile.entries.toSet(),
     /** A metric without an entry renders as "no reading yet". */
     val metrics: Map<MetricTile, MetricUiState> = emptyMap(),
@@ -28,4 +34,22 @@ data class MetricUiState(
  */
 data class DisplayPreferences(
     val unitSystem: UnitSystem = UnitSystem.METRIC,
+    /** Top of the heart rate zones. The phone will know the user's age; until then a fixed guess. */
+    val maxHeartRate: Int = 190,
+)
+
+data class RecordingUiState(
+    val activityType: ActivityType = ActivityType.WALK,
+    /** The sport's own name, when it is more precise than [activityType]'s. */
+    @param:StringRes val title: Int? = null,
+    val elapsedSeconds: Long = 0,
+    val heartRateBpm: Int? = null,
+    val distanceMeters: Int? = null,
+    val caloriesKcal: Int? = null,
+    val elevationGainMeters: Int? = null,
+    val speedMetersPerSecond: Double? = null,
+    val averageHeartRateBpm: Int? = null,
+    val paused: Boolean = false,
+    /** A route sport without a usable GPS fix yet. */
+    val waitingForFix: Boolean = false,
 )
