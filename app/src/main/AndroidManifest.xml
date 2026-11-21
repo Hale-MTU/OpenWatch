@@ -18,7 +18,6 @@
     <uses-permission android:name="android.permission.health.WRITE_OXYGEN_SATURATION" />
     <uses-permission android:name="android.permission.health.WRITE_SKIN_TEMPERATURE" />
     <uses-permission android:name="android.permission.health.WRITE_FLOORS_CLIMBED" />
-    <uses-permission android:name="android.permission.health.WRITE_WHEELCHAIR_PUSHES" />
     <uses-permission android:name="android.permission.health.WRITE_SPEED" />
     <uses-permission android:name="android.permission.health.WRITE_POWER" />
     <uses-permission android:name="android.permission.health.WRITE_VO2_MAX" />
@@ -31,7 +30,6 @@
     <!-- What the estimates read: a weight and height for the walking energy and the body
          composition, the workouts a minute falls in, the sleep a night already holds. -->
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
-    <uses-permission android:name="android.permission.health.READ_STEPS" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
     <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_EXERCISE" />

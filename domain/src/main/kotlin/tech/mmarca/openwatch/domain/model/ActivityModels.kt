@@ -44,10 +44,10 @@ enum class ActivityRecordSource {
 
 /**
  * A total stored as one record beside the session. The form shows the first five;
- * [FLOORS] and [WHEELCHAIR_PUSHES] come only from an import, so no edit ever names them
- * as changed and [ActivityWriteRequest.keepingUntouchedMetrics] always keeps them.
+ * [FLOORS] comes only from an import, so no edit ever names it as changed and
+ * [ActivityWriteRequest.keepingUntouchedMetrics] always keeps it.
  */
-enum class ActivityFormMetric { STEPS, DISTANCE, ELEVATION, ACTIVE_CALORIES, TOTAL_CALORIES, FLOORS, WHEELCHAIR_PUSHES }
+enum class ActivityFormMetric { STEPS, DISTANCE, ELEVATION, ACTIVE_CALORIES, TOTAL_CALORIES, FLOORS }
 
 /**
  * What OpenWatch itself stored for one session. Null means it stored nothing for that
@@ -60,7 +60,6 @@ data class OwnActivityMetrics(
     val activeCaloriesKcal: Double? = null,
     val totalCaloriesKcal: Double? = null,
     val floorsClimbed: Double? = null,
-    val wheelchairPushes: Long? = null,
 )
 
 /** The bounds a written total must stay inside. Shared with importers that check before writing. */
@@ -70,7 +69,6 @@ object ActivityWriteLimits {
     const val MaxCaloriesKcal = 1_000_000.0
     const val MaxSteps = 1_000_000L
     const val MaxFloors = 100_000.0
-    const val MaxWheelchairPushes = 1_000_000L
     const val MinHeartRateBpm = 1L
     const val MaxHeartRateBpm = 255L
 }
@@ -92,7 +90,6 @@ data class ActivityWriteRequest(
     val activeCaloriesKcal: Double? = null,
     val totalCaloriesKcal: Double? = null,
     val floorsClimbed: Double? = null,
-    val wheelchairPushes: Long? = null,
     val bleSamples: BleRecordingSampleBuffer = BleRecordingSampleBuffer(),
     val source: ActivityRecordSource = ActivityRecordSource.MANUAL_ENTRY,
     /**
@@ -120,8 +117,6 @@ data class ActivityWriteRequest(
             totalCaloriesKcal =
             if (ActivityFormMetric.TOTAL_CALORIES in edited) totalCaloriesKcal else own.totalCaloriesKcal,
             floorsClimbed = if (ActivityFormMetric.FLOORS in edited) floorsClimbed else own.floorsClimbed,
-            wheelchairPushes =
-            if (ActivityFormMetric.WHEELCHAIR_PUSHES in edited) wheelchairPushes else own.wheelchairPushes,
         )
     }
 }

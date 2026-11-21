@@ -14,7 +14,6 @@ import androidx.health.connect.client.records.SpeedRecord
 import androidx.health.connect.client.records.StepsCadenceRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
-import androidx.health.connect.client.records.WheelchairPushesRecord
 import javax.inject.Inject
 import javax.inject.Singleton
 import tech.mmarca.openwatch.data.repository.contract.ActivityRepository
@@ -47,7 +46,6 @@ class ActivityWriteRepository(
     private val writeCyclingCadencePermission = HealthPermission.getWritePermission(CyclingPedalingCadenceRecord::class)
     private val writeExerciseRoutePermission = HealthPermission.PERMISSION_WRITE_EXERCISE_ROUTE
     private val writeFloorsPermission = HealthPermission.getWritePermission(FloorsClimbedRecord::class)
-    private val writeWheelchairPushesPermission = HealthPermission.getWritePermission(WheelchairPushesRecord::class)
 
     private suspend fun grantedPermissionsIfAvailable(): Set<String> =
         if (hc.availability() == HealthConnectAvailability.AVAILABLE) hc.grantedPermissions() else emptySet()
@@ -61,9 +59,8 @@ class ActivityWriteRepository(
         if (request.totalCaloriesKcal != null) add(writeTotalCaloriesPermission)
         if (request.stepsCount != null) add(writeStepsPermission)
         addAll(request.bleSamples.writePermissions())
-        // Only an import carries these; the form never asks for them.
+        // Only an import carries this; the form never asks for it.
         if (request.floorsClimbed != null) add(writeFloorsPermission)
-        if (request.wheelchairPushes != null) add(writeWheelchairPushesPermission)
     }
 
     private fun BleRecordingSampleBuffer.writePermissions(): Set<String> = buildSet {

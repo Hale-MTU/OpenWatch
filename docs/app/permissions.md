@@ -11,7 +11,7 @@ What a watch sync writes: `WRITE_STEPS`, `WRITE_DISTANCE`, `WRITE_EXERCISE`,
 `WRITE_EXERCISE_ROUTE`, `WRITE_ELEVATION_GAINED`, `WRITE_ACTIVE_CALORIES_BURNED`,
 `WRITE_TOTAL_CALORIES_BURNED`, `WRITE_HEART_RATE`, `WRITE_RESTING_HEART_RATE`,
 `WRITE_HEART_RATE_VARIABILITY`, `WRITE_BASAL_METABOLIC_RATE`, `WRITE_FLOORS_CLIMBED`,
-`WRITE_WHEELCHAIR_PUSHES`, `WRITE_SPEED`, `WRITE_POWER`,
+`WRITE_SPEED`, `WRITE_POWER`,
 `WRITE_OXYGEN_SATURATION`, `WRITE_RESPIRATORY_RATE`, `WRITE_SKIN_TEMPERATURE`,
 `WRITE_VO2_MAX`, `WRITE_SLEEP`. Steps cadence falls under `WRITE_STEPS` and cycling cadence under `WRITE_EXERCISE`:
 Health Connect has no separate cadence permission.
@@ -37,8 +37,7 @@ composition), `READ_EXERCISE` (a minute inside a workout gets no walking-energy 
 `READ_RESTING_HEART_RATE` (a day that already holds a resting heart rate is left alone, and
 the heart rate zones the watch shows), `READ_HEART_RATE` (the highest heart rate, for those
 zones, and a workout's energy). `READ_HEALTH_DATA_HISTORY`: the latest weight and height are
-often older than the 30 days Health Connect shows without it. `READ_STEPS` is declared and
-not used by this version.
+often older than the 30 days Health Connect shows without it.
 
 `READ_HEALTH_DATA_IN_BACKGROUND`: a scheduled sync with the app closed can only see other
 apps' weights, workouts and sleep with this grant. Without it the sync still writes the

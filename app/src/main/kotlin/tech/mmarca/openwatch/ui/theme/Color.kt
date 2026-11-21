@@ -34,7 +34,6 @@ val BodyFatColor = Color(0xFF8A6A55)
 val FloorsColor = Color(0xFFA8881F)
 val ActiveCaloriesColor = Color(0xFFDE6C39)
 val ElevationColor = Color(0xFF6E9440)
-val WheelchairPushesColor = Color(0xFF2E8C7F)
 val MindfulnessColor = Color(0xFF8A6E9C)
 val CycleColor = Color(0xFFBE5C85)
 

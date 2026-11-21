@@ -18,7 +18,6 @@ import androidx.health.connect.client.records.SpeedRecord
 import androidx.health.connect.client.records.StepsCadenceRecord
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
-import androidx.health.connect.client.records.WheelchairPushesRecord
 import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.units.Mass
@@ -225,18 +224,6 @@ class ActivityRecordWriter(
                     )
                 )
             }
-            wheelchairPushes?.let { pushes ->
-                add(
-                    WheelchairPushesRecord(
-                        startTime = startTime,
-                        startZoneOffset = startOffset,
-                        endTime = endTime,
-                        endZoneOffset = endOffset,
-                        count = pushes,
-                        metadata = metricMetadata("wheelchair_pushes", startTime),
-                    )
-                )
-            }
             addAll(
                 bleSamples.toManualActivitySensorRecords(startTime, endTime, zone) { kind, start ->
                     metricMetadata(kind, start)
@@ -412,9 +399,6 @@ class ActivityRecordWriter(
         request.stepsCount?.let { require(it > 0L && it <= ActivityWriteLimits.MaxSteps) { "Steps are out of range." } }
         request.floorsClimbed?.let {
             require(it > 0.0 && it <= ActivityWriteLimits.MaxFloors) { "Floors climbed are out of range." }
-        }
-        request.wheelchairPushes?.let {
-            require(it > 0L && it <= ActivityWriteLimits.MaxWheelchairPushes) { "Wheelchair pushes are out of range." }
         }
         val sortedPauses = request.pauseIntervals.sortedBy { it.startTime }
         sortedPauses.forEach { interval ->
