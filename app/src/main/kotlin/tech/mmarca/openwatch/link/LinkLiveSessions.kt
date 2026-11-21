@@ -70,7 +70,7 @@ class LinkLiveSessions @Inject constructor(
     private val garminRealtime: GarminRealtimeStore,
     private val wearOs: WearOsCompanionManager,
     private val host: Lazy<OpenLinkHost>,
-    @param:ApplicationScope appScope: CoroutineScope,
+    @ApplicationScope appScope: CoroutineScope,
 ) {
     private val scope = appScope
     private val streams = mutableMapOf<String, SharedFlow<OpenLinkSample>>()

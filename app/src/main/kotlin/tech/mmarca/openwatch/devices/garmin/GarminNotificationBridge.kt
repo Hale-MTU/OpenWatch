@@ -26,6 +26,7 @@ import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import kotlinx.coroutines.plus
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 import tech.mmarca.openwatch.devices.core.RadioLeaseRegistry
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 /**
  * The seam between Android's notification listener and the Garmin stack:
@@ -47,8 +48,10 @@ class GarminNotificationBridge @Inject constructor(
     private val foregroundGate: tech.mmarca.openwatch.core.performance.AppForegroundGate,
     private val realtimeStore: GarminRealtimeStore,
     private val musicRelay: GarminMusicRelay,
-    @param:ApplicationScope appScope: CoroutineScope,
+    @ApplicationScope appScope: CoroutineScope,
     private val radioLeases: RadioLeaseRegistry,
+    // Lazy: the controller reaches the sync ports, and the bridge must not wait on them at start.
+    private val syncController: dagger.Lazy<DeviceSyncController>,
 ) : CompanionPresenceObserver, NotificationSink {
 
     private companion object {
@@ -369,28 +372,16 @@ class GarminNotificationBridge @Inject constructor(
         ensureCompanionLink()
     }
 
-    /** A background sync already running for an announcement. */
-    private var announcedSyncRunning = false
-
-    /** The watch finished writing a recording: sync it now, in the background. */
+    /**
+     * The watch finished writing a recording: sync it now, in the background, through the
+     * controller like every other sync, so it claims the radio, shows on the watch screen,
+     * and cannot run beside a tapped or scheduled one. Busy is a no-op: that sync takes the
+     * recording too.
+     */
     private fun syncAnnouncedFile(address: String) {
-        scope.launch {
-            if (announcedSyncRunning) return@launch
-            val device = deviceFor(address)
-                ?: return@launch
-            announcedSyncRunning = true
-            try {
-                GarminLog.log("[GARMIN-COMPANION] announced file; syncing now")
-                val result = syncService.sync(device, listenAfter = Duration.ZERO, onProgress = null)
-                GarminLog.log("[GARMIN-COMPANION] announced-file sync: $result")
-            } catch (error: CancellationException) {
-                throw error
-            } catch (error: Exception) {
-                GarminLog.log("[GARMIN-COMPANION] announced-file sync failed: $error")
-            } finally {
-                announcedSyncRunning = false
-            }
-        }
+        val device = deviceFor(address) ?: return
+        val running = syncController.get().syncDevice(device.id, silent = true)
+        GarminLog.log(if (running == null) "[GARMIN-COMPANION] announced file; a sync already runs" else "[GARMIN-COMPANION] announced file; syncing now")
     }
 
     /** An app's display name, via the manifest `<queries>`. Null for an app it cannot see. */

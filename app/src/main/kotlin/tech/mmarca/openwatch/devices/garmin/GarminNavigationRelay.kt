@@ -30,7 +30,7 @@ class GarminNavigationRelay @Inject constructor(
     private val deviceRepository: BleDeviceRepository,
     private val stateStore: GarminDeviceStateStore,
     private val guidanceFeed: CoMapsGuidanceFeed,
-    @param:ApplicationScope appScope: CoroutineScope,
+    @ApplicationScope appScope: CoroutineScope,
 ) {
     private val scope = appScope + Dispatchers.Default.limitedParallelism(1)
     private val policy = GarminNavigationRelayPolicy()

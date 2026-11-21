@@ -38,7 +38,7 @@ class LinkDevices @Inject constructor(
     wearOsLinkStore: WearOsLinkStore,
     scaleStore: XiaomiScaleStore,
     scaleListener: XiaomiScaleListener,
-    @param:ApplicationScope appScope: CoroutineScope,
+    @ApplicationScope appScope: CoroutineScope,
 ) {
     private val scope = appScope
 

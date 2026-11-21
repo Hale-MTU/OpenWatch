@@ -155,7 +155,7 @@ class WatchDeviceViewModel @Inject constructor(
     private val dispatchers: tech.mmarca.openwatch.core.performance.DispatcherProvider,
     private val wearOsCompanionManager: WearOsCompanionManager,
     private val wearOsLinkStore: WearOsLinkStore,
-    @param:ApplicationScope appScope: CoroutineScope,
+    @ApplicationScope appScope: CoroutineScope,
 ) : ViewModel() {
 
     val deviceId: String = savedStateHandle.get<String>(WATCH_DEVICE_ID_ARG).orEmpty()

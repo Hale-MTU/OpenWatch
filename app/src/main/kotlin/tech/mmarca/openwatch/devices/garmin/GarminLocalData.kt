@@ -28,7 +28,7 @@ class GarminLocalData @Inject constructor(
     private val fileStore: GarminFileStore,
     private val sleepMinutes: GarminSleepMinuteRepository,
     private val wellness: GarminWellnessRepository,
-    @param:ApplicationScope appScope: CoroutineScope,
+    @ApplicationScope appScope: CoroutineScope,
 ) {
     private val housekeepingScope = appScope + Dispatchers.IO
 

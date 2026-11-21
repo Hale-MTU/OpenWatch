@@ -32,7 +32,7 @@ class WearOsPhoneActivity @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val deviceRepository: BleDeviceRepository,
     private val nodePort: WearOsNodePort,
-    @param:ApplicationScope appScope: CoroutineScope,
+    @ApplicationScope appScope: CoroutineScope,
 ) {
     private val scope = appScope + Dispatchers.IO
 

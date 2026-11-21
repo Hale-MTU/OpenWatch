@@ -21,7 +21,7 @@ class OpenWatchLinkPublisher @Inject constructor(
     private val preferences: BodyProfilePreferences,
     private val profileSync: LinkProfileSync,
     private val streamingNotifier: LinkStreamingNotifier,
-    @param:ApplicationScope appScope: CoroutineScope,
+    @ApplicationScope appScope: CoroutineScope,
 ) {
     private val scope = appScope
     private var started = false

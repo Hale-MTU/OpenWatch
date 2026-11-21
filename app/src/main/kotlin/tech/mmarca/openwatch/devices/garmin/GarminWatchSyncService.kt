@@ -48,7 +48,7 @@ class GarminWatchSyncService @Inject constructor(
     private val fileStore: GarminFileStore,
     /** Everything that touches Bluetooth. A test hands over a fake and drives a whole sync. */
     private val radio: GarminRadio,
-    @param:ApplicationScope appScope: CoroutineScope,
+    @ApplicationScope appScope: CoroutineScope,
     private val radioLeases: RadioLeaseRegistry,
 ) : DeviceSyncPort {
 

@@ -28,7 +28,7 @@ import tech.mmarca.openwatch.core.performance.ApplicationScope
 @Singleton
 class CoMapsGuidanceFeed @Inject constructor(
     private val repository: CoMapsNavigationRepository,
-    @param:ApplicationScope appScope: CoroutineScope,
+    @ApplicationScope appScope: CoroutineScope,
 ) {
     /** Why the feed is up. No reason outranks another. */
     enum class Reason {

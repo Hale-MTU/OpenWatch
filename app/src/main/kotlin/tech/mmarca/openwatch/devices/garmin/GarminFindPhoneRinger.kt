@@ -31,7 +31,7 @@ import tech.mmarca.openwatch.core.performance.ApplicationScope
 @Singleton
 class GarminFindPhoneRinger @Inject constructor(
     @ApplicationContext private val context: Context,
-    @param:ApplicationScope appScope: CoroutineScope,
+    @ApplicationScope appScope: CoroutineScope,
 ) {
     private companion object {
         const val CHANNEL_ID = "garmin_find_phone"
