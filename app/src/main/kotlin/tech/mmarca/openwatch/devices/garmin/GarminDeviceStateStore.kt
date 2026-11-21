@@ -6,6 +6,7 @@ import androidx.core.content.edit
 import java.time.DayOfWeek
 import org.json.JSONArray
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
+import tech.mmarca.openwatch.devices.core.sync.AutoSyncIntervalStore
 
 /**
  * Garmin's per-device state, kept out of the generic registry: the
@@ -14,7 +15,7 @@ import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
  * are the Flutter build's; the migrator copies the values across. Do not
  * read `FlutterSharedPreferences` here. Lists are JSON arrays to keep order.
  */
-class GarminDeviceStateStore(private val prefs: SharedPreferences) {
+class GarminDeviceStateStore(private val prefs: SharedPreferences) : AutoSyncIntervalStore {
 
     constructor(context: Context) : this(
         context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE),
@@ -118,10 +119,11 @@ class GarminDeviceStateStore(private val prefs: SharedPreferences) {
      * How often the watch syncs on its own. Off by default. Stored as
      * minutes, so a dropped interval degrades to off, not another schedule.
      */
-    fun autoSyncInterval(deviceId: String): AutoSyncInterval =
+    // Every watch's interval, Wear OS included, under its historical key.
+    override fun autoSyncInterval(deviceId: String): AutoSyncInterval =
         AutoSyncInterval.fromMinutes(prefs.getInt(autoSyncPrefsKey(deviceId), 0))
 
-    fun setAutoSyncInterval(deviceId: String, interval: AutoSyncInterval) {
+    override fun setAutoSyncInterval(deviceId: String, interval: AutoSyncInterval) {
         prefs.edit { putInt(autoSyncPrefsKey(deviceId), interval.minutes) }
     }
 

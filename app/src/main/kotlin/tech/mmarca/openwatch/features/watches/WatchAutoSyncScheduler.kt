@@ -13,7 +13,7 @@ import javax.inject.Singleton
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
-import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
+import tech.mmarca.openwatch.devices.core.sync.AutoSyncIntervalStore
 import tech.mmarca.openwatch.devices.garmin.GarminLog
 
 /**
@@ -26,17 +26,17 @@ import tech.mmarca.openwatch.devices.garmin.GarminLog
 class WatchAutoSyncScheduler @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val deviceRepository: BleDeviceRepository,
-    private val stateStore: GarminDeviceStateStore,
+    private val intervals: AutoSyncIntervalStore,
     private val syncPort: DeviceSyncPort,
 ) {
 
     private val workManager: WorkManager get() = WorkManager.getInstance(context)
 
-    fun interval(deviceId: String): AutoSyncInterval = stateStore.autoSyncInterval(deviceId)
+    fun interval(deviceId: String): AutoSyncInterval = intervals.autoSyncInterval(deviceId)
 
     /** Stores the choice and re-plans from now, so a shorter interval runs sooner. */
     fun setInterval(deviceId: String, interval: AutoSyncInterval) {
-        stateStore.setAutoSyncInterval(deviceId, interval)
+        intervals.setAutoSyncInterval(deviceId, interval)
         if (interval.isOn) {
             enqueue(deviceId, interval, ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE)
         } else {
@@ -49,7 +49,7 @@ class WatchAutoSyncScheduler @Inject constructor(
         // Runs from Application.onCreate. Not worth failing app start over.
         runCatching {
             deviceRepository.devices.forEach { device ->
-                val interval = stateStore.autoSyncInterval(device.id)
+                val interval = intervals.autoSyncInterval(device.id)
                 if (interval.isOn && syncPort.canSync(device)) {
                     enqueue(device.id, interval, ExistingPeriodicWorkPolicy.KEEP)
                 } else {
@@ -68,7 +68,7 @@ class WatchAutoSyncScheduler @Inject constructor(
     /** Removal: the schedule goes with the watch, and so does the choice. */
     fun forget(deviceId: String) {
         cancel(deviceId)
-        stateStore.setAutoSyncInterval(deviceId, AutoSyncInterval.OFF)
+        intervals.setAutoSyncInterval(deviceId, AutoSyncInterval.OFF)
     }
 
     private fun enqueue(

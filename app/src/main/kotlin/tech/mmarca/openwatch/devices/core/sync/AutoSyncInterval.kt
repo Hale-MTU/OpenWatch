@@ -29,3 +29,13 @@ enum class AutoSyncInterval(
             entries.firstOrNull { it != OFF && it.minutes == minutes } ?: OFF
     }
 }
+
+/**
+ * Where each device's automatic sync interval is kept. A port, so the schedule does not
+ * name the store a vendor keeps it in.
+ */
+interface AutoSyncIntervalStore {
+    fun autoSyncInterval(deviceId: String): AutoSyncInterval
+
+    fun setAutoSyncInterval(deviceId: String, interval: AutoSyncInterval)
+}

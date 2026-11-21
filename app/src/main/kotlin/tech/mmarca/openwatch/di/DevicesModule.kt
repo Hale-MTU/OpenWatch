@@ -15,6 +15,7 @@ import tech.mmarca.openwatch.devices.core.pairing.WatchPairingPort
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
 import tech.mmarca.openwatch.devices.garmin.GarminCounterWatermarkStore
 import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
+import tech.mmarca.openwatch.devices.core.sync.AutoSyncIntervalStore
 import tech.mmarca.openwatch.devices.garmin.GarminFileStore
 import tech.mmarca.openwatch.devices.garmin.GarminGattProbe
 import tech.mmarca.openwatch.devices.garmin.GarminGattRadio
@@ -82,6 +83,10 @@ abstract class DevicesModule {
     @Binds
     @Singleton
     abstract fun bindWearOsNodePort(impl: BluetoothWearOsNodePort): WearOsNodePort
+
+    // Every watch's sync interval, Wear OS included, lives in the Garmin store under its old key.
+    @Binds
+    abstract fun bindAutoSyncIntervalStore(impl: GarminDeviceStateStore): AutoSyncIntervalStore
 
     companion object {
 
