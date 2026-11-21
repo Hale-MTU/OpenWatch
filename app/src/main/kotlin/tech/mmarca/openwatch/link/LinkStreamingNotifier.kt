@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import tech.mmarca.openlink.host.OpenLinkHost
 import tech.mmarca.openwatch.MainActivity
 import tech.mmarca.openwatch.R
-import tech.mmarca.openwatch.features.connectedapps.appLabel
 
 /**
  * The notification while another app keeps a watch streaming: "Streaming heart rate to

@@ -1,8 +1,6 @@
 package tech.mmarca.openwatch.features.connectedapps
 
 import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,6 +22,7 @@ import tech.mmarca.openwatch.link.FirstPartyApps
 import tech.mmarca.openwatch.link.LinkLiveSessions
 import tech.mmarca.openwatch.link.LinkSessionStatus
 import tech.mmarca.openwatch.link.linkSessionStatuses
+import tech.mmarca.openwatch.link.appLabel
 
 /** One app that asked to use OpenWatch over OpenLink, as the screen shows it. */
 data class ConnectedApp(
@@ -109,15 +108,3 @@ class ConnectedAppsViewModel @Inject constructor(
         )
     }
 }
-
-/** The app's name as the launcher shows it, or its package name if it is not visible. */
-internal fun appLabel(context: Context, packageName: String): String = runCatching {
-    val pm = context.packageManager
-    val info = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        pm.getApplicationInfo(packageName, PackageManager.ApplicationInfoFlags.of(0))
-    } else {
-        @Suppress("DEPRECATION")
-        pm.getApplicationInfo(packageName, 0)
-    }
-    pm.getApplicationLabel(info).toString()
-}.getOrDefault(packageName)

@@ -20,8 +20,8 @@ import tech.mmarca.openlink.host.OpenLinkHostCore
 import tech.mmarca.openwatch.data.repository.BodyProfileProvider
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
-import tech.mmarca.openwatch.features.connectedapps.appLabel
 import tech.mmarca.openwatch.link.LinkProfileSync
+import tech.mmarca.openwatch.link.appLabel
 
 data class BodyProfileUiState(
     val declared: BodyProfile = BodyProfile(),
