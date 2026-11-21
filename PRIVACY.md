@@ -166,7 +166,7 @@ Health Connect is the source of truth for every record it has a type for. OpenWa
 
 The Wear OS watch app keeps a week of sensor readings and a month of recorded workouts in its own private storage on the watch, whether or not the phone has collected them, and deletes them after that.
 
-OpenWatch opts out of Android's cloud backup. When you move to a new phone, Android can copy the app's data across. The phone app's manifest removes inherited Android network permissions, including `INTERNET`.
+OpenWatch opts out of Android's cloud backup. When you move to a new phone, Android can copy the app's data across; from version 0.4.1 the scale's key, the Wear OS link tokens and the list of apps you allowed stay behind, so the new phone asks for them again. The watch app keeps all its data on the watch. The phone app's manifest removes inherited Android network permissions, including `INTERNET`.
 
 ## Diagnostics
 
