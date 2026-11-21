@@ -167,6 +167,28 @@ class DeviceSyncControllerTest {
     }
 
     @Test
+    fun `of callers on several threads at once, exactly one gets the radio`() = runTest {
+        val watch = addWatch()
+        port.gate = CompletableDeferred()
+        val controller = controller()
+        val start = java.util.concurrent.CountDownLatch(1)
+        val claims = java.util.concurrent.atomic.AtomicInteger()
+
+        val threads = List(8) {
+            Thread {
+                start.await()
+                if (controller.syncDevice(watch.id) != null) claims.incrementAndGet()
+            }
+        }
+        threads.forEach(Thread::start)
+        start.countDown()
+        threads.forEach(Thread::join)
+
+        assertEquals(1, claims.get())
+        port.gate!!.complete(Unit)
+    }
+
+    @Test
     fun `a failure surfaces its message and ends idle`() = runTest {
         val watch = addWatch()
         port.result = DeviceSyncResult.Failed("Could not connect: timeout")

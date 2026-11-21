@@ -95,15 +95,18 @@ class DeviceSyncController(
         listenAfter: Duration = Duration.ZERO,
         silent: Boolean = false,
     ): Deferred<DeviceSyncResult>? {
-        if (_state.value.isSyncing) return null
         val device = deviceRepository.devices.firstOrNull { it.id == deviceId } ?: return null
         if (!syncPort.canSync(device)) return null
 
-        // Set before the launch, so the radio reads busy at once.
-        _state.value = DeviceSyncUiState(
-            syncingDeviceId = deviceId,
-            phase = DeviceSyncPhase.HANDSHAKE,
-        )
+        // Claimed before the launch, so the radio reads busy at once. A screen, the schedule
+        // and another app over OpenLink call this from different threads: the claim is one
+        // compare-and-set, so only one of two callers at the same moment gets the radio.
+        val claimed = DeviceSyncUiState(syncingDeviceId = deviceId, phase = DeviceSyncPhase.HANDSHAKE)
+        while (true) {
+            val current = _state.value
+            if (current.isSyncing) return null
+            if (_state.compareAndSet(current, claimed)) break
+        }
         return scope.async {
             // The port owns the sequence. The catch is defensive: `async` holds an
             // uncaught exception, which would leave the radio reading busy forever.

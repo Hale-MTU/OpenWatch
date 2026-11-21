@@ -48,9 +48,10 @@ class WatchAutoSyncWorker(
         // A watch switched off keeps its schedule; the runs stop.
         if (!device.enabled) return Result.success()
 
-        // Null means something else holds the sync. The next tick is minutes away.
+        // Null means another sync holds the radio. Retried on the backoff rather than waiting a
+        // whole period: with several watches on one schedule, the loser would otherwise always lose.
         val running = entryPoint.deviceSyncController().syncDevice(deviceId, silent = true)
-            ?: return Result.success()
+            ?: return if (runAttemptCount < MaxAttempts) Result.retry() else Result.success()
 
         return when (val result = running.await()) {
             is DeviceSyncResult.Succeeded -> Result.success()

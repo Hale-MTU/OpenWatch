@@ -12,6 +12,7 @@ import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -379,6 +380,8 @@ class GarminNotificationBridge @Inject constructor(
                 GarminLog.log("[GARMIN-COMPANION] announced file; syncing now")
                 val result = syncService.sync(device, listenAfter = Duration.ZERO, onProgress = null)
                 GarminLog.log("[GARMIN-COMPANION] announced-file sync: $result")
+            } catch (error: CancellationException) {
+                throw error
             } catch (error: Exception) {
                 GarminLog.log("[GARMIN-COMPANION] announced-file sync failed: $error")
             } finally {
