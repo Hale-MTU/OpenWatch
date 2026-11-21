@@ -13,7 +13,11 @@ internal object AesCcm {
 
     private const val BLOCK = 16
 
-    /** The plaintext, or null when [tag] does not authenticate it. */
+    /**
+     * The plaintext, or null when [tag] does not authenticate it, or when the sizes are not
+     * ones CCM defines (a nonce of 7 to 13 bytes, an even tag of 4 to 16). Without that check
+     * an empty tag would compare no bytes and authenticate anything.
+     */
     fun decrypt(
         key: ByteArray,
         nonce: ByteArray,
@@ -21,6 +25,7 @@ internal object AesCcm {
         ciphertext: ByteArray,
         tag: ByteArray,
     ): ByteArray? {
+        if (nonce.size !in 7..13 || tag.size !in 4..16 || tag.size % 2 != 0) return null
         val aes = blockCipher(key)
         // The length field takes what the nonce leaves of a block, after the flags byte.
         val lengthBytes = BLOCK - 1 - nonce.size
