@@ -18,6 +18,7 @@ import tech.mmarca.openwatch.devices.garmin.GarminSendFileResult
 import tech.mmarca.openwatch.devices.garmin.GarminSendStage
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 data class WatchAlarmsUiState(
     /** Null while loading, and when the watch is gone or is not a Garmin. */

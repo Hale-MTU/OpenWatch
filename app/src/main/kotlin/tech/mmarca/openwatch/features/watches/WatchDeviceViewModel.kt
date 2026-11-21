@@ -45,6 +45,9 @@ import tech.mmarca.openwatch.devices.wearos.WearOsLinkStore
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
 import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
+import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 /** Everything the device view shows about one watch. */
 @Immutable

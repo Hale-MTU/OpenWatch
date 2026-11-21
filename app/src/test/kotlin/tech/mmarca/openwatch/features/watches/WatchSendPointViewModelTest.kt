@@ -38,6 +38,7 @@ import tech.mmarca.openwatch.navigation.WATCH_POINT_LONGITUDE_ARG
 import tech.mmarca.openwatch.navigation.WATCH_POINT_NAME_ARG
 import tech.mmarca.openwatch.navigation.WATCH_POINT_UNREADABLE_ARG
 import tech.mmarca.openwatch.util.MainDispatcherRule
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 /** The form picks a watch, reads the coordinates, and never sends on its own. */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)

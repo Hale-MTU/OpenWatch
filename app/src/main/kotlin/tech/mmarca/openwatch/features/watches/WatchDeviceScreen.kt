@@ -77,6 +77,7 @@ import tech.mmarca.openwatch.ui.components.rememberHealthConnectPermissionLaunch
 import tech.mmarca.openwatch.ui.theme.Spacing
 import tech.mmarca.openwatch.ui.components.OpenWatchIconButton
 import tech.mmarca.openwatch.ui.components.ScreenAppBar
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
 
 /** The watch's settings tree browser exists, so the rows that open it are live. */
 internal const val WatchSettingsTreeAvailable: Boolean = true

@@ -49,6 +49,9 @@ import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
 import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
 import tech.mmarca.openwatch.util.MainDispatcherRule
+import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 /** Renaming a watch with no capabilities, and what forgetting a device does and does not do at the OS level. */
 class WatchDeviceViewModelTest {

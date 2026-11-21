@@ -26,6 +26,7 @@ import tech.mmarca.openwatch.navigation.WATCH_POINT_LATITUDE_ARG
 import tech.mmarca.openwatch.navigation.WATCH_POINT_LONGITUDE_ARG
 import tech.mmarca.openwatch.navigation.WATCH_POINT_NAME_ARG
 import tech.mmarca.openwatch.navigation.WATCH_POINT_UNREADABLE_ARG
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 data class WatchSendPointUiState(
     /** The paired watches that can store a point. */

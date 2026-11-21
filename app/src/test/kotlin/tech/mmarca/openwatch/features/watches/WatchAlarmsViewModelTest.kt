@@ -32,6 +32,7 @@ import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
 import tech.mmarca.openwatch.util.MainDispatcherRule
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 /** The list lives on the phone, and nothing reaches the watch until Send. */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)

@@ -28,6 +28,7 @@ import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 /** Find is a toggle, a double-stop must not throw, a refusal is a flag, and a find stands down during a sync. */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)

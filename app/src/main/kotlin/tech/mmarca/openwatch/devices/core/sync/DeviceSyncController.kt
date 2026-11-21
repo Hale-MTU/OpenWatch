@@ -1,4 +1,4 @@
-package tech.mmarca.openwatch.features.watches
+package tech.mmarca.openwatch.devices.core.sync
 
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -15,11 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPhase
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
 import tech.mmarca.openwatch.core.presentation.ScreenError
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
-import tech.mmarca.openwatch.devices.core.sync.UnwrittenSeries
 
 /** Where a device sync has got to, for the row that started it. Device-agnostic. */
 data class DeviceSyncUiState(

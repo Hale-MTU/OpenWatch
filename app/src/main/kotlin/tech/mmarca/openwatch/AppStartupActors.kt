@@ -9,7 +9,7 @@ import tech.mmarca.openwatch.devices.garmin.GarminNavigationRelay
 import tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleListener
 import tech.mmarca.openwatch.devices.wearos.WearOsPhoneActivity
-import tech.mmarca.openwatch.features.watches.WatchAutoSyncScheduler
+import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
 
 /**
  * What the app starts at every process start that the first screen does not wait for.

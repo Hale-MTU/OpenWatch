@@ -9,7 +9,7 @@ import tech.mmarca.openwatch.devices.garmin.GarminNavigationRelay
 import tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge
 import tech.mmarca.openwatch.devices.wearos.WearOsPhoneActivity
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleListener
-import tech.mmarca.openwatch.features.watches.WatchAutoSyncScheduler
+import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
 import tech.mmarca.openwatch.link.OpenWatchLinkPublisher
 
 class AppStartupActorsTest {

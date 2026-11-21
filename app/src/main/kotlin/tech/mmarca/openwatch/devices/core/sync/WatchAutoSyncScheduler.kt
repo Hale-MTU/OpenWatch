@@ -1,4 +1,4 @@
-package tech.mmarca.openwatch.features.watches
+package tech.mmarca.openwatch.devices.core.sync
 
 import android.content.Context
 import androidx.work.BackoffPolicy
@@ -11,10 +11,7 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
-import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
-import tech.mmarca.openwatch.devices.core.sync.AutoSyncIntervalStore
-import tech.mmarca.openwatch.devices.garmin.GarminLog
+import tech.mmarca.openwatch.devices.core.DeviceLog
 
 /**
  * Owns the automatic watch sync schedule: the stored per-watch interval and
@@ -50,6 +47,9 @@ class WatchAutoSyncScheduler @Inject constructor(
         runCatching {
             deviceRepository.devices.forEach { device ->
                 val interval = intervals.autoSyncInterval(device.id)
+                // The work's name before the worker moved package: WorkManager will not
+                // instantiate a class that is gone, nor update work to another class.
+                workManager.cancelUniqueWork(legacyWorkName(device.id))
                 if (interval.isOn && syncPort.canSync(device)) {
                     enqueue(device.id, interval, ExistingPeriodicWorkPolicy.KEEP)
                 } else {
@@ -57,12 +57,13 @@ class WatchAutoSyncScheduler @Inject constructor(
                     cancel(device.id)
                 }
             }
-        }.onFailure { GarminLog.log("[GARMIN-AUTOSYNC] could not restore the schedules: $it") }
+        }.onFailure { Log.log("could not restore the schedules: ${it::class.simpleName}") }
     }
 
     /** Stops a watch's schedule without touching the stored interval. */
     fun cancel(deviceId: String) {
         workManager.cancelUniqueWork(uniqueWorkName(deviceId))
+        workManager.cancelUniqueWork(legacyWorkName(deviceId))
     }
 
     /** Removal: the schedule goes with the watch, and so does the choice. */
@@ -92,6 +93,11 @@ class WatchAutoSyncScheduler @Inject constructor(
         /** A watch out of range is usually back within minutes. */
         private const val RETRY_BACKOFF_MINUTES = 10L
 
-        fun uniqueWorkName(deviceId: String): String = "watch-auto-sync-$deviceId"
+        fun uniqueWorkName(deviceId: String): String = "device-auto-sync-$deviceId"
+
+        /** What [uniqueWorkName] was while the worker lived in `features/watches`. */
+        private fun legacyWorkName(deviceId: String): String = "watch-auto-sync-$deviceId"
+
+        private val Log = DeviceLog("DeviceAutoSync")
     }
 }

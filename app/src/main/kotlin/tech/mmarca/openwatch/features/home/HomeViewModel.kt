@@ -13,7 +13,7 @@ import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.garmin.GarminRealtimeState
 import tech.mmarca.openwatch.devices.garmin.GarminRealtimeStore
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
-import tech.mmarca.openwatch.features.watches.DeviceSyncController
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 /** The watch tile at the top of the home screen: the watch being synced, else the most recently synced. */
 data class WatchTileState(

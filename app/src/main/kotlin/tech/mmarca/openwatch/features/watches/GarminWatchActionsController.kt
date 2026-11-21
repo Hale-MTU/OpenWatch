@@ -25,6 +25,7 @@ import tech.mmarca.openwatch.devices.garmin.GarminUploadFileType
 import tech.mmarca.openwatch.devices.garmin.GarminWatchSyncService
 import tech.mmarca.openwatch.devices.garmin.GarminWaypoint
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 /** The find action, Garmin-only: gated on GarminCapability and speaking GFDI directly. */
 data class WatchFindUiState(

@@ -9,7 +9,7 @@ import tech.mmarca.openlink.OpenLinkProfile
 import tech.mmarca.openlink.OpenLinkRecordingRequest
 import tech.mmarca.openlink.host.OpenLinkCaller
 import tech.mmarca.openlink.host.OpenLinkHostCapabilities
-import tech.mmarca.openwatch.features.watches.DeviceSyncController
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 /** What OpenWatch offers over OpenLink. Every method returns at once; see [OpenLinkHostCapabilities]. */
 @Singleton

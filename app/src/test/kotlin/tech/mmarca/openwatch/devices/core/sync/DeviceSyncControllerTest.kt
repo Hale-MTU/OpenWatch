@@ -1,4 +1,4 @@
-package tech.mmarca.openwatch.features.watches
+package tech.mmarca.openwatch.devices.core.sync
 
 import android.content.Context
 import io.mockk.every
@@ -17,10 +17,6 @@ import org.junit.Test
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPhase
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice

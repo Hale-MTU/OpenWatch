@@ -24,7 +24,7 @@ import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleConfig
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleListener
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleStore
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
-import tech.mmarca.openwatch.features.watches.DeviceSyncController
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 /**
  * The paired devices as OpenLink shows them: watches and bike computers from the device

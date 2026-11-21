@@ -14,7 +14,7 @@ import org.robolectric.annotation.Config
 import tech.mmarca.openwatch.AppStartupActors
 import tech.mmarca.openwatch.devices.core.pairing.CompanionPresenceObserver
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
-import tech.mmarca.openwatch.features.watches.DeviceSyncController
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 
 /**

@@ -40,6 +40,8 @@ import tech.mmarca.openwatch.ui.components.OpenWatchOutlinedButton
 import tech.mmarca.openwatch.ui.components.PermissionCallout
 import tech.mmarca.openwatch.ui.components.formatDeviceTime
 import tech.mmarca.openwatch.ui.theme.Spacing
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 @Composable
 internal fun WearOsStatusCard(
