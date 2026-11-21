@@ -13,6 +13,15 @@ Gradle wrapper. JDK 17 or 21, the Android platform 37 and build-tools 37.0.0.
 `scripts/ci-android-gradle.sh` wraps `./gradlew` with the JDK and SDK checks the CI image
 needs; it works locally too.
 
+## The JDK
+
+The Gradle daemon runs on JDK 17, pinned in `gradle/gradle-daemon-jvm.properties`: the JDK CI
+and F-Droid build with. Where none is installed, Gradle downloads one (Temurin, through foojay)
+into `~/.gradle/jdks`; `JAVA_HOME` only starts the launcher. It matters for the bytes: the same
+commit built on JDK 21 ships a different `assets/dexopt/baseline.prof` (measured 2026-11-21,
+classes identical), so a local release build matches CI's and F-Droid's only on 17. The
+plugins' classpath is locked in `buildscript-gradle.lockfile`.
+
 ## The Gates
 
 Two gates, as in OpenVitals: the phone gate and the watch gate. Both run the link

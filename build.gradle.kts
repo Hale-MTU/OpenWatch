@@ -10,6 +10,14 @@ plugins {
     alias(libs.plugins.ksp) apply false
 }
 
+// The plugins' own classpath (AGP, Kotlin, Hilt, KSP and what they pull in) is locked too, in
+// buildscript-gradle.lockfile: a plugin's transitive dependency cannot move on its own.
+buildscript {
+    configurations.classpath {
+        resolutionStrategy.activateDependencyLocking()
+    }
+}
+
 // Each module's coordinates and lockfile come from its convention plugin (build-logic/).
 dependencyLocking {
     lockAllConfigurations()
