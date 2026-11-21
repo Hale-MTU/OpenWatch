@@ -41,9 +41,26 @@ its base and runs the phone jobs for anything outside `wear/` and the watch job 
 `gradle.properties` or to the health-calculations pointer runs both: the watch app compiles
 that library too.
 
+## Lint
+
+Lint runs on every pull request and push that touches the phone side, and in the watch
+gate. A warning fails it (`warningsAsErrors`, set for every module in `build-logic/`).
+The warnings that were there when that was switched on are in each module's
+`lint-baseline.xml`; fix them from there, and never record a new one into it. A baseline
+entry that was fixed is reported as such and can be dropped by regenerating:
+
+```bash
+./gradlew :app:updateLintBaselineCi :domain:updateLintBaselineCi :wear:updateLintBaselineDebug
+```
+
+Two kinds of check are off on purpose. The version checks (`GradleDependency`,
+`NewerVersionAvailable` and the like) change with the calendar, not the code. The plural and
+spelling checks over translations are informational: Weblate writes those files, and
+`scripts/verify-translations.py` checks what can break at runtime.
+
 ## Dependency Locks
 
-Every module locks its dependencies (`dependencyLocking` in the root build). After a
+Every module locks its dependencies (`dependencyLocking`, in `build-logic/`). After a
 dependency change, regenerate the module's lockfile and commit it:
 
 ```bash

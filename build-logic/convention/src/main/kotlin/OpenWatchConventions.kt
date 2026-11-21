@@ -25,9 +25,21 @@ internal fun Project.configureAndroid(android: CommonExtension) {
     android.buildToolsVersion = "37.0.0"
     android.compileOptions.sourceCompatibility = JavaVersion.VERSION_17
     android.compileOptions.targetCompatibility = JavaVersion.VERSION_17
-    // No lint vital on release-type builds: the gate's lint job already ran the full lint on
-    // the commit, and lint vital ran beside R8 in the signing build (five minutes, 2026-10).
-    android.lint.checkReleaseBuilds = false
+    android.lint.apply {
+        // No lint vital on release-type builds: the gate's lint job already ran the full lint
+        // on the commit, and lint vital ran beside R8 in the signing build (five minutes, 2026-10).
+        checkReleaseBuilds = false
+        // A new warning fails the gate. What was there when this was switched on is recorded
+        // in each module's lint-baseline.xml and is worked off from there, never added to.
+        warningsAsErrors = true
+        baseline = file("lint-baseline.xml")
+        // These change with the calendar, not with the code: a new library or SDK release would
+        // fail a commit that touched nothing. Upgrades are their own decision.
+        disable += setOf("GradleDependency", "NewerVersionAvailable", "AndroidGradlePluginVersion", "OldTargetApi")
+        // Weblate writes the translations. A plural shape or a word in one of them is reported,
+        // not a gate failure; scripts/verify-translations.py checks what can break at runtime.
+        informational += setOf("MissingQuantity", "UnusedQuantity", "Typos")
+    }
 }
 
 /**

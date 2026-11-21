@@ -2,10 +2,10 @@
 # (release.yml) looks its result up instead of running it again.
 #
 # submodule-pointers on every pull request and push, and three jobs that
-# build. app-test on every pull request and push; lint on pushes to main
-# only (lint alone is half of the gate's task time, and a finding is rarely
-# what a review turns on; main catches it before a nightly ships); wear-test
-# when the watch app or the build plumbing it shares with the phone changed.
+# build. app-test and lint when the phone side changed, lint in a job of its
+# own since it is half of the gate's task time; a new lint warning fails it
+# (each module's lint-baseline.xml holds the old ones); wear-test when the
+# watch app or the build plumbing it shares with the phone changed.
 # Locally the whole gate is one invocation, verifyCi.
 #
 # Every workflow pins ubuntu-26.04, the image ubuntu-latest moves to between
@@ -79,16 +79,13 @@ jobs:
           echo "wear=$wear" >> "$GITHUB_OUTPUT"
       - id: plan
         env:
-          EVENT: ${{ github.event_name }}
           PHONE: ${{ steps.changes.outputs.phone }}
           WEAR: ${{ steps.changes.outputs.wear }}
         run: |
-          run_lint=false
-          if [ "$EVENT" = "push" ]; then run_lint=$PHONE; fi
           {
-            echo "run_tests=$PHONE"; echo "run_lint=$run_lint"; echo "run_wear=$WEAR"
+            echo "run_tests=$PHONE"; echo "run_lint=$PHONE"; echo "run_wear=$WEAR"
           } >> "$GITHUB_OUTPUT"
-          echo "plan: tests=$PHONE lint=$run_lint wear=$WEAR"
+          echo "plan: tests=$PHONE lint=$PHONE wear=$WEAR"
 
   # A submodule pointer that names a commit only a pull request branch holds
   # builds until that branch is deleted, and then no fresh clone can check it

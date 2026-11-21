@@ -65,9 +65,8 @@ tasks.register("verifyCiPreflight") {
     )
 }
 
-// Lint is half of the gate's task time. CI runs it on pushes to main and in
-// the release build, not on pull requests (.github/workflows/verify.yml), so it
-// is not part of verifyCiPreflight.
+// Lint is half of the gate's task time, so CI gives it a job of its own beside the tests
+// (.github/workflows/verify.yml) rather than a place in verifyCiPreflight.
 tasks.register("verifyCiLint") {
     group = "verification"
     description = "Runs phone app and domain module lint for CI."

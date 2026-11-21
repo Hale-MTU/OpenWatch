@@ -92,7 +92,6 @@ android {
         // Tests do not ship. Analysing them cost as much as the app itself.
         ignoreTestSources = true
         disable += setOf(
-            "LogNotTimber",
             // Partial Weblate languages are allowed once scripts/verify-translations.py
             // confirms at least 70% coverage and placeholder safety.
             "MissingTranslation",
