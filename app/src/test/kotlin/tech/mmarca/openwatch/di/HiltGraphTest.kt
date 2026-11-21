@@ -12,6 +12,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import tech.mmarca.openwatch.AppStartupActors
+import tech.mmarca.openwatch.devices.core.DeviceClassifier
 import tech.mmarca.openwatch.devices.core.pairing.CompanionPresenceObserver
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
@@ -35,6 +36,7 @@ class HiltGraphTest {
     @Inject lateinit var syncPorts: Set<@JvmSuppressWildcards DeviceSyncPort>
     @Inject lateinit var presenceObservers: Set<@JvmSuppressWildcards CompanionPresenceObserver>
     @Inject lateinit var syncController: DeviceSyncController
+    @Inject lateinit var deviceClassifiers: List<@JvmSuppressWildcards DeviceClassifier>
     @Inject lateinit var healthConnect: HealthConnectGateway
     @Inject lateinit var startupActors: AppStartupActors
 
@@ -48,6 +50,9 @@ class HiltGraphTest {
             .containsExactly("GarminWatchSyncService", "WearOsWatchSyncService")
         assertThat(presenceObservers.map { it::class.simpleName })
             .containsExactly("XiaomiScaleListener", "GarminNotificationBridge")
+        // Order is the rule here: the first classifier that claims a device wins.
+        assertThat(deviceClassifiers.map { it::class.simpleName })
+            .containsExactly("GarminDeviceClassifier", "WearOsDeviceClassifier").inOrder()
     }
 
     @Test

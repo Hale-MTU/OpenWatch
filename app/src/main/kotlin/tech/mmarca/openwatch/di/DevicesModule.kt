@@ -36,6 +36,11 @@ import tech.mmarca.openwatch.devices.core.sync.CompositeDeviceSyncPort
 import tech.mmarca.openwatch.devices.wearos.BluetoothWearOsNodePort
 import tech.mmarca.openwatch.devices.wearos.WearOsNodePort
 import tech.mmarca.openwatch.devices.wearos.WearOsWatchSyncService
+import tech.mmarca.openwatch.devices.wearos.WearOsDeviceClassifier
+import tech.mmarca.openwatch.devices.garmin.GarminScanClassifier
+import tech.mmarca.openwatch.devices.garmin.GarminDeviceClassifier
+import tech.mmarca.openwatch.devices.core.DeviceScanClassifier
+import tech.mmarca.openwatch.devices.core.DeviceClassifier
 
 /** Wiring for the `devices/` layer, kept apart so [AppModule] carries no watch knowledge. */
 @Module
@@ -89,6 +94,19 @@ abstract class DevicesModule {
     abstract fun bindAutoSyncIntervalStore(impl: GarminDeviceStateStore): AutoSyncIntervalStore
 
     companion object {
+
+        /**
+         * Each integration's verdict on a scanned device. A list, not a set: the first that
+         * claims a device wins, so the order is part of the rule. A new integration adds its
+         * classifier here, and nothing in `sensors/` changes.
+         */
+        @Provides
+        fun provideDeviceClassifiers(): List<@JvmSuppressWildcards DeviceClassifier> =
+            listOf(GarminDeviceClassifier(), WearOsDeviceClassifier())
+
+        @Provides
+        fun provideDeviceScanClassifiers(): List<@JvmSuppressWildcards DeviceScanClassifier> =
+            listOf(GarminScanClassifier())
 
         @Provides
         @Singleton

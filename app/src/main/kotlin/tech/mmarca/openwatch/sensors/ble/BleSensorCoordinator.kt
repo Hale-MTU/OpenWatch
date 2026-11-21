@@ -35,9 +35,6 @@ import tech.mmarca.openwatch.devices.core.DeviceClassification
 import tech.mmarca.openwatch.devices.core.DeviceClassifier
 import tech.mmarca.openwatch.devices.core.DeviceScanClassifier
 import tech.mmarca.openwatch.devices.core.classifyDevice
-import tech.mmarca.openwatch.devices.garmin.GarminDeviceClassifier
-import tech.mmarca.openwatch.devices.garmin.GarminScanClassifier
-import tech.mmarca.openwatch.devices.wearos.WearOsDeviceClassifier
 import tech.mmarca.openwatch.domain.model.BleDiscoveredDevice
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
 
@@ -54,6 +51,10 @@ import kotlinx.coroutines.flow.asStateFlow
 @Singleton
 class BleSensorCoordinator @Inject constructor(
     @ApplicationContext private val context: Context,
+    /** Scan-time evidence that a device speaks an integration's sync service. */
+    private val scanClassifiers: List<@JvmSuppressWildcards DeviceScanClassifier>,
+    /** The `(integration, kind)` verdicts, strongest first; bound in `di/DevicesModule`. */
+    private val deviceClassifiers: List<@JvmSuppressWildcards DeviceClassifier>,
 ) {
     private val bleThread = HandlerThread("OpenWatchBle").apply { start() }
     private val bleHandler = Handler(bleThread.looper)
@@ -67,13 +68,6 @@ class BleSensorCoordinator @Inject constructor(
     private var scanCallback: ScanCallback? = null
     private var sdpReceiver: BroadcastReceiver? = null
     private val scanResults = ConcurrentHashMap<String, BleDiscoveredDevice>()
-
-    /** Per-integration classifiers: scan-time evidence, and the `(integration, kind)` verdict. */
-    private val scanClassifiers: List<DeviceScanClassifier> = listOf(GarminScanClassifier())
-    private val deviceClassifiers: List<DeviceClassifier> = listOf(
-        GarminDeviceClassifier(),
-        WearOsDeviceClassifier(),
-    )
 
     @SuppressLint("MissingPermission")
     fun startScan(showAllDevices: Boolean = false) {
