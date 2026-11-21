@@ -14,7 +14,8 @@ import org.junit.Test
 class FileSizeRatchetTest {
 
     private val lineCounts: Map<String, Int> by lazy {
-        (File(SourceRoot).walkTopDown() + File(SharedRoot).walkTopDown() + File(DomainRoot).walkTopDown())
+        (File(SourceRoot).walkTopDown() + File(SharedRoot).walkTopDown() + File(DomainRoot).walkTopDown() +
+            File(WearRoot).walkTopDown())
             .filter { it.isFile && it.extension == "kt" }
             .associate { it.rootRelativePath() to it.readLines().size }
     }
@@ -57,9 +58,13 @@ class FileSizeRatchetTest {
         /** The domain module keeps the app's package names, so its paths are reported as the app's. */
         const val DomainRoot = "../domain/src/main/kotlin/tech/mmarca/openwatch"
 
+        /** The watch app: the same limit, though its gate is a different task. */
+        const val WearRoot = "../wear/src/main/kotlin/tech/mmarca/openwatch"
+
         fun File.rootRelativePath(): String = when {
             invariantSeparatorsPath.contains("/wearlink/") -> "wearlink/" + relativeTo(File(SharedRoot)).invariantSeparatorsPath
             invariantSeparatorsPath.contains("/domain/src/") -> relativeTo(File(DomainRoot)).invariantSeparatorsPath
+            invariantSeparatorsPath.contains("/wear/src/") -> "wear/" + relativeTo(File(WearRoot)).invariantSeparatorsPath
             else -> relativeTo(File(SourceRoot)).invariantSeparatorsPath
         }
         const val MaxLines = 800
