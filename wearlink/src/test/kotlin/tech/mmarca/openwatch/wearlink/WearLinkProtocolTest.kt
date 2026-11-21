@@ -270,4 +270,19 @@ class WearLinkProtocolTest {
         assertNull(WearLinkProtocol.parseRequest("WO_SINCE 10"))
         assertNull(WearLinkProtocol.parseRequest("WO_SINCE -1 5"))
     }
+
+    @Test
+    fun `a data line that grew at its end still reads, its new fields ignored`() {
+        val p = WearLinkProtocol
+        fun grown(line: String) = "$line 42 future"
+
+        assertEquals(WearLinkProtocol.HeartRateSample(1_700_000_000_000, 61), p.parseSample(grown(p.formatSample(1_700_000_000_000, 61))))
+        assertEquals(WearLinkProtocol.End(3, true), p.parseEnd(grown(p.formatEnd(3, true))))
+        val step = WearLinkProtocol.StepMinute(1_700_000_040_000, 12)
+        assertEquals(step, p.parseStepMinute(grown(p.formatStepMinute(step))))
+        val ascent = WearLinkProtocol.AscentMinute(1_700_000_040_000, 31)
+        assertEquals(ascent, p.parseAscentMinute(grown(p.formatAscentMinute(ascent))))
+        val raw = p.parseSleepMinute("SM 1700000000000 R 7200 16 300 42 58 15 6 -12 3 998 3 4 5 86 90 7")!!
+        assertEquals(raw, p.parseSleepMinute(grown(p.formatSleepMinute(raw))))
+    }
 }

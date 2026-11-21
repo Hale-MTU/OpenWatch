@@ -82,8 +82,8 @@ import java.util.UUID
  *   limit cut the reply short and another request from the last line's time
  *   would return more.
  *
- * A line the receiver cannot parse is skipped, never fatal: an older peer may
- * send something newer.
+ * A line the receiver cannot parse is skipped, never fatal. A data line may grow
+ * at its end: a reader takes the fields it knows and ignores any after them.
  */
 object WearLinkProtocol {
 
@@ -532,7 +532,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `ST` line: a minute start and a plausible count. */
     fun parseStepMinute(line: String): StepMinute? {
         val fields = fields(line)
-        if (fields.size != 3 || fields[0] != STEP_MINUTE) return null
+        if (fields.size < 3 || fields[0] != STEP_MINUTE) return null
         val at = fields[1].toLongOrNull() ?: return null
         val steps = fields[2].toIntOrNull() ?: return null
         if (at <= 0 || at % MINUTE_MILLIS != 0L || steps !in 1..MAX_STEPS_PER_MINUTE) return null
@@ -574,7 +574,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `RR` line: a time, a breathing rate of 6 to 30 a minute, one or two routes. */
     fun parseRespiratoryWindow(line: String): RespiratoryWindow? {
         val fields = fields(line)
-        if (fields.size != 4 || fields[0] != RESPIRATORY_WINDOW) return null
+        if (fields.size < 4 || fields[0] != RESPIRATORY_WINDOW) return null
         val at = fields[1].toLongOrNull() ?: return null
         val breaths10 = fields[2].toIntOrNull() ?: return null
         val routes = fields[3].toIntOrNull() ?: return null
@@ -588,7 +588,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `O2` line: a time, 70 to 100 percent, and a plausible heart rate or none. */
     fun parseSpo2(line: String): Spo2Measurement? {
         val fields = fields(line)
-        if (fields.size != 4 || fields[0] != SPO2_MEASUREMENT) return null
+        if (fields.size < 4 || fields[0] != SPO2_MEASUREMENT) return null
         val at = fields[1].toLongOrNull() ?: return null
         val percent = fields[2].toIntOrNull() ?: return null
         val bpm = if (fields[3] == NO_VALUE) null else fields[3].toIntOrNull() ?: return null
@@ -601,7 +601,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `SK` line: a minute start and temperatures a wrist can have. */
     fun parseSkinMinute(line: String): SkinMinute? {
         val fields = fields(line)
-        if (fields.size != 4 || fields[0] != SKIN_MINUTE) return null
+        if (fields.size < 4 || fields[0] != SKIN_MINUTE) return null
         val at = fields[1].toLongOrNull() ?: return null
         val skin = fields[2].toIntOrNull() ?: return null
         val ambient = fields[3].toIntOrNull() ?: return null
@@ -617,7 +617,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `HV` line: a time, a plausible RMSSD and a plausible beat count. */
     fun parseHrvWindow(line: String): HrvWindow? {
         val fields = fields(line)
-        if (fields.size != 4 || fields[0] != HRV_WINDOW) return null
+        if (fields.size < 4 || fields[0] != HRV_WINDOW) return null
         val at = fields[1].toLongOrNull() ?: return null
         val rmssd10 = fields[2].toIntOrNull() ?: return null
         val beats = fields[3].toIntOrNull() ?: return null
@@ -633,7 +633,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `AS` line: a minute start and a plausible ascent. */
     fun parseAscentMinute(line: String): AscentMinute? {
         val fields = fields(line)
-        if (fields.size != 3 || fields[0] != ASCENT_MINUTE) return null
+        if (fields.size < 3 || fields[0] != ASCENT_MINUTE) return null
         val at = fields[1].toLongOrNull() ?: return null
         val decimetres = fields[2].toIntOrNull() ?: return null
         if (at <= 0 || at % MINUTE_MILLIS != 0L || decimetres !in 1..MAX_ASCENT_DECIMETRES_PER_MINUTE) return null
@@ -645,7 +645,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `HR` line with a plausible rate. */
     fun parseSample(line: String): HeartRateSample? {
         val fields = fields(line)
-        if (fields.size != 3 || fields[0] != HEART_RATE) return null
+        if (fields.size < 3 || fields[0] != HEART_RATE) return null
         val at = fields[1].toLongOrNull() ?: return null
         val bpm = fields[2].toIntOrNull() ?: return null
         if (at <= 0 || bpm !in MIN_BPM..MAX_BPM) return null
@@ -666,7 +666,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `SM` line. A rate outside the plausible range reads as none. */
     fun parseSleepMinute(line: String): SleepMinute? {
         val f = fields(line)
-        if (f.size != SLEEP_MINUTE_FIELDS || f[0] != SLEEP_MINUTE) return null
+        if (f.size < SLEEP_MINUTE_FIELDS || f[0] != SLEEP_MINUTE) return null
         val at = f[1].toLongOrNull() ?: return null
         val kind = MinuteKind.fromCode(f[2]) ?: return null
         val offset = f[3].toIntOrNull() ?: return null
@@ -717,7 +717,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `END` line. */
     fun parseEnd(line: String): End? {
         val fields = fields(line)
-        if (fields.size != 3 || fields[0] != END) return null
+        if (fields.size < 3 || fields[0] != END) return null
         val count = fields[1].toIntOrNull() ?: return null
         val more = when (fields[2]) {
             "0" -> false
