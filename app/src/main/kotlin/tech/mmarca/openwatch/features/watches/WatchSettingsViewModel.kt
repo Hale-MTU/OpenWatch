@@ -71,6 +71,7 @@ class WatchSettingsLinks @VisibleForTesting internal constructor(
         stateStore: tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore,
         calendarSource: tech.mmarca.openwatch.devices.garmin.GarminCalendarSource,
         @ApplicationScope appScope: CoroutineScope,
+        radioLeases: tech.mmarca.openwatch.devices.core.RadioLeaseRegistry,
     ) : this(
         // Sequential: the link confines its protobuf traffic to this dispatcher.
         scope = appScope + Dispatchers.Default.limitedParallelism(1),
@@ -88,6 +89,7 @@ class WatchSettingsLinks @VisibleForTesting internal constructor(
                 phoneName = phone.bluetoothName,
                 manufacturer = phone.manufacturer,
                 model = phone.model,
+                lease = tech.mmarca.openwatch.devices.garmin.RegistryGarminRadioLease(radioLeases),
                 weatherProvider = { weatherStore.freshSnapshot() },
                 agpsSource = agpsStore.source(),
                 calendarProvider = { begin, end ->

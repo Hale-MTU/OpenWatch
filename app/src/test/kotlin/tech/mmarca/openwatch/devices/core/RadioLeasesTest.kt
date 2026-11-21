@@ -22,156 +22,156 @@ class RadioLeasesTest {
         const val OTHER_ADDRESS = "AA:BB:CC:DD:EE:02"
     }
 
+    private val leases = RadioLeaseRegistry()
+
     @Before
     fun setUp() {
         mockkStatic(SystemClock::class)
         every { SystemClock.elapsedRealtime() } answers { nowMillis }
-        RadioLeases.clear()
     }
 
     @After
     fun tearDown() {
-        RadioLeases.clear()
         unmockkStatic(SystemClock::class)
     }
 
     @Test
     fun `a held lease excludes another owner on the same address`() {
-        assertTrue(RadioLeases.acquire(ADDRESS, "sync", 10_000))
-        assertFalse(RadioLeases.acquire(ADDRESS, "forwarder", 10_000))
-        assertEquals("sync", RadioLeases.owner(ADDRESS))
+        assertTrue(leases.acquire(ADDRESS, "sync", 10_000))
+        assertFalse(leases.acquire(ADDRESS, "forwarder", 10_000))
+        assertEquals("sync", leases.owner(ADDRESS))
     }
 
     @Test
     fun `leases are keyed by address, not global`() {
-        assertTrue(RadioLeases.acquire(ADDRESS, "sync", 10_000))
-        assertTrue(RadioLeases.acquire(OTHER_ADDRESS, "forwarder", 10_000))
+        assertTrue(leases.acquire(ADDRESS, "sync", 10_000))
+        assertTrue(leases.acquire(OTHER_ADDRESS, "forwarder", 10_000))
     }
 
     @Test
     fun `re-acquiring extends a lease the owner already holds`() {
-        assertTrue(RadioLeases.acquire(ADDRESS, "sync", 1_000))
+        assertTrue(leases.acquire(ADDRESS, "sync", 1_000))
         nowMillis += 900
-        assertTrue(RadioLeases.acquire(ADDRESS, "sync", 1_000))
+        assertTrue(leases.acquire(ADDRESS, "sync", 1_000))
         // Without the extension the original TTL would have lapsed here.
         nowMillis += 900
-        assertEquals("sync", RadioLeases.owner(ADDRESS))
+        assertEquals("sync", leases.owner(ADDRESS))
     }
 
     @Test
     fun `an expired lease cannot block a new holder`() {
-        assertTrue(RadioLeases.acquire(ADDRESS, "sync", 1_000))
+        assertTrue(leases.acquire(ADDRESS, "sync", 1_000))
         nowMillis += 1_000
-        assertNull(RadioLeases.owner(ADDRESS))
-        assertTrue(RadioLeases.acquire(ADDRESS, "forwarder", 1_000))
+        assertNull(leases.owner(ADDRESS))
+        assertTrue(leases.acquire(ADDRESS, "forwarder", 1_000))
     }
 
     @Test
     fun `renew extends only while held and unwanted`() {
-        assertTrue(RadioLeases.acquire(ADDRESS, "forwarder", 1_000))
-        assertTrue(RadioLeases.renew(ADDRESS, "forwarder", 1_000))
+        assertTrue(leases.acquire(ADDRESS, "forwarder", 1_000))
+        assertTrue(leases.renew(ADDRESS, "forwarder", 1_000))
 
         // A waiter makes the holder's next renew fail: that is how an indefinite lease is given up.
-        RadioLeases.request(ADDRESS, "sync")
-        assertFalse(RadioLeases.renew(ADDRESS, "forwarder", 1_000))
+        leases.request(ADDRESS, "sync")
+        assertFalse(leases.renew(ADDRESS, "forwarder", 1_000))
     }
 
     @Test
     fun `renew fails once the lease expired or was taken`() {
-        assertTrue(RadioLeases.acquire(ADDRESS, "sync", 1_000))
+        assertTrue(leases.acquire(ADDRESS, "sync", 1_000))
         nowMillis += 1_000
-        assertFalse(RadioLeases.renew(ADDRESS, "sync", 1_000))
+        assertFalse(leases.renew(ADDRESS, "sync", 1_000))
 
-        assertTrue(RadioLeases.acquire(ADDRESS, "forwarder", 1_000))
-        assertFalse(RadioLeases.renew(ADDRESS, "sync", 1_000))
+        assertTrue(leases.acquire(ADDRESS, "forwarder", 1_000))
+        assertFalse(leases.renew(ADDRESS, "sync", 1_000))
     }
 
     @Test
     fun `acquiring satisfies the owner's own outstanding request`() {
-        assertTrue(RadioLeases.acquire(ADDRESS, "forwarder", 1_000))
-        RadioLeases.request(ADDRESS, "sync")
+        assertTrue(leases.acquire(ADDRESS, "forwarder", 1_000))
+        leases.request(ADDRESS, "sync")
         nowMillis += 1_000
 
-        assertTrue(RadioLeases.acquire(ADDRESS, "sync", 1_000))
+        assertTrue(leases.acquire(ADDRESS, "sync", 1_000))
         // The waiter entry is gone: sync can renew its own fresh lease.
-        assertTrue(RadioLeases.renew(ADDRESS, "sync", 1_000))
+        assertTrue(leases.renew(ADDRESS, "sync", 1_000))
     }
 
     @Test
     fun `request against a free or own lease is a no-op`() {
-        RadioLeases.request(ADDRESS, "sync")
-        assertTrue(RadioLeases.acquire(ADDRESS, "sync", 1_000))
-        RadioLeases.request(ADDRESS, "sync")
-        assertTrue(RadioLeases.renew(ADDRESS, "sync", 1_000))
+        leases.request(ADDRESS, "sync")
+        assertTrue(leases.acquire(ADDRESS, "sync", 1_000))
+        leases.request(ADDRESS, "sync")
+        assertTrue(leases.renew(ADDRESS, "sync", 1_000))
     }
 
     @Test
     fun `a waiter that gave up expires, so the holder can renew again`() {
-        assertTrue(RadioLeases.acquire(ADDRESS, "notifications", 15_000))
-        RadioLeases.request(ADDRESS, "sync")
-        assertFalse(RadioLeases.renew(ADDRESS, "notifications", 15_000))
+        assertTrue(leases.acquire(ADDRESS, "notifications", 15_000))
+        leases.request(ADDRESS, "sync")
+        assertFalse(leases.renew(ADDRESS, "notifications", 15_000))
 
         // The sync timed out after 8 s and never took the lease. Its request used to stay for
         // ever, and every later renew on this address failed.
         nowMillis += 10_000
-        assertTrue(RadioLeases.renew(ADDRESS, "notifications", 15_000))
+        assertTrue(leases.renew(ADDRESS, "notifications", 15_000))
     }
 
     @Test
     fun `withdraw takes a request back at once`() {
-        assertTrue(RadioLeases.acquire(ADDRESS, "notifications", 15_000))
-        RadioLeases.request(ADDRESS, "sync")
+        assertTrue(leases.acquire(ADDRESS, "notifications", 15_000))
+        leases.request(ADDRESS, "sync")
 
-        RadioLeases.withdraw(ADDRESS, "sync")
+        leases.withdraw(ADDRESS, "sync")
 
-        assertTrue(RadioLeases.renew(ADDRESS, "notifications", 15_000))
+        assertTrue(leases.renew(ADDRESS, "notifications", 15_000))
     }
 
     @Test
     fun `withdraw by someone else leaves the request in place`() {
-        assertTrue(RadioLeases.acquire(ADDRESS, "notifications", 15_000))
-        RadioLeases.request(ADDRESS, "sync")
+        assertTrue(leases.acquire(ADDRESS, "notifications", 15_000))
+        leases.request(ADDRESS, "sync")
 
-        RadioLeases.withdraw(ADDRESS, "find")
+        leases.withdraw(ADDRESS, "find")
 
-        assertFalse(RadioLeases.renew(ADDRESS, "notifications", 15_000))
+        assertFalse(leases.renew(ADDRESS, "notifications", 15_000))
     }
 
     @Test
     fun `work with an end keeps the radio while someone waits`() {
-        assertTrue(RadioLeases.acquire(ADDRESS, "sync", 15_000))
-        RadioLeases.request(ADDRESS, "notifications")
+        assertTrue(leases.acquire(ADDRESS, "sync", 15_000))
+        leases.request(ADDRESS, "notifications")
 
         // Yielding here let the lease lapse mid-sync, and the waiter opened a second link.
         nowMillis += 5_000
-        assertTrue(RadioLeases.renew(ADDRESS, "sync", 15_000, yieldToWaiter = false))
+        assertTrue(leases.renew(ADDRESS, "sync", 15_000, yieldToWaiter = false))
         nowMillis += 14_000
-        assertFalse(RadioLeases.acquire(ADDRESS, "notifications", 15_000))
-        assertEquals("sync", RadioLeases.owner(ADDRESS))
+        assertFalse(leases.acquire(ADDRESS, "notifications", 15_000))
+        assertEquals("sync", leases.owner(ADDRESS))
     }
 
     @Test
     fun `release keeps the address unavailable for the settle window`() {
         // Android closes a BluetoothGatt asynchronously; a connect inside that window is the collision the lease prevents.
-        assertTrue(RadioLeases.acquire(ADDRESS, "sync", 10_000))
-        RadioLeases.release(ADDRESS, "sync")
+        assertTrue(leases.acquire(ADDRESS, "sync", 10_000))
+        leases.release(ADDRESS, "sync")
 
-        assertFalse(RadioLeases.acquire(ADDRESS, "forwarder", 1_000))
+        assertFalse(leases.acquire(ADDRESS, "forwarder", 1_000))
         nowMillis += 300
-        assertTrue(RadioLeases.acquire(ADDRESS, "forwarder", 1_000))
+        assertTrue(leases.acquire(ADDRESS, "forwarder", 1_000))
     }
 
     @Test
     fun `a late release by a non-holder does not cancel the new holder`() {
-        assertTrue(RadioLeases.acquire(ADDRESS, "sync", 1_000))
+        assertTrue(leases.acquire(ADDRESS, "sync", 1_000))
         nowMillis += 1_000
-        assertTrue(RadioLeases.acquire(ADDRESS, "forwarder", 10_000))
+        assertTrue(leases.acquire(ADDRESS, "forwarder", 10_000))
 
-        RadioLeases.release(ADDRESS, "sync")
+        leases.release(ADDRESS, "sync")
 
-        assertEquals("forwarder", RadioLeases.owner(ADDRESS))
+        assertEquals("forwarder", leases.owner(ADDRESS))
         // And the new holder's lease was not shortened to the settle window.
         nowMillis += 5_000
-        assertEquals("forwarder", RadioLeases.owner(ADDRESS))
+        assertEquals("forwarder", leases.owner(ADDRESS))
     }
 }

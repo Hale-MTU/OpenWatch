@@ -31,6 +31,7 @@ import tech.mmarca.openwatch.devices.core.withRadioLease
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import kotlinx.coroutines.plus
 import tech.mmarca.openwatch.core.performance.ApplicationScope
+import tech.mmarca.openwatch.devices.core.RadioLeaseRegistry
 
 /**
  * Drives one sync with a Garmin watch: take the radio lease, open the link,
@@ -48,6 +49,7 @@ class GarminWatchSyncService @Inject constructor(
     /** Everything that touches Bluetooth. A test hands over a fake and drives a whole sync. */
     private val radio: GarminRadio,
     @param:ApplicationScope appScope: CoroutineScope,
+    private val radioLeases: RadioLeaseRegistry,
 ) : DeviceSyncPort {
 
     private val syncMutex = Mutex()
@@ -126,7 +128,7 @@ class GarminWatchSyncService @Inject constructor(
         }
 
         val pull = try {
-            withRadioLease(device.address, RadioLeaseOwner.SYNC) {
+            radioLeases.withRadioLease(device.address, RadioLeaseOwner.SYNC) {
                 radio.pull(device, listenAfter, onProgress)
             }
         } catch (error: CancellationException) {
@@ -182,7 +184,7 @@ class GarminWatchSyncService @Inject constructor(
         address: String,
         timeout: Duration = GarminFindMyWatch.defaultTimeout,
         cancelled: CompletableDeferred<Unit>? = null,
-    ): Boolean = withRadioLease(address, RadioLeaseOwner.FIND) {
+    ): Boolean = radioLeases.withRadioLease(address, RadioLeaseOwner.FIND) {
         radio.find(address, timeout, cancelled)
     }
 
@@ -203,7 +205,7 @@ class GarminWatchSyncService @Inject constructor(
         return try {
             onStage(GarminSendStage.CONNECTING)
             withTimeoutOrNull(SEND_TIMEOUT) {
-                withRadioLease(device.address, RadioLeaseOwner.SYNC) {
+                radioLeases.withRadioLease(device.address, RadioLeaseOwner.SYNC) {
                     radio.upload(device, type, bytes, onStage)
                 }
             } ?: GarminSendFileResult.NoAnswer

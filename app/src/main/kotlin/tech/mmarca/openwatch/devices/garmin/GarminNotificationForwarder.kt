@@ -11,11 +11,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import tech.mmarca.openwatch.devices.core.RadioLeases
+import tech.mmarca.openwatch.devices.core.RadioLeaseRegistry
 import tech.mmarca.openwatch.core.performance.runSuspendCatching
 
 /**
- * The forwarder's view of the radio lease. A seam over [RadioLeases] so the
+ * The forwarder's view of the radio lease. A seam over [RadioLeaseRegistry] so the
  * hold-and-yield dance can be tested with a fake. Owner tags are strings
  * because they end up in logcat.
  */
@@ -57,21 +57,21 @@ object GarminRadioOwners {
     const val NOTIFICATIONS = "notifications"
 }
 
-/** The real lease: [RadioLeases], with this interface's TTL. */
-object SharedGarminRadioLease : GarminRadioLease {
+/** The real lease: the process's [RadioLeaseRegistry], with this interface's TTL. */
+class RegistryGarminRadioLease(private val leases: RadioLeaseRegistry) : GarminRadioLease {
     override fun acquire(address: String, owner: String): Boolean =
-        RadioLeases.acquire(address, owner, GarminRadioLease.acquireTtl.inWholeMilliseconds)
+        leases.acquire(address, owner, GarminRadioLease.acquireTtl.inWholeMilliseconds)
 
     override fun request(address: String, owner: String) =
-        RadioLeases.request(address, owner)
+        leases.request(address, owner)
 
     override fun renew(address: String, owner: String): Boolean =
-        RadioLeases.renew(address, owner, GarminRadioLease.ttl.inWholeMilliseconds)
+        leases.renew(address, owner, GarminRadioLease.ttl.inWholeMilliseconds)
 
     override fun release(address: String, owner: String) =
-        RadioLeases.release(address, owner)
+        leases.release(address, owner)
 
-    override fun owner(address: String): String? = RadioLeases.owner(address)
+    override fun owner(address: String): String? = leases.owner(address)
 }
 
 /**

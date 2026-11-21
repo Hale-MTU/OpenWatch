@@ -343,7 +343,7 @@ class GarminSettingsLink private constructor(
             model: String,
             language: String = "en_US",
             region: String = "us",
-            lease: GarminRadioLease = SharedGarminRadioLease,
+            lease: GarminRadioLease,
             weatherProvider: (() -> tech.mmarca.openwatch.devices.weather.WeatherSnapshot?)? = null,
             agpsSource: GarminAgpsSource? = null,
             calendarProvider: ((beginEpochSeconds: Long, endEpochSeconds: Long) -> List<GarminCalendarEvent>?)? = null,

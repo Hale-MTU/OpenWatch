@@ -90,6 +90,7 @@ class GarminWatchSyncServiceTest {
 
     private fun service() = GarminWatchSyncService(
         appScope = CoroutineScope(SupervisorJob()),
+        radioLeases = tech.mmarca.openwatch.devices.core.RadioLeaseRegistry(),
         context = context,
         bleDeviceRepository = deviceRepository,
         stateStore = stateStore,

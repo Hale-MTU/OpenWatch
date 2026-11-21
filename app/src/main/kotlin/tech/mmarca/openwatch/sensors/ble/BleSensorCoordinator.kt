@@ -42,6 +42,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import tech.mmarca.openwatch.devices.core.ble.BleUuids
+import tech.mmarca.openwatch.devices.core.withRadioLease
+import tech.mmarca.openwatch.devices.core.RadioLeaseBusyException
+import tech.mmarca.openwatch.devices.core.RadioLeaseOwner
+import tech.mmarca.openwatch.devices.core.RadioLeaseRegistry
 
 /**
  * The BLE discovery scan the add-watch flow uses: what is advertising, what is
@@ -56,6 +60,7 @@ class BleSensorCoordinator @Inject constructor(
     private val scanClassifiers: List<@JvmSuppressWildcards DeviceScanClassifier>,
     /** The `(integration, kind)` verdicts, strongest first; bound in `di/DevicesModule`. */
     private val deviceClassifiers: List<@JvmSuppressWildcards DeviceClassifier>,
+    private val radioLeases: RadioLeaseRegistry,
 ) {
     private val bleThread = HandlerThread("OpenWatchBle").apply { start() }
     private val bleHandler = Handler(bleThread.looper)
@@ -187,8 +192,20 @@ class BleSensorCoordinator @Inject constructor(
         sdpReceiver = null
     }
 
-    @SuppressLint("MissingPermission")
+    /**
+     * The GATT services [address] offers. It opens a GATT link, so it holds the radio lease
+     * like every other link: a watch the notification forwarder holds hands the radio over
+     * for the probe. A radio busy with work that does not yield (a sync) is no answer.
+     */
     suspend fun discoverCapabilities(address: String): Set<BleSensorCapability> =
+        try {
+            radioLeases.withRadioLease(address, RadioLeaseOwner.PROBE) { probeCapabilities(address) }
+        } catch (_: RadioLeaseBusyException) {
+            emptySet()
+        }
+
+    @SuppressLint("MissingPermission")
+    private suspend fun probeCapabilities(address: String): Set<BleSensorCapability> =
         withContext(Dispatchers.IO) {
             suspendCancellableCoroutine { continuation ->
                 val adapter = bluetoothAdapter

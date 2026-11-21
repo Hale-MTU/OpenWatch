@@ -1,14 +1,18 @@
 package tech.mmarca.openwatch.devices.core
 
 import android.os.SystemClock
+import javax.inject.Inject
+import javax.inject.Singleton
 
 /**
- * A process-wide exclusive lease on one watch's radio. Every opener (sync,
- * find, settings, notifications) acquires one per address first. Keyed by
- * address: two holders on different peripherals is fine. Leases expire, so
- * a killed holder cannot wedge the radio until reboot.
+ * An exclusive lease on one device's radio, one registry for the process (a Hilt
+ * singleton). Every opener (sync, find, settings, notifications) acquires one per address
+ * first. Keyed by address: two holders on different peripherals is fine. Leases expire, so
+ * a killed holder cannot wedge the radio until reboot. Injected, not an `object`, so a test
+ * gets its own and nothing is shared between tests.
  */
-object RadioLeases {
+@Singleton
+class RadioLeaseRegistry @Inject constructor() {
 
     private data class Lease(val owner: String, val expiresAtMillis: Long)
 
@@ -23,12 +27,6 @@ object RadioLeases {
      * for ever, and every later renew on that address failed.
      */
     private val waiters = HashMap<String, Waiter>()
-
-    /** A little longer than any caller waits for a handover. */
-    private const val WAITER_TTL_MILLIS = 10_000L
-
-    /** How long after a release the address stays unavailable: GATT closes asynchronously. */
-    private const val SETTLE_MILLIS = 300L
 
     private fun now(): Long = SystemClock.elapsedRealtime()
 
@@ -99,10 +97,11 @@ object RadioLeases {
         return leases[address]?.owner
     }
 
-    /** Test seam: forgets every lease. */
-    @Synchronized
-    fun clear() {
-        leases.clear()
-        waiters.clear()
+    private companion object {
+        /** A little longer than any caller waits for a handover. */
+        const val WAITER_TTL_MILLIS = 10_000L
+
+        /** How long after a release the address stays unavailable: GATT closes asynchronously. */
+        const val SETTLE_MILLIS = 300L
     }
 }

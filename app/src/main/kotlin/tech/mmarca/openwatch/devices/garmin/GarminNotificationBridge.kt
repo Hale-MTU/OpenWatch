@@ -25,6 +25,7 @@ import tech.mmarca.openwatch.devices.notifications.OpenWatchNotificationListener
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import kotlinx.coroutines.plus
 import tech.mmarca.openwatch.core.performance.ApplicationScope
+import tech.mmarca.openwatch.devices.core.RadioLeaseRegistry
 
 /**
  * The seam between Android's notification listener and the Garmin stack:
@@ -47,6 +48,7 @@ class GarminNotificationBridge @Inject constructor(
     private val realtimeStore: GarminRealtimeStore,
     private val musicRelay: GarminMusicRelay,
     @param:ApplicationScope appScope: CoroutineScope,
+    private val radioLeases: RadioLeaseRegistry,
 ) : CompanionPresenceObserver, NotificationSink {
 
     private companion object {
@@ -173,7 +175,7 @@ class GarminNotificationBridge @Inject constructor(
             phoneName = identity.bluetoothName,
             manufacturer = identity.manufacturer,
             model = identity.model,
-            lease = SharedGarminRadioLease,
+            lease = RegistryGarminRadioLease(radioLeases),
             openLink = { request ->
                 GarminBleNotificationLink.open(context, scope, request, highMtu = stateStore.highMtu(request.address))
             },

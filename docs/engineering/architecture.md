@@ -64,8 +64,8 @@ Where the copied code met an OpenVitals class that did not come along, it meets 
 
 Vendor-neutral ports plus the two things every integration shares.
 
-- [`RadioLease.kt`](../../app/src/main/kotlin/tech/mmarca/openwatch/devices/core/RadioLease.kt) — `object RadioLeases`, a process-wide lease keyed **per Bluetooth address**. Two holders on different peripherals is allowed by design; two holders on the same peripheral is not.
-- [`RadioLeaseUse.kt`](../../app/src/main/kotlin/tech/mmarca/openwatch/devices/core/RadioLeaseUse.kt) — `withRadioLease(address, owner) { ... }`, `RadioLeaseBusyException`, and `object RadioLeaseOwner` with the four owner tags: `SYNC`, `FIND`, `SETTINGS`, `NOTIFICATIONS`. They are strings rather than an enum because they appear in logcat.
+- [`RadioLease.kt`](../../app/src/main/kotlin/tech/mmarca/openwatch/devices/core/RadioLease.kt) — `RadioLeaseRegistry`, one injected singleton for the process, a lease keyed **per Bluetooth address**. Two holders on different peripherals is allowed by design; two holders on the same peripheral is not.
+- [`RadioLeaseUse.kt`](../../app/src/main/kotlin/tech/mmarca/openwatch/devices/core/RadioLeaseUse.kt) — `registry.withRadioLease(address, owner) { ... }`, `RadioLeaseBusyException`, and `object RadioLeaseOwner` with the five owner tags: `SYNC`, `FIND`, `SETTINGS`, `NOTIFICATIONS`, `PROBE`. They are strings rather than an enum because they appear in logcat.
 - `DeviceClassification.kt` / `DeviceScanClassifier.kt` — `DeviceClassifier` and `DeviceScanClassifier` function interfaces; the first non-null classification wins, otherwise the device is a plain sensor.
 - `core/pairing/` — `WatchPairingPort` (bond, unbond, associate, disassociate), its `BleWatchPairing` implementation, `CompanionDevicePairing` around `CompanionDeviceManager`, `OpenWatchCompanionDeviceService`, and `CompanionPresenceObserver`. The service is declared first in the manifest and is therefore the app's primary companion service, the only one Android tells that an associated device appeared; it passes that to every observer bound `@IntoSet` in `di/DevicesModule.kt`.
 - `core/sync/DeviceSyncPort.kt` — `canSync(device)` plus a progress-reporting `sync(...)`, so the watch UI never names a vendor. `core/sync/DeviceSyncController` runs a sync through the port, one at a time, for the screens, the schedule and OpenLink alike; `WatchAutoSyncScheduler` and `WatchAutoSyncWorker` are the per-device periodic sync (unique work `device-auto-sync-<id>`; the name before the move, `watch-auto-sync-<id>`, is cancelled at start). The interval comes through `AutoSyncIntervalStore`. Each integration binds its own port `@IntoSet`; `CompositeDeviceSyncPort` is the one the sync controller sees and hands a device to the port that claims it.
@@ -263,10 +263,12 @@ an expedited or foreground one, as is the scale's half-hourly `ScaleListenerWork
 
 ### 2. One BLE radio, leased per address
 
-Every subsystem that opens a BLE link to a device goes through `RadioLeases`. The four owners
-are `SYNC`, `FIND`, `SETTINGS`, and `NOTIFICATIONS`, and on a given address they mutually
-exclude: a file sync, a find-my-watch ring, an open settings link, and the notification
-forwarder cannot hold the same watch at once.
+Every subsystem that opens a BLE link to a device goes through `RadioLeaseRegistry`. The five
+owners are `SYNC`, `FIND`, `SETTINGS`, `NOTIFICATIONS` and `PROBE` (the add-a-device flow reading
+a device's GATT services), and on a given address they mutually exclude: a file sync, a
+find-my-watch ring, an open settings link, the notification forwarder and a probe cannot hold
+the same watch at once. `GattConnectionRatchetTest` keeps `connectGatt(` to the files that hold
+the lease.
 
 - Leases expire, so a crashed holder cannot wedge the radio. A fresh lease lasts 30 s, a
   renewed one 15 s.
