@@ -49,10 +49,12 @@ class WatchAutoSyncWorker(
 
         // Null means another sync holds the radio. Retried on the backoff rather than waiting a
         // whole period: with several watches on one schedule, the loser would otherwise always lose.
-        val running = entryPoint.deviceSyncController().syncDevice(deviceId, silent = true)
+        // In this coroutine, not the controller's: the sync is the job's work, held awake by
+        // the job and cancelled with it when the system stops the job.
+        val result = entryPoint.deviceSyncController().runSync(deviceId, silent = true)
             ?: return if (runAttemptCount < MaxAttempts) Result.retry() else Result.success()
 
-        return when (val result = running.await()) {
+        return when (result) {
             is DeviceSyncResult.Succeeded -> Result.success()
 
             is DeviceSyncResult.Failed -> {

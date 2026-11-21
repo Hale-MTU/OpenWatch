@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.core.presentation.ScreenError
 
 /** Where a device sync has got to, for the row that started it. Device-agnostic. */
@@ -81,76 +82,96 @@ class DeviceSyncController(
     }
 
     /**
-     * Syncs [deviceId], one at a time. A device no port claims is a no-op.
-     * [listenAfter] is the diagnostic window held open after the sync.
-     * [silent] is for the automatic schedule: a failure ends idle, no banner.
-     * Returns a [Deferred] so a background caller can act on the outcome.
+     * Syncs [deviceId], one at a time, on the controller's own scope, and returns at once:
+     * for a screen or another app over OpenLink, which must not wait. A device no port claims,
+     * or a radio already busy, is null. [listenAfter] is the diagnostic window held open
+     * after the sync. [silent] is for the automatic schedule: a failure ends idle, no banner.
      */
     fun syncDevice(
         deviceId: String,
         listenAfter: Duration = Duration.ZERO,
         silent: Boolean = false,
     ): Deferred<DeviceSyncResult>? {
+        val device = claim(deviceId) ?: return null
+        return scope.async { runClaimed(device, listenAfter, silent) }
+    }
+
+    /**
+     * Syncs [deviceId] in the caller's own coroutine: for the scheduled worker, so the sync
+     * is the job's work. The job's wake lock then covers it, and when the system stops the
+     * job, the sync is cancelled with it rather than left running unowned. Every integration
+     * resumes from what it saved. Null as for [syncDevice].
+     */
+    suspend fun runSync(deviceId: String, silent: Boolean = true): DeviceSyncResult? {
+        val device = claim(deviceId) ?: return null
+        return runClaimed(device, Duration.ZERO, silent)
+    }
+
+    /**
+     * Takes the radio for [deviceId]; null when no port claims it or a sync already runs.
+     * Claimed before any launch, so the radio reads busy at once. A screen, the schedule and
+     * another app over OpenLink call this from different threads: the claim is one
+     * compare-and-set, so only one of two callers at the same moment gets the radio.
+     */
+    private fun claim(deviceId: String): BleSensorDevice? {
         val device = deviceRepository.devices.firstOrNull { it.id == deviceId } ?: return null
         if (!syncPort.canSync(device)) return null
-
-        // Claimed before the launch, so the radio reads busy at once. A screen, the schedule
-        // and another app over OpenLink call this from different threads: the claim is one
-        // compare-and-set, so only one of two callers at the same moment gets the radio.
         val claimed = DeviceSyncUiState(syncingDeviceId = deviceId, phase = DeviceSyncPhase.HANDSHAKE)
         while (true) {
             val current = _state.value
             if (current.isSyncing) return null
-            if (_state.compareAndSet(current, claimed)) break
+            if (_state.compareAndSet(current, claimed)) return device
         }
-        return scope.async {
-            // The port owns the sequence. The catch is defensive: `async` holds an
-            // uncaught exception, which would leave the radio reading busy forever.
-            val result = try {
-                syncPort.sync(
-                    device,
-                    listenAfter = listenAfter,
-                    onProgress = { progress ->
-                        _state.update { current ->
-                            if (current.syncingDeviceId != deviceId) {
-                                current
-                            } else {
-                                current.copy(
-                                    phase = progress.phase,
-                                    filesTotal = progress.filesTotal,
-                                    filesDone = progress.filesDone,
-                                )
-                            }
-                        }
-                    },
-                )
-            } catch (error: CancellationException) {
-                _state.value = DeviceSyncUiState()
-                throw error
-            } catch (error: Exception) {
-                DeviceSyncResult.Failed(error.message ?: error.toString())
-            }
-            _state.value = when (result) {
-                is DeviceSyncResult.Succeeded -> DeviceSyncUiState(
-                    phase = DeviceSyncPhase.COMPLETE,
-                    lastDeviceId = deviceId,
-                    lastFileCount = result.fileCount,
-                    lastNightCount = result.nightCount,
-                    lastStepMinuteCount = result.stepMinuteCount,
-                    lastMissingBodyWeight = result.missingBodyWeight,
-                    lastWeightReadWithheld = result.weightReadWithheld,
-                    lastUnwritten = result.unwritten,
-                    lastWithheldPermissions = result.withheldPermissions,
-                )
+    }
 
-                is DeviceSyncResult.Failed -> if (silent) {
-                    DeviceSyncUiState()
-                } else {
-                    DeviceSyncUiState(error = result.error)
-                }
-            }
-            result
+    private suspend fun runClaimed(device: BleSensorDevice, listenAfter: Duration, silent: Boolean): DeviceSyncResult {
+        val deviceId = device.id
+        // The port owns the sequence. The catch is defensive: an uncaught exception would
+        // leave the radio reading busy forever.
+        val result = try {
+            syncPort.sync(
+                device,
+                listenAfter = listenAfter,
+                onProgress = { progress ->
+                    _state.update { current ->
+                        if (current.syncingDeviceId != deviceId) {
+                            current
+                        } else {
+                            current.copy(
+                                phase = progress.phase,
+                                filesTotal = progress.filesTotal,
+                                filesDone = progress.filesDone,
+                            )
+                        }
+                    }
+                },
+            )
+        } catch (error: CancellationException) {
+            _state.value = DeviceSyncUiState()
+            throw error
+        } catch (error: Exception) {
+            DeviceSyncResult.Failed(error.message ?: error.toString())
         }
+        _state.value = when (result) {
+            is DeviceSyncResult.Succeeded -> DeviceSyncUiState(
+                phase = DeviceSyncPhase.COMPLETE,
+                lastDeviceId = deviceId,
+                lastFileCount = result.fileCount,
+                lastNightCount = result.nightCount,
+                lastStepMinuteCount = result.stepMinuteCount,
+                lastMissingBodyWeight = result.missingBodyWeight,
+                lastWeightReadWithheld = result.weightReadWithheld,
+                lastUnwritten = result.unwritten,
+                lastWithheldPermissions = result.withheldPermissions,
+            )
+
+            is DeviceSyncResult.Failed -> if (silent) {
+                DeviceSyncUiState()
+            } else {
+                DeviceSyncUiState(error = result.error)
+            }
+        }
+        return result
     }
 
     /** Clears the finished/failed banner so the row goes back to normal. */

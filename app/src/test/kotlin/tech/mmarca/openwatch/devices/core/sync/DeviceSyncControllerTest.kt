@@ -21,6 +21,7 @@ import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import kotlinx.coroutines.launch
 
 /**
  * Row-state discipline: one sync at a time, progress scoped to the syncing device,
@@ -86,6 +87,36 @@ class DeviceSyncControllerTest {
 
     private fun kotlinx.coroutines.test.TestScope.controller() =
         DeviceSyncController(repo, port, backgroundScope)
+
+    @Test
+    fun `a scheduled sync runs in the caller and is cancelled with it, freeing the radio`() = runTest {
+        val watch = addWatch()
+        port.gate = CompletableDeferred()
+        val controller = controller()
+
+        // The worker's coroutine: when the system stops the job, this is what is cancelled.
+        val job = launch { controller.runSync(watch.id) }
+        runCurrent()
+        assertTrue(controller.state.value.isSyncingDevice(watch.id))
+
+        job.cancel()
+        runCurrent()
+
+        assertFalse(controller.state.value.isSyncing)
+        assertTrue(job.isCancelled)
+        // The radio is free for the next run.
+        assertNotNull(controller.syncDevice(watch.id))
+    }
+
+    @Test
+    fun `a scheduled sync returns its result to the caller`() = runTest {
+        val watch = addWatch()
+        port.result = DeviceSyncResult.Succeeded(4)
+
+        val result = controller().runSync(watch.id)
+
+        assertEquals(DeviceSyncResult.Succeeded(4), result)
+    }
 
     @Test
     fun `a successful sync ends idle with the file count`() = runTest {
