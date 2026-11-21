@@ -9,10 +9,15 @@ import tech.mmarca.openwatch.healthconnect.MaxRecordsPerInsert
 enum class RecordWrite { WRITTEN, PRESENT, FAILED }
 
 /**
- * Writes [records] in batches of at most [MaxRecordsPerInsert]. Health Connect refuses a
- * whole batch when one `clientRecordId` is already there at the same or a higher version;
- * then each record of that batch is written alone, so the new ones still land. Batching
- * here, and not only in the gateway, keeps that fallback to the one batch that was refused.
+ * Writes [records] in batches of at most [MaxRecordsPerInsert]. The Health Connect APK on
+ * Android 13 and older is taken to refuse a whole batch when one `clientRecordId` is already
+ * there; then each record of that batch is written alone, so the new ones still land.
+ * Batching here keeps that fallback to the one batch that was refused.
+ *
+ * The platform's Health Connect (Android 14 and newer) refuses nothing: an equal version
+ * replaces the stored record and a lower one is silently ignored (`ClientRecordVersionTest`,
+ * measured on Android 17). There every record reads as [RecordWrite.WRITTEN], present or not,
+ * and a record rewritten at the same version changes; only a lower version keeps the old one.
  *
  * Returns what became of each record, in order. Any other failure of a
  * batch is thrown. Any other failure of a single record goes to [onFailure],

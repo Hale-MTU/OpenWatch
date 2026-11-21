@@ -74,6 +74,8 @@ android {
         applicationId = "tech.mmarca.openwatch"
         minSdk = 26
         targetSdk = 36
+        // The instrumented tests are JUnit 4; without this runner none of them would run.
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         versionCode = phoneVersionCode
         versionName = versionNameOverride.orElse(baseVersionName).get()
         buildConfigField("boolean", "OPENWATCH_DIAGNOSTICS", "false")
