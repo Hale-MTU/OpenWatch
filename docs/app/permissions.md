@@ -162,9 +162,10 @@ own. The user's consent is the system "Allow OpenWatch to access <device>?" dial
 association keeps the app alive while a watch is in range, so a file sync that runs for
 minutes is not killed; for the scale, it is what lets Android wake the app for the two seconds
 a weigh-in is on the air. For a Garmin watch, declining is supported: the watch is bonded and
-syncs regardless. A Wear OS watch is added only with the association, because OpenWatch may
-start a foreground service from the background only for an associated device, and a workout
-another app starts on the watch needs one. A Wear OS watch added before this rule, or whose
+syncs regardless. A Wear OS watch is added only with the association, because Android lets an
+app start a foreground service from the background only for an associated device. OpenWatch
+starts none for a watch today; the association keeps that open for a workout another app starts
+on the watch. A Wear OS watch added before this rule, or whose
 association the user removed in Android's settings, shows a "Link watch" button on its device
 screen.
 

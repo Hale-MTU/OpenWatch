@@ -4,9 +4,9 @@ import java.util.UUID
 
 /**
  * The line protocol between OpenWatch on the phone and the OpenWatch Wear OS
- * app, over one RFCOMM socket per request. Every line is UTF-8, space-separated
- * fields, `\n`-terminated. The phone sends one request line; the watch answers
- * with zero or more data lines and one terminating line, then both sides close.
+ * app, over an RFCOMM socket. Every line is UTF-8, space-separated fields,
+ * `\n`-terminated. The phone sends a request line; the watch answers with zero
+ * or more data lines and one terminating line, and waits for the next request.
  *
  * One source for both apps: `:wearlink` is compiled into `:app` and `:wear`.
  *
