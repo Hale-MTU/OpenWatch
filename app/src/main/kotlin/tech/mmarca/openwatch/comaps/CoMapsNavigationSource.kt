@@ -13,7 +13,6 @@ import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -21,6 +20,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
+import tech.mmarca.openwatch.core.performance.DispatcherProvider
 
 /** What one query of CoMaps' live-navigation provider found. */
 sealed interface CoMapsProviderAnswer {
@@ -68,12 +69,13 @@ data class CoMapsLiveEvent(
 @Singleton
 class CoMapsNavigationSource @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
 ) {
     // Read and set from the IO pool and from the caller's thread.
     @Volatile
     private var resolvedPackage: String? = null
 
-    suspend fun queryLive(): CoMapsProviderAnswer = withContext(Dispatchers.IO) {
+    suspend fun queryLive(): CoMapsProviderAnswer = withContext(dispatchers.io) {
         queryLiveBlocking()
     }
 
@@ -164,13 +166,13 @@ class CoMapsNavigationSource @Inject constructor(
             observer?.let(context.contentResolver::unregisterContentObserver)
             changes.close()
         }
-    }.flowOn(Dispatchers.IO)
+    }.flowOn(dispatchers.io)
 
     /**
      * The followed route as interleaved `lat, lon`, or null. Separate from
      * [queryLive], which runs per fix; a route only changes with `route_revision`.
      */
-    suspend fun queryRoute(): DoubleArray? = withContext(Dispatchers.IO) {
+    suspend fun queryRoute(): DoubleArray? = withContext(dispatchers.io) {
         val authority = providerAuthority() ?: return@withContext null
         if (!hasPermission()) return@withContext null
         try {

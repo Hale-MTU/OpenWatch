@@ -20,7 +20,6 @@ import tech.mmarca.openwatch.data.local.scale.ScaleWeighInDao
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.domain.preferences.SystemUnitSystemProvider
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CoroutineScope
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 
@@ -36,7 +35,8 @@ object AppModule {
     @Provides
     @Singleton
     @ApplicationScope
-    fun provideApplicationScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    fun provideApplicationScope(dispatchers: DispatcherProvider): CoroutineScope =
+        CoroutineScope(SupervisorJob() + dispatchers.default)
 
     @Provides
     @Singleton

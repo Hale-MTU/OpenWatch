@@ -22,12 +22,13 @@ import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.reflect.KClass
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import tech.mmarca.openwatch.core.performance.AppForegroundGate
 import tech.mmarca.openwatch.domain.model.HealthConnectAvailability
+import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
+import tech.mmarca.openwatch.core.performance.DispatcherProvider
 
 /**
  * The one place that touches the Health Connect client. The devices write
@@ -44,6 +45,7 @@ class HealthConnectGateway(
     private val foregroundGate: AppForegroundGate,
     private val clientProvider: () -> HealthConnectClient,
     private val elapsedMillis: () -> Long = { System.nanoTime() / 1_000_000L },
+    private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
 ) {
     @Inject
     constructor(
@@ -99,7 +101,7 @@ class HealthConnectGateway(
     }
 
     private suspend fun loadGrantedPermissions(): Set<String> {
-        val granted = withContext(Dispatchers.IO) {
+        val granted = withContext(dispatchers.io) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 // Platform permissions: a local check, no call into the provider.
                 declaredPermissions.filterTo(mutableSetOf()) { permission ->
@@ -125,7 +127,7 @@ class HealthConnectGateway(
     /** The highest heart rate Health Connect holds in `[start, end)`, from any app; null without the read grant or a sample. */
     suspend fun readMaxHeartRate(start: Instant, end: Instant): Long? {
         if (HealthPermission.getReadPermission(HeartRateRecord::class) !in grantedPermissions()) return null
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatchers.io) {
             clientProvider().aggregate(
                 AggregateRequest(metrics = setOf(HeartRateRecord.BPM_MAX), timeRangeFilter = TimeRangeFilter.between(start, end)),
             )[HeartRateRecord.BPM_MAX]
@@ -240,7 +242,7 @@ class HealthConnectGateway(
     suspend fun readLatestHeightCm(): Double? =
         latest(HeightRecord::class)?.height?.inMeters?.times(100.0)
 
-    private suspend fun <T : Record> latest(recordType: KClass<T>): T? = withContext(Dispatchers.IO) {
+    private suspend fun <T : Record> latest(recordType: KClass<T>): T? = withContext(dispatchers.io) {
         clientProvider().readRecords(
             ReadRecordsRequest(
                 recordType = recordType,

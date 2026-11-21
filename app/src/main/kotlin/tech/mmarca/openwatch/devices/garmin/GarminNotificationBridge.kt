@@ -14,7 +14,6 @@ import javax.inject.Singleton
 import kotlin.time.Duration
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.pairing.CompanionPresenceObserver
@@ -27,6 +26,8 @@ import kotlinx.coroutines.plus
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 import tech.mmarca.openwatch.devices.core.RadioLeaseRegistry
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
+import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
+import tech.mmarca.openwatch.core.performance.DispatcherProvider
 
 /**
  * The seam between Android's notification listener and the Garmin stack:
@@ -52,6 +53,7 @@ class GarminNotificationBridge @Inject constructor(
     private val radioLeases: RadioLeaseRegistry,
     // Lazy: the controller reaches the sync ports, and the bridge must not wait on them at start.
     private val syncController: dagger.Lazy<DeviceSyncController>,
+    private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
 ) : CompanionPresenceObserver, NotificationSink {
 
     private companion object {
@@ -65,7 +67,7 @@ class GarminNotificationBridge @Inject constructor(
     }
 
     /** Sequential on purpose. `limitedParallelism(1)` is FIFO. */
-    private val scope = appScope + Dispatchers.Default.limitedParallelism(1)
+    private val scope = appScope + dispatchers.default.limitedParallelism(1)
 
     private var forwarder: GarminNotificationForwarder? = null
 

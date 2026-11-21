@@ -6,15 +6,19 @@ import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
 import java.time.Instant
 import kotlin.reflect.KClass
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
+import tech.mmarca.openwatch.core.performance.DispatcherProvider
 
 /**
  * Page-streamed read of every record of a type in a range. Streamed, not
  * accumulated: a year of samples pinned small heaps at their limit. A page
  * failure throws rather than truncating.
  */
-internal class SyncRecordsReader(private val client: () -> HealthConnectClient) {
+internal class SyncRecordsReader(
+    private val client: () -> HealthConnectClient,
+    private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
+) {
 
     @Suppress("UNCHECKED_CAST")
     suspend fun forEachRecordPage(
@@ -26,7 +30,7 @@ internal class SyncRecordsReader(private val client: () -> HealthConnectClient) 
         val filter = TimeRangeFilter.between(start, end)
         var pageToken: String? = null
         do {
-            val response = withContext(Dispatchers.IO) {
+            val response = withContext(dispatchers.io) {
                 client().readRecords(
                     ReadRecordsRequest(
                         recordType = recordType as KClass<Record>,

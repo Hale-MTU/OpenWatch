@@ -10,7 +10,6 @@ import java.time.Instant
 import java.util.Base64
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
@@ -20,11 +19,14 @@ import tech.mmarca.openwatch.domain.model.CoMapsNavigationState
 import tech.mmarca.openwatch.domain.model.CoMapsRoutePolyline
 import tech.mmarca.openwatch.domain.model.isCoMapsGuiding
 import tech.mmarca.openwatch.domain.model.simplifyCoMapsRoutePoints
+import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
+import tech.mmarca.openwatch.core.performance.DispatcherProvider
 
 @Singleton
 class CoMapsNavigationRepositoryImpl @Inject constructor(
     @ApplicationContext context: Context,
     private val source: CoMapsNavigationSource,
+    private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
 ) : CoMapsNavigationRepository {
 
     /** Injectable clock: the liveness window is time arithmetic tests must own. */
@@ -107,7 +109,7 @@ class CoMapsNavigationRepositoryImpl @Inject constructor(
         val points = source.queryRoute() ?: return null
         if (points.size < 4) return null
         // Sub-pixel simplification once per fetch, off the caller's thread.
-        val simplified = withContext(Dispatchers.Default) {
+        val simplified = withContext(dispatchers.default) {
             simplifyCoMapsRoutePoints(points)
         }
         // The destination rides on the live row, so the caller fills it in.

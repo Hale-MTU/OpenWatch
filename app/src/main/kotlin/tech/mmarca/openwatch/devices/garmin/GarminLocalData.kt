@@ -4,7 +4,6 @@ import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.data.repository.contract.GarminSleepMinuteRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminWellnessRepository
@@ -12,6 +11,8 @@ import tech.mmarca.openwatch.devices.garmin.wellness.SleepMinuteRetention
 import kotlinx.coroutines.plus
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 import tech.mmarca.openwatch.core.performance.runSuspendCatching
+import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
+import tech.mmarca.openwatch.core.performance.DispatcherProvider
 
 /**
  * Owns what a Garmin watch leaves on the phone outside Health Connect:
@@ -29,8 +30,9 @@ class GarminLocalData @Inject constructor(
     private val sleepMinutes: GarminSleepMinuteRepository,
     private val wellness: GarminWellnessRepository,
     @ApplicationScope appScope: CoroutineScope,
+    private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
 ) {
-    private val housekeepingScope = appScope + Dispatchers.IO
+    private val housekeepingScope = appScope + dispatchers.io
 
     /** For app start, fire-and-forget. */
     fun pruneOnAppStart() {

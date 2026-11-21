@@ -27,7 +27,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
@@ -46,6 +45,8 @@ import tech.mmarca.openwatch.devices.core.withRadioLease
 import tech.mmarca.openwatch.devices.core.RadioLeaseBusyException
 import tech.mmarca.openwatch.devices.core.RadioLeaseOwner
 import tech.mmarca.openwatch.devices.core.RadioLeaseRegistry
+import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
+import tech.mmarca.openwatch.core.performance.DispatcherProvider
 
 /**
  * The BLE discovery scan the add-watch flow uses: what is advertising, what is
@@ -61,6 +62,7 @@ class BleSensorCoordinator @Inject constructor(
     /** The `(integration, kind)` verdicts, strongest first; bound in `di/DevicesModule`. */
     private val deviceClassifiers: List<@JvmSuppressWildcards DeviceClassifier>,
     private val radioLeases: RadioLeaseRegistry,
+    private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
 ) {
     private val bleThread = HandlerThread("OpenWatchBle").apply { start() }
     private val bleHandler = Handler(bleThread.looper)
@@ -206,7 +208,7 @@ class BleSensorCoordinator @Inject constructor(
 
     @SuppressLint("MissingPermission")
     private suspend fun probeCapabilities(address: String): Set<BleSensorCapability> =
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             suspendCancellableCoroutine { continuation ->
                 val adapter = bluetoothAdapter
                 if (adapter == null || !adapter.isEnabled) {

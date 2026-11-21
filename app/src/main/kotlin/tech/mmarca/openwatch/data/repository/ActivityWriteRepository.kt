@@ -31,7 +31,7 @@ class ActivityWriteRepository(
 ) : ActivityRepository {
 
     @Inject
-    constructor(hc: HealthConnectGateway) : this(hc, ActivityRecordWriter(hc::insertActivityRecords))
+    constructor(hc: HealthConnectGateway) : this(hc, ActivityRecordWriter(insert = hc::insertActivityRecords))
 
     private val writeExercisePermission = HealthPermission.getWritePermission(ExerciseSessionRecord::class)
     private val writeDistancePermission = HealthPermission.getWritePermission(DistanceRecord::class)

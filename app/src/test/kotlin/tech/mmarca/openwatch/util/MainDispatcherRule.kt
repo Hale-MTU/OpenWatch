@@ -14,6 +14,7 @@ class MainDispatcherRule : TestWatcher() {
     val testDispatcher = UnconfinedTestDispatcher()
     val dispatcherProvider = object : DispatcherProvider {
         override val main = testDispatcher
+        override val mainImmediate = testDispatcher
         override val io = testDispatcher
         override val default = testDispatcher
     }

@@ -27,6 +27,6 @@ class GarminSessionConfinementTest {
                 "parallel on the default dispatcher and share the transport's plain maps.",
         ).that(hosts).isEqualTo(sessions)
         assertWithMessage("onSessionThread must stay sequential")
-            .that(link).contains("Dispatchers.Default.limitedParallelism(1)")
+            .that(link).contains("dispatchers.default.limitedParallelism(1)")
     }
 }

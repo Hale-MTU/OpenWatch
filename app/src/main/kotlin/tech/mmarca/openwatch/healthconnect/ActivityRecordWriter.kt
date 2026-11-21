@@ -27,7 +27,6 @@ import androidx.health.connect.client.units.meters
 import java.time.Instant
 import java.time.ZoneId
 import java.util.UUID
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import tech.mmarca.healthcalculations.model.ExerciseRoutePoint
 import tech.mmarca.openwatch.domain.model.ActivityExerciseSegmentWrite
@@ -36,6 +35,8 @@ import tech.mmarca.openwatch.domain.model.ActivityWriteLimits
 import tech.mmarca.openwatch.domain.model.ActivityWriteRequest
 import tech.mmarca.openwatch.domain.model.BleRecordingSampleBuffer
 import tech.mmarca.openwatch.domain.model.importSessionClientRecordId
+import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
+import tech.mmarca.openwatch.core.performance.DispatcherProvider
 
 /**
  * Writes an activity and the records beside it, as OpenVitals' manual entry
@@ -44,13 +45,15 @@ import tech.mmarca.openwatch.domain.model.importSessionClientRecordId
  * Only the write half lives here; OpenWatch reads no activity back.
  */
 class ActivityRecordWriter(
+    // First, so the insert stays a trailing lambda.
+    private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
     /**
      * Writes one batch and returns the records' ids. In the app it is the gateway's, so the
      * sync switch covers workouts like every other write.
      */
     private val insert: suspend (List<Record>) -> List<String>,
 ) {
-    suspend fun writeActivityEntry(request: ActivityWriteRequest): String = withContext(Dispatchers.IO) {
+    suspend fun writeActivityEntry(request: ActivityWriteRequest): String = withContext(dispatchers.io) {
         validateActivityWriteRequest(request)
 
         val zone = ZoneId.systemDefault()
@@ -78,7 +81,7 @@ class ActivityRecordWriter(
      * call, so one file at a time exhausted the daily allowance. The insert
      * is atomic, hence the importer's file-by-file retry.
      */
-    suspend fun writeActivityEntries(requests: List<ActivityWriteRequest>): List<String> = withContext(Dispatchers.IO) {
+    suspend fun writeActivityEntries(requests: List<ActivityWriteRequest>): List<String> = withContext(dispatchers.io) {
         if (requests.isEmpty()) return@withContext emptyList()
         requests.forEach { validateActivityWriteRequest(it) }
 

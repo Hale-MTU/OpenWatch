@@ -12,7 +12,6 @@ import java.io.IOException
 import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -24,6 +23,8 @@ import tech.mmarca.openwatch.wearlink.WearLinkOutcome
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 import tech.mmarca.openwatch.wearlink.WearLinkWorkout
 import tech.mmarca.openwatch.wearlink.WearLinkSession
+import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
+import tech.mmarca.openwatch.core.performance.DispatcherProvider
 
 /**
  * Bluetooth Classic RFCOMM implementation of [WearOsNodePort], on AOSP APIs
@@ -40,13 +41,14 @@ import tech.mmarca.openwatch.wearlink.WearLinkSession
 class BluetoothWearOsNodePort @Inject constructor(
     @ApplicationContext private val context: Context,
     private val linkStore: WearOsLinkStore,
+    private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
 ) : WearOsNodePort {
 
     @SuppressLint("MissingPermission")
     override suspend fun checkStatus(
         targetAddress: String?,
         targetName: String?,
-    ): WearOsCompanionStatus = withContext(Dispatchers.IO) {
+    ): WearOsCompanionStatus = withContext(dispatchers.io) {
         val match = try {
             bondedWatch(targetAddress, targetName)
         } catch (failure: WearOsLinkFailure) {
@@ -74,7 +76,7 @@ class BluetoothWearOsNodePort @Inject constructor(
         targetAddress: String?,
         targetName: String?,
         since: Instant,
-    ): WearOsHeartRatePage? = withContext(Dispatchers.IO) {
+    ): WearOsHeartRatePage? = withContext(dispatchers.io) {
         val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext null
         withSession(match, targetAddress, PULL_TIMEOUT_MS) { session ->
             val page = unwrap(session.pullHeartRate(since.toEpochMilli(), WearLinkProtocol.MAX_SAMPLES_PER_REQUEST))
@@ -89,7 +91,7 @@ class BluetoothWearOsNodePort @Inject constructor(
         targetAddress: String?,
         targetName: String?,
         since: Instant,
-    ): WearOsSleepMinutePage? = withContext(Dispatchers.IO) {
+    ): WearOsSleepMinutePage? = withContext(dispatchers.io) {
         val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext null
         withSession(match, targetAddress, PULL_TIMEOUT_MS) { session ->
             val page = unwrap(session.pullSleepMinutes(since.toEpochMilli(), WearLinkProtocol.MAX_MINUTES_PER_REQUEST))
@@ -101,7 +103,7 @@ class BluetoothWearOsNodePort @Inject constructor(
         targetAddress: String?,
         targetName: String?,
         since: Instant,
-    ): WearOsStepPage? = withContext(Dispatchers.IO) {
+    ): WearOsStepPage? = withContext(dispatchers.io) {
         val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext null
         withSession(match, targetAddress, PULL_TIMEOUT_MS) { session ->
             // A watch app from before steps would answer the request with an error.
@@ -118,7 +120,7 @@ class BluetoothWearOsNodePort @Inject constructor(
         targetAddress: String?,
         targetName: String?,
         since: Instant,
-    ): WearOsAscentPage? = withContext(Dispatchers.IO) {
+    ): WearOsAscentPage? = withContext(dispatchers.io) {
         val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext null
         withSession(match, targetAddress, PULL_TIMEOUT_MS) { session ->
             // A watch app from before ascent would answer the request with an error.
@@ -135,7 +137,7 @@ class BluetoothWearOsNodePort @Inject constructor(
         targetAddress: String?,
         targetName: String?,
         since: Instant,
-    ): WearOsHrvPage? = withContext(Dispatchers.IO) {
+    ): WearOsHrvPage? = withContext(dispatchers.io) {
         val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext null
         withSession(match, targetAddress, PULL_TIMEOUT_MS) { session ->
             // A watch app from before HRV, or one without the raw PPG sensor, would answer with an error.
@@ -152,7 +154,7 @@ class BluetoothWearOsNodePort @Inject constructor(
         targetAddress: String?,
         targetName: String?,
         since: Instant,
-    ): WearOsRespiratoryPage? = withContext(Dispatchers.IO) {
+    ): WearOsRespiratoryPage? = withContext(dispatchers.io) {
         val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext null
         withSession(match, targetAddress, PULL_TIMEOUT_MS) { session ->
             if (WearLinkProtocol.CAP_RESPIRATORY_RATE !in session.peer.capabilities) return@withSession WearOsRespiratoryPage(emptyList(), false)
@@ -168,7 +170,7 @@ class BluetoothWearOsNodePort @Inject constructor(
         targetAddress: String?,
         targetName: String?,
         since: Instant,
-    ): WearOsSpo2Page? = withContext(Dispatchers.IO) {
+    ): WearOsSpo2Page? = withContext(dispatchers.io) {
         val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext null
         withSession(match, targetAddress, PULL_TIMEOUT_MS) { session ->
             if (WearLinkProtocol.CAP_SPO2 !in session.peer.capabilities) return@withSession WearOsSpo2Page(emptyList(), false)
@@ -181,7 +183,7 @@ class BluetoothWearOsNodePort @Inject constructor(
         targetAddress: String?,
         targetName: String?,
         since: Instant,
-    ): WearOsSkinPage? = withContext(Dispatchers.IO) {
+    ): WearOsSkinPage? = withContext(dispatchers.io) {
         val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext null
         withSession(match, targetAddress, PULL_TIMEOUT_MS) { session ->
             if (WearLinkProtocol.CAP_SKIN_TEMPERATURE !in session.peer.capabilities) return@withSession WearOsSkinPage(emptyList(), false)
@@ -191,7 +193,7 @@ class BluetoothWearOsNodePort @Inject constructor(
     }
 
     override suspend fun pullWatchSettings(targetAddress: String?, targetName: String?): Map<String, String>? =
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext null
             withSession(match, targetAddress, PING_TIMEOUT_MS) { session ->
                 if (WearLinkProtocol.CAP_PREFERENCES !in session.peer.capabilities) return@withSession null
@@ -200,7 +202,7 @@ class BluetoothWearOsNodePort @Inject constructor(
         }
 
     override suspend fun setWatchSetting(targetAddress: String?, targetName: String?, key: String, value: String): Boolean =
-        withContext(Dispatchers.IO) {
+        withContext(dispatchers.io) {
             val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext false
             withSession(match, targetAddress, PING_TIMEOUT_MS) { session ->
                 if (WearLinkProtocol.CAP_PREFERENCES !in session.peer.capabilities) return@withSession false
@@ -212,7 +214,7 @@ class BluetoothWearOsNodePort @Inject constructor(
         targetAddress: String?,
         targetName: String?,
         since: Instant,
-    ): WearOsWorkoutPage? = withContext(Dispatchers.IO) {
+    ): WearOsWorkoutPage? = withContext(dispatchers.io) {
         val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext null
         withSession(match, targetAddress, PULL_TIMEOUT_MS) { session ->
             if (WearLinkProtocol.CAP_WORKOUTS !in session.peer.capabilities) return@withSession WearOsWorkoutPage(emptyList(), false)
@@ -225,7 +227,7 @@ class BluetoothWearOsNodePort @Inject constructor(
         targetAddress: String?,
         targetName: String?,
         at: Instant,
-    ): Boolean = withContext(Dispatchers.IO) {
+    ): Boolean = withContext(dispatchers.io) {
         val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext false
         withSession(match, targetAddress, PING_TIMEOUT_MS) { session ->
             if (WearLinkProtocol.CAP_PHONE_ACTIVE !in session.peer.capabilities) return@withSession false
@@ -238,7 +240,7 @@ class BluetoothWearOsNodePort @Inject constructor(
         targetAddress: String?,
         targetName: String?,
         onSample: (WearOsHeartRateSample) -> Unit,
-    ): Boolean = withContext(Dispatchers.IO) {
+    ): Boolean = withContext(dispatchers.io) {
         val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext false
         withSession(match, targetAddress, LIVE_SESSION_MS + PING_TIMEOUT_MS) { session ->
             if (WearLinkProtocol.CAP_LIVE_HEART_RATE !in session.peer.capabilities) return@withSession false

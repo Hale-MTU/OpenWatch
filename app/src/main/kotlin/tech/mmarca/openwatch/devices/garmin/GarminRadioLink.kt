@@ -12,7 +12,6 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
@@ -27,6 +26,8 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.weather.WeatherStore
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.core.performance.runSuspendCatching
+import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
+import tech.mmarca.openwatch.core.performance.DispatcherProvider
 
 /** What a pull landed, and why it stopped early if it did. */
 data class GarminPullResult(
@@ -75,6 +76,7 @@ class GarminGattRadio @Inject constructor(
     private val locationSource: GarminPhoneLocationSource,
     private val agpsStore: GarminAgpsStore,
     private val calendarSource: GarminCalendarSource,
+    private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
 ) : GarminRadio {
 
     private val phone = GarminPhoneIdentity()
@@ -84,7 +86,7 @@ class GarminGattRadio @Inject constructor(
      * that the frame pump and the requests share, and `abort()` comes from a third coroutine.
      * The callers arrive on the default dispatcher, where those three ran in parallel.
      */
-    private val sessionDispatcher = Dispatchers.Default.limitedParallelism(1)
+    private val sessionDispatcher = dispatchers.default.limitedParallelism(1)
 
     private suspend fun <T> onSessionThread(block: suspend CoroutineScope.() -> T): T =
         withContext(sessionDispatcher) { coroutineScope(block) }

@@ -18,7 +18,6 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.cancel
@@ -31,6 +30,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import tech.mmarca.openwatch.core.performance.runSuspendCatching
+import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
+import tech.mmarca.openwatch.core.performance.DispatcherProvider
 
 /** Thrown when the watch cannot be reached or exposes no supported Garmin transport. */
 class GarminGattClientException(message: String) : Exception(message)
@@ -48,6 +49,7 @@ class GarminGattClient(
     private val onLog: ((String) -> Unit)? = null,
     /** Ask for a large MTU. Off is the workaround for a watch that misbehaves with big packets. */
     private val highMtu: Boolean = true,
+    private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
 ) {
 
     private companion object {
@@ -88,7 +90,7 @@ class GarminGattClient(
     val onDisconnected: SharedFlow<String> = disconnected
 
     /** Runs the GFDI re-registration when the watch closes the handle. Invisible to callers. */
-    private val healScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val healScope = CoroutineScope(SupervisorJob() + dispatchers.default)
 
     // Single-shot bridges from the GATT callback into coroutines. Fresh per dial: a failed one leaves them failed.
     @Volatile

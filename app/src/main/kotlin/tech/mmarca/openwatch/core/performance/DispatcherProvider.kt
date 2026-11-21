@@ -1,16 +1,23 @@
 package tech.mmarca.openwatch.core.performance
 
-import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
+/**
+ * The dispatchers, injected rather than named, so a test runs the code on its own. Classes
+ * take it as a constructor parameter defaulting to [DefaultDispatcherProvider]; Hilt passes
+ * the bound one. Dispatchers, not contexts, so a class can derive `limitedParallelism(1)`.
+ */
 interface DispatcherProvider {
-    val main: CoroutineContext
-    val io: CoroutineContext
-    val default: CoroutineContext
+    val main: CoroutineDispatcher
+    val mainImmediate: CoroutineDispatcher
+    val io: CoroutineDispatcher
+    val default: CoroutineDispatcher
 }
 
 object DefaultDispatcherProvider : DispatcherProvider {
-    override val main: CoroutineContext = Dispatchers.Main
-    override val io: CoroutineContext = Dispatchers.IO
-    override val default: CoroutineContext = Dispatchers.Default
+    override val main: CoroutineDispatcher get() = Dispatchers.Main
+    override val mainImmediate: CoroutineDispatcher get() = Dispatchers.Main.immediate
+    override val io: CoroutineDispatcher = Dispatchers.IO
+    override val default: CoroutineDispatcher = Dispatchers.Default
 }
