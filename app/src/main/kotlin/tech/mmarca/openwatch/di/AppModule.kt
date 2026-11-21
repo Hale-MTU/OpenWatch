@@ -19,6 +19,10 @@ import tech.mmarca.openwatch.data.local.garmin.GarminWellnessDao
 import tech.mmarca.openwatch.data.local.scale.ScaleWeighInDao
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.domain.preferences.SystemUnitSystemProvider
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineScope
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -27,6 +31,12 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDispatcherProvider(): DispatcherProvider = DefaultDispatcherProvider
+
+    /** The process's long-lived work. No handler: a bug in it still crashes, as it should. */
+    @Provides
+    @Singleton
+    @ApplicationScope
+    fun provideApplicationScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     @Provides
     @Singleton

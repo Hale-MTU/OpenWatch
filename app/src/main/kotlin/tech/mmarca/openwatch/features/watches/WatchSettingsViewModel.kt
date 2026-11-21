@@ -20,7 +20,6 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -41,6 +40,8 @@ import tech.mmarca.openwatch.devices.garmin.GarminSettingsScreen
 import tech.mmarca.openwatch.devices.garmin.GarminSettingsService
 import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
 import tech.mmarca.openwatch.navigation.WATCH_SETTINGS_SCREEN_ID_ARG
+import kotlinx.coroutines.plus
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /**
  * How long a link outlives the last screen watching it. Long enough to walk
@@ -69,9 +70,10 @@ class WatchSettingsLinks @VisibleForTesting internal constructor(
         agpsStore: tech.mmarca.openwatch.devices.garmin.GarminAgpsStore,
         stateStore: tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore,
         calendarSource: tech.mmarca.openwatch.devices.garmin.GarminCalendarSource,
+        @ApplicationScope appScope: CoroutineScope,
     ) : this(
         // Sequential: the link confines its protobuf traffic to this dispatcher.
-        scope = CoroutineScope(SupervisorJob() + Dispatchers.Default.limitedParallelism(1)),
+        scope = appScope + Dispatchers.Default.limitedParallelism(1),
         grace = LINK_GRACE,
         opener = { scope, deviceId ->
             val device = bleDeviceRepository.devices.firstOrNull { it.id == deviceId }

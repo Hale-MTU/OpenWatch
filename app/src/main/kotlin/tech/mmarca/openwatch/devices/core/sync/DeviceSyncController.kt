@@ -7,8 +7,6 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +15,7 @@ import kotlinx.coroutines.flow.update
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.core.presentation.ScreenError
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /** Where a device sync has got to, for the row that started it. Device-agnostic. */
 data class DeviceSyncUiState(
@@ -54,21 +53,11 @@ data class DeviceSyncUiState(
  * watch surface reads the same state.
  */
 @Singleton
-class DeviceSyncController(
+class DeviceSyncController @Inject constructor(
     private val deviceRepository: BleDeviceRepository,
     private val syncPort: DeviceSyncPort,
-    private val scope: CoroutineScope,
+    @param:ApplicationScope private val scope: CoroutineScope,
 ) {
-
-    @Inject
-    constructor(
-        deviceRepository: BleDeviceRepository,
-        syncPort: DeviceSyncPort,
-    ) : this(
-        deviceRepository,
-        syncPort,
-        CoroutineScope(SupervisorJob() + Dispatchers.Default),
-    )
 
     private val _state = MutableStateFlow(DeviceSyncUiState())
     val state: StateFlow<DeviceSyncUiState> = _state.asStateFlow()

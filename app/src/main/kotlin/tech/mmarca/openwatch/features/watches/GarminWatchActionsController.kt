@@ -6,9 +6,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,6 +24,7 @@ import tech.mmarca.openwatch.devices.garmin.GarminWatchSyncService
 import tech.mmarca.openwatch.devices.garmin.GarminWaypoint
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /** The find action, Garmin-only: gated on GarminCapability and speaking GFDI directly. */
 data class WatchFindUiState(
@@ -82,6 +81,7 @@ class GarminWatchActionsController(
         syncController: DeviceSyncController,
         syncService: GarminWatchSyncService,
         stateStore: GarminDeviceStateStore,
+        @ApplicationScope scope: CoroutineScope,
     ) : this(
         deviceRepository,
         syncController,
@@ -97,7 +97,7 @@ class GarminWatchActionsController(
                 if (it == GarminSendFileResult.Sent) stateStore.recordSentAlarms(device.id, alarms)
             }
         },
-        CoroutineScope(SupervisorJob() + Dispatchers.Default),
+        scope,
     )
 
     private val _state = MutableStateFlow(WatchFindUiState())

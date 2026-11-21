@@ -6,12 +6,13 @@ import javax.inject.Singleton
 import kotlin.math.abs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.media.PhoneMediaCommand
 import tech.mmarca.openwatch.devices.media.PhoneMediaSource
 import tech.mmarca.openwatch.devices.media.PhoneMediaState
+import kotlinx.coroutines.plus
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /**
  * Puts the phone's player on a Garmin watch's music controls: what is
@@ -33,11 +34,12 @@ class GarminMusicRelay(
         deviceRepository: BleDeviceRepository,
         stateStore: GarminDeviceStateStore,
         media: PhoneMediaSource,
+        @ApplicationScope appScope: CoroutineScope,
     ) : this(
         deviceRepository,
         stateStore,
         media,
-        CoroutineScope(SupervisorJob() + Dispatchers.Default.limitedParallelism(1)),
+        appScope + Dispatchers.Default.limitedParallelism(1),
         SystemClock::elapsedRealtime,
     )
 

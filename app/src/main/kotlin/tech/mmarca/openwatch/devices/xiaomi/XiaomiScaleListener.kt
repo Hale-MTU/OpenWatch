@@ -11,7 +11,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,6 +22,8 @@ import tech.mmarca.openwatch.data.repository.contract.ScaleWeighInRepository
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevice
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevicePairing
 import tech.mmarca.openwatch.devices.core.pairing.CompanionPresenceObserver
+import kotlinx.coroutines.plus
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /**
  * Keeps the phone listening for the scale. The scan itself lives in the
@@ -59,6 +60,7 @@ class XiaomiScaleListener(
         weighIns: ScaleWeighInRepository,
         foreground: ScaleForeground,
         dispatchers: DispatcherProvider,
+        @ApplicationScope appScope: CoroutineScope,
     ) : this(
         context,
         store,
@@ -67,7 +69,7 @@ class XiaomiScaleListener(
         companion,
         weighIns,
         foreground,
-        CoroutineScope(SupervisorJob() + dispatchers.io),
+        appScope + dispatchers.io,
     ) {
         // The app's one instance: the pipeline's debug trail goes to logcat from here on.
         ScaleLog.installLogcatSink()

@@ -4,13 +4,14 @@ import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
 import tech.mmarca.openwatch.data.repository.contract.ScaleWeighInRepository
+import kotlinx.coroutines.plus
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /** One broadcast as the scan delivered it: who sent it, and the `0xFE95` service data. */
 class ScaleAdvert(val address: String, val serviceData: ByteArray)
@@ -41,7 +42,8 @@ class ScaleWeighInIngest(
         weighIns: ScaleWeighInRepository,
         writer: ScaleWeighInWriter,
         dispatchers: DispatcherProvider,
-    ) : this(store, weighIns, writer, CoroutineScope(SupervisorJob() + dispatchers.io), Instant::now)
+        @ApplicationScope appScope: CoroutineScope,
+    ) : this(store, weighIns, writer, appScope + dispatchers.io, Instant::now)
 
     // Broadcasts arrive faster than a write finishes. One at a time, in order.
     private val ingesting = Mutex()
