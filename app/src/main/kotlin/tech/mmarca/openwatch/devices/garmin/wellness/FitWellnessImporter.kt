@@ -1,6 +1,8 @@
 package tech.mmarca.openwatch.devices.garmin.wellness
 
+import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.Record
+import androidx.health.connect.client.records.SleepSessionRecord
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -15,11 +17,13 @@ import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminSleepMinuteRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminWellnessRepository
 import tech.mmarca.openwatch.data.repository.insertSkippingPresent
+import tech.mmarca.openwatch.data.repository.partitionByWriteGrant
 import tech.mmarca.openwatch.devices.garmin.GarminCounterWatermarkStore
 import tech.mmarca.openwatch.devices.garmin.GarminDownloadedFile
 import tech.mmarca.openwatch.devices.garmin.GarminLog
 import tech.mmarca.openwatch.domain.model.GarminWellnessMetric
 import tech.mmarca.openwatch.domain.model.GarminWellnessSample
+import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 
 /**
  * Runs the wellness import for one sync's FIT files: Health Connect records
@@ -28,19 +32,43 @@ import tech.mmarca.openwatch.domain.model.GarminWellnessSample
  * watch-only metrics into [GarminWellnessRepository]. Activity files are
  * left to the activity importer.
  *
+ * A record type whose Health Connect write is not granted is left out and its permission
+ * returned, so one withheld grant costs that type, not the whole import: a failed import
+ * keeps its files pending, and every later sync would stop at them.
+ *
  * Throws when the write path is unavailable; a single bad file is skipped.
  */
 @Singleton
-class FitWellnessImporter @Inject constructor(
+class FitWellnessImporter(
     private val importRepository: ImportedRecordRepository,
     private val wellnessRepository: GarminWellnessRepository,
     private val watermarkStore: GarminCounterWatermarkStore,
     private val sleepMinuteRepository: GarminSleepMinuteRepository,
     private val sleepEstimation: GarminSleepEstimationWriter,
+    private val grantedPermissions: suspend () -> Set<String>,
 ) {
+    @Inject
+    constructor(
+        importRepository: ImportedRecordRepository,
+        wellnessRepository: GarminWellnessRepository,
+        watermarkStore: GarminCounterWatermarkStore,
+        sleepMinuteRepository: GarminSleepMinuteRepository,
+        sleepEstimation: GarminSleepEstimationWriter,
+        healthConnect: HealthConnectGateway,
+    ) : this(
+        importRepository,
+        wellnessRepository,
+        watermarkStore,
+        sleepMinuteRepository,
+        sleepEstimation,
+        healthConnect::grantedPermissions,
+    )
 
-    suspend fun import(files: List<GarminDownloadedFile>) {
-        if (files.isEmpty()) return
+    /** Imports [files]; returns the write permissions whose records were left out. */
+    suspend fun import(files: List<GarminDownloadedFile>): Set<String> {
+        if (files.isEmpty()) return emptySet()
+        val granted = grantedPermissions()
+        val withheld = sortedSetOf<String>()
 
         val records = mutableListOf<Record>()
         var counters = FitMonitoringCounters()
@@ -86,8 +114,8 @@ class FitWellnessImporter @Inject constructor(
             )
         }
 
-        writeRecords(records)
-        writeCounters(counters)
+        withheld += writeRecords(records, granted)
+        withheld += writeCounters(counters, granted)
 
         // After the Health Connect writes, like the Flutter build. A failure still fails the sync.
         wellnessRepository.upsert(watchOnly)
@@ -95,7 +123,15 @@ class FitWellnessImporter @Inject constructor(
             GarminLog.log("[GARMIN-IMPORT] stored ${watchOnly.size} watch-only samples")
         }
 
-        estimateSleep(sleepMinutes, nightsWithRealStages)
+        // The minutes are kept either way: once the grant comes, a later sync estimates the nights.
+        if (sleepMinutes.isNotEmpty() && WriteSleep !in granted) {
+            sleepMinuteRepository.upsert(sleepMinutes)
+            withheld += WriteSleep
+        } else {
+            estimateSleep(sleepMinutes, nightsWithRealStages)
+        }
+        if (withheld.isNotEmpty()) GarminLog.log("[GARMIN-IMPORT] ${withheld.size} record type(s) not granted, left out")
+        return withheld
     }
 
     /**
@@ -122,14 +158,17 @@ class FitWellnessImporter @Inject constructor(
         sleepMinuteRepository.pruneBefore(Instant.now().minusMillis(SleepMinuteRetention.inWholeMilliseconds))
     }
 
-    /** One batched insert. Duplicate-id rejections are retried one by one and count as success. */
-    private suspend fun writeRecords(records: List<Record>) {
+    /**
+     * The granted records in one batched insert; returns the permissions of the rest.
+     * Duplicate-id rejections are retried one by one and count as success.
+     */
+    private suspend fun writeRecords(records: List<Record>, granted: Set<String>): Set<String> {
         // Several files can restate the same record; the last occurrence wins.
-        val deduped = records
-            .associateBy { it.metadata.clientRecordId ?: it }
-            .values
-            .toList()
-        if (deduped.isEmpty()) return
+        val (deduped, withheld) = partitionByWriteGrant(
+            records.associateBy { it.metadata.clientRecordId ?: it }.values.toList(),
+            granted,
+        )
+        if (deduped.isEmpty()) return withheld
         val written = importRepository.insertSkippingPresent(deduped)
         GarminLog.log(
             if (written == deduped.size) {
@@ -138,24 +177,28 @@ class FitWellnessImporter @Inject constructor(
                 "[GARMIN-IMPORT] wrote $written/${deduped.size} records (rest already present)"
             },
         )
+        return withheld
     }
 
-    private suspend fun writeCounters(counters: FitMonitoringCounters) {
-        if (counters.isEmpty) return
+    private suspend fun writeCounters(counters: FitMonitoringCounters, granted: Set<String>): Set<String> {
+        if (counters.isEmpty) return emptySet()
         val mapped = fitMonitoringCounterRecords(counters, previous = watermarkStore.load())
         if (mapped.records.isEmpty()) {
             // Nothing new, but the cursor moved. Persisting it keeps a re-sync
             // from re-walking the same minutes, and nothing is lost.
             watermarkStore.save(mapped.watermarks)
-            return
+            return emptySet()
         }
-        writeRecords(mapped.records)
-        // Only once the records are in, or those minutes would be skipped for good.
+        val withheld = writeRecords(mapped.records, granted)
+        // Only once the records are in, or those minutes would be skipped for good. One mark
+        // covers steps, distance and calories together, so it moves even when one of them was
+        // not granted: those minutes of that type stay unwritten, and the card says so.
         watermarkStore.save(mapped.watermarks)
         GarminLog.log(
             "[GARMIN-IMPORT] wrote ${mapped.records.size} intraday counter " +
                 "records across ${mapped.watermarks.size} day(s)",
         )
+        return withheld
     }
 
     /** The watch-only metrics one decoded file carried. */
@@ -250,3 +293,5 @@ class FitWellnessImporter @Inject constructor(
 
 /** How long stored sleep minutes are kept. Long enough for a late-synced night. */
 internal val SleepMinuteRetention = 45.days
+
+private val WriteSleep = HealthPermission.getWritePermission(SleepSessionRecord::class)

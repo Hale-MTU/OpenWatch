@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.data.repository
 
+import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.Record
 import kotlinx.coroutines.CancellationException
 import tech.mmarca.openwatch.healthconnect.MaxRecordsPerInsert
@@ -52,6 +53,20 @@ private suspend fun ImportedRecordRepository.insertBatchWithOutcomes(
             }
         }
     }
+}
+
+/**
+ * [records] split by whether this app may write their type: the ones whose Health Connect
+ * write permission is in [granted], and the permissions of the rest. A write that is not
+ * granted fails the whole request, so it is left out before the request, not after.
+ */
+fun partitionByWriteGrant(records: List<Record>, granted: Set<String>): Pair<List<Record>, Set<String>> {
+    val withheld = sortedSetOf<String>()
+    val allowed = records.filter { record ->
+        val permission = HealthPermission.getWritePermission(record::class)
+        (permission in granted).also { if (!it) withheld += permission }
+    }
+    return allowed to withheld
 }
 
 /** [insertWithOutcomes], counting the records that landed. A record already present does not count. */

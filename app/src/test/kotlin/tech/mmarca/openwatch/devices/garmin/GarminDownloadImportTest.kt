@@ -46,7 +46,7 @@ class GarminDownloadImportTest {
     @Test
     fun `keys are recorded after both imports`() = runTest {
         val files = listOf(file(1), file(2))
-        coEvery { importer.import(files) } returns Unit
+        coEvery { importer.import(files) } returns emptySet()
         coEvery { activityImporter.import(files) } returns GarminActivityImportResult(written = 2)
 
         subject().import(WATCH, files)
@@ -77,7 +77,7 @@ class GarminDownloadImportTest {
         val landed = file(1)
         val refused = file(2)
         val files = listOf(landed, refused)
-        coEvery { importer.import(files) } returns Unit
+        coEvery { importer.import(files) } returns emptySet()
         coEvery { activityImporter.import(files) } returns
             GarminActivityImportResult(written = 1, missingPermission = listOf(refused))
 
@@ -91,7 +91,7 @@ class GarminDownloadImportTest {
     fun `an imported file stops being pending`() = runTest {
         val files = listOf(file(1))
         fileStore.save(files.single(), now = Instant.parse("2026-07-22T10:05:00Z"), deviceId = WATCH)
-        coEvery { importer.import(files) } returns Unit
+        coEvery { importer.import(files) } returns emptySet()
         coEvery { activityImporter.import(files) } returns GarminActivityImportResult(written = 1)
         every { stateStore.recordSyncedFileKeys(any(), any()) } returns Unit
 

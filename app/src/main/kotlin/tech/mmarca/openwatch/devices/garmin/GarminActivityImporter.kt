@@ -28,6 +28,11 @@ data class GarminActivityImportResult(
     val failedWrites: List<GarminDownloadedFile> = emptyList(),
     /** Workouts written without calories: the file measured none and the body profile has no weight. */
     val withoutCaloriesForWantOfWeight: Int = 0,
+    /**
+     * The write permissions whose wellness records the same files carried were left out.
+     * Set by [GarminDownloadImport], which runs the wellness import beside this one.
+     */
+    val wellnessWithheldPermissions: Set<String> = emptySet(),
 ) {
     /** Files the next sync must fetch again, so their keys must not be recorded. */
     val retry: List<GarminDownloadedFile> get() = missingPermission + failedWrites

@@ -177,6 +177,9 @@ fun WatchDeviceScreen(
             isBikeComputer = isBikeComputer,
             onRename = { showRenameDialog = true },
         )
+        if (isGarmin && !state.sync.isSyncing && state.sync.lastDeviceId == device.id) {
+            GarminUnwrittenNotice(state.sync.lastWithheldPermissions, onAllowGrants = syncGrantLauncher.launch)
+        }
 
         if (device.isWearosWatch) {
             val liveHeartRateBpm by viewModel.wearOsLiveHeartRateBpm.collectAsStateWithLifecycle()

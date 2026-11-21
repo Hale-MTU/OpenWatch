@@ -565,4 +565,5 @@
     <string name="health_data_watch_skin">Only on a Samsung watch, and only when you switch on skin temperature at night.</string>
     <string name="health_data_watch_spo2">Only on a Samsung watch, and only when you switch on SpO2 at night.</string>
     <string name="health_data_open_body">Every health data type, the device it comes from and why.</string>
+    <string name="settings_watch_garmin_withheld">Not saved to Health Connect, for want of permission: %1$s. Allow them, and the next sync saves what the watch sends from then on.</string>
 </resources>

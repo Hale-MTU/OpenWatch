@@ -20,6 +20,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import tech.mmarca.openwatch.core.fit.FitDecoder
 import tech.mmarca.openwatch.core.fit.fitInstant
+import tech.mmarca.openwatch.core.presentation.ScreenError
+import tech.mmarca.openwatch.core.presentation.isPermissionFailure
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.RadioLeaseBusyException
 import tech.mmarca.openwatch.devices.core.RadioLeaseOwner
@@ -111,14 +113,14 @@ class GarminWatchSyncService @Inject constructor(
         // Files a run saved but never imported: a crash, or an import that threw. The watch
         // has archived them, so this is their only way in. Before the pull, so their keys are
         // recorded before the listing is filtered and they are not fetched twice.
-        try {
+        val pendingWithheld = try {
             importPendingFiles(device)
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
             // The write path is down. Pulling more now would only queue more behind it.
             GarminLog.log("[GARMIN-SYNC] pending import failed: $error")
-            return DeviceSyncResult.Failed(describe(error))
+            return failed(error)
         }
 
         val pull = try {
@@ -131,7 +133,7 @@ class GarminWatchSyncService @Inject constructor(
             return DeviceSyncResult.Failed("The watch is busy (${error.holder}). Try again in a moment.")
         } catch (error: Exception) {
             GarminLog.log("[GARMIN-SYNC] failed: $error")
-            return DeviceSyncResult.Failed(describe(error))
+            return failed(error)
         }
 
         val downloaded = pull.files
@@ -146,7 +148,7 @@ class GarminWatchSyncService @Inject constructor(
                 // Reaching here means the write path itself is unavailable.
                 GarminLog.log("[GARMIN-SYNC] import failed: $error")
                 // Nothing reached Health Connect, so the next run must fetch again.
-                return DeviceSyncResult.Failed(describe(error))
+                return failed(error)
             }
         }
 
@@ -164,6 +166,7 @@ class GarminWatchSyncService @Inject constructor(
         return DeviceSyncResult.Succeeded(
             fileCount = downloaded.size,
             missingBodyWeight = activities.withoutCaloriesForWantOfWeight > 0,
+            withheldPermissions = pendingWithheld + activities.wellnessWithheldPermissions,
         )
     }
 
@@ -217,13 +220,24 @@ class GarminWatchSyncService @Inject constructor(
 
 
 
-    /** Imports what [GarminFileStore.pending] holds for [device]. Throws when the write path is down. */
-    private suspend fun importPendingFiles(device: BleSensorDevice) {
+    /**
+     * Imports what [GarminFileStore.pending] holds for [device]; returns the write permissions
+     * whose records were left out. Throws when the write path is down.
+     */
+    private suspend fun importPendingFiles(device: BleSensorDevice): Set<String> {
         val pending = fileStore.pending(device.id)
-        if (pending.isEmpty()) return
+        if (pending.isEmpty()) return emptySet()
         GarminLog.log("[GARMIN-SYNC] importing ${pending.size} file(s) an earlier run saved but never imported")
-        downloadImport.import(device.id, pending)
+        return downloadImport.import(device.id, pending).wellnessWithheldPermissions
     }
+
+    /** A missing permission stays a type, so the screen offers the grant instead of a sentence. */
+    private fun failed(error: Throwable): DeviceSyncResult.Failed =
+        if (error.isPermissionFailure()) {
+            DeviceSyncResult.Failed(ScreenError.PermissionDenied)
+        } else {
+            DeviceSyncResult.Failed(describe(error))
+        }
 
     private fun notImportedMessage(activities: GarminActivityImportResult): String? = when {
         activities.missingPermission.isNotEmpty() ->

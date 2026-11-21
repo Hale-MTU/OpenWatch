@@ -21,6 +21,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
@@ -129,6 +130,28 @@ class GarminWatchSyncServiceTest {
     }
 
     @Test
+    fun `wellness types left out for want of a grant are reported, and the sync still succeeds`() = runTest {
+        pullResult = GarminPullResult(files = listOf(file(1)))
+        coEvery { downloadImport.import(any(), any()) } returns
+            GarminActivityImportResult(written = 1, wellnessWithheldPermissions = setOf(WriteSleep))
+
+        val result = service().sync(WATCH, Duration.ZERO, null)
+
+        assertEquals(setOf(WriteSleep), (result as DeviceSyncResult.Succeeded).withheldPermissions)
+        coVerify(exactly = 1) { deviceRepository.markSynced(WATCH.id, any()) }
+    }
+
+    @Test
+    fun `a write refused for a missing permission is a permission failure, not a sentence`() = runTest {
+        pullResult = GarminPullResult(files = listOf(file(1)))
+        coEvery { downloadImport.import(any(), any()) } throws SecurityException("WRITE_WEIGHT not granted")
+
+        val result = service().sync(WATCH, Duration.ZERO, null)
+
+        assertEquals(DeviceSyncResult.Failed(ScreenError.PermissionDenied), result)
+    }
+
+    @Test
     fun `an interrupted sync that landed files says both things`() = runTest {
         pullResult = GarminPullResult(files = listOf(file(1)), incompleteReason = "the link dropped")
 
@@ -210,3 +233,5 @@ class GarminWatchSyncServiceTest {
         )
     }
 }
+
+private const val WriteSleep = "android.permission.health.WRITE_SLEEP"

@@ -23,9 +23,9 @@ class GarminDownloadImport @Inject constructor(
      * saved copies stay pending for the next sync.
      */
     suspend fun import(deviceId: String, files: List<GarminDownloadedFile>): GarminActivityImportResult {
-        importer.import(files)
+        val wellnessWithheld = importer.import(files)
         // Same path as a hand-picked FIT folder. Per-file failures come back in the result.
-        val activities = activityImporter.import(files)
+        val activities = activityImporter.import(files).copy(wellnessWithheldPermissions = wellnessWithheld)
         // Files with no stable key are fetched again every sync by design. A workout that
         // did not reach Health Connect keeps no key either, so it comes back.
         stateStore.recordSyncedFileKeys(
