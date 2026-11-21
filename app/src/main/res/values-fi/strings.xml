@@ -167,7 +167,6 @@
     <string name="settings_health_connect_group_title">Health Connect</string>
     <string name="health_connect_sync_paused">Health Connect -synkronointi on tauolla</string>
     <string name="privacy_policy_title">Tietosuojakäytäntö</string>
-    <string name="privacy_policy_body_1">OpenWatch yhdistää Garmin- tai Wear OS -kellon ja Xiaomi-vaa\'an puhelimeesi ja kirjoittaa niiden tallentamat tiedot Health Connectiin: suoritukset, askeleet, kerrokset, kalorit, sykkeen, unen ja painon. Se lukee vain sen, mitä synkronointi tarvitsee, kuten painosi ja pituutesi, ja vain luvallasi.</string>
     <string name="privacy_policy_body_2">Tämä sovellus ei lataa terveystietojasi pilvipalveluun, ei sisällä mainoksia eikä jaa tietoja kolmansille osapuolille.</string>
     <string name="privacy_policy_body_3">OpenWatch ei ole lääkinnällinen laite eikä diagnosoi, hoida, paranna tai ehkäise mitään sairautta tai terveydentilaa. Se ei korvaa pätevän terveydenhuollon ammattilaisen lääketieteellistä neuvoa, diagnoosia tai hoitoa.</string>
     <string name="notification_listener_label">Kellon ilmoitukset</string>

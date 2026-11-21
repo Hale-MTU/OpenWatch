@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.features.healthconnect
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,12 +21,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import tech.mmarca.openwatch.PermissionsRationaleActivity
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.domain.model.HealthConnectAvailability
 import tech.mmarca.openwatch.healthconnect.openHealthConnectPermissionSettings
 import tech.mmarca.openwatch.ui.components.OpenWatchButton
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchOutlinedButton
+import tech.mmarca.openwatch.ui.components.OpenWatchTextButton
 import tech.mmarca.openwatch.ui.components.rememberHealthConnectPermissionLauncher
 import tech.mmarca.openwatch.ui.theme.Spacing
 
@@ -104,6 +107,14 @@ fun HealthConnectSetupScreen(
                     ) {
                         Text(stringResource(R.string.hc_setup_open_settings))
                     }
+                }
+                // What each type is for, before the user is asked for it. The same screen
+                // Health Connect opens from its own permission page.
+                OpenWatchTextButton(
+                    onClick = { context.startActivity(Intent(context, PermissionsRationaleActivity::class.java)) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.health_data_title))
                 }
             }
         }

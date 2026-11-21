@@ -29,6 +29,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import tech.mmarca.openwatch.PermissionsRationaleActivity
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.features.watches.NotificationAccessDisclosureDialog
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
@@ -122,6 +123,11 @@ fun SettingsScreen(
                     showNotificationDisclosure = true
                 }
             },
+        )
+        SettingsRow(
+            title = stringResource(R.string.health_data_title),
+            body = stringResource(R.string.health_data_open_body),
+            onClick = { context.startActivity(Intent(context, PermissionsRationaleActivity::class.java)) },
         )
         SettingsRow(
             title = stringResource(R.string.privacy_policy_title),

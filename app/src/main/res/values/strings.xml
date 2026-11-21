@@ -214,7 +214,6 @@
     <string name="health_connect_sync_paused">Health Connect sync is paused</string>
     <string name="dashboard_summary_today">Today</string>
     <string name="privacy_policy_title">Privacy policy</string>
-    <string name="privacy_policy_body_1">OpenWatch pairs a Garmin or Wear OS watch and a Xiaomi scale with your phone and writes what they record to Health Connect: activities, steps, floors, calories, heart rate, sleep and weight. It reads only what a sync needs, such as your weight and height, and only with your permission.</string>
     <string name="privacy_policy_body_2">This app does not upload your health data to a cloud service, does not include ads, and does not share data with third parties.</string>
     <string name="privacy_policy_body_3">OpenWatch is not a medical device and does not diagnose, treat, cure, or prevent any disease or medical condition. It is not a substitute for medical advice, diagnosis, or treatment from a qualified healthcare professional.</string>
     <string name="notification_listener_label">Watch notifications</string>
@@ -565,6 +564,5 @@
     <string name="health_data_watch_background">To keep recording with the watch\'s screen off.</string>
     <string name="health_data_watch_skin">Only on a Samsung watch, and only when you switch on skin temperature at night.</string>
     <string name="health_data_watch_spo2">Only on a Samsung watch, and only when you switch on SpO2 at night.</string>
-    <string name="health_data_open">What OpenWatch reads and writes</string>
     <string name="health_data_open_body">Every health data type, the device it comes from and why.</string>
 </resources>

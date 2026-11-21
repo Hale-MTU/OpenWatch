@@ -113,7 +113,6 @@
     <string name="health_connect_sync_paused">Synchronizace s Health Connect je pozastavena</string>
     <string name="dashboard_summary_today">Dnes</string>
     <string name="privacy_policy_title">Zásady ochrany soukromí</string>
-    <string name="privacy_policy_body_1">OpenWatch spáruje hodinky Garmin nebo Wear OS a váhu Xiaomi s telefonem a zapisuje, co zaznamenají, do Health Connect: aktivity, kroky, patra, kalorie, tep, spánek a hmotnost. Čte jen to, co synchronizace potřebuje, například vaši hmotnost a výšku, a jen s vaším svolením.</string>
     <string name="privacy_policy_body_2">Tato aplikace nenahrává vaše zdravotní data do cloudu, neobsahuje reklamy a nesdílí data s třetími stranami.</string>
     <string name="privacy_policy_body_3">OpenWatch není zdravotnický prostředek a není určen k diagnostice, léčbě, vyléčení ani prevenci žádné nemoci či zdravotní potíže. Nenahrazuje lékařskou radu, diagnózu ani léčbu od kvalifikovaného zdravotníka.</string>
     <string name="notification_listener_label">Oznámení na hodinkách</string>
