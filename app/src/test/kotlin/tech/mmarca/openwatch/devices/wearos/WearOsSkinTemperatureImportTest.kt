@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.devices.wearos
 import java.time.Instant
 import java.time.ZoneOffset
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -30,10 +31,10 @@ class WearOsSkinTemperatureImportTest {
     }
 
     @Test
-    fun `the baseline is the earlier nights' median once there are three, else the night's own`() {
-        val run = WearOsSkinTemperatureImport.runs(minutes(0, 60) { 34.0 + (it % 3) * 0.1 }).single()
-        assertEquals(34.1, WearOsSkinTemperatureImport.baseline(run, listOf(33.0, 33.5)), 1e-9)
-        assertEquals(33.5, WearOsSkinTemperatureImport.baseline(run, listOf(33.0, 33.5, 34.0)), 1e-9)
+    fun `the baseline is the earlier nights' median once there are three, else unknown`() {
+        assertNull(WearOsSkinTemperatureImport.baseline(emptyList()))
+        assertNull(WearOsSkinTemperatureImport.baseline(listOf(33.0, 33.5)))
+        assertEquals(33.5, WearOsSkinTemperatureImport.baseline(listOf(33.0, 33.5, 34.0))!!, 1e-9)
     }
 
     @Test
