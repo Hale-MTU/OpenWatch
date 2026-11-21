@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -63,7 +65,20 @@ class WatchAutoSyncScheduler @Inject constructor(
     /** Stops a watch's schedule without touching the stored interval. */
     fun cancel(deviceId: String) {
         workManager.cancelUniqueWork(uniqueWorkName(deviceId))
+        workManager.cancelUniqueWork(continuationWorkName(deviceId))
         workManager.cancelUniqueWork(legacyWorkName(deviceId))
+    }
+
+    /**
+     * A run its budget cut short: the rest, soon, as a one-time job beside the periodic one.
+     * KEEP, so a continuation already queued is not queued twice.
+     */
+    fun continueSoon(deviceId: String, continuation: Int) {
+        val request = OneTimeWorkRequestBuilder<WatchAutoSyncWorker>()
+            .setInputData(WatchAutoSyncWorker.inputData(deviceId, continuation))
+            .setConstraints(Constraints.Builder().setRequiresBatteryNotLow(true).build())
+            .build()
+        workManager.enqueueUniqueWork(continuationWorkName(deviceId), ExistingWorkPolicy.KEEP, request)
     }
 
     /** Removal: the schedule goes with the watch, and so does the choice. */
@@ -94,6 +109,8 @@ class WatchAutoSyncScheduler @Inject constructor(
         private const val RETRY_BACKOFF_MINUTES = 10L
 
         fun uniqueWorkName(deviceId: String): String = "device-auto-sync-$deviceId"
+
+        private fun continuationWorkName(deviceId: String): String = "device-auto-sync-more-$deviceId"
 
         /** What [uniqueWorkName] was while the worker lived in `features/watches`. */
         private fun legacyWorkName(deviceId: String): String = "watch-auto-sync-$deviceId"

@@ -42,6 +42,8 @@ import tech.mmarca.openwatch.devices.garmin.GarminDeviceClassifier
 import tech.mmarca.openwatch.devices.core.DeviceScanClassifier
 import tech.mmarca.openwatch.devices.core.DeviceClassifier
 import tech.mmarca.openwatch.devices.notifications.NotificationSink
+import tech.mmarca.openwatch.devices.core.sync.SyncWakeLock
+import tech.mmarca.openwatch.devices.core.sync.AndroidSyncWakeLock
 
 /** Wiring for the `devices/` layer, kept apart so [AppModule] carries no watch knowledge. */
 @Module
@@ -97,6 +99,9 @@ abstract class DevicesModule {
     // Every watch's sync interval, Wear OS included, lives in the Garmin store under its old key.
     @Binds
     abstract fun bindAutoSyncIntervalStore(impl: GarminDeviceStateStore): AutoSyncIntervalStore
+
+    @Binds
+    abstract fun bindSyncWakeLock(impl: AndroidSyncWakeLock): SyncWakeLock
 
     companion object {
 

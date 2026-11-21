@@ -109,6 +109,25 @@ class DeviceSyncControllerTest {
     }
 
     @Test
+    fun `a sync no job holds awake runs under the wake lock, a scheduled one does not`() = runTest {
+        val watch = addWatch()
+        var held = 0
+        val lock = object : SyncWakeLock {
+            override suspend fun <T> holding(block: suspend () -> T): T {
+                held++
+                return block()
+            }
+        }
+        val controller = DeviceSyncController(repo, port, backgroundScope, lock)
+
+        controller.syncDevice(watch.id)!!.join()
+        controller.runSync(watch.id)
+
+        assertEquals(1, held)
+        assertEquals(2, port.calls)
+    }
+
+    @Test
     fun `a scheduled sync returns its result to the caller`() = runTest {
         val watch = addWatch()
         port.result = DeviceSyncResult.Succeeded(4)

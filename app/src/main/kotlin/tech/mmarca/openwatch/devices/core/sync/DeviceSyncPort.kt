@@ -38,6 +38,8 @@ sealed class DeviceSyncResult {
         val weightReadWithheld: Boolean = false,
         val unwritten: Set<UnwrittenSeries> = emptySet(),
         val withheldPermissions: Set<String> = emptySet(),
+        /** The run stopped at its [SyncBudget] with more on the device; a continuation should follow. */
+        val moreRemains: Boolean = false,
     ) : DeviceSyncResult()
 
     /**

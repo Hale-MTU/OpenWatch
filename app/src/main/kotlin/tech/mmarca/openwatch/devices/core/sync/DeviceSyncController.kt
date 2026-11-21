@@ -57,6 +57,7 @@ class DeviceSyncController @Inject constructor(
     private val deviceRepository: BleDeviceRepository,
     private val syncPort: DeviceSyncPort,
     @param:ApplicationScope private val scope: CoroutineScope,
+    private val wakeLock: SyncWakeLock = SyncWakeLock.None,
 ) {
 
     private val _state = MutableStateFlow(DeviceSyncUiState())
@@ -82,7 +83,8 @@ class DeviceSyncController @Inject constructor(
         silent: Boolean = false,
     ): Deferred<DeviceSyncResult>? {
         val device = claim(deviceId) ?: return null
-        return scope.async { runClaimed(device, listenAfter, silent) }
+        // No job holds the phone awake for this one; the wake lock does.
+        return scope.async { wakeLock.holding { runClaimed(device, listenAfter, silent) } }
     }
 
     /**

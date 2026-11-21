@@ -44,6 +44,7 @@ import tech.mmarca.healthcalculations.model.WearSleepMinute
 import tech.mmarca.openwatch.data.repository.isDuplicateClientRecordFailure
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.healthcalculations.insights.AscentCredit
+import tech.mmarca.openwatch.devices.core.sync.syncBudgetSpent
 
 /**
  * Pulls what the OpenWatch Wear OS app recorded and writes it to Health
@@ -181,19 +182,26 @@ class WearOsWatchSyncService(
     ): DeviceSyncResult {
         onProgress?.invoke(DeviceSyncProgress(DeviceSyncPhase.HANDSHAKE))
         val progress = Progress(onProgress)
+        // Between series, past their cursors, a spent budget ends the run; the rest is next.
+        suspend fun spent() = syncBudgetSpent().also { if (it) progress.moreRemains = true }
         try {
-            if (!pullHeartRate(device, progress)) return notPaired(device)
-            val steps = pullSteps(device, progress) ?: return notPaired(device)
-            // The floors filter needs the steps, so floors wait when the steps were not pulled.
-            if (STEPS_WRITE_PERMISSION !in progress.withheldPermissions && !pullAscent(device, progress, steps)) {
-                return notPaired(device)
+            run series@{
+                if (!pullHeartRate(device, progress)) return notPaired(device)
+                if (spent()) return@series
+                val steps = pullSteps(device, progress) ?: return notPaired(device)
+                // The floors filter needs the steps, so floors wait when the steps were not pulled.
+                if (STEPS_WRITE_PERMISSION !in progress.withheldPermissions && !pullAscent(device, progress, steps)) {
+                    return notPaired(device)
+                }
+                if (spent()) return@series
+                if (!pullSleep(device, progress)) return notPaired(device)
+                val night = nightSeries.sync(device, linkRetry) ?: return notPaired(device)
+                progress.unwritten += night.unwritten
+                progress.withheldPermissions += night.withheld
+                if (spent()) return@series
+                if (!pullWorkouts(device, progress)) return notPaired(device)
+                zones.sync(device, linkRetry)
             }
-            if (!pullSleep(device, progress)) return notPaired(device)
-            val night = nightSeries.sync(device, linkRetry) ?: return notPaired(device)
-            progress.unwritten += night.unwritten
-            progress.withheldPermissions += night.withheld
-            if (!pullWorkouts(device, progress)) return notPaired(device)
-            zones.sync(device, linkRetry)
         } catch (error: CancellationException) {
             throw error
         } catch (failure: WearOsLinkFailure) {
@@ -216,10 +224,12 @@ class WearOsWatchSyncService(
         linkStore.record(device.id, WearOsLinkSnapshot(WearOsAppStatus.APP_RUNNING, checkedAt = clock()))
 
         onProgress?.invoke(DeviceSyncProgress(DeviceSyncPhase.COMPLETE, filesTotal = progress.pages, filesDone = progress.pages))
-        bleDeviceRepository.markSynced(device.id, clock())
+        // A run its budget cut short is not a sync of everything.
+        if (!progress.moreRemains) bleDeviceRepository.markSynced(device.id, clock())
         return DeviceSyncResult.Succeeded(
             progress.written, progress.nights, progress.stepMinutes, progress.missingBodyWeight,
             progress.weightReadWithheld, progress.unwritten.toSet(), progress.withheldPermissions.toSet(),
+            moreRemains = progress.moreRemains,
         )
     }
 
@@ -746,6 +756,9 @@ class WearOsWatchSyncService(
 
         /** The series those grants kept out of Health Connect. */
         val unwritten = mutableSetOf<UnwrittenSeries>()
+
+        /** The budget ended the run before every series. */
+        var moreRemains = false
 
         fun page() {
             pages++

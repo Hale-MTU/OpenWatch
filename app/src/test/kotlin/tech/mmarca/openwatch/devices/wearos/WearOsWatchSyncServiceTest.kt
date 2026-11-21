@@ -40,6 +40,8 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.StepsCadenceRecord
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
+import tech.mmarca.openwatch.devices.core.sync.SyncBudget
+import kotlinx.coroutines.withContext
 
 /**
  * What a Wear OS sync does around the link. The watch is a fake here: the
@@ -242,6 +244,22 @@ class WearOsWatchSyncServiceTest {
         coVerify(exactly = 1) { deviceRepository.markSynced(WATCH.id, any()) }
         assertEquals(DeviceSyncPhase.HANDSHAKE, progress.first().phase)
         assertEquals(DeviceSyncPhase.COMPLETE, progress.last().phase)
+    }
+
+    @Test
+    fun `a spent budget ends the run after the series it finished, and says more remains`() = runTest {
+        pages += WearOsHeartRatePage(samples(0, 10), hasMore = false)
+        watchSteps += List(3) { WearOsStepMinute(t0.plusSeconds(60L * it), 10) }
+
+        val result = withContext(SyncBudget(deadlineMillis = 0, elapsedMillis = { 1 })) {
+            service().sync(WATCH, Duration.ZERO, null)
+        }
+
+        assertEquals(DeviceSyncResult.Succeeded(2, moreRemains = true), result)
+        assertEquals(t0.plusSeconds(10), cursors.heartRateCursor(WATCH.id))
+        // The steps wait for the continuation, and a cut-short run is not stamped as a sync.
+        assertTrue(stepPullsSince.isEmpty())
+        coVerify(exactly = 0) { deviceRepository.markSynced(any(), any()) }
     }
 
     @Test

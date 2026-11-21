@@ -10,6 +10,7 @@ import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.DeviceLog
+import kotlinx.coroutines.withContext
 
 /**
  * One scheduled sync of one watch, run by `WorkManager`. Not a foreground
@@ -51,11 +52,19 @@ class WatchAutoSyncWorker(
         // whole period: with several watches on one schedule, the loser would otherwise always lose.
         // In this coroutine, not the controller's: the sync is the job's work, held awake by
         // the job and cancelled with it when the system stops the job.
-        val result = entryPoint.deviceSyncController().runSync(deviceId, silent = true)
-            ?: return if (runAttemptCount < MaxAttempts) Result.retry() else Result.success()
+        // The budget ends a long sync cleanly before the system's ten-minute limit would cancel it.
+        val result = withContext(SyncBudget.forNext(BudgetMillis)) {
+            entryPoint.deviceSyncController().runSync(deviceId, silent = true)
+        } ?: return if (runAttemptCount < MaxAttempts) Result.retry() else Result.success()
 
         return when (result) {
-            is DeviceSyncResult.Succeeded -> Result.success()
+            is DeviceSyncResult.Succeeded -> {
+                val continuation = inputData.getInt(KeyContinuation, 0)
+                if (result.moreRemains && continuation < MaxContinuations) {
+                    scheduler.continueSoon(deviceId, continuation + 1)
+                }
+                Result.success()
+            }
 
             is DeviceSyncResult.Failed -> {
                 Log.log("run failed: ${result.error::class.simpleName}")
@@ -67,14 +76,21 @@ class WatchAutoSyncWorker(
 
     companion object {
         private const val KeyDeviceId = "device_id"
+        private const val KeyContinuation = "continuation"
+
+        /** Two minutes short of WorkManager's ten, for the run to end and report. */
+        private const val BudgetMillis = 8 * 60_000L
+
+        /** Follow-up runs after one its budget cut short, before the period takes over. */
+        private const val MaxContinuations = 3
 
         /** Attempts per period, the first included. */
         private const val MaxAttempts = 3
 
         private val Log = DeviceLog("DeviceAutoSync")
 
-        fun inputData(deviceId: String): Data =
-            Data.Builder().putString(KeyDeviceId, deviceId).build()
+        fun inputData(deviceId: String, continuation: Int = 0): Data =
+            Data.Builder().putString(KeyDeviceId, deviceId).putInt(KeyContinuation, continuation).build()
     }
 }
 

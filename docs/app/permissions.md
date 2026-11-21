@@ -183,7 +183,9 @@ behind a per-watch toggle that is off by default.
 ## Foreground Service Permissions
 
 `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_CONNECTED_DEVICE`, for the scale's 45-second
-listening service. `WAKE_LOCK` and `POST_NOTIFICATIONS` go with it.
+listening service. `POST_NOTIFICATIONS` goes with it. `WAKE_LOCK` keeps the phone awake for a
+watch sync no scheduled job holds awake (one you tap, one another app asks for over OpenLink, one
+the watch starts by announcing a recording), never for more than 30 minutes.
 
 ## Overlay Protection
 
