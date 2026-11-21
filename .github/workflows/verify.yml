@@ -43,7 +43,7 @@ jobs:
       run_lint: ${{ steps.plan.outputs.run_lint }}
       run_wear: ${{ steps.plan.outputs.run_wear }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           # The OpenLink and health-calculations libraries are submodules the apps build from.
           submodules: true
@@ -93,7 +93,7 @@ jobs:
   submodule-pointers:
     runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - run: scripts/ci-submodule-pointers.sh
 
   # The stock runner ships JDK 17 and the Android SDK; scripts/ci-android-setup.sh
@@ -111,12 +111,12 @@ jobs:
     if: needs.context.outputs.run_tests == 'true'
     runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           # The OpenLink and health-calculations libraries are submodules the apps build from.
           submodules: true
       - run: echo "GRADLE_USER_HOME=$RUNNER_TEMP/gradle-user-home" >> "$GITHUB_ENV"
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       - run: scripts/ci-android-gradle.sh -Popenwatch.testForks=4 verifyCiUnitTest verifyCiPreflight
       - run: git diff --check
 
@@ -126,12 +126,12 @@ jobs:
     if: needs.context.outputs.run_lint == 'true'
     runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           # The OpenLink and health-calculations libraries are submodules the apps build from.
           submodules: true
       - run: echo "GRADLE_USER_HOME=$RUNNER_TEMP/gradle-user-home" >> "$GITHUB_ENV"
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       - run: scripts/ci-android-gradle.sh verifyCiLint
       - run: git diff --check
 
@@ -144,11 +144,11 @@ jobs:
     if: needs.context.outputs.run_wear == 'true'
     runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           # The OpenLink and health-calculations libraries are submodules the apps build from.
           submodules: true
       - run: echo "GRADLE_USER_HOME=$RUNNER_TEMP/gradle-user-home" >> "$GITHUB_ENV"
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       - run: scripts/ci-android-gradle.sh verifyWearCi
       - run: git diff --check
