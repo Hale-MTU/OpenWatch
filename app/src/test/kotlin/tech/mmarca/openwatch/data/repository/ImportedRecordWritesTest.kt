@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.openwatch.healthconnect.MaxRecordsPerInsert
 
 class ImportedRecordWritesTest {
 
@@ -44,6 +45,23 @@ class ImportedRecordWritesTest {
         assertEquals(listOf(RecordWrite.WRITTEN, RecordWrite.PRESENT, RecordWrite.WRITTEN), outcomes)
         assertEquals(listOf(listOf("a", "b", "c"), listOf("a"), listOf("b"), listOf("c")), calls)
         assertEquals(setOf("a", "b", "c"), present)
+    }
+
+    @Test
+    fun `a long list goes in batches, and only the refused batch is written one by one`() = runTest {
+        present.clear()
+        val records = (0 until 2 * MaxRecordsPerInsert + 2).map { record("r$it", it.toLong()) }
+        // One record of the second batch is already there.
+        present += "r${MaxRecordsPerInsert + 5}"
+
+        val outcomes = repository.insertWithOutcomes(records)
+
+        assertEquals(records.size, outcomes.size)
+        assertEquals(RecordWrite.PRESENT, outcomes[MaxRecordsPerInsert + 5])
+        assertEquals(records.size - 1, outcomes.count { it == RecordWrite.WRITTEN })
+        // Three batches, and the second again record by record.
+        assertEquals(listOf(MaxRecordsPerInsert, MaxRecordsPerInsert, 2), calls.filter { it.size > 1 }.map { it.size })
+        assertEquals(MaxRecordsPerInsert, calls.count { it.size == 1 })
     }
 
     @Test

@@ -2,22 +2,29 @@ package tech.mmarca.openwatch.data.repository
 
 import androidx.health.connect.client.records.Record
 import kotlinx.coroutines.CancellationException
+import tech.mmarca.openwatch.healthconnect.MaxRecordsPerInsert
 
 /** What became of one record in [insertWithOutcomes]. */
 enum class RecordWrite { WRITTEN, PRESENT, FAILED }
 
 /**
- * Writes [records] in one batch. Health Connect refuses the whole batch when
- * one `clientRecordId` is already there at the same or a higher version;
- * then each record is written alone, so the new ones still land.
+ * Writes [records] in batches of at most [MaxRecordsPerInsert]. Health Connect refuses a
+ * whole batch when one `clientRecordId` is already there at the same or a higher version;
+ * then each record of that batch is written alone, so the new ones still land. Batching
+ * here, and not only in the gateway, keeps that fallback to the one batch that was refused.
  *
- * Returns what became of each record, in order. Any other failure of the
+ * Returns what became of each record, in order. Any other failure of a
  * batch is thrown. Any other failure of a single record goes to [onFailure],
  * which throws it unless the caller says otherwise.
  */
 suspend fun ImportedRecordRepository.insertWithOutcomes(
     records: List<Record>,
     onFailure: (Record, Exception) -> Unit = { _, error -> throw error },
+): List<RecordWrite> = records.chunked(MaxRecordsPerInsert).flatMap { insertBatchWithOutcomes(it, onFailure) }
+
+private suspend fun ImportedRecordRepository.insertBatchWithOutcomes(
+    records: List<Record>,
+    onFailure: (Record, Exception) -> Unit,
 ): List<RecordWrite> {
     if (records.isEmpty()) return emptyList()
     try {

@@ -159,8 +159,13 @@ class HealthConnectGateway(
         isBackgroundReadAvailable() &&
             HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND !in grantedPermissions()
 
+    /**
+     * Writes [records], at most [MaxRecordsPerInsert] a request. The requests are separate
+     * transactions: a failure leaves the earlier ones written, which every caller can take,
+     * since a record's `clientRecordId` makes writing it again an update.
+     */
     suspend fun insertImportedRecords(records: List<Record>) {
-        withSyncEnabled { clientProvider().insertRecords(records) }
+        withSyncEnabled { clientProvider().insertInChunks(records) }
     }
 
     /** Deletes this app's records of [recordType] by `clientRecordId`. Unknown ids are ignored. */
@@ -285,4 +290,15 @@ private fun declaredHealthPermissions(context: Context): Set<String> {
     }.getOrNull() ?: return emptySet()
     return info.requestedPermissions.orEmpty()
         .filterTo(linkedSetOf()) { it.startsWith("android.permission.health.") }
+}
+
+/**
+ * The most records one insert carries. Health Connect asks for no more than a thousand a
+ * request; a watch's first sync brings several thousand minutes at once.
+ */
+internal const val MaxRecordsPerInsert = 1000
+
+/** [records] in requests of at most [MaxRecordsPerInsert], in order. */
+internal suspend fun HealthConnectClient.insertInChunks(records: List<Record>) {
+    records.chunked(MaxRecordsPerInsert).forEach { insertRecords(it) }
 }
