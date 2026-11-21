@@ -8,6 +8,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.openwatch.wearlink.DaySummary
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.AscentMinute
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HeartRateSample
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.StepMinute
@@ -144,5 +145,58 @@ class WearReadingsTest {
         assertTrue(WearReadings.metrics(emptyList(), now, zone).isEmpty())
         assertNull(WearReadings.metrics(week(day(today)), now, zone)[MetricTile.HEART_RATE])
         assertFalse(WearReadings.metrics(week(day(today)), now, zone).containsKey(MetricTile.STEPS))
+    }
+
+    @Test
+    fun nightValuesShowTheLatestTodayAndADailyMean() {
+        val yesterday = today.minusDays(1)
+        val readings = week(
+            WearReadings.day(today, zone, emptyList(), emptyList(), emptyList(), night = mapOf(MetricTile.HRV to listOf(40.0, 60.0))),
+            earlier = mapOf(1 to WearReadings.day(yesterday, zone, emptyList(), emptyList(), emptyList(), night = mapOf(MetricTile.HRV to listOf(30.0)))),
+        )
+        val hrv = WearReadings.metrics(readings, now, zone).getValue(MetricTile.HRV)
+        assertEquals(60.0, hrv.current!!, 0.0)
+        assertEquals(listOf(40.0, 60.0), hrv.today)
+        assertEquals(listOf(30.0, 50.0), hrv.week)
+    }
+
+    @Test
+    fun aNightMetricWithoutAReadingIsLeftOut() {
+        val metrics = WearReadings.metrics(week(day(today)), now, zone)
+        assertFalse(MetricTile.SKIN_TEMPERATURE in metrics)
+        assertFalse(MetricTile.BLOOD_OXYGEN in metrics)
+    }
+
+    @Test
+    fun theLastNightStaysCurrentOnADayWithoutOne() {
+        val yesterday = today.minusDays(1)
+        val readings = week(
+            day(today),
+            earlier = mapOf(1 to WearReadings.day(yesterday, zone, emptyList(), emptyList(), emptyList(), night = mapOf(MetricTile.BLOOD_OXYGEN to listOf(97.0)))),
+        )
+        val spo2 = WearReadings.metrics(readings, now, zone).getValue(MetricTile.BLOOD_OXYGEN)
+        assertEquals(97.0, spo2.current!!, 0.0)
+        assertTrue(spo2.today.isEmpty())
+        assertEquals(listOf(97.0, 0.0), spo2.week)
+    }
+
+    @Test
+    fun thePhonesFiguresFillSleepRestingRateEnergyAndDistance() {
+        val yesterday = today.minusDays(1)
+        val phone = mapOf(
+            yesterday.toEpochDay() to DaySummary(yesterday.toEpochDay(), sleepMinutes = 400, restingBpm = 55, activeKcal = 300, distanceMetres = 4000),
+            today.toEpochDay() to DaySummary(today.toEpochDay(), sleepMinutes = 430, awakeMinutes = 20, remMinutes = 90, lightMinutes = 250, deepMinutes = 70),
+        )
+        val metrics = WearReadings.metrics(week(day(today)), now, zone, phone)
+        assertEquals(430.0, metrics.getValue(MetricTile.SLEEP).current!!, 0.0)
+        assertEquals(listOf(400.0, 430.0), metrics.getValue(MetricTile.SLEEP).week)
+        // The resting rate carries over; a day's total does not.
+        assertEquals(55.0, metrics.getValue(MetricTile.RESTING_HEART_RATE).current!!, 0.0)
+        assertNull(metrics.getValue(MetricTile.ACTIVE_CALORIES).current)
+        assertEquals(listOf(4000.0, 0.0), metrics.getValue(MetricTile.DISTANCE).week)
+        assertEquals(
+            mapOf(SleepStage.AWAKE to 20.0, SleepStage.REM to 90.0, SleepStage.LIGHT to 250.0, SleepStage.DEEP to 70.0),
+            WearReadings.sleepStages(phone),
+        )
     }
 }
