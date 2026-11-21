@@ -37,18 +37,24 @@ class LinkProfileSync @Inject constructor(
     fun current(): OpenLinkProfile =
         preferences.bodyProfile().toLink(prefs.getLong(KEY_UPDATED_AT, 0L))
 
-    /** Takes [profile] if it is newer than what is here. Returns whether it did. */
+    /**
+     * Takes [profile] if it is newer than what is here. Returns whether it did.
+     *
+     * A stamp in the future (another app's clock, or a value it made up) is kept as [now]:
+     * stored as it came, it would beat every change made here until that time arrived.
+     */
     @Synchronized
-    fun accept(profile: OpenLinkProfile): Boolean {
+    fun accept(profile: OpenLinkProfile, now: Long = System.currentTimeMillis()): Boolean {
         if (profile.updatedAtMillis <= prefs.getLong(KEY_UPDATED_AT, 0L)) return false
+        val stamp = if (profile.updatedAtMillis > now + MAX_CLOCK_SKEW_MILLIS) now else profile.updatedAtMillis
         val body = profile.toBody()
         preferences.setBodyProfile(body)
         val stored = preferences.bodyProfile()
         prefs.edit {
-            putLong(KEY_UPDATED_AT, profile.updatedAtMillis)
+            putLong(KEY_UPDATED_AT, stamp)
             putString(KEY_SIGNATURE, stored.signature())
         }
-        _updatedAtMillis.value = profile.updatedAtMillis
+        _updatedAtMillis.value = stamp
         return true
     }
 
@@ -78,6 +84,9 @@ class LinkProfileSync @Inject constructor(
     }
 
     private companion object {
+        /** How far ahead of this phone's clock another app's stamp may be and still count. */
+        const val MAX_CLOCK_SKEW_MILLIS = 5 * 60_000L
+
         const val PREFS = "openlink_profile"
         const val KEY_UPDATED_AT = "updated_at"
         const val KEY_SIGNATURE = "signature"

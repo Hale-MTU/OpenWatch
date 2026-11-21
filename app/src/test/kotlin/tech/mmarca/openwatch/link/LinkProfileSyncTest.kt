@@ -75,4 +75,16 @@ class LinkProfileSyncTest {
         assertEquals(7_000, published.updatedAtMillis)
         assertNull(sync.onLocalProfile(edited, now = 8_000))
     }
+
+    @Test
+    fun `a profile stamped in the future is taken, but cannot block the next change made here`() {
+        sync.onLocalProfile(preferences.bodyProfile(), now = 1_000)
+        val tenYears = 10L * 365 * 24 * 3600 * 1000
+
+        assertTrue(sync.accept(OpenLinkProfile(birthYear = 1985, updatedAtMillis = 10_000 + tenYears), now = 10_000))
+        assertEquals(10_000, sync.updatedAtMillis.value)
+
+        val published = sync.onLocalProfile(BodyProfile(birthYear = 1991, heightCm = 180.0), now = 20_000)
+        assertEquals(20_000, published!!.updatedAtMillis)
+    }
 }
