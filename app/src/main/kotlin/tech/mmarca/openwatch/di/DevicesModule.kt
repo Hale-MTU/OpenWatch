@@ -41,6 +41,7 @@ import tech.mmarca.openwatch.devices.garmin.GarminScanClassifier
 import tech.mmarca.openwatch.devices.garmin.GarminDeviceClassifier
 import tech.mmarca.openwatch.devices.core.DeviceScanClassifier
 import tech.mmarca.openwatch.devices.core.DeviceClassifier
+import tech.mmarca.openwatch.devices.notifications.NotificationSink
 
 /** Wiring for the `devices/` layer, kept apart so [AppModule] carries no watch knowledge. */
 @Module
@@ -84,6 +85,10 @@ abstract class DevicesModule {
     @Binds
     @IntoSet
     abstract fun bindWatchPresenceObserver(impl: GarminNotificationBridge): CompanionPresenceObserver
+
+    // The one integration that mirrors the phone's notifications today.
+    @Binds
+    abstract fun bindNotificationSink(impl: GarminNotificationBridge): NotificationSink
 
     @Binds
     @Singleton

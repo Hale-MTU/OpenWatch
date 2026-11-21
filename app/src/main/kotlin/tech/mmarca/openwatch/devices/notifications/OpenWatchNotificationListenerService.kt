@@ -12,7 +12,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.os.BundleCompat
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge
 
 /**
  * Reads the phone's notifications so they can be mirrored to a paired Garmin
@@ -27,7 +26,7 @@ import tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge
 class OpenWatchNotificationListenerService : NotificationListenerService() {
 
     @Inject
-    lateinit var bridge: GarminNotificationBridge
+    lateinit var sink: NotificationSink
 
     companion object {
         private const val TAG = "OVNotifyListener"
@@ -215,7 +214,7 @@ class OpenWatchNotificationListenerService : NotificationListenerService() {
                 ),
             )
             // Single process: the forwarder is right there.
-            bridge.onNotificationsPending()
+            sink.onNotificationsPending()
         } catch (error: Throwable) {
             // A listener that throws is unbound, and the user must re-grant access.
             Log.w(TAG, "failed to handle a notification: $error")

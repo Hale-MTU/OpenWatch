@@ -15,7 +15,7 @@ import androidx.core.app.NotificationManagerCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import tech.mmarca.openwatch.devices.garmin.GarminLog
+import tech.mmarca.openwatch.devices.core.DeviceLog
 import tech.mmarca.openwatch.devices.notifications.OpenWatchNotificationListenerService
 
 /**
@@ -61,7 +61,7 @@ class AndroidPhoneMediaSource @Inject constructor(
             true
         } catch (error: SecurityException) {
             // Notification access is off, or was just revoked.
-            GarminLog.log("[MEDIA] no access to media sessions: $error")
+            Log.log("no access to media sessions")
             false
         }
     }
@@ -184,3 +184,5 @@ class AndroidPhoneMediaSource @Inject constructor(
         manager.getApplicationLabel(manager.getApplicationInfo(packageName, 0)).toString()
     }.getOrNull()
 }
+
+private val Log = DeviceLog("PhoneMedia")

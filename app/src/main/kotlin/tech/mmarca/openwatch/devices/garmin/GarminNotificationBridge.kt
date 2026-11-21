@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.pairing.CompanionPresenceObserver
 import tech.mmarca.openwatch.devices.notifications.NotificationMsg
+import tech.mmarca.openwatch.devices.notifications.NotificationSink
 import tech.mmarca.openwatch.devices.notifications.NotificationStore
 import tech.mmarca.openwatch.devices.notifications.OpenWatchNotificationListenerService
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
@@ -44,7 +45,7 @@ class GarminNotificationBridge @Inject constructor(
     private val foregroundGate: tech.mmarca.openwatch.core.performance.AppForegroundGate,
     private val realtimeStore: GarminRealtimeStore,
     private val musicRelay: GarminMusicRelay,
-) : CompanionPresenceObserver {
+) : CompanionPresenceObserver, NotificationSink {
 
     private companion object {
         const val TAG = "OVNotifyBridge"
@@ -83,7 +84,7 @@ class GarminNotificationBridge @Inject constructor(
     }
 
     /** Called by the listener service after it buffered something. Thread-safe. */
-    fun onNotificationsPending() {
+    override fun onNotificationsPending() {
         scope.launch { drain() }
     }
 

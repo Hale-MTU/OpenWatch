@@ -6,7 +6,7 @@ import android.content.Intent
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import kotlin.concurrent.thread
-import tech.mmarca.openwatch.devices.garmin.GarminLog
+import tech.mmarca.openwatch.devices.core.DeviceLog
 
 /**
  * Receives weather from a companion app (Breezy Weather) over the
@@ -32,13 +32,10 @@ class GenericWeatherReceiver : BroadcastReceiver() {
             try {
                 val snapshot = GenericWeatherPayload.decode(json, gzipped) ?: return@thread
                 store.save(snapshot)
-                GarminLog.log(
-                    "[WEATHER] received ${snapshot.location.ifBlank { "(unnamed)" }} " +
-                        "${snapshot.currentTempKelvin}K, ${snapshot.hourly.size}h/" +
-                        "${snapshot.daily.size}d forecast",
-                )
+                // Counts only: the place and the temperatures are the user's.
+                Log.log("received ${snapshot.hourly.size}h/${snapshot.daily.size}d forecast")
             } catch (error: Exception) {
-                GarminLog.log("[WEATHER] broken weather broadcast: $error")
+                Log.log("broken weather broadcast: ${error::class.simpleName}")
             } finally {
                 pending.finish()
             }
@@ -55,3 +52,5 @@ class GenericWeatherReceiver : BroadcastReceiver() {
         const val EXTRA_WEATHER_GZ = "WeatherGz"
     }
 }
+
+private val Log = DeviceLog("Weather")
