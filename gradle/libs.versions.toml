@@ -121,6 +121,7 @@ androidx-wear-ongoing = { group = "androidx.wear", name = "wear-ongoing", versio
 # Wear Tiles (used only by :wear)
 androidx-wear-tiles = { group = "androidx.wear.tiles", name = "tiles", version.ref = "wear-tiles" }
 androidx-wear-protolayout = { group = "androidx.wear.protolayout", name = "protolayout", version.ref = "wear-protolayout" }
+androidx-wear-protolayout-material = { group = "androidx.wear.protolayout", name = "protolayout-material", version.ref = "wear-protolayout" }
 androidx-wear-protolayout-material3 = { group = "androidx.wear.protolayout", name = "protolayout-material3", version.ref = "wear-protolayout" }
 androidx-concurrent-futures-ktx = { group = "androidx.concurrent", name = "concurrent-futures-ktx", version.ref = "concurrent-futures" }
 
