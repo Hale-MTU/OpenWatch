@@ -283,4 +283,23 @@ tasks.withType<Test>().configureEach {
     // The memory budget above assumes one test task at a time. The domain
     // module's tests take seconds; they go first rather than beside these.
     mustRunAfter(":domain:testCiUnitTest")
+    // The architecture tests read sources and documents as plain files: this module's
+    // and the others' code, both manifests, the strings, the privacy documents. None
+    // of that is on the test classpath, so it is declared here; otherwise a change to
+    // one of them alone is answered with a cached pass.
+    val repository = rootProject.layout.projectDirectory
+    mapOf(
+        "scannedAppMain" to "app/src/main",
+        "scannedDomainMain" to "domain/src/main",
+        "scannedWearMain" to "wear/src/main",
+        "scannedWearlinkMain" to "wearlink/src/main",
+    ).forEach { (name, path) ->
+        inputs.dir(repository.dir(path)).withPropertyName(name).withPathSensitivity(PathSensitivity.RELATIVE)
+    }
+    mapOf(
+        "scannedPrivacyPolicy" to "PRIVACY.md",
+        "scannedPermissionsDoc" to "docs/app/permissions.md",
+    ).forEach { (name, path) ->
+        inputs.file(repository.file(path)).withPropertyName(name).withPathSensitivity(PathSensitivity.RELATIVE)
+    }
 }
