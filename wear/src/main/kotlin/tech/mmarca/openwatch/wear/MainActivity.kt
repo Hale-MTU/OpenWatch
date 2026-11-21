@@ -19,7 +19,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
- * The watch app: today's dashboard, with the workout recorder and the link
+ * The watch app: the dashboard and quick log, with the link
  * and recorder status one step down. Asks for the permissions
  * the link and the recorders need; each part starts on its own once
  * granted. The recording itself lives in [WearAppService], so closing the
@@ -57,6 +57,7 @@ class MainActivity : ComponentActivity() {
             }
             OpenWatchWearApp(
                 state = uiState,
+                onLog = viewModel::log,
                 onStartWorkout = { workoutOpen = true },
                 statusScreen = { StatusScreen(onOpenWorkout = { workoutOpen = true }) },
             )
