@@ -82,8 +82,15 @@ Do not break these without an explicit decision.
   `fallbackToDestructiveMigration`. Table and column names match OpenVitals'.
 - **The ratchets hold.** `DevicesLayeringTest` (no `@Module` under `devices/`),
   `CompanionPairingWiringTest` (an Activity calls `attachToActivity`),
-  `GarminSessionConfinementTest`, `FileSizeRatchetTest` (800 lines, with a ceiling list) and
-  `NoRunBlockingRatchetTest`. When one fails, fix the code, not the test.
+  `GarminSessionConfinementTest`, `FileSizeRatchetTest` (800 lines, with a ceiling list),
+  `NoRunBlockingRatchetTest` and `HealthPermissionsTest`. When one fails, fix the code, not the
+  test.
+- **A health permission is in the catalog, or it is not declared.**
+  `healthconnect/HealthDataCatalog` lists every health permission of both manifests by the
+  device its data comes from; the app shows that list, and `HealthPermissionsTest` holds the
+  manifests and the records the integrations build to it. A new type means its catalog row,
+  its line in `PRIVACY.md` and `docs/app/permissions.md`, and Play's health declaration,
+  before it ships.
 
 ## Rules
 
