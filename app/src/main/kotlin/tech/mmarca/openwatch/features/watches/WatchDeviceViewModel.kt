@@ -144,7 +144,7 @@ class WatchDeviceViewModel @Inject constructor(
     private val calendarSource: tech.mmarca.openwatch.devices.garmin.GarminCalendarSource,
     private val navigationRelay: tech.mmarca.openwatch.devices.garmin.GarminNavigationRelay,
     private val coMapsNavigationRepository:
-        tech.mmarca.openwatch.data.repository.contract.CoMapsNavigationRepository,
+        tech.mmarca.openwatch.comaps.CoMapsNavigationRepository,
     private val coMapsGuidanceFeed: tech.mmarca.openwatch.comaps.CoMapsGuidanceFeed,
     private val musicRelay: tech.mmarca.openwatch.devices.garmin.GarminMusicRelay,
     private val notificationsGateway: WatchNotificationsGateway,

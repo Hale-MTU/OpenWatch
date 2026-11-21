@@ -1,4 +1,4 @@
-package tech.mmarca.openwatch.data.repository
+package tech.mmarca.openwatch.comaps
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -14,10 +14,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import tech.mmarca.openwatch.comaps.CoMapsLiveEvent
-import tech.mmarca.openwatch.comaps.CoMapsNavigationSource
-import tech.mmarca.openwatch.comaps.CoMapsProviderAnswer
-import tech.mmarca.openwatch.data.repository.contract.CoMapsNavigationRepository
 import tech.mmarca.openwatch.domain.model.CoMapsCoordinate
 import tech.mmarca.openwatch.domain.model.CoMapsNavigationSnapshot
 import tech.mmarca.openwatch.domain.model.CoMapsNavigationState

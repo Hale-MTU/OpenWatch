@@ -15,6 +15,7 @@ import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
 import tech.mmarca.openwatch.domain.preferences.SystemUnitSystemProvider
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
+import tech.mmarca.openwatch.healthconnect.HealthConnectSyncSwitch
 
 /**
  * The few app-wide preferences OpenWatch keeps: whether Health Connect writes
@@ -26,7 +27,7 @@ import tech.mmarca.openwatch.domain.preferences.UnitSystem
 class OpenWatchPreferences(
     private val prefs: SharedPreferences,
     private val unitSystemProvider: SystemUnitSystemProvider,
-) : BodyProfilePreferences {
+) : BodyProfilePreferences, HealthConnectSyncSwitch {
 
     @Inject
     constructor(@ApplicationContext context: Context, unitSystemProvider: SystemUnitSystemProvider) : this(
@@ -37,7 +38,7 @@ class OpenWatchPreferences(
     private val _healthConnectSyncEnabled = MutableStateFlow(prefs.getBoolean(KEY_HEALTH_CONNECT_SYNC_ENABLED, true))
 
     /** Off pauses every Health Connect write; the devices keep what they heard until it is on again. */
-    val healthConnectSyncEnabledFlow: StateFlow<Boolean> = _healthConnectSyncEnabled.asStateFlow()
+    override val healthConnectSyncEnabledFlow: StateFlow<Boolean> = _healthConnectSyncEnabled.asStateFlow()
 
     private val _writeRespiratoryRate = MutableStateFlow(prefs.getBoolean(KEY_WRITE_RESPIRATORY_RATE, false))
 
@@ -51,7 +52,7 @@ class OpenWatchPreferences(
             _writeRespiratoryRate.value = value
         }
 
-    var healthConnectSyncEnabled: Boolean
+    override var healthConnectSyncEnabled: Boolean
         get() = _healthConnectSyncEnabled.value
         set(value) {
             prefs.edit { putBoolean(KEY_HEALTH_CONNECT_SYNC_ENABLED, value) }

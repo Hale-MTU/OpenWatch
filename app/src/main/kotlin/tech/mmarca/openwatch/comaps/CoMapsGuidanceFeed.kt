@@ -15,7 +15,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import tech.mmarca.openwatch.data.repository.contract.CoMapsNavigationRepository
 import tech.mmarca.openwatch.domain.model.CoMapsNavigationState
 
 /**

@@ -1,4 +1,4 @@
-package tech.mmarca.openwatch.data.repository.contract
+package tech.mmarca.openwatch.comaps
 
 import kotlinx.coroutines.flow.Flow
 import tech.mmarca.openwatch.domain.model.CoMapsNavigationSnapshot

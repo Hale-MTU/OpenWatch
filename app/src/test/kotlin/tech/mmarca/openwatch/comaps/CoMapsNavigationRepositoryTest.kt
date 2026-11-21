@@ -1,4 +1,4 @@
-package tech.mmarca.openwatch.data.repository
+package tech.mmarca.openwatch.comaps
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -13,9 +13,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import tech.mmarca.openwatch.comaps.CoMapsLiveEvent
-import tech.mmarca.openwatch.comaps.CoMapsNavigationSource
-import tech.mmarca.openwatch.comaps.CoMapsProviderAnswer
 import tech.mmarca.openwatch.domain.model.CoMapsNavigationSnapshot
 import tech.mmarca.openwatch.domain.model.CoMapsNavigationState
 
