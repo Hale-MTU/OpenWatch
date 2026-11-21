@@ -5,7 +5,6 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +15,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.domain.model.CoMapsNavigationState
+import kotlinx.coroutines.plus
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /**
  * What CoMaps is guiding right now: one feed for everyone. Each feature [request]s it
@@ -27,6 +28,7 @@ import tech.mmarca.openwatch.domain.model.CoMapsNavigationState
 @Singleton
 class CoMapsGuidanceFeed @Inject constructor(
     private val repository: CoMapsNavigationRepository,
+    @param:ApplicationScope appScope: CoroutineScope,
 ) {
     /** Why the feed is up. No reason outranks another. */
     enum class Reason {
@@ -37,7 +39,7 @@ class CoMapsGuidanceFeed @Inject constructor(
         WATCH,
     }
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val scope = appScope + Dispatchers.Main.immediate
 
     /** A flow, not a set: the askers are on different threads, and start/stop must happen in order. */
     private val reasons = MutableStateFlow<Set<Reason>>(emptySet())

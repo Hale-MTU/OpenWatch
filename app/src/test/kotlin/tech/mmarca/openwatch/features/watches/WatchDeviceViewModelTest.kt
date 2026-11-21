@@ -52,6 +52,8 @@ import tech.mmarca.openwatch.util.MainDispatcherRule
 import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CoroutineScope
 
 /** Renaming a watch with no capabilities, and what forgetting a device does and does not do at the OS level. */
 class WatchDeviceViewModelTest {
@@ -137,6 +139,7 @@ class WatchDeviceViewModelTest {
         deviceId: String,
         wearOsCompanionManager: WearOsCompanionManager = mockk(relaxed = true),
     ) = WatchDeviceViewModel(
+        appScope = CoroutineScope(SupervisorJob()),
         savedStateHandle = SavedStateHandle(mapOf(WATCH_DEVICE_ID_ARG to deviceId)),
         deviceRepository = repo,
         stateStore = stateStore,
@@ -156,7 +159,7 @@ class WatchDeviceViewModelTest {
         calendarSource = mockk(relaxed = true),
         navigationRelay = mockk(relaxed = true),
         coMapsNavigationRepository = mockk(relaxed = true),
-        coMapsGuidanceFeed = tech.mmarca.openwatch.comaps.CoMapsGuidanceFeed(mockk(relaxed = true)),
+        coMapsGuidanceFeed = tech.mmarca.openwatch.comaps.CoMapsGuidanceFeed(mockk(relaxed = true), CoroutineScope(SupervisorJob())),
         agpsStore = mockk<GarminAgpsStore>(relaxed = true).also {
             every { it.agps } returns MutableStateFlow(GarminAgpsState())
         },

@@ -28,6 +28,8 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CoroutineScope
 
 /**
  * What a sync does around the radio. The watch is a fake here: the order, the refusals and
@@ -87,6 +89,7 @@ class GarminWatchSyncServiceTest {
     }
 
     private fun service() = GarminWatchSyncService(
+        appScope = CoroutineScope(SupervisorJob()),
         context = context,
         bleDeviceRepository = deviceRepository,
         stateStore = stateStore,

@@ -13,6 +13,8 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import tech.mmarca.openwatch.data.repository.contract.GarminSleepMinuteRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminWellnessRepository
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.CoroutineScope
 
 /** Watch data outside Health Connect used to age out only inside a sync. A removed watch never syncs. */
 class GarminLocalDataTest {
@@ -28,6 +30,8 @@ class GarminLocalDataTest {
         fileStore = GarminFileStore(resolveDirectory = { folder.root }, retention = 30.days),
         sleepMinutes = sleepMinutes,
         wellness = wellness,
+        // The class adds its own dispatcher, as with the application scope.
+        appScope = CoroutineScope(SupervisorJob()),
     )
 
     private fun file(name: String, modified: Instant): File =

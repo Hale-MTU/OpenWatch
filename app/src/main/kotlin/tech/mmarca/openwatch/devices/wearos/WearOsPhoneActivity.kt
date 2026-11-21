@@ -12,9 +12,10 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import kotlinx.coroutines.plus
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /**
  * Tells the paired watches when the wearer unlocks the phone, so a watch
@@ -31,8 +32,9 @@ class WearOsPhoneActivity @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val deviceRepository: BleDeviceRepository,
     private val nodePort: WearOsNodePort,
+    @param:ApplicationScope appScope: CoroutineScope,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val scope = appScope + Dispatchers.IO
 
     @Volatile
     private var lastSentAt: Instant = Instant.EPOCH

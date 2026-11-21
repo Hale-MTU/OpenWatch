@@ -17,10 +17,11 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.R
+import kotlinx.coroutines.plus
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /**
  * Rings the phone when the watch asks. The default alarm sound on the
@@ -30,6 +31,7 @@ import tech.mmarca.openwatch.R
 @Singleton
 class GarminFindPhoneRinger @Inject constructor(
     @ApplicationContext private val context: Context,
+    @param:ApplicationScope appScope: CoroutineScope,
 ) {
     private companion object {
         const val CHANNEL_ID = "garmin_find_phone"
@@ -39,7 +41,7 @@ class GarminFindPhoneRinger @Inject constructor(
         const val MAX_DURATION_SECONDS = 120
     }
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val scope = appScope + Dispatchers.Main
     private var player: MediaPlayer? = null
     private var stopJob: Job? = null
 

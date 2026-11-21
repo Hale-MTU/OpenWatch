@@ -4,7 +4,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -25,6 +24,7 @@ import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleListener
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleStore
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /**
  * The paired devices as OpenLink shows them: watches and bike computers from the device
@@ -38,8 +38,9 @@ class LinkDevices @Inject constructor(
     wearOsLinkStore: WearOsLinkStore,
     scaleStore: XiaomiScaleStore,
     scaleListener: XiaomiScaleListener,
+    @param:ApplicationScope appScope: CoroutineScope,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = appScope
 
     val devices: StateFlow<List<OpenLinkDevice>> = combine(
         deviceRepository.devicesFlow,

@@ -8,12 +8,13 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
 import tech.mmarca.openwatch.comaps.CoMapsGuidanceFeed
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.domain.model.CoMapsNavigationState
+import kotlinx.coroutines.plus
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /**
  * Puts CoMaps guidance on a Garmin watch as one notification updated in
@@ -29,10 +30,9 @@ class GarminNavigationRelay @Inject constructor(
     private val deviceRepository: BleDeviceRepository,
     private val stateStore: GarminDeviceStateStore,
     private val guidanceFeed: CoMapsGuidanceFeed,
+    @param:ApplicationScope appScope: CoroutineScope,
 ) {
-    private val scope = CoroutineScope(
-        SupervisorJob() + Dispatchers.Default.limitedParallelism(1),
-    )
+    private val scope = appScope + Dispatchers.Default.limitedParallelism(1)
     private val policy = GarminNavigationRelayPolicy()
     private var started = false
 

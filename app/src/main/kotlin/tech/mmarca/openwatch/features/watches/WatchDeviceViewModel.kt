@@ -10,7 +10,6 @@ import java.time.Instant
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -48,6 +47,8 @@ import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
 import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
+import kotlinx.coroutines.plus
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /** Everything the device view shows about one watch. */
 @Immutable
@@ -153,12 +154,13 @@ class WatchDeviceViewModel @Inject constructor(
     private val dispatchers: tech.mmarca.openwatch.core.performance.DispatcherProvider,
     private val wearOsCompanionManager: WearOsCompanionManager,
     private val wearOsLinkStore: WearOsLinkStore,
+    @param:ApplicationScope appScope: CoroutineScope,
 ) : ViewModel() {
 
     val deviceId: String = savedStateHandle.get<String>(WATCH_DEVICE_ID_ARG).orEmpty()
 
     /** Outlives the view-model: the unbond after a removal must not die with the screen. */
-    private val housekeepingScope = CoroutineScope(SupervisorJob() + dispatchers.default)
+    private val housekeepingScope = appScope + dispatchers.default
 
     private val localState = MutableStateFlow(WatchDeviceUiState())
 

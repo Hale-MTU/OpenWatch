@@ -7,7 +7,6 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -42,6 +41,7 @@ import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge
 import tech.mmarca.openwatch.devices.garmin.GarminRealtimeStore
 import tech.mmarca.openwatch.devices.wearos.WearOsCompanionManager
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /** What one session is doing, for the Connected apps screen and the streaming notification. */
 data class LinkSessionActivity(
@@ -70,8 +70,9 @@ class LinkLiveSessions @Inject constructor(
     private val garminRealtime: GarminRealtimeStore,
     private val wearOs: WearOsCompanionManager,
     private val host: Lazy<OpenLinkHost>,
+    @param:ApplicationScope appScope: CoroutineScope,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = appScope
     private val streams = mutableMapOf<String, SharedFlow<OpenLinkSample>>()
     private val recordings = mutableMapOf<String, Job>()
     private val subscriptions = mutableMapOf<String, Job>()

@@ -13,7 +13,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -30,6 +29,8 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.devices.core.withRadioLease
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import kotlinx.coroutines.plus
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /**
  * Drives one sync with a Garmin watch: take the radio lease, open the link,
@@ -46,12 +47,13 @@ class GarminWatchSyncService @Inject constructor(
     private val fileStore: GarminFileStore,
     /** Everything that touches Bluetooth. A test hands over a fake and drives a whole sync. */
     private val radio: GarminRadio,
+    @param:ApplicationScope appScope: CoroutineScope,
 ) : DeviceSyncPort {
 
     private val syncMutex = Mutex()
 
     /** Outlives one sync: closing the sync screen must not cancel the chain rebuild it started. */
-    private val rebuildScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val rebuildScope = appScope + Dispatchers.IO
 
     init {
         // Idempotent, and a no-op outside debug builds.

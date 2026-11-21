@@ -4,11 +4,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import tech.mmarca.openlink.host.OpenLinkHost
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
+import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /**
  * Sends the device list and local profile changes to the bound OpenLink clients, and keeps
@@ -21,8 +21,9 @@ class OpenWatchLinkPublisher @Inject constructor(
     private val preferences: BodyProfilePreferences,
     private val profileSync: LinkProfileSync,
     private val streamingNotifier: LinkStreamingNotifier,
+    @param:ApplicationScope appScope: CoroutineScope,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = appScope
     private var started = false
 
     @Synchronized
