@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
+import tech.mmarca.openwatch.core.performance.runSuspendCatching
 
 /**
  * One reliable multi-link (MLR) service channel: the watch's own stop-and-wait
@@ -47,7 +48,7 @@ internal class GarminMlrChannel(
     private val ackRequests = Channel<Int>(Channel.CONFLATED)
     private val ackWriter = scope.launch {
         for (requestNumber in ackRequests) {
-            runCatching { write(packet(requestNumber, 0, ByteArray(0))) }
+            runSuspendCatching { write(packet(requestNumber, 0, ByteArray(0))) }
                 .onFailure { onLog?.invoke("[GARMIN-MLR] ACK write failed: $it") }
         }
     }

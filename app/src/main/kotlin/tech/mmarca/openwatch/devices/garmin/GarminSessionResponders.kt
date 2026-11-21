@@ -4,6 +4,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.devices.weather.WeatherSnapshot
+import tech.mmarca.openwatch.core.performance.runSuspendCatching
 
 /** What a session's owner provides for the watch's asks. A missing hook refuses that ask. */
 data class GarminSessionHooks(
@@ -80,14 +81,14 @@ internal class GarminSessionResponders(
         // here would otherwise take the process down.
         if (httpReply != null) {
             scope.launch {
-                runCatching { protobuf.respond(requestId, httpReply) }
+                runSuspendCatching { protobuf.respond(requestId, httpReply) }
                     .onFailure { GarminLog.log("[GARMIN-PB] reply #$requestId failed: $it") }
             }
             return
         }
         val coreReply = coreLocation?.handle(payload) ?: return
         scope.launch {
-            runCatching {
+            runSuspendCatching {
                 protobuf.respond(requestId, coreReply.payload)
                 coreReply.followUp?.let { followUp ->
                     protobuf.request(followUp, label = "location update", timeout = 5.seconds)

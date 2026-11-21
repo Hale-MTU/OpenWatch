@@ -30,6 +30,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
+import tech.mmarca.openwatch.core.performance.runSuspendCatching
 
 /** Thrown when the watch cannot be reached or exposes no supported Garmin transport. */
 class GarminGattClientException(message: String) : Exception(message)
@@ -286,13 +287,13 @@ class GarminGattClient(
             onGfdiClosed = {
                 // Re-register rather than tear down: on a held link this is recoverable.
                 healScope.launch {
-                    runCatching { ml?.reopenGfdi() }
+                    runSuspendCatching { ml?.reopenGfdi() }
                         .onFailure { log("[GARMIN-BLE] GFDI reopen failed: $it") }
                 }
             },
             onControlPacket = { packet ->
                 healScope.launch {
-                    runCatching { writeToCharacteristic(packet) }
+                    runSuspendCatching { writeToCharacteristic(packet) }
                         .onFailure { error ->
                             log("[GARMIN-BLE] control write failed: $error")
                             // Fail the open now rather than at its timeout.
@@ -420,7 +421,7 @@ class GarminGattClient(
             throw GarminGattClientException("Could not start service discovery")
         }
         val services = withTimeoutOrNull(DISCOVER_TIMEOUT) {
-            runCatching { servicesSignal.await() }.getOrNull()
+            runSuspendCatching { servicesSignal.await() }.getOrNull()
         }
         if (services == null) {
             close()
@@ -444,7 +445,7 @@ class GarminGattClient(
             val dialled = device.connectGatt(context, false, callback, BluetoothDevice.TRANSPORT_LE)
             gatt = dialled
             val outcome = withTimeoutOrNull(CONNECT_TIMEOUT) {
-                runCatching { connectedSignal.await() }
+                runSuspendCatching { connectedSignal.await() }
             }
             if (outcome?.isSuccess == true) return dialled
             hangUp(dialled)
@@ -550,7 +551,7 @@ class GarminGattClient(
             // Paced, not required: some stacks omit the callback for a write without response.
             // An explicit failure is still an error.
             val outcome = withTimeoutOrNull(WRITE_TIMEOUT) {
-                runCatching { completion.await() }
+                runSuspendCatching { completion.await() }
             }
             writeCompleted = null
             outcome?.getOrThrow()

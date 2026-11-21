@@ -32,6 +32,7 @@ suspend fun <T> GarminMlTransport.useServiceChannel(
         }
         return block(channel)
     } finally {
+        // Teardown that must finish: cancellation is swallowed here on purpose.
         runCatching { closeService(serviceCode) }
         clearServiceHandler(serviceCode)
     }

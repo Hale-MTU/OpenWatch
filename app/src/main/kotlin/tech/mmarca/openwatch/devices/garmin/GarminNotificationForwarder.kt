@@ -12,6 +12,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.devices.core.RadioLeases
+import tech.mmarca.openwatch.core.performance.runSuspendCatching
 
 /**
  * The forwarder's view of the radio lease. A seam over [RadioLeases] so the
@@ -268,6 +269,7 @@ class GarminNotificationForwarder(
                 ),
             )
             if (disposed) {
+                // Teardown that must finish: cancellation is swallowed here on purpose.
                 runCatching { opened.close() }
                 lease.release(address, GarminRadioOwners.NOTIFICATIONS)
                 return
@@ -388,9 +390,9 @@ class GarminNotificationForwarder(
         while (queue.isNotEmpty()) {
             when (val item = queue.removeAt(0)) {
                 Pending.KeepAlive -> continue
-                is Pending.Post -> runCatching { current.push(item.notification) }
+                is Pending.Post -> runSuspendCatching { current.push(item.notification) }
                     .onFailure { GarminLog.log("[GARMIN-NOTIFY] failed to announce: $it") }
-                is Pending.Withdraw -> runCatching { current.withdraw(item.id) }
+                is Pending.Withdraw -> runSuspendCatching { current.withdraw(item.id) }
                     .onFailure { GarminLog.log("[GARMIN-NOTIFY] failed to announce: $it") }
             }
         }
@@ -419,6 +421,7 @@ class GarminNotificationForwarder(
         renewJob = null
         cancelUnlessSelf(goneJob)
         goneJob = null
+        // Teardown that must finish: cancellation is swallowed here on purpose.
         if (current != null) runCatching { current.close() }
         lease.release(address, GarminRadioOwners.NOTIFICATIONS)
 

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import tech.mmarca.openwatch.core.performance.runSuspendCatching
 
 /**
  * An open conversation with the watch's notification service. Held open
@@ -141,20 +142,20 @@ class GarminBleNotificationLink private constructor(
             GarminLog.log("[GARMIN-LIVE] live readings need the V2 transport")
             return
         }
-        runCatching {
+        runSuspendCatching {
             if (enabled) ml.openService(service.code) else ml.closeService(service.code)
         }.onFailure { GarminLog.log("[GARMIN-LIVE] could not toggle ${service.name}: $it") }
     }
 
     override suspend fun pushMusic(state: GarminMusicState) {
         if (closed) return
-        runCatching { session.pushMusic(state) }
+        runSuspendCatching { session.pushMusic(state) }
             .onFailure { GarminLog.log("[GARMIN-MUSIC] could not send the player state: $it") }
     }
 
     override suspend fun setHostForeground(foreground: Boolean) {
         if (closed) return
-        runCatching { session.notifyHostForeground(foreground) }
+        runSuspendCatching { session.notifyHostForeground(foreground) }
             .onFailure { GarminLog.log("[GARMIN-NOTIFY] could not send foreground state: $it") }
     }
 

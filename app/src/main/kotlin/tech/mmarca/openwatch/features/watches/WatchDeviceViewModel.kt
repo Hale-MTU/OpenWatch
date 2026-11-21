@@ -49,6 +49,7 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import kotlinx.coroutines.plus
 import tech.mmarca.openwatch.core.performance.ApplicationScope
+import tech.mmarca.openwatch.core.performance.runSuspendCatching
 
 /** Everything the device view shows about one watch. */
 @Immutable
@@ -445,7 +446,7 @@ class WatchDeviceViewModel @Inject constructor(
     /** Re-reads the background grant: on resume, and after the permission screen returns. */
     fun refreshBackgroundAccess() {
         viewModelScope.launch {
-            val missing = runCatching { healthConnectManager.isBackgroundReadGrantMissing() }.getOrDefault(false)
+            val missing = runSuspendCatching { healthConnectManager.isBackgroundReadGrantMissing() }.getOrDefault(false)
             localState.update { it.copy(backgroundReadMissing = missing) }
         }
     }
@@ -513,17 +514,17 @@ class WatchDeviceViewModel @Inject constructor(
         if (device.isGarminGfdi) {
             stateStore.clear(deviceId)
             housekeepingScope.launch {
-                runCatching { onboardGarminWatch.forget(device.address) }
+                runSuspendCatching { onboardGarminWatch.forget(device.address) }
             }
             if (wasLastGarminWatch) {
                 housekeepingScope.launch {
-                    runCatching { garminLocalData.clearAfterLastWatchRemoved(deleteWatchHistory) }
+                    runSuspendCatching { garminLocalData.clearAfterLastWatchRemoved(deleteWatchHistory) }
                 }
             }
         } else if (device.isWearosWatch) {
             wearOsLinkStore.clear(deviceId, device.address)
             housekeepingScope.launch {
-                runCatching { onboardWearOsWatch.forget(device.address) }
+                runSuspendCatching { onboardWearOsWatch.forget(device.address) }
             }
         }
     }

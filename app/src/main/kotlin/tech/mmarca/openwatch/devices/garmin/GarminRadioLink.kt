@@ -26,6 +26,7 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPhase
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.weather.WeatherStore
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.core.performance.runSuspendCatching
 
 /** What a pull landed, and why it stopped early if it did. */
 data class GarminPullResult(
@@ -159,7 +160,7 @@ class GarminGattRadio @Inject constructor(
             // Battery percentage rides the same link via the protobuf DeviceStatusService.
             // Collected beside the pull; bounded by a timeout.
             val batteryJob = launch {
-                runCatching {
+                runSuspendCatching {
                     if (withTimeoutOrNull(HANDSHAKE_TIMEOUT) { handshakeReady.await() } == null) {
                         return@launch
                     }

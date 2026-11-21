@@ -83,8 +83,8 @@ Do not break these without an explicit decision.
 - **The ratchets hold.** `DevicesLayeringTest` (no `@Module` under `devices/`),
   `CompanionPairingWiringTest` (an Activity calls `attachToActivity`),
   `GarminSessionConfinementTest`, `FileSizeRatchetTest` (800 lines, with a ceiling list),
-  `NoRunBlockingRatchetTest` and `HealthPermissionsTest`. When one fails, fix the code, not the
-  test.
+  `NoRunBlockingRatchetTest`, `SuspendRunCatchingRatchetTest` and `HealthPermissionsTest`.
+  When one fails, fix the code, not the test.
 - **A health permission is in the catalog, or it is not declared.**
   `healthconnect/HealthDataCatalog` lists every health permission of both manifests by the
   device its data comes from; the app shows that list, and `HealthPermissionsTest` holds the

@@ -11,6 +11,7 @@ import tech.mmarca.openwatch.data.repository.contract.GarminWellnessRepository
 import tech.mmarca.openwatch.devices.garmin.wellness.SleepMinuteRetention
 import kotlinx.coroutines.plus
 import tech.mmarca.openwatch.core.performance.ApplicationScope
+import tech.mmarca.openwatch.core.performance.runSuspendCatching
 
 /**
  * Owns what a Garmin watch leaves on the phone outside Health Connect:
@@ -33,7 +34,7 @@ class GarminLocalData @Inject constructor(
 
     /** For app start, fire-and-forget. */
     fun pruneOnAppStart() {
-        housekeepingScope.launch { runCatching { prune(Instant.now()) } }
+        housekeepingScope.launch { runSuspendCatching { prune(Instant.now()) } }
     }
 
     /** Applies both retention rules. A sync does the same. */
