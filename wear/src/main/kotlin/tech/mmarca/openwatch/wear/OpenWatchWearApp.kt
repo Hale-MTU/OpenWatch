@@ -8,6 +8,7 @@ import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import tech.mmarca.openwatch.wear.features.dashboard.DashboardScreen
+import tech.mmarca.openwatch.wear.features.metric.MetricDetailScreen
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
@@ -40,8 +41,20 @@ fun OpenWatchWearApp(
                         tiles = MetricTile.DefaultTiles.filter { it in currentState.availableMetrics },
                         metrics = currentState.metrics,
                         unitSystem = currentState.preferences.unitSystem,
+                        onOpenMetric = { navController.navigate(WearRoutes.metric(it)) },
                         onStartActivity = onStartWorkout,
                         onOpenStatus = { navController.navigate(WearRoutes.STATUS) },
+                    )
+                }
+                composable(WearRoutes.METRIC) { entry ->
+                    val metric = MetricTile.valueOf(checkNotNull(entry.arguments?.getString(WearRoutes.METRIC_ARG)))
+                    MetricDetailScreen(
+                        metric = metric,
+                        state = currentState.metrics[metric] ?: MetricUiState(),
+                        unitSystem = currentState.preferences.unitSystem,
+                        maxHeartRate = currentState.preferences.maxHeartRate,
+                        restingHeartRate = currentState.metrics[MetricTile.RESTING_HEART_RATE]?.current,
+                        sleepStages = currentState.sleepStages,
                     )
                 }
                 composable(WearRoutes.STATUS) { statusScreen() }
