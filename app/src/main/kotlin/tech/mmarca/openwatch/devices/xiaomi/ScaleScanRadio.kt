@@ -13,7 +13,7 @@ import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import tech.mmarca.openwatch.sensors.ble.hasBluetoothScanPermission
+import tech.mmarca.openwatch.devices.core.ble.hasBluetoothScanPermission
 
 /** Whether the phone is listening for the scale, and if not, what stands in the way. */
 enum class ScaleListenerStatus {

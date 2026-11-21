@@ -41,6 +41,7 @@ import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import tech.mmarca.openwatch.devices.core.ble.BleUuids
 
 /**
  * The BLE discovery scan the add-watch flow uses: what is advertising, what is

@@ -1,4 +1,4 @@
-package tech.mmarca.openwatch.sensors.ble
+package tech.mmarca.openwatch.devices.core.ble
 
 import android.Manifest
 import android.annotation.SuppressLint

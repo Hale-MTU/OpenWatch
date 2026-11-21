@@ -6,7 +6,7 @@ import tech.mmarca.openwatch.devices.core.DeviceScanClassifier
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleDiscoveredDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
-import tech.mmarca.openwatch.sensors.ble.BleUuids
+import tech.mmarca.openwatch.devices.core.ble.BleUuids
 
 /**
  * Classifies a scanned device for Garmin by its advertised name: a watch
