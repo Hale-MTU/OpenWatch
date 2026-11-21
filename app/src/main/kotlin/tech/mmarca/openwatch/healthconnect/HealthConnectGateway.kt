@@ -251,8 +251,13 @@ class HealthConnectGateway(
         ).records.firstOrNull()
     }
 
-    /** The raw client, for the activity writer only. Everything else goes through a method here. */
-    internal fun client(): HealthConnectClient = clientProvider()
+    /**
+     * Writes a workout and the records beside it in one request, behind the sync switch like
+     * every other write; returns the records' ids. One request, not [insertImportedRecords]'
+     * chunks: a session and its samples land together or not at all.
+     */
+    suspend fun insertActivityRecords(records: List<Record>): List<String> =
+        withSyncEnabled { clientProvider().insertRecords(records).recordIdsList }
 
     private suspend fun <T> withSyncEnabled(block: suspend () -> T): T {
         syncGate.requireEnabled()

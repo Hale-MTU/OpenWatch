@@ -13,6 +13,7 @@ import java.time.Instant
 import java.util.TimeZone
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -27,6 +28,7 @@ import tech.mmarca.openwatch.data.repository.contract.ActivityRepository
 import tech.mmarca.openwatch.domain.model.ActivityRecordSource
 import tech.mmarca.openwatch.domain.model.ActivityWriteRequest
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
+import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 
 /**
  * Only ACTIVITY files are considered, a file the parser rejects is skipped
@@ -155,6 +157,18 @@ class GarminActivityImporterTest {
         assertEquals(0, result.written)
         assertEquals(listOf(ride), result.failedWrites)
         assertEquals(listOf(ride), result.retry)
+    }
+
+    @Test
+    fun `a paused Health Connect sync is thrown, so every workout waits instead of failing one by one`() = runTest {
+        val importer = importer()
+        coEvery { activityRepository.writeActivityEntries(any()) } throws HealthConnectSyncDisabledException()
+        val ride = file(GarminFileType.ACTIVITY, rideWithAscent(totalAscentMeters = 12))
+
+        val thrown = runCatching { importer.import(listOf(ride)) }.exceptionOrNull()
+
+        assertTrue(thrown is HealthConnectSyncDisabledException)
+        coVerify(exactly = 0) { activityRepository.writeActivityEntry(any()) }
     }
 
 @Test

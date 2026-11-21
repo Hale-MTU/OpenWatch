@@ -245,7 +245,7 @@ class GarminWatchSyncService @Inject constructor(
                 "write exercise data in Health Connect, then sync again."
         activities.failedWrites.isNotEmpty() ->
             "${activities.failedWrites.size} workout(s) could not be saved to Health Connect. " +
-                "The next sync fetches them again."
+                "The next sync tries them again."
         else -> null
     }
 

@@ -26,13 +26,12 @@ class GarminDownloadImport @Inject constructor(
         val wellnessWithheld = importer.import(files)
         // Same path as a hand-picked FIT folder. Per-file failures come back in the result.
         val activities = activityImporter.import(files).copy(wellnessWithheldPermissions = wellnessWithheld)
-        // Files with no stable key are fetched again every sync by design. A workout that
-        // did not reach Health Connect keeps no key either, so it comes back.
-        stateStore.recordSyncedFileKeys(
-            deviceId,
-            (files - activities.retry.toSet()).mapNotNull { it.entry.dedupKey },
-        )
-        fileStore.markImported(files)
+        // Files with no stable key are fetched again every sync by design. A workout that did
+        // not reach Health Connect keeps no key, and its saved copy stays pending: the watch
+        // archived it on download and will not offer it again, so the copy is its only way in.
+        val retry = activities.retry.toSet()
+        stateStore.recordSyncedFileKeys(deviceId, (files - retry).mapNotNull { it.entry.dedupKey })
+        fileStore.markImported(files - retry)
         return activities
     }
 }

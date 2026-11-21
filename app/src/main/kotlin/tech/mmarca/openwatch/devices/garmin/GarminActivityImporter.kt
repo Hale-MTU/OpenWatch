@@ -15,6 +15,7 @@ import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.data.repository.contract.ActivityRepository
 import tech.mmarca.openwatch.domain.model.ActivityRecordSource
 import tech.mmarca.openwatch.domain.model.ActivityWriteRequest
+import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 
 /**
  * What an activity import did with the files it was given. A file that did not convert is
@@ -34,14 +35,19 @@ data class GarminActivityImportResult(
      */
     val wellnessWithheldPermissions: Set<String> = emptySet(),
 ) {
-    /** Files the next sync must fetch again, so their keys must not be recorded. */
+    /**
+     * Files whose workout did not land. The watch archived them on download and will not offer
+     * them again, so their keys are not recorded and their saved copies stay pending: the next
+     * sync imports them from the phone.
+     */
     val retry: List<GarminDownloadedFile> get() = missingPermission + failedWrites
 }
 
 /**
  * Imports the activity FIT files a sync pulled, down the same path a folder
- * import uses ([toImportWriteRequest]), so the two cannot differ. Never throws except cancellation:
- * per-file failures are reported in the result, not thrown.
+ * import uses ([toImportWriteRequest]), so the two cannot differ. Throws only for
+ * cancellation and for a paused Health Connect sync, which holds every file for later
+ * rather than marking each one failed: per-file failures are reported in the result.
  */
 @Singleton
 class GarminActivityImporter @Inject constructor(
@@ -101,6 +107,8 @@ class GarminActivityImporter @Inject constructor(
                 written = pending.size
             } catch (error: CancellationException) {
                 throw error
+            } catch (error: HealthConnectSyncDisabledException) {
+                throw error
             } catch (error: Exception) {
                 // The batch is atomic; retry file by file so only the bad one fails.
                 GarminLog.log("[GARMIN-IMPORT] activity batch failed, retrying singly: $error")
@@ -109,6 +117,8 @@ class GarminActivityImporter @Inject constructor(
                         activityRepository.writeActivityEntry(request)
                         written += 1
                     } catch (retryError: CancellationException) {
+                        throw retryError
+                    } catch (retryError: HealthConnectSyncDisabledException) {
                         throw retryError
                     } catch (retryError: Exception) {
                         GarminLog.log("[GARMIN-IMPORT] activity write failed: $retryError")

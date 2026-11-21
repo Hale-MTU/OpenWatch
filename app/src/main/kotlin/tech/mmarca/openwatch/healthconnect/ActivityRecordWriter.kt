@@ -1,7 +1,6 @@
 package tech.mmarca.openwatch.healthconnect
 
 import android.util.Log
-import androidx.health.connect.client.HealthConnectClient
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.CyclingPedalingCadenceRecord
 import androidx.health.connect.client.records.DistanceRecord
@@ -45,7 +44,11 @@ import tech.mmarca.openwatch.domain.model.importSessionClientRecordId
  * Only the write half lives here; OpenWatch reads no activity back.
  */
 class ActivityRecordWriter(
-    private val client: () -> HealthConnectClient,
+    /**
+     * Writes one batch and returns the records' ids. In the app it is the gateway's, so the
+     * sync switch covers workouts like every other write.
+     */
+    private val insert: suspend (List<Record>) -> List<String>,
 ) {
     suspend fun writeActivityEntry(request: ActivityWriteRequest): String = withContext(Dispatchers.IO) {
         validateActivityWriteRequest(request)
@@ -101,7 +104,7 @@ class ActivityRecordWriter(
 
 
     private suspend fun insertShrinkingRoutes(records: List<Record>): List<String> =
-        withShrunkRoutes(records) { client().insertRecords(it).recordIdsList }
+        withShrunkRoutes(records) { insert(it) }
 
     private suspend fun <T> withShrunkRoutes(
         records: List<Record>,

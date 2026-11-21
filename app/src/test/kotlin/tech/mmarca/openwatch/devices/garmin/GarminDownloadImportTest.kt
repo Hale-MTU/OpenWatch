@@ -73,10 +73,12 @@ class GarminDownloadImportTest {
     }
 
     @Test
-    fun `a workout that did not reach Health Connect keeps no key`() = runTest {
+    fun `a workout that did not reach Health Connect keeps no key and stays pending`() = runTest {
         val landed = file(1)
         val refused = file(2)
         val files = listOf(landed, refused)
+        // The watch archived both on download: the saved copy is the refused one's only way back.
+        files.forEach { fileStore.save(it, now = Instant.parse("2026-07-22T10:05:00Z"), deviceId = WATCH) }
         coEvery { importer.import(files) } returns emptySet()
         coEvery { activityImporter.import(files) } returns
             GarminActivityImportResult(written = 1, missingPermission = listOf(refused))
@@ -85,6 +87,7 @@ class GarminDownloadImportTest {
 
         verify { stateStore.recordSyncedFileKeys(WATCH, listOf(landed.entry.dedupKey!!)) }
         assertEquals(listOf(refused), result.retry)
+        assertEquals(listOf(refused.entry.fileIndex), fileStore.pending(WATCH).map { it.entry.fileIndex })
     }
 
     @Test

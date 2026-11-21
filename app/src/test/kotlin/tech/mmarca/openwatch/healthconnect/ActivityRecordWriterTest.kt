@@ -35,7 +35,7 @@ import tech.mmarca.openwatch.domain.model.importSessionClientRecordId
 class ActivityRecordWriterTest {
 
     private val fake = FakeHealthConnectClient()
-    private val writer = ActivityRecordWriter { fake }
+    private val writer = ActivityRecordWriter { fake.insertRecords(it).recordIdsList }
 
     // The JVM android.jar stub throws on every Log call.
     @Before
