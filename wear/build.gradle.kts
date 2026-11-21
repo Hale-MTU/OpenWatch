@@ -52,6 +52,11 @@ android {
     buildFeatures {
         compose = true
     }
+
+    // The store tests run twice: on the JVM under Robolectric, in every watch gate, and on a
+    // watch as instrumented tests, against the watch's own SQLite.
+    sourceSets.getByName("test").kotlin.directories.add("src/sharedTest/kotlin")
+    sourceSets.getByName("androidTest").kotlin.directories.add("src/sharedTest/kotlin")
 }
 
 dependencies {
@@ -78,6 +83,10 @@ dependencies {
     // A suspend function as the ListenableFuture a TileService returns.
     implementation(libs.androidx.concurrent.futures.ktx)
     testImplementation(libs.junit4)
+    // The shared store tests, on the JVM.
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.test.ext.junit)
     debugImplementation(libs.androidx.compose.ui.tooling)
     // Real org.json for local tests (the android.jar copy is a throwing stub): the feature vector is JSON.
     testImplementation(libs.org.json)
