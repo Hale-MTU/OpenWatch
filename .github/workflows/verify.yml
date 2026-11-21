@@ -52,6 +52,10 @@ jobs:
       # file that does not exist would be a 404 there, so it fails here.
       - name: Check the docs' links
         run: python3 scripts/sync-wiki.py --repo "$GITHUB_REPOSITORY" --check
+      # The submodules are composite builds with catalogs of their own; a shared version that
+      # drifted would surface as a plugin conflict or a silent upgrade.
+      - name: Check the versions shared with the submodules
+        run: python3 scripts/ci-catalog-alignment.py
       - id: changes
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
