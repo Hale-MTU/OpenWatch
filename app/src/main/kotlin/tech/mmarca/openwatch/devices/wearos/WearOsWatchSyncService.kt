@@ -36,6 +36,7 @@ import tech.mmarca.openwatch.devices.core.sync.SyncFailure
 import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.sync.HealthSeries
 import tech.mmarca.openwatch.data.repository.RecordWrite
+import tech.mmarca.openwatch.data.repository.insertNewer
 import tech.mmarca.openwatch.data.repository.insertWithOutcomes
 import tech.mmarca.healthcalculations.insights.sleepNightWindow
 import tech.mmarca.healthcalculations.insights.WearSleepEstimator
@@ -336,12 +337,10 @@ class WearOsWatchSyncService(
             pageSessionsRead = false
             val newest = page.maxOfOrNull { it.start }
             if (newest != null) {
-                // Minutes before the cursor are unchanged. The cursor minute is written apart, so when it is
-                // unchanged too the batch does not fall back to one by one.
+                // Minutes before the cursor are unchanged; the cursor minute is pulled again, and
+                // the write reads whether it grew.
                 val unwritten = page.filter { !it.start.isBefore(cursor) }
-                val (again, fresh) = unwritten.partition { !it.start.isAfter(cursor) }
-                writeBatch(again)
-                writeBatch(fresh)
+                writeBatch(unwritten)
                 pulledSteps += unwritten.sumOf { it.steps }
                 if (newest.isAfter(cursors.stepsCursor(device.id))) cursors.setStepsCursor(device.id, newest)
                 since = newest
@@ -414,7 +413,8 @@ class WearOsWatchSyncService(
      */
     private suspend fun writeSteps(minutes: List<WearOsStepMinute>, stepsCursor: Instant, progress: WearOsSyncProgress): List<WearOsStepMinute> {
         val records = WearOsStepsImport.records(minutes, zone())
-        val changed = records.zip(importRepository.insertWithOutcomes(records))
+        // Read first: the platform's Health Connect takes an unchanged minute again without a word.
+        val changed = records.zip(importRepository.insertNewer(records))
             .filter { (_, outcome) -> outcome == RecordWrite.WRITTEN }
             .mapTo(HashSet()) { (record, _) -> record.startTime }
         progress.stepMinutes += changed.size

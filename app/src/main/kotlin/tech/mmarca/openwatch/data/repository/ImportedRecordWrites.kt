@@ -81,6 +81,25 @@ private suspend fun HealthRecordStore.insertBatchWithOutcomes(records: List<Reco
 }
 
 /**
+ * Writes only what this app does not already hold at its version or newer, read first, and says
+ * which: for a caller whose next step depends on what changed. The platform's Health Connect
+ * replaces an equal version without a word, so [insertWithOutcomes] reads every record there as
+ * written. One read per record type over the records' span; a type with no known span is
+ * written whole, as by [insertWithOutcomes].
+ */
+suspend fun HealthRecordStore.insertNewer(records: List<Record>): List<RecordWrite> {
+    if (records.isEmpty()) return emptyList()
+    val stored = storedVersions(records) ?: return insertWithOutcomes(records)
+    val newer = records.indices.filter { index ->
+        val version = stored[records[index].clientId]
+        version == null || version < records[index].metadata.clientRecordVersion
+    }
+    val outcomes = MutableList(records.size) { RecordWrite.PRESENT }
+    insertWithOutcomes(newer.map(records::get)).forEachIndexed { at, outcome -> outcomes[newer[at]] = outcome }
+    return outcomes
+}
+
+/**
  * Writes [record] over the stored one with the same `clientRecordId`. A higher version replaces
  * it on its own; a provider that refuses anyway has the stored one deleted first, once.
  */

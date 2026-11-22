@@ -165,6 +165,9 @@ class WearOsWatchSyncServiceTest {
     /** A record type whose write permission the user withheld. */
     private var refused: (androidx.health.connect.client.records.Record) -> Boolean = { false }
 
+    /** True for the APK on older Android, which refuses a batch with a stored id; false for the platform, which takes it. */
+    private var refusesStored = true
+
     /** The body weight the walking energy reads; null as for a profile without one. */
     private var weight: Double? = 70.0
 
@@ -179,7 +182,7 @@ class WearOsWatchSyncServiceTest {
                 val id = record.metadata.clientRecordId ?: return@any false
                 (healthConnectVersions[id] ?: Long.MIN_VALUE) >= record.metadata.clientRecordVersion
             }
-            if (present) throw IllegalStateException("clientRecordId already exists")
+            if (present && refusesStored) throw IllegalStateException("clientRecordId already exists")
             records.forEach { record -> record.metadata.clientRecordId?.let { healthConnectVersions[it] = record.metadata.clientRecordVersion } }
         }
         // What the write path reads to diagnose a refusal: this app's own ids and versions.
@@ -305,7 +308,7 @@ class WearOsWatchSyncServiceTest {
     }
 
     @Test
-    fun `an unchanged cursor minute does not make the new minutes fall back to one by one`() = runTest {
+    fun `an unchanged cursor minute is read as stored and not written again`() = runTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 40)
         service().sync(WATCH, SyncTrigger.REQUESTED, null)
@@ -315,13 +318,32 @@ class WearOsWatchSyncServiceTest {
         insertCalls.clear()
         val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
-        // The cursor minute is written alone and refused as present; its cadence and energy are not tried
-        // again, and no record is tried twice.
-        assertEquals(listOf(t0), insertCalls.first().map { (it as StepsRecord).startTime })
+        // The read says the cursor minute is there at its count: neither it nor its cadence and energy
+        // is tried again, and no record is tried twice.
+        assertEquals(listOf(t0.plusSeconds(60), t0.plusSeconds(120)), insertedOf<StepsRecord>().map { it.startTime })
         val tried = insertCalls.flatten()
-        assertEquals(listOf(t0), tried.filter { it.metadata.clientRecordId!!.endsWith("_${t0.toEpochMilli()}") }.map { (it as StepsRecord).startTime })
+        assertTrue(tried.none { it.metadata.clientRecordId!!.endsWith("_${t0.toEpochMilli()}") })
         assertEquals(tried.size, tried.map { it.metadata.clientRecordId }.distinct().size)
         assertEquals(synced(stepMinutes = 2), result)
+    }
+
+    @Test
+    fun `on the platform an unchanged minute is not written again, nor are its estimates`() = runTest {
+        // Android 14 and newer take a stored id without a word, so only the read tells what changed.
+        refusesStored = false
+        pages += WearOsHeartRatePage(emptyList(), hasMore = false)
+        watchSteps += WearOsStepMinute(t0, 40)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        watchSteps += WearOsStepMinute(t0.plusSeconds(60), 5)
+        pages += WearOsHeartRatePage(emptyList(), hasMore = false)
+        insertCalls.clear()
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        assertEquals(listOf(t0.plusSeconds(60)), insertedOf<StepsRecord>().map { it.startTime })
+        assertTrue(insertedOf<StepsCadenceRecord>().none { it.startTime == t0 })
+        assertTrue(insertedOf<ActiveCaloriesBurnedRecord>().none { it.startTime == t0 })
+        assertEquals(synced(stepMinutes = 1), result)
     }
 
     @Test
@@ -593,8 +615,8 @@ class WearOsWatchSyncServiceTest {
         service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(t0.minusSeconds(60).minusMillis(1), stepPullsSince.first())
-        // Only the cursor minute is tried again; t0 and t0 + 1 min are not rewritten.
-        assertEquals(listOf(t0.plusSeconds(120)), insertedOf<StepsRecord>().map { it.startTime })
+        // The cursor minute is read as unchanged, so no step minute is rewritten.
+        assertEquals(emptyList<Instant>(), insertedOf<StepsRecord>().map { it.startTime })
         assertEquals(listOf(2.0), insertedOf<androidx.health.connect.client.records.FloorsClimbedRecord>().map { it.floors })
     }
 

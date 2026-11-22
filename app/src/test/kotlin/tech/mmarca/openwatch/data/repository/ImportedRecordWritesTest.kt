@@ -122,6 +122,17 @@ class ImportedRecordWritesTest {
     }
 
     @Test
+    fun `read first, only what is absent or newer is written, on the platform too`() = runTest {
+        storeFirst(record("b", 1, version = 5), record("c", 2, version = 5))
+
+        val outcomes = store.insertNewer(listOf(record("a", 0), record("b", 1, version = 5), record("c", 2, version = 6)))
+
+        assertEquals(listOf(RecordWrite.WRITTEN, RecordWrite.PRESENT, RecordWrite.WRITTEN), outcomes)
+        assertEquals(listOf(listOf("a", "c")), store.inserts)
+        assertEquals(1, store.reads)
+    }
+
+    @Test
     fun `a replacement is one insert on the platform, and a delete first where the provider refuses`() = runTest {
         storeFirst(record("b", 1, version = 1))
         store.replaceImportedRecord(record("b", 1, version = 2))
