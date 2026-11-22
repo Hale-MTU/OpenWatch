@@ -45,6 +45,7 @@ import tech.mmarca.healthcalculations.model.WearSleepMinute
 import tech.mmarca.openwatch.data.repository.replaceImportedRecord
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
+import tech.mmarca.openwatch.healthconnect.isHealthConnectRateLimit
 import tech.mmarca.healthcalculations.insights.AscentCredit
 import tech.mmarca.openwatch.devices.core.sync.syncBudgetSpent
 
@@ -213,6 +214,7 @@ class WearOsWatchSyncService(
         } catch (error: Exception) {
             if (error.isPermissionFailure()) return DeviceSyncResult.Failed(permissionError(error))
             if (error is HealthConnectSyncDisabledException) return DeviceSyncResult.Failed(SyncFailure.SyncPaused)
+            if (error.isHealthConnectRateLimit()) return DeviceSyncResult.Failed(SyncFailure.RateLimited, progress.outcome())
             WearOsLog.log("sync failed: $error")
             return DeviceSyncResult.Failed(SyncFailure.Unknown(error))
         }

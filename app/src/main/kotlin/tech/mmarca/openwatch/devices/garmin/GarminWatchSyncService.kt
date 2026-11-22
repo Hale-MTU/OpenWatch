@@ -34,6 +34,7 @@ import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.withRadioLease
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
+import tech.mmarca.openwatch.healthconnect.isHealthConnectRateLimit
 import kotlinx.coroutines.plus
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 import tech.mmarca.openwatch.devices.core.RadioLeaseRegistry
@@ -263,6 +264,7 @@ class GarminWatchSyncService @Inject constructor(
     private fun failed(error: Throwable): DeviceSyncResult.Failed = DeviceSyncResult.Failed(
         when {
             error.isPermissionFailure() -> SyncFailure.HealthConnectPermission
+            error.isHealthConnectRateLimit() -> SyncFailure.RateLimited
             error is HealthConnectSyncDisabledException -> SyncFailure.SyncPaused
             error is GarminGattClientException -> SyncFailure.Unreachable
             else -> SyncFailure.Unknown(error)

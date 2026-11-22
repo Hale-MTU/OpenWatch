@@ -399,6 +399,7 @@
     <string name="sync_failed_health_connect_permission">Health Connect refused a write for want of permission. Allow OpenWatch to write this data in Health Connect, then sync again.</string>
     <string name="sync_failed_bluetooth_permission">Allow OpenWatch to find and connect to nearby devices, then sync again.</string>
     <string name="sync_failed_unreachable">The device did not answer. Keep it close, with Bluetooth on, and try again.</string>
+    <string name="sync_failed_rate_limited">Health Connect asked OpenWatch to slow down. What arrived was saved; the next sync goes on from there.</string>
     <string name="sync_failed_not_saved">Some records could not be saved to Health Connect. The next sync tries them again.</string>
     <plurals name="sync_written_files">
         <item quantity="one">%1$d file synced</item>

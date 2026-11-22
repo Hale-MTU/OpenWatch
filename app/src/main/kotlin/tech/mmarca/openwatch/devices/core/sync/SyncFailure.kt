@@ -38,6 +38,11 @@ sealed interface SyncFailure {
         override val transient: Boolean get() = true
     }
 
+    /** Health Connect refused for this app's call quota. What was written stays; the next sync goes on from there. */
+    data object RateLimited : SyncFailure {
+        override val transient: Boolean get() = true
+    }
+
     /** Health Connect would not take some records for a reason other than a grant; the next sync tries again. */
     data object NotSaved : SyncFailure {
         override val transient: Boolean get() = true

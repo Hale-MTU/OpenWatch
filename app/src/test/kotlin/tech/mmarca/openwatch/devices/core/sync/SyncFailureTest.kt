@@ -11,6 +11,7 @@ class SyncFailureTest {
             SyncFailure.RadioBusy,
             SyncFailure.Unreachable,
             SyncFailure.Interrupted,
+            SyncFailure.RateLimited,
             SyncFailure.NotSaved,
             SyncFailure.Unknown(IllegalStateException("link dropped")),
             SyncFailure.Described(message = 1, transient = true),

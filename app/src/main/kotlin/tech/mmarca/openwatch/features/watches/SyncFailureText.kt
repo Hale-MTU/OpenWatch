@@ -14,6 +14,7 @@ internal fun SyncFailure.toScreenError(): ScreenError = ScreenError.Text(
         SyncFailure.RadioBusy -> R.string.settings_watch_point_failed_busy
         SyncFailure.Unreachable -> R.string.sync_failed_unreachable
         SyncFailure.Interrupted -> R.string.settings_watch_wearos_fail_partial
+        SyncFailure.RateLimited -> R.string.sync_failed_rate_limited
         SyncFailure.NotSaved -> R.string.sync_failed_not_saved
         is SyncFailure.Described -> message
         is SyncFailure.Unknown -> R.string.settings_watch_wearos_fail_generic
