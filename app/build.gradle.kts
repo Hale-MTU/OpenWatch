@@ -102,7 +102,8 @@ android {
 }
 
 // Nothing runs the minified build before it ships, so every R8 task is followed by a check
-// that it kept what is reached by name: the manifest components. A failure here fails the build.
+// that it kept what is reached by name: the manifest components, and the members through which
+// kotlinx-serialization finds a navigation route's serializer. A failure here fails the build.
 androidComponents {
     onVariants { variant ->
         val variantName = variant.name.replaceFirstChar { it.uppercase() }

@@ -1,7 +1,7 @@
 package tech.mmarca.openwatch.features.watches
 
+import android.app.Application
 import android.content.Context
-import androidx.lifecycle.SavedStateHandle
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
@@ -17,16 +17,20 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import tech.mmarca.openwatch.data.repository.testDeviceStateStore
-import tech.mmarca.openwatch.data.repository.testDeviceRepository
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import tech.mmarca.openwatch.core.geo.GeoCoordinateError
 import tech.mmarca.openwatch.core.geo.GeoCoordinateParseResult
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import tech.mmarca.openwatch.data.repository.testDeviceRepository
+import tech.mmarca.openwatch.data.repository.testDeviceStateStore
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
-import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
+import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.garmin.GarminCapability
 import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
 import tech.mmarca.openwatch.devices.garmin.GarminSendFileResult
@@ -34,16 +38,14 @@ import tech.mmarca.openwatch.devices.garmin.GarminWaypoint
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
-import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
-import tech.mmarca.openwatch.navigation.WATCH_POINT_LATITUDE_ARG
-import tech.mmarca.openwatch.navigation.WATCH_POINT_LONGITUDE_ARG
-import tech.mmarca.openwatch.navigation.WATCH_POINT_NAME_ARG
-import tech.mmarca.openwatch.navigation.WATCH_POINT_UNREADABLE_ARG
+import tech.mmarca.openwatch.navigation.WatchSendPoint
+import tech.mmarca.openwatch.navigation.routeHandle
 import tech.mmarca.openwatch.util.MainDispatcherRule
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 /** The form picks a watch, reads the coordinates, and never sends on its own. */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], application = Application::class)
 class WatchSendPointViewModelTest {
 
     @get:Rule
@@ -81,7 +83,7 @@ class WatchSendPointViewModelTest {
         integration = DeviceIntegration.GARMIN,
     )
 
-    private fun TestScope.viewModel(vararg args: Pair<String, String?>): WatchSendPointViewModel {
+    private fun TestScope.viewModel(route: WatchSendPoint = WatchSendPoint()): WatchSendPointViewModel {
         val syncController = DeviceSyncController(repo, syncPort, backgroundScope)
         val controller = GarminWatchActionsController(
             deviceRepository = repo,
@@ -95,7 +97,7 @@ class WatchSendPointViewModelTest {
             scope = backgroundScope,
         )
         return WatchSendPointViewModel(
-            savedStateHandle = SavedStateHandle(mapOf(*args)),
+            savedStateHandle = routeHandle(route),
             deviceRepository = repo,
             stateStore = stateStore,
             actionsController = controller,
@@ -121,7 +123,7 @@ class WatchSendPointViewModelTest {
     fun `several watches and none asked for - the user picks`() = runTest {
         addGarmin("fēnix 7", "E0:48:24:D5:F7:10")
         val second = addGarmin("Instinct 2", "E0:48:24:D5:F7:11")
-        val model = viewModel(WATCH_POINT_LATITUDE_ARG to "48.8584", WATCH_POINT_LONGITUDE_ARG to "2.2945")
+        val model = viewModel(WatchSendPoint(latitude = 48.8584, longitude = 2.2945))
 
         assertNull(model.uiState.value.selectedDeviceId)
         assertFalse(model.uiState.value.canSend)
@@ -137,7 +139,7 @@ class WatchSendPointViewModelTest {
         addGarmin("fēnix 7", "E0:48:24:D5:F7:10")
         val second = addGarmin("Instinct 2", "E0:48:24:D5:F7:11")
 
-        val state = viewModel(WATCH_DEVICE_ID_ARG to second.id).uiState.value
+        val state = viewModel(WatchSendPoint(deviceId = second.id)).uiState.value
 
         assertEquals(second.id, state.selectedDeviceId)
     }
@@ -178,11 +180,7 @@ class WatchSendPointViewModelTest {
     fun `a shared position fills the form and is not sent`() = runTest {
         addGarmin("fēnix 7", "E0:48:24:D5:F7:10")
 
-        val model = viewModel(
-            WATCH_POINT_LATITUDE_ARG to "-33.8568",
-            WATCH_POINT_LONGITUDE_ARG to "151.2153",
-            WATCH_POINT_NAME_ARG to "Opera House",
-        )
+        val model = viewModel(WatchSendPoint(latitude = -33.8568, longitude = 151.2153, name = "Opera House"))
         val state = model.uiState.value
 
         assertEquals("Opera House", state.name)
@@ -195,7 +193,7 @@ class WatchSendPointViewModelTest {
     @Test
     fun `a share with no position says so until the user types`() = runTest {
         addGarmin("fēnix 7", "E0:48:24:D5:F7:10")
-        val model = viewModel(WATCH_POINT_UNREADABLE_ARG to "true", WATCH_POINT_NAME_ARG to "Eiffel Tower")
+        val model = viewModel(WatchSendPoint(name = "Eiffel Tower", unreadable = true))
 
         assertTrue(model.uiState.value.sharedUnreadable)
         assertNull(model.uiState.value.parsed)

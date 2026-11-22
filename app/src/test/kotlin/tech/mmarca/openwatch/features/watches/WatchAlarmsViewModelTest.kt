@@ -1,7 +1,7 @@
 package tech.mmarca.openwatch.features.watches
 
+import android.app.Application
 import android.content.Context
-import androidx.lifecycle.SavedStateHandle
 import io.mockk.every
 import io.mockk.mockk
 import java.time.DayOfWeek
@@ -17,14 +17,18 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import tech.mmarca.openwatch.data.repository.testDeviceStateStore
-import tech.mmarca.openwatch.data.repository.testDeviceRepository
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import tech.mmarca.openwatch.data.repository.testDeviceRepository
+import tech.mmarca.openwatch.data.repository.testDeviceStateStore
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
-import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
+import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.garmin.GarminAlarm
 import tech.mmarca.openwatch.devices.garmin.GarminAlarmsFile
 import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
@@ -32,12 +36,14 @@ import tech.mmarca.openwatch.devices.garmin.GarminSendFileResult
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
-import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
+import tech.mmarca.openwatch.navigation.WatchAlarms
+import tech.mmarca.openwatch.navigation.routeHandle
 import tech.mmarca.openwatch.util.MainDispatcherRule
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 
 /** The list lives on the phone, and nothing reaches the watch until Send. */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], application = Application::class)
 class WatchAlarmsViewModelTest {
 
     @get:Rule
@@ -95,7 +101,7 @@ class WatchAlarmsViewModelTest {
             scope = backgroundScope,
         )
         return WatchAlarmsViewModel(
-            savedStateHandle = SavedStateHandle(mapOf(WATCH_DEVICE_ID_ARG to watch.id)),
+            savedStateHandle = routeHandle(WatchAlarms(watch.id)),
             deviceRepository = repo,
             stateStore = stateStore,
             actionsController = controller,

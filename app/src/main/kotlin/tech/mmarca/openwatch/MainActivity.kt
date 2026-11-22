@@ -26,7 +26,10 @@ import tech.mmarca.openwatch.devices.core.pairing.CompanionDevicePairing
 import tech.mmarca.openwatch.domain.model.HealthConnectAvailability
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.navigation.AppNavigation
-import tech.mmarca.openwatch.navigation.Screen
+import tech.mmarca.openwatch.navigation.ConnectedApps
+import tech.mmarca.openwatch.navigation.Home
+import tech.mmarca.openwatch.navigation.Onboarding
+import tech.mmarca.openwatch.navigation.WatchSendPoint
 import tech.mmarca.openwatch.ui.components.AppBarState
 import tech.mmarca.openwatch.ui.components.LocalAppBarState
 import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
@@ -39,7 +42,7 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var unitFormatter: UnitFormatter
     @Inject lateinit var companionDevicePairing: CompanionDevicePairing
 
-    private var externalNavigationRoute by mutableStateOf<String?>(null)
+    private var externalNavigationRoute by mutableStateOf<Any?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,9 +51,9 @@ class MainActivity : AppCompatActivity() {
             preferences.onboardingDone &&
             healthConnect.availability() == HealthConnectAvailability.AVAILABLE
         ) {
-            Screen.Home.route
+            Home
         } else {
-            Screen.Onboarding.route
+            Onboarding
         }
         enableEdgeToEdge()
         // The companion association dialog needs an Activity launcher. Without this
@@ -122,7 +125,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateExternalNavigationRoute(intent: Intent?) {
         externalNavigationRoute = intent?.sendPointRoute()
-            ?: Screen.ConnectedApps.route.takeIf { intent?.action == ACTION_OPENLINK_CONSENT }
+            ?: ConnectedApps.takeIf { intent?.action == ACTION_OPENLINK_CONSENT }
     }
 
     companion object {
@@ -136,7 +139,7 @@ class MainActivity : AppCompatActivity() {
  * text holding one, a maps URL or bare coordinates. Built here from parsed
  * numbers, so nothing from the intent reaches the navigator as a route.
  */
-internal fun Intent.sendPointRoute(): String? = when (action) {
+internal fun Intent.sendPointRoute(): WatchSendPoint? = when (action) {
     Intent.ACTION_VIEW -> sharedPlaceRoute(geoLink = dataString, text = null)
     Intent.ACTION_SEND -> sharedPlaceRoute(
         geoLink = null,
@@ -147,15 +150,16 @@ internal fun Intent.sendPointRoute(): String? = when (action) {
 }
 
 /** Null when there is nothing place-like at all. A share with no position still opens the form, which says so. */
-internal fun sharedPlaceRoute(geoLink: String?, text: String?): String? {
+internal fun sharedPlaceRoute(geoLink: String?, text: String?): WatchSendPoint? {
     val point = when {
         geoLink != null -> GeoUri.parse(geoLink) ?: return null
         text != null -> SharedLocationText.parse(text) ?: SharedGeoPoint()
         else -> return null
     }
-    return Screen.WatchSendPoint.createRoute(
-        latitude = point.latitude,
-        longitude = point.longitude,
+    // Both or neither: half a position is no position.
+    return WatchSendPoint(
+        latitude = point.latitude.takeIf { point.hasPosition },
+        longitude = point.longitude.takeIf { point.hasPosition },
         name = point.name?.take(SharedPlaceNameLimit),
         unreadable = !point.hasPosition,
     )

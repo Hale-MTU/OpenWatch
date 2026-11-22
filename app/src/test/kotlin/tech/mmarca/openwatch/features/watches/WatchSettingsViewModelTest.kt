@@ -1,6 +1,6 @@
 package tech.mmarca.openwatch.features.watches
 
-import androidx.lifecycle.SavedStateHandle
+import android.app.Application
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -18,15 +18,20 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import tech.mmarca.openwatch.devices.garmin.GarminGattClientException
 import tech.mmarca.openwatch.devices.garmin.GarminSettingsLink
 import tech.mmarca.openwatch.devices.garmin.GarminSettingsScreen
-import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
-import tech.mmarca.openwatch.navigation.WATCH_SETTINGS_SCREEN_ID_ARG
+import tech.mmarca.openwatch.navigation.WatchSettings
+import tech.mmarca.openwatch.navigation.routeHandle
 import tech.mmarca.openwatch.util.MainDispatcherRule
 
 /** One screen of the watch's settings tree: what it shows, and what it says after a change. */
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], application = Application::class)
 class WatchSettingsViewModelTest {
 
     @get:Rule
@@ -40,7 +45,7 @@ class WatchSettingsViewModelTest {
     private fun viewModel(): WatchSettingsViewModel {
         coEvery { links.link(WATCH) } returns link
         return WatchSettingsViewModel(
-            SavedStateHandle(mapOf(WATCH_DEVICE_ID_ARG to WATCH, WATCH_SETTINGS_SCREEN_ID_ARG to SCREEN.toString())),
+            routeHandle(WatchSettings(WATCH, SCREEN)),
             links,
         )
     }

@@ -1,8 +1,8 @@
 package tech.mmarca.openwatch.features.watches
 
+import android.app.Application
 import android.content.Context
 import androidx.health.connect.client.permission.HealthPermission
-import androidx.lifecycle.SavedStateHandle
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -26,6 +26,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import tech.mmarca.openwatch.core.security.testSeal
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.data.repository.testDeviceRepository
@@ -55,11 +58,14 @@ import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
-import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
+import tech.mmarca.openwatch.navigation.WatchDevice
+import tech.mmarca.openwatch.navigation.routeHandle
 import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
 import tech.mmarca.openwatch.util.MainDispatcherRule
 
 /** Renaming a watch with no capabilities, its schedule and the grant that asks for, and what forgetting a device does and does not do at the OS level. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], application = Application::class)
 class WatchDeviceViewModelTest {
 
     @get:Rule
@@ -148,7 +154,7 @@ class WatchDeviceViewModelTest {
     )
 
     private fun viewModel(deviceId: String) = WatchDeviceViewModel(
-        savedStateHandle = SavedStateHandle(mapOf(WATCH_DEVICE_ID_ARG to deviceId)),
+        savedStateHandle = routeHandle(WatchDevice(deviceId)),
         deviceRepository = repo,
         syncController = mockk<DeviceSyncController>().also {
             every { it.state } returns MutableStateFlow(DeviceSyncUiState())

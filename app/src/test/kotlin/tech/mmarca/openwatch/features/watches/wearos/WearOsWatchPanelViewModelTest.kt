@@ -1,6 +1,6 @@
 package tech.mmarca.openwatch.features.watches.wearos
 
-import androidx.lifecycle.SavedStateHandle
+import android.app.Application
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -11,6 +11,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.security.testSeal
 import tech.mmarca.openwatch.data.repository.testDeviceRepository
@@ -19,10 +22,13 @@ import tech.mmarca.openwatch.devices.wearos.WearOsCompanionManager
 import tech.mmarca.openwatch.devices.wearos.WearOsLinkStore
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
-import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
+import tech.mmarca.openwatch.navigation.WatchDevice
+import tech.mmarca.openwatch.navigation.routeHandle
 import tech.mmarca.openwatch.util.MainDispatcherRule
 
 /** The Wear OS panel's status check on the way in. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], application = Application::class)
 class WearOsWatchPanelViewModelTest {
 
     @get:Rule
@@ -43,7 +49,7 @@ class WearOsWatchPanelViewModelTest {
         val manager = mockk<WearOsCompanionManager>()
         coEvery { manager.checkWearOsWatchStatus(any(), any()) } throws SecurityException("BLUETOOTH_CONNECT")
         val vm = WearOsWatchPanelViewModel(
-            savedStateHandle = SavedStateHandle(mapOf(WATCH_DEVICE_ID_ARG to watch.id)),
+            savedStateHandle = routeHandle(WatchDevice(watch.id)),
             deviceRepository = repo,
             companionManager = manager,
             linkStore = WearOsLinkStore(FakeSharedPreferences(), testSeal()),

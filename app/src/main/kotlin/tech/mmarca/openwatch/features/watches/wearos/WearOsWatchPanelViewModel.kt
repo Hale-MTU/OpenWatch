@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Instant
 import javax.inject.Inject
@@ -33,7 +34,7 @@ import tech.mmarca.openwatch.devices.wearos.WearOsLinkStore
 import tech.mmarca.openwatch.devices.wearos.isWearOs
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.features.watches.WatchPermissionRequest
-import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
+import tech.mmarca.openwatch.navigation.WatchDevice
 
 /** What the Wear OS panel of the device view shows: the link's status and the watch's own settings. */
 @Immutable
@@ -71,7 +72,7 @@ class WearOsWatchPanelViewModel @Inject constructor(
     private val onboardWearOsWatch: OnboardWearOsWatchUseCase,
 ) : ViewModel() {
 
-    val deviceId: String = savedStateHandle.get<String>(WATCH_DEVICE_ID_ARG).orEmpty()
+    val deviceId: String = savedStateHandle.toRoute<WatchDevice>().deviceId
 
     private val localState = MutableStateFlow(WearOsWatchPanelUiState())
 

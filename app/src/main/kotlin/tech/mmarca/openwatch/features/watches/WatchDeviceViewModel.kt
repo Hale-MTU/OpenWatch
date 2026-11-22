@@ -5,6 +5,7 @@ import androidx.health.connect.client.permission.HealthPermission
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -29,7 +30,7 @@ import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
-import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
+import tech.mmarca.openwatch.navigation.WatchDevice
 import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
 
 /** What the device view shows about any device: its header, its sync and schedule, its removal. */
@@ -83,7 +84,7 @@ class WatchDeviceViewModel @Inject constructor(
     @ApplicationScope appScope: CoroutineScope,
 ) : ViewModel() {
 
-    val deviceId: String = savedStateHandle.get<String>(WATCH_DEVICE_ID_ARG).orEmpty()
+    val deviceId: String = savedStateHandle.toRoute<WatchDevice>().deviceId
 
     /** Outlives the view-model: the unbond after a removal must not die with the screen. */
     private val housekeepingScope = appScope + dispatchers.default

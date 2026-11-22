@@ -46,24 +46,23 @@ import tech.mmarca.openwatch.ui.components.LocalSnackbarHostState
 @Composable
 fun AppNavigation(
     unitFormatter: UnitFormatter,
-    startDestination: String,
-    externalNavigationRoute: String? = null,
+    startDestination: Any,
+    externalNavigationRoute: Any? = null,
     onExternalNavigationHandled: () -> Unit = {},
     onSetupComplete: () -> Unit = {},
     navController: NavHostController = rememberNavController(),
 ) {
     val appBarState = LocalAppBarState.current
     val backStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = backStackEntry?.destination?.route
+    val destination = backStackEntry?.destination
     val declared = appBarState.of(backStackEntry)
-    val routeTitle = Screen.titleResFor(currentRoute?.substringBefore('?'))?.let { stringResource(it) }
+    val routeTitle = destination?.titleRes()?.let { stringResource(it) }
     val title = declared?.title ?: routeTitle ?: stringResource(R.string.app_name)
-    // The two roots: nothing to go back to.
-    val isHome = currentRoute == Screen.Home.route || currentRoute == Screen.Onboarding.route
+    val isRoot = destination?.isRoot == true
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(externalNavigationRoute, currentRoute) {
-        if (externalNavigationRoute != null && currentRoute != null) {
+    LaunchedEffect(externalNavigationRoute, destination) {
+        if (externalNavigationRoute != null && destination != null) {
             navController.navigate(externalNavigationRoute) { launchSingleTop = true }
             onExternalNavigationHandled()
         }
@@ -76,7 +75,7 @@ fun AppNavigation(
                 TopAppBar(
                     title = { Text(title) },
                     navigationIcon = {
-                        if (!isHome) {
+                        if (!isRoot) {
                             IconButton(onClick = { navController.popBackStack() }) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -111,49 +110,49 @@ fun AppNavigation(
                     .fillMaxSize()
                     .padding(padding),
             ) {
-                composable(Screen.Onboarding.route) {
+                composable<Onboarding> {
                     HealthConnectSetupRoute(
                         onContinue = {
                             onSetupComplete()
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(Screen.Onboarding.route) { inclusive = true }
+                            navController.navigate(Home) {
+                                popUpTo<Onboarding> { inclusive = true }
                             }
                         },
                     )
                 }
-                composable(Screen.HealthConnectSetup.route) {
+                composable<HealthConnectSetup> {
                     HealthConnectSetupRoute(onContinue = null)
                 }
-                composable(Screen.Home.route) {
+                composable<Home> {
                     HomeRoute(
                         onOpenWatch = { deviceId ->
-                            navController.navigate(Screen.WatchDevice.createRoute(deviceId)) { launchSingleTop = true }
+                            navController.navigate(WatchDevice(deviceId)) { launchSingleTop = true }
                         },
-                        onOpenScale = { navController.navigate(Screen.ScaleDevice.route) { launchSingleTop = true } },
+                        onOpenScale = { navController.navigate(ScaleDevice) { launchSingleTop = true } },
                         onOpenHealthConnect = {
-                            navController.navigate(Screen.HealthConnectSetup.route) { launchSingleTop = true }
+                            navController.navigate(HealthConnectSetup) { launchSingleTop = true }
                         },
-                        onOpenSettings = { navController.navigate(Screen.Settings.route) { launchSingleTop = true } },
+                        onOpenSettings = { navController.navigate(Settings) { launchSingleTop = true } },
                     )
                 }
-                composable(Screen.Settings.route) {
+                composable<Settings> {
                     SettingsRoute(
                         onOpenHealthConnect = {
-                            navController.navigate(Screen.HealthConnectSetup.route) { launchSingleTop = true }
+                            navController.navigate(HealthConnectSetup) { launchSingleTop = true }
                         },
-                        onOpenBodyProfile = { navController.navigate(Screen.BodyProfile.route) { launchSingleTop = true } },
-                        onOpenConnectedApps = { navController.navigate(Screen.ConnectedApps.route) { launchSingleTop = true } },
+                        onOpenBodyProfile = { navController.navigate(BodyProfile) { launchSingleTop = true } },
+                        onOpenConnectedApps = { navController.navigate(ConnectedApps) { launchSingleTop = true } },
                     )
                 }
-                composable(Screen.ConnectedApps.route) {
+                composable<ConnectedApps> {
                     ConnectedAppsRoute()
                 }
-                composable(Screen.BodyProfile.route) {
+                composable<BodyProfile> {
                     BodyProfileRoute(unitFormatter = unitFormatter)
                 }
-                composable(Screen.ScaleDevice.route) {
+                composable<ScaleDevice> {
                     ScaleDeviceRoute(
-                        onOpenBodyProfile = { navController.navigate(Screen.BodyProfile.route) { launchSingleTop = true } },
+                        onOpenBodyProfile = { navController.navigate(BodyProfile) { launchSingleTop = true } },
                         onRemoved = { navController.popBackStack() },
                     )
                 }

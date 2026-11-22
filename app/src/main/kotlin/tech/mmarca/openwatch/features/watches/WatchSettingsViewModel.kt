@@ -6,6 +6,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -26,7 +27,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.performance.ApplicationScope
+import tech.mmarca.openwatch.core.performance.DispatcherProvider
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.toScreenError
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
@@ -36,13 +40,8 @@ import tech.mmarca.openwatch.devices.garmin.GarminLog
 import tech.mmarca.openwatch.devices.garmin.GarminPhoneIdentity
 import tech.mmarca.openwatch.devices.garmin.GarminSettingsLink
 import tech.mmarca.openwatch.devices.garmin.GarminSettingsScreen
-import tech.mmarca.openwatch.devices.garmin.GarminSettingsService
-import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
-import tech.mmarca.openwatch.navigation.WATCH_SETTINGS_SCREEN_ID_ARG
-import kotlinx.coroutines.plus
-import tech.mmarca.openwatch.core.performance.ApplicationScope
-import tech.mmarca.openwatch.core.performance.DispatcherProvider
 import tech.mmarca.openwatch.devices.garmin.isGarmin
+import tech.mmarca.openwatch.navigation.WatchSettings
 
 /**
  * How long a link outlives the last screen watching it. Long enough to walk
@@ -237,10 +236,9 @@ class WatchSettingsViewModel @Inject constructor(
     private val links: WatchSettingsLinks,
 ) : ViewModel() {
 
-    val deviceId: String = savedStateHandle.get<String>(WATCH_DEVICE_ID_ARG).orEmpty()
-    val screenId: Int = savedStateHandle.get<String>(WATCH_SETTINGS_SCREEN_ID_ARG)
-        ?.toIntOrNull()
-        ?: GarminSettingsService.ROOT_SCREEN_ID
+    private val route = savedStateHandle.toRoute<WatchSettings>()
+    val deviceId: String = route.deviceId
+    val screenId: Int = route.screenId
 
     private val state = MutableStateFlow(WatchSettingsUiState())
     val uiState: StateFlow<WatchSettingsUiState> = state.asStateFlow()

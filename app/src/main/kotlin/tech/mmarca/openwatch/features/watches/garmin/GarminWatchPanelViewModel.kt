@@ -7,6 +7,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +30,7 @@ import tech.mmarca.openwatch.features.watches.GarminWatchActionsController
 import tech.mmarca.openwatch.features.watches.WatchFindUiState
 import tech.mmarca.openwatch.features.watches.WatchNotificationsGateway
 import tech.mmarca.openwatch.features.watches.WatchPermissionRequest
-import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
+import tech.mmarca.openwatch.navigation.WatchDevice
 
 /** What the Garmin panel of the device view shows: the actions, the rows, the switches. */
 @Immutable
@@ -93,7 +94,7 @@ class GarminWatchPanelViewModel @Inject constructor(
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
-    val deviceId: String = savedStateHandle.get<String>(WATCH_DEVICE_ID_ARG).orEmpty()
+    val deviceId: String = savedStateHandle.toRoute<WatchDevice>().deviceId
 
     /** The grants the switches' lines depend on, read on the way in, on resume and after each dialog. */
     private data class Grants(val notificationAccess: Boolean, val calendar: Boolean, val coMaps: Boolean)

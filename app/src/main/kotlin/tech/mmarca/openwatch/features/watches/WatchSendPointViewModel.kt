@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.features.watches
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.Locale
 import javax.inject.Inject
@@ -16,19 +17,15 @@ import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.core.geo.GeoCoordinateParseResult
 import tech.mmarca.openwatch.core.geo.GeoCoordinateParser
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
 import tech.mmarca.openwatch.devices.garmin.GarminSendFileResult
 import tech.mmarca.openwatch.devices.garmin.GarminSendStage
 import tech.mmarca.openwatch.devices.garmin.GarminWaypoint
 import tech.mmarca.openwatch.devices.garmin.canStorePoints
-import tech.mmarca.openwatch.domain.model.BleSensorDevice
-import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
-import tech.mmarca.openwatch.navigation.WATCH_POINT_LATITUDE_ARG
-import tech.mmarca.openwatch.navigation.WATCH_POINT_LONGITUDE_ARG
-import tech.mmarca.openwatch.navigation.WATCH_POINT_NAME_ARG
-import tech.mmarca.openwatch.navigation.WATCH_POINT_UNREADABLE_ARG
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import tech.mmarca.openwatch.devices.garmin.isGarmin
+import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.navigation.WatchSendPoint
 
 data class WatchSendPointUiState(
     /** The paired watches that can store a point. */
@@ -69,16 +66,16 @@ class WatchSendPointViewModel @Inject constructor(
         val sharedUnreadable: Boolean,
     )
 
+    private val route = savedStateHandle.toRoute<WatchSendPoint>()
+
     private val form = MutableStateFlow(
         Form(
             // What the user typed wins over what the route brought, after a reclaimed process.
-            selectedDeviceId = savedStateHandle.get<String>(KEY_FORM_DEVICE) ?: savedStateHandle.get<String>(WATCH_DEVICE_ID_ARG),
-            name = savedStateHandle.get<String>(KEY_FORM_NAME) ?: savedStateHandle.get<String>(WATCH_POINT_NAME_ARG).orEmpty(),
-            coordinates = savedStateHandle.get<String>(KEY_FORM_COORDINATES) ?: sharedCoordinates(
-                savedStateHandle.get<String>(WATCH_POINT_LATITUDE_ARG)?.toDoubleOrNull(),
-                savedStateHandle.get<String>(WATCH_POINT_LONGITUDE_ARG)?.toDoubleOrNull(),
-            ),
-            sharedUnreadable = savedStateHandle.get<String>(WATCH_POINT_UNREADABLE_ARG) == "true",
+            selectedDeviceId = savedStateHandle.get<String>(KEY_FORM_DEVICE) ?: route.deviceId,
+            name = savedStateHandle.get<String>(KEY_FORM_NAME) ?: route.name.orEmpty(),
+            coordinates = savedStateHandle.get<String>(KEY_FORM_COORDINATES)
+                ?: sharedCoordinates(route.latitude, route.longitude),
+            sharedUnreadable = route.unreadable,
         ),
     )
 

@@ -1,9 +1,6 @@
 package tech.mmarca.openwatch.features.watches
 
-import tech.mmarca.openwatch.R
-import tech.mmarca.openwatch.core.presentation.ScreenError
-import tech.mmarca.openwatch.data.repository.testDeviceRepository
-import androidx.lifecycle.SavedStateHandle
+import android.app.Application
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -15,12 +12,22 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
+import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.data.repository.contract.GarminWellnessRepository
+import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.domain.model.GarminWellnessMetric
 import tech.mmarca.openwatch.domain.model.GarminWellnessSample
+import tech.mmarca.openwatch.navigation.WatchData
+import tech.mmarca.openwatch.navigation.routeHandle
 import tech.mmarca.openwatch.util.MainDispatcherRule
 
 /** The watch-data screen. What [loadWatchMetrics] computes is covered by WatchMetricsTest. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], application = Application::class)
 class WatchDataViewModelTest {
 
     @get:Rule
@@ -39,7 +46,7 @@ class WatchDataViewModelTest {
         stubEmpty()
         coEvery { repository.latest(GarminWellnessMetric.entries.first(), any()) } coAnswers { read.await() }
 
-        val vm = WatchDataViewModel(SavedStateHandle(), repository, testDeviceRepository())
+        val vm = WatchDataViewModel(routeHandle(WatchData(deviceId = "venu")), repository, testDeviceRepository())
         assertTrue(vm.uiState.value.isLoading)
 
         read.complete(null)
@@ -56,7 +63,7 @@ class WatchDataViewModelTest {
         )
         coEvery { repository.latest(GarminWellnessMetric.SLEEP_SCORE, any()) } returns sample
 
-        val vm = WatchDataViewModel(SavedStateHandle(), repository, testDeviceRepository())
+        val vm = WatchDataViewModel(routeHandle(WatchData(deviceId = "venu")), repository, testDeviceRepository())
 
         assertEquals(81L, vm.uiState.value.metrics.valueOf(GarminWellnessMetric.SLEEP_SCORE))
         assertFalse(vm.uiState.value.metrics.isEmpty)
@@ -66,7 +73,7 @@ class WatchDataViewModelTest {
     fun `a failed read shows a failure, not the empty state of a watch that sent nothing`() = runTest {
         coEvery { repository.latest(any(), any()) } throws IllegalStateException("database is locked")
 
-        val vm = WatchDataViewModel(SavedStateHandle(), repository, testDeviceRepository())
+        val vm = WatchDataViewModel(routeHandle(WatchData(deviceId = "venu")), repository, testDeviceRepository())
 
         assertFalse(vm.uiState.value.isLoading)
         // The translated fallback, never the exception's own English text.
@@ -76,7 +83,7 @@ class WatchDataViewModelTest {
     @Test
     fun `refresh reads again`() = runTest {
         stubEmpty()
-        val vm = WatchDataViewModel(SavedStateHandle(), repository, testDeviceRepository())
+        val vm = WatchDataViewModel(routeHandle(WatchData(deviceId = "venu")), repository, testDeviceRepository())
 
         vm.refresh()
 

@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.features.watches
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,15 +12,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import tech.mmarca.openwatch.devices.garmin.GarminAlarm
 import tech.mmarca.openwatch.devices.garmin.GarminAlarmsFile
 import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
 import tech.mmarca.openwatch.devices.garmin.GarminSendFileResult
 import tech.mmarca.openwatch.devices.garmin.GarminSendStage
-import tech.mmarca.openwatch.domain.model.BleSensorDevice
-import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import tech.mmarca.openwatch.devices.garmin.isGarmin
+import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.navigation.WatchAlarms
 
 data class WatchAlarmsUiState(
     /** Null while loading, and when the watch is gone or is not a Garmin. */
@@ -51,7 +52,7 @@ class WatchAlarmsViewModel @Inject constructor(
     syncController: DeviceSyncController,
 ) : ViewModel() {
 
-    private val deviceId: String = checkNotNull(savedStateHandle[WATCH_DEVICE_ID_ARG])
+    private val deviceId: String = savedStateHandle.toRoute<WatchAlarms>().deviceId
 
     private val alarms = MutableStateFlow(stateStore.alarms(deviceId))
 

@@ -1,7 +1,7 @@
 package tech.mmarca.openwatch.features.watches.garmin
 
 import android.Manifest
-import androidx.lifecycle.SavedStateHandle
+import android.app.Application
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -17,6 +17,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 import tech.mmarca.openwatch.comaps.CoMapsGuidanceFeed
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.data.repository.testDeviceRepository
@@ -36,10 +39,13 @@ import tech.mmarca.openwatch.features.watches.GarminWatchActionsController
 import tech.mmarca.openwatch.features.watches.WatchFindUiState
 import tech.mmarca.openwatch.features.watches.WatchNotificationsGateway
 import tech.mmarca.openwatch.features.watches.WatchPermissionRequest
-import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
+import tech.mmarca.openwatch.navigation.WatchDevice
+import tech.mmarca.openwatch.navigation.routeHandle
 import tech.mmarca.openwatch.util.MainDispatcherRule
 
 /** The Garmin panel: the music disclosure, the calendar grant, where alarms lead, and switches that follow the store. */
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [34], application = Application::class)
 class GarminWatchPanelViewModelTest {
 
     @get:Rule
@@ -60,7 +66,7 @@ class GarminWatchPanelViewModelTest {
     )
 
     private fun viewModel(deviceId: String) = GarminWatchPanelViewModel(
-        savedStateHandle = SavedStateHandle(mapOf(WATCH_DEVICE_ID_ARG to deviceId)),
+        savedStateHandle = routeHandle(WatchDevice(deviceId)),
         options = GarminWatchOptions(
             deviceRepository = repo,
             stateStore = stateStore,

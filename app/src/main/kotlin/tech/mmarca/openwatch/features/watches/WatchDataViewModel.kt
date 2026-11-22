@@ -4,6 +4,7 @@ import androidx.compose.runtime.Immutable
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.DayOfWeek
@@ -21,7 +22,7 @@ import tech.mmarca.openwatch.core.presentation.toScreenError
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminWellnessRepository
 import tech.mmarca.openwatch.domain.model.GarminWellnessMetric
-import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
+import tech.mmarca.openwatch.navigation.WatchData
 
 /** One stored watch metric, resolved to a value and the instant it was measured. */
 @Immutable
@@ -136,7 +137,7 @@ class WatchDataViewModel @Inject constructor(
     private val deviceRepository: BleDeviceRepository,
 ) : ViewModel() {
 
-    private val deviceId: String = savedStateHandle.get<String>(WATCH_DEVICE_ID_ARG).orEmpty()
+    private val deviceId: String = savedStateHandle.toRoute<WatchData>().deviceId
 
     private val _uiState = MutableStateFlow(WatchDataUiState())
     val uiState: StateFlow<WatchDataUiState> = _uiState.asStateFlow()
