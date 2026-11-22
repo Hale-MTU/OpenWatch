@@ -33,9 +33,11 @@ import tech.mmarca.openwatch.core.performance.DispatcherProvider
  * for that watch, then the requests of one sync. The watch side is
  * `wear/.../WearLinkServerHost`.
  *
- * The requests of one sync share one session ([WearOsSessionCache]), and
- * with it the capabilities its hello announced; a live heart rate stream
- * holds a connection of its own.
+ * Every call goes through the watch's one link ([WearOsSessionCache]): one
+ * connection at a time, as RFCOMM allows, which the requests of a sync
+ * share with the capabilities its hello announced. A call that finds the
+ * link busy waits its turn. The live heart rate is short windows on the
+ * same link, so a status check, a setting or a sync runs between two.
  *
  * RFCOMM is Classic, not BLE, so no radio lease is taken; phone-to-phone
  * sync works the same way. Every outcome the watch can give is a
@@ -152,29 +154,19 @@ class BluetoothWearOsNodePort internal constructor(
         targetAddress: String?,
         targetName: String?,
         onSample: (WearOsHeartRateSample) -> Unit,
-    ): Boolean = withContext(dispatchers.io) {
-        val match = bondedWatchOrNull(targetAddress, targetName) ?: return@withContext false
-        // A connection of its own, held for minutes: never the cached one a sync shares.
-        guarded(LIVE_SESSION_MS + PING_TIMEOUT_MS) { guard ->
-            val session = open(match, targetAddress, guard)
-            try {
-                if (WearLinkProtocol.CAP_LIVE_HEART_RATE !in session.peer.capabilities) return@guarded false
-                val started = System.currentTimeMillis()
-                // One window after another on the same connection, each shorter than the watch's idle timeout.
-                while (System.currentTimeMillis() - started < LIVE_SESSION_MS) {
-                    val count = unwrap(
-                        session.liveHeartRate(WearLinkProtocol.MAX_LIVE_SECONDS) {
-                            onSample(WearOsHeartRateSample(Instant.ofEpochMilli(it.epochMillis), it.bpm))
-                        },
-                    )
-                    if (count == 0) break
+    ): Boolean = onIo { owner ->
+        val match = bondedWatchOrNull(targetAddress, targetName) ?: return@onIo false
+        var quiet = 0
+        // One short window after another, each a request in the link's turns: whatever else waits goes between two.
+        while (quiet < LIVE_QUIET_WINDOWS) {
+            val outcome = exchange(owner, match, targetAddress, LIVE_TIMEOUT_MS, WearLinkProtocol.CAP_LIVE_HEART_RATE, background = true) {
+                it.liveHeartRate(LIVE_WINDOW_SECONDS) { sample ->
+                    onSample(WearOsHeartRateSample(Instant.ofEpochMilli(sample.epochMillis), sample.bpm))
                 }
-                true
-            } finally {
-                // The watch waits for this close; the watchdog is only a guard.
-                session.close()
-            }
+            } ?: return@onIo false
+            quiet = if (unwrap(outcome) == 0) quiet + 1 else 0
         }
+        true
     }
 
     /** The name the watch gave in its last `OK`, for the status card. */
@@ -199,24 +191,29 @@ class BluetoothWearOsNodePort internal constructor(
         page: (items: List<W>, more: Boolean) -> P,
     ): P? = onIo { owner ->
         val match = bondedWatchOrNull(targetAddress, targetName) ?: return@onIo null
-        val outcome = exchange(owner, match, targetAddress, PULL_TIMEOUT_MS, capability, ask)
+        val outcome = exchange(owner, match, targetAddress, PULL_TIMEOUT_MS, capability, ask = ask)
             ?: return@onIo page(emptyList(), false)
         val got = unwrap(outcome)
         page(got.items, got.more)
     }
 
-    /** [ask] over the watch's session; null, and nothing asked, when its hello did not announce [capability]. */
+    /**
+     * [ask] over the watch's session, in its turn on the watch's one link; null, and nothing asked,
+     * when its hello did not announce [capability]. A [background] request lets the others go first.
+     */
     private suspend fun <T> exchange(
         owner: Job?,
         match: BondedWatch,
         registeredAddress: String?,
         timeoutMs: Long,
         capability: String? = null,
+        background: Boolean = false,
         ask: (WearLinkSession) -> WearLinkOutcome<T>,
     ): WearLinkOutcome<T>? {
-        // The token follows the address the watch was added under, so a session is kept per both.
-        val key = "${match.address.uppercase()} ${registeredAddress.orEmpty().uppercase()}"
-        return sessions.request(key, owner, timeoutMs, capability, open = { guard -> open(match, registeredAddress, guard) }, ask)
+        // One link per bonded watch; the token follows the address the watch was added under, so a session is kept per both.
+        val watch = match.address.uppercase()
+        val key = "$watch ${registeredAddress.orEmpty().uppercase()}"
+        return sessions.request(watch, key, owner, timeoutMs, capability, background, open = { guard -> open(match, registeredAddress, guard) }, ask)
     }
 
     /** The bonded entry for the registered watch. Throws [WearOsLinkFailure.BluetoothOff] or [WearOsLinkFailure.NotBonded]. */
@@ -278,14 +275,31 @@ class BluetoothWearOsNodePort internal constructor(
     }
 
     private companion object {
-        /** Connect (paging plus service lookup), the hello and the ping together. */
+        /**
+         * Connect (paging plus service lookup), the hello and the ping together, once the call has
+         * the link; it waits up to as long again for its turn.
+         */
         const val PING_TIMEOUT_MS = 10_000L
 
         /** A full page over RFCOMM is well under a second; the connect dominates. */
         const val PULL_TIMEOUT_MS = 30_000L
 
-        /** One live connection: well inside the watch's 10-minute limit on a connection. */
-        const val LIVE_SESSION_MS = 8L * 60 * 1000
+        /**
+         * One live window, the longest another call waits for the link while the live heart rate
+         * runs. The watch's idle timer restarts when a request arrives and runs through the
+         * window, and the phone reuses a session only within 10 s of its last request: a window
+         * of the protocol's 10 s maximum would leave every session past that line and need a
+         * connection per window, while 5 s leaves 5 s for the next request. A call that comes
+         * during a window waits at most 5 s, half of what a status check may wait. The watch reads
+         * about once a second, so a window carries about five readings.
+         */
+        const val LIVE_WINDOW_SECONDS = 5
+
+        /** Windows in a row without a reading before the stream ends: the same 10 s of silence one window used to be. */
+        const val LIVE_QUIET_WINDOWS = 2
+
+        /** A connect and hello when the session must be opened, then the window. */
+        const val LIVE_TIMEOUT_MS = PING_TIMEOUT_MS + LIVE_WINDOW_SECONDS * 1000L
     }
 }
 

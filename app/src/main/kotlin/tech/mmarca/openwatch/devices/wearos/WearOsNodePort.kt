@@ -234,12 +234,12 @@ interface WearOsNodePort {
     ): WearOsHrvPage?
 
     /**
-     * Holds one connection and hands each heart rate reading to [onSample],
-     * on an I/O thread, as the watch takes it. Returns true once the watch
-     * reports none (it is off the wrist) or the connection nears the watch's
-     * age limit; the caller connects again later. False when no bonded watch
+     * Hands each heart rate reading to [onSample], on an I/O thread, as the
+     * watch takes it, for as long as the watch sends them; the other calls on
+     * the watch go between. Returns true once the watch reports none (it is
+     * off the wrist); the caller asks again later. False when no bonded watch
      * matches or the watch app cannot stream. Any other failure throws
-     * [WearOsLinkFailure].
+     * [WearOsLinkFailure], also when a sync keeps the link for longer.
      */
     suspend fun liveHeartRate(
         targetAddress: String?,

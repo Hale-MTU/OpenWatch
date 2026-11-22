@@ -10,14 +10,21 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestCoroutineScheduler
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -35,27 +42,39 @@ import tech.mmarca.openwatch.wearlink.WearLinkWorkout
 /**
  * The port over a watch in the same JVM: the real `:wearlink` server on piped streams in place
  * of the RFCOMM socket, so what is counted is connections, hellos and requests as the watch sees
- * them. The session windows run on a clock the test moves.
+ * them. Like RFCOMM, the loopback takes one connection at a time. The session windows run on a
+ * clock the test moves.
  */
 class BluetoothWearOsNodePortTest {
 
     private val linkStore = WearOsLinkStore(FakeSharedPreferences(), testSeal())
+
+    @Volatile
     private var now = 0L
     private val idle = TestCoroutineScheduler()
     private var watch = LoopbackWatch(linkStore.tokenFor(REGISTERED, BOND), FULL)
-    private val port by lazy {
-        BluetoothWearOsNodePort(
-            linkStore,
-            watch,
-            DefaultDispatcherProvider,
-            WearOsSessionCache(CoroutineScope(StandardTestDispatcher(idle)), clock = { now }),
-        )
-    }
+    private val sessions = WearOsSessionCache(CoroutineScope(StandardTestDispatcher(idle)), clock = { now })
+    private val port by lazy { BluetoothWearOsNodePort(linkStore, watch, DefaultDispatcherProvider, sessions) }
 
     @After
     fun closeLinks() = watch.links.forEach { it.dropOnWatch() }
 
     private suspend fun pullHeartRate() = port.pullHeartRate(REGISTERED, NAME, Instant.EPOCH)
+
+    /** One page of a sync: the one place the link-owner tests name a series request. */
+    private suspend fun syncPage() = port.pullHeartRate(REGISTERED, NAME, Instant.EPOCH)
+
+    /** The live heart rate in a coroutine of its own, as the watch screen collects it. */
+    private fun CoroutineScope.streamLive(): Job = launch(Dispatchers.IO) { port.liveHeartRate(REGISTERED, NAME) {} }
+
+    /** Waits, in real time, for what threads other than the test's bring about. */
+    private fun awaitTrue(what: () -> Boolean) {
+        val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
+        while (!what()) {
+            check(System.nanoTime() < deadline) { "timed out" }
+            Thread.sleep(2)
+        }
+    }
 
     @Test
     fun `a sync's requests share one connection and one hello`() = runTest {
@@ -200,18 +219,133 @@ class BluetoothWearOsNodePortTest {
     }
 
     @Test
-    fun `a live heart rate stream holds a connection of its own`() = runTest {
-        pullHeartRate()
+    fun `the live heart rate asks five-second windows on the watch's one connection`() = runTest {
+        assertEquals(emptyMap<String, String>(), port.pullWatchSettings(REGISTERED, NAME))
 
+        // Off the wrist: two windows in a row without a reading end the stream.
         assertTrue(port.liveHeartRate(REGISTERED, NAME) {})
+        assertTrue(port.setWatchSetting(REGISTERED, NAME, WearLinkProtocol.Preferences.HEART_RATE_MAX, "190"))
 
-        assertEquals(WearLinkServer.Outcome.SERVED, watch.links[1].outcome())
-        pullHeartRate()
-        assertEquals(2, watch.connects.get())
-        assertEquals(listOf("HR", "LIVE", "HR"), watch.data.asked)
+        assertEquals(1, watch.connects.get())
+        assertEquals(listOf("PREF", "LIVE", "LIVE", "SET"), watch.data.asked)
+        assertEquals(listOf(5, 5), watch.data.liveSeconds)
     }
 
-    /** A bonded watch whose each connection is served by the real server on a thread of its own. */
+    @Test
+    fun `a status check made while live heart rate streams succeeds`() = runTest {
+        watch.data.liveStreaming = true
+        val live = streamLive()
+        awaitTrue { watch.data.liveWindows.get() > 0 }
+
+        // From a coroutine of its own that ends with the check, as the watch screen's does.
+        val status = withContext(Dispatchers.IO) { port.checkStatus(REGISTERED, NAME) }
+
+        assertEquals(WearOsAppStatus.APP_RUNNING, status.appStatus)
+        // The stream goes on after the check, on the same connection.
+        val checkedAt = watch.data.asked.indexOf("PING")
+        awaitTrue { watch.data.asked.lastIndexOf("LIVE") > checkedAt }
+        live.cancelAndJoin()
+        assertEquals(1, watch.connects.get())
+        assertEquals(0, watch.secondConnects.get())
+    }
+
+    @Test
+    fun `a sync made while live heart rate streams succeeds without a retry`() = runTest {
+        watch.data.liveStreaming = true
+        val live = streamLive()
+        awaitTrue { watch.data.liveWindows.get() > 0 }
+
+        // One sync in a coroutine of its own: its pages, then a setting, as the zones end it.
+        withContext(Dispatchers.IO) {
+            repeat(SYNC_PAGES) { assertNotNull(syncPage()) }
+            assertTrue(port.setWatchSetting(REGISTERED, NAME, WearLinkProtocol.Preferences.HEART_RATE_MAX, "190"))
+        }
+
+        val asked = watch.data.asked.toList()
+        val sync = asked.subList(asked.indexOf(SYNC_PAGE_WORD), asked.lastIndexOf("SET") + 1)
+        // Each request asked once, and no live window between them: the stream waits for the sync.
+        assertEquals(List(SYNC_PAGES) { SYNC_PAGE_WORD } + "SET", sync)
+        // Once the sync is over, the stream comes back.
+        awaitTrue { watch.data.asked.lastIndexOf("LIVE") > asked.lastIndexOf("SET") }
+        live.cancelAndJoin()
+        assertEquals(1, watch.connects.get())
+        assertEquals(0, watch.secondConnects.get())
+    }
+
+    @Test
+    fun `two concurrent calls never hold two connections`() = runTest {
+        val release = CountDownLatch(1)
+        watch.data.holdPreferences = release
+
+        withContext(Dispatchers.IO) {
+            val settings = async { port.pullWatchSettings(REGISTERED, NAME) }
+            awaitTrue { "PREF" in watch.data.asked }
+            val status = async { port.checkStatus(REGISTERED, NAME) }
+            Thread.sleep(200)
+            // The check waits for the link instead of opening a second connection.
+            assertFalse(status.isCompleted)
+            assertEquals(1, watch.connects.get())
+
+            release.countDown()
+            assertEquals(emptyMap<String, String>(), settings.await())
+            assertEquals(WearOsAppStatus.APP_RUNNING, status.await().appStatus)
+        }
+
+        assertEquals(1, watch.connects.get())
+        assertEquals(1, watch.mostOpen.get())
+        assertEquals(0, watch.secondConnects.get())
+    }
+
+    @Test
+    fun `a call that waits past its timeout fails as no answer and connects nothing`() = runTest {
+        val release = CountDownLatch(1)
+        watch.data.holdPreferences = release
+
+        withContext(Dispatchers.IO) {
+            val settings = async { port.pullWatchSettings(REGISTERED, NAME) }
+            awaitTrue { "PREF" in watch.data.asked }
+            val failure = try {
+                sessions.request<Unit>(BOND, "$BOND $REGISTERED", owner = null, timeoutMillis = 100, capability = null, open = { error("a second connection") }) {
+                    error("asked on a link another call holds")
+                }
+                null
+            } catch (expected: WearOsLinkFailure) {
+                expected
+            }
+            assertTrue(failure is WearOsLinkFailure.NoAnswer)
+
+            release.countDown()
+            settings.await()
+        }
+
+        assertEquals(1, watch.connects.get())
+        assertEquals(listOf("PREF"), watch.data.asked)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `a caller quiet for ten seconds no longer holds the live heart rate back`() = runTest {
+        // Asked from the test's own coroutine, which runs on like a long-lived caller.
+        port.pullWatchSettings(REGISTERED, NAME)
+        watch.data.liveStreaming = true
+        val live = streamLive()
+        Thread.sleep(100)
+        assertEquals(0, watch.data.liveWindows.get())
+
+        now += 10_000
+        idle.advanceTimeBy(10_000)
+        idle.runCurrent()
+
+        awaitTrue { watch.data.liveWindows.get() > 0 }
+        live.cancelAndJoin()
+        assertEquals(0, watch.secondConnects.get())
+    }
+
+    /**
+     * A bonded watch whose each connection is served by the real server on a thread of its own.
+     * Like RFCOMM, it takes one connection at a time: while one is open, the next connect fails
+     * as the phone's stack fails it, with no answer.
+     */
     private class LoopbackWatch(token: String, capabilities: Set<String>) : WearOsRadio {
         val data = WatchData(capabilities)
         private val server = WearLinkServer(TrustingStore(token), data)
@@ -221,15 +355,27 @@ class BluetoothWearOsNodePortTest {
         val connects = AtomicInteger()
         val refusedConnects = AtomicInteger()
 
+        /** Connects tried while another connection was open, each refused. */
+        val secondConnects = AtomicInteger()
+
+        /** The most connections open at once. */
+        val mostOpen = AtomicInteger()
+
         override fun bondedWatches(): List<BondedWatch> = listOf(BondedWatch(BOND, NAME))
 
         override fun localName(): String = "Pixel 6 Pro"
 
+        @Synchronized
         override fun connect(watch: BondedWatch, guard: WearOsLinkGuard): WearLinkConnection {
             connects.incrementAndGet()
             if (refusedConnects.getAndUpdate { (it - 1).coerceAtLeast(0) } > 0) throw WearOsLinkFailure.NoAnswer()
+            if (links.any { !it.closed }) {
+                secondConnects.incrementAndGet()
+                throw WearOsLinkFailure.NoAnswer()
+            }
             val link = Link()
             links += link
+            mostOpen.accumulateAndGet(links.count { !it.closed }) { a, b -> maxOf(a, b) }
             guard.watch { link.phone.close() }
             return link.phone
         }
@@ -243,7 +389,13 @@ class BluetoothWearOsNodePortTest {
             private val outcome = AtomicReference<WearLinkServer.Outcome?>()
             private val served = CountDownLatch(1)
 
+            /** Closed by either end; the radio takes another connection then. */
+            @Volatile
+            var closed = false
+                private set
+
             private fun closeAll() {
+                closed = true
                 runCatching { toWatch.close() }
                 runCatching { toPhone.close() }
                 runCatching { watchInput.close() }
@@ -310,9 +462,34 @@ class BluetoothWearOsNodePortTest {
         override fun phoneActive(epochMillis: Long) {
             asked += "PA"
         }
-        override fun heldPreferences(): Map<String, String> = emptyMap<String, String>().also { asked += "PREF" }
+        /** When set, a settings read waits for it, as a request that takes a while. */
+        @Volatile
+        var holdPreferences: CountDownLatch? = null
+
+        override fun heldPreferences(): Map<String, String> {
+            asked += "PREF"
+            holdPreferences?.await(5, TimeUnit.SECONDS)
+            return emptyMap()
+        }
+
         override fun setPreference(key: String, value: String): Boolean = true.also { asked += "SET" }
-        override fun liveHeartRate(seconds: Int, emit: (WearLinkProtocol.HeartRateSample) -> Unit): Int = 0.also { asked += "LIVE" }
+
+        /** While set, each live window sends a reading and lasts [LIVE_WINDOW_MILLIS]; otherwise the watch is off the wrist. */
+        @Volatile
+        var liveStreaming = false
+        val liveWindows = AtomicInteger()
+        val liveSeconds: MutableList<Int> = Collections.synchronizedList(mutableListOf())
+
+        override fun liveHeartRate(seconds: Int, emit: (WearLinkProtocol.HeartRateSample) -> Unit): Int {
+            asked += "LIVE"
+            liveSeconds += seconds
+            liveWindows.incrementAndGet()
+            // Off the wrist, the watch answers none at once.
+            if (!liveStreaming) return 0
+            emit(WearLinkProtocol.HeartRateSample(T0, 70))
+            Thread.sleep(LIVE_WINDOW_MILLIS)
+            return 1
+        }
     }
 
     private companion object {
@@ -322,6 +499,13 @@ class BluetoothWearOsNodePortTest {
         const val NAME = "Galaxy Watch8"
         const val T0 = 1_760_000_000_000L
         const val BUFFER = 256 * 1024
+
+        /** A live window in the loopback: long enough for a call to come during one. */
+        const val LIVE_WINDOW_MILLIS = 30L
+
+        /** What [syncPage] asks the watch, by word, and how many pages a sync takes here. */
+        const val SYNC_PAGE_WORD = "HR"
+        const val SYNC_PAGES = 4
         val FULL = setOf(
             WearLinkProtocol.CAP_HEART_RATE, WearLinkProtocol.CAP_SLEEP_MINUTES, WearLinkProtocol.CAP_STEPS,
             WearLinkProtocol.CAP_ASCENT, WearLinkProtocol.CAP_HRV, WearLinkProtocol.CAP_RESPIRATORY_RATE,

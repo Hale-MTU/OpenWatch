@@ -14,8 +14,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
@@ -78,30 +80,42 @@ class WearOsWatchPanelViewModel @Inject constructor(
 
     val uiState: StateFlow<WearOsWatchPanelUiState> = localState.asStateFlow()
 
+    /** Set once the screen's first status check and settings read have run. */
+    private val firstReadsDone = MutableStateFlow(false)
+
     /**
      * The watch's heart rate as it happens, null while none arrives.
      * Streams only while the screen collects it, so the watch's sensor runs
-     * unbatched only while someone looks.
+     * unbatched only while someone looks. It starts after the screen's first
+     * reads: it shares the watch's one link with them, and the status line
+     * should not wait for a live window.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     val liveHeartRateBpm: StateFlow<Int?> = deviceRepository.devicesFlow
         .map { devices -> devices.firstOrNull { it.id == deviceId }?.takeIf { it.isWearOs } }
         .distinctUntilChanged { old, new -> old?.address == new?.address && old?.bluetoothName == new?.bluetoothName }
         .flatMapLatest { device ->
-            device?.let { companionManager.liveHeartRate(it.address, it.bluetoothName) } ?: flowOf(null)
+            device?.let {
+                flow<Int?> {
+                    firstReadsDone.first { done -> done }
+                    emitAll(companionManager.liveHeartRate(it.address, it.bluetoothName))
+                }
+            } ?: flowOf(null)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(LIVE_STOP_TIMEOUT_MS), null)
 
     init {
         // The first check runs once the device has loaded; later ones are by hand. The watch's
-        // settings are read after it: the watch serves one connection at a time.
+        // settings are read after it, then the live heart rate starts: all share the watch's link.
         viewModelScope.launch {
             val device = deviceRepository.devicesFlow.mapNotNull { devices -> devices.firstOrNull { it.id == deviceId } }.first()
             if (device.isWearOs) {
                 checkWearOsStatus()
                 uiState.first { !it.isCheckingWearOsStatus }
                 loadWatchSettings()
+                uiState.first { !it.isWatchSettingsBusy }
             }
+            firstReadsDone.value = true
         }
         // A sync that ends in a typed failure updates the status row without another ping.
         viewModelScope.launch {

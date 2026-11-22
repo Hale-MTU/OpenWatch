@@ -32,9 +32,11 @@ class WearOsCompanionManager @Inject constructor(
     /**
      * The watch's heart rate as it happens, for as long as it is collected:
      * each reading's bpm, and null whenever the stream pauses (the watch is
-     * off the wrist, out of reach, or the connection was renewed). Ends when
-     * the watch app cannot stream or the Bluetooth grant is missing. Nothing
-     * is stored; the recorded samples arrive with the next sync.
+     * off the wrist or out of reach, or a sync holds the link). It shares the
+     * watch's one link with every other call, in short windows, so a status
+     * check or a sync is never refused for it. Ends when the watch app cannot
+     * stream or the Bluetooth grant is missing. Nothing is stored; the
+     * recorded samples arrive with the next sync.
      */
     fun liveHeartRate(targetAddress: String?, targetName: String?): Flow<Int?> = channelFlow {
         while (true) {

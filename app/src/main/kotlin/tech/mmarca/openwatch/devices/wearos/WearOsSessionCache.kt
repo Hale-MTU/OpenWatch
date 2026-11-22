@@ -1,6 +1,8 @@
 package tech.mmarca.openwatch.devices.wearos
 
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DisposableHandle
@@ -8,14 +10,26 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import tech.mmarca.openwatch.wearlink.WearLinkOutcome
 import tech.mmarca.openwatch.wearlink.WearLinkSession
 
 /**
- * The open sessions of [BluetoothWearOsNodePort], at most one per watch, so the requests of a
- * sync share one connection and one hello instead of paying a connect, a service lookup and a
- * hello each. The watch's capabilities come with that hello, so a sync reads them once, and a
- * series the watch lacks costs no request at all.
+ * The phone's one owner of each watch's link, for [BluetoothWearOsNodePort].
+ *
+ * RFCOMM takes one connection per server channel between a phone and a watch, and the watch
+ * serves everything on one channel: while one connection is open the phone's stack drops a
+ * second, and the call that opened it gets no answer. So every connect, request and close for a
+ * watch happens in a turn of its own, one at a time. A request that finds the link busy waits for
+ * its turn, up to its own timeout, and then runs under a watchdog of that timeout; it never opens
+ * a second connection. Turns go first come, first served, with one exception: a background request
+ * (a window of the live heart rate) lets every other waiting request go first, and also waits
+ * while another caller whose coroutine still runs asked less than [maxIdleMillis] ago, so a sync's
+ * requests follow one another with no live window between them.
+ *
+ * The requests share the watch's one session, so a sync pays one connect, one service lookup and
+ * one hello instead of one each. The watch's capabilities come with that hello, so a sync reads
+ * them once, and a series the watch lacks costs no request at all.
  *
  * A session is reused while it is younger than [maxAgeMillis] and its last request went out less
  * than [maxIdleMillis] ago: the watch closes a connection 15 s after the last request arrived and
@@ -26,11 +40,10 @@ import tech.mmarca.openwatch.wearlink.WearLinkSession
  * closes only when the phone does, so every close here is the phone's.
  *
  * A reused session that turns out closed is replaced once by a new connection, and that one's
- * answer stands. A session busy with one call is not shared: another call at the same moment opens
- * a connection of its own and closes it after, as every call did before.
+ * answer stands.
  */
 internal class WearOsSessionCache(
-    /** Runs the idle closes and the closes when an owner ends; never a request. */
+    /** Runs the idle closes, the closes when an owner ends and the turns a caller held back; never a request. */
     private val idleScope: CoroutineScope,
     private val clock: () -> Long = { System.nanoTime() / NANOS_PER_MILLI },
     private val maxAgeMillis: Long = MAX_AGE_MILLIS,
@@ -40,7 +53,6 @@ internal class WearOsSessionCache(
     private class Held(val key: String, val session: WearLinkSession, val openedAt: Long) {
         /** When the hello was answered or the latest request went out; the watch's idle timer restarts then. */
         var sentAt = openedAt
-        var inUse = true
 
         /** Counts the takes, so an idle close armed before the latest one does nothing. */
         var uses = 0
@@ -55,34 +67,81 @@ internal class WearOsSessionCache(
         }
     }
 
+    /** One request's place in a watch's queue. */
+    private class Turn(val owner: Job?, val background: Boolean) {
+        val signal = CompletableDeferred<Unit>()
+
+        /** Set under the lock once the link is this turn's; [signal] follows outside it. */
+        var granted = false
+    }
+
+    /** A caller that asked lately and whose coroutine still runs: a background turn waits for it. */
+    private class Caller(var lastAt: Long, val ended: DisposableHandle)
+
+    /** One watch: its session, whether a turn has it, who waits, and who asked lately. */
+    private class Link {
+        var session: Held? = null
+        var busy = false
+        val waiting = ArrayList<Turn>()
+        val callers = HashMap<Job, Caller>()
+        var recheck: Job? = null
+    }
+
     private val lock = Any()
-    private val held = HashMap<String, Held>()
+    private val links = HashMap<String, Link>()
 
     /**
-     * [ask] over the session for [key], under one watchdog of [timeoutMillis] for the whole call;
-     * null, and nothing sent, when the session's hello did not announce [capability]. [open]
-     * connects and says hello when no session can be reused; a session it opens belongs to
-     * [owner]. Throws what [open] throws.
+     * [ask] over [watch]'s session for [key] (the session's token), in a turn of the watch's link:
+     * waits for the turn up to [timeoutMillis], then runs under a watchdog of [timeoutMillis]. Null,
+     * and nothing sent, when the session's hello did not announce [capability]. [open] connects and
+     * says hello when no session can be reused; a session it opens belongs to [owner]. A
+     * [background] request lets the others go first. Throws what [open] throws, and
+     * [WearOsLinkFailure.NoAnswer] when the turn did not come in time.
      */
     suspend fun <T> request(
+        watch: String,
         key: String,
         owner: Job?,
         timeoutMillis: Long,
         capability: String?,
+        background: Boolean = false,
         open: (WearOsLinkGuard) -> WearLinkSession,
         ask: (WearLinkSession) -> WearLinkOutcome<T>,
-    ): WearLinkOutcome<T>? = guarded(timeoutMillis) { guard ->
-        take(key)?.let { reused ->
-            val outcome = attempt(reused, guard, capability, ask)
-            if (outcome !is WearLinkOutcome.Closed || guard.tripped) return@guarded outcome
+    ): WearLinkOutcome<T>? {
+        val link = synchronized(lock) { links.getOrPut(watch) { Link() } }
+        val turn = Turn(owner, background)
+        if (!awaitTurn(link, turn, timeoutMillis)) {
+            WearOsLog.log("link busy for the whole timeout; nothing asked")
+            throw WearOsLinkFailure.NoAnswer()
+        }
+        try {
+            return guarded(timeoutMillis) { guard -> inTurn(link, key, owner, guard, capability, open, ask) }
+        } finally {
+            endTurn(link, turn)
+        }
+    }
+
+    private fun <T> inTurn(
+        link: Link,
+        key: String,
+        owner: Job?,
+        guard: WearOsLinkGuard,
+        capability: String?,
+        open: (WearOsLinkGuard) -> WearLinkSession,
+        ask: (WearLinkSession) -> WearLinkOutcome<T>,
+    ): WearLinkOutcome<T>? {
+        take(link, key)?.let { reused ->
+            val outcome = attempt(link, reused, guard, capability, ask)
+            if (outcome !is WearLinkOutcome.Closed || guard.tripped) return outcome
             WearOsLog.log("session found closed; connecting again")
         }
         // Taken before the connect: the watch counts a connection's age from its accept.
         val openedAt = clock()
-        attempt(adopt(key, open(guard), openedAt, owner), guard, capability, ask)
+        return attempt(link, adopt(link, key, open(guard), openedAt, owner), guard, capability, ask)
     }
 
     private fun <T> attempt(
+        link: Link,
         entry: Held,
         guard: WearOsLinkGuard,
         capability: String?,
@@ -101,75 +160,175 @@ internal class WearOsSessionCache(
             answered = outcome is WearLinkOutcome.Ok && !guard.tripped
             return outcome
         } finally {
-            release(entry, answered)
+            release(link, entry, answered)
         }
     }
 
-    /** The idle, fresh session for [key], now in use; null when there is none. A stale one is closed. */
-    private fun take(key: String): Held? {
+    /** The watch's session when it can carry a request for [key]; null when there is none. One that cannot is closed. */
+    private fun take(link: Link, key: String): Held? {
         val stale = synchronized(lock) {
-            val entry = held[key] ?: return null
-            if (entry.inUse) return null
+            val entry = link.session ?: return null
             val now = clock()
-            if (now - entry.openedAt < maxAgeMillis && now - entry.sentAt < maxIdleMillis) {
-                entry.inUse = true
+            val fresh = now - entry.openedAt < maxAgeMillis && now - entry.sentAt < maxIdleMillis
+            if (entry.key == key && fresh && !entry.ownerEnded) {
                 entry.uses++
                 entry.idleClose?.cancel()
                 return entry
             }
-            held.remove(key)
+            link.session = null
             entry
         }
         stale.close()
         return null
     }
 
-    /** Keeps a newly opened session for [owner], or uses it once when [key] already has one. */
-    private fun adopt(key: String, session: WearLinkSession, openedAt: Long, owner: Job?): Held {
+    /** Keeps a newly opened session for [owner]; without an owner it serves this request only. */
+    private fun adopt(link: Link, key: String, session: WearLinkSession, openedAt: Long, owner: Job?): Held {
         val entry = Held(key, session, openedAt).apply { sentAt = clock() }
+        if (owner == null) return entry
         synchronized(lock) {
-            if (owner == null || key in held) return entry
-            held[key] = entry
+            link.session = entry
             // Dispatched: the owner may end on the main thread, and a close must not run there.
-            entry.ownerEnd = owner.invokeOnCompletion { idleScope.launch { ownerEnded(entry) } }
+            entry.ownerEnd = owner.invokeOnCompletion { idleScope.launch { ownerEnded(link, entry) } }
         }
         return entry
     }
 
-    private fun release(entry: Held, answered: Boolean) {
+    private fun release(link: Link, entry: Held, answered: Boolean) {
         synchronized(lock) {
-            val kept = held[entry.key] === entry
+            val kept = link.session === entry
             if (kept && answered && !entry.ownerEnded) {
-                entry.inUse = false
                 val use = entry.uses
                 val closeAt = entry.sentAt + maxIdleMillis
                 entry.idleClose = idleScope.launch {
                     delay((closeAt - clock()).coerceAtLeast(0))
-                    idled(entry, use)
+                    closeInTurn(link, entry) { entry.uses == use }
                 }
                 return
             }
-            if (kept) held.remove(entry.key)
+            if (kept) link.session = null
         }
         entry.close()
     }
 
-    private fun idled(entry: Held, use: Int) {
-        synchronized(lock) {
-            if (held[entry.key] !== entry || entry.inUse || entry.uses != use) return
-            held.remove(entry.key)
-        }
-        entry.close()
-    }
-
-    private fun ownerEnded(entry: Held) {
+    private suspend fun ownerEnded(link: Link, entry: Held) {
         synchronized(lock) {
             entry.ownerEnded = true
-            // In use by another caller: closed when that request ends.
-            if (held[entry.key] !== entry || entry.inUse) return
-            held.remove(entry.key)
+            if (link.session !== entry) return
         }
-        entry.close()
+        // A request on it now closes it when it ends; otherwise this turn does.
+        closeInTurn(link, entry) { true }
+    }
+
+    /** Closes [entry] in a turn of its own, after the requests before it, if it is still the watch's session and [due]. */
+    private suspend fun closeInTurn(link: Link, entry: Held, due: () -> Boolean) {
+        val turn = Turn(owner = null, background = false)
+        awaitTurn(link, turn, timeoutMillis = null)
+        try {
+            val closing = synchronized(lock) {
+                (link.session === entry && due()).also { if (it) link.session = null }
+            }
+            if (closing) entry.close()
+        } finally {
+            endTurn(link, turn)
+        }
+    }
+
+    /** Waits for [turn], for at most [timeoutMillis] when one is given; false when the time ran out first. */
+    private suspend fun awaitTurn(link: Link, turn: Turn, timeoutMillis: Long?): Boolean {
+        synchronized(lock) {
+            link.waiting += turn
+            grantLocked(link)
+        }?.signal?.complete(Unit)
+        val inTime = try {
+            if (timeoutMillis == null) {
+                turn.signal.await()
+                true
+            } else {
+                withTimeoutOrNull(timeoutMillis) { turn.signal.await() } != null
+            }
+        } catch (cancelled: CancellationException) {
+            if (!leave(link, turn)) endTurn(link, turn)
+            throw cancelled
+        }
+        // A turn that came just as the time ran out is still taken.
+        return inTime || !leave(link, turn)
+    }
+
+    /** Takes [turn] out of the queue; false when it had already come. */
+    private fun leave(link: Link, turn: Turn): Boolean = synchronized(lock) {
+        if (turn.granted) return false
+        link.waiting.remove(turn)
+        true
+    }
+
+    private fun endTurn(link: Link, turn: Turn) {
+        synchronized(lock) {
+            link.busy = false
+            val owner = turn.owner
+            if (!turn.background && owner != null && owner.isActive) noteCaller(link, owner)
+            grantLocked(link)
+        }?.signal?.complete(Unit)
+    }
+
+    /** The turn that now has the link, marked granted; null while the link is busy or no waiting turn may have it yet. */
+    private fun grantLocked(link: Link): Turn? {
+        if (link.busy) return null
+        val next = link.waiting.firstOrNull { !it.background }
+            ?: link.waiting.firstOrNull()?.takeIf { background ->
+                val heldUntil = holdLocked(link, background)
+                if (heldUntil != null) recheckAt(link, heldUntil)
+                heldUntil == null
+            }
+            ?: return null
+        link.waiting.remove(next)
+        link.busy = true
+        next.granted = true
+        return next
+    }
+
+    /** [owner] just asked: a background turn waits until it has been quiet for [maxIdleMillis], or has ended. */
+    private fun noteCaller(link: Link, owner: Job) {
+        val now = clock()
+        link.callers[owner]?.let { caller ->
+            caller.lastAt = now
+            return
+        }
+        link.callers[owner] = Caller(now, owner.invokeOnCompletion { callerEnded(link, owner) })
+    }
+
+    private fun callerEnded(link: Link, owner: Job) {
+        synchronized(lock) {
+            link.callers.remove(owner)
+            grantLocked(link)
+        }?.signal?.complete(Unit)
+    }
+
+    /** Until when another caller's work holds [turn] back; null when nothing does. Forgets the callers that are done. */
+    private fun holdLocked(link: Link, turn: Turn): Long? {
+        val now = clock()
+        var until: Long? = null
+        val callers = link.callers.entries.iterator()
+        while (callers.hasNext()) {
+            val (job, caller) = callers.next()
+            val ends = caller.lastAt + maxIdleMillis
+            if (!job.isActive || now >= ends) {
+                caller.ended.dispose()
+                callers.remove()
+            } else if (job !== turn.owner) {
+                until = maxOf(until ?: ends, ends)
+            }
+        }
+        return until
+    }
+
+    /** Looks at the queue again at [at], once the callers holding a background turn back have gone quiet. */
+    private fun recheckAt(link: Link, at: Long) {
+        link.recheck?.cancel()
+        link.recheck = idleScope.launch {
+            delay((at - clock()).coerceAtLeast(0))
+            synchronized(lock) { grantLocked(link) }?.signal?.complete(Unit)
+        }
     }
 
     companion object {

@@ -74,7 +74,7 @@ Naps are written too, each as its own sleep session: a still, worn stretch of at
 
 The watch also keeps every minute whole without bedtime mode once it sees sleep starting: ten still minutes on the wrist with a falling pulse (twenty by day, so reading or a film does not start it). It stops after five waking minutes in a row, off the wrist, on the charger, after ten hours, or at once when you unlock your phone: the phone tells the watch, at most every five minutes. A glance at the watch does not stop it. Holding the processor awake costs battery; see Night measurements below.
 
-While the watch's device screen is open and the watch is worn, its status card shows the heart rate as it happens ("Now: 72 bpm"). The watch measures it for the phone only while someone looks, and nothing live is stored: the same readings arrive with the next sync. Not yet tried on a watch.
+While the watch's device screen is open and the watch is worn, its status card shows the heart rate as it happens ("Now: 72 bpm"). The watch measures it for the phone only while someone looks, and nothing live is stored: the same readings arrive with the next sync. While a sync runs it pauses, and it comes back once the sync is over. Not yet tried on a watch.
 
 Not yet: series beyond heart rate, steps and sleep. Recorded data from the vendor app, if it is installed, still reaches Health Connect, and the apps that read it, as before.
 
