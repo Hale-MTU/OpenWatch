@@ -224,7 +224,8 @@ recording sessions and live readings.
 - `OpenWatchLinkCapabilities` answers from memory on the binder thread: `LinkDevices` (a
   StateFlow over the registry, each device's family for what it can do and whether its link is
   up, and the sync controller; every device goes by its registry id, the scale's included, so
-  no address leaves the phone; a family the contract has no integration name for is not listed),
+  no address leaves the phone; kind and integration are OpenLink's open sets, so a new family
+  goes by its own persisted name, and a client on an older library leaves it out),
   `LinkProfileSync` (last writer wins, stamped in `openlink_profile`), and
   `LinkLiveSessions`.
 - A recording session cannot start a workout on either watch; it keeps the watch's live

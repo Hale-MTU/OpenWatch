@@ -3,7 +3,6 @@ package tech.mmarca.openwatch.link
 import javax.inject.Inject
 import javax.inject.Singleton
 import tech.mmarca.openlink.OpenLinkDevice
-import tech.mmarca.openlink.OpenLinkDeviceKind
 import tech.mmarca.openlink.OpenLinkLiveSubscription
 import tech.mmarca.openlink.OpenLinkProfile
 import tech.mmarca.openlink.OpenLinkRecordingRequest
@@ -30,7 +29,8 @@ class OpenWatchLinkCapabilities @Inject constructor(
 
     override fun requestSync(caller: OpenLinkCaller, deviceId: String) {
         val device = devices.devices.value.firstOrNull { it.id == deviceId } ?: return
-        if (device.kind == OpenLinkDeviceKind.SCALE) return
+        // A scale, or any device whose family pulls nothing.
+        if (!device.supportsSync) return
         // One sync at a time; a request while one runs is dropped, as a tap on the button would be.
         syncController.syncDevice(deviceId)
     }

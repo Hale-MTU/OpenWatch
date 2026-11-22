@@ -103,7 +103,7 @@ class LinkDevicesTest {
     }
 
     @Test
-    fun `a family the contract has no name for stays off OpenLink until it does`() {
+    fun `a family newer than the contract's constants goes by its own name`() {
         val acme = StandIn("ACME", setOf(DeviceFeature.SYNC)) { it.kind == BleDeviceKind.WATCH }
 
         val devices = linkDevices(
@@ -113,6 +113,7 @@ class LinkDevicesTest {
             emptyMap(),
         )
 
-        assertTrue(devices.isEmpty())
+        assertEquals("ACME", devices.single().integration.name)
+        assertEquals(OpenLinkDeviceKind.WATCH, devices.single().kind)
     }
 }

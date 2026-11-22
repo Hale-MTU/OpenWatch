@@ -23,7 +23,7 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /**
- * The paired devices as OpenLink shows them: the registered devices a family owns, with what
+ * The paired devices as OpenLink shows them: every registered device a family owns, with what
  * the family says they can do and whether their link is up, and the sync state. Each goes by
  * its registry id, which says nothing about the device. Kept as a StateFlow so the binder
  * thread reads it from memory.
@@ -55,18 +55,14 @@ internal fun linkDevices(
 ): List<OpenLinkDevice> =
     registered.mapNotNull { device ->
         val family = families.of(device) ?: return@mapNotNull null
-        // The contract names its integrations; a family it has no name for stays off OpenLink until it does.
-        val integration = OpenLinkIntegration.entries.firstOrNull { it.name == family.id } ?: return@mapNotNull null
         val features = family.features(device)
         OpenLinkDevice(
             id = device.id,
             displayName = device.displayName,
-            kind = when (device.kind) {
-                BleDeviceKind.BIKE_COMPUTER -> OpenLinkDeviceKind.BIKE_COMPUTER
-                BleDeviceKind.SCALE -> OpenLinkDeviceKind.SCALE
-                BleDeviceKind.WATCH, BleDeviceKind.SENSOR -> OpenLinkDeviceKind.WATCH
-            },
-            integration = integration,
+            // Open sets: a new family or kind goes by its own persisted name, and a client on
+            // an older library leaves it out.
+            kind = OpenLinkDeviceKind(device.kind.storageName),
+            integration = OpenLinkIntegration(family.id),
             connection = when (connections[device.id]) {
                 true -> OpenLinkConnection.CONNECTED
                 false -> OpenLinkConnection.DISCONNECTED
