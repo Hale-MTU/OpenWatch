@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.features.watches
 
+import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.devices.wearos.WearOsSyncCursorStore
 import tech.mmarca.openwatch.devices.wearos.WearOsFamily
 import tech.mmarca.openwatch.devices.garmin.GarminFamily
@@ -117,7 +118,7 @@ class WatchDeviceViewModelTest {
     fun setUp() {
         val context = mockk<Context>()
         every { context.getSharedPreferences(any(), any()) } returns FakeSharedPreferences()
-        repo = BleDeviceRepository(context)
+        repo = testDeviceRepository()
         stateStore = GarminDeviceStateStore(FakeSharedPreferences())
         pairing = FakePairing()
         autoSyncIntervals.clear()

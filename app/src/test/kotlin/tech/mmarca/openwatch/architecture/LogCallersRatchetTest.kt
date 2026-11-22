@@ -50,6 +50,7 @@ class LogCallersRatchetTest {
             "app/AppStartupActors.kt",
             "app/core/presentation/ScreenError.kt",
             "app/data/repository/ActivityWriteRepository.kt",
+            "app/data/repository/BleDeviceRepository.kt",
             "app/devices/core/DeviceLog.kt",
             "app/devices/core/pairing/BleWatchPairing.kt",
             "app/devices/core/pairing/CompanionDevicePairing.kt",

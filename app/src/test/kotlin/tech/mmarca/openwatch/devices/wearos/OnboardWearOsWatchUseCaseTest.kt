@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.devices.wearos
 
+import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.devices.core.pairing.CompanionFilter
 import android.content.Context
 import io.mockk.every
@@ -64,7 +65,7 @@ class OnboardWearOsWatchUseCaseTest {
     fun setUp() {
         val context = mockk<Context>()
         every { context.getSharedPreferences(any(), any()) } returns FakeSharedPreferences()
-        repo = BleDeviceRepository(context)
+        repo = testDeviceRepository()
         pairing = FakePairing()
         useCase = OnboardWearOsWatchUseCase(pairing, repo)
     }

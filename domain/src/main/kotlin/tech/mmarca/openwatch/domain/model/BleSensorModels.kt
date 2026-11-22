@@ -71,6 +71,11 @@ data class BleSensorDevice(
     val integration: DeviceIntegration? = null,
     /** When recorded files were last pulled. Null for a sensor or a never-synced watch. */
     val lastSyncedAt: Instant? = null,
+    /**
+     * What the device adds to its records' ids and its rows' keys, so two devices of one family
+     * keep apart. Empty for a family's first device, whose ids were there before salts were.
+     */
+    val idSalt: String = "",
 ) {
     /** Literally a watch, not a bike computer, so an Edge never gets watch-only UI. */
     val isWatch: Boolean

@@ -13,6 +13,8 @@ import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
 import tech.mmarca.openwatch.core.presentation.CurrentLocaleStrings
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
+import tech.mmarca.openwatch.data.local.device.DeviceDao
+import tech.mmarca.openwatch.data.local.device.DeviceStateDao
 import tech.mmarca.openwatch.data.local.OpenWatchDatabase
 import tech.mmarca.openwatch.data.local.OpenWatchMigrations
 import tech.mmarca.openwatch.data.local.garmin.GarminSleepMinuteDao
@@ -50,6 +52,14 @@ object AppModule {
     @Singleton
     fun provideGarminWellnessDao(database: OpenWatchDatabase): GarminWellnessDao =
         database.garminWellnessDao()
+
+    @Provides
+    @Singleton
+    fun provideDeviceDao(database: OpenWatchDatabase): DeviceDao = database.deviceDao()
+
+    @Provides
+    @Singleton
+    fun provideDeviceStateDao(database: OpenWatchDatabase): DeviceStateDao = database.deviceStateDao()
 
     @Provides
     @Singleton

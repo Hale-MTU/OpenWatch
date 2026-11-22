@@ -39,7 +39,7 @@ OpenWatch seams noted.
 | `link/` | The OpenLink host: the exported service, the device list and profile as OpenLink shows them, recording sessions and live readings for another app. |
 | `healthconnect/` | `HealthConnectGateway`, `ActivityRecordWriter`, the sync gate, intents and availability. |
 | `activityimport/` | FIT activity files into `ActivityWriteRequest`s. |
-| `data/local`, `data/repository` | Room, the repositories and the SharedPreferences stores. |
+| `data/local`, `data/repository` | Room, the repositories and the SharedPreferences stores. `BleDeviceRepository` is the device registry: the `devices` table read once into memory, every read answered from there (the first waits for the load) and every change written behind it in order on the registry's own thread; the JSON in `ble_sensor_devices` it replaced is imported once and left in place. It gives a family's first device the empty id salt and each later one its own. |
 | `comaps/` | The CoMaps guidance feed a Garmin watch relays. |
 | `sensors/ble/` | The BLE discovery scan the add-watch flow uses, and the GATT UUIDs. |
 | `core/` | `ScreenError`, `UnitFormatter`, the OS permissions service, the dispatcher provider and the foreground gate. |

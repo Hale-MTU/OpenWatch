@@ -17,6 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.core.geo.GeoCoordinateError
 import tech.mmarca.openwatch.core.geo.GeoCoordinateParseResult
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
@@ -66,7 +67,7 @@ class WatchSendPointViewModelTest {
     fun setUp() {
         val context = mockk<Context>()
         every { context.getSharedPreferences(any(), any()) } returns FakeSharedPreferences()
-        repo = BleDeviceRepository(context)
+        repo = testDeviceRepository()
         stateStore = GarminDeviceStateStore(FakeSharedPreferences())
     }
 

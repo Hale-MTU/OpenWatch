@@ -17,6 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
@@ -64,7 +65,7 @@ class WatchAlarmsViewModelTest {
     fun setUp() {
         val context = mockk<Context>()
         every { context.getSharedPreferences(any(), any()) } returns FakeSharedPreferences()
-        repo = BleDeviceRepository(context)
+        repo = testDeviceRepository()
         stateStore = GarminDeviceStateStore(FakeSharedPreferences())
         watch = repo.addDevice(
             displayName = "Instinct",

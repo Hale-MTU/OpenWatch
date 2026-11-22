@@ -1,8 +1,5 @@
 package tech.mmarca.openwatch.data.repository
 
-import android.content.Context
-import io.mockk.every
-import io.mockk.mockk
 import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -21,12 +18,10 @@ import tech.mmarca.openwatch.devices.garmin.isGarminWatch
 
 class BleDeviceRepositoryTest {
 
-    /** One [FakeSharedPreferences] that survives across repository instances, so a second [newRepository] is the storage round-trip. */
-    private val context: Context = mockk<Context>().also { context ->
-        every { context.getSharedPreferences(any(), any()) } returns FakeSharedPreferences()
-    }
+    /** One table that survives across repository instances, so a second [newRepository] is the storage round-trip. */
+    private val dao = FakeDeviceDao()
 
-    private fun newRepository() = BleDeviceRepository(context)
+    private fun newRepository() = testDeviceRepository(dao)
 
     private fun BleDeviceRepository.addStrap(): BleSensorDevice = addDevice(
         displayName = "Strap",
@@ -126,13 +121,13 @@ class BleDeviceRepositoryTest {
         val device = repo.addStrap()
         repo.updateBatteryLevel(device.id, 75)
         val firstStamp = repo.devices.single().batteryUpdatedAt
-        val firstPublished = repo.devicesFlow.value
+        val firstPublished = repo.devices
 
         repo.updateBatteryLevel(device.id, 75)
 
         // A repeated identical read is a no-op, and the stamp still says when the level last moved.
         assertEquals(firstStamp, repo.devices.single().batteryUpdatedAt)
-        assertSame(firstPublished, repo.devicesFlow.value)
+        assertSame(firstPublished, repo.devices)
     }
 
     @Test
@@ -411,30 +406,66 @@ class BleDeviceRepositoryTest {
     }
 
     @Test
-    fun aChangeKeepsTheEntriesItCannotRead() {
-        val prefs = FakeSharedPreferences()
-        val ctx = mockk<Context>().also { every { it.getSharedPreferences(any(), any()) } returns prefs }
+    fun `the old JSON registry is imported once, and an entry it cannot read stays in the old file`() {
+        val legacy = FakeSharedPreferences()
+        val good = """{"id":"w1","displayName":"Watch","address":"AA:BB:CC:DD:EE:01","addedAt":1000,"kind":"WATCH"}"""
         val broken = """{"id":"w2","displayName":"Lost","address":"AA:BB:CC:DD:EE:02"}"""
-        prefs.edit().putString("devices", "[$broken]").apply()
+        legacy.edit().putString("devices", "[$good,$broken]").apply()
 
-        val repo = BleDeviceRepository(ctx)
-        assertTrue(repo.devices.isEmpty())
-        repo.addStrap()
+        val repo = testDeviceRepository(dao, legacy)
 
-        val stored = BleDeviceRegistryJson.decodeKeepingUnreadable(prefs.getString("devices", null)!!)!!
-        assertEquals(1, stored.devices.size)
-        assertEquals(1, stored.unreadable.size)
+        assertEquals(listOf("w1"), repo.devices.map { it.id })
+        // A watch stored before salts keeps its ids: the empty salt.
+        assertEquals("", repo.devices.single().idSalt)
+        assertTrue(legacy.getString("devices", null)!!.contains("\"w2\""))
+        // Once: a device removed after the import does not come back at the next start.
+        repo.removeDevice("w1")
+        assertTrue(testDeviceRepository(dao, legacy).devices.isEmpty())
     }
 
     @Test
-    fun aListThatDoesNotParseIsCopiedAsideBeforeItIsReplaced() {
-        val prefs = FakeSharedPreferences()
-        val ctx = mockk<Context>().also { every { it.getSharedPreferences(any(), any()) } returns prefs }
-        prefs.edit().putString("devices", "[{\"id\":").apply()
+    fun `a JSON registry that does not parse imports nothing and is left as it was`() {
+        val legacy = FakeSharedPreferences()
+        legacy.edit().putString("devices", "[{\"id\":").apply()
 
-        BleDeviceRepository(ctx).addStrap()
+        val repo = testDeviceRepository(dao, legacy)
 
-        assertEquals("[{\"id\":", prefs.getString("devices_unparseable", null))
+        assertTrue(repo.devices.isEmpty())
+        assertEquals("[{\"id\":", legacy.getString("devices", null))
+    }
+
+    @Test
+    fun `the first device of a family keeps no salt, and each after it gets one of its own`() {
+        val repo = newRepository()
+        fun watch(n: Int) = repo.addDevice(
+            "Watch $n", "AA:BB:CC:DD:EE:0$n", null, emptySet(),
+            kind = BleDeviceKind.WATCH, integration = DeviceIntegration.GARMIN,
+        )
+
+        val first = watch(1)
+        val second = watch(2)
+        val third = watch(3)
+        val wearOs = repo.addDevice("Pixel", "AA:BB:CC:DD:EE:09", null, emptySet(), kind = BleDeviceKind.WATCH, integration = DeviceIntegration.WEAROS)
+
+        assertEquals("", first.idSalt)
+        assertTrue(second.idSalt.isNotEmpty() && third.idSalt.isNotEmpty() && second.idSalt != third.idSalt)
+        // Another family's first device has none either.
+        assertEquals("", wearOs.idSalt)
+        // And the salts are stored.
+        assertEquals(second.idSalt, newRepository().devices.single { it.id == second.id }.idSalt)
+    }
+
+    @Test
+    fun `a row of an integration this version does not know stays in the table unread`() {
+        val repo = newRepository()
+        repo.addStrap()
+        dao.upsert(repo.devices.single().toEntity().copy(id = "w9", integration = "SOMEVENDOR"))
+
+        val reloaded = newRepository()
+
+        assertEquals(1, reloaded.devices.size)
+        assertTrue("never taken for a Garmin", reloaded.devices.none { it.id == "w9" })
+        assertTrue(dao.rows.containsKey("w9"))
     }
 
     @Test

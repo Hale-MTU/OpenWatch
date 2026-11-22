@@ -1,51 +1,72 @@
 package tech.mmarca.openwatch.data.repository
 
 import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
 import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import org.json.JSONArray
 import org.json.JSONObject
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import tech.mmarca.openwatch.data.local.device.DeviceDao
+import tech.mmarca.openwatch.data.local.device.DeviceEntity
 
 /**
- * The paired devices, one JSON list in preferences.
+ * The paired devices: the `devices` table, read once into memory and written behind it.
  *
- * Every change reads and rewrites the whole list, from the UI, a sync and a Bluetooth
- * callback at once, so changes run one at a time under [lock]. An entry this version
- * cannot read is kept as it was and written back, and a list that does not parse at all
- * is copied aside before anything replaces it: one bad entry must not forget every device.
+ * Every read is the in-memory list, so callers on any thread read it at once, as they did while
+ * this was a preferences file. The first read waits for the load, a handful of rows at process
+ * start, as a first read of SharedPreferences always waited for its file. Changes run one at a
+ * time under [lock], take effect in the list at once, and reach the table in order on the
+ * registry's own thread.
+ *
+ * The JSON list in `ble_sensor_devices` that held the registry until 2026-11 is imported once,
+ * at the first load, and left in place: an entry this version could not read stays there.
  */
 @Singleton
-class BleDeviceRepository @Inject constructor(
-    @ApplicationContext context: Context,
+class BleDeviceRepository(
+    private val dao: DeviceDao,
+    private val legacy: SharedPreferences?,
+    private val writer: Executor,
 ) {
-    private val prefs = context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
-    private val lock = Any()
+    @Inject
+    constructor(dao: DeviceDao, @ApplicationContext context: Context) : this(
+        dao = dao,
+        legacy = context.getSharedPreferences(LEGACY_PREFS_FILE, Context.MODE_PRIVATE),
+        writer = Executors.newSingleThreadExecutor { runnable -> Thread(runnable, "device-registry") },
+    )
 
-    /** Entries this version could not read, as stored. Written back with every change. */
-    @Volatile
-    private var unreadable: List<String> = emptyList()
-    private val _devices = MutableStateFlow(readDevices())
-    val devicesFlow: StateFlow<List<BleSensorDevice>> = _devices.asStateFlow()
+    private val lock = Any()
+    private val loaded = CountDownLatch(1)
+    private val _devices = MutableStateFlow<List<BleSensorDevice>?>(null)
+
+    /** The devices, from the first load on. */
+    val devicesFlow: Flow<List<BleSensorDevice>> = _devices.filterNotNull()
 
     val devices: List<BleSensorDevice>
-        get() = _devices.value
+        get() {
+            loaded.await()
+            return _devices.value.orEmpty()
+        }
 
     val enabledDevices: List<BleSensorDevice>
         get() = devices.filter { it.enabled }
 
-    fun refresh() = synchronized(lock) {
-        _devices.value = readDevices()
+    init {
+        writer.execute(::load)
     }
 
     fun resolveCapabilityAssignments(): Map<BleSensorCapability, BleSensorDevice> {
@@ -97,6 +118,7 @@ class BleDeviceRepository @Inject constructor(
                 integration = integration,
             )
         }
+        val resolvedKind = kind ?: BleDeviceKind.SENSOR
         val device = BleSensorDevice(
             id = UUID.randomUUID().toString(),
             displayName = displayName,
@@ -106,10 +128,11 @@ class BleDeviceRepository @Inject constructor(
             enabled = true,
             wheelCircumferenceMm = wheelCircumferenceMm,
             addedAt = Instant.now(),
-            kind = kind ?: BleDeviceKind.SENSOR,
+            kind = resolvedKind,
             integration = integration,
+            idSalt = saltFor(familyOf(resolvedKind, integration), excludingId = null),
         ).normalized()
-        persist(devices + device)
+        write(devices + device, changed = device)
         device
     }
 
@@ -126,22 +149,33 @@ class BleDeviceRepository @Inject constructor(
     ): BleSensorDevice = synchronized(lock) {
         val current = devices.firstOrNull { it.id == deviceId }
             ?: error("Unknown BLE device: $deviceId")
+        val nextKind = kind ?: current.kind
+        val nextIntegration = integration ?: current.integration
+        // A sensor that becomes a watch joins a family now, and takes its salt then.
+        val family = familyOf(nextKind, nextIntegration)
+        val salt = if (family != null && family != familyOf(current.kind, current.integration)) {
+            saltFor(family, excludingId = deviceId)
+        } else {
+            current.idSalt
+        }
         val updated = current.copy(
             displayName = displayName ?: current.displayName,
             bluetoothName = bluetoothName ?: current.bluetoothName,
             capabilities = capabilities ?: current.capabilities,
             enabled = enabled ?: current.enabled,
             wheelCircumferenceMm = wheelCircumferenceMm ?: current.wheelCircumferenceMm,
-            kind = kind ?: current.kind,
-            integration = integration ?: current.integration,
+            kind = nextKind,
+            integration = nextIntegration,
+            idSalt = salt,
         ).normalized()
-        persist(devices.map { if (it.id == deviceId) updated else it })
+        write(devices.map { if (it.id == deviceId) updated else it }, changed = updated)
         updated
     }
 
     fun removeDevice(deviceId: String) = synchronized(lock) {
-        // Garmin-specific state is cleared by whoever forgets the watch.
-        persist(devices.filterNot { it.id == deviceId })
+        if (devices.none { it.id == deviceId }) return@synchronized
+        // What an integration kept in device_state goes with the row; the rest is its family's to forget.
+        write(devices.filterNot { it.id == deviceId }, removedId = deviceId)
     }
 
     fun setDeviceEnabled(deviceId: String, enabled: Boolean) {
@@ -153,61 +187,126 @@ class BleDeviceRepository @Inject constructor(
         // Only a changed reading is written; the stamp says when the level moved.
         val current = devices.firstOrNull { it.id == deviceId } ?: return@synchronized
         if (current.batteryPercent == percent) return@synchronized
-        persist(
-            devices.map { device ->
-                if (device.id == deviceId) {
-                    device.copy(
-                        batteryPercent = percent,
-                        batteryUpdatedAt = Instant.now(),
-                    ).normalized()
-                } else {
-                    device
-                }
-            },
-        )
+        val updated = current.copy(batteryPercent = percent, batteryUpdatedAt = Instant.now()).normalized()
+        write(devices.map { if (it.id == deviceId) updated else it }, changed = updated)
     }
 
     /** Stamps a watch's last completed file pull. A no-op for an unknown id. */
     fun markSynced(deviceId: String, at: Instant) = synchronized(lock) {
-        if (devices.none { it.id == deviceId }) return@synchronized
-        persist(
-            devices.map { device ->
-                if (device.id == deviceId) device.copy(lastSyncedAt = at) else device
-            },
-        )
+        val current = devices.firstOrNull { it.id == deviceId } ?: return@synchronized
+        val updated = current.copy(lastSyncedAt = at)
+        write(devices.map { if (it.id == deviceId) updated else it }, changed = updated)
     }
 
-    /** Called under [lock]. */
-    private fun persist(nextDevices: List<BleSensorDevice>) {
-        prefs.edit {
-            putString(KEY_DEVICES, BleDeviceRegistryJson.encode(nextDevices, unreadable))
+    /** Called under [lock]: the list at once, the table behind it, in order. */
+    private fun write(next: List<BleSensorDevice>, changed: BleSensorDevice? = null, removedId: String? = null) {
+        _devices.value = next
+        val row = changed?.toEntity()
+        writer.execute {
+            try {
+                row?.let(dao::upsert)
+                removedId?.let(dao::delete)
+            } catch (error: Exception) {
+                // A full disk, or a database closed under it: the list in memory holds until the next start.
+                runCatching { Log.w(TAG, "registry write failed: ${error::class.simpleName}") }
+            }
         }
-        _devices.value = nextDevices
     }
 
-    private fun readDevices(): List<BleSensorDevice> {
-        val stored = prefs.getString(KEY_DEVICES, null) ?: return emptyList()
-        val registry = BleDeviceRegistryJson.decodeKeepingUnreadable(stored)
-        if (registry == null) {
-            // Not a list at all. Keep the first copy aside, so the next change cannot erase it.
-            if (!prefs.contains(KEY_UNPARSEABLE_COPY)) prefs.edit { putString(KEY_UNPARSEABLE_COPY, stored) }
-            unreadable = emptyList()
-            return emptyList()
+    private fun load() {
+        try {
+            importLegacyOnce()
+            // A row this version cannot read, from a newer build, stays in the table unread.
+            _devices.value = dao.all().mapNotNull { it.toModelOrNull() }
+        } catch (error: Exception) {
+            runCatching { Log.w(TAG, "registry load failed: ${error::class.simpleName}") }
+            _devices.value = emptyList()
+        } finally {
+            loaded.countDown()
         }
-        unreadable = registry.unreadable
-        return registry.devices
+    }
+
+    /** The JSON registry of before, into the table once. A row already there wins. */
+    private fun importLegacyOnce() {
+        val prefs = legacy ?: return
+        if (prefs.getBoolean(KEY_IMPORTED, false)) return
+        val registry = prefs.getString(KEY_DEVICES, null)?.let(BleDeviceRegistryJson::decodeKeepingUnreadable)
+        if (registry != null) dao.insertIfAbsent(registry.devices.map { it.toEntity() })
+        prefs.edit(commit = true) { putBoolean(KEY_IMPORTED, true) }
+    }
+
+    /**
+     * The salt a device of [family] takes: empty for the family's first, so its records keep the
+     * ids they had before salts existed, and a fresh one for each after it.
+     */
+    private fun saltFor(family: String?, excludingId: String?): String {
+        if (family == null) return ""
+        val taken = devices.any { it.id != excludingId && familyOf(it.kind, it.integration) == family }
+        return if (taken) UUID.randomUUID().toString().take(SALT_LENGTH) else ""
     }
 
     private companion object {
-        const val PREFS_FILE = "ble_sensor_devices"
+        const val TAG = "BleDeviceRepository"
+        const val LEGACY_PREFS_FILE = "ble_sensor_devices"
         const val KEY_DEVICES = "devices"
-        const val KEY_UNPARSEABLE_COPY = "devices_unparseable"
+        const val KEY_IMPORTED = "devices_imported_to_room"
+        const val SALT_LENGTH = 8
     }
 }
 
 /**
- * The registry's JSON format, shared with the Flutter build. Reading is
- * tolerant: absent or unknown fields fall back to a plain sensor.
+ * The family a device's records belong to, for its salt: its integration, and Garmin for a watch
+ * or bike computer stored before the integration was (it always was a Garmin). Null for a
+ * plain sensor, which writes no records of its own.
+ */
+internal fun familyOf(kind: BleDeviceKind, integration: DeviceIntegration?): String? = when {
+    integration != null -> integration.storageName
+    kind == BleDeviceKind.WATCH || kind == BleDeviceKind.BIKE_COMPUTER -> DeviceIntegration.GARMIN.storageName
+    else -> null
+}
+
+internal fun BleSensorDevice.toEntity() = DeviceEntity(
+    id = id,
+    integration = integration?.storageName,
+    kind = kind.storageName,
+    displayName = displayName,
+    address = address,
+    bluetoothName = bluetoothName,
+    capabilities = capabilities.joinToString(",") { it.name },
+    enabled = enabled,
+    wheelCircumferenceMm = wheelCircumferenceMm,
+    batteryPercent = batteryPercent,
+    batteryUpdatedAt = batteryUpdatedAt?.toEpochMilli(),
+    addedAt = addedAt.toEpochMilli(),
+    lastSyncedAt = lastSyncedAt?.toEpochMilli(),
+    idSalt = idSalt,
+)
+
+/** The model of [this] row, or null for an integration or kind this version does not know. */
+internal fun DeviceEntity.toModelOrNull(): BleSensorDevice? {
+    val knownIntegration = integration?.let { DeviceIntegration.fromStorage(it) ?: return null }
+    return BleSensorDevice(
+        id = id,
+        displayName = displayName,
+        address = address,
+        bluetoothName = bluetoothName,
+        capabilities = capabilities.split(',').filter { it.isNotBlank() }
+            .mapNotNullTo(mutableSetOf()) { name -> runCatching { BleSensorCapability.valueOf(name) }.getOrNull() },
+        enabled = enabled,
+        wheelCircumferenceMm = wheelCircumferenceMm,
+        batteryPercent = batteryPercent,
+        batteryUpdatedAt = batteryUpdatedAt?.let(Instant::ofEpochMilli),
+        addedAt = Instant.ofEpochMilli(addedAt),
+        kind = BleDeviceKind.fromStorage(kind) ?: return null,
+        integration = knownIntegration,
+        lastSyncedAt = lastSyncedAt?.let(Instant::ofEpochMilli),
+        idSalt = idSalt,
+    ).normalized()
+}
+
+/**
+ * The registry's JSON format of before, shared with the Flutter build: what the registry imports
+ * once. Reading is tolerant: absent or unknown fields fall back to a plain sensor.
  */
 internal object BleDeviceRegistryJson {
 

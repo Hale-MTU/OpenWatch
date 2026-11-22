@@ -96,7 +96,6 @@ class WatchesViewModel @Inject constructor(
 
 
     fun refresh() {
-        deviceRepository.refresh()
         refreshOsPermissions()
     }
 
