@@ -70,15 +70,7 @@ class MetricStoreTest {
     @Test
     fun aRowThisBuildCannotReadIsSkippedNotFatal() {
         store.put(WearMetrics.HEART_RATE, hr(1_000, 60))
-        store.writableDatabase.insert(
-            MetricStore.TABLE,
-            null,
-            ContentValues().apply {
-                put("metric", WearMetrics.HEART_RATE.key)
-                put("time_ms", 2_000L)
-                put("line", "HR from a future build")
-            },
-        )
+        insertRaw(WearMetrics.HEART_RATE.key, 2_000L, "HR from a future build")
         assertEquals(listOf(hr(1_000, 60)), store.since(WearMetrics.HEART_RATE, 0, 10))
         assertNull(store.latest(WearMetrics.HEART_RATE))
     }
@@ -157,6 +149,7 @@ class MetricStoreTest {
                 put("metric", key)
                 put("time_ms", at)
                 put("line", line)
+                put("seq", RAW_SEQ + at)
             },
         )
     }
@@ -185,5 +178,8 @@ class MetricStoreTest {
         const val FILE_DB = "test_metrics_wal.db"
         const val WRITERS = 4
         const val ROWS_PER_WRITER = 100
+
+        /** Far above what the tests' own writes take, so a raw row never shares a number with one. */
+        const val RAW_SEQ = 1_000_000L
     }
 }
