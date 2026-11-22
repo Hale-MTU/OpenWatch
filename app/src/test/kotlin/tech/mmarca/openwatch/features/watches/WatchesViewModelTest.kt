@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.features.watches
 
+import androidx.lifecycle.SavedStateHandle
 import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.devices.core.pairing.CompanionFilter
 import android.content.Context
@@ -152,9 +153,12 @@ class WatchesViewModelTest {
         every { service.watchSetupCatalog() } returns catalog
     }
 
+    private val savedState = SavedStateHandle()
+
     private fun viewModel(
         os: OsPermissionsService = osPermissions(),
     ) = WatchesViewModel(
+        savedStateHandle = savedState,
         deviceRepository = repo,
         sensorCoordinator = coordinator,
         onboardGarminWatch = OnboardGarminWatchUseCase(pairing, repo, probe),
@@ -242,10 +246,13 @@ class WatchesViewModelTest {
         verify(exactly = 1) { service.openSettingsFor(OsPermissionId.BATTERY_OPTIMIZATION) }
         verify(exactly = 0) { service.openSettingsFor(OsPermissionId.NOTIFICATION_FORWARDING) }
 
+        // Android reclaims the process while its settings screen shows; the walk is not lost.
+        val back = viewModel(os = service)
+
         // Coming back from that screen hands over the next one.
-        vm.openNextSpecialPermission()
+        back.openNextSpecialPermission()
         verify(exactly = 1) { service.openSettingsFor(OsPermissionId.NOTIFICATION_FORWARDING) }
-        assertTrue(vm.uiState.value.pendingSpecialPermissions.isEmpty())
+        assertTrue(back.uiState.value.pendingSpecialPermissions.isEmpty())
     }
 
     @Test

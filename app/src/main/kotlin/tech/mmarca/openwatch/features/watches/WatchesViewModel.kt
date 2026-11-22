@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.features.watches
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -70,6 +71,7 @@ data class WatchesUiState(
  */
 @HiltViewModel
 class WatchesViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     private val deviceRepository: BleDeviceRepository,
     private val sensorCoordinator: BleSensorCoordinator,
     private val onboardGarminWatch: OnboardGarminWatchUseCase,
@@ -77,9 +79,32 @@ class WatchesViewModel @Inject constructor(
     private val osPermissionsService: OsPermissionsService,
 ) : ViewModel() {
 
+    /**
+     * The permission walk sends the user to Android's settings screens, where the process may be
+     * reclaimed: the gate, the queue and the open add dialog come back from [savedStateHandle].
+     * The scan's results do not survive anyway, so the selection is not kept.
+     */
     private val localState = MutableStateFlow(
-        WatchesUiState(osPermissions = osPermissionsService.watchSetupCatalog()),
+        WatchesUiState(
+            osPermissions = osPermissionsService.watchSetupCatalog(),
+            showPermissionsGate = savedStateHandle[KEY_PERMISSIONS_GATE] ?: false,
+            pendingSpecialPermissions = savedStateHandle.get<ArrayList<String>>(KEY_PENDING_SPECIALS).orEmpty()
+                .mapNotNull { name -> OsPermissionId.entries.firstOrNull { it.name == name } },
+            showAddFlow = savedStateHandle[KEY_ADD_FLOW] ?: false,
+            addDisplayName = savedStateHandle[KEY_ADD_NAME] ?: "",
+        ),
     )
+
+    init {
+        viewModelScope.launch {
+            localState.collect { state ->
+                savedStateHandle[KEY_PERMISSIONS_GATE] = state.showPermissionsGate
+                savedStateHandle[KEY_PENDING_SPECIALS] = ArrayList(state.pendingSpecialPermissions.map { it.name })
+                savedStateHandle[KEY_ADD_FLOW] = state.showAddFlow
+                savedStateHandle[KEY_ADD_NAME] = state.addDisplayName
+            }
+        }
+    }
 
     val uiState: StateFlow<WatchesUiState> = combine(
         deviceRepository.devicesFlow,
@@ -315,3 +340,8 @@ class WatchesViewModel @Inject constructor(
         return state.asStateFlow()
     }
 }
+
+private const val KEY_PERMISSIONS_GATE = "watches_permissions_gate"
+private const val KEY_PENDING_SPECIALS = "watches_pending_specials"
+private const val KEY_ADD_FLOW = "watches_add_flow"
+private const val KEY_ADD_NAME = "watches_add_name"

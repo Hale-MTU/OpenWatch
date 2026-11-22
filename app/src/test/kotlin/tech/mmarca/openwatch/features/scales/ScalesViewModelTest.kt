@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.features.scales
 
+import androidx.lifecycle.SavedStateHandle
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -49,7 +50,10 @@ class ScalesViewModelTest {
         }
     }
 
+    private val savedState = SavedStateHandle()
+
     private fun viewModel() = ScalesViewModel(
+        savedStateHandle = savedState,
         store = store,
         listener = listener,
         weighIns = FakeScaleWeighInRepository(),
@@ -69,6 +73,19 @@ class ScalesViewModelTest {
         viewModel.openAddFlow()
         assertFalse(viewModel.uiState.value.showPermissionsGate)
         assertTrue(viewModel.uiState.value.showAddFlow)
+    }
+
+    @Test
+    fun `the add flow comes back after the process is reclaimed`() = runTest {
+        scanGranted = false
+        val before = viewModel()
+        backgroundScope.launch(mainDispatcherRule.testDispatcher) { before.uiState.collect {} }
+        before.startAdd()
+
+        val after = viewModel()
+        backgroundScope.launch(mainDispatcherRule.testDispatcher) { after.uiState.collect {} }
+
+        assertTrue(after.uiState.value.showPermissionsGate)
     }
 
     @Test

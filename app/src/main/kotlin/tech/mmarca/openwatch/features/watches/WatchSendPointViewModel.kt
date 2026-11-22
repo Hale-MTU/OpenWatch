@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.core.geo.GeoCoordinateParseResult
 import tech.mmarca.openwatch.core.geo.GeoCoordinateParser
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
@@ -54,7 +55,7 @@ data class WatchSendPointUiState(
 /** The send-a-point form. The send itself runs in the controller, so it outlives this screen. */
 @HiltViewModel
 class WatchSendPointViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
     deviceRepository: BleDeviceRepository,
     private val stateStore: GarminDeviceStateStore,
     private val actionsController: GarminWatchActionsController,
@@ -70,15 +71,26 @@ class WatchSendPointViewModel @Inject constructor(
 
     private val form = MutableStateFlow(
         Form(
-            selectedDeviceId = savedStateHandle.get<String>(WATCH_DEVICE_ID_ARG),
-            name = savedStateHandle.get<String>(WATCH_POINT_NAME_ARG).orEmpty(),
-            coordinates = sharedCoordinates(
+            // What the user typed wins over what the route brought, after a reclaimed process.
+            selectedDeviceId = savedStateHandle.get<String>(KEY_FORM_DEVICE) ?: savedStateHandle.get<String>(WATCH_DEVICE_ID_ARG),
+            name = savedStateHandle.get<String>(KEY_FORM_NAME) ?: savedStateHandle.get<String>(WATCH_POINT_NAME_ARG).orEmpty(),
+            coordinates = savedStateHandle.get<String>(KEY_FORM_COORDINATES) ?: sharedCoordinates(
                 savedStateHandle.get<String>(WATCH_POINT_LATITUDE_ARG)?.toDoubleOrNull(),
                 savedStateHandle.get<String>(WATCH_POINT_LONGITUDE_ARG)?.toDoubleOrNull(),
             ),
             sharedUnreadable = savedStateHandle.get<String>(WATCH_POINT_UNREADABLE_ARG) == "true",
         ),
     )
+
+    init {
+        viewModelScope.launch {
+            form.collect { form ->
+                savedStateHandle[KEY_FORM_DEVICE] = form.selectedDeviceId
+                savedStateHandle[KEY_FORM_NAME] = form.name
+                savedStateHandle[KEY_FORM_COORDINATES] = form.coordinates
+            }
+        }
+    }
 
     init {
         // A result from an earlier visit says nothing about this point.
@@ -142,3 +154,7 @@ class WatchSendPointViewModel @Inject constructor(
 /** Five decimals is about a metre. A point, never a comma: the parser reads it back. */
 internal fun coordinatesText(latitude: Double, longitude: Double): String =
     String.format(Locale.US, "%.5f, %.5f", latitude, longitude)
+
+private const val KEY_FORM_DEVICE = "send_point_device"
+private const val KEY_FORM_NAME = "send_point_name"
+private const val KEY_FORM_COORDINATES = "send_point_coordinates"

@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.features.scales
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -76,13 +77,40 @@ private data class ScalesLocalState(
  */
 @HiltViewModel
 class ScalesViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
     private val store: XiaomiScaleStore,
     private val listener: XiaomiScaleListener,
     weighIns: ScaleWeighInRepository,
     private val osPermissionsService: OsPermissionsService,
 ) : ViewModel() {
 
-    private val local = MutableStateFlow(ScalesLocalState(osPermissions = osPermissionsService.scaleSetupCatalog()))
+    /**
+     * The add flow outlives a reclaimed process: the gate, the dialog, its step and the name come
+     * back from [savedStateHandle]. The key never does: it opens every weigh-in the scale sends,
+     * so it stays in memory only and is typed again.
+     */
+    private val local = MutableStateFlow(
+        ScalesLocalState(
+            osPermissions = osPermissionsService.scaleSetupCatalog(),
+            showPermissionsGate = savedStateHandle[KEY_PERMISSIONS_GATE] ?: false,
+            showAddFlow = savedStateHandle[KEY_ADD_FLOW] ?: false,
+            addStep = savedStateHandle.get<String>(KEY_ADD_STEP)?.let { name -> AddScaleStep.entries.firstOrNull { it.name == name } }
+                ?: AddScaleStep.FIND,
+            nameInput = savedStateHandle[KEY_NAME] ?: "",
+        ),
+    )
+
+    init {
+        viewModelScope.launch {
+            local.collect { state ->
+                savedStateHandle[KEY_PERMISSIONS_GATE] = state.showPermissionsGate
+                savedStateHandle[KEY_ADD_FLOW] = state.showAddFlow
+                // The key step needs what Android found, which a new process no longer has.
+                savedStateHandle[KEY_ADD_STEP] = if (state.found == null) AddScaleStep.FIND.name else state.addStep.name
+                savedStateHandle[KEY_NAME] = state.nameInput
+            }
+        }
+    }
 
     val uiState: StateFlow<ScalesUiState> = combine(
         store.config,
@@ -200,3 +228,8 @@ class ScalesViewModel @Inject constructor(
         }
     }
 }
+
+private const val KEY_PERMISSIONS_GATE = "scales_permissions_gate"
+private const val KEY_ADD_FLOW = "scales_add_flow"
+private const val KEY_ADD_STEP = "scales_add_step"
+private const val KEY_NAME = "scales_add_name"
