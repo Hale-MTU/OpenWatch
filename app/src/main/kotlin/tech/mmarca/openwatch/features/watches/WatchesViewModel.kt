@@ -232,14 +232,11 @@ class WatchesViewModel @Inject constructor(
         localState.update { it.copy(addDisplayName = value) }
     }
 
-    /** Bonds and registers the selected watch. [onDone] gets `true` when the sheet should close. */
-    fun onboardSelectedWatch(onDone: (Boolean) -> Unit = {}) {
+    /** Bonds and registers the selected watch. Success closes the sheet through the state; a failure leaves it open. */
+    fun onboardSelectedWatch() {
         val state = localState.value
         val selected = state.selectedDevice
-        if (selected == null || state.isOnboarding) {
-            onDone(false)
-            return
-        }
+        if (selected == null || state.isOnboarding) return
         val displayName = state.addDisplayName.trim()
             .ifBlank { selected.name ?: selected.address }
 
@@ -253,14 +250,12 @@ class WatchesViewModel @Inject constructor(
                     is WearOsOnboardOutcome.Succeeded -> {
                         localState.update { it.copy(isOnboarding = false, onboardStep = null) }
                         closeAddFlow()
-                        onDone(true)
                     }
                     // The sheet stays open, so the user can try again and allow the request.
                     WearOsOnboardOutcome.NotAssociated -> {
                         localState.update {
                             it.copy(isOnboarding = false, onboardStep = null, companionRequired = true)
                         }
-                        onDone(false)
                     }
                 }
             }
@@ -301,7 +296,6 @@ class WatchesViewModel @Inject constructor(
                             ),
                         )
                     }
-                    onDone(false)
                 }
 
                 is GarminOnboardOutcome.Succeeded -> {
@@ -321,7 +315,6 @@ class WatchesViewModel @Inject constructor(
                         )
                     }
                     closeAddFlow()
-                    onDone(true)
                 }
             }
         }

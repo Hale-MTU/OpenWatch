@@ -239,11 +239,13 @@ internal fun ScaleRemoveCard(onRemove: () -> Unit) {
     }
 }
 
-/** A new key for the same scale. [onSave] says whether the text was a key; the dialog stays open if not. */
+/**
+ * A new key for the same scale. The ViewModel decides whether it closes: [invalid] marks a text
+ * that was not a key. The text stays in memory only: the key opens every weigh-in.
+ */
 @Composable
-internal fun ScaleKeyDialog(onSave: (String) -> Boolean, onDismiss: () -> Unit) {
+internal fun ScaleKeyDialog(invalid: Boolean, onEdit: () -> Unit, onSave: (String) -> Unit, onDismiss: () -> Unit) {
     var key by remember { mutableStateOf("") }
-    var invalid by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.settings_scales_key_replace)) },
@@ -254,14 +256,14 @@ internal fun ScaleKeyDialog(onSave: (String) -> Boolean, onDismiss: () -> Unit) 
                     value = key,
                     onValueChange = {
                         key = it
-                        invalid = false
+                        onEdit()
                     },
                     isError = invalid,
                 )
             }
         },
         confirmButton = {
-            TextButton(onClick = { invalid = !onSave(key) }) { Text(stringResource(R.string.action_save)) }
+            TextButton(onClick = { onSave(key) }) { Text(stringResource(R.string.action_save)) }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }

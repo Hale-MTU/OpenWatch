@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -63,7 +64,6 @@ fun ScaleDeviceScreen(
     }
 
     var showRenameDialog by rememberSaveable { mutableStateOf(false) }
-    var showKeyDialog by rememberSaveable { mutableStateOf(false) }
     var showRemoveDialog by rememberSaveable { mutableStateOf(false) }
 
     val name = state.name
@@ -112,7 +112,7 @@ fun ScaleDeviceScreen(
         }
 
         SectionHeader(stringResource(R.string.settings_scales_section_scale))
-        ScaleDetailsCards(state = state, onChangeKey = { showKeyDialog = true })
+        ScaleDetailsCards(state = state, onChangeKey = viewModel::openKeyDialog)
         ScaleRemoveCard(onRemove = { showRemoveDialog = true })
     }
 
@@ -127,11 +127,16 @@ fun ScaleDeviceScreen(
             onDismiss = { showRenameDialog = false },
         )
     }
-    if (showKeyDialog) {
+    if (state.keyDialogOpen) {
         ScaleKeyDialog(
-            onSave = { key -> viewModel.changeKey(key).also { if (it) showKeyDialog = false } },
-            onDismiss = { showKeyDialog = false },
+            invalid = state.keyInputInvalid,
+            onEdit = viewModel::onKeyEdited,
+            onSave = viewModel::changeKey,
+            onDismiss = viewModel::dismissKeyDialog,
         )
+    }
+    LaunchedEffect(state.removed) {
+        if (state.removed) onRemoved()
     }
     if (showRemoveDialog) {
         ConfirmRemoveDialog(
@@ -140,7 +145,6 @@ fun ScaleDeviceScreen(
             onConfirm = {
                 showRemoveDialog = false
                 viewModel.remove()
-                onRemoved()
             },
             onDismiss = { showRemoveDialog = false },
         )

@@ -21,11 +21,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -210,12 +207,6 @@ enum class WatchSettingsChangeResult {
 /** A transient report on the last change, for the screen to word. */
 enum class WatchSettingsNotice { REFUSED, UNANSWERED }
 
-/** One-shot instructions to the screen. */
-enum class WatchSettingsEvent {
-    /** The screen described something just deleted. The watch answers a dead id with its parent. */
-    CLOSE_SCREEN,
-}
-
 @Immutable
 data class WatchSettingsUiState(
     val isLoading: Boolean = true,
@@ -226,6 +217,11 @@ data class WatchSettingsUiState(
     /** Rows with a change in flight — drawn busy, and not re-tappable. */
     val busyEntryIds: Set<Int> = emptySet(),
     val notice: WatchSettingsNotice? = null,
+    /**
+     * The screen described something just deleted, and must close: the watch answers a dead id
+     * with its parent. Held until the screen says it closed ([WatchSettingsViewModel.onCloseHandled]).
+     */
+    val closeScreen: Boolean = false,
 ) {
     val isEmpty: Boolean get() = !isLoading && error == null && (screen?.isEmpty ?: true)
 }
@@ -249,8 +245,6 @@ class WatchSettingsViewModel @Inject constructor(
     private val state = MutableStateFlow(WatchSettingsUiState())
     val uiState: StateFlow<WatchSettingsUiState> = state.asStateFlow()
 
-    private val eventFlow = MutableSharedFlow<WatchSettingsEvent>(extraBufferCapacity = 4)
-    val events: SharedFlow<WatchSettingsEvent> = eventFlow.asSharedFlow()
 
     /** Set once the first read lands, so resume can tell a return from a first appearance. */
     private var loadedOnce = false
@@ -271,6 +265,11 @@ class WatchSettingsViewModel @Inject constructor(
     fun onResumed() {
         if (!loadedOnce) return
         load()
+    }
+
+    /** The screen closed after a delete. */
+    fun onCloseHandled() {
+        state.update { it.copy(closeScreen = false) }
     }
 
     fun setSwitch(entryId: Int, value: Boolean) {
@@ -356,7 +355,7 @@ class WatchSettingsViewModel @Inject constructor(
                 )
             }
             if (result == WatchSettingsChangeResult.APPLIED && closeOnSuccess) {
-                eventFlow.tryEmit(WatchSettingsEvent.CLOSE_SCREEN)
+                state.update { it.copy(closeScreen = true) }
                 return@launch
             }
             // Not "if applied": show what the watch holds, not what was asked.

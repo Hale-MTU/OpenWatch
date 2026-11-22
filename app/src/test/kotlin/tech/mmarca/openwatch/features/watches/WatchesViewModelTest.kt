@@ -331,10 +331,9 @@ class WatchesViewModelTest {
         vm.openAddFlow()
         vm.selectDiscoveredDevice(watch)
 
-        var closed: Boolean? = null
-        vm.onboardSelectedWatch { closed = it }
+        vm.onboardSelectedWatch()
 
-        assertEquals(true, closed)
+        assertFalse(vm.uiState.value.showAddFlow)
         assertEquals(1, repo.devices.size)
         assertEquals(BleDeviceKind.WATCH, repo.devices.single().kind)
         assertFalse(vm.uiState.value.isOnboarding)
@@ -368,10 +367,9 @@ class WatchesViewModelTest {
         vm.openAddFlow()
         vm.selectDiscoveredDevice(watch)
 
-        var closed: Boolean? = null
-        vm.onboardSelectedWatch { closed = it }
+        vm.onboardSelectedWatch()
 
-        assertEquals(false, closed)
+        assertTrue(vm.uiState.value.showAddFlow)
         assertTrue(repo.devices.isEmpty())
         // The sheet must survive: re-scanning to retry a mistyped code is a pointless round trip.
         assertNotNull(vm.uiState.value.selectedDevice)
@@ -395,10 +393,9 @@ class WatchesViewModelTest {
         vm.openAddFlow()
         vm.selectDiscoveredDevice(wearOsWatch)
 
-        var closed: Boolean? = null
-        vm.onboardSelectedWatch { closed = it }
+        vm.onboardSelectedWatch()
 
-        assertEquals(false, closed)
+        assertTrue(vm.uiState.value.showAddFlow)
         assertTrue(repo.devices.isEmpty())
         assertTrue(vm.uiState.value.showAddFlow)
         assertTrue(vm.uiState.value.companionRequired)
@@ -412,10 +409,9 @@ class WatchesViewModelTest {
         vm.openAddFlow()
         vm.selectDiscoveredDevice(wearOsWatch)
 
-        var closed: Boolean? = null
-        vm.onboardSelectedWatch { closed = it }
+        vm.onboardSelectedWatch()
 
-        assertEquals(true, closed)
+        assertFalse(vm.uiState.value.showAddFlow)
         assertTrue(repo.devices.single().isWearOs)
         assertFalse(vm.uiState.value.companionRequired)
         assertEquals(null, vm.uiState.value.onboardNotice)
@@ -428,10 +424,9 @@ class WatchesViewModelTest {
         vm.openAddFlow()
         vm.selectDiscoveredDevice(watch)
 
-        var closed: Boolean? = null
-        vm.onboardSelectedWatch { closed = it }
+        vm.onboardSelectedWatch()
 
-        assertEquals(true, closed)
+        assertFalse(vm.uiState.value.showAddFlow)
         assertEquals(1, repo.devices.size)
         assertEquals(WatchOnboardNotice.NO_COMPANION, vm.uiState.value.onboardNotice)
     }

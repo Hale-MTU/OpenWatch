@@ -86,13 +86,20 @@ class ScaleDeviceViewModelTest {
         viewModel.rename("   ")
         assertEquals("Hall scale", viewModel.uiState.value.name)
 
-        assertFalse(viewModel.changeKey("nope"))
-        assertTrue(viewModel.changeKey("ffffffffffffffffffffffffffffffff"))
+        viewModel.openKeyDialog()
+        viewModel.changeKey("nope")
+        assertTrue(viewModel.uiState.value.keyDialogOpen)
+        assertTrue(viewModel.uiState.value.keyInputInvalid)
+        viewModel.onKeyEdited()
+        assertFalse(viewModel.uiState.value.keyInputInvalid)
+        viewModel.changeKey("ffffffffffffffffffffffffffffffff")
+        assertFalse(viewModel.uiState.value.keyDialogOpen)
         verify(exactly = 1) { listener.changeKey(any()) }
         assertEquals("8C:D0:B2:F6:BE:EF", viewModel.uiState.value.address)
 
         viewModel.remove()
         assertNull(viewModel.uiState.value.name)
+        assertTrue(viewModel.uiState.value.removed)
     }
 
     @Test

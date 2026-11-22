@@ -70,11 +70,10 @@ fun WatchSettingsScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(viewModel) {
-        viewModel.events.collect { event ->
-            when (event) {
-                WatchSettingsEvent.CLOSE_SCREEN -> onClose()
-            }
+    LaunchedEffect(state.closeScreen) {
+        if (state.closeScreen) {
+            viewModel.onCloseHandled()
+            onClose()
         }
     }
 

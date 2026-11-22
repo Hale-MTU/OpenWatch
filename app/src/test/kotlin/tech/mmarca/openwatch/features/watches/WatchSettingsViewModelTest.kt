@@ -142,15 +142,15 @@ class WatchSettingsViewModelTest {
         coEvery { link.screen(SCREEN) } returns before
         coEvery { link.delete(SCREEN, ENTRY) } returns true
         val vm = viewModel()
-        val events = mutableListOf<WatchSettingsEvent>()
-        val collecting = launch(UnconfinedTestDispatcher(testScheduler)) { vm.events.collect { events += it } }
 
         vm.runAction(ENTRY)
 
-        assertEquals(listOf(WatchSettingsEvent.CLOSE_SCREEN), events)
+        // Held in the state, so a screen that was not collecting at that moment still closes.
+        assertTrue(vm.uiState.value.closeScreen)
         // The watch answers a deleted screen's id with its parent. Reading it would show the wrong screen.
         coVerify(exactly = 1) { link.screen(SCREEN) }
-        collecting.cancel()
+        vm.onCloseHandled()
+        assertFalse(vm.uiState.value.closeScreen)
     }
 
     @Test

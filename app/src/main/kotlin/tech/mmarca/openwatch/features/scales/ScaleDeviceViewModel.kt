@@ -65,6 +65,12 @@ data class ScaleDeviceUiState(
     /** The scale filed a weigh-in under another of its user slots. */
     val otherProfileIgnored: Boolean = false,
     val screenError: ScreenError? = null,
+    /** The new-key dialog is open; it closes only on a text that is a key. */
+    val keyDialogOpen: Boolean = false,
+    /** The last text saved in that dialog was not a key. */
+    val keyInputInvalid: Boolean = false,
+    /** The scale was removed: the screen goes back. */
+    val removed: Boolean = false,
 )
 
 private data class ScaleDeviceLocalState(
@@ -73,6 +79,9 @@ private data class ScaleDeviceLocalState(
     val missingWritePermissions: Set<String> = emptySet(),
     val missingProfileInputs: Set<BodyCompositionInput> = emptySet(),
     val screenError: ScreenError? = null,
+    val keyDialogOpen: Boolean = false,
+    val keyInputInvalid: Boolean = false,
+    val removed: Boolean = false,
 )
 
 /** One scale, and everything about it. The listening and the saving go on without this screen. */
@@ -117,6 +126,9 @@ class ScaleDeviceViewModel @Inject constructor(
             missingProfileInputs = local.missingProfileInputs,
             otherProfileIgnored = config.ignoredProfile != null,
             screenError = local.screenError,
+            keyDialogOpen = local.keyDialogOpen,
+            keyInputInvalid = local.keyInputInvalid,
+            removed = local.removed,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ScaleDeviceUiState())
 
@@ -151,11 +163,28 @@ class ScaleDeviceViewModel @Inject constructor(
         listener.rename(trimmed)
     }
 
-    /** A new key for the same scale. False, and nothing changes, when [text] is not a key. */
-    fun changeKey(text: String): Boolean {
-        val key = XiaomiScaleStore.parseBindKey(text) ?: return false
+    fun openKeyDialog() {
+        local.update { it.copy(keyDialogOpen = true, keyInputInvalid = false) }
+    }
+
+    fun dismissKeyDialog() {
+        local.update { it.copy(keyDialogOpen = false, keyInputInvalid = false) }
+    }
+
+    /** The text in the key dialog changed: the last complaint no longer applies. */
+    fun onKeyEdited() {
+        local.update { it.copy(keyInputInvalid = false) }
+    }
+
+    /** A new key for the same scale. A text that is not a key keeps the dialog open, marked invalid. */
+    fun changeKey(text: String) {
+        val key = XiaomiScaleStore.parseBindKey(text)
+        if (key == null) {
+            local.update { it.copy(keyInputInvalid = true) }
+            return
+        }
         listener.changeKey(key)
-        return true
+        local.update { it.copy(keyDialogOpen = false, keyInputInvalid = false) }
     }
 
     /** Asks Android to watch for the scale again, for a user who revoked it. The scale has to be awake. */
@@ -189,6 +218,7 @@ class ScaleDeviceViewModel @Inject constructor(
     /** Stops listening and forgets the scale and its key. Saved weigh-ins stay. */
     fun remove() {
         listener.forget()
+        local.update { it.copy(removed = true) }
     }
 
     private suspend fun ScaleWeighIn.toDisplay(): ScaleWeighInDisplay? {
