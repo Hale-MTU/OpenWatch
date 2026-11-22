@@ -16,6 +16,8 @@ travels over Bluetooth between the device and the phone. Open source under AGPL-
   and weather on the watch, CoMaps guidance on the wrist, a GPS ephemeris upload, saved
   locations. The watch-only measurements Health Connect cannot hold (stress, Body Battery,
   sleep score and the like) stay in OpenWatch's own database and its Watch Data screen.
+  Notifications go to the watch from every app or only the ones you choose, and what Android
+  hides on the lock screen stays hidden.
 - **Wear OS watches**, through the OpenWatch watch app in `wear/`: heart rate, steps and
   floors recorded on the watch, synced to Health Connect on a tap or a schedule, with an
   estimated sleep session per night, naps as their own sessions and the night's resting heart
@@ -34,6 +36,10 @@ travels over Bluetooth between the device and the phone. Open source under AGPL-
   watch's live heart rate while the other app records an activity. OpenVitals connects
   without a prompt; any other app waits for your answer on the Connected apps screen, where
   each thing an app may do has its own switch.
+
+Several watches can be paired, a second one of the same kind keeping records of its own, and
+the app lists every Health Connect data type it reads and writes, the device it comes from and
+why.
 
 The device code, its screens and its tests came from OpenVitals 2.16.0 unchanged where the
 seams allowed; [docs/features/watches.md](docs/features/watches.md) describes the behaviour.
@@ -101,6 +107,8 @@ does not know, on its Connected apps screen.
 ## Privacy
 
 Nothing leaves the phone. Notifications forwarded to a watch are held in memory and sent to
-the watch only. The scale's key is stored in the app's private preferences. The app has no
+the watch only; a secret one is never sent. The scale's key and the watches' link tokens are
+kept encrypted under a key the Android Keystore holds, and stay behind when Android moves the
+app to a new phone. The app has no
 `INTERNET` permission, which the manifest enforces by removing the permission from every
 dependency too.
