@@ -21,7 +21,8 @@ import tech.mmarca.openwatch.devices.garmin.GarminLog
 data class WatchNotificationApp(
     val packageName: String,
     val label: String,
-    val blocked: Boolean,
+    /** Whether its notifications reach the watch, under the current mode. */
+    val sends: Boolean,
 )
 
 /**
@@ -38,7 +39,11 @@ data class WatchNotificationsUiState(
     val disclosureAccepted: Boolean = false,
     /** Whether the disclosure dialog is on screen. Owned here so the ordering is testable. */
     val showDisclosure: Boolean = false,
-    /** Every launchable app, blocked flag included. Empty until loaded. */
+    /** Only the apps switched on send, instead of every app but those switched off. */
+    val onlyAllowed: Boolean = false,
+    /** A channel set to hide sensitive content on the lock screen sends its title only. */
+    val hideSensitiveContent: Boolean = true,
+    /** Every launchable app, and whether it sends. Empty until loaded. */
     val apps: List<WatchNotificationApp> = emptyList(),
     val loadingApps: Boolean = false,
     val loading: Boolean = true,
@@ -46,7 +51,11 @@ data class WatchNotificationsUiState(
     /** Forwarding is only actually happening when both gates are open. */
     val active: Boolean get() = enabled && accessGranted
 
-    val blockedCount: Int get() = apps.count { it.blocked }
+    /** In the default mode, the apps switched off. */
+    val blockedCount: Int get() = apps.count { !it.sends }
+
+    /** In allow-list mode, the apps switched on. */
+    val sendingCount: Int get() = apps.count { it.sends }
 }
 
 /**
@@ -78,11 +87,13 @@ class WatchNotificationAppsViewModel @Inject constructor(
                     enabled = store.enabled,
                     accessGranted = granted,
                     disclosureAccepted = store.disclosureAccepted,
+                    onlyAllowed = store.onlyAllowed,
+                    hideSensitiveContent = store.hideSensitiveContent,
                     loading = false,
                 )
             }
-            // The listener keeps its own copy of the configuration. Pushed on every
-            // refresh: the paired watch can change without this switch moving.
+            // Told on every refresh, so the bridge lets go of a link it no longer needs: the
+            // paired watch can change without this switch moving.
             pushConfig()
         }
     }
@@ -137,12 +148,11 @@ class WatchNotificationAppsViewModel @Inject constructor(
         pushConfig()
     }
 
-    /** Loads the app list for the blocklist. */
+    /** Loads the app list. */
     fun loadApps() {
         if (state.value.loadingApps) return
         state.update { it.copy(loadingApps = true) }
         viewModelScope.launch {
-            val blocked = store.blockedPackages
             val installed = withContext(ioDispatcher) {
                 try {
                     gateway.listLaunchableApps()
@@ -158,7 +168,7 @@ class WatchNotificationAppsViewModel @Inject constructor(
                         WatchNotificationApp(
                             packageName = app.packageName,
                             label = app.label,
-                            blocked = app.packageName in blocked,
+                            sends = store.sends(app.packageName),
                         )
                     },
                 )
@@ -166,19 +176,38 @@ class WatchNotificationAppsViewModel @Inject constructor(
         }
     }
 
-    /** Silences an app, or un-silences it. */
-    fun setBlocked(packageName: String, blocked: Boolean) {
+    /** Lets an app send, or stops it, in the list the current mode reads. */
+    fun setSends(packageName: String, sends: Boolean) {
         viewModelScope.launch {
-            store.setBlocked(packageName, blocked = blocked)
+            store.setSends(packageName, sends = sends)
             state.update {
                 it.copy(
                     apps = it.apps.map { app ->
-                        if (app.packageName == packageName) app.copy(blocked = blocked) else app
+                        if (app.packageName == packageName) app.copy(sends = sends) else app
                     },
                 )
             }
             pushConfig()
         }
+    }
+
+    /** Switches between every app but the silenced ones and only the chosen ones. Each list is kept. */
+    fun setOnlyAllowed(onlyAllowed: Boolean) {
+        viewModelScope.launch {
+            store.onlyAllowed = onlyAllowed
+            state.update { current ->
+                current.copy(
+                    onlyAllowed = onlyAllowed,
+                    apps = current.apps.map { app -> app.copy(sends = store.sends(app.packageName)) },
+                )
+            }
+            pushConfig()
+        }
+    }
+
+    fun setHideSensitiveContent(hide: Boolean) {
+        store.hideSensitiveContent = hide
+        state.update { it.copy(hideSensitiveContent = hide) }
     }
 
     fun openAccessSettings() {

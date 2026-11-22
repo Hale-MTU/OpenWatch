@@ -76,9 +76,22 @@ fun WatchNotificationAppsScreen(viewModel: WatchNotificationAppsViewModel) {
         }
 
         if (state.active) {
+            item(key = "options") {
+                ForwardingOptionsCard(
+                    state = state,
+                    onOnlyAllowed = viewModel::setOnlyAllowed,
+                    onHideSensitive = viewModel::setHideSensitiveContent,
+                )
+            }
             item(key = "intro") {
                 Text(
-                    text = stringResource(R.string.settings_watch_notifications_apps_intro),
+                    text = stringResource(
+                        if (state.onlyAllowed) {
+                            R.string.settings_watch_notifications_apps_intro_allowed
+                        } else {
+                            R.string.settings_watch_notifications_apps_intro
+                        },
+                    ),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm),
@@ -105,10 +118,8 @@ fun WatchNotificationAppsScreen(viewModel: WatchNotificationAppsViewModel) {
                 else -> items(state.apps, key = { it.packageName }) { app ->
                     AppRow(
                         app = app,
-                        onSendsChanged = { sends ->
-                            // Inverted: the switch reads "sends", the stored state is the blocklist.
-                            viewModel.setBlocked(app.packageName, blocked = !sends)
-                        },
+                        // The mode decides which list the switch writes.
+                        onSendsChanged = { sends -> viewModel.setSends(app.packageName, sends) },
                     )
                 }
             }
@@ -188,10 +199,16 @@ private fun MasterSwitchCard(
             if (state.active) {
                 Spacer(modifier = Modifier.padding(top = Spacing.sm))
                 Text(
-                    text = if (state.blockedCount == 0) {
-                        stringResource(R.string.settings_watch_notifications_apps_none)
-                    } else {
-                        pluralStringResource(
+                    text = when {
+                        state.onlyAllowed && state.sendingCount == 0 ->
+                            stringResource(R.string.settings_watch_notifications_apps_allowed_none)
+                        state.onlyAllowed -> pluralStringResource(
+                            R.plurals.settings_watch_notifications_apps_allowed,
+                            state.sendingCount,
+                            state.sendingCount,
+                        )
+                        state.blockedCount == 0 -> stringResource(R.string.settings_watch_notifications_apps_none)
+                        else -> pluralStringResource(
                             R.plurals.settings_watch_notifications_apps_blocked,
                             state.blockedCount,
                             state.blockedCount,
@@ -202,6 +219,52 @@ private fun MasterSwitchCard(
                 )
             }
         }
+    }
+}
+
+/** The two choices about what goes: which apps, and how much of a hidden channel. */
+@Composable
+private fun ForwardingOptionsCard(
+    state: WatchNotificationsUiState,
+    onOnlyAllowed: (Boolean) -> Unit,
+    onHideSensitive: (Boolean) -> Unit,
+) {
+    OpenWatchCard(style = OpenWatchCardStyle.Neutral) {
+        Column(modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)) {
+            OptionRow(
+                title = stringResource(R.string.settings_watch_notifications_only_allowed),
+                body = stringResource(R.string.settings_watch_notifications_only_allowed_body),
+                checked = state.onlyAllowed,
+                onCheckedChange = onOnlyAllowed,
+            )
+            OptionRow(
+                title = stringResource(R.string.settings_watch_notifications_hide_sensitive),
+                body = stringResource(R.string.settings_watch_notifications_hide_sensitive_body),
+                checked = state.hideSensitiveContent,
+                onCheckedChange = onHideSensitive,
+            )
+        }
+    }
+}
+
+@Composable
+private fun OptionRow(title: String, body: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = Spacing.sm),
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = body,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Spacer(modifier = Modifier.width(Spacing.lg))
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 
@@ -232,7 +295,7 @@ private fun AppRow(
             }
             Spacer(modifier = Modifier.width(Spacing.lg))
             Switch(
-                checked = !app.blocked,
+                checked = app.sends,
                 onCheckedChange = onSendsChanged,
             )
         }

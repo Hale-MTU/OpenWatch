@@ -229,6 +229,16 @@
         <item quantity="other">%1$d apps silenced</item>
     </plurals>
     <string name="settings_watch_notifications_apps_intro">Turn an app off to stop its notifications reaching the watch. Everything else keeps coming through.</string>
+    <string name="settings_watch_notifications_apps_intro_allowed">Turn an app on to send its notifications to the watch. Nothing else comes through.</string>
+    <string name="settings_watch_notifications_apps_allowed_none">No app sends to the watch yet</string>
+    <plurals name="settings_watch_notifications_apps_allowed">
+        <item quantity="one">%1$d app sends to the watch</item>
+        <item quantity="other">%1$d apps send to the watch</item>
+    </plurals>
+    <string name="settings_watch_notifications_only_allowed">Only apps I choose</string>
+    <string name="settings_watch_notifications_only_allowed_body">On, only the apps switched on below send. Off, every app sends but the ones switched off. Each list is kept.</string>
+    <string name="settings_watch_notifications_hide_sensitive">Hide sensitive content</string>
+    <string name="settings_watch_notifications_hide_sensitive_body">Where Android\'s notification settings hide an app\'s sensitive content on the lock screen, the watch gets the title only.</string>
     <string name="settings_watch_notifications_apps_empty">No apps found.</string>
     <string name="settings_watch_notifications_disclosure_title">OpenWatch will read your notifications</string>
     <string name="settings_watch_notifications_disclosure_body">To show notifications on your watch, OpenWatch reads the notifications your phone receives — including their text.\n\nThey are read on this device and sent only to the watch you paired, over Bluetooth. Nothing is saved to a file or a database, and OpenWatch has no internet permission, so notifications cannot be sent anywhere else.\n\nYou can turn this off at any time, and revoke notification access from Android settings.</string>

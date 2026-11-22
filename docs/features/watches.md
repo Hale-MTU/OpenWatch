@@ -295,9 +295,11 @@ Phone notifications can be forwarded to a paired Garmin watch that supports it. 
 3. It then opens Android's notification access screen. Access can only be granted there; OpenWatch cannot request it from inside the app.
 4. Coming back to OpenWatch, the switch turns itself on once access has been granted.
 
-### The App Blocklist
+### Which Apps Send
 
-"Apps to silence" lists the apps installed on the phone. Everything sends to the watch until an app is switched off, so the list is a blocklist rather than an allow-list.
+The list shows the apps installed on the phone. By default every app sends until it is switched off, so the list is a blocklist. "Only apps I choose" turns it into an allow-list: then only the apps switched on send. Each mode keeps its own list, so switching back finds the blocklist as it was.
+
+"Hide sensitive content", on by default, holds back the content of a channel set in Android's notification settings to hide sensitive content on the lock screen (see below).
 
 Some notifications never reach the watch regardless: ongoing and foreground-service notifications, group summaries, notifications an app marks as local to the phone or as secret, notifications from a channel set not to show on the lock screen, notifications with neither a title nor a body, minimum-importance channels, anything at all while the phone's own Do Not Disturb is on, and OpenWatch's own notifications.
 

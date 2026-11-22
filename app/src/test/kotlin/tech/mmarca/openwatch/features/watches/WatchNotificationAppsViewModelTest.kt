@@ -170,8 +170,8 @@ class WatchNotificationAppsViewModelTest {
 
         val apps = vm.uiState.value.apps
         assertEquals(listOf("Chat", "Mail"), apps.map { it.label })
-        assertTrue(apps.first { it.packageName == "com.example.chat" }.blocked)
-        assertFalse(apps.first { it.packageName == "com.example.mail" }.blocked)
+        assertFalse(apps.first { it.packageName == "com.example.chat" }.sends)
+        assertTrue(apps.first { it.packageName == "com.example.mail" }.sends)
     }
 
     @Test
@@ -180,14 +180,32 @@ class WatchNotificationAppsViewModelTest {
         vm.loadApps()
         val pushesBefore = gateway.pushedConfig
 
-        vm.setBlocked("com.example.chat", blocked = true)
+        vm.setSends("com.example.chat", sends = false)
 
         assertTrue(store.blockedPackages.contains("com.example.chat"))
-        assertTrue(vm.uiState.value.apps.first { it.packageName == "com.example.chat" }.blocked)
+        assertFalse(vm.uiState.value.apps.first { it.packageName == "com.example.chat" }.sends)
         assertTrue(gateway.pushedConfig > pushesBefore)
 
-        vm.setBlocked("com.example.chat", blocked = false)
+        vm.setSends("com.example.chat", sends = true)
         assertFalse(store.blockedPackages.contains("com.example.chat"))
+    }
+
+    @Test
+    fun `in allow-list mode a switch writes the allow list, and switching back restores the block list`() = runTest {
+        store.blockedPackages = setOf("com.example.chat")
+        val vm = viewModel()
+        vm.loadApps()
+
+        vm.setOnlyAllowed(true)
+        // Nothing is chosen yet, so nothing sends.
+        assertTrue(vm.uiState.value.apps.none { it.sends })
+        vm.setSends("com.example.mail", sends = true)
+        assertEquals(setOf("com.example.mail"), store.allowedPackages)
+        assertEquals(1, vm.uiState.value.sendingCount)
+
+        vm.setOnlyAllowed(false)
+        assertFalse(vm.uiState.value.apps.first { it.packageName == "com.example.chat" }.sends)
+        assertTrue(vm.uiState.value.apps.first { it.packageName == "com.example.mail" }.sends)
     }
 
     @Test
