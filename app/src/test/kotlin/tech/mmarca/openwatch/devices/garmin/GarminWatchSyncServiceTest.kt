@@ -22,6 +22,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import tech.mmarca.openwatch.data.repository.testDeviceStateStore
 import tech.mmarca.openwatch.devices.core.RadioLeaseBusyException
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
@@ -50,7 +51,7 @@ class GarminWatchSyncServiceTest {
 
     private val context = mockk<Context>(relaxed = true)
     private val deviceRepository = mockk<BleDeviceRepository>(relaxed = true)
-    private val stateStore = GarminDeviceStateStore(FakeSharedPreferences())
+    private val stateStore = GarminDeviceStateStore(testDeviceStateStore(), FakeSharedPreferences())
     private val downloadImport = mockk<GarminDownloadImport>()
     private val fileStore by lazy { GarminFileStore(resolveDirectory = { temp.root }) }
 

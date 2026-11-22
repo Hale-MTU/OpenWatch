@@ -12,6 +12,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import tech.mmarca.openwatch.data.repository.testDeviceStateStore
 import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
@@ -66,7 +67,7 @@ class GarminMusicRelayTest {
         val context = mockk<Context>()
         every { context.getSharedPreferences(any(), any()) } returns FakeSharedPreferences()
         repo = testDeviceRepository()
-        stateStore = GarminDeviceStateStore(FakeSharedPreferences())
+        stateStore = GarminDeviceStateStore(testDeviceStateStore(), FakeSharedPreferences())
         watch = repo.addDevice(
             displayName = "vívoactive 5",
             address = "E0:48:24:D5:F7:10",

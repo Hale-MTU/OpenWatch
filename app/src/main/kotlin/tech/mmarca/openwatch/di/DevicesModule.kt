@@ -11,6 +11,8 @@ import dagger.multibindings.IntoMap
 import dagger.multibindings.IntoSet
 import dagger.multibindings.StringKey
 import javax.inject.Singleton
+import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import tech.mmarca.openwatch.data.repository.DeviceStateStore
 import tech.mmarca.openwatch.StartupActor
 import tech.mmarca.openwatch.devices.core.DeviceClassifier
 import tech.mmarca.openwatch.devices.core.DeviceFamily
@@ -194,7 +196,9 @@ abstract class DevicesModule {
         @Singleton
         fun provideGarminDeviceStateStore(
             @ApplicationContext context: Context,
-        ): GarminDeviceStateStore = GarminDeviceStateStore(context)
+            state: DeviceStateStore,
+            registry: BleDeviceRepository,
+        ): GarminDeviceStateStore = GarminDeviceStateStore(context, state, registry.devices.mapTo(HashSet()) { it.id })
 
         // One instance: the store finds a file's pending note by the object that saved it.
         @Provides

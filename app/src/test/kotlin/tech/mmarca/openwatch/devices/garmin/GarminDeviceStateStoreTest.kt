@@ -7,12 +7,16 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import tech.mmarca.openwatch.data.repository.testDeviceStateStore
+import tech.mmarca.openwatch.data.repository.FakeDeviceStateDao
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
 
 class GarminDeviceStateStoreTest {
 
     private lateinit var prefs: FakeSharedPreferences
+
+    private val stateDao = FakeDeviceStateDao()
     private lateinit var store: GarminDeviceStateStore
 
     private val deviceId = "ble-watch-1"
@@ -20,7 +24,7 @@ class GarminDeviceStateStoreTest {
     @Before
     fun setUp() {
         prefs = FakeSharedPreferences()
-        store = GarminDeviceStateStore(prefs)
+        store = GarminDeviceStateStore(testDeviceStateStore(stateDao), prefs)
     }
 
     @Test
@@ -30,7 +34,7 @@ class GarminDeviceStateStoreTest {
         store.setHighMtu("aa:bb:cc:dd:ee:ff", false)
 
         // The address is the key, whatever its case; another watch keeps the default.
-        assertFalse(GarminDeviceStateStore(prefs).highMtu("AA:BB:CC:DD:EE:FF"))
+        assertFalse(GarminDeviceStateStore(testDeviceStateStore(stateDao), prefs).highMtu("AA:BB:CC:DD:EE:FF"))
         assertTrue(store.highMtu("11:22:33:44:55:66"))
     }
 
@@ -43,7 +47,7 @@ class GarminDeviceStateStoreTest {
         // A second store over the same prefs is the real round-trip.
         assertEquals(
             setOf("128/49/1", "128/32/2"),
-            GarminDeviceStateStore(prefs).syncedFileKeys(deviceId),
+            GarminDeviceStateStore(testDeviceStateStore(stateDao), prefs).syncedFileKeys(deviceId),
         )
     }
 
@@ -94,7 +98,7 @@ class GarminDeviceStateStoreTest {
         // A second store over the same prefs proves the wireName format persists.
         assertEquals(
             setOf(GarminCapability.SYNC, GarminCapability.FIND_MY_WATCH),
-            GarminDeviceStateStore(prefs).capabilities(deviceId),
+            GarminDeviceStateStore(testDeviceStateStore(stateDao), prefs).capabilities(deviceId),
         )
     }
 
@@ -118,7 +122,7 @@ class GarminDeviceStateStoreTest {
         store.clear(deviceId, address = "AA:BB:CC:DD:EE:FF")
 
         // The keys are gone from storage, not only the in-memory view.
-        val reloaded = GarminDeviceStateStore(prefs)
+        val reloaded = GarminDeviceStateStore(testDeviceStateStore(stateDao), prefs)
         assertTrue(reloaded.syncedFileKeys(deviceId).isEmpty())
         assertTrue(reloaded.capabilities(deviceId).isEmpty())
         // Re-pairing is a fresh watch, and a fresh watch gets the default.
@@ -139,7 +143,7 @@ class GarminDeviceStateStoreTest {
 
         assertEquals(
             AutoSyncInterval.HOURLY,
-            GarminDeviceStateStore(prefs).autoSyncInterval(deviceId),
+            GarminDeviceStateStore(testDeviceStateStore(stateDao), prefs).autoSyncInterval(deviceId),
         )
     }
 
@@ -155,7 +159,32 @@ class GarminDeviceStateStoreTest {
         // The stored value must survive a build that adds or drops an interval.
         store.setAutoSyncInterval(deviceId, AutoSyncInterval.EVERY_2_HOURS)
 
-        assertEquals(120, prefs.getInt("garmin_auto_sync_minutes_$deviceId", 0))
+        assertEquals("120", stateDao.rows[deviceId to "garmin_auto_sync_minutes"]?.value)
+    }
+
+    @Test
+    fun `the old file's values are taken over once, the longer of two keys that share a beginning first`() {
+        val legacy = FakeSharedPreferences().apply {
+            edit()
+                .putInt("garmin_auto_sync_minutes_$deviceId", 120)
+                .putBoolean("garmin_stay_connected_$deviceId", false)
+                .putString("garmin_alarms_$deviceId", "[\"420,31,true,SOUND,false,NONE\"]")
+                .putString("garmin_alarms_sent_$deviceId", "[]")
+                .putBoolean("garmin_high_mtu_AA:BB:CC:DD:EE:FF", false)
+                .putInt("garmin_auto_sync_minutes_gone", 30)
+                .apply()
+        }
+        val adopting = GarminDeviceStateStore(testDeviceStateStore(stateDao), legacy)
+
+        adopting.adoptLegacy(legacy, registered = setOf(deviceId))
+
+        assertEquals(AutoSyncInterval.EVERY_2_HOURS, adopting.autoSyncInterval(deviceId))
+        assertFalse(adopting.stayConnected(deviceId))
+        assertEquals(1, adopting.alarms(deviceId).size)
+        assertEquals(emptyList<GarminAlarm>(), adopting.sentAlarms(deviceId))
+        // The link's flag stays where every link opener reads it.
+        assertFalse(adopting.highMtu("AA:BB:CC:DD:EE:FF"))
+        assertTrue(stateDao.rows.keys.none { it.first == "gone" })
     }
 
     @Test
@@ -165,7 +194,7 @@ class GarminDeviceStateStoreTest {
         store.setStayConnected(deviceId, false)
 
         // The default loses to a choice: a wearer who turned the link off must not get it back.
-        assertFalse(GarminDeviceStateStore(prefs).stayConnected(deviceId))
+        assertFalse(GarminDeviceStateStore(testDeviceStateStore(stateDao), prefs).stayConnected(deviceId))
     }
 
     @Test
@@ -174,7 +203,7 @@ class GarminDeviceStateStoreTest {
 
         store.recordSyncProtocol(deviceId, GarminSyncProtocol.LEGACY)
 
-        assertEquals(GarminSyncProtocol.LEGACY, GarminDeviceStateStore(prefs).syncProtocol(deviceId))
+        assertEquals(GarminSyncProtocol.LEGACY, GarminDeviceStateStore(testDeviceStateStore(stateDao), prefs).syncProtocol(deviceId))
     }
 
     @Test
@@ -205,7 +234,7 @@ class GarminDeviceStateStoreTest {
 
         store.setAlarms(deviceId, alarms)
 
-        assertEquals(alarms, GarminDeviceStateStore(prefs).alarms(deviceId))
+        assertEquals(alarms, GarminDeviceStateStore(testDeviceStateStore(stateDao), prefs).alarms(deviceId))
     }
 
     @Test

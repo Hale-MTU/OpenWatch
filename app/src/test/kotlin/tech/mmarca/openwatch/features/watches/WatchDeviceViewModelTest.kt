@@ -120,7 +120,7 @@ class WatchDeviceViewModelTest {
         val context = mockk<Context>()
         every { context.getSharedPreferences(any(), any()) } returns FakeSharedPreferences()
         repo = testDeviceRepository()
-        stateStore = GarminDeviceStateStore(FakeSharedPreferences())
+        stateStore = GarminDeviceStateStore(testDeviceStateStore(), FakeSharedPreferences())
         pairing = FakePairing()
         autoSyncIntervals.clear()
         autoSyncScheduler = mockk(relaxed = true)
