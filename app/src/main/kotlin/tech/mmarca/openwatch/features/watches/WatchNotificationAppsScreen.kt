@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.OpenInNew
 import androidx.compose.material.icons.outlined.Lock
@@ -29,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -37,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchCardStyle
+import tech.mmarca.openwatch.ui.components.SwitchRow
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
@@ -135,7 +138,16 @@ private fun MasterSwitchCard(
 ) {
     OpenWatchCard {
         Column(modifier = Modifier.padding(Spacing.lg)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            // The row toggles, so TalkBack reads the title with the state.
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.toggleable(
+                    value = state.active,
+                    enabled = !state.loading,
+                    role = Role.Switch,
+                    onValueChange = onToggle,
+                ),
+            ) {
                 Icon(
                     imageVector = Icons.Outlined.NotificationsActive,
                     contentDescription = null,
@@ -156,7 +168,7 @@ private fun MasterSwitchCard(
                 Spacer(modifier = Modifier.width(Spacing.lg))
                 Switch(
                     checked = state.active,
-                    onCheckedChange = if (state.loading) null else onToggle,
+                    onCheckedChange = null,
                     enabled = !state.loading,
                 )
             }
@@ -230,41 +242,20 @@ private fun ForwardingOptionsCard(
     onHideSensitive: (Boolean) -> Unit,
 ) {
     OpenWatchCard(style = OpenWatchCardStyle.Neutral) {
-        Column(modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)) {
-            OptionRow(
+        Column(modifier = Modifier.padding(vertical = Spacing.sm)) {
+            SwitchRow(
                 title = stringResource(R.string.settings_watch_notifications_only_allowed),
                 body = stringResource(R.string.settings_watch_notifications_only_allowed_body),
                 checked = state.onlyAllowed,
                 onCheckedChange = onOnlyAllowed,
             )
-            OptionRow(
+            SwitchRow(
                 title = stringResource(R.string.settings_watch_notifications_hide_sensitive),
                 body = stringResource(R.string.settings_watch_notifications_hide_sensitive_body),
                 checked = state.hideSensitiveContent,
                 onCheckedChange = onHideSensitive,
             )
         }
-    }
-}
-
-@Composable
-private fun OptionRow(title: String, body: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = Spacing.sm),
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge)
-            Text(
-                text = body,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-        Spacer(modifier = Modifier.width(Spacing.lg))
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 
@@ -278,6 +269,7 @@ private fun AppRow(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
+                .toggleable(value = app.sends, role = Role.Switch, onValueChange = onSendsChanged)
                 .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
         ) {
             Column(modifier = Modifier.weight(1f)) {
@@ -294,9 +286,10 @@ private fun AppRow(
                 )
             }
             Spacer(modifier = Modifier.width(Spacing.lg))
+            // The row toggles; the switch only shows the state.
             Switch(
                 checked = app.sends,
-                onCheckedChange = onSendsChanged,
+                onCheckedChange = null,
             )
         }
     }

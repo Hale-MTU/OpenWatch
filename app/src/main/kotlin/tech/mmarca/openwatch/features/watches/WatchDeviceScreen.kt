@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,7 +19,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.automirrored.outlined.BluetoothSearching
 import androidx.compose.material.icons.outlined.BrightnessMedium
@@ -30,24 +30,19 @@ import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.WifiTethering
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,8 +63,12 @@ import tech.mmarca.openwatch.devices.garmin.GarminCapability
 import tech.mmarca.openwatch.devices.garmin.GarminSettingsService
 import tech.mmarca.openwatch.devices.garmin.canStorePoints
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.ui.components.ConfirmRemoveDialog
 import tech.mmarca.openwatch.ui.components.DeclareAppBar
 import tech.mmarca.openwatch.ui.components.DeviceAvatar
+import tech.mmarca.openwatch.ui.components.DeviceRowIconGap
+import tech.mmarca.openwatch.ui.components.RenameDialog
+import tech.mmarca.openwatch.ui.components.SectionHeader
 import tech.mmarca.openwatch.ui.components.formatDeviceTime
 import tech.mmarca.openwatch.ui.components.InlineGrantPrompt
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
@@ -77,6 +76,8 @@ import tech.mmarca.openwatch.ui.components.rememberHealthConnectPermissionLaunch
 import tech.mmarca.openwatch.ui.theme.Spacing
 import tech.mmarca.openwatch.ui.components.OpenWatchIconButton
 import tech.mmarca.openwatch.ui.components.ScreenAppBar
+import tech.mmarca.openwatch.ui.components.SwitchCard
+import tech.mmarca.openwatch.ui.components.SwitchRow
 import tech.mmarca.openwatch.devices.garmin.isGarmin
 import tech.mmarca.openwatch.devices.wearos.isWearOs
 
@@ -297,58 +298,22 @@ fun WatchDeviceScreen(
             )
         }
         if (isGarmin) {
-            OpenWatchCard {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = stringResource(R.string.settings_watch_stay_connected),
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f),
-                        )
-                        Switch(
-                            checked = state.stayConnected,
-                            onCheckedChange = { viewModel.setStayConnected(it) },
-                        )
-                    }
-                    Text(
-                        text = stringResource(R.string.settings_watch_stay_connected_body),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
+            SwitchCard(
+                title = stringResource(R.string.settings_watch_stay_connected),
+                body = stringResource(R.string.settings_watch_stay_connected_body),
+                checked = state.stayConnected,
+                onCheckedChange = { viewModel.setStayConnected(it) },
+            )
             // Only with the link held: a stream needs a connection.
             if (state.stayConnected) {
-                OpenWatchCard {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stringResource(R.string.settings_watch_live_readings),
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier.weight(1f),
-                            )
-                            Switch(
-                                checked = state.liveReadings,
-                                onCheckedChange = { viewModel.setLiveReadings(it) },
-                            )
-                        }
-                        Text(
-                            text = state.liveHeartRateBpm
-                                ?.let { stringResource(R.string.settings_watch_live_now, it) }
-                                ?: stringResource(R.string.settings_watch_live_readings_body),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
+                SwitchCard(
+                    title = stringResource(R.string.settings_watch_live_readings),
+                    body = state.liveHeartRateBpm
+                        ?.let { stringResource(R.string.settings_watch_live_now, it) }
+                        ?: stringResource(R.string.settings_watch_live_readings_body),
+                    checked = state.liveReadings,
+                    onCheckedChange = { viewModel.setLiveReadings(it) },
+                )
             }
             CalendarSyncCard(
                 state = state,
@@ -376,24 +341,11 @@ fun WatchDeviceScreen(
                 onForget = viewModel::forgetAgps,
             )
         }
-        OpenWatchCard {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_watch_enabled),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f),
-                )
-                Switch(
-                    checked = device.enabled,
-                    onCheckedChange = { viewModel.setEnabled(it) },
-                )
-            }
-        }
+        SwitchCard(
+            title = stringResource(R.string.settings_watch_enabled),
+            checked = device.enabled,
+            onCheckedChange = { viewModel.setEnabled(it) },
+        )
         // Last, and its own card: a destructive action wants distance.
         OpenWatchCard {
             Text(
@@ -410,6 +362,7 @@ fun WatchDeviceScreen(
 
     if (showRenameDialog) {
         RenameDialog(
+            title = stringResource(R.string.settings_watch_rename),
             initialName = device.displayName,
             onSave = { name ->
                 viewModel.rename(name)
@@ -419,9 +372,11 @@ fun WatchDeviceScreen(
         )
     }
     if (showRemoveDialog) {
-        ConfirmRemoveWatchDialog(
-            deviceName = device.displayName,
-            offerHistoryDelete = viewModel.offersHistoryDeletion,
+        ConfirmRemoveDialog(
+            title = stringResource(R.string.settings_device_remove_confirm_title, device.displayName),
+            body = stringResource(R.string.settings_watch_remove_confirm_body),
+            // The last Garmin watch's watch-only history has no other owner left.
+            option = stringResource(R.string.settings_watch_remove_delete_history).takeIf { viewModel.offersHistoryDeletion },
             onConfirm = { deleteWatchHistory ->
                 showRemoveDialog = false
                 viewModel.removeDevice(deleteWatchHistory)
@@ -467,7 +422,7 @@ private fun StatusCard(
                 size = 44,
                 icon = if (isBikeComputer) Icons.AutoMirrored.Outlined.DirectionsBike else null,
             )
-            Spacer(modifier = Modifier.width(WatchRowIconGap))
+            Spacer(modifier = Modifier.width(DeviceRowIconGap))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = if (device.enabled) {
@@ -646,29 +601,21 @@ private fun MusicControlsCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+                .padding(vertical = Spacing.sm),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = stringResource(R.string.settings_watch_music),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f),
-                )
-                Switch(
-                    checked = state.musicControls,
-                    onCheckedChange = onToggle,
-                )
-            }
-            Text(
-                text = stringResource(R.string.settings_watch_music_body),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            SwitchRow(
+                title = stringResource(R.string.settings_watch_music),
+                body = stringResource(R.string.settings_watch_music_body),
+                checked = state.musicControls,
+                onCheckedChange = onToggle,
+                contentPadding = PaddingValues(horizontal = Spacing.lg),
             )
             if (state.musicAccessMissing) {
                 Text(
                     text = stringResource(R.string.settings_watch_music_no_access),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = Spacing.lg),
                 )
             }
         }
@@ -685,29 +632,21 @@ private fun CalendarSyncCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+                .padding(vertical = Spacing.sm),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = stringResource(R.string.settings_watch_calendar),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f),
-                )
-                Switch(
-                    checked = state.calendarSync,
-                    onCheckedChange = onToggle,
-                )
-            }
-            Text(
-                text = stringResource(R.string.settings_watch_calendar_body),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            SwitchRow(
+                title = stringResource(R.string.settings_watch_calendar),
+                body = stringResource(R.string.settings_watch_calendar_body),
+                checked = state.calendarSync,
+                onCheckedChange = onToggle,
+                contentPadding = PaddingValues(horizontal = Spacing.lg),
             )
             if (state.calendarPermissionMissing) {
                 Text(
                     text = stringResource(R.string.settings_watch_calendar_no_permission),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = Spacing.lg),
                 )
             }
         }
@@ -727,29 +666,21 @@ private fun NavigationOnWatchCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+                .padding(vertical = Spacing.sm),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = stringResource(R.string.settings_watch_navigation),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f),
-                )
-                Switch(
-                    checked = state.navigationOnWatch,
-                    onCheckedChange = onToggle,
-                )
-            }
-            Text(
-                text = stringResource(R.string.settings_watch_navigation_body),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            SwitchRow(
+                title = stringResource(R.string.settings_watch_navigation),
+                body = stringResource(R.string.settings_watch_navigation_body),
+                checked = state.navigationOnWatch,
+                onCheckedChange = onToggle,
+                contentPadding = PaddingValues(horizontal = Spacing.lg),
             )
             if (state.coMapsPermissionMissing) {
                 Text(
                     text = stringResource(R.string.settings_watch_navigation_no_permission),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(horizontal = Spacing.lg),
                 )
             }
         }
@@ -945,55 +876,6 @@ internal fun LiveSensorSection(
     }
 }
 
-@Composable
-internal fun SectionHeader(title: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.width(WatchChipGap))
-        HorizontalDivider(modifier = Modifier.weight(1f))
-    }
-}
-
-@Composable
-private fun RenameDialog(
-    initialName: String,
-    onSave: (String) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var name by remember { mutableStateOf(initialName) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_watch_rename)) },
-        text = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text(stringResource(R.string.settings_watch_name_label)) },
-                singleLine = true,
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = { onSave(name) }) {
-                Text(stringResource(R.string.action_save))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
-            }
-        },
-    )
-}
-
 /** Gap inside a status chip. */
 private val WatchChipGap = 10.dp
 /** Inline status icons, between bodySmall text sizes. */
@@ -1001,4 +883,3 @@ private val WatchInlineIconSize = 18.dp
 /** The small in-row progress spinner's stroke. */
 private val WatchProgressStroke = 2.dp
 /** Gap between a row's leading icon and its text. */
-private val WatchRowIconGap = 14.dp

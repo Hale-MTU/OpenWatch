@@ -3,17 +3,12 @@ package tech.mmarca.openwatch.features.scales
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.MonitorWeight
 import androidx.compose.material3.Icon
@@ -21,7 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -32,7 +26,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.devices.xiaomi.ScaleListenerStatus
-import tech.mmarca.openwatch.ui.components.DeviceAvatar
+import tech.mmarca.openwatch.ui.components.DeviceListRow
 import tech.mmarca.openwatch.ui.components.OpenWatchButton
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchTextButton
@@ -132,38 +126,15 @@ private fun NoScaleCard(onAdd: () -> Unit, modifier: Modifier = Modifier) {
 
 @Composable
 private fun ScaleRow(scale: ScaleCardState, onOpen: () -> Unit, modifier: Modifier = Modifier) {
-    OpenWatchCard(modifier = modifier) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onOpen)
-                .padding(Spacing.lg),
-        ) {
-            DeviceAvatar(icon = Icons.Outlined.MonitorWeight)
-            Spacer(modifier = Modifier.width(RowIconGap))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = scale.name, style = MaterialTheme.typography.titleSmall)
-                Text(
-                    text = stringResource(scale.statusRes()),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = scale.lastWeighInAt?.let {
-                        stringResource(R.string.settings_scales_last_weigh_in_at, formatDeviceTime(it))
-                    } ?: stringResource(R.string.settings_scales_no_weigh_in),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
+    DeviceListRow(
+        name = scale.name,
+        status = stringResource(scale.statusRes()),
+        detail = scale.lastWeighInAt?.let { stringResource(R.string.settings_scales_last_weigh_in_at, formatDeviceTime(it)) }
+            ?: stringResource(R.string.settings_scales_no_weigh_in),
+        onOpen = onOpen,
+        modifier = modifier,
+        icon = Icons.Outlined.MonitorWeight,
+    )
 }
 
 /** One line on what the scale is doing, for the card and the device header. */
@@ -182,4 +153,3 @@ internal fun scaleStatusRes(status: ScaleListenerStatus, wokenBySystem: Boolean)
 private val AddIconSize = 18.dp
 
 /** Gap between a row's leading icon and its text. */
-private val RowIconGap = 14.dp

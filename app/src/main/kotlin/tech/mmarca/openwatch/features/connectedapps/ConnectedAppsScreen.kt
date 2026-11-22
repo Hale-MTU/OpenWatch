@@ -2,18 +2,16 @@ package tech.mmarca.openwatch.features.connectedapps
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import android.app.Activity
@@ -23,10 +21,10 @@ import android.os.Build
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openlink.OpenLink
 import tech.mmarca.openwatch.MainActivity
@@ -34,6 +32,7 @@ import tech.mmarca.openlink.OpenLinkTrust
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.link.LinkSessionStatus
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
+import tech.mmarca.openwatch.ui.components.SwitchRow
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
@@ -130,15 +129,13 @@ private fun ConnectedAppCard(
                 }
                 OpenLinkTrust.TRUSTED -> {
                     app.requested.forEach { capability ->
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-                            Text(
-                                text = stringResource(capabilityLabel(capability)),
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.weight(1f),
-                            )
-                            Spacer(modifier = Modifier.width(Spacing.sm))
-                            Switch(checked = capability in app.granted, onCheckedChange = { onCapability(capability, it) })
-                        }
+                        // The card's column already holds the inset.
+                        SwitchRow(
+                            title = stringResource(capabilityLabel(capability)),
+                            checked = capability in app.granted,
+                            onCheckedChange = { onCapability(capability, it) },
+                            contentPadding = PaddingValues(0.dp),
+                        )
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                         TextButton(onClick = onBlock) { Text(stringResource(R.string.connected_apps_block)) }

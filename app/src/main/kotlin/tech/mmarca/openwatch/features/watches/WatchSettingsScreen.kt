@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.RadioButtonChecked
@@ -42,6 +43,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -204,14 +206,13 @@ private fun EntryRow(
             enabled = !busy,
             // Disabled while in flight, not optimistic: the value shown is the watch's.
             onClick = if (busy) null else ({ onToggle(!(entry.switchedOn ?: false)) }),
+            checked = entry.switchedOn ?: false,
             trailing = {
                 if (busy) {
                     RowSpinner()
                 } else {
-                    Switch(
-                        checked = entry.switchedOn ?: false,
-                        onCheckedChange = { value -> onToggle(value) },
-                    )
+                    // The row toggles; the switch only shows the state.
+                    Switch(checked = entry.switchedOn ?: false, onCheckedChange = null)
                 }
             },
         )
@@ -329,6 +330,8 @@ private fun RowCard(
     onClick: (() -> Unit)?,
     titleColor: Color = Color.Unspecified,
     trailing: (@Composable () -> Unit)? = null,
+    // Set on a switch row: [onClick] flips it, and TalkBack reads the title with the state.
+    checked: Boolean? = null,
 ) {
     OpenWatchCard(
         modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.xs),
@@ -338,7 +341,16 @@ private fun RowCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .let { base ->
-                    if (onClick != null && enabled) base.clickable(onClick = onClick) else base
+                    when {
+                        checked != null -> base.toggleable(
+                            value = checked,
+                            enabled = onClick != null && enabled,
+                            role = Role.Switch,
+                            onValueChange = { onClick?.invoke() },
+                        )
+                        onClick != null && enabled -> base.clickable(onClick = onClick)
+                        else -> base
+                    }
                 }
                 .padding(horizontal = Spacing.lg, vertical = Spacing.md),
         ) {

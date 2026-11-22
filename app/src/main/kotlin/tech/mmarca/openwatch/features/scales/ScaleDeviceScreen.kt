@@ -28,9 +28,12 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.devices.xiaomi.ScaleListenerStatus
+import tech.mmarca.openwatch.ui.components.ConfirmRemoveDialog
 import tech.mmarca.openwatch.ui.components.DeclareAppBar
+import tech.mmarca.openwatch.ui.components.RenameDialog
 import tech.mmarca.openwatch.ui.components.ScreenAppBar
 import tech.mmarca.openwatch.ui.components.ScreenErrorContent
+import tech.mmarca.openwatch.ui.components.SectionHeader
 import tech.mmarca.openwatch.ui.components.rememberHealthConnectPermissionLauncher
 import tech.mmarca.openwatch.ui.theme.Spacing
 
@@ -82,13 +85,13 @@ fun ScaleDeviceScreen(
         ScaleStatusCard(state = state, onRename = { showRenameDialog = true })
 
         state.lastWeighIn?.let { weighIn ->
-            ScaleSectionHeader(stringResource(R.string.settings_scales_last_title))
+            SectionHeader(stringResource(R.string.settings_scales_last_title))
             ScaleLastWeighInCard(weighIn = weighIn, onDelete = viewModel::deleteLastWeighIn)
         }
         state.screenError?.let { ScreenErrorContent(screenError = it) }
 
         if (state.needsListeningSection()) {
-            ScaleSectionHeader(stringResource(R.string.settings_scales_section_listening))
+            SectionHeader(stringResource(R.string.settings_scales_section_listening))
             ScaleListeningCard(
                 state = state,
                 android12 = android12,
@@ -100,7 +103,7 @@ fun ScaleDeviceScreen(
         }
 
         if (state.needsHealthConnectSection()) {
-            ScaleSectionHeader(stringResource(R.string.settings_health_connect_group_title))
+            SectionHeader(stringResource(R.string.settings_health_connect_group_title))
             ScaleHealthConnectCard(
                 state = state,
                 onGrantHealthConnect = { healthConnectLauncher.launch(state.missingWritePermissions) },
@@ -108,13 +111,14 @@ fun ScaleDeviceScreen(
             )
         }
 
-        ScaleSectionHeader(stringResource(R.string.settings_scales_section_scale))
+        SectionHeader(stringResource(R.string.settings_scales_section_scale))
         ScaleDetailsCards(state = state, onChangeKey = { showKeyDialog = true })
         ScaleRemoveCard(onRemove = { showRemoveDialog = true })
     }
 
     if (showRenameDialog) {
-        ScaleRenameDialog(
+        RenameDialog(
+            title = stringResource(R.string.settings_scales_rename),
             initialName = name,
             onSave = { newName ->
                 showRenameDialog = false
@@ -130,10 +134,9 @@ fun ScaleDeviceScreen(
         )
     }
     if (showRemoveDialog) {
-        ScaleConfirmDialog(
+        ConfirmRemoveDialog(
             title = stringResource(R.string.settings_device_remove_confirm_title, name),
             body = stringResource(R.string.settings_scales_remove_body),
-            confirm = stringResource(R.string.action_remove),
             onConfirm = {
                 showRemoveDialog = false
                 viewModel.remove()

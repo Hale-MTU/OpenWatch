@@ -43,7 +43,7 @@ OpenWatch seams noted.
 | `comaps/` | The CoMaps guidance feed a Garmin watch relays. |
 | `sensors/ble/` | The BLE discovery scan the add-watch flow uses, and the GATT UUIDs. |
 | `core/` | `ScreenError`, `UnitFormatter`, the OS permissions service, the dispatcher provider and the foreground gate. |
-| `navigation/`, `ui/` | The routes, the app bar state, the theme and the few shared components. |
+| `navigation/`, `ui/` | The routes, the app bar state, the theme and the shared components every screen uses instead of its own copy: `SwitchRow` / `SwitchCard` (the whole row is one toggle, so TalkBack reads the title with the state), `SectionHeader` (a heading), `DeviceListRow`, `RenameDialog`, `ConfirmRemoveDialog`, `ScreenErrorContent`. |
 
 ## The OpenWatch Seams
 

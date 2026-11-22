@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
@@ -16,13 +15,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Duration
 import kotlin.math.roundToLong
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.domain.model.GarminWellnessMetric
 import tech.mmarca.openwatch.ui.components.DeviceValueRow
+import tech.mmarca.openwatch.ui.components.SectionHeader
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
@@ -104,7 +103,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.todayItems(metrics: W
     if (stress == null && energy == null && moderate == null && vigorous == null) return
 
     item(key = "today-header") {
-        SectionTitle(stringResource(R.string.dashboard_summary_today))
+        SectionHeader(stringResource(R.string.dashboard_summary_today))
     }
     if (stress != null) {
         item(key = "stress") {
@@ -154,7 +153,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.lastNightItems(metric
     if (score == null && awake == null && awakenings == null && needed == null && restless == null) return
 
     item(key = "night-header") {
-        SectionTitle(stringResource(R.string.settings_watch_data_last_night))
+        SectionHeader(stringResource(R.string.settings_watch_data_last_night))
     }
     if (score != null) {
         item(key = "sleep-score") {
@@ -262,7 +261,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.trainingItems(metrics
     if (recovery == null && readiness == null && acute == null && !thresholds) return
 
     item(key = "training-header") {
-        SectionTitle(stringResource(R.string.settings_watch_data_training))
+        SectionHeader(stringResource(R.string.settings_watch_data_training))
     }
     if (recovery != null) {
         item(key = "recovery") {
@@ -386,18 +385,6 @@ private fun labelFor(metric: GarminWellnessMetric): Int = when (metric) {
 
     // Unshown: its scale is undocumented.
     GarminWellnessMetric.SLEEP_PRESSURE -> R.string.settings_watch_data_title
-}
-
-@Composable
-private fun SectionTitle(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Spacing.lg, vertical = Spacing.xs),
-    )
 }
 
 private fun averageOf(series: List<WatchMetricReading>): String? {

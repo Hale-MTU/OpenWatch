@@ -1,23 +1,26 @@
 package tech.mmarca.openwatch.features.watches
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
+import tech.mmarca.openwatch.ui.components.SectionHeader
+import tech.mmarca.openwatch.ui.components.SwitchRow
 import tech.mmarca.openwatch.ui.theme.Spacing
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Preferences
 import tech.mmarca.openwatch.devices.wearos.isWearOs
+
+/** The inset these rows keep inside the card. */
+private val SettingPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.xs)
 
 /**
  * The watch's own settings, read from and written to the watch over the
@@ -62,18 +65,22 @@ internal fun WearOsWatchSettingsCard(
                 return@Column
             }
             fun on(key: String) = settings[key] == Preferences.ON
-            SettingSwitch(
+            SwitchRow(
                 title = stringResource(R.string.watch_settings_power_save),
                 body = stringResource(R.string.watch_settings_power_save_body),
                 checked = settings[Preferences.HEART_RATE_DAY] == "600",
                 enabled = !busy,
-            ) { onSet(Preferences.HEART_RATE_DAY, if (it) "600" else "10") }
-            SettingSwitch(
+                contentPadding = SettingPadding,
+                onCheckedChange = { onSet(Preferences.HEART_RATE_DAY, if (it) "600" else "10") },
+            )
+            SwitchRow(
                 title = stringResource(R.string.watch_settings_synced),
                 body = stringResource(R.string.watch_settings_synced_body),
                 checked = settings[Preferences.SLEEP_HOLD] == Preferences.SYNCED,
                 enabled = !busy,
-            ) { onSet(Preferences.SLEEP_HOLD, if (it) Preferences.SYNCED else Preferences.LOCK) }
+                contentPadding = SettingPadding,
+                onCheckedChange = { onSet(Preferences.SLEEP_HOLD, if (it) Preferences.SYNCED else Preferences.LOCK) },
+            )
             if (on(Preferences.SAMSUNG_AVAILABLE)) {
                 Text(
                     text = stringResource(R.string.watch_settings_samsung_note),
@@ -81,30 +88,36 @@ internal fun WearOsWatchSettingsCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm),
                 )
-                SettingSwitch(
+                SwitchRow(
                     title = stringResource(R.string.watch_settings_hr_samsung),
-                    body = null,
                     checked = settings[Preferences.HEART_RATE_SOURCE] == Preferences.SAMSUNG,
                     enabled = !busy,
-                ) { onSet(Preferences.HEART_RATE_SOURCE, if (it) Preferences.SAMSUNG else Preferences.SENSOR) }
-                SettingSwitch(
+                    contentPadding = SettingPadding,
+                    onCheckedChange = { onSet(Preferences.HEART_RATE_SOURCE, if (it) Preferences.SAMSUNG else Preferences.SENSOR) },
+                )
+                SwitchRow(
                     title = stringResource(R.string.watch_settings_hrv_samsung),
-                    body = null,
                     checked = settings[Preferences.HRV_SOURCE] == Preferences.SAMSUNG,
                     enabled = !busy,
-                ) { onSet(Preferences.HRV_SOURCE, if (it) Preferences.SAMSUNG else Preferences.SENSOR) }
-                SettingSwitch(
+                    contentPadding = SettingPadding,
+                    onCheckedChange = { onSet(Preferences.HRV_SOURCE, if (it) Preferences.SAMSUNG else Preferences.SENSOR) },
+                )
+                SwitchRow(
                     title = stringResource(R.string.watch_settings_skin),
                     body = stringResource(R.string.watch_settings_allow_on_watch).takeIf { on(Preferences.SKIN_TEMPERATURE) && !on(Preferences.SKIN_GRANTED) },
                     checked = on(Preferences.SKIN_TEMPERATURE),
                     enabled = !busy,
-                ) { onSet(Preferences.SKIN_TEMPERATURE, if (it) Preferences.ON else Preferences.OFF) }
-                SettingSwitch(
+                    contentPadding = SettingPadding,
+                    onCheckedChange = { onSet(Preferences.SKIN_TEMPERATURE, if (it) Preferences.ON else Preferences.OFF) },
+                )
+                SwitchRow(
                     title = stringResource(R.string.watch_settings_spo2),
                     body = stringResource(R.string.watch_settings_allow_on_watch).takeIf { on(Preferences.SPO2) && !on(Preferences.SPO2_GRANTED) },
                     checked = on(Preferences.SPO2),
                     enabled = !busy,
-                ) { onSet(Preferences.SPO2, if (it) Preferences.ON else Preferences.OFF) }
+                    contentPadding = SettingPadding,
+                    onCheckedChange = { onSet(Preferences.SPO2, if (it) Preferences.ON else Preferences.OFF) },
+                )
             }
             if (error != null) {
                 Text(
@@ -115,21 +128,5 @@ internal fun WearOsWatchSettingsCard(
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun SettingSwitch(title: String, body: String?, checked: Boolean, enabled: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = Spacing.lg, vertical = Spacing.xs),
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, style = MaterialTheme.typography.bodyLarge)
-            if (body != null) {
-                Text(text = body, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-        Switch(checked = checked, onCheckedChange = onChange, enabled = enabled)
     }
 }

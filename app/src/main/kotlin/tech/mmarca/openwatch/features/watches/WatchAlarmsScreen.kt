@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -60,6 +61,7 @@ import tech.mmarca.openwatch.ui.components.OpenWatchButton
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchOutlinedButton
 import tech.mmarca.openwatch.ui.components.OptionDropdown
+import tech.mmarca.openwatch.ui.components.SwitchRow
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /** The alarm being edited: a new one, or the one at [index]. */
@@ -261,17 +263,13 @@ private fun AlarmEditorDialog(
                     onSelect = { alarm = alarm.copy(label = it ?: GarminAlarmLabel.NONE) },
                 )
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = stringResource(R.string.settings_watch_alarms_backlight),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.weight(1f),
-                    )
-                    Switch(
-                        checked = alarm.backlight,
-                        onCheckedChange = { alarm = alarm.copy(backlight = it) },
-                    )
-                }
+                // The dialog already holds the inset.
+                SwitchRow(
+                    title = stringResource(R.string.settings_watch_alarms_backlight),
+                    checked = alarm.backlight,
+                    onCheckedChange = { alarm = alarm.copy(backlight = it) },
+                    contentPadding = PaddingValues(0.dp),
+                )
             }
         },
         confirmButton = {

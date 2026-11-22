@@ -217,11 +217,11 @@ fun OpenWatchIconButton(
     enabled: Boolean = true,
     content: @Composable () -> Unit,
 ) {
-    val interactionEnabled = enabled && !false
+    // The platform's 48 dp touch target, not a smaller one.
     IconButton(
         onClick = onClick,
-        modifier = modifier.size(44.dp),
-        enabled = interactionEnabled,
+        modifier = modifier,
+        enabled = enabled,
     ) {
         content()
     }

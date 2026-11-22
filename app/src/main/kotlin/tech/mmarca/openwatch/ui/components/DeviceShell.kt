@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Watch
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +30,45 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import tech.mmarca.openwatch.ui.theme.Spacing
 
-/** The pieces every paired-device screen shares: the round glyph, the value row, the time. */
+/** The pieces every paired-device screen shares: the round glyph, the list row, the value row, the time. */
+
+/**
+ * A paired device in a list: its glyph, its [name], a [status] line and a [detail] line (when
+ * it last synced, or weighed), opening the device on a tap.
+ */
+@Composable
+fun DeviceListRow(
+    name: String,
+    status: String,
+    detail: String,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
+    /** The device's kind; a watch when null. */
+    icon: ImageVector? = null,
+) {
+    OpenWatchCard(modifier = modifier) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onOpen)
+                .padding(Spacing.lg),
+        ) {
+            DeviceAvatar(icon = icon)
+            Spacer(modifier = Modifier.width(DeviceRowIconGap))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = name, style = MaterialTheme.typography.titleSmall)
+                Text(text = status, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = detail, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
 
 /** The round glyph for a device. [icon] is the device's kind; a watch by default. */
 @Composable
@@ -88,6 +128,9 @@ fun DeviceValueRow(
         }
     }
 }
+
+/** The gap between a device's glyph and its text, in every device row and header. */
+val DeviceRowIconGap = 14.dp
 
 /** A device timestamp: the time for today, the date once older. */
 fun formatDeviceTime(

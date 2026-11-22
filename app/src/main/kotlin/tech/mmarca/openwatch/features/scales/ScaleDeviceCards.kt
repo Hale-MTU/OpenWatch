@@ -13,10 +13,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.MonitorWeight
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,6 +31,7 @@ import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.devices.xiaomi.ScaleListenerStatus
 import tech.mmarca.openwatch.devices.xiaomi.ScaleWriteFailure
 import tech.mmarca.openwatch.ui.components.DeviceAvatar
+import tech.mmarca.openwatch.ui.components.DeviceRowIconGap
 import tech.mmarca.openwatch.ui.components.DeviceValueRow
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchIconButton
@@ -53,7 +52,7 @@ internal fun ScaleStatusCard(state: ScaleDeviceUiState, onRename: () -> Unit) {
                 .padding(Spacing.lg),
         ) {
             DeviceAvatar(size = 44, icon = Icons.Outlined.MonitorWeight)
-            Spacer(modifier = Modifier.width(RowIconGap))
+            Spacer(modifier = Modifier.width(DeviceRowIconGap))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stringResource(scaleStatusRes(state.listenerStatus, state.wokenBySystem)),
@@ -240,47 +239,6 @@ internal fun ScaleRemoveCard(onRemove: () -> Unit) {
     }
 }
 
-@Composable
-internal fun ScaleSectionHeader(title: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Spacer(modifier = Modifier.width(ChipGap))
-        HorizontalDivider(modifier = Modifier.weight(1f))
-    }
-}
-
-@Composable
-internal fun ScaleRenameDialog(initialName: String, onSave: (String) -> Unit, onDismiss: () -> Unit) {
-    var name by remember { mutableStateOf(initialName) }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_scales_rename)) },
-        text = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text(stringResource(R.string.settings_watch_name_label)) },
-                singleLine = true,
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = { onSave(name) }) { Text(stringResource(R.string.action_save)) }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
-        },
-    )
-}
-
 /** A new key for the same scale. [onSave] says whether the text was a key; the dialog stays open if not. */
 @Composable
 internal fun ScaleKeyDialog(onSave: (String) -> Boolean, onDismiss: () -> Unit) {
@@ -367,7 +325,6 @@ private fun ValueLine(@StringRes label: Int, value: String) {
 }
 
 /** Gap between a row's leading icon and its text. */
-private val RowIconGap = 14.dp
 
 /** Gap between a section title and its divider. */
 private val ChipGap = 10.dp

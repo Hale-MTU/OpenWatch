@@ -3,18 +3,15 @@ package tech.mmarca.openwatch.features.healthconnect
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -29,6 +26,7 @@ import tech.mmarca.openwatch.ui.components.OpenWatchButton
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchOutlinedButton
 import tech.mmarca.openwatch.ui.components.OpenWatchTextButton
+import tech.mmarca.openwatch.ui.components.SwitchCard
 import tech.mmarca.openwatch.ui.components.rememberHealthConnectPermissionLauncher
 import tech.mmarca.openwatch.ui.theme.Spacing
 
@@ -119,24 +117,13 @@ fun HealthConnectSetupScreen(
             }
         }
 
-        OpenWatchCard(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Spacing.lg),
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = stringResource(R.string.hc_setup_sync_title), style = MaterialTheme.typography.titleSmall)
-                    Text(
-                        text = stringResource(R.string.hc_setup_sync_body),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Switch(checked = state.syncEnabled, onCheckedChange = viewModel::setSyncEnabled)
-            }
-        }
+        SwitchCard(
+            title = stringResource(R.string.hc_setup_sync_title),
+            body = stringResource(R.string.hc_setup_sync_body),
+            checked = state.syncEnabled,
+            onCheckedChange = viewModel::setSyncEnabled,
+            modifier = Modifier.fillMaxWidth(),
+        )
 
         OpenWatchButton(
             onClick = onContinue,

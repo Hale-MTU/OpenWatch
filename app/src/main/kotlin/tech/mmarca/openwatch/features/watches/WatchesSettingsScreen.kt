@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.automirrored.outlined.BluetoothSearching
 import androidx.compose.material.icons.outlined.CheckCircle
@@ -41,8 +40,8 @@ import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.devices.garmin.GarminOnboardStep
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import tech.mmarca.openwatch.ui.components.DeviceListRow
 import tech.mmarca.openwatch.ui.components.OpenWatchButton
-import tech.mmarca.openwatch.ui.components.DeviceAvatar
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OsPermissionsDialog
 import tech.mmarca.openwatch.ui.components.formatDeviceTime
@@ -218,49 +217,16 @@ private fun WatchRow(
     onOpen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    OpenWatchCard(modifier = modifier) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onOpen)
-                .padding(Spacing.lg),
-        ) {
-            DeviceAvatar()
-            Spacer(modifier = Modifier.width(WatchRowIconGap))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = device.displayName,
-                    style = MaterialTheme.typography.titleSmall,
-                )
-                // A watch is named after its Bluetooth name; its state says more.
-                Text(
-                    text = if (device.enabled) {
-                        stringResource(R.string.settings_watch_connected)
-                    } else {
-                        stringResource(R.string.settings_watch_not_connected)
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    // A watch reports its battery over GFDI, not the standard service.
-                    text = device.lastSyncedAt?.let {
-                        stringResource(
-                            R.string.settings_watch_last_synced,
-                            formatDeviceTime(it),
-                        )
-                    } ?: stringResource(R.string.settings_watch_never_synced),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
-                contentDescription = null,
-            )
-        }
-    }
+    // A watch is named after its Bluetooth name; its state says more. It reports its battery
+    // over GFDI, not the standard service, so the row shows the last sync instead.
+    DeviceListRow(
+        name = device.displayName,
+        status = stringResource(if (device.enabled) R.string.settings_watch_connected else R.string.settings_watch_not_connected),
+        detail = device.lastSyncedAt?.let { stringResource(R.string.settings_watch_last_synced, formatDeviceTime(it)) }
+            ?: stringResource(R.string.settings_watch_never_synced),
+        onOpen = onOpen,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -445,4 +411,3 @@ private fun WatchPairStepRow(
 /** The small in-row progress spinner's stroke. */
 private val WatchProgressStroke = 2.dp
 /** Gap between a row's leading icon and its text. */
-private val WatchRowIconGap = 14.dp

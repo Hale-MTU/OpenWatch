@@ -7,21 +7,18 @@ import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -33,6 +30,7 @@ import tech.mmarca.openwatch.PermissionsRationaleActivity
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.features.watches.NotificationAccessDisclosureDialog
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
+import tech.mmarca.openwatch.ui.components.SwitchCard
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 @Composable
@@ -66,42 +64,20 @@ fun SettingsScreen(
             body = stringResource(R.string.body_profile_settings_body),
             onClick = onOpenBodyProfile,
         )
-        OpenWatchCard(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Spacing.lg),
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = stringResource(R.string.hc_setup_sync_title), style = MaterialTheme.typography.titleSmall)
-                    Text(
-                        text = stringResource(R.string.hc_setup_sync_body),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Switch(checked = state.syncEnabled, onCheckedChange = viewModel::setSyncEnabled)
-            }
-        }
-        OpenWatchCard(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(Spacing.lg),
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = stringResource(R.string.settings_respiratory_rate_title), style = MaterialTheme.typography.titleSmall)
-                    Text(
-                        text = stringResource(R.string.settings_respiratory_rate_body),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Switch(checked = state.writeRespiratoryRate, onCheckedChange = viewModel::setWriteRespiratoryRate)
-            }
-        }
+        SwitchCard(
+            title = stringResource(R.string.hc_setup_sync_title),
+            body = stringResource(R.string.hc_setup_sync_body),
+            checked = state.syncEnabled,
+            onCheckedChange = viewModel::setSyncEnabled,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        SwitchCard(
+            title = stringResource(R.string.settings_respiratory_rate_title),
+            body = stringResource(R.string.settings_respiratory_rate_body),
+            checked = state.writeRespiratoryRate,
+            onCheckedChange = viewModel::setWriteRespiratoryRate,
+            modifier = Modifier.fillMaxWidth(),
+        )
         SettingsRow(
             title = stringResource(R.string.connected_apps_title),
             body = stringResource(R.string.connected_apps_settings_body),

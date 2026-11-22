@@ -1,19 +1,9 @@
 package tech.mmarca.openwatch.features.watches
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import tech.mmarca.openwatch.R
-import tech.mmarca.openwatch.ui.components.OpenWatchCard
-import tech.mmarca.openwatch.ui.theme.Spacing
+import tech.mmarca.openwatch.ui.components.SwitchCard
 
 /**
  * The large-Bluetooth-packets switch: on by default, off for a watch that
@@ -24,28 +14,10 @@ internal fun HighMtuCard(
     state: WatchDeviceUiState,
     onToggle: (Boolean) -> Unit,
 ) {
-    OpenWatchCard {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = stringResource(R.string.settings_watch_high_mtu),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f),
-                )
-                Switch(
-                    checked = state.highMtu,
-                    onCheckedChange = onToggle,
-                )
-            }
-            Text(
-                text = stringResource(R.string.settings_watch_high_mtu_body),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
+    SwitchCard(
+        title = stringResource(R.string.settings_watch_high_mtu),
+        body = stringResource(R.string.settings_watch_high_mtu_body),
+        checked = state.highMtu,
+        onCheckedChange = onToggle,
+    )
 }

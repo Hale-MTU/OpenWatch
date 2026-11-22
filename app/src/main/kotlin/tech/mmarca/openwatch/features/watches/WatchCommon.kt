@@ -1,23 +1,14 @@
 package tech.mmarca.openwatch.features.watches
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.PrivacyTip
-import androidx.compose.material.icons.outlined.Watch
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
@@ -26,26 +17,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.time.Duration
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
-import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /** Pieces the device view and the watch-data screen share. */
@@ -116,59 +95,6 @@ internal fun capabilityLabel(
 
     BleSensorCapability.RUNNING_SPEED_CADENCE ->
         stringResource(R.string.settings_sensors_capability_running_speed_cadence)
-}
-
-/** Confirms removing a watch: the bond, the association and the synced-file record are lost. */
-@Composable
-internal fun ConfirmRemoveWatchDialog(
-    deviceName: String,
-    /** True for the last Garmin watch: its watch-only history has no other owner left. */
-    offerHistoryDelete: Boolean,
-    onConfirm: (deleteWatchHistory: Boolean) -> Unit,
-    onDismiss: () -> Unit,
-) {
-    var deleteWatchHistory by rememberSaveable { mutableStateOf(false) }
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(stringResource(R.string.settings_device_remove_confirm_title, deviceName))
-        },
-        text = {
-            Column {
-                Text(stringResource(R.string.settings_watch_remove_confirm_body))
-                if (offerHistoryDelete) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = Spacing.md)
-                            .toggleable(
-                                value = deleteWatchHistory,
-                                role = Role.Checkbox,
-                                onValueChange = { deleteWatchHistory = it },
-                            ),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Checkbox(checked = deleteWatchHistory, onCheckedChange = null)
-                        Spacer(modifier = Modifier.width(Spacing.sm))
-                        Text(stringResource(R.string.settings_watch_remove_delete_history))
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { onConfirm(deleteWatchHistory) }) {
-                Text(
-                    text = stringResource(R.string.action_remove),
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
-            }
-        },
-    )
 }
 
 /** The small in-row progress spinner's stroke. */

@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.features.home
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,6 +41,7 @@ import tech.mmarca.openwatch.features.scales.ScalesViewModel
 import tech.mmarca.openwatch.features.watches.WatchesSection
 import tech.mmarca.openwatch.features.watches.WatchesViewModel
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
+import tech.mmarca.openwatch.ui.components.SectionHeader
 import tech.mmarca.openwatch.ui.components.formatDeviceTime
 import tech.mmarca.openwatch.ui.theme.Spacing
 
@@ -74,11 +77,11 @@ fun HomeScreen(
                 modifier = Modifier.padding(horizontal = Spacing.lg),
             )
         }
-        SectionTitle(stringResource(R.string.home_section_watches))
+        SectionHeader(stringResource(R.string.home_section_watches))
         WatchesSection(viewModel = watchesViewModel, onOpenWatch = onOpenWatch)
-        SectionTitle(stringResource(R.string.home_section_scale))
+        SectionHeader(stringResource(R.string.home_section_scale))
         ScalesSection(viewModel = scalesViewModel, onOpenScale = onOpenScale)
-        SectionTitle(stringResource(R.string.home_section_app))
+        SectionHeader(stringResource(R.string.home_section_app))
         HomeRow(
             icon = Icons.Outlined.FavoriteBorder,
             title = stringResource(R.string.home_health_connect),
@@ -92,15 +95,6 @@ fun HomeScreen(
             onClick = onOpenSettings,
         )
     }
-}
-
-@Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.xs),
-    )
 }
 
 @Composable
@@ -162,12 +156,15 @@ internal fun WatchTile(
                 }
             }
             if (tile.isSyncing) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(WatchSyncSpinnerSize),
-                    strokeWidth = WatchSyncSpinnerStroke,
-                )
+                // In the button's 48 dp slot, so the row does not move when the sync starts.
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.minimumInteractiveComponentSize()) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(WatchSyncSpinnerSize),
+                        strokeWidth = WatchSyncSpinnerStroke,
+                    )
+                }
             } else {
-                IconButton(onClick = onSync, modifier = Modifier.size(WatchSyncButtonSize)) {
+                IconButton(onClick = onSync) {
                     Icon(
                         imageVector = Icons.Outlined.Sync,
                         contentDescription = stringResource(R.string.home_watch_sync),
@@ -194,7 +191,6 @@ private fun watchTileSubtitle(tile: WatchTileState): String? {
 }
 
 private val HomeRowIconSize = 28.dp
-private val WatchSyncButtonSize = 32.dp
 private val WatchSyncGlyphSize = 18.dp
 private val WatchSyncSpinnerSize = 20.dp
 private val WatchSyncSpinnerStroke = 2.dp
