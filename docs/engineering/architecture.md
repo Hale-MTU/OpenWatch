@@ -165,7 +165,7 @@ Notes worth carrying:
 
 ### `devices/notifications`
 
-`OpenWatchNotificationListenerService` is the platform `NotificationListenerService`. It reads posted notifications, filters them through the pure `NotificationFilter`, buffers them in the memory-only `NotificationStore`, and hands them to `GarminNotificationBridge`. It touches no Bluetooth; the bridge owns the forwarding. Nothing is written to a file or a database.
+`OpenWatchNotificationListenerService` is the platform `NotificationListenerService`. It reads posted notifications, filters them through the pure `NotificationFilter` against the one setting of what to forward (`WatchNotificationPrefsStore`, which the screen, the listener and the bridge all read; the listener's old copy is adopted once and dropped), buffers them in the memory-only `NotificationStore`, and hands them to `GarminNotificationBridge`. It touches no Bluetooth; the bridge owns the forwarding. Nothing is written to a file or a database.
 
 ### Hilt wiring
 

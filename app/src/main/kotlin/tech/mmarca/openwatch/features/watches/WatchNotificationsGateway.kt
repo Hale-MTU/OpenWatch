@@ -11,13 +11,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Inject
 import javax.inject.Singleton
-import tech.mmarca.openwatch.data.repository.BleDeviceRepository
-import tech.mmarca.openwatch.data.repository.WatchNotificationPrefsStore
 import tech.mmarca.openwatch.devices.garmin.GarminLog
 import tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge
-import tech.mmarca.openwatch.devices.notifications.NotificationFilter
-import tech.mmarca.openwatch.devices.notifications.NotificationStore
-import tech.mmarca.openwatch.devices.garmin.isGarmin
 
 /** One app the user can silence. */
 data class InstalledApp(
@@ -40,15 +35,13 @@ interface WatchNotificationsGateway {
     /** Every launchable app, via the manifest `<queries>`, never QUERY_ALL_PACKAGES. */
     fun listLaunchableApps(): List<InstalledApp>
 
-    /** Mirrors the configuration to the listener's filter. The one place the two copies can drift. */
+    /** Tells the forwarder the setting changed, so a link it no longer needs is let go. */
     fun pushConfiguration()
 }
 
 /** The real gateway. */
 class AndroidWatchNotificationsGateway @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val store: WatchNotificationPrefsStore,
-    private val deviceRepository: BleDeviceRepository,
     private val bridge: GarminNotificationBridge,
 ) : WatchNotificationsGateway {
 
@@ -82,16 +75,7 @@ class AndroidWatchNotificationsGateway @Inject constructor(
     }
 
     override fun pushConfiguration() {
-        // No watch means capture nothing.
-        val watch = deviceRepository.devices.firstOrNull { it.isGarmin }
-        NotificationStore.writeConfig(
-            context,
-            NotificationFilter.Config(
-                enabled = store.enabled,
-                blockedPackages = store.blockedPackages,
-                watchAddress = watch?.address,
-            ),
-        )
+        // The listener and the bridge read the store itself; nothing is copied.
         bridge.onConfigChanged()
     }
 }

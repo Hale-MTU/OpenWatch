@@ -8,4 +8,7 @@ package tech.mmarca.openwatch.devices.notifications
 fun interface NotificationSink {
     /** Something was buffered in [NotificationStore]. Called on the listener's thread. */
     fun onNotificationsPending()
+
+    /** Whether a watch is paired to send to; with none, nothing is captured. */
+    fun hasTarget(): Boolean = true
 }

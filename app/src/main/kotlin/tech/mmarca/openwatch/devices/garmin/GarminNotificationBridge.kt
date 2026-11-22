@@ -15,6 +15,7 @@ import kotlin.time.Duration
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import tech.mmarca.openwatch.data.repository.WatchNotificationPrefsStore
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.pairing.CompanionPresenceObserver
 import tech.mmarca.openwatch.devices.notifications.NotificationMsg
@@ -38,6 +39,7 @@ import tech.mmarca.openwatch.core.performance.DispatcherProvider
  */
 @Singleton
 class GarminNotificationBridge @Inject constructor(
+    private val settings: WatchNotificationPrefsStore,
     @ApplicationContext private val context: Context,
     private val deviceRepository: BleDeviceRepository,
     private val findPhoneRinger: GarminFindPhoneRinger,
@@ -99,9 +101,10 @@ class GarminNotificationBridge @Inject constructor(
     /** Called after the configuration changed. Off or unpaired tears the link down. */
     fun onConfigChanged() {
         scope.launch {
-            val config = NotificationStore.readConfig(context)
+            // A setting can only narrow forwarding when it changes, so what was buffered is suspect.
+            if (!settings.enabled) NotificationStore.clearPending()
             val current = forwarder ?: return@launch
-            if (!config.enabled || forwarderAddress != pairedWatchAddress()) {
+            if (!settings.enabled || forwarderAddress != pairedWatchAddress()) {
                 GarminLog.log("[GARMIN-NOTIFY] configuration changed; stopping the forwarder")
                 dropForwarder()
             }
@@ -149,6 +152,8 @@ class GarminNotificationBridge @Inject constructor(
         deviceRepository.devices.firstOrNull { it.address.equals(address, ignoreCase = true) }
 
     /** The paired Garmin watch's address, or null. */
+    override fun hasTarget(): Boolean = pairedWatchAddress() != null
+
     private fun pairedWatchAddress(): String? =
         deviceRepository.devices.firstOrNull { it.isGarmin }?.address
 

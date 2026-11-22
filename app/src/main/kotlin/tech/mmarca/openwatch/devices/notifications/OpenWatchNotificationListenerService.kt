@@ -12,6 +12,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.os.BundleCompat
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import tech.mmarca.openwatch.data.repository.WatchNotificationPrefsStore
 
 /**
  * Reads the phone's notifications so they can be mirrored to a paired Garmin
@@ -27,6 +28,9 @@ class OpenWatchNotificationListenerService : NotificationListenerService() {
 
     @Inject
     lateinit var sink: NotificationSink
+
+    @Inject
+    lateinit var settings: WatchNotificationPrefsStore
 
     companion object {
         private const val TAG = "OVNotifyListener"
@@ -152,7 +156,11 @@ class OpenWatchNotificationListenerService : NotificationListenerService() {
     private fun handle(sbn: StatusBarNotification?, removed: Boolean) {
         val notification = sbn?.notification ?: return
         try {
-            val config = NotificationStore.readConfig(this)
+            val config = NotificationFilter.Config(
+                enabled = settings.enabled,
+                blockedPackages = settings.blockedPackages,
+                hasWatch = sink.hasTarget(),
+            )
             val extras = notification.extras
 
             // A call that was answered, or placed, leaves the wrist: only a ringing one shows.

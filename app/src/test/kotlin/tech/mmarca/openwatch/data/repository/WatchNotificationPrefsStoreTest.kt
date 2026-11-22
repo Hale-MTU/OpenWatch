@@ -117,4 +117,37 @@ class WatchNotificationPrefsStoreTest {
         assertFalse(store.enabled)
         assertTrue(store.blockedPackages.isEmpty())
     }
+
+    private fun listenerCopy(): FakeSharedPreferences = FakeSharedPreferences().apply {
+        edit()
+            .putBoolean("forwarding_enabled", true)
+            .putStringSet("blocked_packages", setOf("com.bank.app"))
+            .putString("watch_address", "AA:BB:CC:DD:EE:FF")
+            .apply()
+    }
+
+    @Test
+    fun `the listener's own copy is adopted where the store has none, then dropped`() {
+        val listener = listenerCopy()
+
+        val store = WatchNotificationPrefsStore(prefs, listenerPrefs = listener)
+
+        assertTrue(store.enabled)
+        assertEquals(setOf("com.bank.app"), store.blockedPackages)
+        // Gone from the listener's file, so the two can never drift again.
+        assertFalse(listener.contains("forwarding_enabled"))
+        assertFalse(listener.contains("blocked_packages"))
+        assertFalse(listener.contains("watch_address"))
+    }
+
+    @Test
+    fun `the store's own setting wins over the listener's copy, which the screen kept in step`() {
+        prefs.edit().putStringSet("garmin_notifications_blocked_packages", setOf("com.spam.app")).apply()
+
+        val store = WatchNotificationPrefsStore(prefs, listenerPrefs = listenerCopy())
+
+        assertEquals(setOf("com.spam.app"), store.blockedPackages)
+        // The switch the store had no value for is still taken from the copy.
+        assertTrue(store.enabled)
+    }
 }

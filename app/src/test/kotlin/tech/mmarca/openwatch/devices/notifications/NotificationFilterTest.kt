@@ -11,7 +11,7 @@ class NotificationFilterTest {
     private val enabled = NotificationFilter.Config(
         enabled = true,
         blockedPackages = emptySet(),
-        watchAddress = "AA:BB:CC:DD:EE:FF",
+        hasWatch = true,
     )
 
     private fun candidate(
@@ -55,7 +55,7 @@ class NotificationFilterTest {
 
     @Test
     fun `nothing is captured when no watch is paired, because there is nowhere to send it`() {
-        assertThat(verdict(config = enabled.copy(watchAddress = null)))
+        assertThat(verdict(config = enabled.copy(hasWatch = false)))
             .isEqualTo(NotificationFilter.Verdict.NO_WATCH)
     }
 

@@ -28,11 +28,11 @@ object NotificationFilter {
     data class Config(
         val enabled: Boolean,
         val blockedPackages: Set<String>,
-        /** Null when no watch is paired: there is nowhere to send anything. */
-        val watchAddress: String?,
+        /** False when no watch is paired: there is nowhere to send anything. */
+        val hasWatch: Boolean,
     ) {
         companion object {
-            val disabled = Config(enabled = false, blockedPackages = emptySet(), watchAddress = null)
+            val disabled = Config(enabled = false, blockedPackages = emptySet(), hasWatch = false)
         }
     }
 
@@ -73,7 +73,7 @@ object NotificationFilter {
         interruptionFilter: Int = INTERRUPTION_FILTER_ALL,
     ): Verdict {
         if (!config.enabled) return Verdict.DISABLED
-        if (config.watchAddress.isNullOrEmpty()) return Verdict.NO_WATCH
+        if (!config.hasWatch) return Verdict.NO_WATCH
         if (candidate.packageName == ownPackage) return Verdict.OWN_PACKAGE
         if (candidate.packageName in config.blockedPackages) return Verdict.BLOCKED
 
