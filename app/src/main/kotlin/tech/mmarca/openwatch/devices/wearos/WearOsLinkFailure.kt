@@ -1,14 +1,14 @@
 package tech.mmarca.openwatch.devices.wearos
 
 import tech.mmarca.openwatch.R
-import tech.mmarca.openwatch.core.presentation.ScreenError
+import tech.mmarca.openwatch.devices.core.sync.SyncFailure
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
 /**
  * Why the phone could not get what it wanted from the watch, one case per
  * thing the user can do about it. A missing Bluetooth permission is not
- * here: it stays a `SecurityException`, which the app turns into
- * `ScreenError.PermissionDenied` and a grant affordance.
+ * here: it stays a `SecurityException`, which a sync turns into
+ * `SyncFailure.BluetoothPermission`.
  */
 sealed class WearOsLinkFailure(message: String, cause: Throwable? = null) : Exception(message, cause) {
 
@@ -51,8 +51,15 @@ sealed class WearOsLinkFailure(message: String, cause: Throwable? = null) : Exce
         is Refused -> WearOsAppStatus.NO_ANSWER
     }
 
-    /** The sentence the screen shows for this failure. */
-    fun toScreenError(): ScreenError = ScreenError.Text(toAppStatus().messageRes())
+    /**
+     * The sync failure this stands for. Bluetooth off is everyone's; the rest is this link's own
+     * state, in its own words. No answer may clear up by itself, so the schedule retries it.
+     */
+    fun toSyncFailure(): SyncFailure = when (val status = toAppStatus()) {
+        WearOsAppStatus.BLUETOOTH_OFF -> SyncFailure.BluetoothOff
+        WearOsAppStatus.NO_ANSWER -> SyncFailure.Described(status.messageRes(), transient = true)
+        else -> SyncFailure.Described(status.messageRes())
+    }
 }
 
 /** The sentence for a status that is not success. */

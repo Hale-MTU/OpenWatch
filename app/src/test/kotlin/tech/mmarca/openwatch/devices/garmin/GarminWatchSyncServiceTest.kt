@@ -22,12 +22,14 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import tech.mmarca.openwatch.core.presentation.ScreenError
+import tech.mmarca.openwatch.devices.core.RadioLeaseBusyException
+import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
+import tech.mmarca.openwatch.devices.core.sync.SyncFailure
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import kotlinx.coroutines.SupervisorJob
@@ -130,7 +132,7 @@ class GarminWatchSyncServiceTest {
 
         val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
-        assertEquals(DeviceSyncResult.Failed("out of range"), result)
+        assertEquals(DeviceSyncResult.Failed(SyncFailure.Unreachable), result)
         coVerify(exactly = 0) { downloadImport.import(any(), any()) }
         coVerify(exactly = 0) { deviceRepository.markSynced(any(), any()) }
     }
@@ -142,7 +144,7 @@ class GarminWatchSyncServiceTest {
 
         val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
-        assertEquals(DeviceSyncResult.Failed("Health Connect is down"), result)
+        assertTrue((result as DeviceSyncResult.Failed).failure is SyncFailure.Unknown)
         coVerify(exactly = 0) { deviceRepository.markSynced(any(), any()) }
     }
 
@@ -165,27 +167,47 @@ class GarminWatchSyncServiceTest {
 
         val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
-        assertEquals(DeviceSyncResult.Failed(ScreenError.PermissionDenied), result)
+        assertEquals(DeviceSyncResult.Failed(SyncFailure.HealthConnectPermission), result)
     }
 
     @Test
-    fun `an interrupted sync that landed files says both things`() = runTest {
+    fun `a paused Health Connect sync is said as paused, not as the exception's text`() = runTest {
+        pullResult = GarminPullResult(files = listOf(file(1)))
+        coEvery { downloadImport.import(any(), any()) } throws HealthConnectSyncDisabledException()
+
+        val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
+
+        assertEquals(DeviceSyncResult.Failed(SyncFailure.SyncPaused), result)
+    }
+
+    @Test
+    fun `a radio another task holds is busy, which the schedule retries`() = runTest {
+        pullFailure = RadioLeaseBusyException(holder = "notifications")
+
+        val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null) as DeviceSyncResult.Failed
+
+        assertEquals(SyncFailure.RadioBusy, result.failure)
+        assertTrue(result.failure.transient)
+    }
+
+    @Test
+    fun `an interrupted sync imports what landed and fails as interrupted`() = runTest {
         pullResult = GarminPullResult(files = listOf(file(1)), incompleteReason = "the link dropped")
 
         val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
-        assertEquals(DeviceSyncResult.Failed("Imported 1 file(s), but sync was interrupted: the link dropped"), result)
+        assertEquals(DeviceSyncResult.Failed(SyncFailure.Interrupted), result)
         // The files did land, so they are imported before the failure is reported.
         coVerify(exactly = 1) { downloadImport.import(WATCH.id, pullResult.files) }
     }
 
     @Test
-    fun `an interrupted sync that landed nothing reports only the interruption`() = runTest {
+    fun `an interrupted sync that landed nothing reports the interruption, not the link's own words`() = runTest {
         pullResult = GarminPullResult(files = emptyList(), incompleteReason = "the watch went away")
 
         val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
-        assertEquals(DeviceSyncResult.Failed("the watch went away"), result)
+        assertEquals(DeviceSyncResult.Failed(SyncFailure.Interrupted), result)
     }
 
     @Test
@@ -196,8 +218,7 @@ class GarminWatchSyncServiceTest {
 
         val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
-        val message = (result as DeviceSyncResult.Failed).message
-        assertTrue(message, message.startsWith("1 workout(s) were not imported."))
+        assertEquals(DeviceSyncResult.Failed(SyncFailure.HealthConnectPermission), result)
     }
 
     @Test
@@ -219,7 +240,7 @@ class GarminWatchSyncServiceTest {
 
         val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
-        assertEquals(DeviceSyncResult.Failed("Health Connect is down"), result)
+        assertTrue((result as DeviceSyncResult.Failed).failure is SyncFailure.Unknown)
         assertEquals("pulling more would only queue more behind a write path that is down", 0, pulls)
     }
 

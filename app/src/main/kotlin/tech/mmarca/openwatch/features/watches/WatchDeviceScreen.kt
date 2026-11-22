@@ -233,7 +233,7 @@ fun WatchDeviceScreen(
                     modifier = Modifier.padding(horizontal = Spacing.lg),
                 )
             }
-            state.sync.error.resolve()?.let { message ->
+            state.sync.failure?.toScreenError().resolve()?.let { message ->
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodySmall,

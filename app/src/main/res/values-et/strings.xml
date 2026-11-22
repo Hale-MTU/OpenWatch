@@ -345,7 +345,6 @@
     <string name="settings_watch_wearos_status_protocol">Kell vastas midagi, mida OpenWatch ei suutnud lugeda. Uuenda mõlemat rakendust ja proovi uuesti.</string>
     <string name="settings_watch_wearos_linked_to">Seotud: %1$s</string>
     <string name="settings_watch_wearos_fail_partial">Kell lõpetas poole pealt vastamise. Saabunu on salvestatud; jätkamiseks sünkrooni uuesti.</string>
-    <string name="settings_watch_wearos_fail_health_connect">Luba OpenWatchil kirjutada pulssi ja und Health Connecti ning sünkrooni uuesti.</string>
     <string name="settings_watch_wearos_fail_generic">Kella ei õnnestunud sünkroonida. Proovi uuesti.</string>
     <string name="settings_watch_wearos_check_app">Kontrolli Wear OS rakendust</string>
     <string name="settings_watch_wearos_checking">Wear OS rakenduse kontrollimine…</string>

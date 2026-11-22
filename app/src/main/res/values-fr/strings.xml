@@ -347,7 +347,6 @@
     <string name="settings_watch_wearos_status_protocol">La montre a répondu quelque chose qu’OpenWatch n’a pas pu lire. Mettez à jour les deux apps et réessayez.</string>
     <string name="settings_watch_wearos_linked_to">Lié à %1$s</string>
     <string name="settings_watch_wearos_fail_partial">La montre a cessé de répondre en cours de route. Ce qui est arrivé a été enregistré ; synchronisez à nouveau pour continuer.</string>
-    <string name="settings_watch_wearos_fail_health_connect">Autorisez OpenWatch à écrire la fréquence cardiaque et le sommeil dans Santé Connect, puis synchronisez à nouveau.</string>
     <string name="settings_watch_wearos_fail_generic">La montre n’a pas pu être synchronisée. Réessayez.</string>
     <string name="settings_watch_wearos_check_app">Vérifier l\'appli Wear OS</string>
     <string name="settings_watch_wearos_checking">Vérification de l\'appli Wear OS…</string>

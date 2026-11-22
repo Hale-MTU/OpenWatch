@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
-import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /** Where a device sync has got to, for the row that started it. Device-agnostic. */
@@ -38,7 +37,8 @@ data class DeviceSyncUiState(
     val lastUnwritten: Set<UnwrittenSeries> = emptySet(),
     /** Health Connect grants the last completed run skipped a write for want of. */
     val lastWithheldPermissions: Set<String> = emptySet(),
-    val error: ScreenError? = null,
+    /** Why the last requested run failed; a background one ends without it. */
+    val failure: SyncFailure? = null,
 ) {
     val isSyncing: Boolean get() = syncingDeviceId != null
 
@@ -129,7 +129,7 @@ class DeviceSyncController @Inject constructor(
             _state.value = DeviceSyncUiState()
             throw error
         } catch (error: Exception) {
-            DeviceSyncResult.Failed(error.message ?: error.toString())
+            DeviceSyncResult.Failed(SyncFailure.Unknown(error))
         }
         _state.value = when (result) {
             is DeviceSyncResult.Succeeded -> DeviceSyncUiState(
@@ -147,7 +147,7 @@ class DeviceSyncController @Inject constructor(
             is DeviceSyncResult.Failed -> if (trigger == SyncTrigger.BACKGROUND) {
                 DeviceSyncUiState()
             } else {
-                DeviceSyncUiState(error = result.error)
+                DeviceSyncUiState(failure = result.failure)
             }
         }
         return result

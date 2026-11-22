@@ -349,7 +349,6 @@
     <string name="settings_watch_wearos_status_protocol">ウォッチの応答を OpenWatch が読み取れませんでした。両方のアプリを更新して、もう一度お試しください。</string>
     <string name="settings_watch_wearos_linked_to">%1$s と接続中</string>
     <string name="settings_watch_wearos_fail_partial">ウォッチが途中で応答しなくなりました。受信した分は保存済みです。続けるにはもう一度同期してください。</string>
-    <string name="settings_watch_wearos_fail_health_connect">OpenWatch に Health Connect への心拍数と睡眠の書き込みを許可してから、もう一度同期してください。</string>
     <string name="settings_watch_wearos_fail_generic">ウォッチを同期できませんでした。もう一度お試しください。</string>
     <string name="settings_watch_wearos_check_app">Wear OS アプリを確認</string>
     <string name="settings_watch_wearos_checking">Wear OS アプリを確認中…</string>

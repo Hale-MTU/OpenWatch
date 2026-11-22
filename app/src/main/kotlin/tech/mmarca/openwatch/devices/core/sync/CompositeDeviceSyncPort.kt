@@ -18,7 +18,7 @@ class CompositeDeviceSyncPort(private val ports: Set<DeviceSyncPort>) : DeviceSy
         onProgress: ((DeviceSyncProgress) -> Unit)?,
     ): DeviceSyncResult {
         val owner = owner(device)
-            ?: return DeviceSyncResult.Failed("No integration syncs this device.")
+            ?: return DeviceSyncResult.Failed(SyncFailure.Unknown(IllegalStateException("No integration syncs this device")))
         return owner.sync(device, trigger, onProgress)
     }
 

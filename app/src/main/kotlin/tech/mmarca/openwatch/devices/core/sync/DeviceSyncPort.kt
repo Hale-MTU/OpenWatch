@@ -1,6 +1,5 @@
 package tech.mmarca.openwatch.devices.core.sync
 
-import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 
 /** How far a sync has got. Device-agnostic. */
@@ -53,18 +52,8 @@ sealed class DeviceSyncResult {
         val moreRemains: Boolean = false,
     ) : DeviceSyncResult()
 
-    /**
-     * The sync failed. [error] is what the screen shows; an integration with
-     * a sentence already in hand passes it as a [ScreenError.Message], one
-     * with a typed cause passes a [ScreenError.Text] or [ScreenError.PermissionDenied].
-     */
-    data class Failed(val error: ScreenError) : DeviceSyncResult() {
-        constructor(message: String) : this(ScreenError.Message(message))
-
-        /** The rendered sentence, for a message-shaped error; the resource id's name otherwise. */
-        val message: String
-            get() = (error as? ScreenError.Message)?.text ?: error.toString()
-    }
+    /** The sync failed, for [failure]; the screen words it. */
+    data class Failed(val failure: SyncFailure) : DeviceSyncResult()
 }
 
 /**

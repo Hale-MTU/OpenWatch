@@ -345,7 +345,6 @@
     <string name="settings_watch_wearos_status_protocol">手表的回应 OpenWatch 无法读取。请更新两个应用后重试。</string>
     <string name="settings_watch_wearos_linked_to">已连接到 %1$s</string>
     <string name="settings_watch_wearos_fail_partial">手表中途停止了回应。已收到的数据已保存；请再次同步以继续。</string>
-    <string name="settings_watch_wearos_fail_health_connect">请允许 OpenWatch 向 Health Connect 写入心率和睡眠，然后再次同步。</string>
     <string name="settings_watch_wearos_fail_generic">无法同步手表。请重试。</string>
     <string name="settings_watch_wearos_check_app">检查 Wear OS 应用</string>
     <string name="settings_watch_wearos_checking">正在检查 Wear OS 应用…</string>

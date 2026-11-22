@@ -399,8 +399,11 @@
     <string name="settings_watch_wearos_status_protocol">The watch answered something OpenWatch could not read. Update both apps and try again.</string>
     <string name="settings_watch_wearos_linked_to">Linked to %1$s</string>
     <string name="settings_watch_wearos_fail_partial">The watch stopped answering part-way. What arrived was saved; sync again to continue.</string>
-    <string name="settings_watch_wearos_fail_health_connect">Allow OpenWatch to write heart rate and sleep in Health Connect, then sync again.</string>
     <string name="settings_watch_wearos_fail_generic">The watch could not be synced. Try again.</string>
+    <string name="sync_failed_health_connect_permission">Health Connect refused a write for want of permission. Allow OpenWatch to write this data in Health Connect, then sync again.</string>
+    <string name="sync_failed_bluetooth_permission">Allow OpenWatch to find and connect to nearby devices, then sync again.</string>
+    <string name="sync_failed_unreachable">The device did not answer. Keep it close, with Bluetooth on, and try again.</string>
+    <string name="sync_failed_not_saved">Some records could not be saved to Health Connect. The next sync tries them again.</string>
     <string name="settings_watch_wearos_check_app">Validate Wear OS App</string>
     <string name="settings_watch_wearos_checking">Checking Wear OS app…</string>
     <string name="settings_watch_wearos_sync_section">Watch Sync</string>

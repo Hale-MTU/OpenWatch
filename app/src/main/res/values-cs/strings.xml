@@ -349,7 +349,6 @@
     <string name="settings_watch_wearos_status_protocol">Hodinky odpověděly něčím, co OpenWatch nedokáže přečíst. Aktualizujte obě aplikace a zkuste to znovu.</string>
     <string name="settings_watch_wearos_linked_to">Propojeno s %1$s</string>
     <string name="settings_watch_wearos_fail_partial">Hodinky přestaly v průběhu odpovídat. Co dorazilo, je uloženo; pokračujte další synchronizací.</string>
-    <string name="settings_watch_wearos_fail_health_connect">Povolte OpenWatch zapisovat tep a spánek do Health Connect a synchronizujte znovu.</string>
     <string name="settings_watch_wearos_fail_generic">Hodinky se nepodařilo synchronizovat. Zkuste to znovu.</string>
     <string name="settings_watch_wearos_check_app">Ověřit aplikaci Wear OS</string>
     <string name="settings_watch_wearos_checking">Kontroluji aplikaci Wear OS…</string>

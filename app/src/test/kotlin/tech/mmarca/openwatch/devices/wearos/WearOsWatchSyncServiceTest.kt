@@ -13,7 +13,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.mmarca.openwatch.R
-import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
@@ -41,6 +40,7 @@ import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.StepsCadenceRecord
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import tech.mmarca.openwatch.devices.core.sync.SyncBudget
+import tech.mmarca.openwatch.devices.core.sync.SyncFailure
 import kotlinx.coroutines.withContext
 
 /**
@@ -532,7 +532,7 @@ class WearOsWatchSyncServiceTest {
 
         val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
-        assertEquals(ScreenError.Text(R.string.settings_watch_wearos_bt_not_paired), (result as DeviceSyncResult.Failed).error)
+        assertEquals(SyncFailure.Described(R.string.settings_watch_wearos_bt_not_paired), (result as DeviceSyncResult.Failed).failure)
         assertEquals(Instant.EPOCH, cursors.stepsCursor(WATCH.id))
     }
 
@@ -544,7 +544,7 @@ class WearOsWatchSyncServiceTest {
 
         val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
-        assertEquals(ScreenError.Text(R.string.settings_watch_wearos_fail_partial), (result as DeviceSyncResult.Failed).error)
+        assertEquals(SyncFailure.Interrupted, (result as DeviceSyncResult.Failed).failure)
     }
 
     @Test
@@ -888,7 +888,7 @@ class WearOsWatchSyncServiceTest {
         val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(result is DeviceSyncResult.Failed)
-        assertEquals(ScreenError.Text(R.string.settings_watch_wearos_fail_partial), (result as DeviceSyncResult.Failed).error)
+        assertEquals(SyncFailure.Interrupted, (result as DeviceSyncResult.Failed).failure)
         assertEquals(t0.plusSeconds(10), cursors.heartRateCursor(WATCH.id))
         assertEquals(Instant.EPOCH, cursors.sleepCursor(WATCH.id))
     }
@@ -899,7 +899,7 @@ class WearOsWatchSyncServiceTest {
 
         val pending = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
-        assertEquals(ScreenError.Text(R.string.settings_watch_wearos_status_pending), (pending as DeviceSyncResult.Failed).error)
+        assertEquals(SyncFailure.Described(R.string.settings_watch_wearos_status_pending), (pending as DeviceSyncResult.Failed).failure)
         assertEquals(WearOsAppStatus.PENDING_CONFIRMATION, linkStore.snapshots.value.getValue(WATCH.id).status)
         // A refusal is not retried: one pull, one failure.
         assertEquals(1, pullsSince.size)
@@ -907,7 +907,7 @@ class WearOsWatchSyncServiceTest {
         pullFailure = WearOsLinkFailure.Unauthorized(WearLinkProtocol.UnauthorizedReason.MISMATCH)
         val refused = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
-        assertEquals(ScreenError.Text(R.string.settings_watch_wearos_status_unauthorized_mismatch), (refused as DeviceSyncResult.Failed).error)
+        assertEquals(SyncFailure.Described(R.string.settings_watch_wearos_status_unauthorized_mismatch), (refused as DeviceSyncResult.Failed).failure)
     }
 
     @Test
@@ -940,7 +940,7 @@ class WearOsWatchSyncServiceTest {
         val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(result is DeviceSyncResult.Failed)
-        assertEquals(ScreenError.Text(R.string.settings_watch_wearos_bt_not_paired), (result as DeviceSyncResult.Failed).error)
+        assertEquals(SyncFailure.Described(R.string.settings_watch_wearos_bt_not_paired), (result as DeviceSyncResult.Failed).failure)
         assertEquals(WearOsAppStatus.NOT_PAIRED, linkStore.snapshots.value.getValue(WATCH.id).status)
         coVerify(exactly = 0) { deviceRepository.markSynced(any(), any()) }
     }
@@ -952,7 +952,7 @@ class WearOsWatchSyncServiceTest {
         val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(result is DeviceSyncResult.Failed)
-        assertEquals(ScreenError.Text(R.string.settings_watch_wearos_app_no_answer), (result as DeviceSyncResult.Failed).error)
+        assertEquals(SyncFailure.Described(R.string.settings_watch_wearos_app_no_answer, transient = true), (result as DeviceSyncResult.Failed).failure)
         assertEquals(WearOsAppStatus.NO_ANSWER, linkStore.snapshots.value.getValue(WATCH.id).status)
         assertEquals(Instant.EPOCH, cursors.heartRateCursor(WATCH.id))
         coVerify(exactly = 0) { deviceRepository.markSynced(any(), any()) }
@@ -966,7 +966,7 @@ class WearOsWatchSyncServiceTest {
         val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(result is DeviceSyncResult.Failed)
-        assertEquals(ScreenError.Text(R.string.settings_watch_wearos_fail_partial), (result as DeviceSyncResult.Failed).error)
+        assertEquals(SyncFailure.Interrupted, (result as DeviceSyncResult.Failed).failure)
         assertEquals(t0.plusSeconds(10), cursors.heartRateCursor(WATCH.id))
         coVerify(exactly = 1) { importRepository.insertImportedRecords(any()) }
         coVerify(exactly = 0) { deviceRepository.markSynced(any(), any()) }
@@ -980,7 +980,7 @@ class WearOsWatchSyncServiceTest {
         val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(result is DeviceSyncResult.Failed)
-        assertEquals(ScreenError.Text(R.string.settings_watch_wearos_fail_health_connect), (result as DeviceSyncResult.Failed).error)
+        assertEquals(SyncFailure.HealthConnectPermission, (result as DeviceSyncResult.Failed).failure)
         assertEquals(Instant.EPOCH, cursors.heartRateCursor(WATCH.id))
     }
 

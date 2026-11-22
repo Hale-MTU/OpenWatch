@@ -23,7 +23,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import tech.mmarca.openwatch.R
-import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.isPermissionFailure
 import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
@@ -33,6 +32,7 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPhase
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
+import tech.mmarca.openwatch.devices.core.sync.SyncFailure
 import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.sync.UnwrittenSeries
 import tech.mmarca.openwatch.data.repository.RecordWrite
@@ -43,6 +43,7 @@ import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.healthcalculations.model.WearSleepMinute
 import tech.mmarca.openwatch.data.repository.isDuplicateClientRecordFailure
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
+import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 import tech.mmarca.healthcalculations.insights.AscentCredit
 import tech.mmarca.openwatch.devices.core.sync.syncBudgetSpent
 
@@ -207,19 +208,15 @@ class WearOsWatchSyncService(
         } catch (failure: WearOsLinkFailure) {
             linkStore.record(device.id, WearOsLinkSnapshot(failure.toAppStatus(), checkedAt = clock()))
             WearOsLog.log("sync failed: ${failure.message}")
-            return DeviceSyncResult.Failed(
-                if (progress.hasWritten && failure is WearOsLinkFailure.NoAnswer) {
-                    ScreenError.Text(R.string.settings_watch_wearos_fail_partial)
-                } else {
-                    failure.toScreenError()
-                },
-            )
+            val partWay = progress.hasWritten && failure is WearOsLinkFailure.NoAnswer
+            return DeviceSyncResult.Failed(if (partWay) SyncFailure.Interrupted else failure.toSyncFailure())
         } catch (error: SecurityException) {
             return DeviceSyncResult.Failed(permissionError(error))
         } catch (error: Exception) {
             if (error.isPermissionFailure()) return DeviceSyncResult.Failed(permissionError(error))
+            if (error is HealthConnectSyncDisabledException) return DeviceSyncResult.Failed(SyncFailure.SyncPaused)
             WearOsLog.log("sync failed: $error")
-            return DeviceSyncResult.Failed(ScreenError.Text(R.string.settings_watch_wearos_fail_generic))
+            return DeviceSyncResult.Failed(SyncFailure.Unknown(error))
         }
         linkStore.record(device.id, WearOsLinkSnapshot(WearOsAppStatus.APP_RUNNING, checkedAt = clock()))
 
@@ -717,15 +714,15 @@ class WearOsWatchSyncService(
 
     private fun notPaired(device: BleSensorDevice): DeviceSyncResult.Failed {
         linkStore.record(device.id, WearOsLinkSnapshot(WearOsAppStatus.NOT_PAIRED, checkedAt = clock()))
-        return DeviceSyncResult.Failed(ScreenError.Text(R.string.settings_watch_wearos_bt_not_paired))
+        return DeviceSyncResult.Failed(SyncFailure.Described(R.string.settings_watch_wearos_bt_not_paired))
     }
 
-    /** The Bluetooth grant shows as the grant affordance; a Health Connect refusal names the write. */
-    private fun permissionError(error: Throwable): ScreenError =
+    /** A refused Bluetooth call names the nearby-devices grant; anything else is Health Connect's. */
+    private fun permissionError(error: Throwable): SyncFailure =
         if (error is SecurityException && error.message?.contains("BLUETOOTH", ignoreCase = true) == true) {
-            ScreenError.PermissionDenied
+            SyncFailure.BluetoothPermission
         } else {
-            ScreenError.Text(R.string.settings_watch_wearos_fail_health_connect)
+            SyncFailure.HealthConnectPermission
         }
 
     private class Holdings(val foreign: Boolean, val own: Boolean)

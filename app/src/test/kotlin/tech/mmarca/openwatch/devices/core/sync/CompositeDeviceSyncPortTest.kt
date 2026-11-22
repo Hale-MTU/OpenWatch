@@ -12,7 +12,12 @@ import tech.mmarca.openwatch.domain.model.DeviceIntegration
 
 class CompositeDeviceSyncPortTest {
 
-    private class PortFor(private val integration: DeviceIntegration, val name: String) : DeviceSyncPort {
+    /** Tells the ports apart by what they answer. */
+    private companion object {
+        fun answer(tag: Int) = DeviceSyncResult.Failed(SyncFailure.Described(tag))
+    }
+
+    private class PortFor(private val integration: DeviceIntegration, val tag: Int) : DeviceSyncPort {
         var syncs = 0
         override fun canSync(device: BleSensorDevice) = device.integration == integration
         override suspend fun sync(
@@ -21,12 +26,12 @@ class CompositeDeviceSyncPortTest {
             onProgress: ((DeviceSyncProgress) -> Unit)?,
         ): DeviceSyncResult {
             syncs++
-            return DeviceSyncResult.Failed(name)
+            return answer(tag)
         }
     }
 
-    private val garmin = PortFor(DeviceIntegration.GARMIN, "garmin")
-    private val wearOs = PortFor(DeviceIntegration.WEAROS, "wearos")
+    private val garmin = PortFor(DeviceIntegration.GARMIN, 1)
+    private val wearOs = PortFor(DeviceIntegration.WEAROS, 2)
     private val composite = CompositeDeviceSyncPort(setOf(garmin, wearOs))
 
     private fun watch(integration: DeviceIntegration?) = BleSensorDevice(
@@ -44,8 +49,8 @@ class CompositeDeviceSyncPortTest {
 
     @Test
     fun `each device goes to the port that claims it`() = runTest {
-        assertEquals(DeviceSyncResult.Failed("wearos"), composite.sync(watch(DeviceIntegration.WEAROS), SyncTrigger.REQUESTED, null))
-        assertEquals(DeviceSyncResult.Failed("garmin"), composite.sync(watch(DeviceIntegration.GARMIN), SyncTrigger.REQUESTED, null))
+        assertEquals(answer(2), composite.sync(watch(DeviceIntegration.WEAROS), SyncTrigger.REQUESTED, null))
+        assertEquals(answer(1), composite.sync(watch(DeviceIntegration.GARMIN), SyncTrigger.REQUESTED, null))
         assertEquals(1, garmin.syncs)
         assertEquals(1, wearOs.syncs)
     }

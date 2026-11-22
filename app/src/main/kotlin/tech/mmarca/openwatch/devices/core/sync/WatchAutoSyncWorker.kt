@@ -67,9 +67,10 @@ class WatchAutoSyncWorker(
             }
 
             is DeviceSyncResult.Failed -> {
-                Log.log("run failed: ${result.error::class.simpleName}")
-                // Out of range, busy radio, recording: retry on the backoff, then wait for the next period.
-                if (runAttemptCount < MaxAttempts) Result.retry() else Result.success()
+                Log.log("run failed: ${result.failure::class.simpleName}")
+                // Out of range, busy radio, recording: retry on the backoff, then wait for the next
+                // period. A missing grant or a paused sync waits for the user, not for a retry.
+                if (result.failure.transient && runAttemptCount < MaxAttempts) Result.retry() else Result.success()
             }
         }
     }

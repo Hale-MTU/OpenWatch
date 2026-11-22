@@ -349,7 +349,6 @@
     <string name="settings_watch_wearos_status_protocol">Часы ответили то, что OpenWatch не смог прочитать. Обновите оба приложения и попробуйте снова.</string>
     <string name="settings_watch_wearos_linked_to">Связано с %1$s</string>
     <string name="settings_watch_wearos_fail_partial">Часы перестали отвечать на середине. Полученное сохранено; синхронизируйте снова, чтобы продолжить.</string>
-    <string name="settings_watch_wearos_fail_health_connect">Разрешите OpenWatch записывать пульс и сон в Health Connect и синхронизируйте снова.</string>
     <string name="settings_watch_wearos_fail_generic">Не удалось синхронизировать часы. Попробуйте снова.</string>
     <string name="settings_watch_wearos_check_app">Проверить приложение Wear OS</string>
     <string name="settings_watch_wearos_checking">Проверка приложения Wear OS…</string>

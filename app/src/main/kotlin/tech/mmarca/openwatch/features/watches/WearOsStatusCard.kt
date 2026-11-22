@@ -286,7 +286,7 @@ internal fun WearOsSyncCard(
                     )
                 }
             }
-            sync.error.resolve()?.let { message ->
+            sync.failure?.toScreenError().resolve()?.let { message ->
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodySmall,

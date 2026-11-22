@@ -349,7 +349,6 @@
     <string name="settings_watch_wearos_status_protocol">Zegarek odpowiedział czymś, czego OpenWatch nie potrafi odczytać. Zaktualizuj obie aplikacje i spróbuj ponownie.</string>
     <string name="settings_watch_wearos_linked_to">Połączono z %1$s</string>
     <string name="settings_watch_wearos_fail_partial">Zegarek przestał odpowiadać w trakcie. To, co dotarło, zostało zapisane; zsynchronizuj ponownie, aby kontynuować.</string>
-    <string name="settings_watch_wearos_fail_health_connect">Zezwól OpenWatch na zapis tętna i snu w Health Connect, a potem zsynchronizuj ponownie.</string>
     <string name="settings_watch_wearos_fail_generic">Nie udało się zsynchronizować zegarka. Spróbuj ponownie.</string>
     <string name="settings_watch_wearos_check_app">Sprawdź aplikację Wear OS</string>
     <string name="settings_watch_wearos_checking">Sprawdzanie aplikacji Wear OS…</string>

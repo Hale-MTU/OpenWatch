@@ -13,7 +13,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
@@ -151,7 +150,7 @@ class DeviceSyncControllerTest {
         assertEquals(3, controller.state.value.lastFileCount)
         // Scoped, so another watch's card does not show this outcome.
         assertEquals(watch.id, controller.state.value.lastDeviceId)
-        assertNull(controller.state.value.error)
+        assertNull(controller.state.value.failure)
     }
 
     @Test
@@ -236,13 +235,13 @@ class DeviceSyncControllerTest {
     @Test
     fun `a failure surfaces its message and ends idle`() = runTest {
         val watch = addWatch()
-        port.result = DeviceSyncResult.Failed("Could not connect: timeout")
+        port.result = DeviceSyncResult.Failed(SyncFailure.Unreachable)
         val controller = controller()
 
         controller.syncDevice(watch.id)!!.join()
 
         assertFalse(controller.state.value.isSyncing)
-        assertEquals(ScreenError.Message("Could not connect: timeout"), controller.state.value.error)
+        assertEquals(SyncFailure.Unreachable, controller.state.value.failure)
         assertNull(controller.state.value.lastFileCount)
     }
 
@@ -280,7 +279,7 @@ class DeviceSyncControllerTest {
         controller.clear()
 
         assertNull(controller.state.value.lastFileCount)
-        assertNull(controller.state.value.error)
+        assertNull(controller.state.value.failure)
 
         // A running sync's state must survive a stray clear().
         port.gate = CompletableDeferred()
@@ -301,21 +300,21 @@ class DeviceSyncControllerTest {
 
         // A sync never throws. If one does, the radio must not read busy forever.
         assertFalse(controller.state.value.isSyncing)
-        assertEquals(ScreenError.Message("the port broke its contract"), controller.state.value.error)
+        assertTrue(controller.state.value.failure is SyncFailure.Unknown)
         assertNotNull(controller.syncDevice(watch.id))
     }
 
     @Test
     fun `a silent failure ends idle without a banner`() = runTest {
         val watch = addWatch()
-        port.result = DeviceSyncResult.Failed("Could not connect: timeout")
+        port.result = DeviceSyncResult.Failed(SyncFailure.Unreachable)
         val controller = controller()
 
         // A scheduled sync out of range at 3am must not leave a red message for later.
         controller.syncDevice(watch.id, SyncTrigger.BACKGROUND)!!.join()
 
         assertFalse(controller.state.value.isSyncing)
-        assertNull(controller.state.value.error)
+        assertNull(controller.state.value.failure)
     }
 
     @Test
@@ -332,13 +331,13 @@ class DeviceSyncControllerTest {
     @Test
     fun `the outcome comes back to the caller that awaits it`() = runTest {
         val watch = addWatch()
-        port.result = DeviceSyncResult.Failed("The watch is busy (notifications)")
+        port.result = DeviceSyncResult.Failed(SyncFailure.RadioBusy)
         val controller = controller()
 
         // What the scheduled run reads to decide between a retry and waiting.
         val result = controller.syncDevice(watch.id, SyncTrigger.BACKGROUND)!!.await()
 
-        assertEquals(DeviceSyncResult.Failed("The watch is busy (notifications)"), result)
+        assertEquals(DeviceSyncResult.Failed(SyncFailure.RadioBusy), result)
     }
 
     @Test

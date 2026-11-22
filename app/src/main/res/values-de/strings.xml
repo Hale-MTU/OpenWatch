@@ -345,7 +345,6 @@
     <string name="settings_watch_wearos_status_protocol">Die Uhr hat etwas geantwortet, das OpenWatch nicht lesen konnte. Aktualisiere beide Apps und versuche es erneut.</string>
     <string name="settings_watch_wearos_linked_to">Verbunden mit %1$s</string>
     <string name="settings_watch_wearos_fail_partial">Die Uhr hat mittendrin aufgehört zu antworten. Was ankam, ist gespeichert; synchronisiere erneut, um fortzufahren.</string>
-    <string name="settings_watch_wearos_fail_health_connect">Erlaube OpenWatch, Herzfrequenz und Schlaf in Health Connect zu schreiben, und synchronisiere erneut.</string>
     <string name="settings_watch_wearos_fail_generic">Die Uhr konnte nicht synchronisiert werden. Versuche es erneut.</string>
     <string name="settings_watch_wearos_check_app">Wear-OS-App prüfen</string>
     <string name="settings_watch_wearos_checking">Wear-OS-App wird geprüft…</string>

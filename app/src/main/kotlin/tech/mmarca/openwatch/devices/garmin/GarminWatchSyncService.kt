@@ -18,7 +18,6 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeoutOrNull
 import tech.mmarca.openwatch.core.fit.FitDecoder
 import tech.mmarca.openwatch.core.fit.fitInstant
-import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.isPermissionFailure
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.RadioLeaseBusyException
@@ -26,9 +25,11 @@ import tech.mmarca.openwatch.devices.core.RadioLeaseOwner
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
+import tech.mmarca.openwatch.devices.core.sync.SyncFailure
 import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.withRadioLease
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 import kotlinx.coroutines.plus
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 import tech.mmarca.openwatch.devices.core.RadioLeaseRegistry
@@ -137,7 +138,8 @@ class GarminWatchSyncService @Inject constructor(
         } catch (error: CancellationException) {
             throw error
         } catch (error: RadioLeaseBusyException) {
-            return DeviceSyncResult.Failed("The watch is busy (${error.holder}). Try again in a moment.")
+            GarminLog.log("[GARMIN-SYNC] radio busy: ${error.holder}")
+            return DeviceSyncResult.Failed(SyncFailure.RadioBusy)
         } catch (error: Exception) {
             GarminLog.log("[GARMIN-SYNC] failed: $error")
             return failed(error)
@@ -161,15 +163,14 @@ class GarminWatchSyncService @Inject constructor(
 
         val incompleteReason = pull.incompleteReason
         if (incompleteReason != null) {
-            return DeviceSyncResult.Failed(
-                if (downloaded.isEmpty()) incompleteReason
-                else "Imported ${downloaded.size} file(s), but sync was interrupted: $incompleteReason",
-            )
+            // The reason is the link's own account, for the log; the screen says "part-way".
+            GarminLog.log("[GARMIN-SYNC] interrupted after ${downloaded.size} file(s): $incompleteReason")
+            return DeviceSyncResult.Failed(SyncFailure.Interrupted)
         }
 
         bleDeviceRepository.markSynced(device.id, Instant.now())
         // Saying "synced" here hid workouts that never reached Health Connect.
-        notImportedMessage(activities)?.let { return DeviceSyncResult.Failed(it) }
+        notImported(activities)?.let { return DeviceSyncResult.Failed(it) }
         return DeviceSyncResult.Succeeded(
             fileCount = downloaded.size,
             missingBodyWeight = activities.withoutCaloriesForWantOfWeight > 0,
@@ -238,30 +239,20 @@ class GarminWatchSyncService @Inject constructor(
         return downloadImport.import(device.id, pending).wellnessWithheldPermissions
     }
 
-    /** A missing permission stays a type, so the screen offers the grant instead of a sentence. */
-    private fun failed(error: Throwable): DeviceSyncResult.Failed =
-        if (error.isPermissionFailure()) {
-            DeviceSyncResult.Failed(ScreenError.PermissionDenied)
-        } else {
-            DeviceSyncResult.Failed(describe(error))
-        }
+    /** The cause as a type: a missing grant or a paused sync is not a link that failed. */
+    private fun failed(error: Throwable): DeviceSyncResult.Failed = DeviceSyncResult.Failed(
+        when {
+            error.isPermissionFailure() -> SyncFailure.HealthConnectPermission
+            error is HealthConnectSyncDisabledException -> SyncFailure.SyncPaused
+            error is GarminGattClientException -> SyncFailure.Unreachable
+            else -> SyncFailure.Unknown(error)
+        },
+    )
 
-    private fun notImportedMessage(activities: GarminActivityImportResult): String? = when {
-        activities.missingPermission.isNotEmpty() ->
-            "${activities.missingPermission.size} workout(s) were not imported. Allow OpenWatch to " +
-                "write exercise data in Health Connect, then sync again."
-        activities.failedWrites.isNotEmpty() ->
-            "${activities.failedWrites.size} workout(s) could not be saved to Health Connect. " +
-                "The next sync tries them again."
+    private fun notImported(activities: GarminActivityImportResult): SyncFailure? = when {
+        activities.missingPermission.isNotEmpty() -> SyncFailure.HealthConnectPermission
+        activities.failedWrites.isNotEmpty() -> SyncFailure.NotSaved
         else -> null
-    }
-
-    private fun describe(error: Throwable): String {
-        if (error is GarminGattClientException) {
-            return error.message ?: "The watch could not be synced."
-        }
-        val text = error.message ?: error.toString()
-        return text.ifBlank { "The watch could not be synced." }
     }
 
 

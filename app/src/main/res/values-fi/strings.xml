@@ -345,7 +345,6 @@
     <string name="settings_watch_wearos_status_protocol">Kello vastasi jotain, mitä OpenWatch ei voinut lukea. Päivitä molemmat sovellukset ja yritä uudelleen.</string>
     <string name="settings_watch_wearos_linked_to">Yhdistetty: %1$s</string>
     <string name="settings_watch_wearos_fail_partial">Kello lakkasi vastaamasta kesken. Saapunut tallennettiin; jatka synkronoimalla uudelleen.</string>
-    <string name="settings_watch_wearos_fail_health_connect">Salli OpenWatchin kirjoittaa syke ja uni Health Connectiin ja synkronoi uudelleen.</string>
     <string name="settings_watch_wearos_fail_generic">Kelloa ei voitu synkronoida. Yritä uudelleen.</string>
     <string name="settings_watch_wearos_check_app">Tarkista Wear OS -sovellus</string>
     <string name="settings_watch_wearos_checking">Tarkistetaan Wear OS -sovellusta…</string>

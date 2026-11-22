@@ -349,7 +349,6 @@ Podes desactivalo cando queiras e revogar o acceso ás notificacións desde os a
     <string name="settings_watch_wearos_status_protocol">O reloxo respondeu algo que OpenWatch non puido ler. Actualiza as dúas apps e téntao de novo.</string>
     <string name="settings_watch_wearos_linked_to">Vinculado a %1$s</string>
     <string name="settings_watch_wearos_fail_partial">O reloxo deixou de responder a medias. O recibido gardouse; sincroniza de novo para continuar.</string>
-    <string name="settings_watch_wearos_fail_health_connect">Permite a OpenWatch escribir frecuencia cardíaca e sono en Health Connect e sincroniza de novo.</string>
     <string name="settings_watch_wearos_fail_generic">Non se puido sincronizar o reloxo. Téntao de novo.</string>
     <string name="settings_watch_wearos_check_app">Comprobar a app de Wear OS</string>
     <string name="settings_watch_wearos_checking">Comprobando a app de Wear OS…</string>
