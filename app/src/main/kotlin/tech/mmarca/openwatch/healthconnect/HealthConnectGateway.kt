@@ -14,6 +14,7 @@ import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeightRecord
 import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.WeightRecord
+import androidx.health.connect.client.records.metadata.DataOrigin
 import androidx.health.connect.client.request.AggregateRequest
 import androidx.health.connect.client.request.ReadRecordsRequest
 import androidx.health.connect.client.time.TimeRangeFilter
@@ -190,36 +191,36 @@ class HealthConnectGateway(
         action: suspend (List<Record>) -> Unit,
     ) = SyncRecordsReader(clientProvider).forEachRecordPage(recordType, start, end, action)
 
+    /**
+     * The `clientRecordId` and version of each of this app's own [recordType] records in
+     * `[start, end]`. Filtered to this app's origin, so it needs no read grant and sees the same
+     * in the background: what the write path reads to tell a stored record from a new one.
+     */
     @Suppress("UNCHECKED_CAST")
-    suspend fun findMatchingImportedClientRecordIds(
+    suspend fun readOwnClientRecordVersions(
         recordType: KClass<out Record>,
         start: Instant,
         end: Instant,
-        wantedIds: Set<String>,
-    ): Set<String> {
-        if (wantedIds.isEmpty()) return emptySet()
-        val typedRecordType = recordType as KClass<Record>
-        val matches = mutableSetOf<String>()
+    ): Map<String, Long> = withContext(dispatchers.io) {
+        val versions = mutableMapOf<String, Long>()
         var pageToken: String? = null
         do {
             val response = clientProvider().readRecords(
                 ReadRecordsRequest(
-                    recordType = typedRecordType,
+                    recordType = recordType as KClass<Record>,
                     timeRangeFilter = TimeRangeFilter.between(start, end),
-                    pageSize = ImportedClientRecordIdPageSize,
+                    dataOriginFilter = setOf(DataOrigin(context.packageName)),
+                    pageSize = OwnRecordsPageSize,
                     pageToken = pageToken,
                 ),
             )
             for (record in response.records) {
                 val clientRecordId = record.metadata.clientRecordId ?: continue
-                if (clientRecordId in wantedIds) {
-                    matches += clientRecordId
-                }
+                versions[clientRecordId] = record.metadata.clientRecordVersion
             }
-            if (matches.size == wantedIds.size) break
             pageToken = response.pageToken
         } while (!pageToken.isNullOrBlank())
-        return matches
+        versions
     }
 
     /** The time spans of every exercise session overlapping `[start, end)`, from any app. */
@@ -278,7 +279,7 @@ class HealthConnectGateway(
     private companion object {
         const val TAG = "HealthConnectGateway"
         const val GrantedPermissionsCacheMillis = 30_000L
-        const val ImportedClientRecordIdPageSize = 500
+        const val OwnRecordsPageSize = 1000
     }
 }
 

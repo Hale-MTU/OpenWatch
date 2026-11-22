@@ -16,7 +16,7 @@ import tech.mmarca.healthcalculations.insights.EstimatedSleepSession
 import tech.mmarca.healthcalculations.insights.SleepStageEstimator
 import tech.mmarca.healthcalculations.model.GarminSleepMinute
 import tech.mmarca.healthcalculations.model.SleepMinuteKind
-import tech.mmarca.openwatch.data.repository.isDuplicateClientRecordFailure
+import tech.mmarca.openwatch.data.repository.replaceImportedRecord
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 
 /**
@@ -142,20 +142,8 @@ class GarminSleepEstimationWriter(
         return found
     }
 
-    /** A higher version replaces the earlier estimate. If Health Connect still objects, delete and retry once. */
-    private suspend fun write(record: SleepSessionRecord) {
-        try {
-            importRepository.insertImportedRecords(listOf(record))
-        } catch (error: CancellationException) {
-            throw error
-        } catch (error: Exception) {
-            if (!error.isDuplicateClientRecordFailure()) throw error
-            val id = requireNotNull(record.metadata.clientRecordId)
-            GarminLog.log("[GARMIN-SLEEP-EST] $id already present; replacing")
-            healthConnect.deleteImportedRecordsByClientIds(SleepSessionRecord::class, listOf(id))
-            importRepository.insertImportedRecords(listOf(record))
-        }
-    }
+    /** A higher version replaces the earlier estimate; a provider that objects has it deleted first. */
+    private suspend fun write(record: SleepSessionRecord) = importRepository.replaceImportedRecord(record)
 }
 
 private const val WatchSleepIdPrefix = "garmin_fit_sleep_"

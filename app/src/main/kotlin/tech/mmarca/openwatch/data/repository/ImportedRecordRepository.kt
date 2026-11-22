@@ -17,25 +17,23 @@ import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 class ImportedRecordRepository @Inject constructor(
     private val hc: HealthConnectGateway,
     private val dispatchers: DispatcherProvider,
-) {
-    suspend fun insertImportedRecords(records: List<Record>) =
+) : HealthRecordStore {
+    override suspend fun insertImportedRecords(records: List<Record>) =
         withContext(dispatchers.io) {
             hc.insertImportedRecords(records)
         }
 
-    /** Deletes this app's records of [recordType] by `clientRecordId`. Unknown ids are ignored. */
-    suspend fun deleteImportedRecordsByClientIds(recordType: KClass<out Record>, clientRecordIds: List<String>) =
+    override suspend fun deleteImportedRecordsByClientIds(recordType: KClass<out Record>, clientRecordIds: List<String>) =
         withContext(dispatchers.io) {
             hc.deleteImportedRecordsByClientIds(recordType, clientRecordIds)
         }
 
-    suspend fun findMatchingImportedClientRecordIds(
+    override suspend fun ownClientRecordVersions(
         recordType: KClass<out Record>,
         start: Instant,
         end: Instant,
-        wantedIds: Set<String>,
-    ): Set<String> =
+    ): Map<String, Long> =
         withContext(dispatchers.io) {
-            hc.findMatchingImportedClientRecordIds(recordType, start, end, wantedIds)
+            hc.readOwnClientRecordVersions(recordType, start, end)
         }
 }

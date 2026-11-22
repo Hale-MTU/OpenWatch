@@ -182,6 +182,11 @@ class WearOsWatchSyncServiceTest {
             if (present) throw IllegalStateException("clientRecordId already exists")
             records.forEach { record -> record.metadata.clientRecordId?.let { healthConnectVersions[it] = record.metadata.clientRecordVersion } }
         }
+        // What the write path reads to diagnose a refusal: this app's own ids and versions.
+        coEvery { importRepository.ownClientRecordVersions(any(), any(), any()) } answers { healthConnectVersions.toMap() }
+        coEvery { importRepository.deleteImportedRecordsByClientIds(any(), any()) } answers {
+            secondArg<List<String>>().forEach { healthConnectVersions.remove(it) }
+        }
     }
 
     private fun stepCounts(): Map<Instant, Long> =
@@ -810,13 +815,10 @@ class WearOsWatchSyncServiceTest {
     @Test
     fun `a resting heart rate Health Connect holds at a higher version is replaced`() = runTest {
         healthConnectVersions["wearos_rhr_est_2026-10-08"] = Long.MAX_VALUE
-        coEvery { healthConnect.deleteImportedRecordsByClientIds(any(), any()) } answers {
-            secondArg<List<String>>().forEach { healthConnectVersions.remove(it) }
-        }
 
         syncNight()
 
-        coVerify { healthConnect.deleteImportedRecordsByClientIds(RestingHeartRateRecord::class, listOf("wearos_rhr_est_2026-10-08")) }
+        coVerify { importRepository.deleteImportedRecordsByClientIds(RestingHeartRateRecord::class, listOf("wearos_rhr_est_2026-10-08")) }
         assertEquals(t0.toEpochMilli(), healthConnectVersions["wearos_rhr_est_2026-10-08"])
     }
 

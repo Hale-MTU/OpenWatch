@@ -17,7 +17,7 @@ import tech.mmarca.healthcalculations.insights.bodyComposition
 import tech.mmarca.healthcalculations.insights.bodyCompositionMissingInputs
 import tech.mmarca.openwatch.domain.model.ScaleWeighIn
 import tech.mmarca.healthcalculations.preferences.BodyProfile
-import tech.mmarca.openwatch.data.repository.isDuplicateClientRecordFailure
+import tech.mmarca.openwatch.data.repository.insertWithOutcomes
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 
@@ -102,12 +102,8 @@ class ScaleWeighInWriter @Inject constructor(
         val records = scaleWeighInRecords(weighIn, composition, granted)
         // Not cut short once started: an insert without its stamp would be written twice.
         withContext(NonCancellable) {
-            try {
-                importRepository.insertImportedRecords(records)
-            } catch (error: Exception) {
-                // This state is already there: an earlier pass wrote it and died before stamping it.
-                if (!error.isDuplicateClientRecordFailure()) throw error
-            }
+            // A record already there was written by an earlier pass that died before stamping it.
+            importRepository.insertWithOutcomes(records)
             weighIns.markWritten(weighIn)
         }
     }

@@ -41,7 +41,7 @@ import tech.mmarca.healthcalculations.insights.sleepNightWindow
 import tech.mmarca.healthcalculations.insights.WearSleepEstimator
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.healthcalculations.model.WearSleepMinute
-import tech.mmarca.openwatch.data.repository.isDuplicateClientRecordFailure
+import tech.mmarca.openwatch.data.repository.replaceImportedRecord
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 import tech.mmarca.healthcalculations.insights.AscentCredit
@@ -676,19 +676,8 @@ class WearOsWatchSyncService(
         }
     }
 
-    /** A higher version replaces the earlier estimate. If Health Connect still objects, delete and retry once. */
-    private suspend fun writeReplacing(record: Record) {
-        try {
-            importRepository.insertImportedRecords(listOf(record))
-        } catch (error: CancellationException) {
-            throw error
-        } catch (error: Exception) {
-            if (!error.isDuplicateClientRecordFailure()) throw error
-            val id = requireNotNull(record.metadata.clientRecordId)
-            healthConnect.deleteImportedRecordsByClientIds(record::class, listOf(id))
-            importRepository.insertImportedRecords(listOf(record))
-        }
-    }
+    /** A higher version replaces the earlier estimate; a provider that objects has it deleted first. */
+    private suspend fun writeReplacing(record: Record) = importRepository.replaceImportedRecord(record)
 
     private fun notPaired(device: BleSensorDevice): DeviceSyncResult.Failed {
         linkStore.record(device.id, WearOsLinkSnapshot(WearOsAppStatus.NOT_PAIRED, checkedAt = clock()))

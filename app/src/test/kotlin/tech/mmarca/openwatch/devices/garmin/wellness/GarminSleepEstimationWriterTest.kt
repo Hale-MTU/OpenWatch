@@ -93,17 +93,20 @@ class GarminSleepEstimationWriterTest {
     }
 
     @Test
-    fun `a duplicate rejection deletes the old estimate and retries once`() = runTest {
+    fun `a refusal for the stored estimate deletes it and writes again once`() = runTest {
         coEvery { minuteRepository.minutesBetween(any(), any()) } returns nightMinutes(420)
         var calls = 0
         coEvery { importRepository.insertImportedRecords(any()) } coAnswers {
-            if (calls++ == 0) throw IllegalStateException("Duplicate clientRecordId record")
+            if (calls++ == 0) throw IllegalStateException("refused")
         }
+        // The read, not the refusal's text, says the estimate is already there.
+        coEvery { importRepository.ownClientRecordVersions(SleepSessionRecord::class, any(), any()) } returns
+            mapOf("garmin_fit_sleep_est_2024-03-05" to 1L)
 
         writer.estimateNights(setOf(night), mapOf(night to zone))
 
         val ids = slot<List<String>>()
-        coVerify { healthConnect.deleteImportedRecordsByClientIds(SleepSessionRecord::class, capture(ids)) }
+        coVerify { importRepository.deleteImportedRecordsByClientIds(SleepSessionRecord::class, capture(ids)) }
         assertEquals(listOf("garmin_fit_sleep_est_2024-03-05"), ids.captured)
         assertEquals(2, calls)
     }
