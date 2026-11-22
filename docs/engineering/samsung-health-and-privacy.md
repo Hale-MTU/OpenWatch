@@ -120,7 +120,9 @@ windows. The platform checks a permission per tracker (`PermissionUtil`): from A
 `SamsungIbiSource` (the platform's own intervals, through `SamsungHealthPlatform`, the
 clean-room client in `wear/.../samsung/`) once chosen on the status screen. The choice
 (`WearSettings.hrvSource`) is shown only where `com.samsung.android.service.health` answers the bind
-intent, so a watch from another maker never sees it. The tracker runs only for the five-minute
+intent from the system image, so a watch from another maker never sees it, and a store app that takes
+the package name there is never bound. A callback that claims more than 100 000 points or 64 values
+a point fails the read before anything is allocated. The tracker runs only for the five-minute
 window. The intervals carry no times of their own: the first point after a start held 535 of
 them (about ten minutes of history), and with the screen off the points arrive in batches, so
 `SamsungIbiWindow` times each interval back from its point and keeps the ones that ended inside

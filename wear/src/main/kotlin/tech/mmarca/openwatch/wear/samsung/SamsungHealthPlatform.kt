@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.wear.samsung
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.ServiceConnection
 import android.os.Binder
 import android.os.Handler
@@ -174,30 +175,6 @@ internal class SamsungHealthPlatform(
         }
     }
 
-    /** A typed list: a count, then per item a presence flag and the point. */
-    private fun readPoints(p: Parcel): List<RawPoint> {
-        val points = ArrayList<RawPoint>()
-        repeat(p.readInt()) {
-            if (p.readInt() == 0) return@repeat
-            val timestamp = p.readLong()
-            val count = p.readInt().coerceAtLeast(0)
-            val ints = IntArray(count)
-            val floats = FloatArray(count)
-            for (v in 0 until count) {
-                val type = p.readInt()
-                check(type == VAL_PARCELABLE) { "value type $type" }
-                val afterValue = readOptionalLengthPrefix(p)
-                p.readString() // the value's class name
-                ints[v] = p.readInt()
-                floats[v] = p.readFloat()
-                p.readLong()
-                if (afterValue >= 0) p.setDataPosition(afterValue)
-            }
-            points += RawPoint(timestamp, ints, floats)
-        }
-        return points
-    }
-
     companion object {
         private const val TAG = "SamsungHealthPlatform"
         private const val SERVICE_PACKAGE = "com.samsung.android.service.health"
@@ -218,9 +195,49 @@ internal class SamsungHealthPlatform(
 
         private fun bindIntent() = Intent(BIND_ACTION).setPackage(SERVICE_PACKAGE)
 
-        /** Whether this watch has the platform's tracking service: Samsung watches only. */
+        /** Bounds on what one callback may claim: far above a flush's points, far below an allocation that fails. */
+        internal const val MAX_POINTS = 100_000
+        internal const val MAX_VALUES = 64
+
+        /** An app the system image ships, updated or not: what Samsung's tracking service is. */
+        internal fun isSystemApp(flags: Int): Boolean =
+            flags and (ApplicationInfo.FLAG_SYSTEM or ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0
+
+        /**
+         * A typed list: a count, then per item a presence flag and the point. The counts come from
+         * the other process, so an absurd one fails the read instead of the allocation.
+         */
+        internal fun readPoints(p: Parcel): List<RawPoint> {
+            val points = ArrayList<RawPoint>()
+            val size = p.readInt()
+            check(size in 0..MAX_POINTS) { "point count $size" }
+            repeat(size) {
+                if (p.readInt() == 0) return@repeat
+                val timestamp = p.readLong()
+                val count = p.readInt()
+                check(count in 0..MAX_VALUES) { "value count $count" }
+                val ints = IntArray(count)
+                val floats = FloatArray(count)
+                for (v in 0 until count) {
+                    val type = p.readInt()
+                    check(type == VAL_PARCELABLE) { "value type $type" }
+                    val afterValue = readOptionalLengthPrefix(p)
+                    p.readString() // the value's class name
+                    ints[v] = p.readInt()
+                    floats[v] = p.readFloat()
+                    p.readLong()
+                    if (afterValue >= 0) p.setDataPosition(afterValue)
+                }
+                points += RawPoint(timestamp, ints, floats)
+            }
+            return points
+        }
+
+
+        /** Whether this watch has the platform's tracking service, from its system image: Samsung watches only. */
         fun isInstalled(context: Context): Boolean =
-            context.packageManager.queryIntentServices(bindIntent(), 0).isNotEmpty()
+            context.packageManager.queryIntentServices(bindIntent(), 0)
+                .any { resolved -> resolved.serviceInfo?.applicationInfo?.let { isSystemApp(it.flags) } == true }
 
         /**
          * Newer platforms write a length before a parcelable inside a generic
