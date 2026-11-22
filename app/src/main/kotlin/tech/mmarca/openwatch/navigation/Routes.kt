@@ -1,8 +1,10 @@
 package tech.mmarca.openwatch.navigation
 
 import androidx.annotation.StringRes
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.toRoute
 import kotlin.reflect.KClass
 import kotlinx.serialization.Serializable
 import tech.mmarca.openwatch.R
@@ -86,6 +88,17 @@ private val routeTitles: List<Pair<KClass<*>, Int>> = listOf(
 /** This destination's title; null for one that titles itself (a device, by its name). */
 @StringRes
 fun NavDestination.titleRes(): Int? = routeTitles.firstOrNull { (route, _) -> hasRoute(route) }?.second
+
+/** The paired device this entry's screen is about, which the list beside it marks; null for a screen about none. */
+fun NavBackStackEntry.deviceId(): String? = when {
+    destination.hasRoute(DeviceDetail::class) -> toRoute<DeviceDetail>().deviceId
+    destination.hasRoute(WatchData::class) -> toRoute<WatchData>().deviceId
+    destination.hasRoute(WatchNotifications::class) -> toRoute<WatchNotifications>().deviceId
+    destination.hasRoute(WatchAlarms::class) -> toRoute<WatchAlarms>().deviceId
+    destination.hasRoute(WatchSettings::class) -> toRoute<WatchSettings>().deviceId
+    destination.hasRoute(WatchSendPoint::class) -> toRoute<WatchSendPoint>().deviceId
+    else -> null
+}
 
 /** The two roots, Home and the first run's setup: nothing to go back to. */
 val NavDestination.isRoot: Boolean

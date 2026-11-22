@@ -5,7 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -13,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Watch
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import tech.mmarca.openwatch.R
@@ -33,8 +37,9 @@ import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
- * The Home destination. It has no state of its own: it fills [HomeScreen]'s watch and scale
- * slots with their section routes, the same ones their own screens use.
+ * The Home destination, and the list side of the list-detail layout on a wide screen. It has no
+ * state of its own: it fills [HomeScreen]'s watch and scale slots with their section routes.
+ * [selectedDeviceId] is the device shown beside the list, marked in it.
  */
 @Composable
 fun HomeRoute(
@@ -42,13 +47,42 @@ fun HomeRoute(
     onOpenScale: (deviceId: String) -> Unit,
     onOpenHealthConnect: () -> Unit,
     onOpenSettings: () -> Unit,
+    modifier: Modifier = Modifier,
+    selectedDeviceId: String? = null,
 ) {
     HomeScreen(
         onOpenHealthConnect = onOpenHealthConnect,
         onOpenSettings = onOpenSettings,
-        watchesSection = { WatchesSectionRoute(onOpenWatch = onOpenWatch) },
-        scalesSection = { ScalesSectionRoute(onOpenScale = onOpenScale) },
+        watchesSection = { WatchesSectionRoute(onOpenWatch = onOpenWatch, selectedDeviceId = selectedDeviceId) },
+        scalesSection = { ScalesSectionRoute(onOpenScale = onOpenScale, selectedDeviceId = selectedDeviceId) },
+        modifier = modifier,
     )
+}
+
+/** The detail side of the list-detail layout before anything is opened from the list. */
+@Composable
+fun HomeDetailPlaceholder(modifier: Modifier = Modifier) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+        modifier = modifier
+            .fillMaxSize()
+            .padding(Spacing.xxl),
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Watch,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(PlaceholderIconSize),
+        )
+        Spacer(modifier = Modifier.height(Spacing.md))
+        Text(
+            text = stringResource(R.string.home_detail_placeholder),
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
 }
 
 /**
@@ -102,6 +136,14 @@ private fun HomeScreenPreview() {
     }
 }
 
+@Preview(showBackground = true, widthDp = 600)
+@Composable
+private fun HomeDetailPlaceholderPreview() {
+    OpenWatchTheme {
+        HomeDetailPlaceholder()
+    }
+}
+
 /** Stands in for a section route, which needs its ViewModel. */
 @Composable
 private fun PreviewSlot(label: String) {
@@ -139,3 +181,4 @@ private fun HomeRow(icon: ImageVector, title: String, subtitle: String, onClick:
 }
 
 private val HomeRowIconSize = 28.dp
+private val PlaceholderIconSize = 48.dp

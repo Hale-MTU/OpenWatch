@@ -65,6 +65,8 @@ import tech.mmarca.openwatch.ui.components.OpenWatchOutlinedButton
 @Composable
 fun WatchesSectionRoute(
     onOpenWatch: (String) -> Unit,
+    /** The watch shown beside the list on a wide screen, marked in it. */
+    selectedDeviceId: String? = null,
     viewModel: WatchesViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -97,6 +99,7 @@ fun WatchesSectionRoute(
     WatchesSection(
         state = state,
         onOpenWatch = onOpenWatch,
+        selectedDeviceId = selectedDeviceId,
         onAdd = viewModel::startAdd,
         onDismissNotice = viewModel::dismissNotice,
         onGrantAllPermissions = {
@@ -129,6 +132,7 @@ fun WatchesSectionRoute(
 fun WatchesSection(
     state: WatchesUiState,
     onOpenWatch: (String) -> Unit,
+    selectedDeviceId: String?,
     onAdd: () -> Unit,
     onDismissNotice: () -> Unit,
     onGrantAllPermissions: () -> Unit,
@@ -212,6 +216,7 @@ fun WatchesSection(
             state.watches.forEach { watch ->
                 WatchRow(
                     device = watch,
+                    selected = watch.id == selectedDeviceId,
                     onOpen = { onOpenWatch(watch.id) },
                     modifier = Modifier.padding(horizontal = Spacing.lg),
                 )
@@ -300,6 +305,7 @@ private fun PreviewWatchesSection(state: WatchesUiState) {
     WatchesSection(
         state = state,
         onOpenWatch = {},
+        selectedDeviceId = null,
         onAdd = {},
         onDismissNotice = {},
         onGrantAllPermissions = {},
@@ -345,6 +351,7 @@ private val WatchPermissionIconSize = 18.dp
 @Composable
 private fun WatchRow(
     device: BleSensorDevice,
+    selected: Boolean,
     onOpen: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -357,6 +364,7 @@ private fun WatchRow(
             ?: stringResource(R.string.settings_watch_never_synced),
         onOpen = onOpen,
         modifier = modifier,
+        selected = selected,
     )
 }
 

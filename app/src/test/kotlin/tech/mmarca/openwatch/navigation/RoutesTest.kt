@@ -23,16 +23,15 @@ import tech.mmarca.openwatch.R
 @Config(sdk = [34], application = Application::class)
 class RoutesTest {
 
+    private val navController = NavHostController(ApplicationProvider.getApplicationContext()).apply {
+        navigatorProvider.addNavigator(ComposeNavigator())
+    }
+
     /** Home and the device destinations as the app declares them. Building it maps every argument to a NavType. */
-    private fun graph(): NavGraph {
-        val navController = NavHostController(ApplicationProvider.getApplicationContext()).apply {
-            navigatorProvider.addNavigator(ComposeNavigator())
-        }
-        return navController.createGraph(startDestination = Home) {
-            composable<Home> {}
-            composable<Onboarding> {}
-            deviceRoutes(navController)
-        }
+    private fun graph(): NavGraph = navController.createGraph(startDestination = Home) {
+        composable<Home> {}
+        composable<Onboarding> {}
+        deviceRoutes(navController)
     }
 
     @Test
@@ -61,5 +60,20 @@ class RoutesTest {
         assertEquals(point, routeHandle(point).toRoute<WatchSendPoint>())
         assertEquals(WatchSendPoint(), routeHandle(WatchSendPoint()).toRoute<WatchSendPoint>())
         assertEquals(WatchSettings("w1", 7), routeHandle(WatchSettings("w1", 7)).toRoute<WatchSettings>())
+    }
+
+    @Test
+    fun `each screen under a device names it, for the list beside it to mark`() {
+        navController.graph = graph()
+        fun current() = navController.currentBackStackEntry!!.deviceId()
+
+        assertNull(current())
+        navController.navigate(DeviceDetail("w1"))
+        assertEquals("w1", current())
+        navController.navigate(WatchSettings("w1", 7))
+        assertEquals("w1", current())
+        // A point shared from another app is about no watch yet.
+        navController.navigate(WatchSendPoint(latitude = 48.8584, longitude = 2.2945))
+        assertNull(current())
     }
 }

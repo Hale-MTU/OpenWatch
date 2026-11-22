@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,6 +22,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.time.Instant
@@ -34,7 +37,8 @@ import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
  * A paired device in a list: its glyph, its [name], a [status] line and a [detail] line (when
- * it last synced, or weighed), opening the device on a tap.
+ * it last synced, or weighed), opening the device on a tap. [selected] marks the one shown
+ * beside the list on a wide screen.
  */
 @Composable
 fun DeviceListRow(
@@ -45,12 +49,24 @@ fun DeviceListRow(
     modifier: Modifier = Modifier,
     /** The device's kind; a watch when null. */
     icon: ImageVector? = null,
+    selected: Boolean = false,
 ) {
-    OpenWatchCard(modifier = modifier) {
+    // An outline, not a fill: a filled container hides the avatar's circle in some palettes and
+    // takes the contrast from the status lines.
+    val shape = MaterialTheme.shapes.medium
+    OpenWatchCard(
+        modifier = if (selected) {
+            modifier.border(SelectedOutlineWidth, MaterialTheme.colorScheme.primary, shape)
+        } else {
+            modifier
+        },
+        shape = shape,
+    ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
+                .semantics { this.selected = selected }
                 .clickable(onClick = onOpen)
                 .padding(Spacing.lg),
         ) {
@@ -131,6 +147,8 @@ fun DeviceValueRow(
 
 /** The gap between a device's glyph and its text, in every device row and header. */
 val DeviceRowIconGap = 14.dp
+
+private val SelectedOutlineWidth = 2.dp
 
 /** A device timestamp: the time for today, the date once older. */
 fun formatDeviceTime(

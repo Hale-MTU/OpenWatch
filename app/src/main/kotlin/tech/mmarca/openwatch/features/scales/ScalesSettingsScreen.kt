@@ -46,6 +46,8 @@ import tech.mmarca.openwatch.ui.theme.Spacing
 @Composable
 fun ScalesSectionRoute(
     onOpenScale: (deviceId: String) -> Unit,
+    /** The device shown beside the list on a wide screen, marked in it. */
+    selectedDeviceId: String? = null,
     viewModel: ScalesViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -59,6 +61,7 @@ fun ScalesSectionRoute(
     ScalesSection(
         state = state,
         onOpenScale = onOpenScale,
+        selectedDeviceId = selectedDeviceId,
         onAdd = viewModel::startAdd,
         onOpenSupportedScales = { context.startActivity(Intent(Intent.ACTION_VIEW, supportedScalesUrl.toUri())) },
         onGrantAllPermissions = { permissionRequester.request(state.osPermissions.requestablePermissions) },
@@ -79,6 +82,7 @@ fun ScalesSectionRoute(
 fun ScalesSection(
     state: ScalesUiState,
     onOpenScale: (deviceId: String) -> Unit,
+    selectedDeviceId: String?,
     onAdd: () -> Unit,
     /** The supported-scales page, which also says where each scale's key is found. */
     onOpenSupportedScales: () -> Unit,
@@ -112,7 +116,12 @@ fun ScalesSection(
                 modifier = Modifier.padding(horizontal = Spacing.lg),
             )
         } else {
-            ScaleRow(scale = scale, onOpen = { scale.deviceId?.let(onOpenScale) }, modifier = Modifier.padding(horizontal = Spacing.lg))
+            ScaleRow(
+                scale = scale,
+                selected = scale.deviceId != null && scale.deviceId == selectedDeviceId,
+                onOpen = { scale.deviceId?.let(onOpenScale) },
+                modifier = Modifier.padding(horizontal = Spacing.lg),
+            )
         }
     }
 
@@ -157,6 +166,7 @@ private fun ScalesSectionPreview() {
                 ),
             ),
             onOpenScale = {},
+            selectedDeviceId = "s400",
             onAdd = {},
             onOpenSupportedScales = {},
             onGrantAllPermissions = {},
@@ -208,7 +218,7 @@ private fun NoScaleCard(onAdd: () -> Unit, onOpenSupportedScales: () -> Unit, mo
 }
 
 @Composable
-private fun ScaleRow(scale: ScaleCardState, onOpen: () -> Unit, modifier: Modifier = Modifier) {
+private fun ScaleRow(scale: ScaleCardState, selected: Boolean, onOpen: () -> Unit, modifier: Modifier = Modifier) {
     DeviceListRow(
         name = scale.name,
         status = stringResource(scale.statusRes()),
@@ -217,6 +227,7 @@ private fun ScaleRow(scale: ScaleCardState, onOpen: () -> Unit, modifier: Modifi
         onOpen = onOpen,
         modifier = modifier,
         icon = Icons.Outlined.MonitorWeight,
+        selected = selected,
     )
 }
 
