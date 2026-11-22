@@ -4,11 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -36,6 +33,7 @@ import tech.mmarca.openwatch.core.presentation.localizedList
 import tech.mmarca.openwatch.link.LinkSessionStatus
 import tech.mmarca.openwatch.ui.components.BulletRow
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
+import tech.mmarca.openwatch.ui.components.ScreenColumn
 import tech.mmarca.openwatch.ui.components.SwitchRow
 import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
@@ -71,11 +69,8 @@ fun ConnectedAppsScreen(
     onCapabilityChange: (packageName: String, capability: String, granted: Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
+    ScreenColumn(
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Spacing.md),
     ) {
         Text(

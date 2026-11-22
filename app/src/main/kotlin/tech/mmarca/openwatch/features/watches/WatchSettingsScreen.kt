@@ -60,6 +60,7 @@ import tech.mmarca.openwatch.devices.garmin.GarminSettingsEntry
 import tech.mmarca.openwatch.devices.garmin.GarminSettingsOption
 import tech.mmarca.openwatch.devices.garmin.GarminSettingsScreen
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
+import tech.mmarca.openwatch.ui.components.screenContent
 import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
 
@@ -141,7 +142,7 @@ fun WatchSettingsScreen(
             // Blank rows are dropped: an alarm list reserves one per slot.
             val rows = screen.entries.filterNot { it.isBlank }
             LazyColumn(
-                modifier = modifier.fillMaxSize(),
+                modifier = modifier.screenContent(),
                 contentPadding = PaddingValues(
                     top = Spacing.sm,
                     bottom = Spacing.xxl,

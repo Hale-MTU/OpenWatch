@@ -8,11 +8,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,6 +34,7 @@ import tech.mmarca.openwatch.ui.components.ConfirmRemoveDialog
 import tech.mmarca.openwatch.ui.components.DeclareAppBar
 import tech.mmarca.openwatch.ui.components.RenameDialog
 import tech.mmarca.openwatch.ui.components.ScreenAppBar
+import tech.mmarca.openwatch.ui.components.ScreenColumn
 import tech.mmarca.openwatch.ui.components.ScreenErrorContent
 import tech.mmarca.openwatch.ui.components.SectionHeader
 import tech.mmarca.openwatch.ui.components.rememberHealthConnectPermissionLauncher
@@ -128,12 +126,10 @@ fun ScaleDeviceScreen(
         return
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(Spacing.lg),
+    ScreenColumn(
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        verticalPadding = Spacing.lg,
     ) {
         ScaleStatusCard(state = state, onRename = { showRenameDialog = true })
 

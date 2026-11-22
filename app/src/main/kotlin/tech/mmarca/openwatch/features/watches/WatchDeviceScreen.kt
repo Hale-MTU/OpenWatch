@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.automirrored.outlined.BluetoothSearching
@@ -69,6 +67,7 @@ import tech.mmarca.openwatch.ui.components.DeclareAppBar
 import tech.mmarca.openwatch.ui.components.DeviceAvatar
 import tech.mmarca.openwatch.ui.components.DeviceRowIconGap
 import tech.mmarca.openwatch.ui.components.RenameDialog
+import tech.mmarca.openwatch.ui.components.ScreenColumn
 import tech.mmarca.openwatch.ui.components.SectionHeader
 import tech.mmarca.openwatch.ui.components.formatDeviceTime
 import tech.mmarca.openwatch.ui.components.InlineGrantPrompt
@@ -167,12 +166,9 @@ fun WatchDeviceScreen(
     // A bike computer records rides, not wrist wellness; its Data view is hidden.
     val isBikeComputer = device.isBikeComputer
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(Spacing.lg),
+    ScreenColumn(
         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        verticalPadding = Spacing.lg,
     ) {
         StatusCard(
             device = device,
