@@ -43,9 +43,10 @@ data class XiaomiScaleConfig(
 }
 
 /**
- * The scale's settings, kept out of the device registry: a scale takes no
- * connection, so it has no capabilities, no bond and no sync. One scale,
- * identified by the address Android's companion dialog returned.
+ * The S400's own state, beside its registry row: a scale takes no
+ * connection, so it has no capabilities, no bond and no sync, only a key
+ * and a user slot. One scale, identified by the address Android's companion
+ * dialog returned.
  * SharedPreferences-backed, never backed up nor moved to another phone. The
  * bind key is sealed by [seal] under a key the Keystore keeps; one kept in
  * plain before that is sealed the first time it is read.

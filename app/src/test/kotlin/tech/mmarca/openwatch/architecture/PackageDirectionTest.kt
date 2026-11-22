@@ -72,9 +72,7 @@ class PackageDirectionTest {
         val Integrations = setOf("garmin", "wearos", "xiaomi")
         val BelowIntegrations = setOf("data", "healthconnect", "core", "comaps", "activityimport", "sensors")
 
-        /** The scale is no registered device yet, so OpenLink lists it itself until it joins the registry. */
-        val Allowed = setOf(
-            "link/LinkDevices.kt -> devices.xiaomi",
-        )
+        /** Imports against the direction, each with its reason. None left: a new one needs one. */
+        val Allowed = emptySet<String>()
     }
 }

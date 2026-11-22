@@ -5,8 +5,10 @@ import java.time.Instant
 /**
  * What a registered Bluetooth device is. A [SENSOR] streams live GATT values
  * and owns capabilities. A [WATCH] holds FIT files pulled over GFDI. A
- * [BIKE_COMPUTER] does both. File sync keys off [BleSensorDevice.isGarminGfdi],
- * the live role off a non-empty [BleSensorDevice.capabilities].
+ * [BIKE_COMPUTER] does both. A [SCALE] takes no connection: it broadcasts
+ * each weigh-in, and its family listens. What a device can do is its
+ * family's to say; the live role keys off a non-empty
+ * [BleSensorDevice.capabilities].
  */
 enum class BleDeviceKind(
     /** Persisted form, so a rename cannot orphan stored devices. */
@@ -15,6 +17,7 @@ enum class BleDeviceKind(
     SENSOR("SENSOR"),
     WATCH("WATCH"),
     BIKE_COMPUTER("BIKE_COMPUTER"),
+    SCALE("SCALE"),
     ;
 
     companion object {
@@ -24,13 +27,15 @@ enum class BleDeviceKind(
 }
 
 /**
- * Which integration owns a [BleDeviceKind.WATCH]. Garmin speaks GFDI; WearOS
- * is a live heart-rate source whose data arrives via Health Connect. Null
- * for a sensor, and for a Garmin watch stored before this field existed.
+ * Which integration owns a device: its family. Garmin speaks GFDI; WearOS
+ * talks to the OpenWatch watch app; Xiaomi listens to the S400 scale's
+ * broadcasts. Null for a sensor, and for a Garmin watch stored before this
+ * field existed.
  */
 enum class DeviceIntegration(val storageName: String) {
     GARMIN("GARMIN"),
     WEAROS("WEAROS"),
+    XIAOMI("XIAOMI"),
     ;
 
     companion object {

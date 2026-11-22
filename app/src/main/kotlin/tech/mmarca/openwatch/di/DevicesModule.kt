@@ -55,6 +55,7 @@ import tech.mmarca.openwatch.devices.xiaomi.ScaleForeground
 import tech.mmarca.openwatch.devices.xiaomi.ScaleListeningForeground
 import tech.mmarca.openwatch.devices.xiaomi.ScaleScanRadio
 import tech.mmarca.openwatch.devices.xiaomi.SystemScaleScanRadio
+import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleFamily
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleListener
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleStore
 import tech.mmarca.openwatch.wearlink.SecretSeal
@@ -127,6 +128,11 @@ abstract class DevicesModule {
     @IntoMap
     @StringKey("WEAROS")
     abstract fun bindWearOsFamily(impl: WearOsFamily): DeviceFamily
+
+    @Binds
+    @IntoMap
+    @StringKey("XIAOMI")
+    abstract fun bindXiaomiScaleFamily(impl: XiaomiScaleFamily): DeviceFamily
 
     companion object {
         // What each integration starts at every process start (AppStartupActors).

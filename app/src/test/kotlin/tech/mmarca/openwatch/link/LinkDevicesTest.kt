@@ -11,8 +11,6 @@ import tech.mmarca.openlink.OpenLinkSampleType
 import tech.mmarca.openwatch.devices.core.DeviceFamilies
 import tech.mmarca.openwatch.devices.core.DeviceFamily
 import tech.mmarca.openwatch.devices.core.DeviceFeature
-import tech.mmarca.openwatch.devices.xiaomi.ScaleListenerStatus
-import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleConfig
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
@@ -40,7 +38,8 @@ class LinkDevicesTest {
     private val wearOs = StandIn("WEAROS", setOf(DeviceFeature.SYNC, DeviceFeature.LIVE_HEART_RATE)) {
         it.kind == BleDeviceKind.WATCH && it.integration == DeviceIntegration.WEAROS
     }
-    private val families = DeviceFamilies(mapOf("GARMIN" to garmin, "WEAROS" to wearOs))
+    private val xiaomi = StandIn("XIAOMI", emptySet()) { it.kind == BleDeviceKind.SCALE && it.integration == DeviceIntegration.XIAOMI }
+    private val families = DeviceFamilies(mapOf("GARMIN" to garmin, "WEAROS" to wearOs, "XIAOMI" to xiaomi))
 
     private fun device(
         id: String,
@@ -70,15 +69,15 @@ class LinkDevicesTest {
                 device("venu", BleDeviceKind.WATCH, DeviceIntegration.GARMIN),
                 device("pixel", BleDeviceKind.WATCH, DeviceIntegration.WEAROS),
                 device("strap", BleDeviceKind.SENSOR, capabilities = setOf(BleSensorCapability.HEART_RATE)),
+                device("bathroom", BleDeviceKind.SCALE, DeviceIntegration.XIAOMI),
             ),
             syncingDeviceIds = setOf("venu"),
             families = families,
-            connections = mapOf("pixel" to true),
-            scale = XiaomiScaleConfig(hasKey = true, address = "11:22:33:44:55:66", name = "Bathroom"),
-            scaleStatus = ScaleListenerStatus.LISTENING,
+            connections = mapOf("pixel" to true, "bathroom" to true),
         )
 
-        assertEquals(listOf("venu", "pixel", SCALE_ID_PREFIX + "11:22:33:44:55:66"), devices.map { it.id })
+        // The scale goes by its registry id too: its address stays on the phone.
+        assertEquals(listOf("venu", "pixel", "bathroom"), devices.map { it.id })
         val garmin = devices[0]
         assertEquals(OpenLinkIntegration.GARMIN, garmin.integration)
         assertTrue(garmin.syncing)
@@ -89,20 +88,15 @@ class LinkDevicesTest {
         assertEquals(setOf(OpenLinkSampleType.HEART_RATE), devices[1].liveSampleTypes)
         val scale = devices[2]
         assertEquals(OpenLinkDeviceKind.SCALE, scale.kind)
-        assertEquals("Bathroom", scale.displayName)
+        assertEquals(OpenLinkIntegration.XIAOMI, scale.integration)
+        assertEquals(OpenLinkConnection.CONNECTED, scale.connection)
         assertEquals(false, scale.supportsSync)
-    }
-
-    @Test
-    fun `a scale without its key is not listed yet`() {
-        val devices = linkDevices(emptyList(), emptySet(), families, emptyMap(), XiaomiScaleConfig(hasKey = false, address = "11:22"), ScaleListenerStatus.OFF)
-
-        assertTrue(devices.isEmpty())
+        assertEquals(false, scale.supportsRecording)
     }
 
     @Test
     fun `a legacy watch entry without an integration counts as Garmin`() {
-        val devices = linkDevices(listOf(device("fenix", BleDeviceKind.WATCH)), emptySet(), families, emptyMap(), XiaomiScaleConfig(), ScaleListenerStatus.OFF)
+        val devices = linkDevices(listOf(device("fenix", BleDeviceKind.WATCH)), emptySet(), families, emptyMap())
 
         assertEquals(OpenLinkIntegration.GARMIN, devices.single().integration)
         assertEquals(OpenLinkConnection.UNKNOWN, devices.single().connection)
@@ -117,8 +111,6 @@ class LinkDevicesTest {
             emptySet(),
             DeviceFamilies(mapOf("ACME" to acme)),
             emptyMap(),
-            XiaomiScaleConfig(),
-            ScaleListenerStatus.OFF,
         )
 
         assertTrue(devices.isEmpty())

@@ -18,12 +18,16 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
+import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.data.repository.contract.ScaleWeighInRepository
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevice
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevicePairing
 import tech.mmarca.openwatch.devices.core.pairing.CompanionPresenceObserver
 import kotlinx.coroutines.plus
 import tech.mmarca.openwatch.core.performance.ApplicationScope
+import tech.mmarca.openwatch.domain.model.BleDeviceKind
+import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.domain.model.DeviceIntegration
 
 /**
  * Keeps the phone listening for the scale. The scan itself lives in the
@@ -37,11 +41,15 @@ import tech.mmarca.openwatch.core.performance.ApplicationScope
  * device: the scale advertises from the moment someone steps on, Android
  * wakes the app, and for the seconds until the result the app holds a
  * foreground service, which is what makes its scan run full time.
+ *
+ * The scale is also a row of the device registry, so it has an id, a family and a place beside
+ * the watches; its key and slot stay in [store]. One scale: setting up another replaces it.
  */
 @Singleton
 class XiaomiScaleListener(
     private val context: Context,
     private val store: XiaomiScaleStore,
+    private val registry: BleDeviceRepository,
     private val radio: ScaleScanRadio,
     private val writer: ScaleWeighInWriter,
     private val companion: CompanionDevicePairing,
@@ -54,6 +62,7 @@ class XiaomiScaleListener(
     constructor(
         @ApplicationContext context: Context,
         store: XiaomiScaleStore,
+        registry: BleDeviceRepository,
         radio: ScaleScanRadio,
         writer: ScaleWeighInWriter,
         companion: CompanionDevicePairing,
@@ -64,6 +73,7 @@ class XiaomiScaleListener(
     ) : this(
         context,
         store,
+        registry,
         radio,
         writer,
         companion,
@@ -85,6 +95,7 @@ class XiaomiScaleListener(
 
     /** Every process start, the one a scale broadcast caused included. Without a scale it does nothing. */
     fun onAppStart() {
+        reconcileRegistry()
         if (!store.config.value.isSetUp) return
         // Runs from Application.onCreate. Not worth failing app start over.
         runCatching {
@@ -122,9 +133,16 @@ class XiaomiScaleListener(
     suspend fun findScale(): CompanionDevice? =
         companion.discover(S400Beacon.SERVICE_UUID, S400Beacon.discoveryFilters)
 
-    /** Adds the scale the dialog found and starts listening for it. */
+    /** The scale's registry row, or null without a scale. */
+    val device: BleSensorDevice?
+        get() = registry.devices.firstOrNull { it.isXiaomiScale }
+
+    /** Adds the scale the dialog found and starts listening for it. An earlier scale's row goes. */
     fun setUp(found: CompanionDevice, name: String, key: ByteArray) {
         store.setUp(found.address, name, key)
+        registry.devices.filter { it.isXiaomiScale && !it.address.equals(found.address, ignoreCase = true) }
+            .forEach { registry.removeDevice(it.id) }
+        register(found.address, name, found.name)
         arm(restart = true)
     }
 
@@ -135,6 +153,7 @@ class XiaomiScaleListener(
 
     fun rename(name: String) {
         store.rename(name)
+        device?.let { registry.updateDevice(it.id, displayName = name) }
     }
 
     /**
@@ -183,13 +202,42 @@ class XiaomiScaleListener(
         }
     }
 
-    /** Stops listening and forgets the scale and its key. The weigh-ins already saved stay. */
+    /** Stops listening and forgets the scale, its row and its key. The weigh-ins already saved stay. */
     fun forget() {
+        device?.let { registry.removeDevice(it.id) }
+        release()
+    }
+
+    /** What [forget] does once the registry row is gone, for the family's removal path. */
+    fun release() {
         store.config.value.address?.let(companion::disassociate)
         radio.disarm()
         workManager.cancelUniqueWork(WORK_NAME)
         store.clear()
         _status.value = ScaleListenerStatus.OFF
+    }
+
+    /**
+     * The registry holds a row for the scale [store] holds, and none for another: a scale set
+     * up before the scale had a row gets one here, once.
+     */
+    private fun reconcileRegistry() {
+        val config = store.config.value
+        val address = config.address?.takeIf { config.isSetUp }
+        registry.devices.filter { it.isXiaomiScale && !it.address.equals(address, ignoreCase = true) }
+            .forEach { registry.removeDevice(it.id) }
+        if (address != null && device == null) register(address, config.name, bluetoothName = null)
+    }
+
+    private fun register(address: String, name: String?, bluetoothName: String?) {
+        registry.addDevice(
+            displayName = name ?: bluetoothName ?: DEFAULT_NAME,
+            address = address,
+            bluetoothName = bluetoothName,
+            capabilities = emptySet(),
+            kind = BleDeviceKind.SCALE,
+            integration = DeviceIntegration.XIAOMI,
+        )
     }
 
     /** Tries again to save the weigh-ins Health Connect has not taken yet. */
@@ -200,6 +248,9 @@ class XiaomiScaleListener(
     companion object {
         private const val TAG = "ScaleListener"
         const val WORK_NAME = "scale-listener"
+
+        /** The model, for a scale whose name is not known. */
+        private const val DEFAULT_NAME = "S400"
 
         /** How long a dropped scan can go unnoticed while the app stays closed. */
         const val REARM_MINUTES = 30L

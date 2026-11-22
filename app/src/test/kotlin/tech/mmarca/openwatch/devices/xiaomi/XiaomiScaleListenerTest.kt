@@ -29,9 +29,12 @@ import org.junit.Before
 import org.junit.Test
 import tech.mmarca.openwatch.core.security.testSeal
 import tech.mmarca.openwatch.data.repository.contract.FakeScaleWeighInRepository
+import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevice
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevicePairing
+import tech.mmarca.openwatch.domain.model.BleDeviceKind
+import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.domain.model.ScaleReading
 
 /** When the phone listens for the scale, and what keeps it listening. */
@@ -61,6 +64,7 @@ class XiaomiScaleListenerTest {
     private val writer = mockk<ScaleWeighInWriter>(relaxed = true)
     private val companion = mockk<CompanionDevicePairing>(relaxed = true)
     private val weighIns = FakeScaleWeighInRepository()
+    private val registry = testDeviceRepository()
 
     /** What the foreground port was asked to do, in order. */
     private val foregroundCalls = mutableListOf<String>()
@@ -74,6 +78,7 @@ class XiaomiScaleListenerTest {
     private fun listener(scope: TestScope = TestScope(UnconfinedTestDispatcher())) = XiaomiScaleListener(
         context = mockk<Context>(relaxed = true),
         store = store,
+        registry = registry,
         radio = radio,
         writer = writer,
         companion = companion,
@@ -155,6 +160,9 @@ class XiaomiScaleListenerTest {
 
         coVerify(exactly = 1) { companion.discover(S400Beacon.SERVICE_UUID, S400Beacon.discoveryFilters) }
         assertEquals("Bathroom" to scale, store.config.value.name to store.config.value.address)
+        val row = registry.devices.single()
+        assertEquals(Triple("Bathroom", scale, BleDeviceKind.SCALE), Triple(row.displayName, row.address, row.kind))
+        assertEquals(DeviceIntegration.XIAOMI, row.integration)
         assertEquals(listOf(scale to true), radio.arms)
         assertTrue(listener.isWokenBySystem())
         // The association can be revoked in Android's settings; the device screen can ask again.
@@ -224,6 +232,38 @@ class XiaomiScaleListenerTest {
     }
 
     @Test
+    fun `a scale set up before it had a registry row gets one at start, once, and keeps it renamed`() {
+        store.setUp(scale, "Scale", key)
+
+        listener.onAppStart()
+        listener.onAppStart()
+        listener.rename("Bathroom")
+
+        val row = registry.devices.single()
+        assertEquals(scale, row.address)
+        assertEquals("Bathroom", row.displayName)
+        assertEquals(row, listener.device)
+    }
+
+    @Test
+    fun `a row left without its scale goes at start, and another scale replaces the first`() = runTest {
+        store.setUp(scale, "Scale", key)
+        listener.onAppStart()
+        store.clear()
+
+        listener.onAppStart()
+
+        assertTrue(registry.devices.isEmpty())
+
+        listener.setUp(CompanionDevice(scale, null), name = "First", key = key)
+        listener.setUp(CompanionDevice("11:22:33:44:55:66", null), name = "Second", key = key)
+
+        assertEquals(listOf("Second"), registry.devices.map { it.displayName })
+        // The only scale, so the first of its family: its records keep their ids.
+        assertEquals("", registry.devices.single().idSalt)
+    }
+
+    @Test
     fun `a new key keeps the scale, and removing the scale stops everything`() {
         store.setUp(scale, "Scale", key)
         store.setKeyRejected(true)
@@ -235,6 +275,7 @@ class XiaomiScaleListenerTest {
 
         listener.forget()
 
+        assertTrue(registry.devices.isEmpty())
         // Android must stop watching for a scale the app no longer knows.
         verify(exactly = 1) { companion.disassociate(scale) }
         assertEquals(1, radio.disarms)
