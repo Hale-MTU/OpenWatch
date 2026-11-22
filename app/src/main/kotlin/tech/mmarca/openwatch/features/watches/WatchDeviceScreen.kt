@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import tech.mmarca.openwatch.devices.core.DeviceFeature
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.resolve
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
@@ -76,6 +77,8 @@ import tech.mmarca.openwatch.ui.components.rememberHealthConnectPermissionLaunch
 import tech.mmarca.openwatch.ui.theme.Spacing
 import tech.mmarca.openwatch.ui.components.OpenWatchIconButton
 import tech.mmarca.openwatch.ui.components.ScreenAppBar
+import tech.mmarca.openwatch.devices.garmin.isGarmin
+import tech.mmarca.openwatch.devices.wearos.isWearOs
 
 /** The watch's settings tree browser exists, so the rows that open it are live. */
 internal const val WatchSettingsTreeAvailable: Boolean = true
@@ -158,7 +161,7 @@ fun WatchDeviceScreen(
     var showRemoveDialog by rememberSaveable { mutableStateOf(false) }
 
     // Only a Garmin GFDI device has sync, settings and find. WearOS speaks none of it.
-    val isGarmin = device.isGarminGfdi
+    val isGarmin = device.isGarmin
     // A bike computer records rides, not wrist wellness; its Data view is hidden.
     val isBikeComputer = device.isBikeComputer
 
@@ -180,7 +183,7 @@ fun WatchDeviceScreen(
             state.sync.lastFor(device.id)?.let { SyncOutcomeSummary(it, onAllowGrants = syncGrantLauncher.launch) }
         }
 
-        if (device.isWearosWatch) {
+        if (device.isWearOs) {
             val liveHeartRateBpm by viewModel.wearOsLiveHeartRateBpm.collectAsStateWithLifecycle()
             SectionHeader(stringResource(R.string.settings_watch_wearos_status_section))
             WearOsStatusCard(
@@ -275,7 +278,8 @@ fun WatchDeviceScreen(
         WearOsWatchSettingsSection(state, viewModel::loadWatchSettings, viewModel::setWatchSetting)
         SectionHeader(stringResource(R.string.settings_watch_section_device))
         // First: the schedule decides whether this screen is ever visited again.
-        if (isGarmin || device.isWearosWatch) {
+        // Anything that syncs syncs on a schedule too.
+        if (DeviceFeature.SYNC in state.features) {
             AutoSyncCard(
                 selected = state.autoSync,
                 backgroundReadMissing = state.backgroundReadMissing,

@@ -23,7 +23,7 @@ class WearOsFamily @Inject constructor(
 
     override val id: String = DeviceIntegration.WEAROS.storageName
 
-    override fun owns(device: BleSensorDevice): Boolean = device.isWearosWatch
+    override fun owns(device: BleSensorDevice): Boolean = device.isWearOs
 
     override fun features(device: BleSensorDevice): Set<DeviceFeature> =
         setOf(DeviceFeature.SYNC, DeviceFeature.LIVE_HEART_RATE)

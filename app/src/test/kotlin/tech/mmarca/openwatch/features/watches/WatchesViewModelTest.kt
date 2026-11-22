@@ -36,6 +36,8 @@ import tech.mmarca.openwatch.domain.model.BleDiscoveredDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
 import tech.mmarca.openwatch.util.MainDispatcherRule
+import tech.mmarca.openwatch.devices.garmin.isGarmin
+import tech.mmarca.openwatch.devices.wearos.isWearOs
 
 /**
  * The sheet-level flow: no capability probe for a GFDI device, what a refused pairing leaves
@@ -347,7 +349,7 @@ class WatchesViewModelTest {
         val registered = repo.devices.single()
         assertEquals(BleDeviceKind.BIKE_COMPUTER, registered.kind)
         assertTrue(registered.isBikeComputer)
-        assertTrue(registered.isGarminGfdi)
+        assertTrue(registered.isGarmin)
         assertTrue(registered.capabilities.isEmpty())
     }
 
@@ -406,7 +408,7 @@ class WatchesViewModelTest {
         vm.onboardSelectedWatch { closed = it }
 
         assertEquals(true, closed)
-        assertTrue(repo.devices.single().isWearosWatch)
+        assertTrue(repo.devices.single().isWearOs)
         assertFalse(vm.uiState.value.companionRequired)
         assertEquals(null, vm.uiState.value.onboardNotice)
     }

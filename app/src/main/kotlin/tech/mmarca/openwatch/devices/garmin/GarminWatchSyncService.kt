@@ -72,7 +72,7 @@ class GarminWatchSyncService @Inject constructor(
     }
 
     /** A watch OR an Edge bike computer — both pull recorded FIT files over GFDI. */
-    override fun canSync(device: BleSensorDevice): Boolean = device.isGarminGfdi
+    override fun canSync(device: BleSensorDevice): Boolean = device.isGarmin
 
     /**
      * The held link's owner for [device], backed by this service's stores.

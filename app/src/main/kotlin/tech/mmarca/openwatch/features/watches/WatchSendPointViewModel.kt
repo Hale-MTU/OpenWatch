@@ -27,6 +27,7 @@ import tech.mmarca.openwatch.navigation.WATCH_POINT_LONGITUDE_ARG
 import tech.mmarca.openwatch.navigation.WATCH_POINT_NAME_ARG
 import tech.mmarca.openwatch.navigation.WATCH_POINT_UNREADABLE_ARG
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
+import tech.mmarca.openwatch.devices.garmin.isGarmin
 
 data class WatchSendPointUiState(
     /** The paired watches that can store a point. */
@@ -132,7 +133,7 @@ class WatchSendPointViewModel @Inject constructor(
     }
 
     private fun BleSensorDevice.canStorePoints(): Boolean =
-        enabled && isGarminGfdi && stateStore.capabilities(id).canStorePoints()
+        enabled && isGarmin && stateStore.capabilities(id).canStorePoints()
 
     private fun sharedCoordinates(latitude: Double?, longitude: Double?): String =
         if (latitude == null || longitude == null) "" else coordinatesText(latitude, longitude)

@@ -29,6 +29,7 @@ import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.toScreenError
 import tech.mmarca.openwatch.devices.core.DeviceFamilies
+import tech.mmarca.openwatch.devices.core.DeviceFeature
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
 import tech.mmarca.openwatch.devices.garmin.GarminAgpsImport
 import tech.mmarca.openwatch.devices.garmin.GarminAgpsKind
@@ -50,12 +51,16 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import kotlinx.coroutines.plus
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 import tech.mmarca.openwatch.core.performance.runSuspendCatching
+import tech.mmarca.openwatch.devices.garmin.isGarmin
+import tech.mmarca.openwatch.devices.wearos.isWearOs
 
 /** Everything the device view shows about one watch. */
 @Immutable
 data class WatchDeviceUiState(
     /** Null while loading and after removal — the screen shows its no-data state. */
     val device: BleSensorDevice? = null,
+    /** What the device's family says it can do; empty for a plain sensor. */
+    val features: Set<DeviceFeature> = emptySet(),
     /** What the watch declared in its last handshake. Empty means unknown, not none; see [supports]. */
     val capabilities: Set<GarminCapability> = emptySet(),
     val sync: DeviceSyncUiState = DeviceSyncUiState(),
@@ -174,7 +179,8 @@ class WatchDeviceViewModel @Inject constructor(
         val device = devices.firstOrNull { it.id == deviceId }
         local.copy(
             device = device,
-            capabilities = if (device?.isGarminGfdi == true) {
+            features = device?.let(families::features).orEmpty(),
+            capabilities = if (device?.isGarmin == true) {
                 stateStore.capabilities(deviceId)
             } else {
                 emptySet()
@@ -207,7 +213,7 @@ class WatchDeviceViewModel @Inject constructor(
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     val wearOsLiveHeartRateBpm: StateFlow<Int?> = deviceRepository.devicesFlow
-        .map { devices -> devices.firstOrNull { it.id == deviceId }?.takeIf { it.isWearosWatch } }
+        .map { devices -> devices.firstOrNull { it.id == deviceId }?.takeIf { it.isWearOs } }
         .distinctUntilChanged { old, new -> old?.address == new?.address && old?.bluetoothName == new?.bluetoothName }
         .flatMapLatest { device ->
             device?.let { wearOsCompanionManager.liveHeartRate(it.address, it.bluetoothName) } ?: flowOf(null)
@@ -218,7 +224,7 @@ class WatchDeviceViewModel @Inject constructor(
         // The first check runs once the device has loaded; later ones are by hand. The watch's
         // settings are read after it: the watch serves one connection at a time.
         viewModelScope.launch {
-            if (uiState.first { it.device != null }.device?.isWearosWatch == true) {
+            if (uiState.first { it.device != null }.device?.isWearOs == true) {
                 checkWearOsStatus()
                 uiState.first { !it.isCheckingWearOsStatus }
                 loadWatchSettings()
@@ -267,7 +273,7 @@ class WatchDeviceViewModel @Inject constructor(
     /** Checks whether the Wear OS watch is paired and its OpenWatch app answers. */
     fun checkWearOsStatus() {
         val device = uiState.value.device ?: return
-        if (!device.isWearosWatch || localState.value.isCheckingWearOsStatus) return
+        if (!device.isWearOs || localState.value.isCheckingWearOsStatus) return
         localState.update {
             it.copy(
                 isCheckingWearOsStatus = true,
@@ -297,7 +303,7 @@ class WatchDeviceViewModel @Inject constructor(
     /** Asks Android for the companion association of a Wear OS watch that has none. */
     fun associateWearOs() {
         val device = uiState.value.device ?: return
-        if (!device.isWearosWatch || localState.value.isAssociatingWearOs) return
+        if (!device.isWearOs || localState.value.isAssociatingWearOs) return
         localState.update { it.copy(isAssociatingWearOs = true) }
         viewModelScope.launch {
             val associated = onboardWearOsWatch.associate(device.address, device.displayName)
@@ -400,7 +406,7 @@ class WatchDeviceViewModel @Inject constructor(
     /** Reads the watch's own settings over the link. */
     fun loadWatchSettings() {
         val device = uiState.value.device ?: return
-        if (!device.isWearosWatch || localState.value.isWatchSettingsBusy) return
+        if (!device.isWearOs || localState.value.isWatchSettingsBusy) return
         localState.update { it.copy(isWatchSettingsBusy = true) }
         viewModelScope.launch {
             try {

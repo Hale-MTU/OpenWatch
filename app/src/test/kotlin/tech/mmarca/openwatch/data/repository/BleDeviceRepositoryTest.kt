@@ -16,6 +16,8 @@ import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import tech.mmarca.openwatch.devices.garmin.isGarmin
+import tech.mmarca.openwatch.devices.garmin.isGarminWatch
 
 class BleDeviceRepositoryTest {
 
@@ -218,7 +220,7 @@ class BleDeviceRepositoryTest {
         assertEquals(watch.id, stored.id)
         // Both roles on one entry, the way an Edge already was.
         assertEquals(BleDeviceKind.WATCH, stored.kind)
-        assertTrue(stored.isGarminGfdi)
+        assertTrue(stored.isGarmin)
         assertEquals(
             stored.id,
             repo.resolveCapabilityAssignments()[BleSensorCapability.HEART_RATE]?.id,
@@ -373,7 +375,7 @@ class BleDeviceRepositoryTest {
         assertEquals(Instant.ofEpochMilli(1_753_100_000_000), device.lastSyncedAt)
         assertTrue(device.isWatch)
         assertTrue(device.isGarminWatch)
-        assertTrue(device.isGarminGfdi)
+        assertTrue(device.isGarmin)
     }
 
     @Test

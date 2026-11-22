@@ -25,6 +25,7 @@ import tech.mmarca.openwatch.devices.garmin.GarminWaypoint
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import tech.mmarca.openwatch.core.performance.ApplicationScope
+import tech.mmarca.openwatch.devices.garmin.isGarmin
 
 /** The find action, Garmin-only: gated on GarminCapability and speaking GFDI directly. */
 data class WatchFindUiState(
@@ -126,7 +127,7 @@ class GarminWatchActionsController(
         if (radioInUse) return null
 
         val device = deviceRepository.devices.firstOrNull { it.id == deviceId } ?: return null
-        if (!device.isGarminGfdi) return null
+        if (!device.isGarmin) return null
 
         val cancel = CompletableDeferred<Unit>()
         findCancel = cancel
@@ -177,7 +178,7 @@ class GarminWatchActionsController(
     ): Job? {
         if (radioInUse) return null
         val device = deviceRepository.devices.firstOrNull { it.id == deviceId } ?: return null
-        if (!device.isGarminGfdi) return null
+        if (!device.isGarmin) return null
 
         state.value = WatchFileSendUiState(sendingDeviceId = deviceId)
         return scope.launch {

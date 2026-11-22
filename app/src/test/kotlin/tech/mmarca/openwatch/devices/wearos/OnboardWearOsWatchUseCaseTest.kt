@@ -17,6 +17,7 @@ import tech.mmarca.openwatch.devices.core.pairing.WatchPairingPort
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleDiscoveredDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import tech.mmarca.openwatch.devices.garmin.isGarminWatch
 
 /** Records what the use case asked of the pairing layer, and can force a declined or throwing association. */
 private class FakePairing : WatchPairingPort {
@@ -86,7 +87,7 @@ class OnboardWearOsWatchUseCaseTest {
         val device = repo.devices.single()
         assertEquals(BleDeviceKind.WATCH, device.kind)
         assertEquals(DeviceIntegration.WEAROS, device.integration)
-        assertTrue(device.isWearosWatch)
+        assertTrue(device.isWearOs)
         assertFalse(device.isGarminWatch)
         assertTrue(device.capabilities.isEmpty())
     }
@@ -134,7 +135,7 @@ class OnboardWearOsWatchUseCaseTest {
 
         val device = repo.devices.single()
         assertEquals("Renamed Watch", device.displayName)
-        assertTrue(device.isWearosWatch)
+        assertTrue(device.isWearOs)
     }
 
     @Test

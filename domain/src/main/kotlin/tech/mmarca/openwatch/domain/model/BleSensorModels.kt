@@ -67,7 +67,7 @@ data class BleSensorDevice(
     val addedAt: Instant,
     /** Defaulted so devices stored before this field existed keep their meaning. */
     val kind: BleDeviceKind = BleDeviceKind.SENSOR,
-    /** The owning integration for a watch. Null means legacy Garmin. */
+    /** The owning integration for a watch; its family decides what that means (Garmin reads null as its own). */
     val integration: DeviceIntegration? = null,
     /** When recorded files were last pulled. Null for a sensor or a never-synced watch. */
     val lastSyncedAt: Instant? = null,
@@ -79,25 +79,6 @@ data class BleSensorDevice(
     /** A Garmin Edge: a GFDI sync device that is also a candidate live sensor. */
     val isBikeComputer: Boolean
         get() = kind == BleDeviceKind.BIKE_COMPUTER
-
-    /**
-     * Driven over GFDI: a Garmin watch or bike computer. The file-sync concept. Named, not
-     * "not Wear OS": another watch family added later must not be synced as a Garmin.
-     */
-    val isGarminGfdi: Boolean
-        get() = (kind == BleDeviceKind.WATCH || kind == BleDeviceKind.BIKE_COMPUTER) && isGarminIntegration
-
-    /** A Garmin watch. For file-sync eligibility use [isGarminGfdi]. */
-    val isGarminWatch: Boolean
-        get() = isWatch && isGarminIntegration
-
-    /** Garmin, or a watch stored before the integration was recorded, which was always a Garmin. */
-    private val isGarminIntegration: Boolean
-        get() = integration == DeviceIntegration.GARMIN || integration == null
-
-    /** A WearOS watch: live heart rate over BLE, recorded data via Health Connect. */
-    val isWearosWatch: Boolean
-        get() = isWatch && integration == DeviceIntegration.WEAROS
 
     /**
      * Can hold live capabilities and join a recording: a sensor, a bike

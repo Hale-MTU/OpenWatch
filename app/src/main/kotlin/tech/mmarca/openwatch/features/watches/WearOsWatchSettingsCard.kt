@@ -17,6 +17,7 @@ import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.theme.Spacing
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Preferences
+import tech.mmarca.openwatch.devices.wearos.isWearOs
 
 /**
  * The watch's own settings, read from and written to the watch over the
@@ -27,7 +28,7 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Preferences
 /** The watch's own settings on its device screen, for a Wear OS watch only; a Garmin watch has its own. */
 @Composable
 internal fun WearOsWatchSettingsSection(state: WatchDeviceUiState, onLoad: () -> Unit, onSet: (key: String, value: String) -> Unit) {
-    if (state.device?.isWearosWatch != true) return
+    if (state.device?.isWearOs != true) return
     SectionHeader(stringResource(R.string.watch_settings_section))
     WearOsWatchSettingsCard(
         settings = state.watchSettings,

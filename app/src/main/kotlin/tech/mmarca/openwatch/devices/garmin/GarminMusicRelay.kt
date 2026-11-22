@@ -106,7 +106,7 @@ class GarminMusicRelay(
     }
 
     private fun wantsMusicOnWatch(): Boolean {
-        val watch = deviceRepository.devices.firstOrNull { it.isGarminGfdi } ?: return false
+        val watch = deviceRepository.devices.firstOrNull { it.isGarmin } ?: return false
         return stateStore.musicControls(watch.id)
     }
 }

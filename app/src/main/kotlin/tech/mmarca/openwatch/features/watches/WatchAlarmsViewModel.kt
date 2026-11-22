@@ -19,6 +19,7 @@ import tech.mmarca.openwatch.devices.garmin.GarminSendStage
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
+import tech.mmarca.openwatch.devices.garmin.isGarmin
 
 data class WatchAlarmsUiState(
     /** Null while loading, and when the watch is gone or is not a Garmin. */
@@ -72,7 +73,7 @@ class WatchAlarmsViewModel @Inject constructor(
         radioBusy,
     ) { devices, alarms, send, radioBusy ->
         WatchAlarmsUiState(
-            device = devices.firstOrNull { it.id == deviceId && it.enabled && it.isGarminGfdi },
+            device = devices.firstOrNull { it.id == deviceId && it.enabled && it.isGarmin },
             alarms = alarms,
             // Read on every change: a finished send has just recorded its list.
             unsent = alarms != stateStore.sentAlarms(deviceId).orEmpty(),

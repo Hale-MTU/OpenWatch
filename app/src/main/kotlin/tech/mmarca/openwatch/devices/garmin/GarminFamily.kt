@@ -31,7 +31,7 @@ class GarminFamily @Inject constructor(
 
     override val id: String = DeviceIntegration.GARMIN.storageName
 
-    override fun owns(device: BleSensorDevice): Boolean = device.isGarminGfdi
+    override fun owns(device: BleSensorDevice): Boolean = device.isGarmin
 
     override fun features(device: BleSensorDevice): Set<DeviceFeature> =
         setOf(DeviceFeature.SYNC, DeviceFeature.FIND, DeviceFeature.LIVE_HEART_RATE, DeviceFeature.LIVE_STEPS)

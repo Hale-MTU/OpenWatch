@@ -55,7 +55,7 @@ class WearOsPhoneActivity @Inject constructor(
     private fun onUnlocked(at: Instant) {
         if (at.isBefore(lastSentAt.plus(MIN_GAP))) return
         lastSentAt = at
-        val watches = deviceRepository.devices.filter { it.isWearosWatch && it.enabled }
+        val watches = deviceRepository.devices.filter { it.isWearOs && it.enabled }
         if (watches.isEmpty()) return
         scope.launch {
             for (watch in watches) {

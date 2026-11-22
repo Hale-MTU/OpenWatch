@@ -42,6 +42,7 @@ import tech.mmarca.openwatch.navigation.WATCH_SETTINGS_SCREEN_ID_ARG
 import kotlinx.coroutines.plus
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
+import tech.mmarca.openwatch.devices.garmin.isGarmin
 
 /**
  * How long a link outlives the last screen watching it. Long enough to walk
@@ -79,7 +80,7 @@ class WatchSettingsLinks @VisibleForTesting internal constructor(
         grace = LINK_GRACE,
         opener = { scope, deviceId ->
             val device = bleDeviceRepository.devices.firstOrNull { it.id == deviceId }
-            if (device == null || !device.isGarminGfdi) {
+            if (device == null || !device.isGarmin) {
                 throw GarminGattClientException("Not a paired Garmin device: $deviceId")
             }
             val phone = GarminPhoneIdentity()

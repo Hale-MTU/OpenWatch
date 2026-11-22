@@ -17,6 +17,7 @@ import tech.mmarca.openwatch.devices.garmin.GarminLog
 import tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge
 import tech.mmarca.openwatch.devices.notifications.NotificationFilter
 import tech.mmarca.openwatch.devices.notifications.NotificationStore
+import tech.mmarca.openwatch.devices.garmin.isGarmin
 
 /** One app the user can silence. */
 data class InstalledApp(
@@ -82,7 +83,7 @@ class AndroidWatchNotificationsGateway @Inject constructor(
 
     override fun pushConfiguration() {
         // No watch means capture nothing.
-        val watch = deviceRepository.devices.firstOrNull { it.isGarminGfdi }
+        val watch = deviceRepository.devices.firstOrNull { it.isGarmin }
         NotificationStore.writeConfig(
             context,
             NotificationFilter.Config(

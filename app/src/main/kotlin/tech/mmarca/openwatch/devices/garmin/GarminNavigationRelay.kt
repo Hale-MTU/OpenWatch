@@ -93,7 +93,7 @@ class GarminNavigationRelay @Inject constructor(
     }
 
     private fun wantsGuidanceOnWatch(): Boolean {
-        val watch = deviceRepository.devices.firstOrNull { it.isGarminGfdi } ?: return false
+        val watch = deviceRepository.devices.firstOrNull { it.isGarmin } ?: return false
         return stateStore.navigationOnWatch(watch.id)
     }
 

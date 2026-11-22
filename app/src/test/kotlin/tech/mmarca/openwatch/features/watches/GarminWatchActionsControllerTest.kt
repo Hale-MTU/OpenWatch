@@ -29,6 +29,7 @@ import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
+import tech.mmarca.openwatch.devices.garmin.isGarmin
 
 /** Find is a toggle, a double-stop must not throw, a refusal is a flag, and a find stands down during a sync. */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -50,7 +51,7 @@ class GarminWatchActionsControllerTest {
     private val syncGate = CompletableDeferred<Unit>()
 
     private val syncPort = object : DeviceSyncPort {
-        override fun canSync(device: BleSensorDevice): Boolean = device.isGarminGfdi
+        override fun canSync(device: BleSensorDevice): Boolean = device.isGarmin
 
         override suspend fun sync(
             device: BleSensorDevice,

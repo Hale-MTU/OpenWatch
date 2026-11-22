@@ -167,7 +167,7 @@ class WearOsWatchSyncService(
         WearOsLog.installLogcatSink()
     }
 
-    override fun canSync(device: BleSensorDevice): Boolean = device.isWearosWatch
+    override fun canSync(device: BleSensorDevice): Boolean = device.isWearOs
 
     override suspend fun sync(
         device: BleSensorDevice,

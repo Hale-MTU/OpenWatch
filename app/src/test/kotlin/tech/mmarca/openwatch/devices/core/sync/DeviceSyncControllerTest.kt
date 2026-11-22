@@ -20,6 +20,7 @@ import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import kotlinx.coroutines.launch
+import tech.mmarca.openwatch.devices.garmin.isGarmin
 
 /**
  * Row-state discipline: one sync at a time, progress scoped to the syncing device,
@@ -48,7 +49,7 @@ class DeviceSyncControllerTest {
         /** Set by the test that breaks the never-throws contract on purpose. */
         var thrown: Exception? = null
 
-        override fun canSync(device: BleSensorDevice): Boolean = device.isGarminGfdi
+        override fun canSync(device: BleSensorDevice): Boolean = device.isGarmin
 
         override suspend fun sync(
             device: BleSensorDevice,

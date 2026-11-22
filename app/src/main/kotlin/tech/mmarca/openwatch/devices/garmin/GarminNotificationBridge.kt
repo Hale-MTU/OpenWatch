@@ -150,7 +150,7 @@ class GarminNotificationBridge @Inject constructor(
 
     /** The paired Garmin watch's address, or null. */
     private fun pairedWatchAddress(): String? =
-        deviceRepository.devices.firstOrNull { it.isGarminGfdi }?.address
+        deviceRepository.devices.firstOrNull { it.isGarmin }?.address
 
     /** Tears the held link down. Live readings die with the link that produced them. */
     private fun dropForwarder() {
@@ -251,7 +251,7 @@ class GarminNotificationBridge @Inject constructor(
         }
         scope.launch {
             val device = deviceRepository.devices.firstOrNull {
-                it.isGarminGfdi && stateStore.stayConnected(it.id)
+                it.isGarmin && stateStore.stayConnected(it.id)
             } ?: return@launch
             observePresence(device.address)
             ensureCompanionLink()
@@ -290,7 +290,7 @@ class GarminNotificationBridge @Inject constructor(
     fun ensureCompanionLink() {
         scope.launch {
             val device = deviceRepository.devices.firstOrNull {
-                it.isGarminGfdi && stateStore.stayConnected(it.id)
+                it.isGarmin && stateStore.stayConnected(it.id)
             } ?: return@launch
             GarminLog.log("[GARMIN-COMPANION] holding the link to ${device.displayName}")
             forwarderFor(device.address, companion = true)?.ensureLink()
@@ -348,7 +348,7 @@ class GarminNotificationBridge @Inject constructor(
      */
     fun holdLiveForSession(deviceId: String, held: Boolean) {
         scope.launch {
-            val device = deviceRepository.devices.firstOrNull { it.id == deviceId && it.isGarminGfdi } ?: return@launch
+            val device = deviceRepository.devices.firstOrNull { it.id == deviceId && it.isGarmin } ?: return@launch
             if (held) {
                 if (!sessionHolds.add(deviceId)) return@launch
                 GarminLog.log("[GARMIN-LIVE] held for a recording session")
@@ -370,7 +370,7 @@ class GarminNotificationBridge @Inject constructor(
 
     /** Android reports every associated device here, a bathroom scale included; only a watch is this bridge's. */
     override fun onCompanionDeviceAppeared(address: String) {
-        if (deviceFor(address)?.isGarminGfdi != true) return
+        if (deviceFor(address)?.isGarmin != true) return
         GarminLog.log("[GARMIN-COMPANION] $address is in range")
         ensureCompanionLink()
     }

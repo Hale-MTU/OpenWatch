@@ -117,7 +117,7 @@ class OnboardGarminWatchUseCaseTest {
         assertEquals(BleDeviceKind.BIKE_COMPUTER, registered.kind)
         assertTrue(registered.isBikeComputer)
         assertFalse(registered.isWatch)
-        assertTrue(registered.isGarminGfdi)
+        assertTrue(registered.isGarmin)
         // Live capabilities are opted in later, so it starts capability-less.
         assertTrue(registered.capabilities.isEmpty())
     }
