@@ -27,9 +27,6 @@ import androidx.compose.ui.unit.dp
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.resolve
-import androidx.compose.ui.res.pluralStringResource
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPhase
-import tech.mmarca.openwatch.devices.core.sync.UnwrittenSeries
 import tech.mmarca.openwatch.devices.wearos.WearOsAppStatus
 import tech.mmarca.openwatch.devices.wearos.WearOsCompanionStatus
 import tech.mmarca.openwatch.devices.wearos.messageRes
@@ -226,67 +223,8 @@ internal fun WearOsSyncCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            // Only after a run this session; the counts are not persisted.
-            val samples = sync.lastFileCount
-            val nights = sync.lastNightCount ?: 0
-            val stepMinutes = sync.lastStepMinuteCount ?: 0
-            if (!sync.isSyncing && sync.phase == DeviceSyncPhase.COMPLETE && samples != null && sync.lastDeviceId == device.id) {
-                val lines = buildList {
-                    if (samples > 0) add(pluralStringResource(R.plurals.settings_watch_wearos_synced_samples, samples, samples))
-                    if (stepMinutes > 0) {
-                        add(pluralStringResource(R.plurals.settings_watch_wearos_synced_step_minutes, stepMinutes, stepMinutes))
-                    }
-                    if (nights > 0) add(pluralStringResource(R.plurals.settings_watch_wearos_synced_nights, nights, nights))
-                    // With something left out, "nothing new" would contradict the line below that says so.
-                    if (isEmpty() && sync.lastUnwritten.isEmpty() && !sync.lastMissingBodyWeight) {
-                        add(stringResource(R.string.settings_watch_wearos_synced_none))
-                    }
-                }
-                for (line in lines) {
-                    Text(
-                        text = line,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                }
-                if (sync.lastMissingBodyWeight && !sync.lastWeightReadWithheld) {
-                    Text(
-                        text = stringResource(R.string.settings_watch_wearos_needs_weight),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                val unwritten = sync.lastUnwritten
-                val weightUnreadable = sync.lastMissingBodyWeight && sync.lastWeightReadWithheld
-                if (unwritten.isNotEmpty() || weightUnreadable) {
-                    // One line per thing left out; the button asks for every grant missing.
-                    val stepsLine = stringResource(R.string.settings_watch_wearos_needs_steps_write)
-                    val caloriesLine = stringResource(R.string.settings_watch_wearos_needs_calories_write)
-                    val weightLine = stringResource(R.string.settings_watch_wearos_needs_weight_read)
-                    val restingHeartRateLine = stringResource(R.string.settings_watch_wearos_needs_resting_heart_rate)
-                    val hrvLine = stringResource(R.string.settings_watch_wearos_needs_hrv_write)
-                    val respiratoryLine = stringResource(R.string.settings_watch_wearos_needs_respiratory_write)
-                    val spo2Line = stringResource(R.string.settings_watch_wearos_needs_spo2_write)
-                    val skinLine = stringResource(R.string.settings_watch_wearos_needs_skin_write)
-                    val workoutLine = stringResource(R.string.settings_watch_wearos_needs_workout_write)
-                    InlineGrantPrompt(
-                        message = listOfNotNull(
-                            stepsLine.takeIf { UnwrittenSeries.STEPS in unwritten },
-                            caloriesLine.takeIf { UnwrittenSeries.WALKING_ENERGY in unwritten },
-                            restingHeartRateLine.takeIf { UnwrittenSeries.RESTING_HEART_RATE in unwritten },
-                            hrvLine.takeIf { UnwrittenSeries.HEART_RATE_VARIABILITY in unwritten },
-                            respiratoryLine.takeIf { UnwrittenSeries.RESPIRATORY_RATE in unwritten },
-                            spo2Line.takeIf { UnwrittenSeries.OXYGEN_SATURATION in unwritten },
-                            skinLine.takeIf { UnwrittenSeries.SKIN_TEMPERATURE in unwritten },
-                            workoutLine.takeIf { UnwrittenSeries.WORKOUTS in unwritten },
-                            weightLine.takeIf { weightUnreadable },
-                        ).joinToString("\n"),
-                        actionLabel = stringResource(R.string.action_grant_permission),
-                        onGrant = { onAllowGrants(sync.lastWithheldPermissions) },
-                    )
-                }
-            }
-            sync.failure?.toScreenError().resolve()?.let { message ->
+            sync.lastFor(device.id)?.let { SyncOutcomeSummary(it, onAllowGrants) }
+            sync.failureFor(device.id)?.toScreenError().resolve()?.let { message ->
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodySmall,

@@ -52,7 +52,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -77,7 +76,6 @@ import tech.mmarca.openwatch.ui.components.rememberHealthConnectPermissionLaunch
 import tech.mmarca.openwatch.ui.theme.Spacing
 import tech.mmarca.openwatch.ui.components.OpenWatchIconButton
 import tech.mmarca.openwatch.ui.components.ScreenAppBar
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
 
 /** The watch's settings tree browser exists, so the rows that open it are live. */
 internal const val WatchSettingsTreeAvailable: Boolean = true
@@ -173,13 +171,13 @@ fun WatchDeviceScreen(
     ) {
         StatusCard(
             device = device,
-            sync = state.sync,
             isGarmin = isGarmin,
             isBikeComputer = isBikeComputer,
             onRename = { showRenameDialog = true },
         )
-        if (isGarmin && !state.sync.isSyncing && state.sync.lastDeviceId == device.id) {
-            GarminUnwrittenNotice(state.sync.lastWithheldPermissions, onAllowGrants = syncGrantLauncher.launch)
+        // A Wear OS watch's sync card says the same inside itself.
+        if (isGarmin) {
+            state.sync.lastFor(device.id)?.let { SyncOutcomeSummary(it, onAllowGrants = syncGrantLauncher.launch) }
         }
 
         if (device.isWearosWatch) {
@@ -233,7 +231,7 @@ fun WatchDeviceScreen(
                     modifier = Modifier.padding(horizontal = Spacing.lg),
                 )
             }
-            state.sync.failure?.toScreenError().resolve()?.let { message ->
+            state.sync.failureFor(device.id)?.toScreenError().resolve()?.let { message ->
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodySmall,
@@ -433,7 +431,6 @@ fun WatchDeviceScreen(
 @Composable
 private fun StatusCard(
     device: BleSensorDevice,
-    sync: DeviceSyncUiState,
     isGarmin: Boolean,
     isBikeComputer: Boolean,
     onRename: () -> Unit,
@@ -452,18 +449,6 @@ private fun StatusCard(
                     formatDeviceTime(syncedAt),
                 ),
             )
-            // Only after a sync this session; the count is not persisted.
-            val files = sync.lastFileCount
-            if (isGarmin && files != null && files > 0) {
-                append(" · ")
-                append(
-                    pluralStringResource(
-                        R.plurals.settings_watch_synced_files,
-                        files,
-                        files,
-                    ),
-                )
-            }
         }
     }
 
@@ -495,14 +480,6 @@ private fun StatusCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                // A workout without calories says why, rather than a guessed weight filling the gap.
-                if (isGarmin && sync.lastMissingBodyWeight && sync.lastDeviceId == device.id) {
-                    Text(
-                        text = stringResource(R.string.settings_watch_garmin_needs_weight),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
             }
             device.batteryPercent?.let { battery ->
                 Spacer(modifier = Modifier.width(Spacing.md))

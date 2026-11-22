@@ -153,12 +153,6 @@
     <string name="settings_watch_not_connected">Nepřipojeno</string>
     <string name="settings_watch_never_synced">Nikdy nesynchronizováno</string>
     <string name="settings_watch_last_synced">Naposledy synchronizováno %1$s</string>
-    <plurals name="settings_watch_synced_files">
-        <item quantity="one">%1$d soubor</item>
-        <item quantity="few">%1$d soubory</item>
-        <item quantity="many">%1$d souboru</item>
-        <item quantity="other">%1$d souborů</item>
-    </plurals>
     <string name="settings_watch_action_data">Data</string>
     <string name="settings_watch_action_sync">Synchronizovat</string>
     <string name="settings_watch_action_alarms">Budíky</string>

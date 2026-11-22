@@ -200,12 +200,6 @@
     <string name="settings_watch_not_connected">Не подключено</string>
     <string name="settings_watch_never_synced">Синхронизация ещё не выполнялась</string>
     <string name="settings_watch_last_synced">Последняя синхронизация: %1$s</string>
-    <plurals name="settings_watch_synced_files">
-        <item quantity="one">%1$d файл</item>
-        <item quantity="few">%1$d файла</item>
-        <item quantity="many">%1$d файлов</item>
-        <item quantity="other">%1$d файлов</item>
-    </plurals>
     <string name="settings_watch_action_data">Данные</string>
     <string name="settings_watch_action_sync">Синхронизация</string>
     <string name="settings_watch_action_alarms">Будильники</string>

@@ -18,31 +18,24 @@ import tech.mmarca.openwatch.core.performance.ApplicationScope
 data class DeviceSyncUiState(
     /** The device id being synced, or null. Scoped so only one row shows a spinner. */
     val syncingDeviceId: String? = null,
-    val phase: DeviceSyncPhase? = null,
-    val filesTotal: Int = 0,
-    val filesDone: Int = 0,
-    /** The device the last completed run synced, so a second watch's card does not show its outcome. */
+    /** The running sync's last tick; null when none runs. */
+    val progress: DeviceSyncProgress? = null,
+    /** The device the last completed run was for, so another watch's card does not show its outcome. */
     val lastDeviceId: String? = null,
-    /** Files downloaded and handed to the importer by the last completed run. */
-    val lastFileCount: Int? = null,
-    /** Estimated nights of sleep written by the last completed run. */
-    val lastNightCount: Int? = null,
-    /** Minutes of steps written by the last completed run. */
-    val lastStepMinuteCount: Int? = null,
-    /** The last completed run skipped an estimate for want of the body weight. */
-    val lastMissingBodyWeight: Boolean = false,
-    /** With [lastMissingBodyWeight]: Health Connect's weight was unreadable for want of the grant. */
-    val lastWeightReadWithheld: Boolean = false,
-    /** The series the last completed run left out for want of a grant. */
-    val lastUnwritten: Set<UnwrittenSeries> = emptySet(),
-    /** Health Connect grants the last completed run skipped a write for want of. */
-    val lastWithheldPermissions: Set<String> = emptySet(),
+    /** What the last completed run wrote and left out; for a failed one, what it wrote first. */
+    val last: DeviceSyncResult.Succeeded? = null,
     /** Why the last requested run failed; a background one ends without it. */
     val failure: SyncFailure? = null,
 ) {
     val isSyncing: Boolean get() = syncingDeviceId != null
 
     fun isSyncingDevice(deviceId: String): Boolean = syncingDeviceId == deviceId
+
+    /** The last run's outcome for [deviceId]; none while a sync runs. Only this session's: nothing persists it. */
+    fun lastFor(deviceId: String): DeviceSyncResult.Succeeded? = last.takeIf { !isSyncing && lastDeviceId == deviceId }
+
+    /** Why the last run for [deviceId] failed; none while a sync runs. */
+    fun failureFor(deviceId: String): SyncFailure? = failure.takeIf { !isSyncing && lastDeviceId == deviceId }
 }
 
 /**
@@ -95,7 +88,7 @@ class DeviceSyncController @Inject constructor(
     private fun claim(deviceId: String): BleSensorDevice? {
         val device = deviceRepository.devices.firstOrNull { it.id == deviceId } ?: return null
         if (!syncPort.canSync(device)) return null
-        val claimed = DeviceSyncUiState(syncingDeviceId = deviceId, phase = DeviceSyncPhase.HANDSHAKE)
+        val claimed = DeviceSyncUiState(syncingDeviceId = deviceId, progress = DeviceSyncProgress(DeviceSyncPhase.HANDSHAKE))
         while (true) {
             val current = _state.value
             if (current.isSyncing) return null
@@ -113,15 +106,7 @@ class DeviceSyncController @Inject constructor(
                 trigger = trigger,
                 onProgress = { progress ->
                     _state.update { current ->
-                        if (current.syncingDeviceId != deviceId) {
-                            current
-                        } else {
-                            current.copy(
-                                phase = progress.phase,
-                                filesTotal = progress.filesTotal,
-                                filesDone = progress.filesDone,
-                            )
-                        }
+                        if (current.syncingDeviceId != deviceId) current else current.copy(progress = progress)
                     }
                 },
             )
@@ -132,22 +117,12 @@ class DeviceSyncController @Inject constructor(
             DeviceSyncResult.Failed(SyncFailure.Unknown(error))
         }
         _state.value = when (result) {
-            is DeviceSyncResult.Succeeded -> DeviceSyncUiState(
-                phase = DeviceSyncPhase.COMPLETE,
-                lastDeviceId = deviceId,
-                lastFileCount = result.fileCount,
-                lastNightCount = result.nightCount,
-                lastStepMinuteCount = result.stepMinuteCount,
-                lastMissingBodyWeight = result.missingBodyWeight,
-                lastWeightReadWithheld = result.weightReadWithheld,
-                lastUnwritten = result.unwritten,
-                lastWithheldPermissions = result.withheldPermissions,
-            )
+            is DeviceSyncResult.Succeeded -> DeviceSyncUiState(lastDeviceId = deviceId, last = result)
 
             is DeviceSyncResult.Failed -> if (trigger == SyncTrigger.BACKGROUND) {
                 DeviceSyncUiState()
             } else {
-                DeviceSyncUiState(failure = result.failure)
+                DeviceSyncUiState(lastDeviceId = deviceId, last = result.partial, failure = result.failure)
             }
         }
         return result

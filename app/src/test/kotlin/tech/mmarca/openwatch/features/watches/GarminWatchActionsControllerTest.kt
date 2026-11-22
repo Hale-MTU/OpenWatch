@@ -58,7 +58,7 @@ class GarminWatchActionsControllerTest {
             onProgress: ((DeviceSyncProgress) -> Unit)?,
         ): DeviceSyncResult {
             syncGate.await()
-            return DeviceSyncResult.Succeeded(0)
+            return DeviceSyncResult.Succeeded()
         }
     }
 

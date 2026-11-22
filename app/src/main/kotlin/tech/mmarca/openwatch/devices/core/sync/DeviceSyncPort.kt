@@ -3,17 +3,61 @@ package tech.mmarca.openwatch.devices.core.sync
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 
 /** How far a sync has got. Device-agnostic. */
-enum class DeviceSyncPhase { HANDSHAKE, LISTING, DOWNLOADING, COMPLETE, FAILED }
+enum class DeviceSyncPhase { HANDSHAKE, LISTING, DOWNLOADING }
 
-/** A progress tick: the [phase] and, while downloading, [filesDone] of [filesTotal]. */
+/** What a progress tick counts. */
+enum class ProgressUnit { FILES, PAGES }
+
+/** A progress tick: the [phase] and, while downloading, [done] of [total] [unit]s. */
 data class DeviceSyncProgress(
     val phase: DeviceSyncPhase,
-    val filesTotal: Int = 0,
-    val filesDone: Int = 0,
+    val total: Int = 0,
+    val done: Int = 0,
+    val unit: ProgressUnit = ProgressUnit.FILES,
 )
 
-/** A series a sync left out for want of a Health Connect grant, so the screen can say which. */
-enum class UnwrittenSeries { STEPS, WALKING_ENERGY, RESTING_HEART_RATE, HEART_RATE_VARIABILITY, RESPIRATORY_RATE, OXYGEN_SATURATION, SKIN_TEMPERATURE, WORKOUTS }
+/** What a run counts as written, for the screen to say. */
+enum class SyncTally {
+    /** Files downloaded and handed to the importer, such as a Garmin watch's FIT files. */
+    FILES,
+    HEART_RATE_SAMPLES,
+    STEP_MINUTES,
+
+    /** Nights of sleep estimated. */
+    SLEEP_NIGHTS,
+}
+
+/** A series a run can leave out, each with a sentence of its own on the screen. */
+enum class HealthSeries {
+    STEPS,
+    WALKING_ENERGY,
+    WORKOUT_ENERGY,
+    RESTING_HEART_RATE,
+    HEART_RATE_VARIABILITY,
+    RESPIRATORY_RATE,
+    OXYGEN_SATURATION,
+    SKIN_TEMPERATURE,
+    WORKOUTS,
+
+    /** Records of several types at once, which the screen names by their grants. */
+    RECORDS,
+}
+
+/** Why a run left a series out. */
+enum class SkipReason {
+    /** A Health Connect grant is missing. */
+    PERMISSION,
+
+    /** An estimate needs the body weight and none is known; a read grant may be what is missing. */
+    NO_BODY_WEIGHT,
+}
+
+/** A series a run left out, why, and the grants that would let the next run write it. */
+data class SkippedSeries(
+    val series: HealthSeries,
+    val reason: SkipReason,
+    val permissions: Set<String> = emptySet(),
+)
 
 /** Who asked for a sync. An integration may act on it; nothing else about the run differs. */
 enum class SyncTrigger {
@@ -31,29 +75,21 @@ enum class SyncTrigger {
 sealed class DeviceSyncResult {
 
     /**
-     * The sync finished with [fileCount] files, or samples for an
-     * integration that counts those, [nightCount] estimated nights of sleep
-     * and [stepMinuteCount] minutes of steps written. 0 is a success.
-     * [missingBodyWeight] says an estimate that needs the body weight was
-     * skipped because none is known, and [weightReadWithheld] that Health
-     * Connect's weight was out of reach for want of the read grant. [unwritten] are the series the run left
-     * out for want of a Health Connect grant, and [withheldPermissions] the
-     * grants (a write, or a read the write depends on) the screen asks for.
+     * The run finished. [written] counts what it wrote, by kind; nothing is a success too.
+     * [skipped] is what it left out and why.
      */
     data class Succeeded(
-        val fileCount: Int,
-        val nightCount: Int = 0,
-        val stepMinuteCount: Int = 0,
-        val missingBodyWeight: Boolean = false,
-        val weightReadWithheld: Boolean = false,
-        val unwritten: Set<UnwrittenSeries> = emptySet(),
-        val withheldPermissions: Set<String> = emptySet(),
+        val written: Map<SyncTally, Int> = emptyMap(),
+        val skipped: Set<SkippedSeries> = emptySet(),
         /** The run stopped at its [SyncBudget] with more on the device; a continuation should follow. */
         val moreRemains: Boolean = false,
-    ) : DeviceSyncResult()
+    ) : DeviceSyncResult() {
+        /** The grants the skipped series wait for: what the screen's one button asks for. */
+        val withheldPermissions: Set<String> get() = skipped.flatMapTo(mutableSetOf()) { it.permissions }
+    }
 
-    /** The sync failed, for [failure]; the screen words it. */
-    data class Failed(val failure: SyncFailure) : DeviceSyncResult()
+    /** The run failed, for [failure], which the screen words; [partial] is what it wrote first. */
+    data class Failed(val failure: SyncFailure, val partial: Succeeded? = null) : DeviceSyncResult()
 }
 
 /**

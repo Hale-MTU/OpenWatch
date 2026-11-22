@@ -18,10 +18,6 @@
         <item quantity="one">%1$d 個のアプリをミュート</item>
         <item quantity="other">%1$d 個のアプリをミュート</item>
     </plurals>
-    <plurals name="settings_watch_synced_files">
-        <item quantity="one">%1$d 個のファイル</item>
-        <item quantity="other">%1$d 個のファイル</item>
-    </plurals>
     <string name="exercise_type_running">ランニング</string>
     <string name="exercise_type_biking">サイクリング</string>
     <string name="exercise_type_stationary_bike">エアロバイク</string>

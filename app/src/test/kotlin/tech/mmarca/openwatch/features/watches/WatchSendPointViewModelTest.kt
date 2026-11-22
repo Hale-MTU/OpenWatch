@@ -59,7 +59,7 @@ class WatchSendPointViewModelTest {
             device: BleSensorDevice,
             trigger: SyncTrigger,
             onProgress: ((DeviceSyncProgress) -> Unit)?,
-        ): DeviceSyncResult = DeviceSyncResult.Succeeded(0)
+        ): DeviceSyncResult = DeviceSyncResult.Succeeded()
     }
 
     @Before

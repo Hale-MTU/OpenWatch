@@ -30,6 +30,10 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.devices.core.sync.SyncFailure
+import tech.mmarca.openwatch.devices.core.sync.HealthSeries
+import tech.mmarca.openwatch.devices.core.sync.SkipReason
+import tech.mmarca.openwatch.devices.core.sync.SkippedSeries
+import tech.mmarca.openwatch.devices.core.sync.SyncTally
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import kotlinx.coroutines.SupervisorJob
@@ -111,7 +115,7 @@ class GarminWatchSyncServiceTest {
 
         val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
-        assertEquals(DeviceSyncResult.Succeeded(2), result)
+        assertEquals(DeviceSyncResult.Succeeded(written = mapOf(SyncTally.FILES to 2)), result)
         coVerify(exactly = 1) { downloadImport.import(WATCH.id, pullResult.files) }
         // Stamped last: a sync that failed to import must come back for the same files.
         coVerify(exactly = 1) { deviceRepository.markSynced(WATCH.id, any()) }
@@ -156,7 +160,10 @@ class GarminWatchSyncServiceTest {
 
         val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
-        assertEquals(setOf(WriteSleep), (result as DeviceSyncResult.Succeeded).withheldPermissions)
+        assertEquals(
+            setOf(SkippedSeries(HealthSeries.RECORDS, SkipReason.PERMISSION, setOf(WriteSleep))),
+            (result as DeviceSyncResult.Succeeded).skipped,
+        )
         coVerify(exactly = 1) { deviceRepository.markSynced(WATCH.id, any()) }
     }
 
@@ -196,7 +203,10 @@ class GarminWatchSyncServiceTest {
 
         val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
-        assertEquals(DeviceSyncResult.Failed(SyncFailure.Interrupted), result)
+        assertEquals(
+            DeviceSyncResult.Failed(SyncFailure.Interrupted, partial = DeviceSyncResult.Succeeded(written = mapOf(SyncTally.FILES to 1))),
+            result,
+        )
         // The files did land, so they are imported before the failure is reported.
         coVerify(exactly = 1) { downloadImport.import(WATCH.id, pullResult.files) }
     }
@@ -211,14 +221,43 @@ class GarminWatchSyncServiceTest {
     }
 
     @Test
-    fun `workouts Health Connect refused are named, not hidden behind Synced`() = runTest {
+    fun `workouts waiting for a grant are named with the grants they need, not hidden behind Synced`() = runTest {
         pullResult = GarminPullResult(files = listOf(file(1)))
+        coEvery { downloadImport.import(any(), any()) } returns GarminActivityImportResult(
+            written = 0,
+            missingPermission = listOf(file(1)),
+            missingWritePermissions = setOf(WriteExercise),
+        )
+
+        val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null) as DeviceSyncResult.Succeeded
+
+        assertEquals(setOf(SkippedSeries(HealthSeries.WORKOUTS, SkipReason.PERMISSION, setOf(WriteExercise))), result.skipped)
+        assertEquals(setOf(WriteExercise), result.withheldPermissions)
+    }
+
+    @Test
+    fun `workouts Health Connect would not take fail the sync, with what did land`() = runTest {
+        pullResult = GarminPullResult(files = listOf(file(1), file(2)))
         coEvery { downloadImport.import(any(), any()) } returns
-            GarminActivityImportResult(written = 0, missingPermission = listOf(file(1)))
+            GarminActivityImportResult(written = 1, failedWrites = listOf(file(2)))
 
         val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
-        assertEquals(DeviceSyncResult.Failed(SyncFailure.HealthConnectPermission), result)
+        assertEquals(
+            DeviceSyncResult.Failed(SyncFailure.NotSaved, partial = DeviceSyncResult.Succeeded(written = mapOf(SyncTally.FILES to 2))),
+            result,
+        )
+    }
+
+    @Test
+    fun `a workout without calories for want of a weight is said, not guessed`() = runTest {
+        pullResult = GarminPullResult(files = listOf(file(1)))
+        coEvery { downloadImport.import(any(), any()) } returns
+            GarminActivityImportResult(written = 1, withoutCaloriesForWantOfWeight = 1)
+
+        val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null) as DeviceSyncResult.Succeeded
+
+        assertEquals(setOf(SkippedSeries(HealthSeries.WORKOUT_ENERGY, SkipReason.NO_BODY_WEIGHT)), result.skipped)
     }
 
     @Test
@@ -273,3 +312,4 @@ class GarminWatchSyncServiceTest {
 }
 
 private const val WriteSleep = "android.permission.health.WRITE_SLEEP"
+private const val WriteExercise = "android.permission.health.WRITE_EXERCISE"

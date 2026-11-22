@@ -255,10 +255,6 @@
     <string name="settings_watch_not_connected">Not connected</string>
     <string name="settings_watch_never_synced">Never synced</string>
     <string name="settings_watch_last_synced">Last synced %1$s</string>
-    <plurals name="settings_watch_synced_files">
-        <item quantity="one">%1$d file</item>
-        <item quantity="other">%1$d files</item>
-    </plurals>
     <string name="settings_watch_action_data">Data</string>
     <string name="settings_watch_action_sync">Sync</string>
     <string name="settings_watch_action_alarms">Alarms</string>
@@ -404,6 +400,10 @@
     <string name="sync_failed_bluetooth_permission">Allow OpenWatch to find and connect to nearby devices, then sync again.</string>
     <string name="sync_failed_unreachable">The device did not answer. Keep it close, with Bluetooth on, and try again.</string>
     <string name="sync_failed_not_saved">Some records could not be saved to Health Connect. The next sync tries them again.</string>
+    <plurals name="sync_written_files">
+        <item quantity="one">%1$d file synced</item>
+        <item quantity="other">%1$d files synced</item>
+    </plurals>
     <string name="settings_watch_wearos_check_app">Validate Wear OS App</string>
     <string name="settings_watch_wearos_checking">Checking Wear OS app…</string>
     <string name="settings_watch_wearos_sync_section">Watch Sync</string>

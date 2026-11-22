@@ -201,10 +201,6 @@
     <string name="settings_watch_not_connected">Ei yhdistetty</string>
     <string name="settings_watch_never_synced">Ei koskaan synkronoitu</string>
     <string name="settings_watch_last_synced">Viimeksi synkronoitu %1$s</string>
-    <plurals name="settings_watch_synced_files">
-        <item quantity="one">%1$d tiedosto</item>
-        <item quantity="other">%1$d tiedostoa</item>
-    </plurals>
     <string name="settings_watch_action_data">Tiedot</string>
     <string name="settings_watch_action_sync">Synkronoi</string>
     <string name="settings_watch_action_alarms">Hälytykset</string>

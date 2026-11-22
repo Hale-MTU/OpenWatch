@@ -115,13 +115,9 @@ class GarminGattRadio @Inject constructor(
             model = phone.model,
             alreadySynced = stateStore.syncedFileKeys(device.id),
             onProgress = { progress ->
-                onProgress?.invoke(
-                    DeviceSyncProgress(
-                        phase = devicePhase(progress.phase),
-                        filesTotal = progress.filesTotal,
-                        filesDone = progress.filesDone,
-                    ),
-                )
+                devicePhase(progress.phase)?.let { phase ->
+                    onProgress?.invoke(DeviceSyncProgress(phase, total = progress.filesTotal, done = progress.filesDone))
+                }
             },
             onFileDownloaded = { file -> fileStore.save(file, now = Instant.now(), deviceId = device.id) },
             keepAnsweringAfterSync = true,
@@ -211,11 +207,7 @@ class GarminGattRadio @Inject constructor(
                                 },
                                 onProgress = { total, done ->
                                     onProgress?.invoke(
-                                        DeviceSyncProgress(
-                                            phase = DeviceSyncPhase.DOWNLOADING,
-                                            filesTotal = total,
-                                            filesDone = done,
-                                        ),
+                                        DeviceSyncProgress(DeviceSyncPhase.DOWNLOADING, total = total, done = done),
                                     )
                                 },
                             ).pull(stateStore.syncedFileKeys(device.id))
@@ -422,13 +414,12 @@ class GarminGattRadio @Inject constructor(
         }
     }
 
-    /** Maps a Garmin protocol phase onto the generic [DeviceSyncPhase] (1:1 today). */
-    private fun devicePhase(phase: GarminSyncPhase): DeviceSyncPhase = when (phase) {
+    /** A Garmin protocol phase as the generic [DeviceSyncPhase]; the end of a run is its result, not a tick. */
+    private fun devicePhase(phase: GarminSyncPhase): DeviceSyncPhase? = when (phase) {
         GarminSyncPhase.HANDSHAKE -> DeviceSyncPhase.HANDSHAKE
         GarminSyncPhase.LISTING -> DeviceSyncPhase.LISTING
         GarminSyncPhase.DOWNLOADING -> DeviceSyncPhase.DOWNLOADING
-        GarminSyncPhase.COMPLETE -> DeviceSyncPhase.COMPLETE
-        GarminSyncPhase.FAILED -> DeviceSyncPhase.FAILED
+        GarminSyncPhase.COMPLETE, GarminSyncPhase.FAILED -> null
     }
 
     private companion object {

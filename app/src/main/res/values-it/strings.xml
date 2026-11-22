@@ -150,10 +150,6 @@
     <string name="settings_watch_not_connected">Non connesso</string>
     <string name="settings_watch_never_synced">Mai sincronizzato</string>
     <string name="settings_watch_last_synced">Ultima sincronizzazione %1$s</string>
-    <plurals name="settings_watch_synced_files">
-        <item quantity="one">%1$d file</item>
-        <item quantity="other">%1$d file</item>
-    </plurals>
     <string name="settings_watch_action_data">Dati</string>
     <string name="settings_watch_action_sync">Sincronizza</string>
     <string name="settings_watch_action_alarms">Sveglie</string>

@@ -28,16 +28,18 @@ import kotlinx.coroutines.launch
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class DeviceSyncControllerTest {
 
+    private fun files(count: Int) = DeviceSyncResult.Succeeded(written = mapOf(SyncTally.FILES to count))
+
     /** Stands in for the whole radio + protocol + import stack. */
     private class FakeSyncPort : DeviceSyncPort {
-        var result: DeviceSyncResult = DeviceSyncResult.Succeeded(0)
+        var result: DeviceSyncResult = DeviceSyncResult.Succeeded()
         var calls = 0
         var seenDevice: BleSensorDevice? = null
         var seenTrigger: SyncTrigger? = null
         var progressToReport: DeviceSyncProgress? = DeviceSyncProgress(
             phase = DeviceSyncPhase.DOWNLOADING,
-            filesTotal = 2,
-            filesDone = 1,
+            total = 2,
+            done = 1,
         )
 
         /** Left incomplete by a test to hold a sync mid-flight. */
@@ -128,17 +130,17 @@ class DeviceSyncControllerTest {
     @Test
     fun `a scheduled sync returns its result to the caller`() = runTest {
         val watch = addWatch()
-        port.result = DeviceSyncResult.Succeeded(4)
+        port.result = files(4)
 
         val result = controller().runSync(watch.id)
 
-        assertEquals(DeviceSyncResult.Succeeded(4), result)
+        assertEquals(files(4), result)
     }
 
     @Test
     fun `a successful sync ends idle with the file count`() = runTest {
         val watch = addWatch()
-        port.result = DeviceSyncResult.Succeeded(3)
+        port.result = files(3)
         val controller = controller()
 
         controller.syncDevice(watch.id)!!.join()
@@ -146,8 +148,9 @@ class DeviceSyncControllerTest {
         assertEquals(1, port.calls)
         assertEquals(watch.id, port.seenDevice?.id)
         assertFalse(controller.state.value.isSyncing)
-        assertEquals(DeviceSyncPhase.COMPLETE, controller.state.value.phase)
-        assertEquals(3, controller.state.value.lastFileCount)
+        assertNull(controller.state.value.progress)
+        assertEquals(files(3), controller.state.value.lastFor(watch.id))
+        assertNull("another watch's card shows none of it", controller.state.value.lastFor("other"))
         // Scoped, so another watch's card does not show this outcome.
         assertEquals(watch.id, controller.state.value.lastDeviceId)
         assertNull(controller.state.value.failure)
@@ -187,8 +190,7 @@ class DeviceSyncControllerTest {
 
         assertTrue(controller.state.value.isSyncingDevice(watch.id))
         assertFalse(controller.state.value.isSyncingDevice(other.id))
-        assertEquals(2, controller.state.value.filesTotal)
-        assertEquals(1, controller.state.value.filesDone)
+        assertEquals(DeviceSyncProgress(DeviceSyncPhase.DOWNLOADING, total = 2, done = 1), controller.state.value.progress)
         port.gate!!.complete(Unit)
         job.join()
     }
@@ -241,8 +243,21 @@ class DeviceSyncControllerTest {
         controller.syncDevice(watch.id)!!.join()
 
         assertFalse(controller.state.value.isSyncing)
-        assertEquals(SyncFailure.Unreachable, controller.state.value.failure)
-        assertNull(controller.state.value.lastFileCount)
+        assertEquals(SyncFailure.Unreachable, controller.state.value.failureFor(watch.id))
+        assertNull("another watch's card shows none of it", controller.state.value.failureFor("other"))
+        assertNull(controller.state.value.last)
+    }
+
+    @Test
+    fun `a run that failed part-way shows what it wrote beside why it stopped`() = runTest {
+        val watch = addWatch()
+        port.result = DeviceSyncResult.Failed(SyncFailure.Interrupted, partial = files(2))
+        val controller = controller()
+
+        controller.syncDevice(watch.id)!!.join()
+
+        assertEquals(files(2), controller.state.value.lastFor(watch.id))
+        assertEquals(SyncFailure.Interrupted, controller.state.value.failureFor(watch.id))
     }
 
     @Test
@@ -271,14 +286,14 @@ class DeviceSyncControllerTest {
     @Test
     fun `clear resets the banner but never a running sync`() = runTest {
         val watch = addWatch()
-        port.result = DeviceSyncResult.Succeeded(2)
+        port.result = files(2)
         val controller = controller()
         controller.syncDevice(watch.id)!!.join()
-        assertNotNull(controller.state.value.lastFileCount)
+        assertNotNull(controller.state.value.last)
 
         controller.clear()
 
-        assertNull(controller.state.value.lastFileCount)
+        assertNull(controller.state.value.last)
         assertNull(controller.state.value.failure)
 
         // A running sync's state must survive a stray clear().
@@ -320,12 +335,12 @@ class DeviceSyncControllerTest {
     @Test
     fun `a silent success still reports the files it took`() = runTest {
         val watch = addWatch()
-        port.result = DeviceSyncResult.Succeeded(4)
+        port.result = files(4)
         val controller = controller()
 
         controller.syncDevice(watch.id, SyncTrigger.BACKGROUND)!!.join()
 
-        assertEquals(4, controller.state.value.lastFileCount)
+        assertEquals(files(4), controller.state.value.last)
     }
 
     @Test

@@ -7,7 +7,9 @@ import tech.mmarca.openwatch.core.presentation.isPermissionFailure
 import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
 import tech.mmarca.openwatch.data.repository.RecordWrite
 import tech.mmarca.openwatch.data.repository.insertWithOutcomes
-import tech.mmarca.openwatch.devices.core.sync.UnwrittenSeries
+import tech.mmarca.openwatch.devices.core.sync.HealthSeries
+import tech.mmarca.openwatch.devices.core.sync.SkipReason
+import tech.mmarca.openwatch.devices.core.sync.SkippedSeries
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 
@@ -33,10 +35,16 @@ internal class WearOsNightSeriesSync(
         suspend fun <T> run(pull: suspend () -> T): T
     }
 
-    /** The series a missing grant kept out, and those grants. */
-    class Outcome(val unwritten: Set<UnwrittenSeries>, val withheld: Set<String>)
+    /** The series a missing grant kept out, each with its grant. */
+    class Outcome(val skipped: Set<SkippedSeries>)
 
     private val granted: suspend () -> Set<String> = { healthConnect.grantedPermissions() }
+
+    private val skinWithheld = SkippedSeries(
+        HealthSeries.SKIN_TEMPERATURE,
+        SkipReason.PERMISSION,
+        setOf(WearOsSkinTemperatureImport.writePermission),
+    )
 
     private val hrv = WearOsWindowSync<WearOsHrvWindow>(
         importRepository = importRepository,
@@ -73,12 +81,10 @@ internal class WearOsNightSeriesSync(
 
     /** Null when no bonded watch matches. A failure other than a missing grant throws. */
     suspend fun sync(device: BleSensorDevice, retry: Retry): Outcome? {
-        val unwritten = mutableSetOf<UnwrittenSeries>()
-        val withheld = mutableSetOf<String>()
-        fun note(outcome: WearOsWindowSync.Outcome, series: UnwrittenSeries, permission: String, label: String) {
+        val skipped = mutableSetOf<SkippedSeries>()
+        fun note(outcome: WearOsWindowSync.Outcome, series: HealthSeries, permission: String, label: String) {
             if (outcome.withheld) {
-                unwritten += series
-                withheld += permission
+                skipped += SkippedSeries(series, SkipReason.PERMISSION, setOf(permission))
                 WearOsLog.log("$label: not written, Health Connect permission missing")
             }
             WearOsLog.log("$label: ${outcome.written} written")
@@ -87,22 +93,22 @@ internal class WearOsNightSeriesSync(
         val hrvOutcome = hrv.sync(device.id) { since ->
             retry.run { nodePort.pullHrv(device.address, device.bluetoothName, since) }?.let { it.windows to it.hasMore }
         } ?: return null
-        note(hrvOutcome, UnwrittenSeries.HEART_RATE_VARIABILITY, WearOsHrvImport.writePermission, "hrv")
+        note(hrvOutcome, HealthSeries.HEART_RATE_VARIABILITY, WearOsHrvImport.writePermission, "hrv")
 
         if (writeRespiratoryRate()) {
             val outcome = respiratory.sync(device.id) { since ->
                 retry.run { nodePort.pullRespiratory(device.address, device.bluetoothName, since) }?.let { it.windows to it.hasMore }
             } ?: return null
-            note(outcome, UnwrittenSeries.RESPIRATORY_RATE, WearOsRespiratoryImport.writePermission, "breathing")
+            note(outcome, HealthSeries.RESPIRATORY_RATE, WearOsRespiratoryImport.writePermission, "breathing")
         }
 
         val spo2Outcome = spo2.sync(device.id) { since ->
             retry.run { nodePort.pullSpo2(device.address, device.bluetoothName, since) }?.let { it.measurements to it.hasMore }
         } ?: return null
-        note(spo2Outcome, UnwrittenSeries.OXYGEN_SATURATION, WearOsSpo2Import.writePermission, "spo2")
+        note(spo2Outcome, HealthSeries.OXYGEN_SATURATION, WearOsSpo2Import.writePermission, "spo2")
 
-        if (!syncSkin(device, retry, unwritten, withheld)) return null
-        return Outcome(unwritten, withheld)
+        if (!syncSkin(device, retry, skipped)) return null
+        return Outcome(skipped)
     }
 
     /**
@@ -114,8 +120,7 @@ internal class WearOsNightSeriesSync(
     private suspend fun syncSkin(
         device: BleSensorDevice,
         retry: Retry,
-        unwritten: MutableSet<UnwrittenSeries>,
-        withheld: MutableSet<String>,
+        skipped: MutableSet<SkippedSeries>,
     ): Boolean {
         if (!healthConnect.isSkinTemperatureAvailable()) return true
         val minutes = ArrayList<WearOsSkinMinute>()
@@ -131,8 +136,7 @@ internal class WearOsNightSeriesSync(
         val finished = WearOsSkinTemperatureImport.finished(WearOsSkinTemperatureImport.runs(minutes), clock())
         if (finished.isEmpty()) return true
         if (WearOsSkinTemperatureImport.writePermission !in granted()) {
-            unwritten += UnwrittenSeries.SKIN_TEMPERATURE
-            withheld += WearOsSkinTemperatureImport.writePermission
+            skipped += skinWithheld
             WearOsLog.log("skin: not written, Health Connect permission missing")
             return true
         }
@@ -152,8 +156,7 @@ internal class WearOsNightSeriesSync(
                     throw error
                 } catch (error: Exception) {
                     if (error !is SecurityException && !error.isPermissionFailure()) throw error
-                    unwritten += UnwrittenSeries.SKIN_TEMPERATURE
-                    withheld += WearOsSkinTemperatureImport.writePermission
+                    skipped += skinWithheld
                     return true
                 }
             }

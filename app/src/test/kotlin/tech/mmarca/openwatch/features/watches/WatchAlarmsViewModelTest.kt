@@ -54,7 +54,7 @@ class WatchAlarmsViewModelTest {
             device: BleSensorDevice,
             trigger: SyncTrigger,
             onProgress: ((DeviceSyncProgress) -> Unit)?,
-        ): DeviceSyncResult = DeviceSyncResult.Succeeded(0)
+        ): DeviceSyncResult = DeviceSyncResult.Succeeded()
     }
 
     private val morning = GarminAlarm(hour = 6, minute = 30, days = setOf(DayOfWeek.MONDAY))

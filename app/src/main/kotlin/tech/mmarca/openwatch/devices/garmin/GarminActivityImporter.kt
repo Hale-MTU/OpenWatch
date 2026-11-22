@@ -25,6 +25,8 @@ data class GarminActivityImportResult(
     val written: Int = 0,
     /** Skipped because Health Connect write access is missing. */
     val missingPermission: List<GarminDownloadedFile> = emptyList(),
+    /** The write grants those workouts needed, for the screen's grant button. */
+    val missingWritePermissions: Set<String> = emptySet(),
     /** Converted, but the Health Connect write failed. */
     val failedWrites: List<GarminDownloadedFile> = emptyList(),
     /** Workouts written without calories: the file measured none and the body profile has no weight. */
@@ -65,6 +67,7 @@ class GarminActivityImporter @Inject constructor(
         val profile = profile()
         val pending = mutableListOf<Pair<GarminDownloadedFile, ActivityWriteRequest>>()
         val missingPermission = mutableListOf<GarminDownloadedFile>()
+        val missingWritePermissions = mutableSetOf<String>()
         val failedWrites = mutableListOf<GarminDownloadedFile>()
         var withoutCalories = 0
         for (file in activityFiles) {
@@ -87,6 +90,7 @@ class GarminActivityImporter @Inject constructor(
                             "skipped: write permissions are missing",
                     )
                     missingPermission += file
+                    missingWritePermissions += activityRepository.activityWritePermissions(request)
                     continue
                 }
             } catch (error: CancellationException) {
@@ -135,6 +139,7 @@ class GarminActivityImporter @Inject constructor(
         return GarminActivityImportResult(
             written = written,
             missingPermission = missingPermission,
+            missingWritePermissions = missingWritePermissions,
             failedWrites = failedWrites,
             withoutCaloriesForWantOfWeight = withoutCalories,
         )

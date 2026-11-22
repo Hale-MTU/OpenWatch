@@ -18,10 +18,6 @@
         <item quantity="one">%1$d app silenciada</item>
         <item quantity="other">%1$d apps silenciadas</item>
     </plurals>
-    <plurals name="settings_watch_synced_files">
-        <item quantity="one">%1$d ficheiro</item>
-        <item quantity="other">%1$d ficheiros</item>
-    </plurals>
     <string name="exercise_type_running">Correr</string>
     <string name="exercise_type_biking">Bicicleta</string>
     <string name="exercise_type_stationary_bike">Bicicleta estática</string>

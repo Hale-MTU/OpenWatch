@@ -25,7 +25,11 @@ import tech.mmarca.openwatch.devices.core.RadioLeaseOwner
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
+import tech.mmarca.openwatch.devices.core.sync.HealthSeries
+import tech.mmarca.openwatch.devices.core.sync.SkipReason
+import tech.mmarca.openwatch.devices.core.sync.SkippedSeries
 import tech.mmarca.openwatch.devices.core.sync.SyncFailure
+import tech.mmarca.openwatch.devices.core.sync.SyncTally
 import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.withRadioLease
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
@@ -161,22 +165,38 @@ class GarminWatchSyncService @Inject constructor(
             }
         }
 
+        val done = outcome(downloaded.size, activities, pendingWithheld)
         val incompleteReason = pull.incompleteReason
         if (incompleteReason != null) {
             // The reason is the link's own account, for the log; the screen says "part-way".
             GarminLog.log("[GARMIN-SYNC] interrupted after ${downloaded.size} file(s): $incompleteReason")
-            return DeviceSyncResult.Failed(SyncFailure.Interrupted)
+            return DeviceSyncResult.Failed(SyncFailure.Interrupted, partial = done.takeIf { downloaded.isNotEmpty() })
         }
 
         bleDeviceRepository.markSynced(device.id, Instant.now())
         // Saying "synced" here hid workouts that never reached Health Connect.
-        notImported(activities)?.let { return DeviceSyncResult.Failed(it) }
-        return DeviceSyncResult.Succeeded(
-            fileCount = downloaded.size,
-            missingBodyWeight = activities.withoutCaloriesForWantOfWeight > 0,
-            withheldPermissions = pendingWithheld + activities.wellnessWithheldPermissions,
-        )
+        if (activities.failedWrites.isNotEmpty()) return DeviceSyncResult.Failed(SyncFailure.NotSaved, partial = done)
+        return done
     }
+
+    /**
+     * What a run wrote and left out, said the way every integration says it. A workout waiting
+     * for a grant stays pending on the phone, so the next sync after the grant writes it.
+     */
+    private fun outcome(files: Int, activities: GarminActivityImportResult, pendingWithheld: Set<String>) =
+        DeviceSyncResult.Succeeded(
+            written = mapOf(SyncTally.FILES to files),
+            skipped = buildSet {
+                val wellness = pendingWithheld + activities.wellnessWithheldPermissions
+                if (wellness.isNotEmpty()) add(SkippedSeries(HealthSeries.RECORDS, SkipReason.PERMISSION, wellness))
+                if (activities.missingPermission.isNotEmpty()) {
+                    add(SkippedSeries(HealthSeries.WORKOUTS, SkipReason.PERMISSION, activities.missingWritePermissions))
+                }
+                if (activities.withoutCaloriesForWantOfWeight > 0) {
+                    add(SkippedSeries(HealthSeries.WORKOUT_ENERGY, SkipReason.NO_BODY_WEIGHT))
+                }
+            },
+        )
 
     /**
      * Makes the watch at [address] alert and keeps the link open while it
@@ -248,12 +268,6 @@ class GarminWatchSyncService @Inject constructor(
             else -> SyncFailure.Unknown(error)
         },
     )
-
-    private fun notImported(activities: GarminActivityImportResult): SyncFailure? = when {
-        activities.missingPermission.isNotEmpty() -> SyncFailure.HealthConnectPermission
-        activities.failedWrites.isNotEmpty() -> SyncFailure.NotSaved
-        else -> null
-    }
 
 
     private companion object {
