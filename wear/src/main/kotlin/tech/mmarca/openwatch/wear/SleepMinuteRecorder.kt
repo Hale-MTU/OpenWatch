@@ -158,7 +158,7 @@ internal class SleepMinuteRecorder(
             bedtime = BedtimeMonitor(context, workerHandler) { applyHold() }.also { it.start() }
             applyHold()
         }
-        Log.i(TAG, "Recording sleep minutes from ${accelerometer.name}")
+        debug.log(TAG) { "Recording sleep minutes from ${accelerometer.name}" }
         return true
     }
 
@@ -329,7 +329,7 @@ internal class SleepMinuteRecorder(
         feedAutoHold(closed)
         applyHold()
         store.putAll(WearMetrics.SLEEP_MINUTES, closed)
-        Log.d(TAG, "Stored ${closed.size} minute(s) up to ${closed.last().epochMillis}")
+        debug.log(TAG) { "Stored ${closed.size} minute(s) up to ${closed.last().epochMillis}" }
         if (now - lastPrunedAt > PRUNE_EVERY_MILLIS) {
             lastPrunedAt = now
             store.prune(WearMetrics.SLEEP_MINUTES, now)

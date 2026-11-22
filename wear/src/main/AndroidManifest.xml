@@ -150,6 +150,41 @@
                 android:resource="@drawable/tile_preview_floors" />
         </service>
 
+        <!-- The heart rate and steps complications: each reads what its tile reads and starts no sensor.
+             The system asks again about every five minutes. -->
+        <service
+            android:name=".HeartRateComplicationService"
+            android:exported="true"
+            android:icon="@drawable/ic_metric_heart_rate"
+            android:label="@string/tile_heart_rate_label"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="SHORT_TEXT" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="300" />
+        </service>
+        <service
+            android:name=".StepsComplicationService"
+            android:exported="true"
+            android:icon="@drawable/ic_metric_steps"
+            android:label="@string/tile_steps_label"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="SHORT_TEXT" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="300" />
+        </service>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

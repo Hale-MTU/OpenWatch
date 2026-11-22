@@ -41,6 +41,19 @@ class DebugProtocol private constructor(private val dir: File?) {
     private val lastArrival = ConcurrentHashMap<String, Long>()
     private val day = SimpleDateFormat("yyyyMMdd", Locale.US)
 
+    /**
+     * A logcat line that carries a value (a reading, a time, a sensor's
+     * name), in a debuggable build only; elsewhere [message] is never even
+     * built. A line like that never goes to `Log.i` or `Log.d` directly: R8
+     * strips those from a release (`proguard-rules.pro`), but a build that
+     * skipped R8, as a non-debuggable debug build does, would keep them, and
+     * text that leaves the app holds structure, not data. Warnings and errors
+     * stay on `Log`, with the throwable and no value.
+     */
+    inline fun log(tag: String, message: () -> String) {
+        if (isEnabled) Log.d(tag, message())
+    }
+
     /** Adds [n] to the counter [key]; the next snapshot reports and resets it. */
     fun count(key: String, n: Long = 1) {
         if (!isEnabled) return

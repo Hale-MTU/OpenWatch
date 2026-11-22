@@ -170,7 +170,7 @@ OpenWatch opts out of Android's cloud backup. When you move to a new phone, Andr
 
 ## Diagnostics
 
-OpenWatch sends no reports by itself. What it logs stays in Android's own log on the device. The phone app's release builds log counts, types and reasons, never a value, a record's time, a name or a device address. The watch app and debug builds can also log a reading with its time, for diagnosis; a log reaches no one unless you export it yourself.
+OpenWatch sends no reports by itself. What it logs stays in Android's own log on the device. The release builds of the phone app and the watch app log counts, types and reasons, never a value, a record's time, a name or a device address. Debug builds can also log a reading with its time, for diagnosis; a log reaches no one unless you export it yourself.
 
 ## Apps You Connect On Your Phone
 

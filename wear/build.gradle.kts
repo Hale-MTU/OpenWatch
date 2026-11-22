@@ -88,6 +88,12 @@ dependencies {
     implementation(libs.androidx.wear.protolayout.material3)
     // A suspend function as the ListenableFuture a TileService returns.
     implementation(libs.androidx.concurrent.futures.ktx)
+    // The heart rate and steps complications: a watch face's slot, read like the tiles. The
+    // library declares androidx.preference, which brings AppCompat and Fragment, yet none of its
+    // classes or resources refers to it (checked in 1.3.0): it is left out. Check again on an update.
+    implementation(libs.androidx.wear.watchface.complications.data.source.ktx) {
+        exclude(group = "androidx.preference", module = "preference")
+    }
     testImplementation(libs.junit4)
     // The shared store tests, on the JVM.
     testImplementation(libs.robolectric)

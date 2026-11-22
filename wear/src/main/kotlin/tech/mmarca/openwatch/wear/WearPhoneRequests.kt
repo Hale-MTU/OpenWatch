@@ -49,7 +49,7 @@ class WearPhoneRequests(private val context: Context) {
             .addAction(action(context, ACTION_BLOCK, R.string.action_block, pending))
             .build()
         runCatching { manager.notify(NOTIFICATION_ID, notification) }
-            .onFailure { Log.w(TAG, "Cannot post the request: ${it.message}") }
+            .onFailure { Log.w(TAG, "Cannot post the request", it) }
     }
 
     fun cancel() {

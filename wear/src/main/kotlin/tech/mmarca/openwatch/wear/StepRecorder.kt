@@ -97,7 +97,7 @@ internal class StepRecorder(
             Log.e(TAG, "Step counter refused", e)
             false
         }
-        if (registered) Log.i(TAG, "Recording steps from ${sensor.name}${if (sensor.isWakeUpSensor) " (waking)" else ""}")
+        if (registered) debug.log(TAG) { "Recording steps from ${sensor.name}${if (sensor.isWakeUpSensor) " (waking)" else ""}" }
         return registered
     }
 
@@ -190,11 +190,11 @@ internal class StepRecorder(
         }
         val (storedBoot, total, at) = fields
         if (storedBoot == boot.toLong()) {
-            Log.i(TAG, "Continuing from total $total")
+            debug.log(TAG) { "Continuing from total $total" }
             return StepMinuteCounter.Reading(at, total)
         }
         val bootedAt = System.currentTimeMillis() - SystemClock.elapsedRealtime()
-        Log.i(TAG, "New boot: counting from 0 at ${java.time.Instant.ofEpochMilli(bootedAt)}")
+        debug.log(TAG) { "New boot: counting from 0 at ${java.time.Instant.ofEpochMilli(bootedAt)}" }
         return StepMinuteCounter.Reading(bootedAt, 0L)
     }
 
@@ -208,14 +208,14 @@ internal class StepRecorder(
 
     /**
      * Logs one line per minute once the next minute starts. The watch has no
-     * steps screen yet; testers read `adb logcat -s StepRecorder`. A late
+     * steps screen yet; testers read `adb logcat -s StepRecorder` on a debuggable build. A late
      * batch may still add to a logged minute.
      */
     private fun logFinishedMinute(row: WearLinkProtocol.StepMinute) {
         val previous = lastRow
         lastRow = row
         if (previous == null || previous.epochMillis == row.epochMillis) return
-        Log.i(TAG, "${java.time.Instant.ofEpochMilli(previous.epochMillis)}: ${previous.steps} steps")
+        debug.log(TAG) { "${java.time.Instant.ofEpochMilli(previous.epochMillis)}: ${previous.steps} steps" }
     }
 
     companion object {

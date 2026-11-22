@@ -22,9 +22,8 @@ class HeartRateTileService : MetricTileService() {
     override val titleRes: Int = R.string.tile_heart_rate_label
 
     override fun read(day: TileDay, chart: TileChart, store: MetricStore): MetricTileContent {
-        val granted = WearPermissions.hasHeartRate(this)
-        val now = TileHeartRate.of(granted, store.latest(WearMetrics.HEART_RATE), day.nowMillis)
-        val samples = if (granted) {
+        val now = readHeartRateNow(this, store, day.nowMillis)
+        val samples = if (now != TileHeartRate.NotGranted) {
             store.since(WearMetrics.HEART_RATE, day.startMillis - 1, TileDay.MAX_HEART_RATE_SAMPLES_PER_DAY)
         } else {
             emptyList()
@@ -75,16 +74,13 @@ class StepsTileService : MetricTileService() {
     override val titleRes: Int = R.string.tile_steps_label
 
     override fun read(day: TileDay, chart: TileChart, store: MetricStore): MetricTileContent {
-        val missing = when {
-            !StepRecorder.hasStepCounter(this) -> R.string.tile_steps_no_sensor
-            !WearPermissions.hasActivityRecognition(this) -> R.string.tile_not_granted
-            else -> null
+        val steps = when (val today = readStepsToday(this, store, day)) {
+            is StepsToday.Missing -> return unavailable(getString(today.reason))
+            is StepsToday.Counted -> today
         }
-        if (missing != null) return unavailable(getString(missing))
-        val minutes = store.since(WearMetrics.STEPS, day.startMillis - 1, TileDay.MAX_MINUTES_PER_DAY)
-        val running = day.cumulative(TileDay.stepAmounts(minutes))
+        val running = steps.running
         val title = getString(titleRes)
-        val value = formatCount(running.last().toLong())
+        val value = formatCount(steps.total)
         val caption = getString(R.string.tile_steps_caption)
         return MetricTileContent(title, value, caption, accent, "$title: $value $caption", chart.cumulative(running, day))
     }

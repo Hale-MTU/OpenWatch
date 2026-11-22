@@ -66,7 +66,7 @@ internal class AscentRecorder(
         }
         thread = worker
         wakeSync?.join(this)
-        Log.i(TAG, "Recording ascent from ${sensor.name}")
+        debug.log(TAG) { "Recording ascent from ${sensor.name}" }
         return true
     }
 
@@ -89,8 +89,8 @@ internal class AscentRecorder(
         if (SensorTime.isStale(at)) return
         val minute = counter.onPressure(at, hectopascals) ?: return
         store.put(WearMetrics.ASCENT, minute)
-        // The watch has no ascent screen yet; testers read `adb logcat -s AscentRecorder`.
-        Log.i(TAG, "${java.time.Instant.ofEpochMilli(minute.epochMillis)}: ${minute.decimetres / 10.0} m climbed so far")
+        // The watch has no ascent screen yet; testers read `adb logcat -s AscentRecorder` on a debuggable build.
+        debug.log(TAG) { "${java.time.Instant.ofEpochMilli(minute.epochMillis)}: ${minute.decimetres / 10.0} m climbed so far" }
 
         if (at - lastPrunedAt > PRUNE_EVERY_MILLIS) {
             lastPrunedAt = at
