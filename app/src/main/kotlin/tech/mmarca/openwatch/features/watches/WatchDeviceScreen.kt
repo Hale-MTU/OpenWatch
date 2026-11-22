@@ -417,7 +417,7 @@ fun WatchDeviceScreen(
     if (showRemoveDialog) {
         ConfirmRemoveWatchDialog(
             deviceName = device.displayName,
-            offerHistoryDelete = viewModel.isLastGarminWatch,
+            offerHistoryDelete = viewModel.offersHistoryDeletion,
             onConfirm = { deleteWatchHistory ->
                 showRemoveDialog = false
                 viewModel.removeDevice(deleteWatchHistory)

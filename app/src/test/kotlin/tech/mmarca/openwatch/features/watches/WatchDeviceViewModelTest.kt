@@ -1,5 +1,8 @@
 package tech.mmarca.openwatch.features.watches
 
+import tech.mmarca.openwatch.devices.wearos.WearOsFamily
+import tech.mmarca.openwatch.devices.garmin.GarminFamily
+import tech.mmarca.openwatch.devices.core.DeviceFamilies
 import tech.mmarca.openwatch.devices.core.pairing.CompanionFilter
 import android.content.Context
 import androidx.lifecycle.SavedStateHandle
@@ -135,6 +138,8 @@ class WatchDeviceViewModelTest {
         integration = DeviceIntegration.GARMIN,
     )
 
+    private val onboardWearOsWatch = mockk<OnboardWearOsWatchUseCase>(relaxed = true)
+
     private fun viewModel(
         deviceId: String,
         wearOsCompanionManager: WearOsCompanionManager = mockk(relaxed = true),
@@ -153,7 +158,6 @@ class WatchDeviceViewModelTest {
             every { it.discoveredDevices } returns MutableStateFlow(emptyList())
             every { it.stopScan() } just runs
         },
-        onboardGarminWatch = OnboardGarminWatchUseCase(pairing, repo, FakeProbe()),
         notificationBridge = notificationBridge,
         realtimeStore = GarminRealtimeStore(),
         calendarSource = mockk(relaxed = true),
@@ -163,16 +167,21 @@ class WatchDeviceViewModelTest {
         agpsStore = mockk<GarminAgpsStore>(relaxed = true).also {
             every { it.agps } returns MutableStateFlow(GarminAgpsState())
         },
-        onboardWearOsWatch = mockk<OnboardWearOsWatchUseCase>(relaxed = true),
+        onboardWearOsWatch = onboardWearOsWatch,
         autoSyncScheduler = autoSyncScheduler,
         musicRelay = mockk(relaxed = true),
         notificationsGateway = notificationsGateway,
-        garminLocalData = garminLocalData,
         healthConnectManager = healthConnectManager,
         // The cleanup after a removal runs on the default dispatcher. Here it runs at once.
         dispatchers = mainDispatcherRule.dispatcherProvider,
         wearOsCompanionManager = wearOsCompanionManager,
         wearOsLinkStore = wearOsLinkStore,
+        families = DeviceFamilies(
+            mapOf(
+                "GARMIN" to GarminFamily(repo, stateStore, OnboardGarminWatchUseCase(pairing, repo, FakeProbe()), garminLocalData),
+                "WEAROS" to WearOsFamily(wearOsLinkStore, onboardWearOsWatch),
+            ),
+        ),
     )
 
     @Test
@@ -285,7 +294,7 @@ class WatchDeviceViewModelTest {
     fun `removing the last Garmin watch clears what only served a paired watch`() = runTest {
         val watch = addWatch()
         val vm = viewModel(watch.id)
-        assertTrue(vm.isLastGarminWatch)
+        assertTrue(vm.offersHistoryDeletion)
 
         vm.removeDevice()
 
@@ -315,7 +324,7 @@ class WatchDeviceViewModelTest {
             integration = DeviceIntegration.GARMIN,
         )
         val vm = viewModel(watch.id)
-        assertFalse(vm.isLastGarminWatch)
+        assertFalse(vm.offersHistoryDeletion)
 
         vm.removeDevice(deleteWatchHistory = true)
 

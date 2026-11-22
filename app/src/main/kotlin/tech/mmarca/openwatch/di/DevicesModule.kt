@@ -1,5 +1,10 @@
 package tech.mmarca.openwatch.di
 
+import tech.mmarca.openwatch.devices.wearos.WearOsFamily
+import tech.mmarca.openwatch.devices.garmin.GarminFamily
+import tech.mmarca.openwatch.devices.core.DeviceFamily
+import dagger.multibindings.StringKey
+import dagger.multibindings.IntoMap
 import android.content.Context
 import dagger.Binds
 import dagger.Module
@@ -102,6 +107,17 @@ abstract class DevicesModule {
 
     @Binds
     abstract fun bindSyncWakeLock(impl: AndroidSyncWakeLock): SyncWakeLock
+
+    // Each family by its persisted name; DeviceFamilies checks the key against the family's id.
+    @Binds
+    @IntoMap
+    @StringKey("GARMIN")
+    abstract fun bindGarminFamily(impl: GarminFamily): DeviceFamily
+
+    @Binds
+    @IntoMap
+    @StringKey("WEAROS")
+    abstract fun bindWearOsFamily(impl: WearOsFamily): DeviceFamily
 
     companion object {
 

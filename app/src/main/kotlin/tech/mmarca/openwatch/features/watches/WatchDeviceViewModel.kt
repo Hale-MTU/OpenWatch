@@ -28,6 +28,7 @@ import kotlinx.coroutines.withContext
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.toScreenError
+import tech.mmarca.openwatch.devices.core.DeviceFamilies
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
 import tech.mmarca.openwatch.devices.garmin.GarminAgpsImport
 import tech.mmarca.openwatch.devices.garmin.GarminAgpsKind
@@ -35,7 +36,6 @@ import tech.mmarca.openwatch.devices.garmin.GarminAgpsState
 import tech.mmarca.openwatch.devices.garmin.GarminAgpsStore
 import tech.mmarca.openwatch.devices.garmin.GarminCapability
 import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
-import tech.mmarca.openwatch.devices.garmin.OnboardGarminWatchUseCase
 import tech.mmarca.openwatch.devices.wearos.OnboardWearOsWatchUseCase
 import tech.mmarca.openwatch.devices.wearos.WearOsCompanionManager
 import tech.mmarca.openwatch.devices.wearos.WearOsCompanionStatus
@@ -138,7 +138,6 @@ class WatchDeviceViewModel @Inject constructor(
     private val autoSyncScheduler: WatchAutoSyncScheduler,
     private val actionsController: GarminWatchActionsController,
     private val sensorCoordinator: BleSensorCoordinator,
-    private val onboardGarminWatch: OnboardGarminWatchUseCase,
     private val onboardWearOsWatch: OnboardWearOsWatchUseCase,
     private val notificationBridge: tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge,
     private val realtimeStore: tech.mmarca.openwatch.devices.garmin.GarminRealtimeStore,
@@ -150,11 +149,11 @@ class WatchDeviceViewModel @Inject constructor(
     private val coMapsGuidanceFeed: tech.mmarca.openwatch.comaps.CoMapsGuidanceFeed,
     private val musicRelay: tech.mmarca.openwatch.devices.garmin.GarminMusicRelay,
     private val notificationsGateway: WatchNotificationsGateway,
-    private val garminLocalData: tech.mmarca.openwatch.devices.garmin.GarminLocalData,
     private val healthConnectManager: tech.mmarca.openwatch.healthconnect.HealthConnectGateway,
     private val dispatchers: tech.mmarca.openwatch.core.performance.DispatcherProvider,
     private val wearOsCompanionManager: WearOsCompanionManager,
     private val wearOsLinkStore: WearOsLinkStore,
+    private val families: DeviceFamilies,
     @ApplicationScope appScope: CoroutineScope,
 ) : ViewModel() {
 
@@ -492,41 +491,23 @@ class WatchDeviceViewModel @Inject constructor(
         }
     }
 
-    /** True when removing this watch leaves no Garmin watch. The dialog then offers to delete its history. */
-    val isLastGarminWatch: Boolean
-        get() = deviceRepository.devices.count { it.isGarminGfdi } == 1 &&
-            deviceRepository.devices.any { it.id == deviceId && it.isGarminGfdi }
+    /** True when removing this device can delete history its family keeps; the dialog then offers it. */
+    val offersHistoryDeletion: Boolean
+        get() = deviceRepository.devices.firstOrNull { it.id == deviceId }?.let(families::offersHistoryDeletion) == true
 
     /**
-     * Removes the watch: registry row, Garmin state or a Wear OS watch's link token, and the
-     * OS-level bond or association, fire and forget.
-     * With the last Garmin watch go its file copies and sleep minutes, and, when the user
-     * ticked it, the watch-only history ([deleteWatchHistory]).
+     * Removes the device: its registry row and schedule now, then what its family holds for it
+     * (state, keys, the system's bond or association, and with [deleteWatchHistory] the history
+     * [offersHistoryDeletion] named), fire and forget.
      */
     fun removeDevice(deleteWatchHistory: Boolean = false) {
-        // Read the device before forgetting it: the OS cleanup needs its address.
+        // Read the device before forgetting it: its family needs the address.
         val device = deviceRepository.devices.firstOrNull { it.id == deviceId }
-        val wasLastGarminWatch = isLastGarminWatch
         deviceRepository.removeDevice(deviceId)
         // Before the early return: a schedule left running would wake the radio for nothing.
         autoSyncScheduler.forget(deviceId)
         if (device == null) return
-        if (device.isGarminGfdi) {
-            stateStore.clear(deviceId)
-            housekeepingScope.launch {
-                runSuspendCatching { onboardGarminWatch.forget(device.address) }
-            }
-            if (wasLastGarminWatch) {
-                housekeepingScope.launch {
-                    runSuspendCatching { garminLocalData.clearAfterLastWatchRemoved(deleteWatchHistory) }
-                }
-            }
-        } else if (device.isWearosWatch) {
-            wearOsLinkStore.clear(deviceId, device.address)
-            housekeepingScope.launch {
-                runSuspendCatching { onboardWearOsWatch.forget(device.address) }
-            }
-        }
+        housekeepingScope.launch { families.forget(device, deleteWatchHistory) }
     }
 
     private fun <T> kotlinx.coroutines.flow.Flow<T>.stateInViewModel(initial: T): StateFlow<T> {
