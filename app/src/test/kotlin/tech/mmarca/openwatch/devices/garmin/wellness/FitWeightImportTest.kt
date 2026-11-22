@@ -1,6 +1,8 @@
 package tech.mmarca.openwatch.devices.garmin.wellness
 
 import androidx.health.connect.client.records.WeightRecord
+import androidx.health.connect.client.records.metadata.Device
+import androidx.health.connect.client.records.metadata.Metadata
 import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -32,6 +34,17 @@ class FitWeightImportTest {
         val record = fitWeightImportRecords(reading).single()
         assertTrue(record is WeightRecord)
         assertEquals(74.25, (record as WeightRecord).weight.inKilograms, 0.001)
+    }
+
+    @Test
+    fun `a Garmin wellness record says a Garmin watch recorded it, not a hand on a phone`() {
+        val metadata = importMetadata("garmin_fit_weight_1")
+
+        assertEquals(Metadata.RECORDING_METHOD_AUTOMATICALLY_RECORDED, metadata.recordingMethod)
+        assertEquals(Device.TYPE_WATCH, metadata.device?.type)
+        assertEquals("Garmin", metadata.device?.manufacturer)
+        // The id scheme is untouched, so a record written again keeps its place.
+        assertEquals("garmin_fit_weight_1", metadata.clientRecordId)
     }
 
     @Test

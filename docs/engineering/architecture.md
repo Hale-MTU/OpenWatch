@@ -85,7 +85,7 @@ The GFDI protocol stack, bottom to top. Everything above the GATT client is tran
 | Message vocabulary | `GarminMessages`, `GarminCapabilities` |
 | Session | `GarminSession`, `GarminSessionResponders`, `GarminStageTimers`, `GarminHeldSyncOwner`, `GarminProtobufTransport`, `GarminFitCapabilities` |
 | File sync | `GarminWatchSyncService`, `GarminDirectory` (legacy listing), `GarminFileSyncProtocol` and `GarminFileSyncTransfer` (protobuf listing and download), `GarminSyncProtocol`, `GarminFileTypes`, `GarminFileStore`, `GarminDeviceStateStore`, `GarminCounterWatermarkStore`, `GarminActivityImporter` |
-| Wellness import | `wellness/GarminFitWellness` (decode), `wellness/FitWellnessExtras` (Pulse Ox, HRV values, thresholds, scores, restless moments), `wellness/FitWellnessImport` and `wellness/FitWellnessExtrasImport` (mapping), `wellness/FitWellnessImporter` (orchestration) |
+| Wellness import | `wellness/GarminFitWellness` (decode), `wellness/FitWellnessExtras` (Pulse Ox, HRV values, thresholds, scores, restless moments), `wellness/FitWellnessImport` and `wellness/FitWellnessExtrasImport` (mapping; every record auto-recorded by a Garmin watch, `importMetadata`), `wellness/FitWellnessImporter` (orchestration) |
 | Notifications | `GarminNotificationBridge` (also the watch's `CompanionPresenceObserver`), `GarminNotificationForwarder`, `GarminNotificationLink`, `GarminGncsHandler`, `GarminNotificationMessages`, `GarminNotificationActions` |
 | Settings link | `GarminSettingsLink`, `GarminSettingsService`, `GarminSettingsModel` |
 | Onboarding | `OnboardGarminWatchUseCase`, `GarminDeviceClassifier`, `GarminDeviceNames`, `GarminPhoneIdentity` |

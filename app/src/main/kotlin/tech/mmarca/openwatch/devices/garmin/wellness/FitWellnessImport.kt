@@ -36,11 +36,19 @@ import tech.mmarca.openwatch.devices.garmin.FitCounterWatermark
 /** Health Connect file type for a Garmin sleep FIT file (`file_id.type`). */
 const val FIT_FILE_TYPE_SLEEP: Int = 49
 
+/**
+ * What every Garmin wellness record says of itself: recorded by a Garmin watch on its own. Until
+ * 2026-11 they read "entered by hand on a phone", which readers that set manual entries apart
+ * took at its word; records written then keep that label unless they are written again. No
+ * model: the only name to hand is the watch's Bluetooth name, which a user can change.
+ */
 internal fun importMetadata(clientRecordId: String): Metadata =
-    Metadata.manualEntry(
+    Metadata.autoRecorded(
+        device = GarminWatchDevice,
         clientRecordId = clientRecordId,
-        device = Device(type = Device.TYPE_PHONE),
     )
+
+private val GarminWatchDevice = Device(type = Device.TYPE_WATCH, manufacturer = "Garmin")
 
 /**
  * Turns a [FitSleepSession] into a `SleepSessionRecord` import, or an empty
