@@ -85,6 +85,8 @@ hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref
 hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 hilt-android-testing = { group = "com.google.dagger", name = "hilt-android-testing", version.ref = "hilt" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+# Robolectric's Android runtime for SDK 34, the level the tests pin; build-logic runs Robolectric offline from it.
+robolectric-android-all = { group = "org.robolectric", name = "android-all-instrumented", version = "14-robolectric-10818077-i7" }
 
 # Testing
 junit4 = { group = "junit", name = "junit", version.ref = "junit4" }

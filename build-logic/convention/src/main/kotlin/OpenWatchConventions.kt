@@ -4,7 +4,13 @@ import com.android.build.api.dsl.LibraryExtension
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.api.tasks.Sync
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.testing.Test
+import org.gradle.kotlin.dsl.getByType
+import org.gradle.kotlin.dsl.register
+import org.gradle.process.CommandLineArgumentProvider
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
@@ -56,6 +62,38 @@ internal fun Project.configureTestSizing() {
 }
 
 /**
+ * Robolectric's Android runtime as a dependency Gradle resolves. Left to itself, Robolectric
+ * downloads the jar (150 MB) from Maven Central in every test fork, uncached and unchecked, and
+ * one failed download there failed every Robolectric test of a CI run (2026-11-22). Resolved
+ * here, it is cached with the rest and checked against gradle/verification-metadata.xml, and the
+ * tests run Robolectric offline from a copy in the build directory. The tests pin SDK 34; a test
+ * on another level needs that level's jar in the catalog too.
+ */
+internal fun Project.configureRobolectricRuntime() {
+    val catalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
+    val runtime = configurations.create("robolectricRuntime") {
+        isCanBeConsumed = false
+        isTransitive = false
+    }
+    dependencies.add(runtime.name, catalog.findLibrary("robolectric-android-all").get())
+    val runtimeDir = layout.buildDirectory.dir("robolectric-runtime")
+    val syncRuntime = tasks.register<Sync>("syncRobolectricRuntime") {
+        from(runtime)
+        into(runtimeDir)
+    }
+    tasks.withType<Test>().configureEach {
+        dependsOn(syncRuntime)
+        inputs.files(runtime).withPropertyName("robolectricRuntime").withPathSensitivity(PathSensitivity.NONE)
+        systemProperty("robolectric.offline", "true")
+        // An argument provider, not a system property: the absolute path must not become an
+        // input, or a cached result from another checkout would never match.
+        jvmArgumentProviders.add(
+            CommandLineArgumentProvider { listOf("-Drobolectric.dependency.dir=${runtimeDir.get().asFile.absolutePath}") },
+        )
+    }
+}
+
+/**
  * The phone and the watch app: one applicationId, one key. Signing comes from the
  * environment the release pipeline sets; without it the release builds are unsigned.
  * Debug, release (R8 with resource shrinking) and nightly (a release with its own suffix).
@@ -66,6 +104,7 @@ class OpenWatchAndroidApplicationPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
         pluginManager.apply("com.android.application")
         configureBasics()
+        configureRobolectricRuntime()
         extensions.configure<ApplicationExtension> {
             configureAndroid(this)
             val signing = ReleaseSigning.fromEnvironment()
