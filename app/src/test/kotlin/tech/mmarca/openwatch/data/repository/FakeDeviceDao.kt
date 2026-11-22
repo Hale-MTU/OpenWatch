@@ -4,6 +4,8 @@ import android.content.SharedPreferences
 import java.util.concurrent.Executor
 import tech.mmarca.openwatch.data.local.device.DeviceDao
 import tech.mmarca.openwatch.data.local.device.DeviceEntity
+import tech.mmarca.openwatch.data.local.device.DeviceStateDao
+import tech.mmarca.openwatch.data.local.device.DeviceStateEntity
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 
 /** The `devices` table in memory. */
@@ -31,3 +33,22 @@ fun testDeviceRepository(
     dao: FakeDeviceDao = FakeDeviceDao(),
     legacy: SharedPreferences = FakeSharedPreferences(),
 ): BleDeviceRepository = BleDeviceRepository(dao, legacy, Executor(Runnable::run))
+
+/** The `device_state` table in memory. */
+class FakeDeviceStateDao : DeviceStateDao {
+    val rows = linkedMapOf<Pair<String, String>, DeviceStateEntity>()
+
+    override fun all(): List<DeviceStateEntity> = rows.values.toList()
+
+    override fun upsert(state: DeviceStateEntity) {
+        rows[state.deviceId to state.key] = state
+    }
+
+    override fun delete(deviceId: String, key: String) {
+        rows.remove(deviceId to key)
+    }
+}
+
+/** A per-device state store over [dao] that loads and writes on the calling thread, for tests. */
+fun testDeviceStateStore(dao: FakeDeviceStateDao = FakeDeviceStateDao()): DeviceStateStore =
+    DeviceStateStore(dao, Executor(Runnable::run), testDeviceRepository())

@@ -9,7 +9,6 @@ import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
-import java.util.concurrent.Executors
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +22,7 @@ import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.data.local.device.DeviceDao
 import tech.mmarca.openwatch.data.local.device.DeviceEntity
+import tech.mmarca.openwatch.data.local.device.DeviceStorageExecutor
 
 /**
  * The paired devices: the `devices` table, read once into memory and written behind it.
@@ -43,10 +43,14 @@ class BleDeviceRepository(
     private val writer: Executor,
 ) {
     @Inject
-    constructor(dao: DeviceDao, @ApplicationContext context: Context) : this(
+    constructor(
+        dao: DeviceDao,
+        @ApplicationContext context: Context,
+        @DeviceStorageExecutor writer: Executor,
+    ) : this(
         dao = dao,
         legacy = context.getSharedPreferences(LEGACY_PREFS_FILE, Context.MODE_PRIVATE),
-        writer = Executors.newSingleThreadExecutor { runnable -> Thread(runnable, "device-registry") },
+        writer = writer,
     )
 
     private val lock = Any()

@@ -7,6 +7,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 import javax.inject.Singleton
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
@@ -14,6 +16,7 @@ import tech.mmarca.openwatch.core.performance.DispatcherProvider
 import tech.mmarca.openwatch.core.presentation.CurrentLocaleStrings
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
 import tech.mmarca.openwatch.data.local.device.DeviceDao
+import tech.mmarca.openwatch.data.local.device.DeviceStorageExecutor
 import tech.mmarca.openwatch.data.local.device.DeviceStateDao
 import tech.mmarca.openwatch.data.local.OpenWatchDatabase
 import tech.mmarca.openwatch.data.local.OpenWatchMigrations
@@ -52,6 +55,13 @@ object AppModule {
     @Singleton
     fun provideGarminWellnessDao(database: OpenWatchDatabase): GarminWellnessDao =
         database.garminWellnessDao()
+
+    /** One thread for the registry and the per-device state; see [DeviceStorageExecutor]. */
+    @Provides
+    @Singleton
+    @DeviceStorageExecutor
+    fun provideDeviceStorageExecutor(): Executor =
+        Executors.newSingleThreadExecutor { runnable -> Thread(runnable, "device-storage") }
 
     @Provides
     @Singleton

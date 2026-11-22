@@ -19,6 +19,7 @@ import tech.mmarca.healthcalculations.insights.WorkoutEnergyMethod
 import tech.mmarca.healthcalculations.insights.WorkoutEnergyResult
 import tech.mmarca.healthcalculations.preferences.BiologicalSex
 import tech.mmarca.healthcalculations.preferences.BodyProfile
+import tech.mmarca.openwatch.data.repository.testDeviceStateStore
 import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 
@@ -68,7 +69,7 @@ class WearOsWorkoutImportTest {
     @Test
     fun `without the grants nothing is written and the cursor stays, with them the cursor moves`() = runTest {
         val repository = mockk<ImportedRecordRepository>(relaxed = true)
-        val cursors = WearOsSyncCursorStore(FakeSharedPreferences())
+        val cursors = WearOsSyncCursorStore(testDeviceStateStore())
         var granted = setOf(WearOsWorkoutImport.sessionPermission)
         val sync = WearOsWorkoutSync(repository, cursors, { granted }, { zone })
         val page = WearOsWorkoutPage(listOf(run()), hasMore = false)
