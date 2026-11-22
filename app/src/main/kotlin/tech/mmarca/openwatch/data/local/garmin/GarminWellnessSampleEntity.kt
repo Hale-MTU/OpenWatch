@@ -11,7 +11,7 @@ import androidx.room.Entity
  */
 @Entity(
     tableName = "garmin_wellness_samples",
-    primaryKeys = ["metric", "time_millis"],
+    primaryKeys = ["metric", "time_millis", "device_salt"],
 )
 data class GarminWellnessSampleEntity(
     /** A [tech.mmarca.openwatch.domain.model.GarminWellnessMetric.storageName]. */
@@ -20,4 +20,6 @@ data class GarminWellnessSampleEntity(
     @ColumnInfo(name = "time_millis") val timeMillis: Long,
     /** Stored raw, uninterpreted, in the metric's own units. */
     @ColumnInfo(name = "value") val value: Long,
+    /** The id salt of the watch it came from; empty for a family's first, and for rows from before. */
+    @ColumnInfo(name = "device_salt", defaultValue = "") val deviceSalt: String = "",
 )

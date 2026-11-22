@@ -14,7 +14,7 @@ import androidx.room.Entity
  */
 @Entity(
     tableName = "scale_weigh_ins",
-    primaryKeys = ["scale_timestamp", "profile"],
+    primaryKeys = ["scale_timestamp", "profile", "device_salt"],
 )
 data class ScaleWeighInEntity(
     /** Seconds on the scale's own clock. Identity only. */
@@ -33,4 +33,6 @@ data class ScaleWeighInEntity(
     @ColumnInfo(name = "updated_millis") val updatedMillis: Long,
     /** The [updatedMillis] that last reached Health Connect. Null while nothing has. */
     @ColumnInfo(name = "written_millis") val writtenMillis: Long?,
+    /** The id salt of the scale it came from; empty for the first scale, and for rows from before. */
+    @ColumnInfo(name = "device_salt", defaultValue = "") val deviceSalt: String = "",
 )

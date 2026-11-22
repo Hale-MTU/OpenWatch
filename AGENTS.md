@@ -80,8 +80,9 @@ Do not break these without an explicit decision.
 - **Every locale ships complete for the copied strings.** A key that comes from OpenVitals is
   re-extracted with `scripts/extract-strings.py`; a key OpenWatch adds lives in `values/`
   until it is translated. `python3 scripts/verify-translations.py` checks the files.
-- **Room is at version 1.** A new entity means a `MIGRATION_1_2` and a bump, not
-  `fallbackToDestructiveMigration`. Table and column names match OpenVitals'.
+- **Room is at version 2.** A change means a `MIGRATION_2_3` in `data/local/OpenWatchMigrations`, a bump
+  and its case in `OpenWatchDatabaseMigrationTest`, never `fallbackToDestructiveMigration`. The three
+  device tables are named as OpenVitals' are, and also key their rows by the device's id salt.
 - **The ratchets hold.** `DevicesLayeringTest` (no `@Module` under `devices/`),
   `CompanionPairingWiringTest` (an Activity calls `attachToActivity`),
   `GarminSessionConfinementTest`, `FileSizeRatchetTest` (800 lines, with a ceiling list),

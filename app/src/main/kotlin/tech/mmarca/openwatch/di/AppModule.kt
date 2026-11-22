@@ -14,6 +14,7 @@ import tech.mmarca.openwatch.core.performance.DispatcherProvider
 import tech.mmarca.openwatch.core.presentation.CurrentLocaleStrings
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
 import tech.mmarca.openwatch.data.local.OpenWatchDatabase
+import tech.mmarca.openwatch.data.local.OpenWatchMigrations
 import tech.mmarca.openwatch.data.local.garmin.GarminSleepMinuteDao
 import tech.mmarca.openwatch.data.local.garmin.GarminWellnessDao
 import tech.mmarca.openwatch.data.local.scale.ScaleWeighInDao
@@ -41,7 +42,9 @@ object AppModule {
     @Provides
     @Singleton
     fun provideOpenWatchDatabase(@ApplicationContext context: Context): OpenWatchDatabase =
-        Room.databaseBuilder(context, OpenWatchDatabase::class.java, OpenWatchDatabase.NAME).build()
+        Room.databaseBuilder(context, OpenWatchDatabase::class.java, OpenWatchDatabase.NAME)
+            .addMigrations(*OpenWatchMigrations.ALL)
+            .build()
 
     @Provides
     @Singleton

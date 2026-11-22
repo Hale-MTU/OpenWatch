@@ -21,8 +21,11 @@ OpenWatch seams noted.
 - UI stack: Jetpack Compose + Material 3 + Navigation Compose + `ViewModel` + coroutines.
 - Health data backend: the Health Connect AndroidX client, behind
   [`HealthConnectGateway`](../../app/src/main/kotlin/tech/mmarca/openwatch/healthconnect/HealthConnectGateway.kt).
-- Room is at version 1, with three tables: `garmin_wellness_samples`, `garmin_sleep_minutes`,
-  `scale_weigh_ins`.
+- Room is at version 2, with five tables: `devices` (the registry) and `device_state` (what an
+  integration keeps per device, gone with its device), and `garmin_wellness_samples`,
+  `garmin_sleep_minutes`, `scale_weigh_ins`, each keyed by the device's id salt as well
+  (`OpenWatchMigrations.MIGRATION_1_2`; a family's first device has the empty salt, so the rows
+  from before belong to it).
 
 ### Top-Level Package Map
 
