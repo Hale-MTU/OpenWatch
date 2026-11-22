@@ -15,6 +15,7 @@ import java.time.temporal.ChronoUnit
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assume.assumeTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -27,8 +28,8 @@ import org.junit.runner.RunWith
  * helpers fall back on never happens, and a record rewritten at the same version changes.
  * The Health Connect APK on Android 13 and older is not covered here.
  *
- * Needs WRITE_STEPS granted to the app under test
- * (`adb shell pm grant tech.mmarca.openwatch.ci android.permission.health.WRITE_STEPS`).
+ * Grants the app under test WRITE_STEPS itself, as `adb shell pm grant` would, so it needs no
+ * step by hand: on CI's emulator the app is a new install every run.
  */
 @RunWith(AndroidJUnit4::class)
 class ClientRecordVersionTest {
@@ -36,6 +37,12 @@ class ClientRecordVersionTest {
     private val client = HealthConnectClient.getOrCreate(InstrumentationRegistry.getInstrumentation().targetContext)
     private val start = Instant.now().minus(3, ChronoUnit.DAYS).truncatedTo(ChronoUnit.MINUTES)
     private val id = "version-probe-${System.nanoTime()}"
+
+    @Before
+    fun grantWriteSteps() {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        instrumentation.uiAutomation.grantRuntimePermission(instrumentation.targetContext.packageName, WRITE_STEPS)
+    }
 
     private fun minute(count: Long, version: Long) = StepsRecord(
         startTime = start,
@@ -87,5 +94,6 @@ class ClientRecordVersionTest {
 
     private companion object {
         const val TAG = "VersionProbe"
+        const val WRITE_STEPS = "android.permission.health.WRITE_STEPS"
     }
 }

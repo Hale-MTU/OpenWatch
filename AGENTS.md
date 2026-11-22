@@ -112,7 +112,9 @@ Do not break these without an explicit decision.
 ## Verification
 
 `./gradlew verifyCi` (phone app and domain) and `./gradlew verifyWearCi` (watch app), or
-`scripts/ci-android-gradle.sh <task>` on a machine without the SDK pieces set up. See
+`scripts/ci-android-gradle.sh <task>` on a machine without the SDK pieces set up. The
+instrumented tests run on emulators on every push to `main` (`.github/workflows/android-test.yml`);
+a test that needs real hardware carries `@RequiresDevice`. See
 `docs/engineering/development.md`.
 
 ## Releases

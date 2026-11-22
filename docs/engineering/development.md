@@ -41,6 +41,45 @@ its base and runs the phone jobs for anything outside `wear/` and the watch job 
 `gradle.properties` or to the health-calculations pointer runs both: the watch app compiles
 that library too.
 
+## Instrumented Tests
+
+The tests in `app/src/androidTest`, `wear/src/androidTest` and `wear/src/sharedTest` (which
+also runs on Robolectric in the watch gate) need Android itself: Compose on a real window,
+the Keystore, the platform's Health Connect, SQLite, `Parcel`. The gates only compile them.
+They run in three places.
+
+- **CI, on emulators.** `.github/workflows/android-test.yml` runs the phone app's tests
+  (`verifyAndroidTest`) on an Android 16 phone image with Google APIs (API 36), and the
+  watch app's (`:wear:connectedAndroidTest`) on Wear OS 5 (API 34), one job each, side by
+  side, in about a quarter of an hour. The verify workflow calls it on every push to `main`,
+  for the sides the push changed, and on no pull request. The release reads that push run,
+  so a failing emulator job holds the nightly and any tag cut from that commit until it
+  passes. When the emulator itself failed (a boot that timed out), "Re-run failed jobs" on
+  the verify run, then re-run the release. A manual run of the `android-test` workflow tries
+  any branch before it merges, and gates nothing. Each job keeps the HTML report, the JUnit
+  results with each test's logcat, and the logcat of the whole run, as the run's
+  `android-test-phone-<attempt>` and `android-test-wear-<attempt>` artifacts.
+- **A phone, or an emulator of your own.** `ANDROID_SERIAL=<serial> ./gradlew verifyAndroidTest`
+  installs the `ci` build (`tech.mmarca.openwatch.ci`, beside the app you use), runs the
+  tests and removes it again. Without `ANDROID_SERIAL` the task does nothing.
+  `scripts/ci-android-test.sh verifyAndroidTest` is what CI runs: the same task, after a
+  check that the animations are off, and followed by one that tests ran at all.
+- **A watch.** Not through a connected task: see [The Watch App](#the-watch-app).
+
+Every test runs on the emulators; none needs hardware they lack. What the emulators do not
+prove: `KeystoreSecretKeyTest` seals under a software key there, not one in the phone's
+secure hardware; `SamsungRecordedParcelDeviceTest` reads and writes AOSP's `Parcel`, not a
+Galaxy Watch's build of it; `ClientRecordVersionTest` measures the Health Connect module the
+image ships, not the one Play keeps updated on a phone.
+
+A test that does need real hardware (a Bluetooth link, a sensor the emulator lacks, Samsung's
+health platform, a key in secure hardware) carries `@RequiresDevice`
+(`androidx.test.filters`): the runner skips it on an emulator and runs it on a device. It is
+listed in this section with what it needs; none is today. A test that needs a permission
+grants it itself through `UiAutomation`, as `ClientRecordVersionTest` does: on CI's emulator
+the app is a new install every run. The emulators run with the three animation scales at 0,
+set by the emulator action.
+
 ## Lint
 
 Lint runs on every pull request and push that touches the phone side, and in the watch
@@ -111,10 +150,12 @@ One listing means one versionCode space. The watch owns the range `2000000001` t
 `OPENWATCH_VERSION_CODE` and `OPENWATCH_VERSION_NAME`, and fails the build when the code is
 outside the watch range.
 
-The watch's instrumented tests (`wear/src/androidTest`, the metric store against real SQLite)
-are compiled by the gate but run only on a device. Do not use `connectedDebugAndroidTest` on a
-watch you wear: it uninstalls the app afterwards, which deletes the recorded data and the
-trusted phones. Install the two APKs over the app instead and run the runner detached:
+The watch's instrumented tests (`wear/src/androidTest` and `wear/src/sharedTest`: the metric
+store against real SQLite, the recorded Samsung parcels) run in CI on a Wear OS emulator
+([Instrumented Tests](#instrumented-tests)). Do not use `connectedDebugAndroidTest`, or
+`scripts/ci-android-test.sh`, on a watch you wear: a connected task uninstalls the app
+afterwards, which deletes the recorded data and the trusted phones. Install the two APKs over
+the app instead and run the runner detached:
 
 ```sh
 ./gradlew :wear:assembleDebug :wear:assembleDebugAndroidTest
@@ -147,8 +188,9 @@ Two Markdown files with the same first heading would become one page; the script
 run; it is OpenVitals' pipeline with the watch app added. A tag or the nightly is cut from a
 commit on `main`, whose push ran the verify workflow; the release's `context` job looks that
 run up, waits for it if it is still going, and stops the release if there is none or it
-failed. The verify run's `lint` and `wear-test` jobs skip when their paths did not change
-and still leave the run successful, which is what the gate reads.
+failed. The push run includes the emulator jobs (`android-test`), so the release waits for
+them too. The verify run's `lint`, `wear-test` and `android-test` jobs skip when their paths
+did not change and still leave the run successful, which is what the gate reads.
 
 Its `build` job signs everything once, with one key, in one Gradle invocation: the phone
 APK, the phone debug APK, the phone AAB, the watch APK and the watch AAB. They are the run's
@@ -296,6 +338,3 @@ OpenVitals' procedure, and the two skills are kept alike. In short:
 5. The companion repositories: the docs site ports the release notes page
    (`scripts/app-docs.json` there) and the landing page's OpenWatch copy follows a headline
    feature.
-
-CI has no device, so it never runs the instrumented tests. To run them, connect a phone or
-emulator: `ANDROID_SERIAL=<serial> ./gradlew verifyAndroidTest`.

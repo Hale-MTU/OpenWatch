@@ -30,13 +30,17 @@ tasks.named<UpdateDaemonJvm>("updateDaemonJvm") {
     languageVersion = JavaLanguageVersion.of(17)
 }
 
+// The device is named, never guessed: with ANDROID_SERIAL unset this does nothing, so it cannot
+// land on whatever phone or watch adb happens to see. CI sets it to the emulator it boots
+// (.github/workflows/android-test.yml).
 val hasAndroidSerial = providers.environmentVariable("ANDROID_SERIAL").isPresent
-val isCiEnvironment = providers.environmentVariable("CI").isPresent
 
+// The phone side's instrumented tests; a module that gains some adds its connected task here,
+// and CI's emulator job runs them with it.
 tasks.register("verifyAndroidTest") {
     group = "verification"
-    description = "Runs connectedCiAndroidTest for local connected-device checks."
-    enabled = hasAndroidSerial && !isCiEnvironment
+    description = "Runs the phone app's instrumented tests on the device ANDROID_SERIAL names."
+    enabled = hasAndroidSerial
     if (enabled) {
         dependsOn(":app:connectedCiAndroidTest")
     }

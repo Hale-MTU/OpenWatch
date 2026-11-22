@@ -146,8 +146,9 @@ jobs:
       # verify workflow. That run is the gate: still going, it is waited for;
       # passed, the build goes ahead; none, or failed, and the release stops.
       # Only a push run counts: a pull request run tested the merge with its
-      # base, not this commit. The
-      # run's jobs that its paths did not touch (lint, wear-test) are skipped
+      # base, not this commit. The push run includes the instrumented tests on
+      # emulators (android-test), which only push runs have. The run's jobs
+      # that its paths did not touch (lint, wear-test, android-test) are skipped
       # and still leave the run successful. An annotated tag's GITHUB_SHA is
       # the tag object, hence the rev-parse.
       - id: verified

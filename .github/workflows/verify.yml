@@ -5,7 +5,9 @@
 # build. app-test and lint when the phone side changed, lint in a job of its
 # own since it is half of the gate's task time; a new lint warning fails it
 # (each module's lint-baseline.xml holds the old ones); wear-test when the
-# watch app or the build plumbing it shares with the phone changed.
+# watch app or the build plumbing it shares with the phone changed. On a push
+# to main, android-test (android-test.yml) also runs the instrumented tests on
+# emulators, for the same sides.
 # Locally the whole gate is one invocation, verifyCi.
 #
 # Every workflow pins ubuntu-26.04, the image ubuntu-latest moves to between
@@ -35,7 +37,7 @@ defaults:
 jobs:
   # Which parts of the tree the change touched. The watch gate runs for the
   # watch app and the build plumbing it shares with the phone; the phone gate
-  # for anything outside wear/. A change to this file runs both.
+  # for anything outside wear/. A change to this file or android-test.yml runs both.
   context:
     runs-on: ubuntu-26.04
     outputs:
@@ -67,7 +69,7 @@ jobs:
             while IFS= read -r f; do
               case "$f" in
                 wear/*) wear=true ;;
-                wearlink/*|build-logic/*|health-calculations|.gitmodules|build.gradle.kts|settings.gradle.kts|settings-gradle.lockfile|gradle.properties|gradle/*|gradlew|scripts/ci-*|.github/workflows/verify.yml) wear=true; phone=true ;;
+                wearlink/*|build-logic/*|health-calculations|.gitmodules|build.gradle.kts|settings.gradle.kts|settings-gradle.lockfile|gradle.properties|gradle/*|gradlew|scripts/ci-*|.github/workflows/verify.yml|.github/workflows/android-test.yml) wear=true; phone=true ;;
                 *) phone=true ;;
               esac
             done < changed.txt
@@ -153,3 +155,15 @@ jobs:
       - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       - run: scripts/ci-android-gradle.sh verifyWearCi
       - run: git diff --check
+
+  # The instrumented tests on emulators, on a push to main only: a quarter of an
+  # hour, too long for every pull request. The push run is the one the release
+  # reads, so a failure here holds the nightly and any tag on that commit.
+  # android-test.yml also runs by hand on any branch.
+  android-test:
+    needs: context
+    if: github.event_name == 'push' && (needs.context.outputs.run_tests == 'true' || needs.context.outputs.run_wear == 'true')
+    uses: ./.github/workflows/android-test.yml
+    with:
+      phone: ${{ needs.context.outputs.run_tests == 'true' }}
+      wear: ${{ needs.context.outputs.run_wear == 'true' }}
