@@ -32,7 +32,9 @@ import tech.mmarca.openlink.OpenLink
 import tech.mmarca.openwatch.MainActivity
 import tech.mmarca.openlink.OpenLinkTrust
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.presentation.localizedList
 import tech.mmarca.openwatch.link.LinkSessionStatus
+import tech.mmarca.openwatch.ui.components.BulletRow
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.SwitchRow
 import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
@@ -192,7 +194,7 @@ private fun ConnectedAppCard(
                 OpenLinkTrust.PENDING -> {
                     Text(text = stringResource(R.string.connected_apps_asks_for), style = MaterialTheme.typography.bodyMedium)
                     app.requested.forEach { capability ->
-                        Text(text = "• " + stringResource(capabilityLabel(capability)), style = MaterialTheme.typography.bodyMedium)
+                        BulletRow(text = stringResource(capabilityLabel(capability)), style = MaterialTheme.typography.bodyMedium)
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
                         Button(onClick = onAllow) { Text(stringResource(R.string.connected_apps_allow)) }
@@ -243,7 +245,7 @@ private fun ActivityLines(app: ConnectedApp) {
 
 @Composable
 internal fun sessionLine(status: LinkSessionStatus): String {
-    val devices = status.deviceNames.joinToString(", ")
+    val devices = localizedList(status.deviceNames)
     return when (status.kind) {
         LinkSessionStatus.Kind.HEART_RATE -> stringResource(R.string.connected_apps_session_heart_rate, devices)
         LinkSessionStatus.Kind.HEART_RATE_AND_STEPS -> stringResource(R.string.connected_apps_session_heart_rate_steps, devices)

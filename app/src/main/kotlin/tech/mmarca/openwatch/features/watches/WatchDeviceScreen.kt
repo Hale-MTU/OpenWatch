@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import tech.mmarca.openwatch.core.presentation.formatPercent
 import tech.mmarca.openwatch.devices.core.DeviceFeature
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.resolve
@@ -443,7 +444,7 @@ private fun StatusCard(
             device.batteryPercent?.let { battery ->
                 Spacer(modifier = Modifier.width(Spacing.md))
                 Text(
-                    text = "$battery%",
+                    text = formatPercent(battery),
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.SemiBold,
                     ),

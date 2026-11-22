@@ -25,6 +25,7 @@ import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.domain.model.HealthConnectAvailability
 import tech.mmarca.openwatch.healthconnect.openHealthConnectPermissionSettings
+import tech.mmarca.openwatch.ui.components.BulletRow
 import tech.mmarca.openwatch.ui.components.OpenWatchButton
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchOutlinedButton
@@ -120,7 +121,7 @@ fun HealthConnectSetupScreen(
                 if (state.availability == HealthConnectAvailability.AVAILABLE && state.missing.isNotEmpty()) {
                     Text(text = stringResource(R.string.hc_setup_missing_title), style = MaterialTheme.typography.labelLarge)
                     state.missing.forEach { name ->
-                        Text(text = "• $name", style = MaterialTheme.typography.bodySmall)
+                        BulletRow(text = name)
                     }
                     if (state.missingExtraAccess) {
                         Text(

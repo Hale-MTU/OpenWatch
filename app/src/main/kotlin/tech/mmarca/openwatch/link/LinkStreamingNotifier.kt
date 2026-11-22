@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import tech.mmarca.openlink.host.OpenLinkHost
 import tech.mmarca.openwatch.MainActivity
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.presentation.localizedList
 
 /**
  * The notification while another app keeps a watch streaming: "Streaming heart rate to
@@ -47,7 +48,7 @@ class LinkStreamingNotifier @Inject constructor(
         }
         ensureChannel()
         val app = appLabel(context, first.packageName)
-        val devices = first.deviceNames.joinToString(", ")
+        val devices = localizedList(first.deviceNames)
         val title = when (first.kind) {
             LinkSessionStatus.Kind.HEART_RATE -> context.getString(R.string.link_streaming_heart_rate, app)
             LinkSessionStatus.Kind.HEART_RATE_AND_STEPS -> context.getString(R.string.link_streaming_heart_rate_steps, app)

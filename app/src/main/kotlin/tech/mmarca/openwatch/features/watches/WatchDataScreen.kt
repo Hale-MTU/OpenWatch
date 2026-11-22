@@ -23,6 +23,7 @@ import java.time.Instant
 import kotlin.math.roundToLong
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.ScreenError
+import tech.mmarca.openwatch.core.presentation.localizedList
 import tech.mmarca.openwatch.domain.model.GarminWellnessMetric
 import tech.mmarca.openwatch.ui.components.DeviceValueRow
 import tech.mmarca.openwatch.ui.components.ScreenErrorContent
@@ -406,7 +407,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.thresholdItems(metric
 private fun MissingFooter(metrics: WatchMetrics) {
     val missing = metrics.missingFrom(ExpectedMetrics)
     if (missing.isEmpty()) return
-    val names = missing.map { stringResource(labelFor(it)) }.distinct().joinToString(", ")
+    val names = localizedList(missing.map { stringResource(labelFor(it)) }.distinct())
     Text(
         text = stringResource(R.string.settings_watch_data_missing, names),
         style = MaterialTheme.typography.bodySmall,

@@ -52,6 +52,8 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.presentation.joinParts
+import tech.mmarca.openwatch.core.presentation.localizedList
 import tech.mmarca.openwatch.devices.garmin.GarminAlarm
 import tech.mmarca.openwatch.devices.garmin.GarminAlarmLabel
 import tech.mmarca.openwatch.devices.garmin.GarminAlarmSound
@@ -415,11 +417,10 @@ private fun alarmSummary(alarm: GarminAlarm): String {
     val days = when (alarm.days) {
         emptySet<DayOfWeek>() -> stringResource(R.string.settings_watch_alarms_once)
         DayOfWeek.entries.toSet() -> stringResource(R.string.settings_watch_alarms_every_day)
-        else -> DayOfWeek.entries.filter { it in alarm.days }
-            .joinToString(", ") { it.getDisplayName(TextStyle.SHORT, locale) }
+        else -> localizedList(DayOfWeek.entries.filter { it in alarm.days }.map { it.getDisplayName(TextStyle.SHORT, locale) }, locale)
     }
     if (alarm.label == GarminAlarmLabel.NONE) return days
-    return "$days · ${stringResource(alarmLabelText(alarm.label))}"
+    return joinParts(listOf(days, stringResource(alarmLabelText(alarm.label))))
 }
 
 @StringRes

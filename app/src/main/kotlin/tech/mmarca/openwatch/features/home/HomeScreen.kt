@@ -39,6 +39,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Instant
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.presentation.joinParts
 import tech.mmarca.openwatch.features.scales.ScalesSectionRoute
 import tech.mmarca.openwatch.features.watches.WatchesSectionRoute
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
@@ -249,7 +250,7 @@ private fun watchTileSubtitle(tile: WatchTileState): String? {
                 ?: stringResource(R.string.settings_watch_never_synced),
         )
     }
-    return parts.joinToString(" · ").takeIf { it.isNotBlank() }
+    return joinParts(parts).takeIf { it.isNotBlank() }
 }
 
 private val HomeRowIconSize = 28.dp
