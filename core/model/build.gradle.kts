@@ -1,7 +1,10 @@
 // The phone app's pure models: the device, sleep-minute, scale and activity models under
 // `domain/model`, the unit and theme preferences under `domain/preferences`, and the
-// coordinate parsing under `core/geo`. Plain Kotlin on the JDK, with the app's package
-// names. The calculations are health-calculations', shared with OpenVitals.
+// coordinate parsing under `core/geo`; the platform sources' plain values the device
+// integrations read (`devices/weather`, `devices/notifications`); and `runSuspendCatching`
+// (`core/performance`). Plain Kotlin on the JDK, with the app's package names, so the device
+// protocol modules can depend on it. The calculations are health-calculations', shared with
+// OpenVitals.
 plugins {
     id("openwatch.jvm.library")
     // Android lint checked these files in :domain; it still does, with the same rules (build-logic/).
@@ -14,4 +17,5 @@ dependencies {
     api("tech.mmarca.healthcalculations:health-calculations")
 
     testImplementation(libs.junit4)
+    testImplementation(libs.kotlinx.coroutines.test)
 }

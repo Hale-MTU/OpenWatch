@@ -24,17 +24,6 @@
     </issue>
 
     <issue
-        id="TrimLambda"
-        message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
-        errorLine1="                .trim { it &lt;= &apos; &apos; }"
-        errorLine2="                      ~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/tech/mmarca/openwatch/devices/garmin/GarminAgpsFile.kt"
-            line="152"
-            column="23"/>
-    </issue>
-
-    <issue
         id="AppBundleLocaleChanges"
         message="Found dynamic locale changes, but did not find corresponding Play Core library calls for downloading languages and splitting by language is not disabled in the `bundle` configuration"
         errorLine1="        val configuration = Configuration(context.resources.configuration).apply { setLocale(locale) }"
@@ -681,17 +670,6 @@
             file="src/main/AndroidManifest.xml"
             line="332"
             column="10"/>
-    </issue>
-
-    <issue
-        id="ObsoleteSdkInt"
-        message="Unnecessary; `SDK_INT` is always >= 26"
-        errorLine1="            verticalAccuracyMeters = if (android.os.Build.VERSION.SDK_INT >= 26) {"
-        errorLine2="                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/tech/mmarca/openwatch/devices/garmin/GarminCoreLocation.kt"
-            line="57"
-            column="42"/>
     </issue>
 
     <issue

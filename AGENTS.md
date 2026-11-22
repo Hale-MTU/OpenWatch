@@ -18,7 +18,8 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 
 - `app/src/main/kotlin/tech/mmarca/openwatch/`
   - `devices/` — the device layer: `core` (ports, the radio lease, companion pairing, the
-    sync port), `garmin` (the GFDI protocol stack and its wellness import), `wearos` (the
+    sync port), `garmin` (the GATT client, the links, stores and wellness import around the
+    protocol module), `wearos` (the
     phone side of the watch app), `xiaomi` (the scale), `notifications`, `media`, `weather`.
     No Compose, no navigation, no Hilt module.
   - `features/` — the screens: `home`, `watches`, `scales`, `healthconnect`, `settings`.
@@ -31,7 +32,13 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 - `core/model` (`:core:model`) and `core/fit` (`:core:fit`) — pure Kotlin on the JDK, with
   the app's package names: `domain/model`, `domain/preferences` and `core/geo` in the first, the
   FIT codec `core/fit` in the second. The unit-system provider that reads the platform's locale
-  data is the app's (`core/presentation/LocaleUnitSystemProvider`).
+  data is the app's (`core/presentation/LocaleUnitSystemProvider`). `:core:model` also holds the
+  plain values the device protocols read from the platform sources (`WeatherSnapshot`,
+  `NotificationMsg`) and `runSuspendCatching`.
+- `devices/garmin/protocol` (`:devices:garmin:protocol`) — the Garmin protocol, pure Kotlin with
+  `explicitApi()` and the app's package names: bytes, COBS, GFDI, protobuf, the multi-link
+  transport, the session, file sync, the uploads and the FIT wellness decoder. Its test
+  fixtures hold the FIT test bytes the app's import tests use.
 - `health-calculations/` — a git submodule and composite build, like `openlink/`: the health
   calculations OpenWatch and OpenVitals share (the Wear OS night and resting heart rate, body
   composition, workout and walking energy, the watch's HRV and respiratory rate from the raw

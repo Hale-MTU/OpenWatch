@@ -142,6 +142,8 @@ dependencies {
     // The pure models, which also bring health-calculations, and the FIT codec.
     implementation(project(":core:model"))
     implementation(project(":core:fit"))
+    // The Garmin protocol, pure Kotlin; its platform half (GATT, stores, Health Connect) is here.
+    implementation(project(":devices:garmin:protocol"))
     implementation(project(":wearlink"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -195,6 +197,8 @@ dependencies {
     // Testing
     // The Wear OS sleep-minute fixtures, for the sync tests.
     testImplementation(testFixtures("tech.mmarca.healthcalculations:health-calculations"))
+    // The FIT test bytes the wellness import tests build their files with.
+    testImplementation(testFixtures(project(":devices:garmin:protocol")))
     testImplementation(libs.junit4)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
@@ -226,7 +230,7 @@ tasks.withType<Test>().configureEach {
     maxHeapSize = "1g"
     // The memory budget above assumes one test task at a time. The pure modules'
     // tests take seconds; they go first rather than beside these.
-    mustRunAfter(":core:model:test", ":core:fit:test")
+    mustRunAfter(":core:model:test", ":core:fit:test", ":devices:garmin:protocol:test")
     // The architecture tests read sources and documents as plain files: this module's
     // and the others' code, both manifests, the strings, the privacy documents. None
     // of that is on the test classpath, so it is declared here; otherwise a change to
@@ -236,6 +240,7 @@ tasks.withType<Test>().configureEach {
         "scannedAppMain" to "app/src/main",
         "scannedCoreModelMain" to "core/model/src/main",
         "scannedCoreFitMain" to "core/fit/src/main",
+        "scannedGarminProtocolMain" to "devices/garmin/protocol/src/main",
         "scannedWearMain" to "wear/src/main",
         "scannedWearRecordingCoreMain" to "wear/recording-core/src/main",
         "scannedWearlinkMain" to "wearlink/src/main",

@@ -56,7 +56,7 @@ class LogCallersRatchetTest {
             "app/devices/core/pairing/BleWatchPairing.kt",
             "app/devices/core/pairing/CompanionDevicePairing.kt",
             "app/devices/core/pairing/OpenWatchCompanionDeviceService.kt",
-            "app/devices/garmin/GarminLog.kt",
+            "app/devices/garmin/GarminLogcatSink.kt",
             "app/devices/garmin/GarminNotificationBridge.kt",
             "app/devices/notifications/Diagnostics.kt",
             "app/devices/notifications/OpenWatchNotificationListenerService.kt",

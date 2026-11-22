@@ -209,31 +209,6 @@ class FitWellnessImportTest {
     // Monitoring (type 32) high-frequency series.
 
     @Test
-    fun `timestamp16 may resolve before its full timestamp anchor`() {
-        val anchor = 0x12_1000L
-
-        assertEquals(0x12_0F00L, resolveMonitoringTimestamp16(anchor, 0x0F00))
-    }
-
-    @Test
-    fun `timestamp16 rolls forward across the unsigned 16 bit boundary`() {
-        val anchor = 0x12_FFF0L
-
-        assertEquals(0x13_0010L, resolveMonitoringTimestamp16(anchor, 0x0010))
-    }
-
-    @Test
-    fun `timestamp16 chooses the nearest rollover instead of shifting a day`() {
-        val anchor = fitTimestamp(utc(2026, 8, 27, 0, 5))
-        val fiveMinutesEarlier = fitTimestamp(utc(2026, 8, 27, 0, 0))
-
-        assertEquals(
-            fiveMinutesEarlier,
-            resolveMonitoringTimestamp16(anchor, fiveMinutesEarlier and 0xFFFF),
-        )
-    }
-
-    @Test
     fun `monitoring heart rate before its anchor keeps the correct day and time`() {
         val anchor = utc(2026, 8, 27, 0, 5)
         val sampleTime = utc(2026, 8, 27, 0, 0)
