@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.features.watches
 import android.content.Context
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -18,7 +19,10 @@ import tech.mmarca.openwatch.data.repository.WatchNotificationPrefsStore
 import tech.mmarca.openwatch.testing.string
 import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 
-/** When the platform hands back no apps, the screen has to say so rather than look like it is loading. */
+/**
+ * When the platform hands back no apps, the screen has to say so rather than look like it is
+ * loading; when it cannot read them, the screen says that instead, never a misleading "no apps".
+ */
 class WatchNotificationAppsScreenTest {
 
     @get:Rule
@@ -44,27 +48,25 @@ class WatchNotificationAppsScreenTest {
     fun aPhoneWithNoLaunchableAppsSaysSoRatherThanShowingAnEmptyList() {
         setScreen(FakeGateway(apps = emptyList()))
 
-        awaitEmptyState()
+        awaitText(string(R.string.settings_watch_notifications_apps_empty))
         composeRule
             .onNodeWithText(string(R.string.settings_watch_notifications_apps_empty))
             .assertIsDisplayed()
     }
 
     @Test
-    fun anAppListThatCannotBeReadLeavesTheScreenUsableRatherThanStuckLoading() {
-        // A host that cannot answer must not spin forever.
+    fun anAppListThatCannotBeReadSaysSoRatherThanStuckLoadingOrEmpty() {
+        // A host that cannot answer must not spin forever, nor pass for a phone with no apps.
         setScreen(FakeGateway(apps = emptyList(), throwsOnList = true))
 
-        awaitEmptyState()
-        composeRule
-            .onNodeWithText(string(R.string.settings_watch_notifications_apps_empty))
-            .assertIsDisplayed()
+        awaitText(string(R.string.screen_error_generic))
+        composeRule.onNodeWithText(string(R.string.screen_error_generic)).assertIsDisplayed()
+        composeRule.onAllNodesWithText(string(R.string.settings_watch_notifications_apps_empty)).assertCountEquals(0)
     }
 
-    private fun awaitEmptyState() {
-        val empty = string(R.string.settings_watch_notifications_apps_empty)
+    private fun awaitText(text: String) {
         composeRule.waitUntil(timeoutMillis = 10_000) {
-            composeRule.onAllNodesWithText(empty).fetchSemanticsNodes().isNotEmpty()
+            composeRule.onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty()
         }
     }
 
