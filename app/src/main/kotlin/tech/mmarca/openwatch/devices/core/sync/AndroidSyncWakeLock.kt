@@ -5,21 +5,7 @@ import android.os.PowerManager
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-/**
- * Keeps the CPU awake while a sync runs that no job holds awake: one tapped on a screen, asked
- * for by another app over OpenLink, or announced by the watch. A scheduled sync needs none,
- * WorkManager holds one for its job. Always with a timeout, so a sync that hangs cannot hold
- * the phone awake.
- */
-interface SyncWakeLock {
-    suspend fun <T> holding(block: suspend () -> T): T
-
-    /** Holds nothing: for tests. */
-    object None : SyncWakeLock {
-        override suspend fun <T> holding(block: suspend () -> T): T = block()
-    }
-}
-
+/** The [SyncWakeLock] of the app: a partial wake lock with the radio's timeout. */
 class AndroidSyncWakeLock @Inject constructor(
     @ApplicationContext private val context: Context,
 ) : SyncWakeLock {

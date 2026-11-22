@@ -36,6 +36,11 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   data is the app's (`core/presentation/LocaleUnitSystemProvider`). `:core:model` also holds the
   plain values the device protocols read from the platform sources (`WeatherSnapshot`,
   `NotificationMsg`) and `runSuspendCatching`.
+- `core/devices-api` (`:core:devices-api`) — the device contracts in `devices/core`, pure
+  Kotlin: `DeviceFamily` and `DeviceFamilies`, `DeviceFeature`, live readings, the classifiers,
+  `BleUuids`, `WatchPairingPort`, `CompanionPresenceObserver`, the sync port and its outcome and
+  failure types, the auto-sync interval, `SyncWakeLock`, the record id salt. Its test fixtures
+  are the shared fakes (`FakeDeviceSyncPort`, `FakeWatchPairing`, `FakeDeviceFamily`).
 - `devices/garmin/protocol` (`:devices:garmin:protocol`) — the Garmin protocol, pure Kotlin with
   `explicitApi()` and the app's package names: bytes, COBS, GFDI, protobuf, the multi-link
   transport, the session, file sync, the uploads and the FIT wellness decoder. Its test

@@ -11,6 +11,7 @@ import java.io.File
 internal val LibraryModuleRoots: Map<String, String> = listOf(
     "core/model",
     "core/fit",
+    "core/devices-api",
     "devices/garmin/protocol",
     "devices/xiaomi/protocol",
 ).associateWith { module -> "../$module/src/main/kotlin/tech/mmarca/openwatch" }

@@ -2,12 +2,12 @@ package tech.mmarca.openwatch.devices.core.ble
 
 import java.util.UUID
 
-internal data class BleServiceMeasurementUuid(
+data class BleServiceMeasurementUuid(
     val serviceUuid: UUID,
     val measurementUuid: UUID,
 )
 
-internal object BleUuids {
+object BleUuids {
     val CLIENT_CHARACTERISTIC_CONFIG: UUID =
         UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 

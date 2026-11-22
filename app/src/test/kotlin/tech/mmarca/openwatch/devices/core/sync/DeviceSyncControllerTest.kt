@@ -32,50 +32,17 @@ class DeviceSyncControllerTest {
 
     private fun files(count: Int) = DeviceSyncResult.Succeeded(written = mapOf(SyncTally.FILES to count))
 
-    /** Stands in for the whole radio + protocol + import stack. */
-    private class FakeSyncPort : DeviceSyncPort {
-        var result: DeviceSyncResult = DeviceSyncResult.Succeeded()
-        var calls = 0
-        var seenDevice: BleSensorDevice? = null
-        var seenTrigger: SyncTrigger? = null
-        var progressToReport: DeviceSyncProgress? = DeviceSyncProgress(
-            phase = DeviceSyncPhase.DOWNLOADING,
-            total = 2,
-            done = 1,
-        )
-
-        /** Left incomplete by a test to hold a sync mid-flight. */
-        var gate: CompletableDeferred<Unit>? = null
-
-        /** Set by the test that breaks the never-throws contract on purpose. */
-        var thrown: Exception? = null
-
-        override fun canSync(device: BleSensorDevice): Boolean = device.isGarmin
-
-        override suspend fun sync(
-            device: BleSensorDevice,
-            trigger: SyncTrigger,
-            onProgress: ((DeviceSyncProgress) -> Unit)?,
-        ): DeviceSyncResult {
-            calls++
-            seenDevice = device
-            seenTrigger = trigger
-            progressToReport?.let { onProgress?.invoke(it) }
-            gate?.await()
-            thrown?.let { throw it }
-            return result
-        }
-    }
-
     private lateinit var repo: BleDeviceRepository
-    private lateinit var port: FakeSyncPort
+    private lateinit var port: FakeDeviceSyncPort
 
     @Before
     fun setUp() {
         val context = mockk<Context>()
         every { context.getSharedPreferences(any(), any()) } returns FakeSharedPreferences()
         repo = testDeviceRepository()
-        port = FakeSyncPort()
+        port = FakeDeviceSyncPort(canSync = { it.isGarmin }).apply {
+            progressToReport = DeviceSyncProgress(phase = DeviceSyncPhase.DOWNLOADING, total = 2, done = 1)
+        }
     }
 
     private fun addWatch(address: String = "E0:48:24:D5:F7:10"): BleSensorDevice = repo.addDevice(

@@ -9,36 +9,25 @@ import tech.mmarca.openlink.OpenLinkDeviceKind
 import tech.mmarca.openlink.OpenLinkIntegration
 import tech.mmarca.openlink.OpenLinkSampleType
 import tech.mmarca.openwatch.devices.core.DeviceFamilies
-import tech.mmarca.openwatch.devices.core.DeviceFamily
 import tech.mmarca.openwatch.devices.core.DeviceFeature
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import tech.mmarca.openwatch.devices.core.FakeDeviceFamily
 
 class LinkDevicesTest {
 
     private val now = Instant.parse("2026-11-08T08:00:00Z")
 
-    /** A family as OpenLink sees one: what it owns and what those devices can do. */
-    private class StandIn(
-        override val id: String,
-        private val features: Set<DeviceFeature>,
-        private val owns: (BleSensorDevice) -> Boolean,
-    ) : DeviceFamily {
-        override fun owns(device: BleSensorDevice) = owns.invoke(device)
-        override fun features(device: BleSensorDevice) = features
-        override suspend fun forget(device: BleSensorDevice, deleteHistory: Boolean) = Unit
-    }
-
-    private val garmin = StandIn(
+    private val garmin = FakeDeviceFamily(
         "GARMIN",
         setOf(DeviceFeature.SYNC, DeviceFeature.FIND, DeviceFeature.LIVE_HEART_RATE, DeviceFeature.LIVE_STEPS),
     ) { it.kind != BleDeviceKind.SENSOR && (it.integration == DeviceIntegration.GARMIN || it.integration == null) }
-    private val wearOs = StandIn("WEAROS", setOf(DeviceFeature.SYNC, DeviceFeature.LIVE_HEART_RATE)) {
+    private val wearOs = FakeDeviceFamily("WEAROS", setOf(DeviceFeature.SYNC, DeviceFeature.LIVE_HEART_RATE)) {
         it.kind == BleDeviceKind.WATCH && it.integration == DeviceIntegration.WEAROS
     }
-    private val xiaomi = StandIn("XIAOMI", emptySet()) { it.kind == BleDeviceKind.SCALE && it.integration == DeviceIntegration.XIAOMI }
+    private val xiaomi = FakeDeviceFamily("XIAOMI", emptySet()) { it.kind == BleDeviceKind.SCALE && it.integration == DeviceIntegration.XIAOMI }
     private val families = DeviceFamilies(mapOf("GARMIN" to garmin, "WEAROS" to wearOs, "XIAOMI" to xiaomi))
 
     private fun device(
@@ -104,7 +93,7 @@ class LinkDevicesTest {
 
     @Test
     fun `a family newer than the contract's constants goes by its own name`() {
-        val acme = StandIn("ACME", setOf(DeviceFeature.SYNC)) { it.kind == BleDeviceKind.WATCH }
+        val acme = FakeDeviceFamily("ACME", setOf(DeviceFeature.SYNC)) { it.kind == BleDeviceKind.WATCH }
 
         val devices = linkDevices(
             listOf(device("band", BleDeviceKind.WATCH)),

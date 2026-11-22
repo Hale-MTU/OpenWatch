@@ -16,10 +16,6 @@ import org.junit.Test
 import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
-import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.devices.garmin.GarminAlarm
 import tech.mmarca.openwatch.devices.garmin.GarminSendFileResult
 import tech.mmarca.openwatch.devices.garmin.GarminSendStage
@@ -31,6 +27,7 @@ import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import tech.mmarca.openwatch.devices.garmin.isGarmin
+import tech.mmarca.openwatch.devices.core.sync.FakeDeviceSyncPort
 
 /** Find is a toggle, a double-stop must not throw, a refusal is a flag, and a find stands down during a sync. */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -51,18 +48,7 @@ class GarminWatchActionsControllerTest {
     /** Blocks the sync until released, so a find can be attempted mid-sync. */
     private val syncGate = CompletableDeferred<Unit>()
 
-    private val syncPort = object : DeviceSyncPort {
-        override fun canSync(device: BleSensorDevice): Boolean = device.isGarmin
-
-        override suspend fun sync(
-            device: BleSensorDevice,
-            trigger: SyncTrigger,
-            onProgress: ((DeviceSyncProgress) -> Unit)?,
-        ): DeviceSyncResult {
-            syncGate.await()
-            return DeviceSyncResult.Succeeded()
-        }
-    }
+    private val syncPort = FakeDeviceSyncPort(canSync = { it.isGarmin }).apply { gate = syncGate }
 
     @Before
     fun setUp() {

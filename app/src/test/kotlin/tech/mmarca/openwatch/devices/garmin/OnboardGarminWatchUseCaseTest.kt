@@ -1,7 +1,6 @@
 package tech.mmarca.openwatch.devices.garmin
 
 import tech.mmarca.openwatch.data.repository.testDeviceRepository
-import tech.mmarca.openwatch.devices.core.pairing.CompanionFilter
 import android.content.Context
 import io.mockk.every
 import io.mockk.mockk
@@ -14,42 +13,10 @@ import org.junit.Test
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.pairing.WatchBondResult
-import tech.mmarca.openwatch.devices.core.pairing.WatchPairingPort
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleDiscoveredDevice
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
-
-/** Records what the use case asked the platform to do. No radio, no Activity, no plugin. */
-private class FakePairing : WatchPairingPort {
-    var bondResult = WatchBondResult.BONDED
-    var associateResult = true
-
-    val calls = mutableListOf<String>()
-
-    override suspend fun bond(address: String): WatchBondResult {
-        calls.add("bond:$address")
-        return bondResult
-    }
-
-    override suspend fun removeBond(address: String) {
-        calls.add("removeBond:$address")
-    }
-
-    override suspend fun associateCompanion(
-        address: String,
-        displayName: String?,
-        filter: CompanionFilter,
-    ): Boolean {
-        calls.add("associate:$address")
-        return associateResult
-    }
-
-    override suspend fun disassociateCompanion(address: String) {
-        calls.add("disassociate:$address")
-    }
-
-    override fun isCompanionAssociated(address: String): Boolean = false
-}
+import tech.mmarca.openwatch.devices.core.pairing.FakeWatchPairing
 
 /** Answers with a canned GATT verdict; never opens a connection. */
 private class FakeProbe : GarminTransportProbe {
@@ -69,7 +36,7 @@ private class FakeProbe : GarminTransportProbe {
 class OnboardGarminWatchUseCaseTest {
 
     private lateinit var repo: BleDeviceRepository
-    private lateinit var pairing: FakePairing
+    private lateinit var pairing: FakeWatchPairing
     private lateinit var probe: FakeProbe
     private lateinit var useCase: OnboardGarminWatchUseCase
 
@@ -86,7 +53,7 @@ class OnboardGarminWatchUseCaseTest {
         val context = mockk<Context>()
         every { context.getSharedPreferences(any(), any()) } returns FakeSharedPreferences()
         repo = testDeviceRepository()
-        pairing = FakePairing()
+        pairing = FakeWatchPairing()
         probe = FakeProbe()
         useCase = OnboardGarminWatchUseCase(pairing, repo, probe)
     }

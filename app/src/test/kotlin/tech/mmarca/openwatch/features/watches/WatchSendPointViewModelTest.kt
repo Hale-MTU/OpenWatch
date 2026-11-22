@@ -27,10 +27,6 @@ import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.data.repository.testDeviceStateStore
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
-import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.garmin.GarminCapability
 import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
 import tech.mmarca.openwatch.devices.garmin.GarminSendFileResult
@@ -41,6 +37,7 @@ import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.navigation.WatchSendPoint
 import tech.mmarca.openwatch.navigation.routeHandle
 import tech.mmarca.openwatch.util.MainDispatcherRule
+import tech.mmarca.openwatch.devices.core.sync.FakeDeviceSyncPort
 
 /** The form picks a watch, reads the coordinates, and never sends on its own. */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -56,15 +53,7 @@ class WatchSendPointViewModelTest {
     private val sent = mutableListOf<Pair<String, GarminWaypoint>>()
     private val sendGate = CompletableDeferred<GarminSendFileResult>()
 
-    private val syncPort = object : DeviceSyncPort {
-        override fun canSync(device: BleSensorDevice): Boolean = true
-
-        override suspend fun sync(
-            device: BleSensorDevice,
-            trigger: SyncTrigger,
-            onProgress: ((DeviceSyncProgress) -> Unit)?,
-        ): DeviceSyncResult = DeviceSyncResult.Succeeded()
-    }
+    private val syncPort = FakeDeviceSyncPort()
 
     @Before
     fun setUp() {

@@ -11,8 +11,9 @@ OpenWatch seams noted.
 
 - App namespace: `tech.mmarca.openwatch`
 - Build logic: `build-logic/`, an included build with the convention plugins every module applies (`openwatch.android.application`, `openwatch.android.library`, `openwatch.jvm.library`): SDK levels, Java 17, signing from the environment, the debug, release and nightly build types, lint and dependency locking. A module's own file holds only what is its own (version codes, the `ci` type, the diagnostics flag). A change there must leave the release APKs byte-identical; compare their hashes before and after.
-- Project shape: eight Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
-  hold the pure code the app depends on (below); `:devices:garmin:protocol` and
+- Project shape: nine Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
+  hold the pure code the app depends on (below); `:core:devices-api` the device contracts
+  ([`devices/core`](#devicescore)); `:devices:garmin:protocol` and
   `:devices:xiaomi:protocol` are the Garmin protocol and the S400 codec, pure Kotlin
   ([`devices/garmin`](#devicesgarmin), [`devices/xiaomi`](#devicesxiaomi)); `:wear` is the Wear OS watch app
   with its own CI gate; `:wearlink` is the pure-Kotlin link both apps depend on. Package names
@@ -71,6 +72,8 @@ Where the copied code met an OpenVitals class that did not come along, it meets 
 ### `devices/core`
 
 Vendor-neutral ports plus the two things every integration shares.
+
+The contracts are their own module, `:core:devices-api` (`core/devices-api`, pure Kotlin, same packages, linted as in the app): `DeviceClassification`, `DeviceScanClassifier`, `DeviceFamily` (with `DeviceFamilies`, `DeviceFeature` and the live readings), `RecordIds`, `ble/BleUuids`, `pairing/WatchPairingPort`, `pairing/CompanionPresenceObserver`, and in `sync/` the port and its types (`DeviceSyncPort`, `SyncFailure`), `CompositeDeviceSyncPort`, `AutoSyncInterval` and the `SyncWakeLock` seam. What holds Android stays in `:app`: the radio lease (`RadioLease`, `RadioLeaseUse`), `DeviceLog`, `ble/BlePermissions`, the pairing and companion implementations, and in `sync/` `DeviceSyncController`, `SyncBudget`, `AndroidSyncWakeLock`, the schedule and its worker, and `EstimatedSleepRecord`. `DeviceFamilies` keeps its `@Inject` constructor (javax.inject); Dagger in `:app` generates its factory. The module's test fixtures are the fakes the tests share: `sync/FakeDeviceSyncPort`, `pairing/FakeWatchPairing` and `FakeDeviceFamily`.
 
 - [`RadioLease.kt`](../../app/src/main/kotlin/tech/mmarca/openwatch/devices/core/RadioLease.kt) — `RadioLeaseRegistry`, one injected singleton for the process, a lease keyed **per Bluetooth address**. Two holders on different peripherals is allowed by design; two holders on the same peripheral is not.
 - [`RadioLeaseUse.kt`](../../app/src/main/kotlin/tech/mmarca/openwatch/devices/core/RadioLeaseUse.kt) — `registry.withRadioLease(address, owner) { ... }`, `RadioLeaseBusyException`, and `object RadioLeaseOwner` with the five owner tags: `SYNC`, `FIND`, `SETTINGS`, `NOTIFICATIONS`, `PROBE`. They are strings rather than an enum because they appear in logcat.
@@ -200,7 +203,7 @@ Package names are unchanged, so an import does not say which module a class is i
 
 The wear sleep fixtures the app's Wear OS sync tests use are health-calculations' test fixtures (`testFixtures("tech.mmarca.healthcalculations:health-calculations")`); these modules have none of their own.
 
-The modules exist for the build and for the boundary: a change elsewhere leaves their compile and test results in the build cache, and the compiler, not a test, keeps Android and the rest of the app out of them. Their tests are plain JUnit (`:core:model:test`, `:core:fit:test`, in `verifyCiUnitTest`, as are `:devices:garmin:protocol:test` and `:devices:xiaomi:protocol:test`), and Android lint still checks them and the protocol modules (`com.android.lint` with the app's rules, each module's `lint` in `verifyCiLint`), without its API-level check (see [development.md](development.md#lint)). What does not belong here: anything with an inbound dependency from `data/`, `healthconnect/` or `features/`, resources, and Hilt wiring. The architecture ratchets walk them through `LibraryModuleRoots` in the app's architecture tests, and `LibraryModuleRootsTest` fails on a module under `core/` or `devices/` that is not listed there.
+The modules exist for the build and for the boundary: a change elsewhere leaves their compile and test results in the build cache, and the compiler, not a test, keeps Android and the rest of the app out of them. Their tests are plain JUnit (`:core:model:test`, `:core:fit:test`, in `verifyCiUnitTest`, as are `:core:devices-api:test`, `:devices:garmin:protocol:test` and `:devices:xiaomi:protocol:test`), and Android lint still checks them, the contracts and the protocol modules (`com.android.lint` with the app's rules, each module's `lint` in `verifyCiLint`), without its API-level check (see [development.md](development.md#lint)). What does not belong here: anything with an inbound dependency from `data/`, `healthconnect/` or `features/`, resources, and Hilt wiring. The architecture ratchets walk them through `LibraryModuleRoots` in the app's architecture tests, and `LibraryModuleRootsTest` fails on a module under `core/` or `devices/` that is not listed there.
 
 ## Shared module `:wearlink`
 

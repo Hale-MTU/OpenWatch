@@ -25,10 +25,6 @@ import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.data.repository.testDeviceStateStore
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
-import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.garmin.GarminAlarm
 import tech.mmarca.openwatch.devices.garmin.GarminAlarmsFile
 import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
@@ -39,6 +35,7 @@ import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.navigation.WatchAlarms
 import tech.mmarca.openwatch.navigation.routeHandle
 import tech.mmarca.openwatch.util.MainDispatcherRule
+import tech.mmarca.openwatch.devices.core.sync.FakeDeviceSyncPort
 
 /** The list lives on the phone, and nothing reaches the watch until Send. */
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -55,15 +52,7 @@ class WatchAlarmsViewModelTest {
     private val sent = mutableListOf<List<GarminAlarm>>()
     private val sendGate = CompletableDeferred<GarminSendFileResult>()
 
-    private val syncPort = object : DeviceSyncPort {
-        override fun canSync(device: BleSensorDevice): Boolean = true
-
-        override suspend fun sync(
-            device: BleSensorDevice,
-            trigger: SyncTrigger,
-            onProgress: ((DeviceSyncProgress) -> Unit)?,
-        ): DeviceSyncResult = DeviceSyncResult.Succeeded()
-    }
+    private val syncPort = FakeDeviceSyncPort()
 
     private val morning = GarminAlarm(hour = 6, minute = 30, days = setOf(DayOfWeek.MONDAY))
     private val evening = GarminAlarm(hour = 22, minute = 0)

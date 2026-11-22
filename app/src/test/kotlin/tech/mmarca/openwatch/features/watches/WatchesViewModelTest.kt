@@ -2,7 +2,6 @@ package tech.mmarca.openwatch.features.watches
 
 import androidx.lifecycle.SavedStateHandle
 import tech.mmarca.openwatch.data.repository.testDeviceRepository
-import tech.mmarca.openwatch.devices.core.pairing.CompanionFilter
 import android.content.Context
 import io.mockk.every
 import io.mockk.just
@@ -24,7 +23,6 @@ import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.DeviceClassification
 import tech.mmarca.openwatch.devices.core.pairing.WatchBondResult
-import tech.mmarca.openwatch.devices.core.pairing.WatchPairingPort
 import tech.mmarca.openwatch.devices.garmin.GarminGattReport
 import tech.mmarca.openwatch.devices.garmin.GarminTransportProbe
 import tech.mmarca.openwatch.devices.garmin.GarminTransportVariant
@@ -40,6 +38,7 @@ import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
 import tech.mmarca.openwatch.util.MainDispatcherRule
 import tech.mmarca.openwatch.devices.garmin.isGarmin
 import tech.mmarca.openwatch.devices.wearos.isWearOs
+import tech.mmarca.openwatch.devices.core.pairing.FakeWatchPairing
 
 /**
  * The sheet-level flow: no capability probe for a GFDI device, what a refused pairing leaves
@@ -49,37 +48,6 @@ class WatchesViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
-
-    /** Records what onboarding asked the platform to do; answers as set up. */
-    private class FakePairing : WatchPairingPort {
-        var bondResult = WatchBondResult.BONDED
-        var associateResult = true
-        val calls = mutableListOf<String>()
-
-        override suspend fun bond(address: String): WatchBondResult {
-            calls.add("bond:$address")
-            return bondResult
-        }
-
-        override suspend fun removeBond(address: String) {
-            calls.add("removeBond:$address")
-        }
-
-        override suspend fun associateCompanion(
-            address: String,
-            displayName: String?,
-            filter: CompanionFilter,
-        ): Boolean {
-            calls.add("associate:$address")
-            return associateResult
-        }
-
-        override suspend fun disassociateCompanion(address: String) {
-            calls.add("disassociate:$address")
-        }
-
-        override fun isCompanionAssociated(address: String): Boolean = false
-    }
 
     /** Canned GATT verdict; never opens a connection. */
     private class FakeProbe : GarminTransportProbe {
@@ -93,7 +61,7 @@ class WatchesViewModelTest {
     }
 
     private lateinit var repo: BleDeviceRepository
-    private lateinit var pairing: FakePairing
+    private lateinit var pairing: FakeWatchPairing
     private lateinit var probe: FakeProbe
     private lateinit var coordinator: BleSensorCoordinator
 
@@ -128,7 +96,7 @@ class WatchesViewModelTest {
         val context = mockk<Context>()
         every { context.getSharedPreferences(any(), any()) } returns FakeSharedPreferences()
         repo = testDeviceRepository()
-        pairing = FakePairing()
+        pairing = FakeWatchPairing()
         probe = FakeProbe()
         coordinator = mockk<BleSensorCoordinator>().also { fake ->
             every { fake.discoveredDevices } returns MutableStateFlow(emptyList())
