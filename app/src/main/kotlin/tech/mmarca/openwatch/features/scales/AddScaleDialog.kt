@@ -1,6 +1,5 @@
 package tech.mmarca.openwatch.features.scales
 
-import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,16 +24,17 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.devices.core.pairing.CompanionDevice
 import tech.mmarca.openwatch.ui.components.OpenWatchTextButton
 import tech.mmarca.openwatch.ui.components.OpenWatchTonalButton
+import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
@@ -43,9 +43,18 @@ import tech.mmarca.openwatch.ui.theme.Spacing
  * broadcasts. The dialog cannot be dismissed while Android's is up.
  */
 @Composable
-internal fun AddScaleDialog(viewModel: ScalesViewModel, state: ScalesUiState) {
+internal fun AddScaleDialog(
+    state: ScalesUiState,
+    onFind: () -> Unit,
+    onNameChange: (String) -> Unit,
+    onKeyChange: (String) -> Unit,
+    /** Where the scale's key is found: the supported-scales page. */
+    onOpenKeyHelp: () -> Unit,
+    onSave: () -> Unit,
+    onClose: () -> Unit,
+) {
     AlertDialog(
-        onDismissRequest = { if (!state.isFinding) viewModel.closeAddFlow() },
+        onDismissRequest = { if (!state.isFinding) onClose() },
         title = { Text(text = stringResource(R.string.settings_scales_add)) },
         text = {
             Column(
@@ -57,7 +66,7 @@ internal fun AddScaleDialog(viewModel: ScalesViewModel, state: ScalesUiState) {
                     active = state.isFinding,
                     done = state.addStep == AddScaleStep.KEY,
                 )
-                if (state.addStep == AddScaleStep.FIND) FindStep(state, onFind = viewModel::findScale)
+                if (state.addStep == AddScaleStep.FIND) FindStep(state, onFind = onFind)
                 StepRow(
                     label = stringResource(R.string.settings_scales_key_step),
                     active = false,
@@ -66,19 +75,20 @@ internal fun AddScaleDialog(viewModel: ScalesViewModel, state: ScalesUiState) {
                 if (state.addStep == AddScaleStep.KEY) {
                     KeyStep(
                         state = state,
-                        onNameChange = viewModel::onNameInputChange,
-                        onKeyChange = viewModel::onKeyInputChange,
+                        onNameChange = onNameChange,
+                        onKeyChange = onKeyChange,
+                        onOpenHelp = onOpenKeyHelp,
                     )
                 }
             }
         },
         confirmButton = {
             if (state.addStep == AddScaleStep.KEY) {
-                TextButton(onClick = viewModel::saveScale) { Text(text = stringResource(R.string.action_save)) }
+                TextButton(onClick = onSave) { Text(text = stringResource(R.string.action_save)) }
             }
         },
         dismissButton = {
-            TextButton(onClick = viewModel::closeAddFlow, enabled = !state.isFinding) {
+            TextButton(onClick = onClose, enabled = !state.isFinding) {
                 Text(text = stringResource(R.string.action_cancel))
             }
         },
@@ -118,6 +128,7 @@ private fun KeyStep(
     state: ScalesUiState,
     onNameChange: (String) -> Unit,
     onKeyChange: (String) -> Unit,
+    onOpenHelp: () -> Unit,
 ) {
     Column(
         modifier = Modifier.padding(start = StepIndent),
@@ -135,9 +146,7 @@ private fun KeyStep(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        val context = LocalContext.current
-        val helpUrl = stringResource(R.string.settings_scales_supported_url)
-        OpenWatchTextButton(onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, helpUrl.toUri())) }) {
+        OpenWatchTextButton(onClick = onOpenHelp) {
             Text(stringResource(R.string.settings_scales_key_help_action))
         }
         ScaleKeyField(
@@ -197,6 +206,28 @@ private fun StepRow(label: String, active: Boolean, done: Boolean) {
             text = label,
             style = MaterialTheme.typography.bodyMedium,
             color = if (active || done) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AddScaleDialogKeyStepPreview() {
+    OpenWatchTheme {
+        AddScaleDialog(
+            state = ScalesUiState(
+                showAddFlow = true,
+                addStep = AddScaleStep.KEY,
+                found = CompanionDevice(address = "5C:E5:0C:4A:91:2F", name = "MIBFS"),
+                nameInput = "Bathroom",
+                keyInput = "9f3a6c21e04b7d58a1c2e9f0b36d4a70",
+            ),
+            onFind = {},
+            onNameChange = {},
+            onKeyChange = {},
+            onOpenKeyHelp = {},
+            onSave = {},
+            onClose = {},
         )
     }
 }

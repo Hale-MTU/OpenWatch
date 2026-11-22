@@ -33,37 +33,63 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.time.Instant
 import tech.mmarca.openwatch.R
-import tech.mmarca.openwatch.features.scales.ScalesSection
-import tech.mmarca.openwatch.features.scales.ScalesViewModel
-import tech.mmarca.openwatch.features.watches.WatchesSection
-import tech.mmarca.openwatch.features.watches.WatchesViewModel
+import tech.mmarca.openwatch.features.scales.ScalesSectionRoute
+import tech.mmarca.openwatch.features.watches.WatchesSectionRoute
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.SectionHeader
 import tech.mmarca.openwatch.ui.components.formatDeviceTime
+import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
- * The device list: the watch tile, the paired watches with the add flow, the
- * scale with its add flow, then Health Connect and Settings. The watch and scale
- * sections are the same composables their own screens use.
+ * The Home destination: the only place that knows the ViewModel. It fills [HomeScreen]'s
+ * watch and scale slots with their section routes, the same ones their own screens use.
  */
 @Composable
-fun HomeScreen(
-    watchesViewModel: WatchesViewModel,
-    scalesViewModel: ScalesViewModel,
-    homeViewModel: HomeViewModel,
+fun HomeRoute(
     onOpenWatch: (String) -> Unit,
     onOpenScale: () -> Unit,
     onOpenHealthConnect: () -> Unit,
     onOpenSettings: () -> Unit,
+    viewModel: HomeViewModel = hiltViewModel(),
 ) {
-    val tile by homeViewModel.watchTile.collectAsStateWithLifecycle()
+    val tile by viewModel.watchTile.collectAsStateWithLifecycle()
 
+    HomeScreen(
+        tile = tile,
+        onSyncWatch = viewModel::syncWatch,
+        onOpenWatch = onOpenWatch,
+        onOpenHealthConnect = onOpenHealthConnect,
+        onOpenSettings = onOpenSettings,
+        watchesSection = { WatchesSectionRoute(onOpenWatch = onOpenWatch) },
+        scalesSection = { ScalesSectionRoute(onOpenScale = onOpenScale) },
+    )
+}
+
+/**
+ * The device list: the watch tile, the paired watches with the add flow, the
+ * scale with its add flow, then Health Connect and Settings. The watch and scale
+ * sections come in as [watchesSection] and [scalesSection].
+ */
+@Composable
+fun HomeScreen(
+    tile: WatchTileState?,
+    onSyncWatch: (deviceId: String) -> Unit,
+    onOpenWatch: (String) -> Unit,
+    onOpenHealthConnect: () -> Unit,
+    onOpenSettings: () -> Unit,
+    watchesSection: @Composable () -> Unit,
+    scalesSection: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(vertical = Spacing.md),
@@ -72,15 +98,15 @@ fun HomeScreen(
         tile?.let { watch ->
             WatchTile(
                 tile = watch,
-                onSync = { homeViewModel.syncWatch(watch.deviceId) },
+                onSync = { onSyncWatch(watch.deviceId) },
                 onOpen = { onOpenWatch(watch.deviceId) },
                 modifier = Modifier.padding(horizontal = Spacing.lg),
             )
         }
         SectionHeader(stringResource(R.string.home_section_watches))
-        WatchesSection(viewModel = watchesViewModel, onOpenWatch = onOpenWatch)
+        watchesSection()
         SectionHeader(stringResource(R.string.home_section_scale))
-        ScalesSection(viewModel = scalesViewModel, onOpenScale = onOpenScale)
+        scalesSection()
         SectionHeader(stringResource(R.string.home_section_app))
         HomeRow(
             icon = Icons.Outlined.FavoriteBorder,
@@ -95,6 +121,42 @@ fun HomeScreen(
             onClick = onOpenSettings,
         )
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun HomeScreenPreview() {
+    OpenWatchTheme {
+        HomeScreen(
+            tile = WatchTileState(
+                deviceId = "forerunner-265",
+                name = "Forerunner 265",
+                batteryPercent = 78,
+                lastSyncedAt = Instant.now().minusSeconds(40 * 60),
+                additionalCount = 1,
+                isSyncing = true,
+                liveHeartRateBpm = 64,
+                liveSteps = 6_412,
+            ),
+            onSyncWatch = {},
+            onOpenWatch = {},
+            onOpenHealthConnect = {},
+            onOpenSettings = {},
+            watchesSection = { PreviewSlot("Watches section") },
+            scalesSection = { PreviewSlot("Scale section") },
+        )
+    }
+}
+
+/** Stands in for a section route, which needs its ViewModel. */
+@Composable
+private fun PreviewSlot(label: String) {
+    Text(
+        text = label,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = Spacing.lg),
+    )
 }
 
 @Composable

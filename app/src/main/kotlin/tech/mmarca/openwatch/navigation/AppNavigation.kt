@@ -23,7 +23,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -32,8 +31,8 @@ import androidx.navigation.compose.rememberNavController
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
 import tech.mmarca.openwatch.features.healthconnect.HealthConnectSetupRoute
-import tech.mmarca.openwatch.features.home.HomeScreen
-import tech.mmarca.openwatch.features.scales.ScaleDeviceScreen
+import tech.mmarca.openwatch.features.home.HomeRoute
+import tech.mmarca.openwatch.features.scales.ScaleDeviceRoute
 import tech.mmarca.openwatch.features.settings.BodyProfileRoute
 import tech.mmarca.openwatch.features.settings.SettingsRoute
 import tech.mmarca.openwatch.ui.components.LocalAppBarState
@@ -126,10 +125,7 @@ fun AppNavigation(
                     HealthConnectSetupRoute(onContinue = null)
                 }
                 composable(Screen.Home.route) {
-                    HomeScreen(
-                        watchesViewModel = hiltViewModel(),
-                        scalesViewModel = hiltViewModel(),
-                        homeViewModel = hiltViewModel(),
+                    HomeRoute(
                         onOpenWatch = { deviceId ->
                             navController.navigate(Screen.WatchDevice.createRoute(deviceId)) { launchSingleTop = true }
                         },
@@ -156,8 +152,7 @@ fun AppNavigation(
                     BodyProfileRoute(unitFormatter = unitFormatter)
                 }
                 composable(Screen.ScaleDevice.route) {
-                    ScaleDeviceScreen(
-                        viewModel = hiltViewModel(),
+                    ScaleDeviceRoute(
                         onOpenBodyProfile = { navController.navigate(Screen.BodyProfile.route) { launchSingleTop = true } },
                         onRemoved = { navController.popBackStack() },
                     )

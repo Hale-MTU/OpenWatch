@@ -24,9 +24,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.time.Duration
+import java.time.Instant
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.devices.xiaomi.ScaleListenerStatus
 import tech.mmarca.openwatch.ui.components.ConfirmRemoveDialog
@@ -36,14 +40,19 @@ import tech.mmarca.openwatch.ui.components.ScreenAppBar
 import tech.mmarca.openwatch.ui.components.ScreenErrorContent
 import tech.mmarca.openwatch.ui.components.SectionHeader
 import tech.mmarca.openwatch.ui.components.rememberHealthConnectPermissionLauncher
+import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
 
-/** One scale: whether it is heard, its last weigh-in, what Health Connect still lacks, and the scale itself. */
+/**
+ * The scale's destination: the only place that knows the ViewModel. It declares the app bar,
+ * re-reads everything on resume, owns the scan and Health Connect permission requests, opens
+ * Bluetooth's settings and goes back once the scale is removed; [ScaleDeviceScreen] draws.
+ */
 @Composable
-fun ScaleDeviceScreen(
-    viewModel: ScaleDeviceViewModel,
+fun ScaleDeviceRoute(
     onOpenBodyProfile: () -> Unit,
     onRemoved: () -> Unit,
+    viewModel: ScaleDeviceViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -63,20 +72,64 @@ fun ScaleDeviceScreen(
         Manifest.permission.ACCESS_FINE_LOCATION
     }
 
+    ScaleDeviceScreen(
+        state = state,
+        android12 = android12,
+        onRename = viewModel::rename,
+        onDeleteLastWeighIn = viewModel::deleteLastWeighIn,
+        onGrantScanPermission = { scanPermissionLauncher.launch(scanPermission) },
+        onOpenBluetoothSettings = { context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) },
+        onAllowSystemWake = viewModel::allowSystemWake,
+        onClaimIgnoredProfile = viewModel::claimIgnoredProfile,
+        onGrantHealthConnect = { healthConnectLauncher.launch(state.missingWritePermissions) },
+        onOpenBodyProfile = onOpenBodyProfile,
+        onChangeKey = viewModel::openKeyDialog,
+        onKeyEdited = viewModel::onKeyEdited,
+        onSaveKey = viewModel::changeKey,
+        onDismissKeyDialog = viewModel::dismissKeyDialog,
+        onRemove = viewModel::remove,
+    )
+
+    LaunchedEffect(state.removed) {
+        if (state.removed) onRemoved()
+    }
+}
+
+/** One scale: whether it is heard, its last weigh-in, what Health Connect still lacks, and the scale itself. */
+@Composable
+fun ScaleDeviceScreen(
+    state: ScaleDeviceUiState,
+    /** Android 12 and later scan on their own grant; earlier ones on location. */
+    android12: Boolean,
+    onRename: (String) -> Unit,
+    onDeleteLastWeighIn: () -> Unit,
+    onGrantScanPermission: () -> Unit,
+    onOpenBluetoothSettings: () -> Unit,
+    onAllowSystemWake: () -> Unit,
+    onClaimIgnoredProfile: () -> Unit,
+    onGrantHealthConnect: () -> Unit,
+    onOpenBodyProfile: () -> Unit,
+    onChangeKey: () -> Unit,
+    onKeyEdited: () -> Unit,
+    onSaveKey: (String) -> Unit,
+    onDismissKeyDialog: () -> Unit,
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     var showRenameDialog by rememberSaveable { mutableStateOf(false) }
     var showRemoveDialog by rememberSaveable { mutableStateOf(false) }
 
     val name = state.name
     if (name == null) {
         // Removed while this screen was open.
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(stringResource(R.string.no_data))
         }
         return
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(Spacing.lg),
@@ -86,7 +139,7 @@ fun ScaleDeviceScreen(
 
         state.lastWeighIn?.let { weighIn ->
             SectionHeader(stringResource(R.string.settings_scales_last_title))
-            ScaleLastWeighInCard(weighIn = weighIn, onDelete = viewModel::deleteLastWeighIn)
+            ScaleLastWeighInCard(weighIn = weighIn, onDelete = onDeleteLastWeighIn)
         }
         state.screenError?.let { ScreenErrorContent(screenError = it) }
 
@@ -95,10 +148,10 @@ fun ScaleDeviceScreen(
             ScaleListeningCard(
                 state = state,
                 android12 = android12,
-                onGrantScanPermission = { scanPermissionLauncher.launch(scanPermission) },
-                onOpenBluetoothSettings = { context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) },
-                onAllowSystemWake = viewModel::allowSystemWake,
-                onClaimIgnoredProfile = viewModel::claimIgnoredProfile,
+                onGrantScanPermission = onGrantScanPermission,
+                onOpenBluetoothSettings = onOpenBluetoothSettings,
+                onAllowSystemWake = onAllowSystemWake,
+                onClaimIgnoredProfile = onClaimIgnoredProfile,
             )
         }
 
@@ -106,13 +159,13 @@ fun ScaleDeviceScreen(
             SectionHeader(stringResource(R.string.settings_health_connect_group_title))
             ScaleHealthConnectCard(
                 state = state,
-                onGrantHealthConnect = { healthConnectLauncher.launch(state.missingWritePermissions) },
+                onGrantHealthConnect = onGrantHealthConnect,
                 onOpenBodyProfile = onOpenBodyProfile,
             )
         }
 
         SectionHeader(stringResource(R.string.settings_scales_section_scale))
-        ScaleDetailsCards(state = state, onChangeKey = viewModel::openKeyDialog)
+        ScaleDetailsCards(state = state, onChangeKey = onChangeKey)
         ScaleRemoveCard(onRemove = { showRemoveDialog = true })
     }
 
@@ -122,7 +175,7 @@ fun ScaleDeviceScreen(
             initialName = name,
             onSave = { newName ->
                 showRenameDialog = false
-                viewModel.rename(newName)
+                onRename(newName)
             },
             onDismiss = { showRenameDialog = false },
         )
@@ -130,13 +183,10 @@ fun ScaleDeviceScreen(
     if (state.keyDialogOpen) {
         ScaleKeyDialog(
             invalid = state.keyInputInvalid,
-            onEdit = viewModel::onKeyEdited,
-            onSave = viewModel::changeKey,
-            onDismiss = viewModel::dismissKeyDialog,
+            onEdit = onKeyEdited,
+            onSave = onSaveKey,
+            onDismiss = onDismissKeyDialog,
         )
-    }
-    LaunchedEffect(state.removed) {
-        if (state.removed) onRemoved()
     }
     if (showRemoveDialog) {
         ConfirmRemoveDialog(
@@ -144,9 +194,48 @@ fun ScaleDeviceScreen(
             body = stringResource(R.string.settings_scales_remove_body),
             onConfirm = {
                 showRemoveDialog = false
-                viewModel.remove()
+                onRemove()
             },
             onDismiss = { showRemoveDialog = false },
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ScaleDeviceScreenPreview() {
+    OpenWatchTheme {
+        ScaleDeviceScreen(
+            state = ScaleDeviceUiState(
+                name = "Bathroom",
+                address = "5C:E5:0C:4A:91:2F",
+                profile = 1,
+                listenerStatus = ScaleListenerStatus.LISTENING,
+                wokenBySystem = true,
+                lastWeighIn = ScaleWeighInDisplay(
+                    time = Instant.now().minus(Duration.ofHours(3)),
+                    weight = "72.4 kg",
+                    heartRate = "68 bpm",
+                    bodyFat = "18.6 %",
+                    leanMass = "58.9 kg",
+                    bodyWater = "42.7 kg",
+                    weightOnly = false,
+                ),
+            ),
+            android12 = true,
+            onRename = {},
+            onDeleteLastWeighIn = {},
+            onGrantScanPermission = {},
+            onOpenBluetoothSettings = {},
+            onAllowSystemWake = {},
+            onClaimIgnoredProfile = {},
+            onGrantHealthConnect = {},
+            onOpenBodyProfile = {},
+            onChangeKey = {},
+            onKeyEdited = {},
+            onSaveKey = {},
+            onDismissKeyDialog = {},
+            onRemove = {},
         )
     }
 }

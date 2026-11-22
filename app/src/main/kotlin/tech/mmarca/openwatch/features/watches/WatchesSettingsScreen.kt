@@ -31,32 +31,42 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.time.Duration
+import java.time.Instant
 import tech.mmarca.openwatch.core.presentation.resolve
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.devices.garmin.GarminOnboardStep
+import tech.mmarca.openwatch.domain.model.BleDeviceKind
+import tech.mmarca.openwatch.domain.model.BleDiscoveredDevice
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import tech.mmarca.openwatch.domain.model.OsPermissionCatalog
+import tech.mmarca.openwatch.domain.model.OsPermissionId
+import tech.mmarca.openwatch.domain.model.OsPermissionRow
 import tech.mmarca.openwatch.ui.components.DeviceListRow
 import tech.mmarca.openwatch.ui.components.OpenWatchButton
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OsPermissionsDialog
 import tech.mmarca.openwatch.ui.components.formatDeviceTime
+import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
 import tech.mmarca.openwatch.ui.components.OpenWatchOutlinedButton
 
 /**
- * The Watches settings screen: the paired list plus the add flow. A watch
- * row only identifies and opens; every action lives in the device view.
+ * The paired watches' section: the only place that knows the ViewModel. It refreshes the
+ * grants on the way in and on every resume, stops the scan on the way out, and owns the
+ * permission request and the settings walk; [WatchesSection] draws.
  */
 @Composable
-fun WatchesSection(
-    viewModel: WatchesViewModel,
+fun WatchesSectionRoute(
     onOpenWatch: (String) -> Unit,
-    modifier: Modifier = Modifier,
+    viewModel: WatchesViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     // One batched dialog for the runtime permissions; settings-screen ones follow through the queue.
@@ -86,6 +96,53 @@ fun WatchesSection(
         viewModel.openNextSpecialPermission()
     }
 
+    WatchesSection(
+        state = state,
+        onOpenWatch = onOpenWatch,
+        onAdd = viewModel::startAdd,
+        onDismissNotice = viewModel::dismissNotice,
+        onGrantAllPermissions = {
+            // Queue the settings walks before the dialog: its callback drains them.
+            viewModel.queueAllSpecialPermissions()
+            requestOsPermissions(state.osPermissions.requestablePermissions)
+        },
+        onGrantPermissionRow = { row ->
+            if (row.isSpecial) {
+                viewModel.queueSpecialPermission(row.id)
+                viewModel.openNextSpecialPermission()
+            } else {
+                requestOsPermissions(row.permissions)
+            }
+        },
+        onContinueToAdd = viewModel::openAddFlow,
+        onDismissPermissionsGate = viewModel::dismissPermissionsGate,
+        onSelectDevice = viewModel::selectDiscoveredDevice,
+        onAddNameChange = viewModel::updateAddDisplayName,
+        onPair = viewModel::onboardSelectedWatch,
+        onCloseAddFlow = viewModel::closeAddFlow,
+    )
+}
+
+/**
+ * The paired list plus the add flow, as drawn from [state]. A watch
+ * row only identifies and opens; every action lives in the device view.
+ */
+@Composable
+fun WatchesSection(
+    state: WatchesUiState,
+    onOpenWatch: (String) -> Unit,
+    onAdd: () -> Unit,
+    onDismissNotice: () -> Unit,
+    onGrantAllPermissions: () -> Unit,
+    onGrantPermissionRow: (OsPermissionRow) -> Unit,
+    onContinueToAdd: () -> Unit,
+    onDismissPermissionsGate: () -> Unit,
+    onSelectDevice: (BleDiscoveredDevice) -> Unit,
+    onAddNameChange: (String) -> Unit,
+    onPair: () -> Unit,
+    onCloseAddFlow: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
@@ -104,7 +161,7 @@ fun WatchesSection(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { viewModel.dismissNotice() }
+                        .clickable { onDismissNotice() }
                         .padding(Spacing.lg),
                 ) {
                     Text(
@@ -138,7 +195,7 @@ fun WatchesSection(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     OpenWatchButton(
-                        onClick = viewModel::startAdd,
+                        onClick = onAdd,
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Icon(
@@ -162,7 +219,7 @@ fun WatchesSection(
                 )
             }
             OpenWatchOutlinedButton(
-                onClick = viewModel::startAdd,
+                onClick = onAdd,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = Spacing.lg),
@@ -186,28 +243,104 @@ fun WatchesSection(
             title = stringResource(R.string.watch_permissions_title),
             body = stringResource(R.string.watch_permissions_body),
             continueLabel = stringResource(R.string.settings_watches_add),
-            onGrantAll = {
-                // Queue the settings walks before the dialog: its callback drains them.
-                viewModel.queueAllSpecialPermissions()
-                requestOsPermissions(state.osPermissions.requestablePermissions)
-            },
-            onGrantRow = { row ->
-                if (row.isSpecial) {
-                    viewModel.queueSpecialPermission(row.id)
-                    viewModel.openNextSpecialPermission()
-                } else {
-                    requestOsPermissions(row.permissions)
-                }
-            },
-            onContinue = viewModel::openAddFlow,
-            onDismiss = viewModel::dismissPermissionsGate,
+            onGrantAll = onGrantAllPermissions,
+            onGrantRow = onGrantPermissionRow,
+            onContinue = onContinueToAdd,
+            onDismiss = onDismissPermissionsGate,
         )
     }
 
     if (state.showAddFlow) {
-        AddWatchDialog(viewModel = viewModel, state = state)
+        AddWatchDialog(
+            state = state,
+            onSelectDevice = onSelectDevice,
+            onNameChange = onAddNameChange,
+            onPair = onPair,
+            onClose = onCloseAddFlow,
+        )
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun WatchesSectionPreview() {
+    OpenWatchTheme {
+        PreviewWatchesSection(state = WatchesUiState(watches = previewWatches()))
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WatchesSectionPermissionsGatePreview() {
+    OpenWatchTheme {
+        PreviewWatchesSection(
+            state = WatchesUiState(
+                osPermissions = OsPermissionCatalog(
+                    rows = listOf(
+                        OsPermissionRow(
+                            id = OsPermissionId.BLUETOOTH,
+                            permissions = listOf("android.permission.BLUETOOTH_SCAN", "android.permission.BLUETOOTH_CONNECT"),
+                            granted = true,
+                        ),
+                        OsPermissionRow(
+                            id = OsPermissionId.NOTIFICATIONS,
+                            permissions = listOf("android.permission.POST_NOTIFICATIONS"),
+                            granted = false,
+                        ),
+                        OsPermissionRow(id = OsPermissionId.BATTERY_OPTIMIZATION, permissions = emptyList(), granted = false),
+                        OsPermissionRow(id = OsPermissionId.NOTIFICATION_FORWARDING, permissions = emptyList(), granted = false),
+                    ),
+                ),
+                showPermissionsGate = true,
+            ),
+        )
+    }
+}
+
+@Composable
+private fun PreviewWatchesSection(state: WatchesUiState) {
+    WatchesSection(
+        state = state,
+        onOpenWatch = {},
+        onAdd = {},
+        onDismissNotice = {},
+        onGrantAllPermissions = {},
+        onGrantPermissionRow = {},
+        onContinueToAdd = {},
+        onDismissPermissionsGate = {},
+        onSelectDevice = {},
+        onAddNameChange = {},
+        onPair = {},
+        onCloseAddFlow = {},
+    )
+}
+
+/** Two paired watches: one connected and synced a while ago, one added and never synced. */
+private fun previewWatches(): List<BleSensorDevice> = listOf(
+    BleSensorDevice(
+        id = "forerunner-265",
+        displayName = "Forerunner 265",
+        address = "D4:3A:2C:7E:51:09",
+        bluetoothName = "Forerunner 265",
+        capabilities = emptySet(),
+        enabled = true,
+        wheelCircumferenceMm = null,
+        addedAt = Instant.now().minus(Duration.ofDays(40)),
+        kind = BleDeviceKind.WATCH,
+        lastSyncedAt = Instant.now().minus(Duration.ofMinutes(25)),
+    ),
+    BleSensorDevice(
+        id = "venu-3",
+        displayName = "Venu 3",
+        address = "F0:8B:16:C2:9D:44",
+        bluetoothName = "Venu 3",
+        capabilities = emptySet(),
+        enabled = false,
+        wheelCircumferenceMm = null,
+        addedAt = Instant.now().minus(Duration.ofMinutes(5)),
+        kind = BleDeviceKind.WATCH,
+    ),
+)
 
 private val WatchPermissionIconSize = 18.dp
 
@@ -231,12 +364,15 @@ private fun WatchRow(
 
 @Composable
 private fun AddWatchDialog(
-    viewModel: WatchesViewModel,
     state: WatchesUiState,
+    onSelectDevice: (BleDiscoveredDevice) -> Unit,
+    onNameChange: (String) -> Unit,
+    onPair: () -> Unit,
+    onClose: () -> Unit,
 ) {
     AlertDialog(
         // Bonding cannot be taken back halfway.
-        onDismissRequest = { if (!state.isOnboarding) viewModel.closeAddFlow() },
+        onDismissRequest = { if (!state.isOnboarding) onClose() },
         title = { Text(stringResource(R.string.settings_watches_add)) },
         text = {
             Column(
@@ -264,7 +400,7 @@ private fun AddWatchDialog(
                 } else if (state.selectedDevice == null) {
                     state.discoveredWatches.forEach { device ->
                         OpenWatchOutlinedButton(
-                            onClick = { viewModel.selectDiscoveredDevice(device) },
+                            onClick = { onSelectDevice(device) },
                             modifier = Modifier.fillMaxWidth(),
                         ) {
                             Column(modifier = Modifier.fillMaxWidth()) {
@@ -280,7 +416,7 @@ private fun AddWatchDialog(
                 state.selectedDevice?.let {
                     OutlinedTextField(
                         value = state.addDisplayName,
-                        onValueChange = viewModel::updateAddDisplayName,
+                        onValueChange = onNameChange,
                         label = { Text(stringResource(R.string.settings_watch_name_label)) },
                         singleLine = true,
                         enabled = !state.isOnboarding,
@@ -311,7 +447,7 @@ private fun AddWatchDialog(
                 TextButton(
                     onClick = {
                         // The dialog owns the close: a refused pairing leaves the sheet open.
-                        viewModel.onboardSelectedWatch()
+                        onPair()
                     },
                     enabled = !state.isOnboarding,
                 ) {
@@ -321,7 +457,7 @@ private fun AddWatchDialog(
         },
         dismissButton = {
             TextButton(
-                onClick = viewModel::closeAddFlow,
+                onClick = onClose,
                 enabled = !state.isOnboarding,
             ) {
                 Text(stringResource(R.string.action_cancel))
