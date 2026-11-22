@@ -22,4 +22,12 @@
         <item>tech.mmarca.openvitals.debug</item>
         <item>tech.mmarca.openvitals.ci</item>
     </string-array>
+
+    <!--
+        The names those clients go by. Another app whose label carries one of them gets a
+        warning on the Connected apps screen: a label is the app's own choice.
+    -->
+    <string-array name="openlink_first_party_names" translatable="false">
+        <item>OpenVitals</item>
+    </string-array>
 </resources>

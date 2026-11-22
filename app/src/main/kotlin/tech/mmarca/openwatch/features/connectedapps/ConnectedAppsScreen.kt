@@ -84,6 +84,14 @@ private fun ConnectedAppCard(
     OpenWatchCard(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(Spacing.lg), verticalArrangement = Arrangement.spacedBy(Spacing.sm)) {
             Text(text = app.label, style = MaterialTheme.typography.titleMedium)
+            // A label is the app's own choice; the package and the key are what identify it.
+            if (!app.firstParty) {
+                Text(
+                    text = stringResource(R.string.connected_apps_identity, app.packageName, app.signerFingerprint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
             Text(
                 text = stringResource(
                     when (app.trust) {
@@ -98,6 +106,12 @@ private fun ConnectedAppCard(
             if (app.unknownSignerForKnownName && app.trust != OpenLinkTrust.BLOCKED) {
                 Text(
                     text = stringResource(R.string.connected_apps_unknown_signer, app.label),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            } else if (app.lookalikeOf != null && app.trust != OpenLinkTrust.BLOCKED) {
+                Text(
+                    text = stringResource(R.string.connected_apps_lookalike, app.label, app.lookalikeOf),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.error,
                 )

@@ -23,6 +23,7 @@ import tech.mmarca.openwatch.link.LinkLiveSessions
 import tech.mmarca.openwatch.link.LinkSessionStatus
 import tech.mmarca.openwatch.link.linkSessionStatuses
 import tech.mmarca.openwatch.link.appLabel
+import tech.mmarca.openwatch.link.signerFingerprint
 
 /** One app that asked to use OpenWatch over OpenLink, as the screen shows it. */
 data class ConnectedApp(
@@ -44,6 +45,12 @@ data class ConnectedApp(
     val nowMillis: Long = 0L,
     /** It uses a first-party name but is not signed by a first-party key; the screen warns. */
     val unknownSignerForKnownName: Boolean = false,
+    /** Came under a first-party package and key. Any other app shows its package and signer. */
+    val firstParty: Boolean = false,
+    /** Its signing key, short, for a person to check; see `signerFingerprint`. */
+    val signerFingerprint: String = "",
+    /** The first-party name its label carries under another package; the screen warns. */
+    val lookalikeOf: String? = null,
 )
 
 @HiltViewModel
@@ -80,16 +87,19 @@ class ConnectedAppsViewModel @Inject constructor(
         if (granted) core.grant(packageName, capability) else core.revoke(packageName, capability)
     }
 
-    private fun OpenLinkClientRecord.toConnectedApp() = ConnectedApp(
+    private fun OpenLinkClientRecord.toConnectedApp() = appLabel(context, packageName).let { label -> ConnectedApp(
         packageName = packageName,
-        label = appLabel(context, packageName),
+        label = label,
         trust = trust,
         requested = CapabilityOrder.filter { it in requested },
         granted = capabilities,
         lastSeenAtMillis = lastSeenAtMillis,
         profileReceivedAtMillis = profileReceivedAtMillis,
         unknownSignerForKnownName = firstParty.usesNameWithoutKey(packageName, knownSigner),
-    )
+        firstParty = knownSigner,
+        signerFingerprint = signerFingerprint(signerSha256),
+        lookalikeOf = firstParty.lookalikeOf(label, packageName),
+    ) }
 
     /** The time now, again every half minute, so "5 min ago" moves on an open screen. */
     private fun ticker(): Flow<Long> = flow {

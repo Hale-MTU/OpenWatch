@@ -233,7 +233,11 @@ recording sessions and live readings.
 - Only a first-party package name (`openlink_first_party_packages`) under one of
   `openlink_known_signers` is trusted without asking (`FirstPartyApps`); the same key under
   another name asks like any app. A first-party name that came under another key gets a
-  warning on its card. What the user switches off stays off through the app's next hello.
+  warning on its card, and so does an app whose label carries a first-party name
+  (`openlink_first_party_names`, ignoring case, spaces and punctuation) under another package.
+  Every card but a first-party client's shows the package and the signer's first 64 bits
+  (`signerFingerprint`), since a label is the app's own choice. What the user switches off
+  stays off through the app's next hello.
 - While the Connected apps screen shows, `MainActivity` drops touches that came through
   another app's window (Compose ignores a view's `filterTouchesWhenObscured`), and from
   API 31 other apps' overlays are hidden.
