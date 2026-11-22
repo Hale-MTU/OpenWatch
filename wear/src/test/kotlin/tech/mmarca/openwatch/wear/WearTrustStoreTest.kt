@@ -7,13 +7,17 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import javax.crypto.KeyGenerator
+import tech.mmarca.openwatch.wearlink.SecretSeal
 import tech.mmarca.openwatch.wearlink.WearLinkToken
 
 class WearTrustStoreTest {
 
     private val prefs = FakeSharedPreferences()
     private var now = 1_000_000L
-    private val store = WearTrustStore(prefs, clock = { now })
+    private val key = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
+    private val seal = SecretSeal { key }
+    private val store = WearTrustStore(prefs, seal, clock = { now })
     private val pendings = ArrayList<PendingPhone>()
     private val phone = "AA:BB:CC:DD:EE:01"
     private val token = WearLinkToken.generate()
@@ -95,6 +99,29 @@ class WearTrustStoreTest {
     fun `addresses are matched regardless of case and survive a restart`() {
         store.trust(phone.lowercase(), token, "Pixel")
 
-        assertEquals(token, WearTrustStore(prefs).tokenFor(phone))
+        assertEquals(token, WearTrustStore(prefs, seal).tokenFor(phone))
+    }
+
+    @Test
+    fun `a token is kept sealed, and one kept in plain before is kept and sealed`() {
+        store.trust(phone, token, "Pixel")
+        val stored = prefs.getString("token_$phone", null)!!
+        assertTrue(stored.startsWith(SecretSeal.PREFIX))
+        assertFalse(stored.contains(token))
+
+        val other = "AA:BB:CC:DD:EE:02"
+        val older = WearLinkToken.generate()
+        prefs.edit().putString("token_$other", older).apply()
+
+        assertEquals(older, store.tokenFor(other))
+        assertTrue(prefs.getString("token_$other", null)!!.startsWith(SecretSeal.PREFIX))
+    }
+
+    @Test
+    fun `a token this watch can no longer open asks the wearer again`() {
+        store.trust(phone, token, "Pixel")
+        val otherKey = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
+
+        assertNull(WearTrustStore(prefs, SecretSeal { otherKey }).tokenFor(phone))
     }
 }

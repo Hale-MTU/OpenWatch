@@ -15,6 +15,7 @@ import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
 import tech.mmarca.openwatch.core.presentation.CurrentLocaleStrings
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
+import tech.mmarca.openwatch.core.security.KeystoreSecretKey
 import tech.mmarca.openwatch.data.local.device.DeviceDao
 import tech.mmarca.openwatch.data.local.device.DeviceStorageExecutor
 import tech.mmarca.openwatch.data.local.device.DeviceStateDao
@@ -25,6 +26,7 @@ import tech.mmarca.openwatch.data.local.garmin.GarminWellnessDao
 import tech.mmarca.openwatch.data.local.scale.ScaleWeighInDao
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.domain.preferences.SystemUnitSystemProvider
+import tech.mmarca.openwatch.wearlink.SecretSeal
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.CoroutineScope
 import tech.mmarca.openwatch.core.performance.ApplicationScope
@@ -32,6 +34,11 @@ import tech.mmarca.openwatch.core.performance.ApplicationScope
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    /** Seals the secrets the phone keeps: the scale's key and the watches' link tokens. */
+    @Provides
+    @Singleton
+    fun provideSecretSeal(): SecretSeal = SecretSeal(KeystoreSecretKey())
 
     @Provides
     @Singleton

@@ -150,7 +150,7 @@ The Xiaomi Body Composition Scale S400. The scale takes no connection: it broadc
 | Health Connect mapping | `S400WeighInImport` (record kinds, ids, record time) |
 | Listening | `ScaleScanRadio` (the one file here touching `android.bluetooth.le`; `devices/core/pairing/CompanionDevicePairing` builds the dialog's filters), `ScaleScanReceiver`, `XiaomiScaleListener` (also the `CompanionPresenceObserver`), `ScaleListeningService` and its `ScaleForeground` port, `ScaleListenerWorker`, `ScaleLog` |
 | Pipeline | `ScaleWeighInIngest` (decode, fold into Room, write), `ScaleWeighInWriter` (Room to Health Connect, retries, delete) |
-| State | `XiaomiScaleStore` (key, address, user slot, last failure) |
+| State | `XiaomiScaleStore` (key, sealed by `SecretSeal`; address, user slot, last failure) |
 
 Notes worth carrying:
 
@@ -193,6 +193,7 @@ The phone-to-watch link, in `wearlink/`, pure Kotlin on the JDK with no Android 
 - `WearLinkProtocol` — the line grammar over the RFCOMM socket: words, limits, the `SM` row type and every format and parse function. The `SM` fields are specified in [sleep-minute-features.md](sleep-minute-features.md).
 - `WearLinkLines` — the framing, defined once for both ends: UTF-8 lines, `\n` terminated, a trailing `\r` tolerated, a line over 512 bytes closes the connection.
 - `WearLinkToken` — the secret a phone presents on every connection: 32 random bytes as Base64, compared in constant time. The bond says the devices know each other; the token says this app on this phone is the one the wearer allowed. The phone keeps one per added watch (`WearOsLinkStore`, keyed by the address the watch was added under, since pairing again can list the bond under another address) and drops it when the watch is removed; the watch keeps one per phone address. A known phone presenting another token, as after a reinstall, is asked about again like a new one, and allowing it replaces the old token.
+- `SecretSeal` — how both apps keep a secret at rest: AES-GCM under a key made in and held by the Android Keystore (`core/security/KeystoreSecretKey` on the phone, `WearSecretKey` on the watch), stored as `v1:` and Base64. It seals the link tokens on both sides and the scale's bind key. A value from before sealing reads as it is and is sealed on that read; a value whose Keystore key is gone opens to nothing, so the watch asks the wearer again and the scale screen asks for the key.
 
 Its tests run in both gates (`verifyCiUnitTest` and `verifyWearCi` depend on `:wearlink:test`), its lockfile is `wearlink/gradle.lockfile`, and the file-size ratchet holds its files to the same limit as the phone app's.
 

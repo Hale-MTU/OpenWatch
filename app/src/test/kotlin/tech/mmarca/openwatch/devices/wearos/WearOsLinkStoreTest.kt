@@ -7,13 +7,14 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.openwatch.core.security.testSeal
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.wearlink.WearLinkToken
 
 class WearOsLinkStoreTest {
 
     private val prefs = FakeSharedPreferences()
-    private val store = WearOsLinkStore(prefs)
+    private val store = WearOsLinkStore(prefs, testSeal())
 
     @Test
     fun `one token per added watch, kept across a new pairing and restarts, new once the watch is removed`() {
@@ -22,12 +23,27 @@ class WearOsLinkStoreTest {
         assertTrue(WearLinkToken.isWellFormed(token))
         // Paired again, the bond is listed under another address.
         assertEquals(token, store.tokenFor("7F:12:34:56:78:9A", "4A:F1:89:49:3C:85"))
-        assertEquals(token, WearOsLinkStore(prefs).tokenFor("7F:12:34:56:78:9A", "A8:D1:62:BE:3A:3B"))
+        assertEquals(token, WearOsLinkStore(prefs, testSeal()).tokenFor("7F:12:34:56:78:9A", "A8:D1:62:BE:3A:3B"))
         assertNotEquals(token, store.tokenFor("11:22:33:44:55:66", "A8:D1:62:BE:3A:3B"))
 
         store.clear("watch-1", "7F:12:34:56:78:9A")
 
         assertNotEquals(token, store.tokenFor("7F:12:34:56:78:9A", "A8:D1:62:BE:3A:3B"))
+    }
+
+    @Test
+    fun `a token is kept sealed, and one kept in plain before is kept and sealed`() {
+        val token = store.tokenFor("7F:12:34:56:78:9A", "A8:D1:62:BE:3A:3B")
+        val stored = prefs.getString("watch_token_7F:12:34:56:78:9A", null)!!
+        assertTrue(stored.startsWith("v1:"))
+        assertFalse(stored.contains(token))
+
+        val older = WearLinkToken.generate()
+        prefs.edit().putString("watch_token_11:22:33:44:55:66", older).apply()
+
+        assertEquals(older, store.tokenFor("11:22:33:44:55:66", "A8:D1:62:BE:3A:3B"))
+        assertTrue(prefs.getString("watch_token_11:22:33:44:55:66", null)!!.startsWith("v1:"))
+        assertEquals(older, WearOsLinkStore(prefs, testSeal()).tokenFor("11:22:33:44:55:66", "A8:D1:62:BE:3A:3B"))
     }
 
     @Test

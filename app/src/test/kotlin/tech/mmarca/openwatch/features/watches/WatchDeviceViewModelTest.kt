@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.features.watches
 
+import tech.mmarca.openwatch.core.security.testSeal
 import tech.mmarca.openwatch.data.repository.testDeviceStateStore
 import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.devices.wearos.WearOsSyncCursorStore
@@ -109,7 +110,7 @@ class WatchDeviceViewModelTest {
     private val garminLocalData = mockk<tech.mmarca.openwatch.devices.garmin.GarminLocalData>(relaxed = true)
     private val healthConnectManager = mockk<tech.mmarca.openwatch.healthconnect.HealthConnectGateway>(relaxed = true)
     private val notificationBridge = mockk<tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge>(relaxed = true)
-    private val wearOsLinkStore = WearOsLinkStore(FakeSharedPreferences())
+    private val wearOsLinkStore = WearOsLinkStore(FakeSharedPreferences(), testSeal())
 
     /** The scheduler owns the stored interval and the WorkManager side, so it is one stub that remembers. */
     private lateinit var autoSyncScheduler: WatchAutoSyncScheduler

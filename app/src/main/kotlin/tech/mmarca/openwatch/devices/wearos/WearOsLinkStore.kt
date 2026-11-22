@@ -10,6 +10,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import tech.mmarca.openwatch.wearlink.SecretSeal
 import tech.mmarca.openwatch.wearlink.WearLinkToken
 
 /** The last thing the link learned about one registered watch. */
@@ -27,13 +28,15 @@ data class WearOsLinkSnapshot(
  * find its bond again), and, in memory, the latest snapshot per device for
  * the screen. Both are keyed by the address the watch was added under: the
  * bond's own address changes when the watch is paired again, and a new
- * token would have the watch ask the wearer again.
+ * token would have the watch ask the wearer again. Tokens are kept sealed by [seal]; one
+ * kept in plain before that is sealed the first time it is read.
  */
 @Singleton
-class WearOsLinkStore(private val prefs: SharedPreferences) {
+class WearOsLinkStore(private val prefs: SharedPreferences, private val seal: SecretSeal) {
 
     @Inject
-    constructor(@ApplicationContext context: Context) : this(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE))
+    constructor(@ApplicationContext context: Context, seal: SecretSeal) :
+        this(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE), seal)
 
     private val snapshotsFlow = MutableStateFlow<Map<String, WearOsLinkSnapshot>>(emptyMap())
 
@@ -49,11 +52,18 @@ class WearOsLinkStore(private val prefs: SharedPreferences) {
     @Synchronized
     fun tokenFor(registeredAddress: String?, bondAddress: String): String {
         val key = tokenKey(registeredAddress?.takeIf { it.isNotBlank() } ?: bondAddress)
-        prefs.getString(key, null)?.takeIf(WearLinkToken::isWellFormed)?.let { return it }
+        prefs.getString(key, null)?.let { stored ->
+            // A token sealed under a key this phone no longer has is gone: a new one is made,
+            // and the watch asks the wearer again.
+            seal.open(stored)?.takeIf(WearLinkToken::isWellFormed)?.let { token ->
+                if (!seal.isSealed(stored)) prefs.edit { putString(key, seal.seal(token) ?: token) }
+                return token
+            }
+        }
         val legacyKey = legacyTokenKey(bondAddress)
         val token = prefs.getString(legacyKey, null)?.takeIf(WearLinkToken::isWellFormed) ?: WearLinkToken.generate()
         prefs.edit {
-            putString(key, token)
+            putString(key, seal.seal(token) ?: token)
             remove(legacyKey)
         }
         return token

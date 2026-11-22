@@ -89,6 +89,8 @@ class XiaomiScaleListener(
         // Runs from Application.onCreate. Not worth failing app start over.
         runCatching {
             arm()
+            // Opening the key seals one an older version kept in plain; off the main thread.
+            scope.launch { store.bindKey() }
             retryPending()
         }.onFailure { Log.w(TAG, "Could not start listening for the scale: $it") }
     }

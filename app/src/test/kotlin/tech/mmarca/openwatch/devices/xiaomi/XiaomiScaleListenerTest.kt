@@ -27,6 +27,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import tech.mmarca.openwatch.core.security.testSeal
 import tech.mmarca.openwatch.data.repository.contract.FakeScaleWeighInRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevice
@@ -56,7 +57,7 @@ class XiaomiScaleListenerTest {
 
     private val workManager = mockk<WorkManager>(relaxed = true)
     private val radio = FakeRadio()
-    private val store = XiaomiScaleStore(FakeSharedPreferences())
+    private val store = XiaomiScaleStore(FakeSharedPreferences(), testSeal())
     private val writer = mockk<ScaleWeighInWriter>(relaxed = true)
     private val companion = mockk<CompanionDevicePairing>(relaxed = true)
     private val weighIns = FakeScaleWeighInRepository()

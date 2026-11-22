@@ -20,6 +20,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.openwatch.core.security.testSeal
 import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
 import tech.mmarca.openwatch.data.repository.BodyProfileProvider
 import tech.mmarca.openwatch.data.repository.contract.FakeBodyProfilePreferences
@@ -48,7 +49,7 @@ class ScaleWeighInIngestTest {
     /** 497.6 ohm at 250 kHz, same weigh-in. */
     private val secondFrame = advert("4859d53b0bd6ef0b25db72785e7e2f46d6000000d8642df6")
 
-    private val store = XiaomiScaleStore(FakeSharedPreferences()).also { it.setUp(address, "Scale", key) }
+    private val store = XiaomiScaleStore(FakeSharedPreferences(), testSeal()).also { it.setUp(address, "Scale", key) }
     private val weighIns = FakeScaleWeighInRepository()
 
     private val written = mutableListOf<List<Record>>()

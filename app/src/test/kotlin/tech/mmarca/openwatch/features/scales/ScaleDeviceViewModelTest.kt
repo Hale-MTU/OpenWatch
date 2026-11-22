@@ -16,6 +16,7 @@ import org.junit.Rule
 import org.junit.Test
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
+import tech.mmarca.openwatch.core.security.testSeal
 import tech.mmarca.openwatch.data.repository.contract.FakeScaleWeighInRepository
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
@@ -37,7 +38,7 @@ class ScaleDeviceViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val key = "0728974d657a4b60964c1b1677f35f7c".hexToByteArray()
-    private val store = XiaomiScaleStore(FakeSharedPreferences()).also { it.setUp("8C:D0:B2:F6:BE:EF", "Bathroom", key) }
+    private val store = XiaomiScaleStore(FakeSharedPreferences(), testSeal()).also { it.setUp("8C:D0:B2:F6:BE:EF", "Bathroom", key) }
     private val listener = mockk<XiaomiScaleListener>(relaxed = true) {
         every { status } returns MutableStateFlow(ScaleListenerStatus.LISTENING)
         every { isWokenBySystem() } returns true

@@ -6,6 +6,7 @@ import androidx.core.content.edit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import tech.mmarca.openwatch.wearlink.SecretSeal
 
 /** Why the last attempt to save a weigh-in to Health Connect did not go through. */
 enum class ScaleWriteFailure { PERMISSION, SYNC_PAUSED, OTHER }
@@ -45,42 +46,71 @@ data class XiaomiScaleConfig(
  * The scale's settings, kept out of the device registry: a scale takes no
  * connection, so it has no capabilities, no bond and no sync. One scale,
  * identified by the address Android's companion dialog returned.
- * SharedPreferences-backed and never backed up; the bind key stays on this
- * phone.
+ * SharedPreferences-backed, never backed up nor moved to another phone. The
+ * bind key is sealed by [seal] under a key the Keystore keeps; one kept in
+ * plain before that is sealed the first time it is read.
  */
-class XiaomiScaleStore(private val prefs: SharedPreferences) {
+class XiaomiScaleStore(private val prefs: SharedPreferences, private val seal: SecretSeal) {
 
-    constructor(context: Context) : this(
+    constructor(context: Context, seal: SecretSeal) : this(
         context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE),
+        seal,
     )
 
     private val _config = MutableStateFlow(read())
     val config: StateFlow<XiaomiScaleConfig> = _config.asStateFlow()
 
-    /** The 16-byte key that opens the scale's broadcasts, or null before one is set. */
-    fun bindKey(): ByteArray? = prefs.getString(KEY_BIND_KEY, null)?.let(::parseBindKey)
+    /** The key as opened, so a broadcast does not ask the Keystore each time. */
+    private var openedKey: ByteArray? = null
+
+    /**
+     * The 16-byte key that opens the scale's broadcasts, or null before one is set. A key
+     * sealed under a Keystore key the phone no longer has reads as rejected, so the screen
+     * asks for it again.
+     */
+    @Synchronized
+    fun bindKey(): ByteArray? {
+        openedKey?.let { return it.copyOf() }
+        val stored = prefs.getString(KEY_BIND_KEY, null) ?: return null
+        val text = seal.open(stored)
+        val key = text?.let(::parseBindKey)
+        if (key == null) {
+            if (seal.isSealed(stored)) setKeyRejected(true)
+            return null
+        }
+        if (!seal.isSealed(stored)) prefs.edit { putString(KEY_BIND_KEY, sealed(key)) }
+        openedKey = key
+        return key.copyOf()
+    }
 
     /** Adds the scale. Whatever an earlier scale left behind goes with it. */
+    @Synchronized
     fun setUp(address: String, name: String, key: ByteArray) {
         require(key.size == BIND_KEY_BYTES)
         prefs.edit {
             clear()
             putString(KEY_ADDRESS, address.uppercase())
             putString(KEY_NAME, name)
-            putString(KEY_BIND_KEY, key.toHexString())
+            putString(KEY_BIND_KEY, sealed(key))
         }
+        openedKey = key.copyOf()
         publish()
     }
 
     /** A new key for the same scale, after it was paired again in Xiaomi Home. The scale stays known. */
+    @Synchronized
     fun changeKey(key: ByteArray) {
         require(key.size == BIND_KEY_BYTES)
         prefs.edit {
-            putString(KEY_BIND_KEY, key.toHexString())
+            putString(KEY_BIND_KEY, sealed(key))
             remove(KEY_REJECTED)
         }
+        openedKey = key.copyOf()
         publish()
     }
+
+    /** Plain hex only when the Keystore gives no key, as every version before sealing kept it. */
+    private fun sealed(key: ByteArray): String = key.toHexString().let { seal.seal(it) ?: it }
 
     fun rename(name: String) {
         prefs.edit { putString(KEY_NAME, name) }
@@ -126,8 +156,10 @@ class XiaomiScaleStore(private val prefs: SharedPreferences) {
     }
 
     /** Forgets the scale and its key. */
+    @Synchronized
     fun clear() {
         prefs.edit { clear() }
+        openedKey = null
         publish()
     }
 
@@ -136,7 +168,8 @@ class XiaomiScaleStore(private val prefs: SharedPreferences) {
     }
 
     private fun read(): XiaomiScaleConfig = XiaomiScaleConfig(
-        hasKey = prefs.getString(KEY_BIND_KEY, null)?.let(::parseBindKey) != null,
+        // Not opened here: that asks the Keystore, and this runs at start-up.
+        hasKey = prefs.getString(KEY_BIND_KEY, null) != null,
         address = prefs.getString(KEY_ADDRESS, null),
         name = prefs.getString(KEY_NAME, null),
         profile = prefs.getInt(KEY_PROFILE, NONE).takeIf { it != NONE },

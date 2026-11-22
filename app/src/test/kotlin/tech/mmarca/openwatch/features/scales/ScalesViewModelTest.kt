@@ -15,6 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import tech.mmarca.openwatch.core.permissions.OsPermissionsService
+import tech.mmarca.openwatch.core.security.testSeal
 import tech.mmarca.openwatch.data.repository.contract.FakeScaleWeighInRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevice
@@ -34,7 +35,7 @@ class ScalesViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val scale = CompanionDevice("8C:D0:B2:F6:BE:EF", "Xiaomi Scale S400 BEEF")
-    private val store = XiaomiScaleStore(FakeSharedPreferences())
+    private val store = XiaomiScaleStore(FakeSharedPreferences(), testSeal())
     private var found: CompanionDevice? = scale
     private val listener = mockk<XiaomiScaleListener>(relaxed = true) {
         every { status } returns MutableStateFlow(ScaleListenerStatus.LISTENING)

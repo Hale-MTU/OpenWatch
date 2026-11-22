@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.openwatch.core.security.testSeal
 import tech.mmarca.openwatch.data.repository.testDeviceStateStore
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
@@ -61,7 +62,7 @@ class WearOsWatchSyncServiceTest {
     private val importRepository = mockk<ImportedRecordRepository>(relaxed = true)
     private val cursors = WearOsSyncCursorStore(testDeviceStateStore())
     private val healthConnect = mockk<HealthConnectGateway>(relaxed = true)
-    private val linkStore = WearOsLinkStore(FakeSharedPreferences())
+    private val linkStore = WearOsLinkStore(FakeSharedPreferences(), testSeal())
     private val zone: ZoneOffset = ZoneOffset.ofHours(2)
 
     /** Pages handed out in order; each pull consumes one. */

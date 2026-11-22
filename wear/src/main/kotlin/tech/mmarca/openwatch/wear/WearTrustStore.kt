@@ -2,6 +2,8 @@ package tech.mmarca.openwatch.wear
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.core.content.edit
+import tech.mmarca.openwatch.wearlink.SecretSeal
 import tech.mmarca.openwatch.wearlink.WearLinkTrustStore
 
 /**
@@ -9,14 +11,17 @@ import tech.mmarca.openwatch.wearlink.WearLinkTrustStore
  * phones the wearer has blocked. Plain preferences: a few entries, keyed by
  * the phone's Bluetooth address. The server consults it on every hello;
  * Allow and Block, on the screen and on the request notification, write to it.
+ * Tokens are kept sealed by [seal]; one kept in plain before that is sealed the first time
+ * it is read.
  */
 class WearTrustStore(
     private val prefs: SharedPreferences,
+    private val seal: SecretSeal,
     private val state: WearLinkState = WearLinkState,
     private val clock: () -> Long = System::currentTimeMillis,
 ) : WearLinkTrustStore {
 
-    constructor(context: Context) : this(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE))
+    constructor(context: Context) : this(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE), SecretSeal(WearSecretKey))
 
     /** Called when an unknown phone asks; the service turns it into a notification. */
     @Volatile
@@ -26,7 +31,13 @@ class WearTrustStore(
         publish()
     }
 
-    override fun tokenFor(peerAddress: String): String? = prefs.getString(tokenKey(peerAddress), null)
+    /** Null too for a token sealed under a key this watch no longer has: the phone is asked about again. */
+    override fun tokenFor(peerAddress: String): String? {
+        val stored = prefs.getString(tokenKey(peerAddress), null) ?: return null
+        val token = seal.open(stored) ?: return null
+        if (!seal.isSealed(stored)) prefs.edit { putString(tokenKey(peerAddress), seal.seal(token) ?: token) }
+        return token
+    }
 
     override fun isBlocked(peerAddress: String): Boolean = peerAddress in blocked()
 
@@ -43,7 +54,7 @@ class WearTrustStore(
     /** The wearer allowed [address] with [token], replacing any token it had. Clears a pending request for it. */
     fun trust(address: String, token: String, name: String) {
         prefs.edit()
-            .putString(tokenKey(address), token)
+            .putString(tokenKey(address), seal.seal(token) ?: token)
             .putString(nameKey(address), name)
             .putLong(trustedAtKey(address), clock())
             .putStringSet(BLOCKED, (blocked() - address).toMutableSet())

@@ -4,13 +4,16 @@ import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.openwatch.core.security.lostKeySeal
+import tech.mmarca.openwatch.core.security.testSeal
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 
 class XiaomiScaleStoreTest {
 
     private val prefs = FakeSharedPreferences()
-    private val store = XiaomiScaleStore(prefs)
+    private val store = XiaomiScaleStore(prefs, testSeal())
     private val key = "0728974d657a4b60964c1b1677f35f7c".hexToByteArray()
 
     @Test
@@ -22,7 +25,7 @@ class XiaomiScaleStoreTest {
         store.noteIgnoredProfile(profile = 2, atMillis = 5_000)
         store.setDeletedScaleTimestamp(1744250605)
 
-        val restarted = XiaomiScaleStore(prefs)
+        val restarted = XiaomiScaleStore(prefs, testSeal())
 
         assertArrayEquals(key, restarted.bindKey())
         assertEquals(
@@ -79,6 +82,33 @@ class XiaomiScaleStoreTest {
     }
 
     @Test
+    fun `the key is kept sealed, and one kept in plain before is sealed once read`() {
+        store.setUp("8C:D0:B2:F6:BE:EF", "Bathroom scale", key)
+
+        val stored = prefs.getString("bind_key", null)!!
+        assertTrue(stored.startsWith("v1:"))
+        assertFalse(stored.contains("0728974d657a4b60964c1b1677f35f7c", ignoreCase = true))
+
+        prefs.edit().putString("bind_key", "0728974d657a4b60964c1b1677f35f7c").apply()
+        val older = XiaomiScaleStore(prefs, testSeal())
+
+        assertArrayEquals(key, older.bindKey())
+        assertTrue(prefs.getString("bind_key", null)!!.startsWith("v1:"))
+        assertArrayEquals(key, XiaomiScaleStore(prefs, testSeal()).bindKey())
+    }
+
+    @Test
+    fun `a key the phone can no longer open is asked for again, the scale kept`() {
+        store.setUp("8C:D0:B2:F6:BE:EF", "Bathroom scale", key)
+
+        val moved = XiaomiScaleStore(prefs, lostKeySeal())
+
+        assertNull(moved.bindKey())
+        assertTrue(moved.config.value.keyRejected)
+        assertTrue(moved.config.value.isSetUp)
+    }
+
+    @Test
     fun `removing the scale leaves nothing, the key included`() {
         store.setUp("8C:D0:B2:F6:BE:EF", "Bathroom scale", key)
         store.setProfile(1)
@@ -86,7 +116,7 @@ class XiaomiScaleStoreTest {
         store.clear()
 
         assertNull(store.bindKey())
-        assertEquals(XiaomiScaleConfig(), XiaomiScaleStore(prefs).config.value)
+        assertEquals(XiaomiScaleConfig(), XiaomiScaleStore(prefs, testSeal()).config.value)
     }
 
     @Test

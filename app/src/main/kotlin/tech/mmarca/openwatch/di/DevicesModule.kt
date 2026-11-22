@@ -57,6 +57,7 @@ import tech.mmarca.openwatch.devices.xiaomi.ScaleScanRadio
 import tech.mmarca.openwatch.devices.xiaomi.SystemScaleScanRadio
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleListener
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleStore
+import tech.mmarca.openwatch.wearlink.SecretSeal
 
 /** Wiring for the `devices/` layer, kept apart so [AppModule] carries no watch knowledge. */
 @Module
@@ -218,6 +219,7 @@ abstract class DevicesModule {
         @Singleton
         fun provideXiaomiScaleStore(
             @ApplicationContext context: Context,
-        ): XiaomiScaleStore = XiaomiScaleStore(context)
+            seal: SecretSeal,
+        ): XiaomiScaleStore = XiaomiScaleStore(context, seal)
     }
 }
