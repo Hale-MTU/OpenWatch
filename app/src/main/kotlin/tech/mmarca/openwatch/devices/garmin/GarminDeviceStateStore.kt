@@ -167,9 +167,12 @@ class GarminDeviceStateStore(private val prefs: SharedPreferences) : AutoSyncInt
         prefs.edit { putBoolean(highMtuPrefsKey(address), enabled) }
     }
 
-    fun clear(deviceId: String) {
+    /** Everything kept for the device: by id, and the link's own flag by its [address]. */
+    fun clear(deviceId: String, address: String? = null) {
         clearSyncedFileKeys(deviceId)
         prefs.edit {
+            remove(navigationOnWatchPrefsKey(deviceId))
+            address?.let { remove(highMtuPrefsKey(it)) }
             remove(capabilitiesPrefsKey(deviceId))
             remove(stayConnectedPrefsKey(deviceId))
             remove(setupWizardPrefsKey(deviceId))

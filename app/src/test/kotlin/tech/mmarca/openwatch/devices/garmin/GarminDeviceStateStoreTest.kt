@@ -112,8 +112,10 @@ class GarminDeviceStateStoreTest {
         store.setAutoSyncInterval(deviceId, AutoSyncInterval.EVERY_2_HOURS)
         store.setAlarms(deviceId, listOf(GarminAlarm(hour = 7, minute = 0)))
         store.recordSentAlarms(deviceId, listOf(GarminAlarm(hour = 7, minute = 0)))
+        store.setNavigationOnWatch(deviceId, true)
+        store.setHighMtu("aa:bb:cc:dd:ee:ff", false)
 
-        store.clear(deviceId)
+        store.clear(deviceId, address = "AA:BB:CC:DD:EE:FF")
 
         // The keys are gone from storage, not only the in-memory view.
         val reloaded = GarminDeviceStateStore(prefs)
@@ -123,6 +125,9 @@ class GarminDeviceStateStoreTest {
         assertTrue(reloaded.stayConnected(deviceId))
         assertEquals(AutoSyncInterval.OFF, reloaded.autoSyncInterval(deviceId))
         assertTrue(reloaded.alarms(deviceId).isEmpty())
+        // The two keys the clean-up used to leave behind.
+        assertFalse(reloaded.navigationOnWatch(deviceId))
+        assertTrue(reloaded.highMtu("AA:BB:CC:DD:EE:FF"))
         assertNull(reloaded.sentAlarms(deviceId))
     }
 

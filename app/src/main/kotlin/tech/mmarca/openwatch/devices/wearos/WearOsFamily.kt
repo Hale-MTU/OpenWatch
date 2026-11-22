@@ -19,6 +19,7 @@ class WearOsFamily @Inject constructor(
     private val linkStore: WearOsLinkStore,
     private val onboard: OnboardWearOsWatchUseCase,
     private val companion: WearOsCompanionManager,
+    private val cursors: WearOsSyncCursorStore,
 ) : DeviceFamily {
 
     override val id: String = DeviceIntegration.WEAROS.storageName
@@ -40,6 +41,8 @@ class WearOsFamily @Inject constructor(
 
     override suspend fun forget(device: BleSensorDevice, deleteHistory: Boolean) {
         linkStore.clear(device.id, device.address)
+        // A watch added again gets a new id, so these would only lie about.
+        cursors.clear(device.id)
         runSuspendCatching { onboard.forget(device.address) }
     }
 }

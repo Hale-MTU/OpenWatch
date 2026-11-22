@@ -61,7 +61,7 @@ class GarminFamily @Inject constructor(
         owns(device) && deviceRepository.devices.none { it.id != device.id && owns(it) }
 
     override suspend fun forget(device: BleSensorDevice, deleteHistory: Boolean) {
-        stateStore.clear(device.id)
+        stateStore.clear(device.id, device.address)
         runSuspendCatching { onboard.forget(device.address) }
         if (deviceRepository.devices.none(::owns)) {
             runSuspendCatching { localData.clearAfterLastWatchRemoved(deleteHistory) }

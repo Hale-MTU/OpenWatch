@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.features.watches
 
+import tech.mmarca.openwatch.devices.wearos.WearOsSyncCursorStore
 import tech.mmarca.openwatch.devices.wearos.WearOsFamily
 import tech.mmarca.openwatch.devices.garmin.GarminFamily
 import tech.mmarca.openwatch.devices.core.DeviceFamilies
@@ -186,7 +187,7 @@ class WatchDeviceViewModelTest {
                     GarminRealtimeStore(),
                     notificationBridge,
                 ),
-                "WEAROS" to WearOsFamily(wearOsLinkStore, onboardWearOsWatch, wearOsCompanionManager),
+                "WEAROS" to WearOsFamily(wearOsLinkStore, onboardWearOsWatch, wearOsCompanionManager, WearOsSyncCursorStore(FakeSharedPreferences())),
             ),
         ),
     )
