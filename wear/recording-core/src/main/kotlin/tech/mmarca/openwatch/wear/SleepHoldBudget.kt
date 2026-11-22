@@ -13,7 +13,7 @@ import java.time.ZoneId
  * it went over. It only counts: nothing is held back when the budget is
  * spent. Pure, and safe to read from another thread.
  */
-internal class SleepHoldBudget(private val zone: () -> ZoneId = ZoneId::systemDefault) {
+class SleepHoldBudget(private val zone: () -> ZoneId = ZoneId::systemDefault) {
 
     enum class Mode { NONE, LOCK, SYNCED }
 

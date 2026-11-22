@@ -67,6 +67,8 @@ android {
 
 dependencies {
     implementation(project(":wearlink"))
+    // The recorders' pure decisions and computations, tested on the plain JVM.
+    implementation(project(":wear:recording-core"))
     // HRV, respiratory rate and the minute features from the raw sensors, shared with the phone.
     implementation("tech.mmarca.healthcalculations:health-calculations")
     val composeBom = platform(libs.androidx.compose.bom)

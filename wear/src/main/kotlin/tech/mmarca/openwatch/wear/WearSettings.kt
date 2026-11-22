@@ -25,7 +25,8 @@ import tech.mmarca.openwatch.wearlink.HeartRateInterval
  */
 internal object WearSettings {
 
-    enum class Source { RAW_SENSOR, SAMSUNG_PLATFORM }
+    /** Defined in `:wear:recording-core`, which [RecorderPlan] and [WatchPreferences] live in. */
+    typealias Source = MeasurementSource
 
     private const val PREFS = "wear_settings"
     private const val KEY_HEART_RATE_DAY = "heart_rate_day"

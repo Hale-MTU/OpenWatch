@@ -1,6 +1,7 @@
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.api.dsl.CommonExtension
 import com.android.build.api.dsl.LibraryExtension
+import com.android.build.api.dsl.Lint
 import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -31,7 +32,12 @@ internal fun Project.configureAndroid(android: CommonExtension) {
     android.buildToolsVersion = "37.0.0"
     android.compileOptions.sourceCompatibility = JavaVersion.VERSION_17
     android.compileOptions.targetCompatibility = JavaVersion.VERSION_17
-    android.lint.apply {
+    configureLint(android.lint)
+}
+
+/** The lint rules of every module that runs Android lint, an Android one or a plain Kotlin one. */
+internal fun Project.configureLint(lint: Lint) {
+    lint.apply {
         // No lint vital on release-type builds: the gate's lint job already ran the full lint
         // on the commit, and lint vital ran beside R8 in the signing build (five minutes, 2026-10).
         checkReleaseBuilds = false
@@ -176,12 +182,19 @@ class OpenWatchAndroidLibraryPlugin : Plugin<Project> {
     }
 }
 
-/** A pure-JVM module, compiled for Java 17 like the apps. */
+/**
+ * A pure-JVM module, compiled for Java 17 like the apps. One that also applies
+ * `com.android.lint` (code moved out of an app, which lint checked there) gets the
+ * Android modules' lint rules.
+ */
 class OpenWatchJvmLibraryPlugin : Plugin<Project> {
     override fun apply(target: Project) = with(target) {
         pluginManager.apply("org.jetbrains.kotlin.jvm")
         configureBasics()
         extensions.configure<KotlinJvmProjectExtension> { jvmToolchain(17) }
+        pluginManager.withPlugin("com.android.lint") {
+            extensions.configure<Lint> { configureLint(this) }
+        }
     }
 }
 

@@ -2,8 +2,8 @@
 
 ## Build
 
-The phone app, the watch app, the pure-Kotlin link and the domain module build with the
-Gradle wrapper. JDK 17 or 21, the Android platform 37 and build-tools 37.0.0.
+The phone app, the watch app and its pure core, the pure-Kotlin link and the domain module
+build with the Gradle wrapper. JDK 17 or 21, the Android platform 37 and build-tools 37.0.0.
 
 ```bash
 ./gradlew :app:assembleDebug
@@ -29,7 +29,7 @@ module's tests, since both apps compile it.
 
 ```bash
 ./gradlew verifyCi        # the phone app and the domain module: unit tests, translations, duplicate classes, android-test compile, lint
-./gradlew verifyWearCi    # the watch app: unit tests, lint, build, android-test compile, and :app's architecture tests
+./gradlew verifyWearCi    # the watch app and its pure core: unit tests, lint, build, android-test compile, and :app's architecture tests
 ```
 
 `verifyCi` is three tasks that CI runs as separate jobs: `verifyCiUnitTest`,
@@ -89,7 +89,8 @@ The warnings that were there when that was switched on are in each module's
 entry that was fixed is reported as such and can be dropped by regenerating:
 
 ```bash
-./gradlew :app:updateLintBaselineCi :domain:updateLintBaselineCi :wear:updateLintBaselineDebug
+./gradlew :app:updateLintBaselineCi :domain:updateLintBaselineCi :wear:updateLintBaselineDebug \
+  :wear:recording-core:updateLintBaseline
 ```
 
 Two kinds of check are off on purpose. The version checks (`GradleDependency`,
@@ -103,7 +104,8 @@ Every module locks its dependencies (`dependencyLocking`, in `build-logic/`). Af
 dependency change, regenerate the module's lockfile and commit it:
 
 ```bash
-./gradlew :app:dependencies :domain:dependencies :wear:dependencies :wearlink:dependencies --write-locks
+./gradlew :app:dependencies :domain:dependencies :wear:dependencies :wear:recording-core:dependencies \
+  :wearlink:dependencies --write-locks
 ```
 
 ## Dependency Verification
@@ -149,6 +151,12 @@ One listing means one versionCode space. The watch owns the range `2000000001` t
 `OPENWATCH_WEAR_VERSION_CODE` and `OPENWATCH_WEAR_VERSION_NAME` the way the phone build reads
 `OPENWATCH_VERSION_CODE` and `OPENWATCH_VERSION_NAME`, and fails the build when the code is
 outside the watch range.
+
+The watch app's code that needs no Android (the recorder plan, the sleep minutes and the
+sleep hold, the step and ascent minutes, the retention warning, the workout tracker, the tiles'
+day) is the module `:wear:recording-core`, in `wear/recording-core/`: plain Kotlin, so its tests
+run on the JVM without Robolectric. A class goes there when it needs no Android API and no
+sensor, preference or store; [architecture.md](architecture.md) lists what it holds.
 
 The watch's instrumented tests (`wear/src/androidTest` and `wear/src/sharedTest`: the metric
 store against real SQLite, the recorded Samsung parcels) run in CI on a Wear OS emulator

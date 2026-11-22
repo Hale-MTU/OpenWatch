@@ -42,12 +42,14 @@ class NoRunBlockingRatchetTest {
     }
 
     private fun sourceFiles() =
-        File(SourceRoot).walkTopDown() + File(DomainRoot).walkTopDown() + File(WearRoot).walkTopDown()
+        File(SourceRoot).walkTopDown() + File(DomainRoot).walkTopDown() + File(WearRoot).walkTopDown() +
+            File(WearCoreRoot).walkTopDown()
 
     private companion object {
         const val SourceRoot = "src/main/kotlin/tech/mmarca/openwatch"
         const val DomainRoot = "../domain/src/main/kotlin/tech/mmarca/openwatch"
         const val WearRoot = "../wear/src/main/kotlin/tech/mmarca/openwatch"
+        const val WearCoreRoot = "../wear/recording-core/src/main/kotlin/tech/mmarca/openwatch"
         val RunBlockingCall = Regex("""\brunBlocking\s*[({]""")
 
         /** Nothing in OpenWatch waits on the main thread. A new entry needs a reason beside it. */

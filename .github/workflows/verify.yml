@@ -138,8 +138,9 @@ jobs:
       - run: scripts/ci-android-gradle.sh verifyCiLint
       - run: git diff --check
 
-  # verifyWearCi (:wearlink:test, :wear:testDebugUnitTest, :wear:lintDebug,
-  # :wear:assembleDebug, :wear:compileDebugAndroidTestKotlin). One invocation:
+  # verifyWearCi (:wearlink:test, :wear:recording-core:test, :wear:recording-core:lint,
+  # :wear:testDebugUnitTest, :wear:lintDebug, :wear:assembleDebug,
+  # :wear:compileDebugAndroidTestKotlin, :app:architectureTest). One invocation:
   # the watch module is small enough that splitting it would cost more in setup
   # than it saves.
   wear-test:

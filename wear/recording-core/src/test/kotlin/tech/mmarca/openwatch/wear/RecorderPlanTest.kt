@@ -10,8 +10,8 @@ class RecorderPlanTest {
 
     private val settings = WatchPreferences(
         heartRateDay = HeartRateInterval.POWER_SAVE,
-        heartRateSource = WearSettings.Source.RAW_SENSOR,
-        hrvSource = WearSettings.Source.RAW_SENSOR,
+        heartRateSource = MeasurementSource.RAW_SENSOR,
+        hrvSource = MeasurementSource.RAW_SENSOR,
         syncedSleepHold = false,
         skinTemperature = true,
         spo2AtNight = true,
@@ -35,10 +35,10 @@ class RecorderPlanTest {
 
     @Test
     fun `by day on the wrist the heart rate runs at the day setting from the chosen source`() {
-        val plan = RecorderPlan.decide(day.copy(settings = settings.copy(heartRateSource = WearSettings.Source.SAMSUNG_PLATFORM)))
+        val plan = RecorderPlan.decide(day.copy(settings = settings.copy(heartRateSource = MeasurementSource.SAMSUNG_PLATFORM)))
 
         assertEquals(HeartRateInterval.POWER_SAVE, plan.heartRate)
-        assertEquals(WearSettings.Source.SAMSUNG_PLATFORM, plan.heartRateSource)
+        assertEquals(MeasurementSource.SAMSUNG_PLATFORM, plan.heartRateSource)
         assertTrue(plan.steps && plan.sleepMinutes && plan.ascent && plan.nightHrv && plan.spo2)
         assertFalse("skin temperature only while sleep is held", plan.skinTemperature)
     }

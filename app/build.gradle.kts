@@ -235,6 +235,7 @@ tasks.withType<Test>().configureEach {
         "scannedAppMain" to "app/src/main",
         "scannedDomainMain" to "domain/src/main",
         "scannedWearMain" to "wear/src/main",
+        "scannedWearRecordingCoreMain" to "wear/recording-core/src/main",
         "scannedWearlinkMain" to "wearlink/src/main",
     ).forEach { (name, path) ->
         inputs.dir(repository.dir(path)).withPropertyName(name).withPathSensitivity(PathSensitivity.RELATIVE)

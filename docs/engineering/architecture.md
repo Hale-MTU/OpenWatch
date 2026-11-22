@@ -11,11 +11,13 @@ OpenWatch seams noted.
 
 - App namespace: `tech.mmarca.openwatch`
 - Build logic: `build-logic/`, an included build with the convention plugins every module applies (`openwatch.android.application`, `openwatch.android.library`, `openwatch.jvm.library`): SDK levels, Java 17, signing from the environment, the debug, release and nightly build types, lint and dependency locking. A module's own file holds only what is its own (version codes, the `ci` type, the diagnostics flag). A change there must leave the release APKs byte-identical; compare their hashes before and after.
-- Project shape: four Gradle modules. The phone app is `:app`; `:domain` holds the pure code
+- Project shape: five Gradle modules. The phone app is `:app`; `:domain` holds the pure code
   the app depends on; `:wear` is the Wear OS watch app with its own CI gate; `:wearlink` is
   the pure-Kotlin link both apps depend on. Package names are the same across `:app` and
   `:domain`. The health calculations, shared with OpenVitals, come from the
   `health-calculations/` submodule, a composite build (below).
+- The watch app's pure core is `:wear:recording-core`, plain Kotlin in `wear/recording-core/`
+  with the watch app's package names; only `:wear` depends on it (below).
 - Dependency wiring: Hilt in `:app`, rooted at `OpenWatchApp`; modules are `di/AppModule.kt`,
   `di/RepositoryModule.kt`, `di/DevicesModule.kt` and `di/LinkModule.kt`.
 - UI stack: Jetpack Compose + Material 3 + Navigation Compose + `ViewModel` + coroutines.
@@ -202,13 +204,27 @@ The phone-to-watch link, in `wearlink/`, pure Kotlin on the JDK with no Android 
 
 Its tests run in both gates (`verifyCiUnitTest` and `verifyWearCi` depend on `:wearlink:test`), its lockfile is `wearlink/gradle.lockfile`, and the file-size ratchet holds its files to the same limit as the phone app's.
 
+## Module `:wear:recording-core`
+
+The watch app's code that needs no Android, in `wear/recording-core/`: plain Kotlin on the JDK, like `:wearlink`, compiled into `:wear` only. Package names are the watch app's (`tech.mmarca.openwatch.wear` and `.wear.workout`), so an import does not say which module a class is in. It holds what the recorders decide and compute, and nothing that reads a sensor, a preference or the store:
+
+- `RecorderPlan` and the `Recorder` interface the recorders implement, `HeartRateSchedule`, `WornGate`, `BedtimeHold`, `BedtimeWindow`, `SleepHold` and `SleepHoldBudget`.
+- `MinuteAggregator` (the sleep-minute rows), `StepMinuteCounter`, `AscentMinuteCounter` and `NightHrvSchedule`.
+- `WearMetric` and `WearMetrics`, the series the store keeps: keys, line codecs, retention. The store itself (`MetricStore`, SQLite) stays in `:wear`.
+- `SyncRetention`, when the wearer is warned that unpulled rows are about to go. `PhonePulls` (the preferences) and `SyncReminder` (the notification) stay in `:wear`.
+- `WatchPreferences`, `WatchAbilities` and `WearPreferenceCodec`, the settings as one value and as the `GET_PREF`/`SET_PREF` tokens, and `MeasurementSource`, the raw sensors or the Samsung platform. `WearSettings` keeps them in its preferences file, in `:wear`, and names the source `WearSettings.Source`, a type alias, so the entry names it stores do not change.
+- `TileDay` and `TileHeartRate`, the tiles' day axis and headline.
+- `workout/`: `WorkoutTracker`, `WorkoutCheckpoint`, and `WorkoutStore` over the `WorkoutRows` interface, which `:wear` implements on the store (`MetricStoreWorkoutRows`).
+
+What stays in `:wear` though it is plain Kotlin: the UI state (`WearUiState`, `WorkoutState`, `WearLinkState`, the status screen's), which the screens and the coroutines around them own, and the Samsung client's point parsers in `samsung/`, whose recorded-callback fixtures the device test shares. Its dependencies are `api` on `:wearlink` (its rows are in the public signatures) and `implementation` on health-calculations; its lockfile is `wear/recording-core/gradle.lockfile`. The watch gate runs its tests, on the JVM with no Robolectric, and Android lint over it (`com.android.lint`, with the Android modules' rules from `build-logic/` and its own `lint-baseline.xml`), since lint checked these files in `:wear`.
+
 ## health-calculations (composite build `health-calculations/`)
 
-The health calculations OpenWatch and OpenVitals share live in their own repository, [Hale-MTU/health-calculations](https://github.com/Hale-MTU/health-calculations), a git submodule at `health-calculations/` taken as a composite build (`includeBuild("health-calculations")`, dependency `tech.mmarca.healthcalculations:health-calculations`). It is plain Kotlin on the JDK with no dependency, so the phone app and the watch app take the same code: `:domain` with `api` (so `:app` sees it), `:wear` with `implementation`.
+The health calculations OpenWatch and OpenVitals share live in their own repository, [Hale-MTU/health-calculations](https://github.com/Hale-MTU/health-calculations), a git submodule at `health-calculations/` taken as a composite build (`includeBuild("health-calculations")`, dependency `tech.mmarca.healthcalculations:health-calculations`). It is plain Kotlin on the JDK with no dependency, so the phone app and the watch app take the same code: `:domain` with `api` (so `:app` sees it), `:wear` and `:wear:recording-core` with `implementation`.
 
 The submodule's pointer must name a commit on the library's default branch: merge the library's pull request first, then move the pointer, here and in OpenVitals. A pointer at a commit that only a pull request branch holds builds until that branch is deleted, and then no fresh clone can check the submodule out. `scripts/ci-submodule-pointers.sh` checks every submodule and is a job of the gate (`submodule-pointers` in `verify.yml`), so a pull request that points at an unmerged library branch stays red until the library is merged.
 
-The phone app reads its `insights` (the Wear OS night, the nocturnal resting heart rate, body composition, workout and walking energy, the activity type a file names), its `model` (the exercise session, the sleep-minute rows) and its `preferences` (the body profile). The watch reads its `signal` package (beats from the PPG, RMSSD, respiratory rate, the accelerometer's minute features, the Samsung inter-beat intervals) and `insights/AscentCredit`, which the phone's floors import reads too, so both count the same climb. The recorders, holds and gates that decide when a sensor runs stay in `:wear`: they control the device, they compute no figure.
+The phone app reads its `insights` (the Wear OS night, the nocturnal resting heart rate, body composition, workout and walking energy, the activity type a file names), its `model` (the exercise session, the sleep-minute rows) and its `preferences` (the body profile). The watch reads its `signal` package (beats from the PPG, RMSSD, respiratory rate, the accelerometer's minute features, the Samsung inter-beat intervals) and `insights/AscentCredit`, which the phone's floors import reads too, so both count the same climb. The recorders, holds and gates that decide when a sensor runs stay in the watch app (`:wear`, the pure ones in `:wear:recording-core`): they control the device, they compute no figure.
 
 Health Connect's exercise and segment types are copied in the library under their Health Connect names; `ExerciseTypeMirrorTest` in `:domain` checks every value against the real classes, both ways. A calculation is changed in the library and reaches the apps when the submodule moves; it moves in OpenVitals in the same step, so both apps give the same number.
 

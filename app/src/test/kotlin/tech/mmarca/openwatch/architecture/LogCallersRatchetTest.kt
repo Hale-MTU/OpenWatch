@@ -5,8 +5,8 @@ import java.io.File
 import org.junit.Test
 
 /**
- * The files that may write to Android's log, in the phone app, the watch app and the two
- * pure modules. What leaves the app is structure, not data: a log line holds a count, a
+ * The files that may write to Android's log, in the phone app, the watch app and the pure
+ * modules. What leaves the app is structure, not data: a log line holds a count, a
  * type or a reason, never a value, a name or an address. A file joins this list only after
  * its log lines are read with that in mind; the list only shrinks otherwise. The debug-only
  * loggers (`DeviceLog`, `GarminLog`, `WearOsLog`, `ScaleLog`) are where new logging belongs.
@@ -42,6 +42,7 @@ class LogCallersRatchetTest {
         val Roots = mapOf(
             "app" to "src/main/kotlin/tech/mmarca/openwatch",
             "wear" to "../wear/src/main/kotlin/tech/mmarca/openwatch",
+            "wear/recording-core" to "../wear/recording-core/src/main/kotlin/tech/mmarca/openwatch",
             "domain" to "../domain/src/main/kotlin/tech/mmarca/openwatch",
             "wearlink" to "../wearlink/src/main/kotlin/tech/mmarca/openwatch",
         )

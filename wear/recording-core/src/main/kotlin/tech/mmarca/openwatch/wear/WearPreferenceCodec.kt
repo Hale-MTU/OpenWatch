@@ -4,10 +4,10 @@ import tech.mmarca.openwatch.wearlink.HeartRateInterval
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Preferences
 
 /** The watch's settings in one value, as [WearSettings] keeps them. */
-internal data class WatchPreferences(
+data class WatchPreferences(
     val heartRateDay: HeartRateInterval,
-    val heartRateSource: WearSettings.Source,
-    val hrvSource: WearSettings.Source,
+    val heartRateSource: MeasurementSource,
+    val hrvSource: MeasurementSource,
     val syncedSleepHold: Boolean,
     val skinTemperature: Boolean,
     val spo2AtNight: Boolean,
@@ -17,13 +17,13 @@ internal data class WatchPreferences(
 )
 
 /** What the watch can offer, which the phone reads but cannot change. */
-internal data class WatchAbilities(val samsung: Boolean, val skinGranted: Boolean, val spo2Granted: Boolean)
+data class WatchAbilities(val samsung: Boolean, val skinGranted: Boolean, val spo2Granted: Boolean)
 
 /**
  * The watch's settings as the `GET_PREF` and `SET_PREF` tokens
  * ([Preferences]): the phone's settings screen for the watch. Pure.
  */
-internal object WearPreferenceCodec {
+object WearPreferenceCodec {
 
     fun encode(preferences: WatchPreferences, abilities: WatchAbilities): Map<String, String> = linkedMapOf(
         Preferences.HEART_RATE_DAY to preferences.heartRateDay.wire,
@@ -68,12 +68,12 @@ internal object WearPreferenceCodec {
     /** A whole bpm within [range], or `0` for none; null for anything else. */
     private fun bpm(value: String, range: IntRange): Int? = value.toIntOrNull()?.takeIf { it == 0 || it in range }
 
-    private fun source(source: WearSettings.Source): String =
-        if (source == WearSettings.Source.SAMSUNG_PLATFORM) Preferences.SAMSUNG else Preferences.SENSOR
+    private fun source(source: MeasurementSource): String =
+        if (source == MeasurementSource.SAMSUNG_PLATFORM) Preferences.SAMSUNG else Preferences.SENSOR
 
-    private fun source(value: String, abilities: WatchAbilities): WearSettings.Source? = when (value) {
-        Preferences.SENSOR -> WearSettings.Source.RAW_SENSOR
-        Preferences.SAMSUNG -> WearSettings.Source.SAMSUNG_PLATFORM.takeIf { abilities.samsung }
+    private fun source(value: String, abilities: WatchAbilities): MeasurementSource? = when (value) {
+        Preferences.SENSOR -> MeasurementSource.RAW_SENSOR
+        Preferences.SAMSUNG -> MeasurementSource.SAMSUNG_PLATFORM.takeIf { abilities.samsung }
         else -> null
     }
 

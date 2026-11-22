@@ -33,6 +33,7 @@ class SuspendRunCatchingRatchetTest {
     private fun roots() = listOf(
         "src/main/kotlin/tech/mmarca/openwatch",
         "../wear/src/main/kotlin/tech/mmarca/openwatch",
+        "../wear/recording-core/src/main/kotlin/tech/mmarca/openwatch",
     )
 
     private companion object {

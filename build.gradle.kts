@@ -98,6 +98,9 @@ tasks.register("verifyWearCi") {
     description = "Runs Wear OS module unit tests, lint, build, and android-test compile checks for CI."
     dependsOn(
         ":wearlink:test",
+        // The watch app's pure core: its tests and Android lint, as when it was part of :wear.
+        ":wear:recording-core:test",
+        ":wear:recording-core:lint",
         ":wear:testDebugUnitTest",
         ":wear:lintDebug",
         ":wear:assembleDebug",

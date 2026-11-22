@@ -19,7 +19,7 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol.StepMinute
  * Pure, so the bucketing and the midnight and clock-change edges are tested
  * without a watch. The values come from the [MetricStore] the recorders fill.
  */
-internal class TileDay(
+class TileDay(
     val startMillis: Long,
     val endMillis: Long,
     val nowMillis: Long,

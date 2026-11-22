@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-/** When the watch warns that rows no phone pulled are about to go, and what it remembers of a pull. */
+/** When the watch warns that rows no phone pulled are about to go. What it remembers of a pull is the watch app's `PhonePullsTest`. */
 class SyncRetentionTest {
 
     private val day = SyncRetention.DAY_MILLIS
@@ -47,21 +47,5 @@ class SyncRetentionTest {
 
         val later = SyncRetention.warning(pulled + 13 * day, pulled + 8 * day, null)!!
         assertEquals(later, SyncRetention.reminderToShow(later, reminded = pruning.key))
-    }
-
-    @Test
-    fun `the last pull and the reminder shown survive a restart`() {
-        val prefs = FakeSharedPreferences()
-        assertNull(PhonePulls(prefs).lastPulledMillis)
-
-        PhonePulls(prefs).apply {
-            notePulled(pulled)
-            reminded = "$pulled SOON"
-        }
-
-        val restarted = PhonePulls(prefs)
-        assertEquals(pulled, restarted.lastPulledMillis)
-        assertEquals("$pulled SOON", restarted.reminded)
-        assertEquals(pulled, prefs.getLong(PhonePulls.KEY_LAST_PULLED, 0))
     }
 }

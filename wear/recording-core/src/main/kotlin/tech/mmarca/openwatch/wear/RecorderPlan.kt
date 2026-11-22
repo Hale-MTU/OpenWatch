@@ -9,7 +9,7 @@ import tech.mmarca.openwatch.wearlink.HeartRateInterval
  * gathers the [Inputs], [decide]s, and hands the [Plan] to every [Recorder]
  * in [WearGraph.recorders].
  */
-internal object RecorderPlan {
+object RecorderPlan {
 
     data class Inputs(
         val heartRateGranted: Boolean,
@@ -33,7 +33,7 @@ internal object RecorderPlan {
         /** The interval in force, [HeartRateInterval.OFF] for none. */
         val heartRate: HeartRateInterval,
         /** The source asked for; the recorder falls back to the sensor when the platform fails. */
-        val heartRateSource: WearSettings.Source,
+        val heartRateSource: MeasurementSource,
         val steps: Boolean,
         val sleepMinutes: Boolean,
         val ascent: Boolean,
@@ -83,7 +83,7 @@ internal object RecorderPlan {
  * and stops with the service. [WearGraph] builds each once per process; the
  * service starts, changes and stops them through this interface alone.
  */
-internal interface Recorder {
+interface Recorder {
     val isRunning: Boolean
 
     /** Starts, changes or stops what this recorder runs to match [plan]. Main thread. */

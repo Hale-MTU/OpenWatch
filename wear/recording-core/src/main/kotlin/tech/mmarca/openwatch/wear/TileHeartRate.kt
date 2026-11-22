@@ -3,7 +3,7 @@ package tech.mmarca.openwatch.wear
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HeartRateSample
 
 /** The heart rate tile's headline: the newest sample and how old it is, or why there is none. */
-internal sealed interface TileHeartRate {
+sealed interface TileHeartRate {
     data object NotGranted : TileHeartRate
 
     /** No sample yet, or only one older than [STALE_AFTER_MILLIS]: off the wrist, or charging. */

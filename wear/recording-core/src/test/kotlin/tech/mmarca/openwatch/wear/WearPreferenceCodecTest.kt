@@ -9,8 +9,8 @@ class WearPreferenceCodecTest {
 
     private val defaults = WatchPreferences(
         heartRateDay = HeartRateInterval.EVERY_10_SECONDS,
-        heartRateSource = WearSettings.Source.RAW_SENSOR,
-        hrvSource = WearSettings.Source.RAW_SENSOR,
+        heartRateSource = MeasurementSource.RAW_SENSOR,
+        hrvSource = MeasurementSource.RAW_SENSOR,
         syncedSleepHold = false,
         skinTemperature = false,
         spo2AtNight = false,

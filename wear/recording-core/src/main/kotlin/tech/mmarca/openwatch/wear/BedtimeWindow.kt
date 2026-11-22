@@ -15,7 +15,7 @@ import java.time.ZonedDateTime
  * not bounded. Outside the window, sleep is still caught by [SleepHold].
  * Pure.
  */
-internal object BedtimeWindow {
+object BedtimeWindow {
 
     const val START_HOUR = 21
     const val END_HOUR = 9
