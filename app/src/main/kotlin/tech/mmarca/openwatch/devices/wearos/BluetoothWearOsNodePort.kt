@@ -216,7 +216,7 @@ class BluetoothWearOsNodePort internal constructor(
                 token = linkStore.tokenFor(registeredAddress, match.address),
                 name = radio.localName(),
             )
-            val session = when (val outcome = WearLinkClient.hello(connection, hello)) {
+            val session = when (val outcome = WearLinkClient.hello(connection, hello, reconnect = { radio.connect(match, guard) })) {
                 is WearLinkOutcome.Ok -> outcome.value
                 else -> throw failureOf(outcome)
             }

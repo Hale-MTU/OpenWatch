@@ -12,7 +12,7 @@ import java.util.UUID
  *
  * Every connection opens with one hello from the phone and one reply from the
  * watch; requests follow only after `OK`:
- * - `HELLO <version> <caps> <token> <name...>` — the phone's protocol version,
+ * - `HELLO <version> <caps> <token> <name...>` — the highest version the phone speaks,
  *   its capabilities (`tm` or `-`), the secret it holds for this watch
  *   (`WearLinkToken`) and its Bluetooth name, the rest of the line.
  * - `OK <version> <caps> <name...>` — the watch knows that token for this phone.
@@ -26,6 +26,9 @@ import java.util.UUID
  * - `UNAUTHORIZED <mismatch|blocked>` — the phone is blocked. `mismatch` is
  *   what an older watch app answers to another token; the phone still reads it.
  * - `VERSION <min> <max>` — the phone's version is outside what the watch speaks.
+ *   A phone that speaks one in that range too says hello once more with the
+ *   highest both speak; a watch answers `OK` with the phone's version, the
+ *   highest both speak. With none in common the range names who is behind.
  * - `ERROR <bad_hello|bad_request|busy|internal>` — the watch could not serve.
  *
  * Requests:

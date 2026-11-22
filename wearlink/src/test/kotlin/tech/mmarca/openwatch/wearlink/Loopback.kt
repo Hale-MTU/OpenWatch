@@ -1,7 +1,13 @@
 package tech.mmarca.openwatch.wearlink
 
+import java.io.ByteArrayOutputStream
+import java.io.FilterInputStream
+import java.io.FilterOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
+import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
@@ -19,8 +25,8 @@ class Loopback(
 ) {
     val server = WearLinkServer(trust, handler, options)
 
-    /** One connection: a server thread serving it, and the client's end. */
-    inner class Link {
+    /** One connection: a server thread serving it, and the client's end, its lines kept in [transcript] when given. */
+    inner class Link(transcript: Transcript? = null) {
         private val toServer = PipedOutputStream()
         private val fromServer = PipedOutputStream()
         private val serverInput = PipedInputStream(toServer, BUFFER)
@@ -40,7 +46,11 @@ class Loopback(
             runCatching { serverInput.close() }
         }
 
-        val clientConnection = WearLinkConnection(clientInput, toServer, "watch") { closeAll() }
+        val clientConnection = WearLinkConnection(
+            transcript?.received(clientInput) ?: clientInput,
+            transcript?.sent(toServer) ?: toServer,
+            "watch",
+        ) { closeAll() }
         private val serverConnection = WearLinkConnection(serverInput, fromServer, phoneAddress) { closeAll() }
 
         val serverThread = Thread({
@@ -57,10 +67,51 @@ class Loopback(
         fun serverReturned(): Boolean = served.count == 0L
     }
 
-    fun connect(): Link = Link()
+    fun connect(transcript: Transcript? = null): Link = Link(transcript)
 
     private companion object {
         const val BUFFER = 256 * 1024
+    }
+}
+
+/**
+ * A golden transcript: every line the phone sent (`> `) and received (`< `), in the order the
+ * phone's thread saw them, from the bytes on the wire.
+ */
+class Transcript {
+    private val kept = Collections.synchronizedList(ArrayList<String>())
+
+    val lines: List<String> get() = synchronized(kept) { kept.toList() }
+
+    fun add(line: String) {
+        kept += line
+    }
+
+    fun sent(output: OutputStream): OutputStream = object : FilterOutputStream(output) {
+        private val line = Line("> ")
+        override fun write(b: Int) {
+            line.feed(b)
+            out.write(b)
+        }
+    }
+
+    fun received(input: InputStream): InputStream = object : FilterInputStream(input) {
+        private val line = Line("< ")
+        override fun read(): Int = super.read().also { if (it >= 0) line.feed(it) }
+        override fun read(b: ByteArray, off: Int, len: Int): Int =
+            super.read(b, off, len).also { n -> for (i in off until off + maxOf(n, 0)) line.feed(b[i].toInt() and 0xff) }
+    }
+
+    private inner class Line(private val prefix: String) {
+        private val bytes = ByteArrayOutputStream()
+        fun feed(b: Int) {
+            if (b == '\n'.code) {
+                add(prefix + bytes.toString(Charsets.UTF_8))
+                bytes.reset()
+            } else {
+                bytes.write(b)
+            }
+        }
     }
 }
 

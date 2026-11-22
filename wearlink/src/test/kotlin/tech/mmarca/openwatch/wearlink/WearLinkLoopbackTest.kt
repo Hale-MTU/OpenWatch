@@ -76,7 +76,7 @@ class WearLinkLoopbackTest {
     fun `an old phone learns the versions the watch speaks`() {
         val link = trusted().connect()
 
-        assertEquals(WearLinkOutcome.VersionMismatch(5, 5), WearLinkClient.hello(link.clientConnection, hello(version = 4)))
+        assertEquals(WearLinkOutcome.VersionMismatch(5, 5), WearLinkClient.hello(link.clientConnection, hello(), versions = 4..4))
         link.clientConnection.close()
         assertEquals(WearLinkServer.Outcome.VERSION_MISMATCH, link.serverOutcome())
     }

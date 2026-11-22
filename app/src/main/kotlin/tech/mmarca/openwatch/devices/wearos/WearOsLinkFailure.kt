@@ -46,7 +46,8 @@ sealed class WearOsLinkFailure(message: String, cause: Throwable? = null) : Exce
             WearLinkProtocol.UnauthorizedReason.MISMATCH -> WearOsAppStatus.UNAUTHORIZED_MISMATCH
             WearLinkProtocol.UnauthorizedReason.BLOCKED -> WearOsAppStatus.UNAUTHORIZED_BLOCKED
         }
-        is VersionMismatch -> if (WearLinkProtocol.VERSION < min) WearOsAppStatus.UPDATE_PHONE else WearOsAppStatus.UPDATE_WATCH
+        // No version in common: the watch's range is wholly past this phone's, or wholly before it.
+        is VersionMismatch -> if (min > WearLinkProtocol.VERSION) WearOsAppStatus.UPDATE_PHONE else WearOsAppStatus.UPDATE_WATCH
         is Protocol -> WearOsAppStatus.PROTOCOL_ERROR
         is Refused -> WearOsAppStatus.NO_ANSWER
     }

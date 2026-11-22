@@ -159,10 +159,54 @@ class WearLinkSession internal constructor(
  * The phone's end: says hello over a fresh connection and, when the watch
  * answers `OK`, hands back a session for requests. Blocking; the caller
  * owns the socket's timeout (closing it unblocks every read here).
+ *
+ * The hello offers the highest version this side speaks ([versions]). A watch
+ * that speaks an older one too refuses with `VERSION <min> <max>`, and the
+ * phone says hello once more, on a new connection from [reconnect], with the
+ * highest version both speak. With none in common the refusal stands: the
+ * caller tells whose app is behind from the watch's range.
  */
 object WearLinkClient {
 
-    fun hello(connection: WearLinkConnection, hello: WearLinkProtocol.Hello): WearLinkOutcome<WearLinkSession> {
+    /** The versions this build speaks, oldest to newest. */
+    val VERSIONS: IntRange = WearLinkProtocol.MIN_VERSION..WearLinkProtocol.VERSION
+
+    /**
+     * Says hello on [connection] with the highest of [versions], and, when the watch's
+     * refusal leaves a lower one both speak, once more on [reconnect]'s connection with it.
+     * [connection] is closed before that, since the watch waits for the close; a connection
+     * this call opened is closed by it unless it hands back a session on it.
+     */
+    fun hello(
+        connection: WearLinkConnection,
+        hello: WearLinkProtocol.Hello,
+        versions: IntRange = VERSIONS,
+        reconnect: (() -> WearLinkConnection)? = null,
+    ): WearLinkOutcome<WearLinkSession> {
+        val offered = hello.copy(version = versions.last)
+        val first = say(connection, offered)
+        val lower = (first as? WearLinkOutcome.VersionMismatch)?.let { commonVersion(versions, it.min..it.max) }
+        if (lower == null || lower >= offered.version || reconnect == null) return accepted(first, versions)
+        connection.close()
+        val again = reconnect()
+        val second = accepted(say(again, offered.copy(version = lower)), versions)
+        if (second !is WearLinkOutcome.Ok) again.close()
+        return second
+    }
+
+    /** The highest version in both ranges, or null when they do not meet. */
+    fun commonVersion(ours: IntRange, theirs: IntRange): Int? =
+        minOf(ours.last, theirs.last).takeIf { it >= maxOf(ours.first, theirs.first) }
+
+    /** A session on a version outside [versions] is refused here, as the watch would have. */
+    private fun accepted(outcome: WearLinkOutcome<WearLinkSession>, versions: IntRange): WearLinkOutcome<WearLinkSession> {
+        if (outcome !is WearLinkOutcome.Ok || outcome.value.peer.version in versions) return outcome
+        val spoken = outcome.value.peer.version
+        outcome.value.close()
+        return WearLinkOutcome.VersionMismatch(spoken, spoken)
+    }
+
+    private fun say(connection: WearLinkConnection, hello: WearLinkProtocol.Hello): WearLinkOutcome<WearLinkSession> {
         val reader = LineReader(connection.input)
         val writer = LineWriter(connection.output)
         return try {

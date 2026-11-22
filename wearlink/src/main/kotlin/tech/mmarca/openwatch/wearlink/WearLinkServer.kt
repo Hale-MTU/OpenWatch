@@ -32,6 +32,8 @@ class WearLinkServer(
         val maxClients: Int = 2,
         /** After a refusal, how long to wait for the phone to close before closing. */
         val refusalCloseWaitMillis: Long = 2_000L,
+        /** The versions the watch speaks; a test gives another range. */
+        val versions: IntRange = WearLinkProtocol.MIN_VERSION..WearLinkProtocol.VERSION,
     )
 
     /** How a connection ended; [IDLE] is a served phone that went quiet past the idle timeout. */
@@ -121,8 +123,9 @@ class WearLinkServer(
         }
 
     private fun decide(peerAddress: String, hello: WearLinkProtocol.Hello): WearLinkProtocol.HelloReply {
-        if (hello.version < WearLinkProtocol.MIN_VERSION || hello.version > WearLinkProtocol.VERSION) {
-            return WearLinkProtocol.HelloReply.VersionMismatch(WearLinkProtocol.MIN_VERSION, WearLinkProtocol.VERSION)
+        // The phone offers its highest version; one this watch speaks is the highest both do.
+        if (hello.version !in options.versions) {
+            return WearLinkProtocol.HelloReply.VersionMismatch(options.versions.first, options.versions.last)
         }
         if (trust.isBlocked(peerAddress)) {
             return WearLinkProtocol.HelloReply.Unauthorized(WearLinkProtocol.UnauthorizedReason.BLOCKED)
@@ -136,7 +139,7 @@ class WearLinkServer(
         }
         // Only a phone that asked for the clock reads a field before the name.
         val clock = if (WearLinkProtocol.CAP_CLOCK in hello.capabilities) handler.nowMillis() else null
-        return WearLinkProtocol.HelloReply.Ok(WearLinkProtocol.VERSION, handler.capabilities(), handler.localName(), clock)
+        return WearLinkProtocol.HelloReply.Ok(hello.version, handler.capabilities(), handler.localName(), clock)
     }
 
     private fun answer(writer: LineWriter, line: String) {
