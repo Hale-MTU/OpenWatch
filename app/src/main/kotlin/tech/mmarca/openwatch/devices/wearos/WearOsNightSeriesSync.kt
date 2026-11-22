@@ -4,14 +4,14 @@ import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
 import tech.mmarca.openwatch.core.presentation.isPermissionFailure
-import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
+import tech.mmarca.openwatch.data.repository.HealthRecordStore
 import tech.mmarca.openwatch.data.repository.RecordWrite
 import tech.mmarca.openwatch.data.repository.insertWithOutcomes
 import tech.mmarca.openwatch.devices.core.sync.HealthSeries
 import tech.mmarca.openwatch.devices.core.sync.SkipReason
 import tech.mmarca.openwatch.devices.core.sync.SkippedSeries
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
-import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
+import tech.mmarca.openwatch.healthconnect.HealthConnectReads
 
 /**
  * The series the watch records at night beside sleep, each written to Health
@@ -23,8 +23,8 @@ import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
  * card, and the sync goes on.
  */
 internal class WearOsNightSeriesSync(
-    private val importRepository: ImportedRecordRepository,
-    private val healthConnect: HealthConnectGateway,
+    private val importRepository: HealthRecordStore,
+    private val healthConnect: HealthConnectReads,
     private val cursors: WearOsSyncCursorStore,
     private val clock: () -> Instant,
     private val zone: () -> ZoneId,

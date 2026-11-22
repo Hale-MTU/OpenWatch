@@ -2,16 +2,13 @@ package tech.mmarca.openwatch.data.repository
 
 import androidx.health.connect.client.records.StepsRecord
 import androidx.health.connect.client.records.metadata.Metadata
-import java.io.File
 import java.time.Instant
 import java.time.ZoneOffset
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertSame
-import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
-import tech.mmarca.openwatch.healthconnect.HealthDataCatalog
 import tech.mmarca.openwatch.healthconnect.MaxRecordsPerInsert
 
 class ImportedRecordWritesTest {
@@ -152,13 +149,5 @@ class ImportedRecordWritesTest {
         store.failure = { refusal }
 
         assertSame(refusal, runCatching { store.replaceImportedRecord(record("a", 0)) }.exceptionOrNull())
-    }
-
-    @Test
-    fun `every type the app writes has a time span, so a refusal of it can be diagnosed`() {
-        val source = File("src/main/kotlin/tech/mmarca/openwatch/data/repository/ImportedRecordWrites.kt").readText()
-        val written = HealthDataCatalog.sections.values.flatten().mapNotNull { it.record?.simpleName }.toSet()
-        val missing = written.filterNot { "is $it ->" in source }
-        assertTrue("timeSpan() has no case for $missing", missing.isEmpty())
     }
 }

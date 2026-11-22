@@ -4,7 +4,7 @@ import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
 import tech.mmarca.openwatch.core.presentation.isPermissionFailure
-import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
+import tech.mmarca.openwatch.data.repository.HealthRecordStore
 
 /**
  * Writes the watch's finished workouts to Health Connect ([WearOsWorkoutImport]),
@@ -17,7 +17,7 @@ import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
  * workouts wait on the watch (it keeps a month). That never fails the sync.
  */
 internal class WearOsWorkoutSync(
-    private val importRepository: ImportedRecordRepository,
+    private val importRepository: HealthRecordStore,
     private val cursors: WearOsSyncCursorStore,
     private val granted: suspend () -> Set<String>,
     private val zone: () -> ZoneId,

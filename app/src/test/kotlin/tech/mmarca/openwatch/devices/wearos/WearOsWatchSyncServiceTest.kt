@@ -766,7 +766,7 @@ class WearOsWatchSyncServiceTest {
 
         service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
-        coVerify { healthConnect.deleteImportedRecordsByClientIds(SleepSessionRecord::class, listOf("wearos_nap_1")) }
+        coVerify { importRepository.deleteImportedRecordsByClientIds(SleepSessionRecord::class, listOf("wearos_nap_1")) }
         assertEquals(1, insertedOf<SleepSessionRecord>().size)
     }
 
@@ -784,7 +784,7 @@ class WearOsWatchSyncServiceTest {
         service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         coVerify(exactly = 0) {
-            healthConnect.deleteImportedRecordsByClientIds(SleepSessionRecord::class, match { "wearos_nap_1@ab12cd34" in it })
+            importRepository.deleteImportedRecordsByClientIds(SleepSessionRecord::class, match { "wearos_nap_1@ab12cd34" in it })
         }
     }
 
@@ -861,7 +861,7 @@ class WearOsWatchSyncServiceTest {
         syncNight()
 
         assertTrue(insertedOf<RestingHeartRateRecord>().isEmpty())
-        coVerify { healthConnect.deleteImportedRecordsByClientIds(RestingHeartRateRecord::class, listOf("wearos_rhr_est_2026-10-08")) }
+        coVerify { importRepository.deleteImportedRecordsByClientIds(RestingHeartRateRecord::class, listOf("wearos_rhr_est_2026-10-08")) }
     }
 
     @Test

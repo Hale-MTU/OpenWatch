@@ -17,6 +17,10 @@ import tech.mmarca.openwatch.comaps.CoMapsNavigationRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminSleepMinuteRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminWellnessRepository
 import tech.mmarca.openwatch.data.repository.contract.ScaleWeighInRepository
+import tech.mmarca.openwatch.data.repository.HealthRecordStore
+import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
+import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
+import tech.mmarca.openwatch.healthconnect.HealthConnectReads
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncSwitch
 
 @Module
@@ -49,4 +53,12 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindBodyProfilePreferences(impl: OpenWatchPreferences): BodyProfilePreferences
+
+    /** The record sink the devices write through (:core:health-api). */
+    @Binds
+    abstract fun bindHealthRecordStore(impl: ImportedRecordRepository): HealthRecordStore
+
+    /** The strict reads the devices make (:core:health-api); the gateway holds the client. */
+    @Binds
+    abstract fun bindHealthConnectReads(impl: HealthConnectGateway): HealthConnectReads
 }

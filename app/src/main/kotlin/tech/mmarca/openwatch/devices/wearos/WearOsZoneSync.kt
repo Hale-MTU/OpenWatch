@@ -9,7 +9,7 @@ import tech.mmarca.healthcalculations.insights.HeartRateZoneBasis
 import tech.mmarca.healthcalculations.insights.observedMaxHeartRateLookbackDays
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
-import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
+import tech.mmarca.openwatch.healthconnect.HealthConnectReads
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Preferences
 
 /**
@@ -23,7 +23,7 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Preferences
  * and it never fails the sync.
  */
 internal class WearOsZoneSync(
-    private val healthConnect: HealthConnectGateway,
+    private val healthConnect: HealthConnectReads,
     private val nodePort: WearOsNodePort,
     private val profile: suspend () -> BodyProfile,
     private val clock: () -> Instant,

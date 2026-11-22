@@ -24,7 +24,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.isPermissionFailure
-import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
+import tech.mmarca.openwatch.data.repository.HealthRecordStore
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.data.repository.BodyProfileProvider
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
@@ -43,7 +43,7 @@ import tech.mmarca.healthcalculations.insights.WearSleepEstimator
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.healthcalculations.model.WearSleepMinute
 import tech.mmarca.openwatch.data.repository.replaceImportedRecord
-import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
+import tech.mmarca.openwatch.healthconnect.HealthConnectReads
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 import tech.mmarca.openwatch.healthconnect.isHealthConnectRateLimit
 import tech.mmarca.healthcalculations.insights.AscentCredit
@@ -96,9 +96,9 @@ import tech.mmarca.openwatch.wearlink.WearLinkSince
 class WearOsWatchSyncService(
     private val nodePort: WearOsNodePort,
     private val cursors: WearOsSyncCursorStore,
-    private val importRepository: ImportedRecordRepository,
+    private val importRepository: HealthRecordStore,
     private val bleDeviceRepository: BleDeviceRepository,
-    private val healthConnect: HealthConnectGateway,
+    private val healthConnect: HealthConnectReads,
     private val linkStore: WearOsLinkStore,
     /** Body weight for the walking energy: Health Connect's latest, else the profile's. Null when neither has one. */
     private val weightKg: suspend () -> Double?,
@@ -119,9 +119,9 @@ class WearOsWatchSyncService(
     constructor(
         nodePort: WearOsNodePort,
         cursors: WearOsSyncCursorStore,
-        importRepository: ImportedRecordRepository,
+        importRepository: HealthRecordStore,
         bleDeviceRepository: BleDeviceRepository,
-        healthConnect: HealthConnectGateway,
+        healthConnect: HealthConnectReads,
         linkStore: WearOsLinkStore,
         bodyProfile: BodyProfileProvider,
         preferences: OpenWatchPreferences,
@@ -546,7 +546,7 @@ class WearOsWatchSyncService(
             WearOsLog.log("nap: could not read earlier estimates: $error")
             return
         }
-        healthConnect.deleteImportedRecordsByClientIds(SleepSessionRecord::class, stale)
+        importRepository.deleteImportedRecordsByClientIds(SleepSessionRecord::class, stale)
     }
 
 
@@ -617,7 +617,7 @@ class WearOsWatchSyncService(
             if (held.foreign) {
                 WearOsLog.log("$night: Health Connect already holds a resting heart rate from elsewhere, skipping")
                 if (held.own) {
-                    healthConnect.deleteImportedRecordsByClientIds(RestingHeartRateRecord::class, listOf(record.metadata.clientRecordId!!))
+                    importRepository.deleteImportedRecordsByClientIds(RestingHeartRateRecord::class, listOf(record.metadata.clientRecordId!!))
                 }
                 return
             }

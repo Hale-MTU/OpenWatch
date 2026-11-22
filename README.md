@@ -50,7 +50,8 @@ seams allowed; [docs/features/watches.md](docs/features/watches.md) describes th
 | Module | What |
 | --- | --- |
 | `app/` | The phone app: `devices/` (the Garmin stack, the Wear OS phone side, the scale listener), `features/` (the screens), `healthconnect/` (the one gateway to Health Connect), `activityimport/` (FIT activity files), `data/` (Room and the preference stores) |
-| `core/` | The pure code the app depends on: `core/model` (the device models, the unit preferences), `core/fit` (FIT decoding) |
+| `core/` | What the app is built on: `core/model` (the device models, the unit preferences), `core/fit` (FIT decoding), `core/devices-api` (the device contracts: families, the sync port, pairing), `core/health-api` (the record sink and the reads the devices use) |
+| `devices/` | The device protocols, pure Kotlin: `devices/garmin/protocol` (GFDI, the session, file sync, the FIT wellness decoder), `devices/xiaomi/protocol` (the S400 scale's codec) |
 | `health-calculations/` | The calculations shared with OpenVitals, from [Hale-MTU/health-calculations](https://github.com/Hale-MTU/health-calculations), a submodule taken as a composite build: the sleep estimate, energy, heart rate, the night HRV and breathing rate, the body profile |
 | `wear/` | The Wear OS watch app |
 | `wearlink/` | The line protocol between the two, pure Kotlin, compiled into both apps |

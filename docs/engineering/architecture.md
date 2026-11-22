@@ -11,9 +11,10 @@ OpenWatch seams noted.
 
 - App namespace: `tech.mmarca.openwatch`
 - Build logic: `build-logic/`, an included build with the convention plugins every module applies (`openwatch.android.application`, `openwatch.android.library`, `openwatch.jvm.library`): SDK levels, Java 17, signing from the environment, the debug, release and nightly build types, lint and dependency locking. A module's own file holds only what is its own (version codes, the `ci` type, the diagnostics flag). A change there must leave the release APKs byte-identical; compare their hashes before and after.
-- Project shape: nine Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
+- Project shape: ten Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
   hold the pure code the app depends on (below); `:core:devices-api` the device contracts
-  ([`devices/core`](#devicescore)); `:devices:garmin:protocol` and
+  ([`devices/core`](#devicescore)); `:core:health-api` how the devices talk to Health Connect
+  ([rule 3](#3-health-connect-is-reached-through-healthconnectgateway-only)); `:devices:garmin:protocol` and
   `:devices:xiaomi:protocol` are the Garmin protocol and the S400 codec, pure Kotlin
   ([`devices/garmin`](#devicesgarmin), [`devices/xiaomi`](#devicesxiaomi)); `:wear` is the Wear OS watch app
   with its own CI gate; `:wearlink` is the pure-Kotlin link both apps depend on. Package names
@@ -203,7 +204,7 @@ Package names are unchanged, so an import does not say which module a class is i
 
 The wear sleep fixtures the app's Wear OS sync tests use are health-calculations' test fixtures (`testFixtures("tech.mmarca.healthcalculations:health-calculations")`); these modules have none of their own.
 
-The modules exist for the build and for the boundary: a change elsewhere leaves their compile and test results in the build cache, and the compiler, not a test, keeps Android and the rest of the app out of them. Their tests are plain JUnit (`:core:model:test`, `:core:fit:test`, in `verifyCiUnitTest`, as are `:core:devices-api:test`, `:devices:garmin:protocol:test` and `:devices:xiaomi:protocol:test`), and Android lint still checks them, the contracts and the protocol modules (`com.android.lint` with the app's rules, each module's `lint` in `verifyCiLint`), without its API-level check (see [development.md](development.md#lint)). What does not belong here: anything with an inbound dependency from `data/`, `healthconnect/` or `features/`, resources, and Hilt wiring. The architecture ratchets walk them through `LibraryModuleRoots` in the app's architecture tests, and `LibraryModuleRootsTest` fails on a module under `core/` or `devices/` that is not listed there.
+The modules exist for the build and for the boundary: a change elsewhere leaves their compile and test results in the build cache, and the compiler, not a test, keeps Android and the rest of the app out of them. Their tests are plain JUnit (`:core:model:test`, `:core:fit:test`, in `verifyCiUnitTest`, as are `:core:devices-api:test`, `:devices:garmin:protocol:test` and `:devices:xiaomi:protocol:test`; `:core:health-api`, an Android library, runs `testCiUnitTest` and `lintCi`), and Android lint still checks them, the contracts and the protocol modules (`com.android.lint` with the app's rules, each module's `lint` in `verifyCiLint`), without its API-level check (see [development.md](development.md#lint)). What does not belong here: anything with an inbound dependency from `data/`, `healthconnect/` or `features/`, resources, and Hilt wiring. The architecture ratchets walk them through `LibraryModuleRoots` in the app's architecture tests, and `LibraryModuleRootsTest` fails on a module under `core/` or `devices/` that is not listed there.
 
 ## Shared module `:wearlink`
 
@@ -333,7 +334,14 @@ on the Classic radio and takes no lease either.
 ### 3. Health Connect is reached through `HealthConnectGateway` only
 
 [`HealthConnectGateway`](../../app/src/main/kotlin/tech/mmarca/openwatch/healthconnect/HealthConnectGateway.kt)
-is the one class that holds the client. The devices write through
+is the one class that holds the client. A device never takes it: it takes the contracts of
+`:core:health-api` (`core/health-api`, an Android library since Health Connect's records are
+the signatures), bound in `di/RepositoryModule`. It reads through `HealthConnectReads`, which
+the gateway implements, and writes through the record sink `HealthRecordStore`, which
+`ImportedRecordRepository` implements, with the helpers of `ImportedRecordWrites.kt` (outcomes
+per record, batches of at most `MaxRecordsPerInsert`). The paused-sync exception and
+`isHealthConnectRateLimit` are the module's too; `FakeHealthRecordStore`, its test fixture, is
+Health Connect's writes in memory as measured. The devices write through
 `ImportedRecordRepository.insertImportedRecords` with a deterministic `clientRecordId`, so a
 re-sync upserts; Health Connect replaces a record only when its `clientRecordVersion` is
 higher, so a record that is rewritten as it grows carries a rising version. Activities go

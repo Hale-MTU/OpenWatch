@@ -9,7 +9,7 @@ import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
 import tech.mmarca.healthcalculations.insights.WorkoutEnergyResult
 import tech.mmarca.healthcalculations.preferences.BodyProfile
-import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
+import tech.mmarca.openwatch.healthconnect.HealthConnectReads
 
 /**
  * Writes a watch workout's active calories ([WearOsWorkoutImport.activeCalories])
@@ -18,7 +18,7 @@ import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
  * the walking energy: a missing grant or a failed read never fails the sync.
  */
 internal class WearOsWorkoutEnergy(
-    private val healthConnect: HealthConnectGateway,
+    private val healthConnect: HealthConnectReads,
     private val profile: suspend () -> BodyProfile,
     private val insert: suspend (List<Record>) -> Unit,
     private val clock: () -> Instant,

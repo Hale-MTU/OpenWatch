@@ -13,7 +13,7 @@ import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.CancellationException
 import tech.mmarca.healthcalculations.insights.SleepStageEstimator
 import tech.mmarca.healthcalculations.model.GarminSleepMinute
-import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
+import tech.mmarca.openwatch.data.repository.HealthRecordStore
 import tech.mmarca.openwatch.data.repository.contract.GarminSleepMinuteRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminWellnessRepository
 import tech.mmarca.openwatch.data.repository.insertSkippingPresent
@@ -23,7 +23,7 @@ import tech.mmarca.openwatch.devices.garmin.GarminDownloadedFile
 import tech.mmarca.openwatch.devices.garmin.GarminLog
 import tech.mmarca.openwatch.domain.model.GarminWellnessMetric
 import tech.mmarca.openwatch.domain.model.GarminWellnessSample
-import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
+import tech.mmarca.openwatch.healthconnect.HealthConnectReads
 
 /**
  * Runs the wellness import for one sync's FIT files: Health Connect records
@@ -40,7 +40,7 @@ import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
  */
 @Singleton
 class FitWellnessImporter(
-    private val importRepository: ImportedRecordRepository,
+    private val importRepository: HealthRecordStore,
     private val wellnessRepository: GarminWellnessRepository,
     private val watermarkStore: GarminCounterWatermarkStore,
     private val sleepMinuteRepository: GarminSleepMinuteRepository,
@@ -49,12 +49,12 @@ class FitWellnessImporter(
 ) {
     @Inject
     constructor(
-        importRepository: ImportedRecordRepository,
+        importRepository: HealthRecordStore,
         wellnessRepository: GarminWellnessRepository,
         watermarkStore: GarminCounterWatermarkStore,
         sleepMinuteRepository: GarminSleepMinuteRepository,
         sleepEstimation: GarminSleepEstimationWriter,
-        healthConnect: HealthConnectGateway,
+        healthConnect: HealthConnectReads,
     ) : this(
         importRepository,
         wellnessRepository,

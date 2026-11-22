@@ -4,7 +4,7 @@ import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
 import tech.mmarca.openwatch.core.presentation.isPermissionFailure
-import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
+import tech.mmarca.openwatch.data.repository.HealthRecordStore
 import tech.mmarca.openwatch.data.repository.RecordWrite
 import tech.mmarca.openwatch.data.repository.insertWithOutcomes
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
@@ -81,7 +81,7 @@ internal class WearOsSeriesReader(private val nodePort: WearOsNodePort, private 
  * watch (it keeps a week) for the next sync after the grant. That never fails the sync.
  */
 internal class WearOsSeriesSync(
-    private val importRepository: ImportedRecordRepository,
+    private val importRepository: HealthRecordStore,
     private val granted: suspend () -> Set<String>,
     private val cursors: WearOsSyncCursorStore,
     private val zone: () -> ZoneId,

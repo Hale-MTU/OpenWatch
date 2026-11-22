@@ -41,6 +41,11 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   `BleUuids`, `WatchPairingPort`, `CompanionPresenceObserver`, the sync port and its outcome and
   failure types, the auto-sync interval, `SyncWakeLock`, the record id salt. Its test fixtures
   are the shared fakes (`FakeDeviceSyncPort`, `FakeWatchPairing`, `FakeDeviceFamily`).
+- `core/health-api` (`:core:health-api`) — how the devices talk to Health Connect, as
+  contracts: the record sink `HealthRecordStore` and its write helpers (`ImportedRecordWrites`),
+  the strict reads `HealthConnectReads`, the paused-sync exception and the rate-limit check. An
+  Android library, since the records are Health Connect's types. Its test fixture is
+  `FakeHealthRecordStore`. The gateway and `ImportedRecordRepository` implement it in `:app`.
 - `devices/garmin/protocol` (`:devices:garmin:protocol`) — the Garmin protocol, pure Kotlin with
   `explicitApi()` and the app's package names: bytes, COBS, GFDI, protobuf, the multi-link
   transport, the session, file sync, the uploads and the FIT wellness decoder. Its test
@@ -79,8 +84,9 @@ Do not break these without an explicit decision.
   `NOTIFICATIONS`. A scan opens no link and takes no lease.
 - **One companion device service.** `OpenWatchCompanionDeviceService` is the primary one; it
   fans out to every `CompanionPresenceObserver` bound `@IntoSet` in `DevicesModule`.
-- **Health Connect is reached through `HealthConnectGateway` only.** Every device write goes
-  through `ImportedRecordRepository.insertImportedRecords` with a deterministic
+- **Health Connect is reached through `HealthConnectGateway` only.** A device takes the
+  contracts of `:core:health-api`, never the gateway: it reads through `HealthConnectReads` and
+  every device write goes through the record sink, `ImportedRecordRepository.insertImportedRecords`, with a deterministic
   `clientRecordId`, so a re-sync upserts; the gateway's reads throw on failure, they never
   return an empty answer that would pass for "no data". There is no rate-limit backoff: the
   devices issue a handful of reads per sync. Add one only once a refusal is seen.

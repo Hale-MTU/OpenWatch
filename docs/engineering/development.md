@@ -101,7 +101,7 @@ entry that was fixed is reported as such and can be dropped by regenerating:
 
 ```bash
 ./gradlew :app:updateLintBaselineCi :core:model:updateLintBaseline :core:fit:updateLintBaseline \
-  :core:devices-api:updateLintBaseline \
+  :core:devices-api:updateLintBaseline :core:health-api:updateLintBaselineCi \
   :devices:garmin:protocol:updateLintBaseline :devices:xiaomi:protocol:updateLintBaseline \
   :wear:updateLintBaselineCi :wear:recording-core:updateLintBaseline
 ```
@@ -118,8 +118,8 @@ dependency change, regenerate the module's lockfile and commit it:
 
 ```bash
 ./gradlew :app:dependencies :core:model:dependencies :core:fit:dependencies :core:devices-api:dependencies \
-  :devices:garmin:protocol:dependencies :devices:xiaomi:protocol:dependencies :wear:dependencies \
-  :wear:recording-core:dependencies :wearlink:dependencies --write-locks
+  :core:health-api:dependencies :devices:garmin:protocol:dependencies :devices:xiaomi:protocol:dependencies \
+  :wear:dependencies :wear:recording-core:dependencies :wearlink:dependencies --write-locks
 ```
 
 ## Dependency Verification

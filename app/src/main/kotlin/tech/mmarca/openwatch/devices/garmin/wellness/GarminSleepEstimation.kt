@@ -7,7 +7,7 @@ import java.time.ZoneOffset
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
-import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
+import tech.mmarca.openwatch.data.repository.HealthRecordStore
 import tech.mmarca.openwatch.data.repository.contract.GarminSleepMinuteRepository
 import tech.mmarca.openwatch.devices.core.sync.estimatedSleepSessionRecord
 import tech.mmarca.openwatch.devices.core.sync.sleepNightWindow
@@ -17,7 +17,7 @@ import tech.mmarca.healthcalculations.insights.SleepStageEstimator
 import tech.mmarca.healthcalculations.model.GarminSleepMinute
 import tech.mmarca.healthcalculations.model.SleepMinuteKind
 import tech.mmarca.openwatch.data.repository.replaceImportedRecord
-import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
+import tech.mmarca.openwatch.healthconnect.HealthConnectReads
 import tech.mmarca.openwatch.devices.core.saltedRecordId
 import tech.mmarca.openwatch.devices.core.recordIdSalt
 
@@ -70,16 +70,16 @@ fun FitSleepMinute.toGarminSleepMinute(): GarminSleepMinute = GarminSleepMinute(
 /** Estimates and writes the nights a sync touched. */
 @Singleton
 class GarminSleepEstimationWriter(
-    private val importRepository: ImportedRecordRepository,
+    private val importRepository: HealthRecordStore,
     private val minuteRepository: GarminSleepMinuteRepository,
-    private val healthConnect: HealthConnectGateway,
+    private val healthConnect: HealthConnectReads,
     private val clock: () -> Instant,
 ) {
     @Inject
     constructor(
-        importRepository: ImportedRecordRepository,
+        importRepository: HealthRecordStore,
         minuteRepository: GarminSleepMinuteRepository,
-        healthConnect: HealthConnectGateway,
+        healthConnect: HealthConnectReads,
     ) : this(importRepository, minuteRepository, healthConnect, Instant::now)
 
     /**

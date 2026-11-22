@@ -8,7 +8,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import tech.mmarca.openwatch.core.presentation.isPermissionFailure
-import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
+import tech.mmarca.openwatch.data.repository.HealthRecordStore
 import tech.mmarca.openwatch.data.repository.BodyProfileProvider
 import tech.mmarca.openwatch.data.repository.contract.ScaleWeighInRepository
 import tech.mmarca.healthcalculations.insights.BodyCompositionEstimate
@@ -18,7 +18,7 @@ import tech.mmarca.healthcalculations.insights.bodyCompositionMissingInputs
 import tech.mmarca.openwatch.domain.model.ScaleWeighIn
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.data.repository.insertWithOutcomes
-import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
+import tech.mmarca.openwatch.healthconnect.HealthConnectReads
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 
 /**
@@ -31,8 +31,8 @@ import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 @Singleton
 class ScaleWeighInWriter @Inject constructor(
     private val weighIns: ScaleWeighInRepository,
-    private val importRepository: ImportedRecordRepository,
-    private val hc: HealthConnectGateway,
+    private val importRepository: HealthRecordStore,
+    private val hc: HealthConnectReads,
     private val bodyProfile: BodyProfileProvider,
     private val store: XiaomiScaleStore,
 ) {

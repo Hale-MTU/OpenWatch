@@ -144,6 +144,8 @@ dependencies {
     implementation(project(":core:fit"))
     // The device contracts: families, features, the sync port, pairing, presence.
     implementation(project(":core:devices-api"))
+    // The devices' Health Connect contracts: the record sink, its write helpers, the strict reads.
+    implementation(project(":core:health-api"))
     // The Garmin protocol, pure Kotlin; its platform half (GATT, stores, Health Connect) is here.
     implementation(project(":devices:garmin:protocol"))
     // The Xiaomi S400 codec, pure Kotlin; the scan, Room and Health Connect side is here.
@@ -205,6 +207,8 @@ dependencies {
     testImplementation(testFixtures(project(":devices:garmin:protocol")))
     // The shared fakes of the device contracts: a sync port, a pairing, a family.
     testImplementation(testFixtures(project(":core:devices-api")))
+    // Health Connect's writes in memory, for the write helpers' callers.
+    testImplementation(testFixtures(project(":core:health-api")))
     testImplementation(libs.junit4)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
@@ -240,6 +244,7 @@ tasks.withType<Test>().configureEach {
         ":core:model:test",
         ":core:fit:test",
         ":core:devices-api:test",
+        ":core:health-api:testCiUnitTest",
         ":devices:garmin:protocol:test",
         ":devices:xiaomi:protocol:test",
     )
@@ -253,6 +258,7 @@ tasks.withType<Test>().configureEach {
         "scannedCoreModelMain" to "core/model/src/main",
         "scannedCoreFitMain" to "core/fit/src/main",
         "scannedCoreDevicesApiMain" to "core/devices-api/src/main",
+        "scannedCoreHealthApiMain" to "core/health-api/src/main",
         "scannedGarminProtocolMain" to "devices/garmin/protocol/src/main",
         "scannedXiaomiProtocolMain" to "devices/xiaomi/protocol/src/main",
         "scannedWearMain" to "wear/src/main",

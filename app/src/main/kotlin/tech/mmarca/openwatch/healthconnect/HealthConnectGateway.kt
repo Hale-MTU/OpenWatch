@@ -47,7 +47,7 @@ class HealthConnectGateway(
     private val clientProvider: () -> HealthConnectClient,
     private val elapsedMillis: () -> Long = { System.nanoTime() / 1_000_000L },
     private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
-) {
+) : HealthConnectReads {
     @Inject
     constructor(
         @ApplicationContext context: Context,
@@ -80,7 +80,7 @@ class HealthConnectGateway(
      * the foreground, since the Health Connect permission screen is another app. A
      * failed call is never cached.
      */
-    suspend fun grantedPermissions(): Set<String> {
+    override suspend fun grantedPermissions(): Set<String> {
         freshGrantedPermissions()?.let { return it }
         return grantedPermissionsMutex.withLock {
             freshGrantedPermissions()?.let { return@withLock it }
@@ -118,7 +118,7 @@ class HealthConnectGateway(
     }
 
     /** True when this Health Connect stores skin temperature (a feature of newer versions). */
-    fun isSkinTemperatureAvailable(): Boolean {
+    override fun isSkinTemperatureAvailable(): Boolean {
         if (availability() != HealthConnectAvailability.AVAILABLE) return false
         return runCatching {
             clientProvider().features.getFeatureStatus(HealthConnectFeatures.FEATURE_SKIN_TEMPERATURE)
@@ -126,7 +126,7 @@ class HealthConnectGateway(
     }
 
     /** The highest heart rate Health Connect holds in `[start, end)`, from any app; null without the read grant or a sample. */
-    suspend fun readMaxHeartRate(start: Instant, end: Instant): Long? {
+    override suspend fun readMaxHeartRate(start: Instant, end: Instant): Long? {
         if (HealthPermission.getReadPermission(HeartRateRecord::class) !in grantedPermissions()) return null
         return withContext(dispatchers.io) {
             clientProvider().aggregate(
@@ -148,7 +148,7 @@ class HealthConnectGateway(
      * a read with this app's own records only, and says nothing. A caller that saves what it
      * read checks this first and skips the pass. The foreground here is a started Activity.
      */
-    suspend fun readsOtherAppsDataNow(): Boolean {
+    override suspend fun readsOtherAppsDataNow(): Boolean {
         if (foregroundGate.isForeground) return true
         if (!isBackgroundReadAvailable()) return false
         return HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND in grantedPermissions()
@@ -184,7 +184,7 @@ class HealthConnectGateway(
     }
 
     /** Every record of [recordType] in `[start, end)`, a page at a time. */
-    suspend fun forEachSyncRecordPage(
+    override suspend fun forEachSyncRecordPage(
         recordType: KClass<out Record>,
         start: Instant,
         end: Instant,
@@ -224,7 +224,7 @@ class HealthConnectGateway(
     }
 
     /** The time spans of every exercise session overlapping `[start, end)`, from any app. */
-    suspend fun readExerciseSessionRanges(start: Instant, end: Instant): List<ClosedRange<Instant>> {
+    override suspend fun readExerciseSessionRanges(start: Instant, end: Instant): List<ClosedRange<Instant>> {
         val ranges = mutableListOf<ClosedRange<Instant>>()
         forEachSyncRecordPage(ExerciseSessionRecord::class, start, end) { page ->
             page.forEach { record ->
@@ -299,12 +299,6 @@ private fun declaredHealthPermissions(context: Context): Set<String> {
     return info.requestedPermissions.orEmpty()
         .filterTo(linkedSetOf()) { it.startsWith("android.permission.health.") }
 }
-
-/**
- * The most records one insert carries. Health Connect asks for no more than a thousand a
- * request; a watch's first sync brings several thousand minutes at once.
- */
-internal const val MaxRecordsPerInsert = 1000
 
 /** [records] in requests of at most [MaxRecordsPerInsert], in order. */
 internal suspend fun HealthConnectClient.insertInChunks(records: List<Record>) {
