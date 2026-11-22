@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.hilt.android) apply false
     alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
 }
 
 // The plugins' own classpath (AGP, Kotlin, Hilt, KSP and what they pull in) is locked too, in

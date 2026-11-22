@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
+    // @Serializable navigation routes.
+    alias(libs.plugins.kotlin.serialization)
 }
 
 // Room writes the schema of each database version here. The files are committed: a migration
