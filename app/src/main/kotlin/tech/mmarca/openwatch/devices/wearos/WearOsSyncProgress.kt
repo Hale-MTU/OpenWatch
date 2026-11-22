@@ -12,7 +12,11 @@ import tech.mmarca.openwatch.devices.core.sync.SkippedSeries
 import tech.mmarca.openwatch.devices.core.sync.SyncTally
 
 /** What one Wear OS sync has done so far: pages for the progress, counts and skips for the result. */
-internal class WearOsSyncProgress(private val onProgress: ((DeviceSyncProgress) -> Unit)?) {
+internal class WearOsSyncProgress(
+    private val onProgress: ((DeviceSyncProgress) -> Unit)?,
+    /** The watch's id salt, for every record id the run makes. */
+    val salt: String = "",
+) {
     var pages = 0
         private set
 

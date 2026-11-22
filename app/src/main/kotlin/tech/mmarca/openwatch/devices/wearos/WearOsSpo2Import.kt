@@ -6,6 +6,7 @@ import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.units.Percentage
 import java.time.ZoneId
+import tech.mmarca.openwatch.devices.core.saltedRecordId
 
 /**
  * Maps the watch's SpO2 spot measurements (the Samsung platform's own
@@ -22,19 +23,19 @@ object WearOsSpo2Import {
     val writePermission: String = HealthPermission.getWritePermission(OxygenSaturationRecord::class)
 
     /** The record of [measurement], or null when Health Connect would refuse the value. */
-    fun record(measurement: WearOsSpo2Measurement, zone: ZoneId): OxygenSaturationRecord? = try {
+    fun record(measurement: WearOsSpo2Measurement, zone: ZoneId, salt: String = ""): OxygenSaturationRecord? = try {
         OxygenSaturationRecord(
             time = measurement.time,
             zoneOffset = zone.rules.getOffset(measurement.time),
             percentage = Percentage(measurement.percent.toDouble()),
             metadata = Metadata.autoRecorded(
                 device = Device(type = Device.TYPE_WATCH),
-                clientRecordId = clientRecordId(measurement),
+                clientRecordId = clientRecordId(measurement, salt),
             ),
         )
     } catch (_: IllegalArgumentException) {
         null
     }
 
-    fun clientRecordId(measurement: WearOsSpo2Measurement): String = "$CLIENT_ID_PREFIX${measurement.time.toEpochMilli()}"
+    fun clientRecordId(measurement: WearOsSpo2Measurement, salt: String = ""): String = saltedRecordId("$CLIENT_ID_PREFIX${measurement.time.toEpochMilli()}", salt)
 }

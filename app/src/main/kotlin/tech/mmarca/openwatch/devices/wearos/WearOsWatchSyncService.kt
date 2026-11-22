@@ -182,7 +182,7 @@ class WearOsWatchSyncService(
         onProgress: ((DeviceSyncProgress) -> Unit)?,
     ): DeviceSyncResult {
         onProgress?.invoke(DeviceSyncProgress(DeviceSyncPhase.HANDSHAKE))
-        val progress = WearOsSyncProgress(onProgress)
+        val progress = WearOsSyncProgress(onProgress, salt = device.idSalt)
         // Between series, past their cursors, a spent budget ends the run; the rest is next.
         suspend fun spent() = syncBudgetSpent().also { if (it) progress.moreRemains = true }
         try {
@@ -234,7 +234,7 @@ class WearOsWatchSyncService(
             progress.page()
             val newest = page.samples.maxOfOrNull { it.time }
             if (newest != null) {
-                importRepository.insertImportedRecords(WearOsHeartRateImport.records(page.samples))
+                importRepository.insertImportedRecords(WearOsHeartRateImport.records(page.samples, progress.salt))
                 progress.written += page.samples.size
                 cursor = newest
                 cursors.setHeartRateCursor(device.id, cursor)
@@ -323,7 +323,7 @@ class WearOsWatchSyncService(
                 }
                 return
             }
-            val energy = WearOsStepsImport.activeCaloriesRecords(minutes, weightKg, zone())
+            val energy = WearOsStepsImport.activeCaloriesRecords(minutes, weightKg, zone(), progress.salt)
             // Counted as written, not as tried: a minute refused as present adds nothing.
             val written = energy.zip(insertEstimates(energy, "walking energy")).filter { (_, outcome) -> outcome == RecordWrite.WRITTEN }
             energyMinutes += written.size
@@ -382,12 +382,12 @@ class WearOsWatchSyncService(
             progress.page()
             val newest = page.minutes.maxOfOrNull { it.start }
             if (newest != null) {
-                val records = WearOsFloorsImport.records(page.minutes, steps)
+                val records = WearOsFloorsImport.records(page.minutes, steps, progress.salt)
                 // The cursor minute apart, as for steps.
                 for (part in records.partition { (it as FloorsClimbedRecord).startTime.isAfter(cursor) }.toList()) {
                     insertEstimates(part, "floors")
                 }
-                val elevation = WearOsFloorsImport.elevationRecords(page.minutes, steps)
+                val elevation = WearOsFloorsImport.elevationRecords(page.minutes, steps, progress.salt)
                 for (part in elevation.partition { (it as ElevationGainedRecord).startTime.isAfter(cursor) }.toList()) {
                     insertEstimates(part, "elevation")
                 }
@@ -414,7 +414,7 @@ class WearOsWatchSyncService(
      * have left without one. Returns the minutes due, for the walking energy.
      */
     private suspend fun writeSteps(minutes: List<WearOsStepMinute>, stepsCursor: Instant, progress: WearOsSyncProgress): List<WearOsStepMinute> {
-        val records = WearOsStepsImport.records(minutes, zone())
+        val records = WearOsStepsImport.records(minutes, zone(), progress.salt)
         // Read first: the platform's Health Connect takes an unchanged minute again without a word.
         val changed = records.zip(importRepository.insertNewer(records))
             .filter { (_, outcome) -> outcome == RecordWrite.WRITTEN }
@@ -422,7 +422,7 @@ class WearOsWatchSyncService(
         progress.stepMinutes += changed.size
         val due = minutes.filter { it.start in changed || it.start.isAfter(stepsCursor) }
         // Health Connect files cadence under the steps grant.
-        insertEstimates(WearOsStepsImport.cadenceRecords(due, zone()), "cadence")
+        insertEstimates(WearOsStepsImport.cadenceRecords(due, zone(), progress.salt), "cadence")
         return due
     }
 
@@ -443,7 +443,7 @@ class WearOsWatchSyncService(
 
     /** A written workout's active calories ([WearOsWorkoutEnergy]); a missing grant or weight is reported as the walking energy's. */
     private suspend fun writeWorkoutEnergy(workout: WearOsWorkout, progress: WearOsSyncProgress) {
-        when (val outcome = workoutEnergy.write(workout)) {
+        when (val outcome = workoutEnergy.write(workout, progress.salt)) {
             WearOsWorkoutEnergy.Outcome.Written, WearOsWorkoutEnergy.Outcome.Skipped -> Unit
             WearOsWorkoutEnergy.Outcome.PermissionMissing -> {
                 progress.withheld(HealthSeries.WALKING_ENERGY, setOf(WearOsWorkoutImport.energyPermission))
@@ -492,7 +492,7 @@ class WearOsWatchSyncService(
                 continue
             }
             WearOsLog.log("$night: ${estimated.summary()}")
-            val record = WearOsSleepImport.record(estimated, night, offset, version = clock().toEpochMilli())
+            val record = WearOsSleepImport.record(estimated, night, offset, version = clock().toEpochMilli(), salt = progress.salt)
             if (record == null) {
                 WearOsLog.log("$night: nothing counted as sleep")
                 continue
@@ -506,7 +506,7 @@ class WearOsWatchSyncService(
             writeReplacing(record)
             nights++
         }
-        val naps = writeNaps(minutes, cursor)
+        val naps = writeNaps(minutes, cursor, progress.salt)
         cursors.setSleepCursor(device.id, newest)
         progress.nights = nights
         WearOsLog.log("sleep: $nights night(s) and $naps nap(s) written from ${minutes.size} minutes")
@@ -518,29 +518,29 @@ class WearOsWatchSyncService(
      * that overlaps the nap wins. An earlier estimate of the same nap with
      * another onset is removed, so re-estimating never leaves two.
      */
-    private suspend fun writeNaps(minutes: List<WearSleepMinute>, cursor: Instant): Int {
+    private suspend fun writeNaps(minutes: List<WearSleepMinute>, cursor: Instant, salt: String): Int {
         var written = 0
         for ((nap, offset) in WearOsSleepImport.naps(minutes, cursor)) {
-            val record = WearOsSleepImport.napRecord(nap, offset, version = clock().toEpochMilli()) ?: continue
+            val record = WearOsSleepImport.napRecord(nap, offset, version = clock().toEpochMilli(), salt = salt) ?: continue
             if (hasForeignRecord(SleepSessionRecord::class, nap.onset, nap.end, WearOsSleepImport::isOwnRecordId)) {
                 WearOsLog.log("nap: Health Connect already holds a session from elsewhere, skipping")
                 continue
             }
-            removeOtherNapEstimates(nap.onset, nap.end, keepId = WearOsSleepImport.napClientRecordId(nap))
+            removeOtherNapEstimates(nap.onset, nap.end, keepId = WearOsSleepImport.napClientRecordId(nap, salt), salt)
             writeReplacing(record)
             written++
         }
         return written
     }
 
-    /** Deletes this import's nap sessions in the window other than [keepId]. A failed read leaves them. */
-    private suspend fun removeOtherNapEstimates(from: Instant, to: Instant, keepId: String) {
+    /** Deletes this watch's nap sessions in the window other than [keepId]; another watch's stay. A failed read leaves them. */
+    private suspend fun removeOtherNapEstimates(from: Instant, to: Instant, keepId: String, salt: String) {
         val stale = ArrayList<String>()
         try {
             healthConnect.forEachSyncRecordPage(SleepSessionRecord::class, from, to) { page ->
                 for (record in page) {
                     val id = record.metadata.clientRecordId
-                    if (id != null && id != keepId && WearOsSleepImport.isOwnNapId(id)) stale += id
+                    if (id != null && id != keepId && WearOsSleepImport.isOwnNapId(id, salt)) stale += id
                 }
             }
         } catch (error: CancellationException) {
@@ -561,6 +561,7 @@ class WearOsWatchSyncService(
     private suspend fun pullWorkouts(device: BleSensorDevice, progress: WearOsSyncProgress): Boolean {
         val outcome = workouts.sync(
             deviceId = device.id,
+            salt = device.idSalt,
             afterWritten = { writeWorkoutEnergy(it, progress) },
         ) { since ->
             retryOnce { nodePort.pullWorkouts(device.address, device.bluetoothName, since) }
@@ -599,7 +600,7 @@ class WearOsWatchSyncService(
         access: RestingHeartRateAccess,
         progress: WearOsSyncProgress,
     ) {
-        val record = WearOsRestingHeartRateImport.record(minutes, estimated, night, offset, version = clock().toEpochMilli())
+        val record = WearOsRestingHeartRateImport.record(minutes, estimated, night, offset, version = clock().toEpochMilli(), salt = progress.salt)
         if (record == null) {
             WearOsLog.log("$night: no resting heart rate, the night runs on or has too few readings")
             return

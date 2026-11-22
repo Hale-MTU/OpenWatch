@@ -10,6 +10,7 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
 import tech.mmarca.healthcalculations.insights.WalkingEnergy
+import tech.mmarca.openwatch.devices.core.saltedRecordId
 
 /**
  * Maps the watch's step minutes to Health Connect records, one per minute
@@ -37,7 +38,7 @@ object WearOsStepsImport {
     const val ACTIVE_CALORIES_CLIENT_ID_PREFIX = "wearos_walk_kcal_"
 
     /** One per minute of [minutes], which hold each minute once ([latestPerMinute]). */
-    fun records(minutes: List<WearOsStepMinute>, zone: ZoneId): List<StepsRecord> =
+    fun records(minutes: List<WearOsStepMinute>, zone: ZoneId, salt: String = ""): List<StepsRecord> =
         minutes.map { minute ->
             StepsRecord(
                 startTime = minute.start,
@@ -45,11 +46,11 @@ object WearOsStepsImport {
                 endTime = minute.end,
                 endZoneOffset = zone.offsetAt(minute.end),
                 count = minute.steps.toLong(),
-                metadata = watchMetadata(clientRecordId(minute.start), minute.steps),
+                metadata = watchMetadata(clientRecordId(minute.start, salt), minute.steps),
             )
         }
 
-    fun cadenceRecords(minutes: List<WearOsStepMinute>, zone: ZoneId): List<StepsCadenceRecord> =
+    fun cadenceRecords(minutes: List<WearOsStepMinute>, zone: ZoneId, salt: String = ""): List<StepsCadenceRecord> =
         minutes.map { minute ->
             StepsCadenceRecord(
                 startTime = minute.start,
@@ -57,7 +58,7 @@ object WearOsStepsImport {
                 endTime = minute.end,
                 endZoneOffset = zone.offsetAt(minute.end),
                 samples = listOf(StepsCadenceRecord.Sample(time = minute.start, rate = minute.steps.toDouble())),
-                metadata = watchMetadata("$CADENCE_CLIENT_ID_PREFIX${minute.start.toEpochMilli()}", minute.steps),
+                metadata = watchMetadata(saltedRecordId("$CADENCE_CLIENT_ID_PREFIX${minute.start.toEpochMilli()}", salt), minute.steps),
             )
         }
 
@@ -70,6 +71,7 @@ object WearOsStepsImport {
         minutes: List<WearOsStepMinute>,
         weightKg: Double?,
         zone: ZoneId,
+        salt: String = "",
     ): List<ActiveCaloriesBurnedRecord> {
         if (weightKg == null || weightKg <= 0.0) return emptyList()
         return minutes.mapNotNull { minute ->
@@ -84,7 +86,7 @@ object WearOsStepsImport {
                 // Computed on the phone, like the other OpenWatch estimates.
                 metadata = Metadata.manualEntry(
                     device = Device(type = Device.TYPE_PHONE),
-                    clientRecordId = "$ACTIVE_CALORIES_CLIENT_ID_PREFIX${minute.start.toEpochMilli()}",
+                    clientRecordId = saltedRecordId("$ACTIVE_CALORIES_CLIENT_ID_PREFIX${minute.start.toEpochMilli()}", salt),
                     clientRecordVersion = minute.steps.toLong(),
                 ),
             )
@@ -100,7 +102,8 @@ object WearOsStepsImport {
     /** Whether a minute would cost more than rest, so a known weight would write walking energy for it. */
     fun hasWalkingEnergy(minutes: List<WearOsStepMinute>): Boolean = minutes.any { WalkingEnergy.isAboveRest(it.steps) }
 
-    fun clientRecordId(minuteStart: Instant): String = "$CLIENT_ID_PREFIX${minuteStart.toEpochMilli()}"
+    fun clientRecordId(minuteStart: Instant, salt: String = ""): String =
+        saltedRecordId("$CLIENT_ID_PREFIX${minuteStart.toEpochMilli()}", salt)
 
     /** Each minute once: a minute twice in one page keeps the larger, later count. */
     fun latestPerMinute(minutes: List<WearOsStepMinute>): List<WearOsStepMinute> =

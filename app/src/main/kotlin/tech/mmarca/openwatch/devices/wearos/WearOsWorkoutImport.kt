@@ -18,6 +18,7 @@ import java.time.ZoneId
 import tech.mmarca.healthcalculations.insights.WorkoutEnergyResult
 import tech.mmarca.healthcalculations.insights.estimateWorkoutEnergy
 import tech.mmarca.healthcalculations.preferences.BodyProfile
+import tech.mmarca.openwatch.devices.core.saltedRecordId
 
 /**
  * Maps a workout the watch recorded to Health Connect: an
@@ -53,7 +54,7 @@ object WearOsWorkoutImport {
         if (distance(workout) != null) add(distancePermission)
     }
 
-    fun records(workout: WearOsWorkout, zone: ZoneId): List<Record> {
+    fun records(workout: WearOsWorkout, zone: ZoneId, salt: String = ""): List<Record> {
         val startOffset = zone.rules.getOffset(workout.start)
         val endOffset = zone.rules.getOffset(workout.end)
         val route = route(workout)
@@ -62,7 +63,7 @@ object WearOsWorkoutImport {
             startZoneOffset = startOffset,
             endTime = workout.end,
             endZoneOffset = endOffset,
-            metadata = metadata(importKey(workout.start)),
+            metadata = metadata(importKey(workout.start, salt)),
             exerciseType = workout.exerciseType,
             segments = workout.pauses
                 .filter { it.start >= workout.start && it.endInclusive <= workout.end && it.start < it.endInclusive }
@@ -76,13 +77,13 @@ object WearOsWorkoutImport {
                 endTime = workout.end,
                 endZoneOffset = endOffset,
                 distance = Length.meters(it),
-                metadata = metadata("$DISTANCE_PREFIX${workout.start.toEpochMilli()}"),
+                metadata = metadata(saltedRecordId("$DISTANCE_PREFIX${workout.start.toEpochMilli()}", salt)),
             )
         }
         return listOfNotNull(session, distance)
     }
 
-    fun importKey(start: Instant): String = "$KEY_PREFIX${start.toEpochMilli()}"
+    fun importKey(start: Instant, salt: String = ""): String = saltedRecordId("$KEY_PREFIX${start.toEpochMilli()}", salt)
 
     /**
      * The workout's active calories, estimated, as an `ActiveCaloriesBurnedRecord`
@@ -101,6 +102,7 @@ object WearOsWorkoutImport {
         profile: BodyProfile,
         samples: List<Pair<Instant, Long>>,
         today: LocalDate,
+        salt: String = "",
     ): Pair<ActiveCaloriesBurnedRecord?, WorkoutEnergyResult> {
         val pauses = workout.pauses.filter { it.start < it.endInclusive }
         val moving = Duration.between(workout.start, workout.end) - pauses.fold(Duration.ZERO) { sum, pause ->
@@ -127,7 +129,7 @@ object WearOsWorkoutImport {
             endTime = workout.end,
             endZoneOffset = zone.rules.getOffset(workout.end),
             energy = Energy.kilocalories(estimate.activeKcal),
-            metadata = metadata("$ENERGY_PREFIX${workout.start.toEpochMilli()}"),
+            metadata = metadata(saltedRecordId("$ENERGY_PREFIX${workout.start.toEpochMilli()}", salt)),
         )
         return record to result
     }

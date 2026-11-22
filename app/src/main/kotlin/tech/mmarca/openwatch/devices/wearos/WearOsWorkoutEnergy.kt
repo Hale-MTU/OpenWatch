@@ -34,7 +34,7 @@ internal class WearOsWorkoutEnergy(
         data class NoWeight(val weightReadWithheld: Boolean) : Outcome
     }
 
-    suspend fun write(workout: WearOsWorkout): Outcome {
+    suspend fun write(workout: WearOsWorkout, salt: String = ""): Outcome {
         val granted = healthConnect.grantedPermissions()
         if (WearOsWorkoutImport.energyPermission !in granted) {
             WearOsLog.log("workout energy: not written, Health Connect permission missing")
@@ -54,6 +54,7 @@ internal class WearOsWorkoutEnergy(
             profile = body,
             samples = heartRate(workout),
             today = clock().atZone(zone()).toLocalDate(),
+            salt = salt,
         )
         if (result is WorkoutEnergyResult.MissingInputs) {
             WearOsLog.log("workout energy: no body weight, so no calories")

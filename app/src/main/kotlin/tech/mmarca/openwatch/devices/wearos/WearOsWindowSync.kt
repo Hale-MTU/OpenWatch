@@ -26,7 +26,7 @@ internal class WearOsWindowSync<W>(
     private val setCursor: (deviceId: String, at: Instant) -> Unit,
     private val startOf: (W) -> Instant,
     /** Null for a value Health Connect would refuse; it is dropped, never retried. */
-    private val record: (W) -> Record?,
+    private val record: (W, salt: String) -> Record?,
     /** The series' name in the sync log. */
     private val label: String,
 ) {
@@ -35,7 +35,7 @@ internal class WearOsWindowSync<W>(
     class Outcome(val written: Int, val withheld: Boolean)
 
     /** Null when [pullPage] has no bonded watch to ask. A failure other than a missing grant throws. */
-    suspend fun sync(deviceId: String, pullPage: suspend (Instant) -> Pair<List<W>, Boolean>?): Outcome? {
+    suspend fun sync(deviceId: String, salt: String = "", pullPage: suspend (Instant) -> Pair<List<W>, Boolean>?): Outcome? {
         var since = cursor(deviceId)
         val allowed = writePermission in granted()
         var written = 0
@@ -44,7 +44,7 @@ internal class WearOsWindowSync<W>(
             val (windows, hasMore) = pullPage(since) ?: return null
             if (windows.isEmpty()) break
             if (!allowed) return Outcome(written, withheld = true)
-            val records = windows.mapNotNull(record)
+            val records = windows.mapNotNull { record(it, salt) }
             if (records.size < windows.size) WearOsLog.log("$label: ${windows.size - records.size} window(s) not written, Health Connect refused the value")
             written += try {
                 importRepository.insertWithOutcomes(records).count { it == RecordWrite.WRITTEN }

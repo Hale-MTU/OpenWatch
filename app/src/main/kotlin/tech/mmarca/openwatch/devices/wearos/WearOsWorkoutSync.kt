@@ -29,6 +29,8 @@ internal class WearOsWorkoutSync(
     /** Null when [pullPage] has no bonded watch to ask. A failure other than a missing grant throws. */
     suspend fun sync(
         deviceId: String,
+        /** The watch's id salt, for the workouts' record ids. */
+        salt: String = "",
         afterWritten: suspend (WearOsWorkout) -> Unit = {},
         pullPage: suspend (Instant) -> WearOsWorkoutPage?,
     ): Outcome? {
@@ -42,7 +44,7 @@ internal class WearOsWorkoutSync(
                 val missing = WearOsWorkoutImport.permissions(workout) - granted()
                 if (missing.isNotEmpty()) return Outcome(written, missing)
                 try {
-                    importRepository.insertImportedRecords(WearOsWorkoutImport.records(workout, zone()))
+                    importRepository.insertImportedRecords(WearOsWorkoutImport.records(workout, zone(), salt))
                 } catch (error: CancellationException) {
                     throw error
                 } catch (error: Exception) {

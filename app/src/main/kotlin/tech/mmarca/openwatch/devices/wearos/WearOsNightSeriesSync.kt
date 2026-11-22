@@ -53,7 +53,7 @@ internal class WearOsNightSeriesSync(
         cursor = cursors::hrvCursor,
         setCursor = cursors::setHrvCursor,
         startOf = { it.start },
-        record = { WearOsHrvImport.record(it, zone()) },
+        record = { window, salt -> WearOsHrvImport.record(window, zone(), salt) },
         label = "hrv",
     )
 
@@ -64,7 +64,7 @@ internal class WearOsNightSeriesSync(
         cursor = cursors::respiratoryCursor,
         setCursor = cursors::setRespiratoryCursor,
         startOf = { it.start },
-        record = { WearOsRespiratoryImport.record(it, zone()) },
+        record = { window, salt -> WearOsRespiratoryImport.record(window, zone(), salt) },
         label = "breathing",
     )
 
@@ -75,7 +75,7 @@ internal class WearOsNightSeriesSync(
         cursor = cursors::spo2Cursor,
         setCursor = cursors::setSpo2Cursor,
         startOf = { it.time },
-        record = { WearOsSpo2Import.record(it, zone()) },
+        record = { measurement, salt -> WearOsSpo2Import.record(measurement, zone(), salt) },
         label = "spo2",
     )
 
@@ -90,19 +90,19 @@ internal class WearOsNightSeriesSync(
             WearOsLog.log("$label: ${outcome.written} written")
         }
 
-        val hrvOutcome = hrv.sync(device.id) { since ->
+        val hrvOutcome = hrv.sync(device.id, device.idSalt) { since ->
             retry.run { nodePort.pullHrv(device.address, device.bluetoothName, since) }?.let { it.windows to it.hasMore }
         } ?: return null
         note(hrvOutcome, HealthSeries.HEART_RATE_VARIABILITY, WearOsHrvImport.writePermission, "hrv")
 
         if (writeRespiratoryRate()) {
-            val outcome = respiratory.sync(device.id) { since ->
+            val outcome = respiratory.sync(device.id, device.idSalt) { since ->
                 retry.run { nodePort.pullRespiratory(device.address, device.bluetoothName, since) }?.let { it.windows to it.hasMore }
             } ?: return null
             note(outcome, HealthSeries.RESPIRATORY_RATE, WearOsRespiratoryImport.writePermission, "breathing")
         }
 
-        val spo2Outcome = spo2.sync(device.id) { since ->
+        val spo2Outcome = spo2.sync(device.id, device.idSalt) { since ->
             retry.run { nodePort.pullSpo2(device.address, device.bluetoothName, since) }?.let { it.measurements to it.hasMore }
         } ?: return null
         note(spo2Outcome, HealthSeries.OXYGEN_SATURATION, WearOsSpo2Import.writePermission, "spo2")
@@ -148,6 +148,7 @@ internal class WearOsNightSeriesSync(
                 WearOsSkinTemperatureImport.baseline(run, medians),
                 zone(),
                 version = clock().toEpochMilli(),
+                salt = device.idSalt,
             )
             if (record != null) {
                 written += try {

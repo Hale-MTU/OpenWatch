@@ -730,6 +730,37 @@ class WearOsWatchSyncServiceTest {
     }
 
     @Test
+    fun `one watch's nap clean-up leaves another watch's naps alone`() = runTest {
+        pages += WearOsHeartRatePage(emptyList(), hasMore = false)
+        sleepPages += WearOsSleepMinutePage(napDayMinutes(), hasMore = false)
+        val othersNap = mockk<SleepSessionRecord> {
+            every { metadata } returns Metadata.manualEntry(clientRecordId = "wearos_nap_1@ab12cd34")
+        }
+        coEvery { healthConnect.forEachSyncRecordPage(SleepSessionRecord::class, any(), any(), any()) } coAnswers {
+            arg<suspend (List<androidx.health.connect.client.records.Record>) -> Unit>(3).invoke(listOf(othersNap))
+        }
+
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        coVerify(exactly = 0) {
+            healthConnect.deleteImportedRecordsByClientIds(SleepSessionRecord::class, match { "wearos_nap_1@ab12cd34" in it })
+        }
+    }
+
+    @Test
+    fun `a second watch of the family writes under its own salt, the first's ids unchanged`() = runTest {
+        pages += WearOsHeartRatePage(samples(0, 10), hasMore = false)
+        watchSteps += WearOsStepMinute(t0, 40)
+
+        service().sync(WATCH.copy(id = "watch-2", idSalt = "ab12cd34"), SyncTrigger.REQUESTED, null)
+
+        val ids = insertCalls.flatten().mapNotNull { it.metadata.clientRecordId }
+        assertTrue(ids.isNotEmpty())
+        assertTrue(ids.toString(), ids.all { it.endsWith("@ab12cd34") })
+        assertTrue(WearOsStepsImport.clientRecordId(t0) == "wearos_steps_${t0.toEpochMilli()}")
+    }
+
+    @Test
     fun `an estimated night also gives its nocturnal resting heart rate`() = runTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         sleepPages += WearOsSleepMinutePage(nightMinutes(), hasMore = false)

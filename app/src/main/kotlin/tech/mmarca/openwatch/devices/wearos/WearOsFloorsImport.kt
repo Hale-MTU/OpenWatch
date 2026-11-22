@@ -9,6 +9,7 @@ import androidx.health.connect.client.units.Length
 import java.time.Instant
 import kotlin.math.roundToLong
 import tech.mmarca.healthcalculations.insights.AscentCredit
+import tech.mmarca.openwatch.devices.core.saltedRecordId
 
 /**
  * Maps the watch's ascent minutes to Health Connect records, one per minute
@@ -32,7 +33,7 @@ object WearOsFloorsImport {
     const val ELEVATION_CLIENT_ID_PREFIX = "wearos_elevation_"
 
     /** Records for [ascent], given the [steps] pulled in the same sync. Minutes without enough steps write nothing. */
-    fun records(ascent: List<WearOsAscentMinute>, steps: List<WearOsStepMinute>): List<Record> =
+    fun records(ascent: List<WearOsAscentMinute>, steps: List<WearOsStepMinute>, salt: String = ""): List<Record> =
         credited(ascent, steps).map { (start, metres) ->
             FloorsClimbedRecord(
                 startTime = start,
@@ -40,12 +41,12 @@ object WearOsFloorsImport {
                 endTime = start.plusSeconds(SECONDS_PER_MINUTE),
                 endZoneOffset = null,
                 floors = metres / AscentCredit.METRES_PER_FLOOR,
-                metadata = watchMetadata("$CLIENT_ID_PREFIX${start.toEpochMilli()}", metres),
+                metadata = watchMetadata(saltedRecordId("$CLIENT_ID_PREFIX${start.toEpochMilli()}", salt), metres),
             )
         }
 
     /** The same credited metres as [records], as elevation gained. */
-    fun elevationRecords(ascent: List<WearOsAscentMinute>, steps: List<WearOsStepMinute>): List<Record> =
+    fun elevationRecords(ascent: List<WearOsAscentMinute>, steps: List<WearOsStepMinute>, salt: String = ""): List<Record> =
         credited(ascent, steps).map { (start, metres) ->
             ElevationGainedRecord(
                 startTime = start,
@@ -53,7 +54,7 @@ object WearOsFloorsImport {
                 endTime = start.plusSeconds(SECONDS_PER_MINUTE),
                 endZoneOffset = null,
                 elevation = Length.meters(metres),
-                metadata = watchMetadata("$ELEVATION_CLIENT_ID_PREFIX${start.toEpochMilli()}", metres),
+                metadata = watchMetadata(saltedRecordId("$ELEVATION_CLIENT_ID_PREFIX${start.toEpochMilli()}", salt), metres),
             )
         }
 

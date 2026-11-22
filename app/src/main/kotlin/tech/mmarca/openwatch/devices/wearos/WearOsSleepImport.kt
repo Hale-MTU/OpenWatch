@@ -12,6 +12,8 @@ import tech.mmarca.healthcalculations.insights.WearSleepEstimator
 import tech.mmarca.healthcalculations.insights.sleepNightWindow
 import tech.mmarca.healthcalculations.model.WearSleepMinute
 import tech.mmarca.openwatch.devices.core.sync.estimatedSleepSessionRecord
+import tech.mmarca.openwatch.devices.core.saltedRecordId
+import tech.mmarca.openwatch.devices.core.recordIdSalt
 
 /**
  * Turns the per-minute rows the watch recorded into one estimated sleep
@@ -28,16 +30,20 @@ object WearOsSleepImport {
 
     const val NAP_ID_PREFIX = "wearos_nap_"
 
-    fun clientRecordId(night: LocalDate): String = "$CLIENT_ID_PREFIX$night"
+    fun clientRecordId(night: LocalDate, salt: String = ""): String = saltedRecordId("$CLIENT_ID_PREFIX$night", salt)
 
     /** One id per nap: its onset minute, which re-estimating the day keeps. */
-    fun napClientRecordId(nap: WearNap): String = "$NAP_ID_PREFIX${nap.onset.toEpochMilli()}"
+    fun napClientRecordId(nap: WearNap, salt: String = ""): String = saltedRecordId("$NAP_ID_PREFIX${nap.onset.toEpochMilli()}", salt)
 
     /** True for a session this import wrote, night or nap. Any other session in the window wins over a new estimate. */
     fun isOwnRecordId(clientRecordId: String?): Boolean =
         clientRecordId?.startsWith(CLIENT_ID_PREFIX) == true || isOwnNapId(clientRecordId)
 
     fun isOwnNapId(clientRecordId: String?): Boolean = clientRecordId?.startsWith(NAP_ID_PREFIX) == true
+
+    /** A nap estimate this watch wrote, by its [salt]: another watch's naps are its own to keep. */
+    fun isOwnNapId(clientRecordId: String?, salt: String): Boolean =
+        isOwnNapId(clientRecordId) && recordIdSalt(clientRecordId) == salt
 
     /**
      * Where a pull starts so the night the cursor sits in can be estimated
@@ -67,11 +73,11 @@ object WearOsSleepImport {
     }
 
     /** The record for a nap, or null when nothing counted as sleep. */
-    fun napRecord(nap: WearNap, offset: ZoneOffset, version: Long): SleepSessionRecord? =
+    fun napRecord(nap: WearNap, offset: ZoneOffset, version: Long, salt: String = ""): SleepSessionRecord? =
         estimatedSleepSessionRecord(
             session = nap.session,
             offset = offset,
-            clientRecordId = napClientRecordId(nap),
+            clientRecordId = napClientRecordId(nap, salt),
             version = version,
             notes = NOTES,
         )
@@ -99,18 +105,24 @@ object WearOsSleepImport {
         WearNight.estimate(minutes, night, offset)
 
     /** The record for an estimated night, or null when nothing counted as sleep. */
-    fun record(night: WearSleepEstimator.Night, date: LocalDate, offset: ZoneOffset, version: Long): SleepSessionRecord? =
+    fun record(
+        night: WearSleepEstimator.Night,
+        date: LocalDate,
+        offset: ZoneOffset,
+        version: Long,
+        salt: String = "",
+    ): SleepSessionRecord? =
         estimatedSleepSessionRecord(
             session = night.session,
             offset = offset,
-            clientRecordId = clientRecordId(date),
+            clientRecordId = clientRecordId(date, salt),
             version = version,
             notes = NOTES,
         )
 
     /** Both steps, for callers that do not log the night. */
-    fun record(minutes: List<WearSleepMinute>, date: LocalDate, offset: ZoneOffset, version: Long): SleepSessionRecord? =
-        night(minutes, date, offset)?.let { record(it, date, offset, version) }
+    fun record(minutes: List<WearSleepMinute>, date: LocalDate, offset: ZoneOffset, version: Long, salt: String = ""): SleepSessionRecord? =
+        night(minutes, date, offset)?.let { record(it, date, offset, version, salt) }
 
     private const val NIGHT_WINDOW_START_HOUR = 18
 

@@ -10,6 +10,7 @@ import java.time.ZoneOffset
 import tech.mmarca.healthcalculations.insights.WearNight
 import tech.mmarca.healthcalculations.insights.WearSleepEstimator
 import tech.mmarca.healthcalculations.model.WearSleepMinute
+import tech.mmarca.openwatch.devices.core.saltedRecordId
 
 /**
  * One nocturnal resting heart rate per estimated night, from the minutes the
@@ -23,7 +24,7 @@ object WearOsRestingHeartRateImport {
 
     const val CLIENT_ID_PREFIX = "wearos_rhr_est_"
 
-    fun clientRecordId(night: LocalDate): String = "$CLIENT_ID_PREFIX$night"
+    fun clientRecordId(night: LocalDate, salt: String = ""): String = saltedRecordId("$CLIENT_ID_PREFIX$night", salt)
 
     fun isOwnRecordId(clientRecordId: String?): Boolean = clientRecordId?.startsWith(CLIENT_ID_PREFIX) == true
 
@@ -43,6 +44,7 @@ object WearOsRestingHeartRateImport {
         night: LocalDate,
         offset: ZoneOffset,
         version: Long,
+        salt: String = "",
     ): RestingHeartRateRecord? {
         // A part of the night reads high, and the value would stand until a later sync revises it.
         val bpm = WearNight.restingHeartRate(minutes, estimated) ?: return null
@@ -52,7 +54,7 @@ object WearOsRestingHeartRateImport {
             beatsPerMinute = bpm.toLong(),
             metadata = Metadata.manualEntry(
                 device = Device(type = Device.TYPE_PHONE),
-                clientRecordId = clientRecordId(night),
+                clientRecordId = clientRecordId(night, salt),
                 clientRecordVersion = version,
             ),
         )

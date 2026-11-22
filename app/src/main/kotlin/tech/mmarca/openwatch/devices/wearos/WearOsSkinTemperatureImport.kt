@@ -10,6 +10,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import tech.mmarca.healthcalculations.stats.medianOrNull
+import tech.mmarca.openwatch.devices.core.saltedRecordId
 
 /**
  * Turns the watch's skin temperature minutes (the Samsung platform's, recorded
@@ -78,7 +79,7 @@ object WearOsSkinTemperatureImport {
         if (earlierMedians.size >= MIN_BASELINE_NIGHTS) checkNotNull(earlierMedians.medianOrNull()) else run.median
 
     /** The record for [run] against [baselineCelsius], or null when Health Connect would refuse it. */
-    fun record(run: Run, baselineCelsius: Double, zone: ZoneId, version: Long): SkinTemperatureRecord? = try {
+    fun record(run: Run, baselineCelsius: Double, zone: ZoneId, version: Long, salt: String = ""): SkinTemperatureRecord? = try {
         SkinTemperatureRecord(
             startTime = run.start,
             startZoneOffset = zone.rules.getOffset(run.start),
@@ -87,7 +88,7 @@ object WearOsSkinTemperatureImport {
             endZoneOffset = zone.rules.getOffset(run.end),
             metadata = Metadata.autoRecorded(
                 device = Device(type = Device.TYPE_WATCH),
-                clientRecordId = clientRecordId(run),
+                clientRecordId = clientRecordId(run, salt),
                 clientRecordVersion = version,
             ),
             deltas = run.minutes.map {
@@ -100,5 +101,5 @@ object WearOsSkinTemperatureImport {
         null
     }
 
-    fun clientRecordId(run: Run): String = "$CLIENT_ID_PREFIX${run.start.toEpochMilli()}"
+    fun clientRecordId(run: Run, salt: String = ""): String = saltedRecordId("$CLIENT_ID_PREFIX${run.start.toEpochMilli()}", salt)
 }

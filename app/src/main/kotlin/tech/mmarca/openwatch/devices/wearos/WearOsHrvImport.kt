@@ -5,6 +5,7 @@ import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
 import java.time.ZoneId
+import tech.mmarca.openwatch.devices.core.saltedRecordId
 
 /**
  * Maps the watch's night-time HRV windows to Health Connect: one
@@ -25,19 +26,19 @@ object WearOsHrvImport {
      * value (it takes 1 to 200 ms). A null is dropped, never retried: the
      * same window would be refused again.
      */
-    fun record(window: WearOsHrvWindow, zone: ZoneId): HeartRateVariabilityRmssdRecord? = try {
+    fun record(window: WearOsHrvWindow, zone: ZoneId, salt: String = ""): HeartRateVariabilityRmssdRecord? = try {
         HeartRateVariabilityRmssdRecord(
             time = window.start,
             zoneOffset = zone.rules.getOffset(window.start),
             heartRateVariabilityMillis = window.rmssdMillis,
             metadata = Metadata.autoRecorded(
                 device = Device(type = Device.TYPE_WATCH),
-                clientRecordId = clientRecordId(window),
+                clientRecordId = clientRecordId(window, salt),
             ),
         )
     } catch (_: IllegalArgumentException) {
         null
     }
 
-    fun clientRecordId(window: WearOsHrvWindow): String = "$CLIENT_ID_PREFIX${window.start.toEpochMilli()}"
+    fun clientRecordId(window: WearOsHrvWindow, salt: String = ""): String = saltedRecordId("$CLIENT_ID_PREFIX${window.start.toEpochMilli()}", salt)
 }
