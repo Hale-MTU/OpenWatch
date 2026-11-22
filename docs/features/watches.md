@@ -333,7 +333,7 @@ Off by default, because an open stream spends the watch's battery.
 
 ## Weather On The Watch
 
-The watch's weather glance asks the phone for weather, and OpenWatch answers from a weather app on the phone, not from the internet. Any app that broadcasts the Gadgetbridge generic-weather format works; [Breezy Weather](https://github.com/breezy-weather/breezy-weather) is the tested one (enable its Gadgetbridge broadcast and add OpenWatch to its recipients). The snapshot is considered fresh for six hours. Any app on the phone can send this broadcast, so the receiver caps what it reads: 512 KB after unzipping, 16 levels of nesting, 72 hours and 16 days of forecast. A payload past a cap is dropped.
+The watch's weather glance asks the phone for weather, and OpenWatch answers from a weather app on the phone, not from the internet. Any app that broadcasts the Gadgetbridge generic-weather format works; [Breezy Weather](https://github.com/breezy-weather/breezy-weather) is the tested one (enable its Gadgetbridge broadcast and add OpenWatch to its recipients). The snapshot is considered fresh for six hours. Any app on the phone can send this broadcast, so the receiver caps what it reads: 512 KB after unzipping, 16 levels of nesting, 72 hours and 16 days of forecast. A payload past a cap is dropped, and one that comes within a minute of the last kept is too. The sender is not checked: Android names a broadcast's sender only when the sender opts in, and weather apps do not.
 
 The location the watch shows is the weather app's location. OpenWatch also answers the watch's own position asks from the phone's last known location, which is what arms the glance in the first place.
 

@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.devices.weather
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.core.content.edit
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Duration
@@ -14,16 +15,24 @@ import org.json.JSONObject
  * wants the weather now, and stale weather is worse than none.
  */
 @Singleton
-class WeatherStore @Inject constructor(
-    @ApplicationContext context: Context,
-) {
-    private val prefs = context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE)
+class WeatherStore(private val prefs: SharedPreferences) {
 
-    fun save(snapshot: WeatherSnapshot, receivedAt: Instant = Instant.now()) {
+    @Inject
+    constructor(@ApplicationContext context: Context) : this(context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE))
+
+    /**
+     * Keeps [snapshot]; false when one was kept less than [MIN_INTERVAL] before. Any app may
+     * send the broadcast, and each save rewrites up to half a megabyte, so a flood is cut to one
+     * write a minute; a companion app refreshes far less often.
+     */
+    fun save(snapshot: WeatherSnapshot, receivedAt: Instant = Instant.now()): Boolean {
+        val last = receivedAt()
+        if (last != null && !receivedAt.isBefore(last) && Duration.between(last, receivedAt) < MIN_INTERVAL) return false
         prefs.edit {
             putString(KEY_SNAPSHOT, snapshot.toJson().toString())
             putLong(KEY_RECEIVED_AT, receivedAt.toEpochMilli())
         }
+        return true
     }
 
     fun snapshot(): WeatherSnapshot? =
@@ -48,5 +57,7 @@ class WeatherStore @Inject constructor(
 
         /** Companion apps refresh every 30m-2h; older than this they would not show it either. */
         val MAX_AGE: Duration = Duration.ofHours(6)
+
+        val MIN_INTERVAL: Duration = Duration.ofMinutes(1)
     }
 }

@@ -12,7 +12,10 @@ import tech.mmarca.openwatch.devices.core.DeviceLog
  * Receives weather from a companion app (Breezy Weather) over the
  * generic-weather broadcast. This is the only weather source. Exported on
  * purpose: the payload is public weather, and freshness is capped. Any app can
- * send it, so [GenericWeatherPayload] caps every size before it parses.
+ * send it, so [GenericWeatherPayload] caps every size before it parses and the
+ * store keeps one a minute. The sender is not checked: a broadcast names its
+ * sender only when the sender opts in (Android 14 and newer), and the companion
+ * apps do not.
  */
 @AndroidEntryPoint
 class GenericWeatherReceiver : BroadcastReceiver() {
@@ -31,9 +34,12 @@ class GenericWeatherReceiver : BroadcastReceiver() {
         thread(name = "generic-weather") {
             try {
                 val snapshot = GenericWeatherPayload.decode(json, gzipped) ?: return@thread
-                store.save(snapshot)
                 // Counts only: the place and the temperatures are the user's.
-                Log.log("received ${snapshot.hourly.size}h/${snapshot.daily.size}d forecast")
+                if (store.save(snapshot)) {
+                    Log.log("received ${snapshot.hourly.size}h/${snapshot.daily.size}d forecast")
+                } else {
+                    Log.log("dropped a forecast within a minute of the last")
+                }
             } catch (error: Exception) {
                 Log.log("broken weather broadcast: ${error::class.simpleName}")
             } finally {

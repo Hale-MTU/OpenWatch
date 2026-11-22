@@ -267,8 +267,9 @@ class CoMapsNavigationSource @Inject constructor(
     }
 
     private fun choosePackage(): String? {
+        // Its own provider only: with CoMaps absent, another app may have taken the authority.
         val candidates = KnownCoMapsPackages.filter { packageName ->
-            resolveProviderAuthority("$packageName.provider.navigation")
+            providerPackage("$packageName.provider.navigation") == packageName
         }
         if (candidates.isEmpty()) {
             return KnownCoMapsPackages.firstOrNull(::isPackageInstalled)
@@ -298,20 +299,27 @@ class CoMapsNavigationSource @Inject constructor(
         RouteSupport.NO
     }
 
-    private fun providerAuthority(): String? =
-        coMapsPackage()
-            ?.let { packageName -> "$packageName.provider.navigation" }
-            ?.takeIf(::resolveProviderAuthority)
+    /**
+     * CoMaps' navigation provider, when CoMaps itself declares it. An authority is unique while
+     * it is taken, but a CoMaps that does not declare it leaves the name to any app, so the
+     * provider must belong to the CoMaps package found. No signer is pinned: CoMaps is signed
+     * differently on F-Droid and on Play.
+     */
+    private fun providerAuthority(): String? {
+        val packageName = coMapsPackage() ?: return null
+        val authority = "$packageName.provider.navigation"
+        return authority.takeIf { providerPackage(it) == packageName }
+    }
 
-    private fun resolveProviderAuthority(authority: String): Boolean =
+    private fun providerPackage(authority: String): String? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             context.packageManager.resolveContentProvider(
                 authority,
                 PackageManager.ComponentInfoFlags.of(0),
-            ) != null
+            )?.packageName
         } else {
             @Suppress("DEPRECATION")
-            context.packageManager.resolveContentProvider(authority, 0) != null
+            context.packageManager.resolveContentProvider(authority, 0)?.packageName
         }
 
     private fun installedPackage(): String? = coMapsPackage()
