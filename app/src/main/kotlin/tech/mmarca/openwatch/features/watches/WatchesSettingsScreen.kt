@@ -98,7 +98,7 @@ fun WatchesSection(
         )
 
         state.onboardNotice?.let { notice ->
-            // Told once, after the sheet closes. Inline: this scaffold has no snackbar host.
+            // Told once, after the sheet closes, where the watch now shows.
             OpenWatchCard(modifier = Modifier.padding(horizontal = Spacing.lg)) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

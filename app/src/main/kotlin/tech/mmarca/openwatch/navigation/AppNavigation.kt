@@ -1,5 +1,9 @@
 package tech.mmarca.openwatch.navigation
 
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import tech.mmarca.openwatch.features.connectedapps.ConnectedAppsScreen
 
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +37,7 @@ import tech.mmarca.openwatch.features.scales.ScaleDeviceScreen
 import tech.mmarca.openwatch.features.settings.BodyProfileScreen
 import tech.mmarca.openwatch.features.settings.SettingsScreen
 import tech.mmarca.openwatch.ui.components.LocalAppBarState
+import tech.mmarca.openwatch.ui.components.LocalSnackbarHostState
 
 /**
  * One app bar for every screen: the route's title, or what the screen declared
@@ -54,7 +59,9 @@ fun AppNavigation(
     val declared = appBarState.of(backStackEntry)
     val routeTitle = Screen.titleResFor(currentRoute?.substringBefore('?'))?.let { stringResource(it) }
     val title = declared?.title ?: routeTitle ?: stringResource(R.string.app_name)
-    val isHome = currentRoute == Screen.Home.route || currentRoute == Screen.HealthConnectSetup.route
+    // The two roots: nothing to go back to.
+    val isHome = currentRoute == Screen.Home.route || currentRoute == Screen.Onboarding.route
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(externalNavigationRoute, currentRoute) {
         if (externalNavigationRoute != null && currentRoute != null) {
@@ -64,6 +71,7 @@ fun AppNavigation(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             if (declared?.hidesAppBar != true) {
                 TopAppBar(
@@ -96,63 +104,68 @@ fun AppNavigation(
             }
         },
     ) { padding ->
-        NavHost(
-            navController = navController,
-            startDestination = startDestination,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-        ) {
-            composable(Screen.HealthConnectSetup.route) {
-                HealthConnectSetupScreen(
-                    viewModel = hiltViewModel(),
-                    onContinue = {
-                        onSetupComplete()
-                        navController.navigate(Screen.Home.route) {
-                            popUpTo(Screen.HealthConnectSetup.route) { inclusive = true }
-                        }
-                    },
-                )
+        CompositionLocalProvider(LocalSnackbarHostState provides snackbarHostState) {
+            NavHost(
+                navController = navController,
+                startDestination = startDestination,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+            ) {
+                composable(Screen.Onboarding.route) {
+                    HealthConnectSetupScreen(
+                        viewModel = hiltViewModel(),
+                        onContinue = {
+                            onSetupComplete()
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Onboarding.route) { inclusive = true }
+                            }
+                        },
+                    )
+                }
+                composable(Screen.HealthConnectSetup.route) {
+                    HealthConnectSetupScreen(viewModel = hiltViewModel(), onContinue = null)
+                }
+                composable(Screen.Home.route) {
+                    HomeScreen(
+                        watchesViewModel = hiltViewModel(),
+                        scalesViewModel = hiltViewModel(),
+                        homeViewModel = hiltViewModel(),
+                        onOpenWatch = { deviceId ->
+                            navController.navigate(Screen.WatchDevice.createRoute(deviceId)) { launchSingleTop = true }
+                        },
+                        onOpenScale = { navController.navigate(Screen.ScaleDevice.route) { launchSingleTop = true } },
+                        onOpenHealthConnect = {
+                            navController.navigate(Screen.HealthConnectSetup.route) { launchSingleTop = true }
+                        },
+                        onOpenSettings = { navController.navigate(Screen.Settings.route) { launchSingleTop = true } },
+                    )
+                }
+                composable(Screen.Settings.route) {
+                    SettingsScreen(
+                        viewModel = hiltViewModel(),
+                        onOpenHealthConnect = {
+                            navController.navigate(Screen.HealthConnectSetup.route) { launchSingleTop = true }
+                        },
+                        onOpenBodyProfile = { navController.navigate(Screen.BodyProfile.route) { launchSingleTop = true } },
+                        onOpenConnectedApps = { navController.navigate(Screen.ConnectedApps.route) { launchSingleTop = true } },
+                    )
+                }
+                composable(Screen.ConnectedApps.route) {
+                    ConnectedAppsScreen(viewModel = hiltViewModel())
+                }
+                composable(Screen.BodyProfile.route) {
+                    BodyProfileScreen(viewModel = hiltViewModel(), unitFormatter = unitFormatter)
+                }
+                composable(Screen.ScaleDevice.route) {
+                    ScaleDeviceScreen(
+                        viewModel = hiltViewModel(),
+                        onOpenBodyProfile = { navController.navigate(Screen.BodyProfile.route) { launchSingleTop = true } },
+                        onRemoved = { navController.popBackStack() },
+                    )
+                }
+                watchRoutes(navController)
             }
-            composable(Screen.Home.route) {
-                HomeScreen(
-                    watchesViewModel = hiltViewModel(),
-                    scalesViewModel = hiltViewModel(),
-                    homeViewModel = hiltViewModel(),
-                    onOpenWatch = { deviceId ->
-                        navController.navigate(Screen.WatchDevice.createRoute(deviceId)) { launchSingleTop = true }
-                    },
-                    onOpenScale = { navController.navigate(Screen.ScaleDevice.route) { launchSingleTop = true } },
-                    onOpenHealthConnect = {
-                        navController.navigate(Screen.HealthConnectSetup.route) { launchSingleTop = true }
-                    },
-                    onOpenSettings = { navController.navigate(Screen.Settings.route) { launchSingleTop = true } },
-                )
-            }
-            composable(Screen.Settings.route) {
-                SettingsScreen(
-                    viewModel = hiltViewModel(),
-                    onOpenHealthConnect = {
-                        navController.navigate(Screen.HealthConnectSetup.route) { launchSingleTop = true }
-                    },
-                    onOpenBodyProfile = { navController.navigate(Screen.BodyProfile.route) { launchSingleTop = true } },
-                    onOpenConnectedApps = { navController.navigate(Screen.ConnectedApps.route) { launchSingleTop = true } },
-                )
-            }
-            composable(Screen.ConnectedApps.route) {
-                ConnectedAppsScreen(viewModel = hiltViewModel())
-            }
-            composable(Screen.BodyProfile.route) {
-                BodyProfileScreen(viewModel = hiltViewModel(), unitFormatter = unitFormatter)
-            }
-            composable(Screen.ScaleDevice.route) {
-                ScaleDeviceScreen(
-                    viewModel = hiltViewModel(),
-                    onOpenBodyProfile = { navController.navigate(Screen.BodyProfile.route) { launchSingleTop = true } },
-                    onRemoved = { navController.popBackStack() },
-                )
-            }
-            watchRoutes(navController)
         }
     }
 }

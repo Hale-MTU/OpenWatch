@@ -40,10 +40,18 @@ class MainActivity : AppCompatActivity() {
     @Inject lateinit var companionDevicePairing: CompanionDevicePairing
 
     private var externalNavigationRoute by mutableStateOf<String?>(null)
-    private var startDestination by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Once, before the graph exists: changing it under a live NavHost would set the graph again.
+        val startDestination = if (
+            preferences.onboardingDone &&
+            healthConnect.availability() == HealthConnectAvailability.AVAILABLE
+        ) {
+            Screen.Home.route
+        } else {
+            Screen.Onboarding.route
+        }
         enableEdgeToEdge()
         // The companion association dialog needs an Activity launcher. Without this
         // attach, no watch or scale is ever associated.
@@ -72,33 +80,16 @@ class MainActivity : AppCompatActivity() {
             }
 
             OpenWatchTheme(dynamicColor = true) {
-                val resolvedStartDestination = startDestination ?: run {
-                    if (
-                        preferences.onboardingDone &&
-                        healthConnect.availability() == HealthConnectAvailability.AVAILABLE
-                    ) {
-                        Screen.Home.route
-                    } else {
-                        Screen.HealthConnectSetup.route
-                    }
-                }.also { destination ->
-                    if (startDestination == null) {
-                        startDestination = destination
-                    }
-                }
                 val rememberedAppBarState = remember { AppBarState() }
 
                 // Where each screen declares what it wants in the app bar.
                 CompositionLocalProvider(LocalAppBarState provides rememberedAppBarState) {
                     AppNavigation(
                         unitFormatter = unitFormatter,
-                        startDestination = resolvedStartDestination,
+                        startDestination = startDestination,
                         externalNavigationRoute = externalNavigationRoute,
                         onExternalNavigationHandled = { externalNavigationRoute = null },
-                        onSetupComplete = {
-                            preferences.onboardingDone = true
-                            startDestination = Screen.Home.route
-                        },
+                        onSetupComplete = { preferences.onboardingDone = true },
                     )
                 }
             }

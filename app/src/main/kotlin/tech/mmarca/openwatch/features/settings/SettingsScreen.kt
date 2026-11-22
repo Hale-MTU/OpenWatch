@@ -3,7 +3,6 @@ package tech.mmarca.openwatch.features.settings
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.provider.Settings
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,11 +12,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -26,9 +27,11 @@ import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.PermissionsRationaleActivity
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.features.watches.NotificationAccessDisclosureDialog
+import tech.mmarca.openwatch.ui.components.LocalSnackbarHostState
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.SwitchCard
 import tech.mmarca.openwatch.ui.theme.Spacing
@@ -45,6 +48,8 @@ fun SettingsScreen(
     var showNotificationDisclosure by remember { mutableStateOf(false) }
     val privacyPolicyUrl = stringResource(R.string.settings_privacy_policy_url)
     val noBrowserMessage = stringResource(R.string.settings_privacy_policy_no_browser, privacyPolicyUrl)
+    val snackbar = LocalSnackbarHostState.current
+    val scope = rememberCoroutineScope()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
 
     Column(
@@ -113,7 +118,7 @@ fun SettingsScreen(
                     context.startActivity(Intent(Intent.ACTION_VIEW, privacyPolicyUrl.toUri()))
                 } catch (_: ActivityNotFoundException) {
                     // This app needs no browser, so some phones that run it have none.
-                    Toast.makeText(context, noBrowserMessage, Toast.LENGTH_LONG).show()
+                    scope.launch { snackbar.showSnackbar(noBrowserMessage, duration = SnackbarDuration.Long) }
                 }
             },
         )

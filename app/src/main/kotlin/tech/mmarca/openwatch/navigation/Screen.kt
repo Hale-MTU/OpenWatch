@@ -22,6 +22,10 @@ sealed class Screen(
     val basePath: String get() = route.substringBefore('?')
 
     data object Home : Screen("home", R.string.app_name)
+    /** The first run: Health Connect set up, then Home. The start destination until it is done. */
+    data object Onboarding : Screen("onboarding", R.string.hc_setup_title)
+
+    /** The same setup as a page of Settings, reached from Home and Settings: back, no Continue. */
     data object HealthConnectSetup : Screen("health_connect", R.string.hc_setup_title)
     data object Settings : Screen("settings", R.string.settings_title)
     data object BodyProfile : Screen("settings/body_profile", R.string.body_profile_title)

@@ -60,7 +60,7 @@ import tech.mmarca.openwatch.ui.theme.Spacing
 /**
  * One screen of the watch's own settings, rendered from what the watch
  * sent. The watch's title renders as a heading inside the content, and
- * change results show as inline notices: this scaffold has no snackbar host.
+ * change results show as inline notices beside the rows they changed.
  */
 @Composable
 fun WatchSettingsScreen(

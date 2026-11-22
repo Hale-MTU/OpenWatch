@@ -208,7 +208,7 @@ private fun CoordinatesSupportingText(parsed: GeoCoordinateParseResult?) {
     Text(text)
 }
 
-/** Progress while sending, then how it ended. Inline: this screen has no snackbar host. */
+/** Progress while sending, then how it ended, inline beside what was sent. */
 @Composable
 private fun SendStatus(state: WatchSendPointUiState) {
     val stage = state.sendingStage

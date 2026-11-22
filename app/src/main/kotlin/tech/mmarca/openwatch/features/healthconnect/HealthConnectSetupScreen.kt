@@ -35,7 +35,8 @@ import tech.mmarca.openwatch.ui.theme.Spacing
 @Composable
 fun HealthConnectSetupScreen(
     viewModel: HealthConnectSetupViewModel,
-    onContinue: () -> Unit,
+    /** Continue to Home, during onboarding; null on the page Settings and Home open. */
+    onContinue: (() -> Unit)?,
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -132,12 +133,14 @@ fun HealthConnectSetupScreen(
             modifier = Modifier.fillMaxWidth(),
         )
 
-        OpenWatchButton(
-            onClick = onContinue,
-            enabled = state.availability == HealthConnectAvailability.AVAILABLE,
-            modifier = Modifier.fillMaxWidth(),
-        ) {
-            Text(stringResource(R.string.hc_setup_continue))
+        if (onContinue != null) {
+            OpenWatchButton(
+                onClick = onContinue,
+                enabled = state.availability == HealthConnectAvailability.AVAILABLE,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Text(stringResource(R.string.hc_setup_continue))
+            }
         }
     }
 }
