@@ -1,3 +1,5 @@
+import com.android.build.api.variant.HostTestBuilder
+
 plugins {
     id("openwatch.android.application")
     alias(libs.plugins.kotlin.compose)
@@ -44,6 +46,15 @@ android {
 
     buildTypes {
         // The debug suffix is the phone debug build's, so a debug watch pairs with a debug phone.
+        // The ci type is the watch gate's, as the phone app's is: its unit tests and lint run on
+        // it, and nothing installs it. Its suffix is the phone's ci one, by the same rule. The
+        // version code is defaultConfig's, inside the watch range like every other type's.
+        create("ci") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".ci"
+            versionNameSuffix = "-ci"
+        }
+
         getByName("nightly") {
             versionNameSuffix = wearNightlyVersionNameSuffix.get()
         }
@@ -63,6 +74,15 @@ android {
     // watch as instrumented tests, against the watch's own SQLite.
     sourceSets.getByName("test").kotlin.directories.add("src/sharedTest/kotlin")
     sourceSets.getByName("androidTest").kotlin.directories.add("src/sharedTest/kotlin")
+}
+
+// The instrumented tests stay on debug, the tested build type, so a run on a watch installs
+// over the debug app (docs/engineering/development.md). AGP gives only that type unit tests,
+// so the ci type asks for its own: the gate runs those.
+androidComponents {
+    beforeVariants(selector().withBuildType("ci")) { variant ->
+        variant.hostTests.getValue(HostTestBuilder.UNIT_TEST_TYPE).enable = true
+    }
 }
 
 dependencies {

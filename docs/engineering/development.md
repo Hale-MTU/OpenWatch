@@ -33,7 +33,9 @@ module's tests, since both apps compile it.
 ```
 
 `verifyCi` is three tasks that CI runs as separate jobs: `verifyCiUnitTest`,
-`verifyCiPreflight` and `verifyCiLint`. The phone app's tests run on the `ci` build type.
+`verifyCiPreflight` and `verifyCiLint`. The phone app's tests run on the `ci` build type. So do
+the watch app's unit tests and lint, on the watch's own `ci` type; its build and the
+instrumented tests' compile stay on `debug`, the type a run on a watch installs.
 
 The verify workflow (`.github/workflows/verify.yml`) diffs a pull request or push against
 its base and runs the phone jobs for anything outside `wear/` and the watch job for `wear/`,
@@ -89,7 +91,7 @@ The warnings that were there when that was switched on are in each module's
 entry that was fixed is reported as such and can be dropped by regenerating:
 
 ```bash
-./gradlew :app:updateLintBaselineCi :domain:updateLintBaselineCi :wear:updateLintBaselineDebug \
+./gradlew :app:updateLintBaselineCi :domain:updateLintBaselineCi :wear:updateLintBaselineCi \
   :wear:recording-core:updateLintBaseline
 ```
 
@@ -144,7 +146,8 @@ languages; a string added between releases shows in English until the release tr
 The watch app in `wear/` shares the phone app's `applicationId`, `tech.mmarca.openwatch`,
 so a store lists it as a form factor of OpenWatch rather than a second app. The Kotlin
 namespace is `tech.mmarca.openwatch.wear`. The debug build type adds the same `.debug` suffix
-as the phone app, so a debug watch pairs with a debug phone.
+as the phone app, so a debug watch pairs with a debug phone. The `ci` type, the watch gate's,
+adds `.ci` as the phone's does; nothing installs either app's `ci` build.
 
 One listing means one versionCode space. The watch owns the range `2000000001` to
 `2099999999`; phone codes stay below it. `wear/build.gradle.kts` reads

@@ -101,8 +101,10 @@ tasks.register("verifyWearCi") {
         // The watch app's pure core: its tests and Android lint, as when it was part of :wear.
         ":wear:recording-core:test",
         ":wear:recording-core:lint",
-        ":wear:testDebugUnitTest",
-        ":wear:lintDebug",
+        // Unit tests and lint on the ci build type, as the phone's gate; the build and the
+        // instrumented tests' compile stay on debug, which a watch's device run installs.
+        ":wear:testCiUnitTest",
+        ":wear:lintCi",
         ":wear:assembleDebug",
         ":wear:compileDebugAndroidTestKotlin",
         // The ratchets over the watch's sources live in :app.
