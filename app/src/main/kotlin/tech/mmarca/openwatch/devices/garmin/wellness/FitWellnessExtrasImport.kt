@@ -13,14 +13,14 @@ import tech.mmarca.openwatch.domain.model.GarminWellnessSample
  * keyed on the instant and namespaced apart from the Health Snapshot SpO2
  * and the nightly HRV summary, which stay their own records.
  */
-fun fitExtrasImportRecords(extras: FitWellnessExtras): List<Record> = buildList {
+fun fitExtrasImportRecords(extras: FitWellnessExtras, salt: String = ""): List<Record> = buildList {
     for ((at, percent) in extras.spo2) {
         add(
             OxygenSaturationRecord(
                 time = at,
                 zoneOffset = null,
                 percentage = Percentage(percent.toDouble()),
-                metadata = importMetadata("garmin_fit_spo2_${at.toEpochMilli()}"),
+                metadata = importMetadata("garmin_fit_spo2_${at.toEpochMilli()}", salt),
             ),
         )
     }
@@ -30,7 +30,7 @@ fun fitExtrasImportRecords(extras: FitWellnessExtras): List<Record> = buildList 
                 time = at,
                 zoneOffset = null,
                 heartRateVariabilityMillis = rmssd,
-                metadata = importMetadata("garmin_fit_hrv_value_${at.toEpochMilli()}"),
+                metadata = importMetadata("garmin_fit_hrv_value_${at.toEpochMilli()}", salt),
             ),
         )
     }

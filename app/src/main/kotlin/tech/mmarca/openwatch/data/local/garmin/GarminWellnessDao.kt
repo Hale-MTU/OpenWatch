@@ -12,20 +12,20 @@ interface GarminWellnessDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertSamples(samples: List<GarminWellnessSampleEntity>)
 
-    /** Samples for [metric] in `[fromMillis, toMillis)`, oldest first. */
+    /** One watch's samples for [metric] in `[fromMillis, toMillis)`, by its id salt, oldest first. */
     @Query(
         "SELECT * FROM garmin_wellness_samples " +
             "WHERE metric = :metric AND time_millis >= :fromMillis AND time_millis < :toMillis " +
-            "ORDER BY time_millis",
+            "AND device_salt = :deviceSalt ORDER BY time_millis",
     )
-    suspend fun samplesBetween(metric: String, fromMillis: Long, toMillis: Long): List<GarminWellnessSampleEntity>
+    suspend fun samplesBetween(metric: String, fromMillis: Long, toMillis: Long, deviceSalt: String): List<GarminWellnessSampleEntity>
 
-    /** The most recent sample for [metric], or null when none has been synced. */
+    /** One watch's most recent sample for [metric], or null when none has been synced. */
     @Query(
-        "SELECT * FROM garmin_wellness_samples WHERE metric = :metric " +
+        "SELECT * FROM garmin_wellness_samples WHERE metric = :metric AND device_salt = :deviceSalt " +
             "ORDER BY time_millis DESC LIMIT 1",
     )
-    suspend fun latest(metric: String): GarminWellnessSampleEntity?
+    suspend fun latest(metric: String, deviceSalt: String): GarminWellnessSampleEntity?
 
     /** Total rows held, for diagnostics. */
     @Query("DELETE FROM garmin_wellness_samples")

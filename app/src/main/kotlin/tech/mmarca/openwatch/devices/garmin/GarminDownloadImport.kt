@@ -2,6 +2,7 @@ package tech.mmarca.openwatch.devices.garmin
 
 import javax.inject.Inject
 import javax.inject.Singleton
+import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.garmin.wellness.FitWellnessImporter
 
 /**
@@ -17,13 +18,16 @@ class GarminDownloadImport @Inject constructor(
     private val activityImporter: GarminActivityImporter,
     private val stateStore: GarminDeviceStateStore,
     private val fileStore: GarminFileStore,
+    private val registry: BleDeviceRepository,
 ) {
     /**
      * Throws when the write path is down. Nothing is recorded then, and the
      * saved copies stay pending for the next sync.
      */
     suspend fun import(deviceId: String, files: List<GarminDownloadedFile>): GarminActivityImportResult {
-        val wellnessWithheld = importer.import(files)
+        // The watch's id salt keys its wellness records and rows apart from another Garmin's.
+        val salt = registry.devices.firstOrNull { it.id == deviceId }?.idSalt.orEmpty()
+        val wellnessWithheld = importer.import(files, salt)
         // Same path as a hand-picked FIT folder. Per-file failures come back in the result.
         val activities = activityImporter.import(files).copy(wellnessWithheldPermissions = wellnessWithheld)
         // Files with no stable key are fetched again every sync by design. A workout that did

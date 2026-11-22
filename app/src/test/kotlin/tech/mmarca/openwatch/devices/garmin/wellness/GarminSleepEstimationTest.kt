@@ -54,6 +54,14 @@ class GarminSleepEstimationTest {
     }
 
     @Test
+    fun `a second watch's ids carry its salt, and only its own stages win over its estimates`() {
+        assertEquals("garmin_fit_sleep_est_2024-03-05@ab12cd34", estimatedSleepClientRecordId(night, "ab12cd34"))
+        assertTrue(isWatchStagedSleepId("garmin_fit_sleep_1709592000000@ab12cd34", "ab12cd34"))
+        assertFalse(isWatchStagedSleepId("garmin_fit_sleep_1709592000000", "ab12cd34"))
+        assertFalse(isWatchStagedSleepId("garmin_fit_sleep_1709592000000@ab12cd34"))
+    }
+
+    @Test
     fun `the record carries the session, its offsets, a version and the estimate note`() {
         val record = estimatedSleepImportRecord(
             session(listOf(span(0, 300, EstimatedStage.LIGHT), span(300, 480, EstimatedStage.DEEP))),

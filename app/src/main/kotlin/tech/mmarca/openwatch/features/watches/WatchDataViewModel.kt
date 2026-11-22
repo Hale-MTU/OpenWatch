@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.features.watches
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,8 +16,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminWellnessRepository
 import tech.mmarca.openwatch.domain.model.GarminWellnessMetric
+import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
 
 /** One stored watch metric, resolved to a value and the instant it was measured. */
 @Immutable
@@ -60,12 +63,14 @@ data class WatchMetrics(
 internal suspend fun loadWatchMetrics(
     repository: GarminWellnessRepository,
     clock: Clock = Clock.systemDefaultZone(),
+    /** The watch's id salt: its samples, not another Garmin's. */
+    salt: String = "",
 ): WatchMetrics {
     val zone: ZoneId = clock.zone
 
     val latest = buildMap {
         for (metric in GarminWellnessMetric.entries) {
-            val sample = repository.latest(metric) ?: continue
+            val sample = repository.latest(metric, salt) ?: continue
             put(metric, WatchMetricReading(value = sample.value, time = sample.time))
         }
     }
@@ -75,7 +80,7 @@ internal suspend fun loadWatchMetrics(
     val dayEnd = today.plusDays(1).atStartOfDay(zone).toInstant()
 
     suspend fun series(metric: GarminWellnessMetric): List<WatchMetricReading> =
-        repository.samplesBetween(metric, dayStart, dayEnd)
+        repository.samplesBetween(metric, dayStart, dayEnd, salt)
             .map { WatchMetricReading(value = it.value, time = it.time) }
 
     // Rows arrive oldest first, so the last value of a day is its final total.
@@ -86,6 +91,7 @@ internal suspend fun loadWatchMetrics(
             metric,
             weekStart.atStartOfDay(zone).toInstant(),
             weekStart.plusDays(7).atStartOfDay(zone).toInstant(),
+            salt,
         )
         val finalByDay = LinkedHashMap<LocalDate, Long>()
         for (row in rows) {
@@ -118,11 +124,15 @@ data class WatchDataUiState(
     val metrics: WatchMetrics = WatchMetrics(),
 )
 
-/** Loads the watch-only metrics for the watch-data screen. */
+/** Loads the watch-only metrics of the route's watch for the watch-data screen. */
 @HiltViewModel
 class WatchDataViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val wellnessRepository: GarminWellnessRepository,
+    private val deviceRepository: BleDeviceRepository,
 ) : ViewModel() {
+
+    private val deviceId: String = savedStateHandle.get<String>(WATCH_DEVICE_ID_ARG).orEmpty()
 
     private val _uiState = MutableStateFlow(WatchDataUiState())
     val uiState: StateFlow<WatchDataUiState> = _uiState.asStateFlow()
@@ -134,7 +144,8 @@ class WatchDataViewModel @Inject constructor(
     fun refresh() {
         viewModelScope.launch {
             val metrics = try {
-                loadWatchMetrics(wellnessRepository)
+                val salt = deviceRepository.devices.firstOrNull { it.id == deviceId }?.idSalt.orEmpty()
+                loadWatchMetrics(wellnessRepository, salt = salt)
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {

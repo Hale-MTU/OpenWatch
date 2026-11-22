@@ -12,7 +12,10 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.devices.garmin.wellness.FitWellnessImporter
+import tech.mmarca.openwatch.domain.model.BleDeviceKind
+import tech.mmarca.openwatch.domain.model.DeviceIntegration
 
 /**
  * The watch archives a file once it is downloaded. A key recorded for a file that never
@@ -28,7 +31,9 @@ class GarminDownloadImportTest {
     private val stateStore = mockk<GarminDeviceStateStore>(relaxed = true)
     private val fileStore by lazy { GarminFileStore(resolveDirectory = { temp.root }) }
 
-    private fun subject() = GarminDownloadImport(importer, activityImporter, stateStore, fileStore)
+    private val registry = testDeviceRepository()
+
+    private fun subject() = GarminDownloadImport(importer, activityImporter, stateStore, fileStore, registry)
 
     private fun file(index: Int) = GarminDownloadedFile(
         entry = GarminDirectoryEntry(
@@ -46,13 +51,13 @@ class GarminDownloadImportTest {
     @Test
     fun `keys are recorded after both imports`() = runTest {
         val files = listOf(file(1), file(2))
-        coEvery { importer.import(files) } returns emptySet()
+        coEvery { importer.import(files, any()) } returns emptySet()
         coEvery { activityImporter.import(files) } returns GarminActivityImportResult(written = 2)
 
         subject().import(WATCH, files)
 
         coVerifyOrder {
-            importer.import(files)
+            importer.import(files, any())
             activityImporter.import(files)
             stateStore.recordSyncedFileKeys(WATCH, files.map { it.entry.dedupKey!! })
         }
@@ -62,7 +67,7 @@ class GarminDownloadImportTest {
     fun `a failed import records nothing and leaves the saved copies pending`() = runTest {
         val files = listOf(file(1))
         fileStore.save(files.single(), now = Instant.parse("2026-07-22T10:05:00Z"), deviceId = WATCH)
-        coEvery { importer.import(files) } throws IllegalStateException("Health Connect is down")
+        coEvery { importer.import(files, any()) } throws IllegalStateException("Health Connect is down")
 
         val failure = runCatching { subject().import(WATCH, files) }.exceptionOrNull()
 
@@ -79,7 +84,7 @@ class GarminDownloadImportTest {
         val files = listOf(landed, refused)
         // The watch archived both on download: the saved copy is the refused one's only way back.
         files.forEach { fileStore.save(it, now = Instant.parse("2026-07-22T10:05:00Z"), deviceId = WATCH) }
-        coEvery { importer.import(files) } returns emptySet()
+        coEvery { importer.import(files, any()) } returns emptySet()
         coEvery { activityImporter.import(files) } returns
             GarminActivityImportResult(written = 1, missingPermission = listOf(refused))
 
@@ -94,13 +99,40 @@ class GarminDownloadImportTest {
     fun `an imported file stops being pending`() = runTest {
         val files = listOf(file(1))
         fileStore.save(files.single(), now = Instant.parse("2026-07-22T10:05:00Z"), deviceId = WATCH)
-        coEvery { importer.import(files) } returns emptySet()
+        coEvery { importer.import(files, any()) } returns emptySet()
         coEvery { activityImporter.import(files) } returns GarminActivityImportResult(written = 1)
         every { stateStore.recordSyncedFileKeys(any(), any()) } returns Unit
 
         subject().import(WATCH, files)
 
         assertEquals(0, fileStore.pending(WATCH).size)
+    }
+
+    @Test
+    fun `a second Garmin imports under its own salt`() = runTest {
+        fun garmin(address: String) = registry.addDevice(
+            displayName = "Forerunner",
+            address = address,
+            bluetoothName = null,
+            capabilities = emptySet(),
+            kind = BleDeviceKind.WATCH,
+            integration = DeviceIntegration.GARMIN,
+        )
+        val first = garmin("AA:AA:AA:AA:AA:01")
+        val second = garmin("AA:AA:AA:AA:AA:02")
+        val files = listOf(file(1))
+        coEvery { importer.import(files, any()) } returns emptySet()
+        coEvery { activityImporter.import(files) } returns GarminActivityImportResult(written = 1)
+
+        subject().import(first.id, files)
+        subject().import(second.id, files)
+
+        assertEquals("", first.idSalt)
+        assertTrue(second.idSalt.isNotEmpty())
+        coVerifyOrder {
+            importer.import(files, "")
+            importer.import(files, second.idSalt)
+        }
     }
 
     private companion object {

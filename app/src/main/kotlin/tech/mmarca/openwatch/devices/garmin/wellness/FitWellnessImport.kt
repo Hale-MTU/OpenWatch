@@ -27,6 +27,7 @@ import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import kotlin.math.max
 import tech.mmarca.openwatch.devices.garmin.FitCounterWatermark
+import tech.mmarca.openwatch.devices.core.saltedRecordId
 
 /**
  * Maps decoded Garmin wellness FIT data onto Health Connect [Record]s. Every
@@ -42,10 +43,10 @@ const val FIT_FILE_TYPE_SLEEP: Int = 49
  * took at its word; records written then keep that label unless they are written again. No
  * model: the only name to hand is the watch's Bluetooth name, which a user can change.
  */
-internal fun importMetadata(clientRecordId: String): Metadata =
+internal fun importMetadata(clientRecordId: String, salt: String = ""): Metadata =
     Metadata.autoRecorded(
         device = GarminWatchDevice,
-        clientRecordId = clientRecordId,
+        clientRecordId = saltedRecordId(clientRecordId, salt),
     )
 
 private val GarminWatchDevice = Device(type = Device.TYPE_WATCH, manufacturer = "Garmin")
@@ -55,7 +56,7 @@ private val GarminWatchDevice = Device(type = Device.TYPE_WATCH, manufacturer = 
  * list if no stage mapped. The `clientRecordId` comes from the start, so a
  * re-import dedupes.
  */
-fun fitSleepImportRecords(session: FitSleepSession): List<Record> {
+fun fitSleepImportRecords(session: FitSleepSession, salt: String = ""): List<Record> {
     val stages = session.stages.mapNotNull { stage ->
         val mapped = sleepStageFor(stage.level) ?: return@mapNotNull null
         SleepSessionRecord.Stage(
@@ -72,7 +73,7 @@ fun fitSleepImportRecords(session: FitSleepSession): List<Record> {
             startZoneOffset = null,
             endTime = session.end,
             endZoneOffset = null,
-            metadata = importMetadata("garmin_fit_sleep_${session.start.toEpochMilli()}"),
+            metadata = importMetadata("garmin_fit_sleep_${session.start.toEpochMilli()}", salt),
             title = "Sleep",
             notes = null,
             stages = stages,
@@ -81,33 +82,33 @@ fun fitSleepImportRecords(session: FitSleepSession): List<Record> {
 }
 
 /** Turns a [FitHrvReading] into an RMSSD record. Deterministic id, so re-imports dedupe. */
-fun fitHrvImportRecords(reading: FitHrvReading): List<Record> = listOf(
+fun fitHrvImportRecords(reading: FitHrvReading, salt: String = ""): List<Record> = listOf(
     HeartRateVariabilityRmssdRecord(
         time = reading.time,
         zoneOffset = null,
         heartRateVariabilityMillis = reading.rmssdMillis,
-        metadata = importMetadata("garmin_fit_hrv_${reading.time.toEpochMilli()}"),
+        metadata = importMetadata("garmin_fit_hrv_${reading.time.toEpochMilli()}", salt),
     ),
 )
 
-fun fitWeightImportRecords(reading: FitWeightReading): List<Record> = listOf(
+fun fitWeightImportRecords(reading: FitWeightReading, salt: String = ""): List<Record> = listOf(
     WeightRecord(
         time = reading.time,
         zoneOffset = null,
         weight = Mass.kilograms(reading.kilograms),
-        metadata = importMetadata("garmin_fit_weight_${reading.time.toEpochMilli()}"),
+        metadata = importMetadata("garmin_fit_weight_${reading.time.toEpochMilli()}", salt),
     ),
 )
 
 /** Turns the metrics file's VO2 max into a record. The rest has no Health Connect type. */
-fun fitMetricsImportRecords(metrics: FitMetricsSummary): List<Record> {
+fun fitMetricsImportRecords(metrics: FitMetricsSummary, salt: String = ""): List<Record> {
     val time = metrics.time ?: return emptyList()
     val vo2Max = metrics.vo2Max ?: return emptyList()
     return listOf(
         Vo2MaxRecord(
             time = time,
             zoneOffset = null,
-            metadata = importMetadata("garmin_fit_vo2max_${time.toEpochMilli()}"),
+            metadata = importMetadata("garmin_fit_vo2max_${time.toEpochMilli()}", salt),
             vo2MillilitersPerMinuteKilogram = vo2Max,
             measurementMethod = Vo2MaxRecord.MEASUREMENT_METHOD_OTHER,
         ),
@@ -118,14 +119,14 @@ fun fitMetricsImportRecords(metrics: FitMetricsSummary): List<Record> {
  * Turns a Health Snapshot's SpO2 and respiration into records. Ids are keyed
  * on the sample instant and namespaced apart from the all-day series.
  */
-fun fitHealthSnapshotImportRecords(snapshot: FitHealthSnapshot): List<Record> = buildList {
+fun fitHealthSnapshotImportRecords(snapshot: FitHealthSnapshot, salt: String = ""): List<Record> = buildList {
     for ((at, percent) in snapshot.spo2) {
         add(
             OxygenSaturationRecord(
                 time = at,
                 zoneOffset = null,
                 percentage = Percentage(percent.toDouble()),
-                metadata = importMetadata("garmin_fit_hsa_spo2_${at.toEpochMilli()}"),
+                metadata = importMetadata("garmin_fit_hsa_spo2_${at.toEpochMilli()}", salt),
             ),
         )
     }
@@ -135,7 +136,7 @@ fun fitHealthSnapshotImportRecords(snapshot: FitHealthSnapshot): List<Record> = 
                 time = at,
                 zoneOffset = null,
                 rate = rate,
-                metadata = importMetadata("garmin_fit_hsa_rr_${at.toEpochMilli()}"),
+                metadata = importMetadata("garmin_fit_hsa_rr_${at.toEpochMilli()}", salt),
             ),
         )
     }
@@ -145,7 +146,7 @@ fun fitHealthSnapshotImportRecords(snapshot: FitHealthSnapshot): List<Record> = 
  * Turns naps into `SleepSessionRecord` imports. A nap has no stages, so the
  * whole span is one light-sleep stage.
  */
-fun fitNapImportRecords(naps: List<FitNap>): List<Record> = buildList {
+fun fitNapImportRecords(naps: List<FitNap>, salt: String = ""): List<Record> = buildList {
     for (nap in naps) {
         if (!nap.end.isAfter(nap.start)) continue
         add(
@@ -154,7 +155,7 @@ fun fitNapImportRecords(naps: List<FitNap>): List<Record> = buildList {
                 startZoneOffset = null,
                 endTime = nap.end,
                 endZoneOffset = null,
-                metadata = importMetadata("garmin_fit_nap_${nap.start.toEpochMilli()}"),
+                metadata = importMetadata("garmin_fit_nap_${nap.start.toEpochMilli()}", salt),
                 title = "Nap",
                 notes = null,
                 stages = listOf(
@@ -177,7 +178,7 @@ private const val FitMonitoringDistanceScale = 100.0
  * the hourly HR and respiration series. Counters go through
  * [fitMonitoringCounterRecords], which needs every file of a sync.
  */
-fun fitMonitoringImportRecords(m: FitMonitoringSummary): List<Record> = buildList {
+fun fitMonitoringImportRecords(m: FitMonitoringSummary, salt: String = ""): List<Record> = buildList {
     val rhrTime = m.restingHeartRateTime
     val rhrBpm = m.restingHeartRateBpm
     if (rhrTime != null && rhrBpm != null) {
@@ -186,7 +187,7 @@ fun fitMonitoringImportRecords(m: FitMonitoringSummary): List<Record> = buildLis
                 time = rhrTime,
                 zoneOffset = null,
                 beatsPerMinute = rhrBpm.toLong(),
-                metadata = importMetadata("garmin_fit_resting_hr_${rhrTime.toEpochMilli()}"),
+                metadata = importMetadata("garmin_fit_resting_hr_${rhrTime.toEpochMilli()}", salt),
             ),
         )
     }
@@ -198,7 +199,7 @@ fun fitMonitoringImportRecords(m: FitMonitoringSummary): List<Record> = buildLis
                 time = bmrTime,
                 zoneOffset = null,
                 basalMetabolicRate = Power.kilocaloriesPerDay(bmr),
-                metadata = importMetadata("garmin_fit_bmr_${bmrTime.toEpochMilli()}"),
+                metadata = importMetadata("garmin_fit_bmr_${bmrTime.toEpochMilli()}", salt),
             ),
         )
     }
@@ -219,7 +220,7 @@ fun fitMonitoringImportRecords(m: FitMonitoringSummary): List<Record> = buildLis
                 samples = samples.map { (at, bpm) ->
                     HeartRateRecord.Sample(time = at, beatsPerMinute = bpm.toLong())
                 },
-                metadata = importMetadata("garmin_fit_hr_${start.toEpochMilli()}"),
+                metadata = importMetadata("garmin_fit_hr_${start.toEpochMilli()}", salt),
             ),
         )
     }
@@ -234,7 +235,7 @@ fun fitMonitoringImportRecords(m: FitMonitoringSummary): List<Record> = buildLis
                 time = at,
                 zoneOffset = null,
                 rate = avg,
-                metadata = importMetadata("garmin_fit_resp_${at.toEpochMilli()}"),
+                metadata = importMetadata("garmin_fit_resp_${at.toEpochMilli()}", salt),
             ),
         )
     }
@@ -290,6 +291,7 @@ fun fitMonitoringCounterRecords(
     counters: FitMonitoringCounters,
     previous: Map<String, FitCounterWatermark> = emptyMap(),
     zone: ZoneId = ZoneId.systemDefault(),
+    salt: String = "",
 ): FitCounterImport {
     val records = mutableListOf<Record>()
     val watermarks = mutableMapOf<String, FitCounterWatermark>()
@@ -399,7 +401,7 @@ fun fitMonitoringCounterRecords(
 
         for (bucket in emitted) {
             val key = if (bucket == retiringWith) day.key else bucket.toString()
-            records.addAll(buckets.getValue(bucket).toRecords(key))
+            records.addAll(buckets.getValue(bucket).toRecords(key, salt))
         }
         if (retiringWith != null) legacyRetired = true
 
@@ -558,7 +560,7 @@ private class CounterDeltas(val start: Instant) {
         if (until.isAfter(end)) end = until
     }
 
-    fun toRecords(key: String): List<Record> = buildList {
+    fun toRecords(key: String, salt: String): List<Record> = buildList {
         if (steps > 0) {
             add(
                 StepsRecord(
@@ -567,7 +569,7 @@ private class CounterDeltas(val start: Instant) {
                     endTime = end,
                     endZoneOffset = null,
                     count = steps.toLong(),
-                    metadata = importMetadata("garmin_fit_steps_$key"),
+                    metadata = importMetadata("garmin_fit_steps_$key", salt),
                 ),
             )
         }
@@ -579,7 +581,7 @@ private class CounterDeltas(val start: Instant) {
                     endTime = end,
                     endZoneOffset = null,
                     distance = Length.meters(distance / FitMonitoringDistanceScale),
-                    metadata = importMetadata("garmin_fit_distance_$key"),
+                    metadata = importMetadata("garmin_fit_distance_$key", salt),
                 ),
             )
         }
@@ -591,7 +593,7 @@ private class CounterDeltas(val start: Instant) {
                     endTime = end,
                     endZoneOffset = null,
                     energy = Energy.kilocalories(calories.toDouble()),
-                    metadata = importMetadata("garmin_fit_active_cal_$key"),
+                    metadata = importMetadata("garmin_fit_active_cal_$key", salt),
                 ),
             )
         }

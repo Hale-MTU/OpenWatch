@@ -64,8 +64,11 @@ class FitWellnessImporter(
         healthConnect::grantedPermissions,
     )
 
-    /** Imports [files]; returns the write permissions whose records were left out. */
-    suspend fun import(files: List<GarminDownloadedFile>): Set<String> {
+    /**
+     * Imports [files] from the watch with id salt [salt]; returns the write permissions whose
+     * records were left out. The salt keys its records' ids, its counters' marks and its rows.
+     */
+    suspend fun import(files: List<GarminDownloadedFile>, salt: String = ""): Set<String> {
         if (files.isEmpty()) return emptySet()
         val granted = grantedPermissions()
         val withheld = sortedSetOf<String>()
@@ -91,18 +94,18 @@ class FitWellnessImporter(
             }
 
             wellness.sleep?.let { sleep ->
-                records += fitSleepImportRecords(sleep)
+                records += fitSleepImportRecords(sleep, salt)
                 SleepStageEstimator.nightDateOf(sleep.start, ZoneId.systemDefault().rules.getOffset(sleep.start))
                     ?.let(nightsWithRealStages::add)
             }
             sleepMinutes += wellness.sleepMinutes.map { it.toGarminSleepMinute() }
-            wellness.hrv?.let { records += fitHrvImportRecords(it) }
-            wellness.monitoring?.let { records += fitMonitoringImportRecords(it) }
-            wellness.metrics?.let { records += fitMetricsImportRecords(it) }
-            records += fitNapImportRecords(wellness.naps)
-            wellness.healthSnapshot?.let { records += fitHealthSnapshotImportRecords(it) }
-            records += fitExtrasImportRecords(wellness.extras)
-            wellness.weights.forEach { records += fitWeightImportRecords(it) }
+            wellness.hrv?.let { records += fitHrvImportRecords(it, salt) }
+            wellness.monitoring?.let { records += fitMonitoringImportRecords(it, salt) }
+            wellness.metrics?.let { records += fitMetricsImportRecords(it, salt) }
+            records += fitNapImportRecords(wellness.naps, salt)
+            wellness.healthSnapshot?.let { records += fitHealthSnapshotImportRecords(it, salt) }
+            records += fitExtrasImportRecords(wellness.extras, salt)
+            wellness.weights.forEach { records += fitWeightImportRecords(it, salt) }
 
             // Counters are mapped once at the end: an interval needs the reading before it.
             wellness.monitoring?.let { counters = counters.merge(fitMonitoringCounters(it)) }
@@ -115,20 +118,20 @@ class FitWellnessImporter(
         }
 
         withheld += writeRecords(records, granted)
-        withheld += writeCounters(counters, granted)
+        withheld += writeCounters(counters, granted, salt)
 
         // After the Health Connect writes, like the Flutter build. A failure still fails the sync.
-        wellnessRepository.upsert(watchOnly)
+        wellnessRepository.upsert(watchOnly, salt)
         if (watchOnly.isNotEmpty()) {
             GarminLog.log("[GARMIN-IMPORT] stored ${watchOnly.size} watch-only samples")
         }
 
         // The minutes are kept either way: once the grant comes, a later sync estimates the nights.
         if (sleepMinutes.isNotEmpty() && WriteSleep !in granted) {
-            sleepMinuteRepository.upsert(sleepMinutes)
+            sleepMinuteRepository.upsert(sleepMinutes, salt)
             withheld += WriteSleep
         } else {
-            estimateSleep(sleepMinutes, nightsWithRealStages)
+            estimateSleep(sleepMinutes, nightsWithRealStages, salt)
         }
         if (withheld.isNotEmpty()) GarminLog.log("[GARMIN-IMPORT] ${withheld.size} record type(s) not granted, left out")
         return withheld
@@ -142,9 +145,10 @@ class FitWellnessImporter(
     private suspend fun estimateSleep(
         minutes: List<GarminSleepMinute>,
         nightsWithRealStages: Set<LocalDate>,
+        salt: String,
     ) {
         if (minutes.isEmpty()) return
-        sleepMinuteRepository.upsert(minutes)
+        sleepMinuteRepository.upsert(minutes, salt)
         GarminLog.log("[GARMIN-IMPORT] stored ${minutes.size} sleep minutes")
 
         // The offset of a night's last minute keys its window; a DST change mid-night shifts it an hour at most.
@@ -153,7 +157,7 @@ class FitWellnessImporter(
             val night = SleepStageEstimator.nightDateOf(minute.time, minute.zoneOffset) ?: continue
             offsets[night] = minute.zoneOffset
         }
-        sleepEstimation.estimateNights(offsets.keys, offsets, nightsWithRealStages)
+        sleepEstimation.estimateNights(offsets.keys, offsets, nightsWithRealStages, salt)
 
         sleepMinuteRepository.pruneBefore(Instant.now().minusMillis(SleepMinuteRetention.inWholeMilliseconds))
     }
@@ -180,20 +184,20 @@ class FitWellnessImporter(
         return withheld
     }
 
-    private suspend fun writeCounters(counters: FitMonitoringCounters, granted: Set<String>): Set<String> {
+    private suspend fun writeCounters(counters: FitMonitoringCounters, granted: Set<String>, salt: String): Set<String> {
         if (counters.isEmpty) return emptySet()
-        val mapped = fitMonitoringCounterRecords(counters, previous = watermarkStore.load())
+        val mapped = fitMonitoringCounterRecords(counters, previous = watermarkStore.load(salt), salt = salt)
         if (mapped.records.isEmpty()) {
             // Nothing new, but the cursor moved. Persisting it keeps a re-sync
             // from re-walking the same minutes, and nothing is lost.
-            watermarkStore.save(mapped.watermarks)
+            watermarkStore.save(mapped.watermarks, salt)
             return emptySet()
         }
         val withheld = writeRecords(mapped.records, granted)
         // Only once the records are in, or those minutes would be skipped for good. One mark
         // covers steps, distance and calories together, so it moves even when one of them was
         // not granted: those minutes of that type stay unwritten, and the card says so.
-        watermarkStore.save(mapped.watermarks)
+        watermarkStore.save(mapped.watermarks, salt)
         GarminLog.log(
             "[GARMIN-IMPORT] wrote ${mapped.records.size} intraday counter " +
                 "records across ${mapped.watermarks.size} day(s)",

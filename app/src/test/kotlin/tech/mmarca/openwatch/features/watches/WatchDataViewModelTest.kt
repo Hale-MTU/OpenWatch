@@ -1,5 +1,7 @@
 package tech.mmarca.openwatch.features.watches
 
+import tech.mmarca.openwatch.data.repository.testDeviceRepository
+import androidx.lifecycle.SavedStateHandle
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
@@ -25,17 +27,17 @@ class WatchDataViewModelTest {
     private val repository = mockk<GarminWellnessRepository>()
 
     private fun stubEmpty() {
-        coEvery { repository.latest(any()) } returns null
-        coEvery { repository.samplesBetween(any(), any(), any()) } returns emptyList()
+        coEvery { repository.latest(any(), any()) } returns null
+        coEvery { repository.samplesBetween(any(), any(), any(), any()) } returns emptyList()
     }
 
     @Test
     fun `it shows loading until the first read lands`() = runTest {
         val read = CompletableDeferred<GarminWellnessSample?>()
         stubEmpty()
-        coEvery { repository.latest(GarminWellnessMetric.entries.first()) } coAnswers { read.await() }
+        coEvery { repository.latest(GarminWellnessMetric.entries.first(), any()) } coAnswers { read.await() }
 
-        val vm = WatchDataViewModel(repository)
+        val vm = WatchDataViewModel(SavedStateHandle(), repository, testDeviceRepository())
         assertTrue(vm.uiState.value.isLoading)
 
         read.complete(null)
@@ -50,9 +52,9 @@ class WatchDataViewModelTest {
             time = Instant.parse("2026-06-10T06:00:00Z"),
             value = 81,
         )
-        coEvery { repository.latest(GarminWellnessMetric.SLEEP_SCORE) } returns sample
+        coEvery { repository.latest(GarminWellnessMetric.SLEEP_SCORE, any()) } returns sample
 
-        val vm = WatchDataViewModel(repository)
+        val vm = WatchDataViewModel(SavedStateHandle(), repository, testDeviceRepository())
 
         assertEquals(81L, vm.uiState.value.metrics.valueOf(GarminWellnessMetric.SLEEP_SCORE))
         assertFalse(vm.uiState.value.metrics.isEmpty)
@@ -60,9 +62,9 @@ class WatchDataViewModelTest {
 
     @Test
     fun `a failed read shows the empty state, not a crash or an endless spinner`() = runTest {
-        coEvery { repository.latest(any()) } throws IllegalStateException("database is locked")
+        coEvery { repository.latest(any(), any()) } throws IllegalStateException("database is locked")
 
-        val vm = WatchDataViewModel(repository)
+        val vm = WatchDataViewModel(SavedStateHandle(), repository, testDeviceRepository())
 
         assertFalse(vm.uiState.value.isLoading)
         assertTrue(vm.uiState.value.metrics.isEmpty)
@@ -71,10 +73,10 @@ class WatchDataViewModelTest {
     @Test
     fun `refresh reads again`() = runTest {
         stubEmpty()
-        val vm = WatchDataViewModel(repository)
+        val vm = WatchDataViewModel(SavedStateHandle(), repository, testDeviceRepository())
 
         vm.refresh()
 
-        coVerify(exactly = 2) { repository.latest(GarminWellnessMetric.SLEEP_SCORE) }
+        coVerify(exactly = 2) { repository.latest(GarminWellnessMetric.SLEEP_SCORE, any()) }
     }
 }

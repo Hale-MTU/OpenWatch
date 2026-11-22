@@ -49,6 +49,23 @@ class GarminCounterWatermarkStoreTest {
     }
 
     @Test
+    fun `each watch keeps its own marks, and a wipe forgets every watch's`() {
+        val at = Instant.ofEpochMilli(1_784_000_000_000)
+        store.save(mapOf("2026-07-14" to mark(at, steps = 100)))
+        store.save(mapOf("2026-07-14" to mark(at, steps = 7)), salt = "ab12cd34")
+
+        assertEquals(100, store.load().getValue("2026-07-14").steps)
+        assertEquals(7, store.load("ab12cd34").getValue("2026-07-14").steps)
+        // The first watch reads the key it always had.
+        assertTrue(prefs.contains("garmin_counter_watermarks"))
+
+        store.clear()
+
+        assertTrue(store.load().isEmpty())
+        assertTrue(store.load("ab12cd34").isEmpty())
+    }
+
+    @Test
     fun `a later sync of the same day moves the watermark forward`() {
         store.save(mapOf("2026-07-25" to mark(Instant.ofEpochMilli(1_784_000_000_000), 24000)))
         store.save(mapOf("2026-07-25" to mark(Instant.ofEpochMilli(1_784_003_600_000), 24843)))

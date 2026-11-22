@@ -11,10 +11,11 @@ import tech.mmarca.healthcalculations.model.GarminSleepMinute
 interface GarminSleepMinuteRepository {
 
     /** Upserts a batch. The minute is the key, so a re-import is idempotent. */
-    suspend fun upsert(minutes: List<GarminSleepMinute>)
+    /** [deviceSalt]: the watch's id salt, empty for the first Garmin and for rows from before. */
+    suspend fun upsert(minutes: List<GarminSleepMinute>, deviceSalt: String = "")
 
     /** Minutes in `[from, to)`, oldest first. */
-    suspend fun minutesBetween(from: Instant, to: Instant): List<GarminSleepMinute>
+    suspend fun minutesBetween(from: Instant, to: Instant, deviceSalt: String = ""): List<GarminSleepMinute>
 
     /** Drops minutes older than [before]. */
     suspend fun pruneBefore(before: Instant)

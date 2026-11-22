@@ -21,7 +21,7 @@ class WatchMetricsTest {
     private class FakeWellnessRepository : GarminWellnessRepository {
         val samples = mutableListOf<GarminWellnessSample>()
 
-        override suspend fun upsert(samples: List<GarminWellnessSample>) {
+        override suspend fun upsert(samples: List<GarminWellnessSample>, deviceSalt: String) {
             this.samples += samples
         }
 
@@ -29,12 +29,13 @@ class WatchMetricsTest {
             metric: GarminWellnessMetric,
             from: Instant,
             to: Instant,
+            deviceSalt: String,
         ): List<GarminWellnessSample> =
             samples
                 .filter { it.metric == metric && it.time >= from && it.time < to }
                 .sortedBy { it.time }
 
-        override suspend fun latest(metric: GarminWellnessMetric): GarminWellnessSample? =
+        override suspend fun latest(metric: GarminWellnessMetric, deviceSalt: String): GarminWellnessSample? =
             samples.filter { it.metric == metric }.maxByOrNull { it.time }
 
         override suspend fun countFor(metric: GarminWellnessMetric): Long =

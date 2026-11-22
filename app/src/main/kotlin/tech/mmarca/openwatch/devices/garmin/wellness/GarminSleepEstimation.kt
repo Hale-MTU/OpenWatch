@@ -18,6 +18,8 @@ import tech.mmarca.healthcalculations.model.GarminSleepMinute
 import tech.mmarca.healthcalculations.model.SleepMinuteKind
 import tech.mmarca.openwatch.data.repository.replaceImportedRecord
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
+import tech.mmarca.openwatch.devices.core.saltedRecordId
+import tech.mmarca.openwatch.devices.core.recordIdSalt
 
 /**
  * Turns stored per-minute rows into one estimated sleep session per night,
@@ -26,12 +28,14 @@ import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
  * Health Connect record is replaced, never appended to.
  */
 
-/** One id per night, so a re-run updates the record in place. */
-fun estimatedSleepClientRecordId(night: LocalDate): String = "$EstimatedSleepIdPrefix$night"
+/** One id per night and watch, so a re-run updates the record in place. */
+fun estimatedSleepClientRecordId(night: LocalDate, salt: String = ""): String =
+    saltedRecordId("$EstimatedSleepIdPrefix$night", salt)
 
-/** True for a session the watch staged itself. Those win over estimates. */
-fun isWatchStagedSleepId(clientRecordId: String): Boolean =
-    clientRecordId.startsWith(WatchSleepIdPrefix) && !clientRecordId.startsWith(EstimatedSleepIdPrefix)
+/** True for a session the watch with [salt] staged itself. Those win over its estimates; another watch's do not. */
+fun isWatchStagedSleepId(clientRecordId: String, salt: String = ""): Boolean =
+    clientRecordId.startsWith(WatchSleepIdPrefix) && !clientRecordId.startsWith(EstimatedSleepIdPrefix) &&
+        recordIdSalt(clientRecordId) == salt
 
 /** The Health Connect record for an estimated night, or null when nothing would count as sleep. */
 fun estimatedSleepImportRecord(
@@ -39,10 +43,11 @@ fun estimatedSleepImportRecord(
     night: LocalDate,
     offset: ZoneOffset,
     version: Long,
+    salt: String = "",
 ): SleepSessionRecord? = estimatedSleepSessionRecord(
     session = session,
     offset = offset,
-    clientRecordId = estimatedSleepClientRecordId(night),
+    clientRecordId = estimatedSleepClientRecordId(night, salt),
     version = version,
     notes = EstimatedSleepNotes,
 )
@@ -87,6 +92,8 @@ class GarminSleepEstimationWriter(
         nights: Set<LocalDate>,
         offsets: Map<LocalDate, ZoneOffset>,
         nightsWithRealStages: Set<LocalDate> = emptySet(),
+        /** The watch's id salt: its minutes, its staged nights and its estimates only. */
+        salt: String = "",
     ) {
         for (night in nights.sorted()) {
             if (night in nightsWithRealStages) {
@@ -95,11 +102,11 @@ class GarminSleepEstimationWriter(
             }
             val offset = offsets[night] ?: ZoneOffset.UTC
             val (from, to) = sleepNightWindow(night, offset)
-            if (hasWatchStagedSession(from, to)) {
+            if (hasWatchStagedSession(from, to, salt)) {
                 GarminLog.log("[GARMIN-SLEEP-EST] $night: Health Connect holds a watch-staged night, skipping")
                 continue
             }
-            val minutes = minuteRepository.minutesBetween(from, to)
+            val minutes = minuteRepository.minutesBetween(from, to, salt)
             val session = try {
                 SleepStageEstimator.estimate(minutes.map { it.toSleepMinute() })
             } catch (error: CancellationException) {
@@ -112,7 +119,7 @@ class GarminSleepEstimationWriter(
                 GarminLog.log("[GARMIN-SLEEP-EST] $night: no night in ${minutes.size} minutes")
                 continue
             }
-            val record = estimatedSleepImportRecord(session, night, offset, version = clock().toEpochMilli())
+            val record = estimatedSleepImportRecord(session, night, offset, version = clock().toEpochMilli(), salt = salt)
             if (record == null) {
                 GarminLog.log("[GARMIN-SLEEP-EST] $night: nothing counted as sleep")
                 continue
@@ -128,11 +135,11 @@ class GarminSleepEstimationWriter(
     }
 
     /** Whether a watch-staged session already covers the window. A read failure counts as no. */
-    private suspend fun hasWatchStagedSession(from: Instant, to: Instant): Boolean {
+    private suspend fun hasWatchStagedSession(from: Instant, to: Instant, salt: String): Boolean {
         var found = false
         try {
             healthConnect.forEachSyncRecordPage(SleepSessionRecord::class, from, to) { page ->
-                if (page.any { it.metadata.clientRecordId?.let(::isWatchStagedSleepId) == true }) found = true
+                if (page.any { record -> record.metadata.clientRecordId?.let { isWatchStagedSleepId(it, salt) } == true }) found = true
             }
         } catch (error: CancellationException) {
             throw error

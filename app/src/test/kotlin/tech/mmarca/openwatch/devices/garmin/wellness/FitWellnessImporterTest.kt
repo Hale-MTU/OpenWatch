@@ -13,6 +13,7 @@ import java.time.Instant
 import java.time.ZoneOffset
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
@@ -82,6 +83,18 @@ class FitWellnessImporterTest {
 
         assertTrue(withheld.isEmpty())
         assertEquals(74.25, (written.single() as WeightRecord).weight.inKilograms, 0.001)
+    }
+
+    @Test
+    fun `a second watch's records carry its salt, and the first watch's ids are as before`() = runTest {
+        granted = setOf(WriteWeight)
+
+        importer().import(listOf(weightFile()))
+        importer().import(listOf(weightFile()), salt = "ab12cd34")
+
+        val (first, second) = written.map { it.metadata.clientRecordId.orEmpty() }
+        assertFalse(first.contains('@'))
+        assertEquals("$first@ab12cd34", second)
     }
 
     @Test

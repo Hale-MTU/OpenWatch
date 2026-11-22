@@ -51,8 +51,9 @@ class GarminCounterWatermarkStore(private val prefs: SharedPreferences) {
         context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE),
     )
 
-    fun load(): Map<String, FitCounterWatermark> {
-        val raw = readLines() ?: return emptyMap()
+    /** The marks of the watch with id salt [salt]; the first Garmin keeps the key from before salts. */
+    fun load(salt: String = ""): Map<String, FitCounterWatermark> {
+        val raw = readLines(salt) ?: return emptyMap()
         val marks = mutableMapOf<String, FitCounterWatermark>()
         for (line in raw) {
             // Unreadable lines are dropped, not guessed at. Older field counts
@@ -118,15 +119,16 @@ class GarminCounterWatermarkStore(private val prefs: SharedPreferences) {
     }
 
     /** Merges [marks] over what is stored and prunes to [RETAINED_DAYS]. */
-    fun save(marks: Map<String, FitCounterWatermark>) {
+    fun save(marks: Map<String, FitCounterWatermark>, salt: String = "") {
         if (marks.isEmpty()) return
-        val merged = load() + marks
+        val merged = load(salt) + marks
         val days = merged.keys.sorted()
         val kept = if (days.size > RETAINED_DAYS) days.subList(days.size - RETAINED_DAYS, days.size) else days
         // '-' keeps a null map null: null means unknowable, empty means no types.
         fun encodeTypes(types: Map<Int, Int>?): String =
             types?.entries?.joinToString(",") { "${it.key}:${it.value}" } ?: "-"
         writeLines(
+            salt,
             kept.map { day ->
                 val mark = merged.getValue(day)
                 "$day|${mark.time.toEpochMilli()}" +
@@ -144,21 +146,23 @@ class GarminCounterWatermarkStore(private val prefs: SharedPreferences) {
         )
     }
 
-    /** Forgets every watermark, for a Health Connect wipe. */
+    /** Forgets every watch's watermarks, for a Health Connect wipe. */
     fun clear() {
-        prefs.edit { remove(PREFS_KEY) }
+        prefs.edit { prefs.all.keys.filter { it == PREFS_KEY || it.startsWith("$PREFS_KEY@") }.forEach(::remove) }
     }
 
-    private fun readLines(): List<String>? {
-        val raw = prefs.getString(PREFS_KEY, null) ?: return null
+    private fun key(salt: String) = if (salt.isEmpty()) PREFS_KEY else "$PREFS_KEY@$salt"
+
+    private fun readLines(salt: String): List<String>? {
+        val raw = prefs.getString(key(salt), null) ?: return null
         return runCatching {
             val array = JSONArray(raw)
             List(array.length()) { array.getString(it) }
         }.getOrNull()
     }
 
-    private fun writeLines(lines: List<String>) {
-        prefs.edit { putString(PREFS_KEY, JSONArray(lines).toString()) }
+    private fun writeLines(salt: String, lines: List<String>) {
+        prefs.edit { putString(key(salt), JSONArray(lines).toString()) }
     }
 
     companion object {
