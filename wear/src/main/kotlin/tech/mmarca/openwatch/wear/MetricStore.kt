@@ -212,6 +212,24 @@ class MetricStore(context: Context, name: String? = DB_NAME) : SQLiteOpenHelper(
         }
     }
 
+    /**
+     * Where [changes] starts so a time cursor at [epochMillis] hands over to the sequence: just
+     * before the first row of [metric], in sequence order, newer than that time, so every row
+     * newer than it comes and so does every row written after that first one; the newest row's
+     * number when none is newer. What it leaves out is what the time cursor had passed: rows not
+     * newer than the time, written before any row that is.
+     */
+    fun seqBeforeNewerThan(metric: WearMetric<*>, epochMillis: Long): Long {
+        val db = readableDatabase
+        val first = DatabaseUtils.longForQuery(
+            db,
+            "SELECT COALESCE(MIN($COL_SEQ), 0) FROM $TABLE WHERE $COL_METRIC = ? AND $COL_TIME > ?",
+            arrayOf(metric.key, epochMillis.toString()),
+        )
+        if (first > 0) return first - 1
+        return DatabaseUtils.longForQuery(db, "SELECT COALESCE(MAX($COL_SEQ), 0) FROM $TABLE WHERE $COL_METRIC = ?", arrayOf(metric.key))
+    }
+
     /** Deletes the rows of [metric] from [fromEpochMillis] to [toEpochMillis], both included. */
     fun deleteRange(metric: WearMetric<*>, fromEpochMillis: Long, toEpochMillis: Long): Boolean = write { db ->
         db.delete(

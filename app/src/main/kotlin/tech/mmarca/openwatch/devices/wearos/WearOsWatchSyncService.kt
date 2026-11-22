@@ -48,15 +48,20 @@ import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 import tech.mmarca.openwatch.healthconnect.isHealthConnectRateLimit
 import tech.mmarca.healthcalculations.insights.AscentCredit
 import tech.mmarca.openwatch.devices.core.sync.syncBudgetSpent
+import tech.mmarca.openwatch.wearlink.WearLinkSince
 
 /**
  * Pulls what the OpenWatch Wear OS app recorded and writes it to Health
  * Connect. The [DeviceSyncPort] for `(WATCH, WEAROS)` devices.
  *
- * Heart rate first: one page at a time from the watch's cursor, each page
- * written before the next is asked for, and the cursor advanced after each
- * write. A sync that dies mid-way therefore loses nothing: the next one
- * resumes at the last page written, and a page written twice upserts.
+ * Every series comes with one request, `SINCE`, by its key ([WearOsSeries]).
+ * Heart rate first: one page at a time from the watch's sequence cursor, each
+ * page written before the next is asked for, and the cursor advanced after
+ * each write. A sync that dies mid-way therefore loses nothing: the next one
+ * resumes at the last page written, and a page written twice upserts. A
+ * sample the watch wrote late, behind those already sent, comes with the next
+ * page. The first pull hands the time cursor of earlier builds over to the
+ * sequence ([WearOsSeriesSync]), so nothing already written is pulled again.
  *
  * Then steps, the same way, but each pull also takes the cursor's minute
  * again: the watch adds late steps only to its newest minute, and a minute
@@ -136,7 +141,6 @@ class WearOsWatchSyncService(
         importRepository = importRepository,
         healthConnect = healthConnect,
         cursors = cursors,
-        nodePort = nodePort,
         clock = clock,
         zone = zone,
         writeRespiratoryRate = writeRespiratoryRate,
@@ -159,9 +163,11 @@ class WearOsWatchSyncService(
 
     private val zones by lazy { WearOsZoneSync(healthConnect, nodePort, zoneProfile, clock, zone) }
 
-    private val linkRetry = object : WearOsNightSeriesSync.Retry {
+    private val linkRetry = object : WearOsLinkRetry {
         override suspend fun <T> run(pull: suspend () -> T): T = retryOnce(pull)
     }
+
+    private val reader = WearOsSeriesReader(nodePort, linkRetry)
 
     init {
         WearOsLog.installLogcatSink()
@@ -196,7 +202,7 @@ class WearOsWatchSyncService(
                 }
                 if (spent()) return@series
                 if (!pullSleep(device, progress)) return notPaired(device)
-                val night = nightSeries.sync(device, linkRetry) ?: return notPaired(device)
+                val night = nightSeries.sync(device, reader) ?: return notPaired(device)
                 progress.skipped += night.skipped
                 if (spent()) return@series
                 if (!pullWorkouts(device, progress)) return notPaired(device)
@@ -225,24 +231,25 @@ class WearOsWatchSyncService(
         return progress.outcome()
     }
 
-    /** False when no bonded watch matches. The samples written are counted on [progress]. */
+    /**
+     * False when no bonded watch matches. The samples written are counted on [progress]. The watch
+     * sends each sample once by its sequence number, so the hour records, keyed on their first
+     * sample, never hold one twice; the time cursor only hands over and keeps the newest time.
+     */
     private suspend fun pullHeartRate(device: BleSensorDevice, progress: WearOsSyncProgress): Boolean {
-        var cursor = cursors.heartRateCursor(device.id)
-        var pages = 0
-        while (true) {
-            val page = retryOnce { nodePort.pullHeartRate(device.address, device.bluetoothName, cursor) } ?: return false
+        val series = WearOsSeries.HEART_RATE
+        val start = cursors.seriesCursor(device.id, series.key) ?: WearLinkSince.afterTime(cursors.heartRateCursor(device.id).toEpochMilli())
+        return reader.pages(device, series, start) { page ->
             progress.page()
-            val newest = page.samples.maxOfOrNull { it.time }
-            if (newest != null) {
-                importRepository.insertImportedRecords(WearOsHeartRateImport.records(page.samples, progress.salt))
-                progress.written += page.samples.size
-                cursor = newest
-                cursors.setHeartRateCursor(device.id, cursor)
+            if (page.values.isNotEmpty()) {
+                importRepository.insertImportedRecords(WearOsHeartRateImport.records(page.values, progress.salt))
+                progress.written += page.values.size
+                val newest = page.values.maxOf { it.time }
+                if (newest.isAfter(cursors.heartRateCursor(device.id))) cursors.setHeartRateCursor(device.id, newest)
             }
-            if (!page.hasMore || newest == null) break
-            if (++pages >= MAX_PAGES) break
+            cursors.setSeriesCursor(device.id, series.key, page.cursor)
+            true
         }
-        return true
     }
 
     /**
@@ -276,7 +283,7 @@ class WearOsWatchSyncService(
         val ascentCursor = cursors.ascentCursor(device.id)
         if (ascentCursor != Instant.EPOCH) since = minOf(since, ascentCursor.minusSeconds(60).minusMillis(1))
         val allMinutes = ArrayList<WearOsStepMinute>()
-        var pages = 0
+        val after = since
         var pulledSteps = 0
         var energyMinutes = 0
         var energyKcal = 0.0
@@ -330,11 +337,10 @@ class WearOsWatchSyncService(
             energyKcal += written.sumOf { (record, _) -> record.energy.inKilocalories }
         }
 
-        while (true) {
-            val pulled = retryOnce { nodePort.pullSteps(device.address, device.bluetoothName, since) } ?: return null
+        val found = reader.pages(device, WearOsSeries.STEPS, WearLinkSince.afterTime(after.toEpochMilli())) { pulled ->
             progress.page()
             // Each minute once, so every builder below works on the same minutes.
-            page = WearOsStepsImport.latestPerMinute(pulled.minutes)
+            page = WearOsStepsImport.latestPerMinute(pulled.values.filter { it.start.isAfter(after) })
             allMinutes += page
             pageSessionsRead = false
             val newest = page.maxOfOrNull { it.start }
@@ -345,11 +351,10 @@ class WearOsWatchSyncService(
                 writeBatch(unwritten)
                 pulledSteps += unwritten.sumOf { it.steps }
                 if (newest.isAfter(cursors.stepsCursor(device.id))) cursors.setStepsCursor(device.id, newest)
-                since = newest
             }
-            if (!pulled.hasMore || newest == null) break
-            if (++pages >= MAX_PAGES) break
+            true
         }
+        if (!found) return null
         if (energyNeeded && withheld.isNotEmpty()) {
             progress.withheld(HealthSeries.WALKING_ENERGY, withheld)
         }
@@ -373,32 +378,30 @@ class WearOsWatchSyncService(
      */
     private suspend fun pullAscent(device: BleSensorDevice, progress: WearOsSyncProgress, steps: List<WearOsStepMinute>): Boolean {
         val cursor = cursors.ascentCursor(device.id)
-        var since = if (cursor == Instant.EPOCH) cursor else cursor.minusMillis(1)
-        var pages = 0
+        val since = if (cursor == Instant.EPOCH) cursor else cursor.minusMillis(1)
         var climbed = 0.0
         var credited = 0.0
-        while (true) {
-            val page = retryOnce { nodePort.pullAscent(device.address, device.bluetoothName, since) } ?: return false
+        val found = reader.pages(device, WearOsSeries.ASCENT, WearLinkSince.afterTime(since.toEpochMilli())) { pulled ->
             progress.page()
-            val newest = page.minutes.maxOfOrNull { it.start }
+            val minutes = pulled.values.filter { it.start.isAfter(since) }
+            val newest = minutes.maxOfOrNull { it.start }
             if (newest != null) {
-                val records = WearOsFloorsImport.records(page.minutes, steps, progress.salt)
+                val records = WearOsFloorsImport.records(minutes, steps, progress.salt)
                 // The cursor minute apart, as for steps.
                 for (part in records.partition { (it as FloorsClimbedRecord).startTime.isAfter(cursor) }.toList()) {
                     insertEstimates(part, "floors")
                 }
-                val elevation = WearOsFloorsImport.elevationRecords(page.minutes, steps, progress.salt)
+                val elevation = WearOsFloorsImport.elevationRecords(minutes, steps, progress.salt)
                 for (part in elevation.partition { (it as ElevationGainedRecord).startTime.isAfter(cursor) }.toList()) {
                     insertEstimates(part, "elevation")
                 }
-                climbed += page.minutes.sumOf { it.metres }
+                climbed += minutes.sumOf { it.metres }
                 credited += records.sumOf { (it as FloorsClimbedRecord).floors } * AscentCredit.METRES_PER_FLOOR
                 if (newest.isAfter(cursors.ascentCursor(device.id))) cursors.setAscentCursor(device.id, newest)
-                since = newest
             }
-            if (!page.hasMore || newest == null) break
-            if (++pages >= MAX_PAGES) break
+            true
         }
+        if (!found) return false
         // The watch has no screen for these yet; testers read this line.
         WearOsLog.log(
             "ascent: ${"%.1f".format(Locale.ROOT, credited)} of ${"%.1f".format(Locale.ROOT, climbed)} m climbed written as floors; " +
@@ -465,18 +468,8 @@ class WearOsWatchSyncService(
     /** False when no bonded watch matches. */
     private suspend fun pullSleep(device: BleSensorDevice, progress: WearOsSyncProgress): Boolean {
         val cursor = cursors.sleepCursor(device.id)
-        val minutes = ArrayList<WearSleepMinute>()
-        var since = WearOsSleepImport.pullStart(cursor, zone().rules.getOffset(cursor))
-        var pages = 0
-        while (true) {
-            val page = retryOnce { nodePort.pullSleepMinutes(device.address, device.bluetoothName, since) } ?: return false
-            progress.page()
-            minutes += page.minutes
-            val newest = page.minutes.maxOfOrNull { it.time }
-            if (!page.hasMore || newest == null) break
-            since = newest
-            if (++pages >= MAX_PAGES) break
-        }
+        val since = WearOsSleepImport.pullStart(cursor, zone().rules.getOffset(cursor))
+        val minutes = reader.newerThan(device, WearOsSeries.SLEEP_MINUTES, since) { progress.page() } ?: return false
         val newest = minutes.maxOfOrNull { it.time } ?: return true
 
         var nights = 0
@@ -700,11 +693,7 @@ class WearOsWatchSyncService(
     /** What the sync may do with resting heart rates: [withheld] are the grants missing. */
     private class RestingHeartRateAccess(val withheld: Set<String>, val seesOtherApps: Boolean)
 
-    /** Counts the pages pulled, for the progress ticks, and what was written. */
     private companion object {
-        /** A safety net against a watch that always says "more": two million samples. */
-        private const val MAX_PAGES = 1000
-
         private const val RETRY_DELAY_MILLIS = 1_500L
 
         /** Longer than any workout, as `HealthConnectSeries`' lookaround is longer than any series record. */

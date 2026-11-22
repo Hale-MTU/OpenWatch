@@ -20,19 +20,7 @@ private class FakeWearOsNodePort : WearOsNodePort {
         return statusToReturn
     }
 
-    override suspend fun pullHeartRate(targetAddress: String?, targetName: String?, since: Instant): WearOsHeartRatePage? = null
-
-    override suspend fun pullSleepMinutes(targetAddress: String?, targetName: String?, since: Instant): WearOsSleepMinutePage? = null
-    override suspend fun pullSteps(targetAddress: String?, targetName: String?, since: Instant): WearOsStepPage? = null
-    override suspend fun pullAscent(targetAddress: String?, targetName: String?, since: Instant): WearOsAscentPage? = null
-
-    override suspend fun pullHrv(targetAddress: String?, targetName: String?, since: Instant): WearOsHrvPage? = null
-
-    override suspend fun pullRespiratory(targetAddress: String?, targetName: String?, since: Instant): WearOsRespiratoryPage? = null
-
-    override suspend fun pullSpo2(targetAddress: String?, targetName: String?, since: Instant): WearOsSpo2Page? = null
-
-    override suspend fun pullSkin(targetAddress: String?, targetName: String?, since: Instant): WearOsSkinPage? = null
+    override suspend fun <T : Any> pullSeries(targetAddress: String?, targetName: String?, series: WearSeries<T>, cursor: String): WearOsSeriesPage<T>? = null
 
     override suspend fun pullWatchSettings(targetAddress: String?, targetName: String?): Map<String, String>? = null
 

@@ -67,6 +67,24 @@ class MetricStoreSequenceTest {
     }
 
     @Test
+    fun aTimeCursorHandsOverAtTheFirstRowNewerThanIt() {
+        val store = open()
+        store.putAll(WearMetrics.HEART_RATE, listOf(hr(10_000, 61), hr(20_000, 62), hr(30_000, 63)))
+        // Written after them, behind a phone's time cursor at 20 000.
+        store.put(WearMetrics.HEART_RATE, hr(15_000, 70))
+
+        val after = store.seqBeforeNewerThan(WearMetrics.HEART_RATE, 20_000)
+        assertEquals(listOf("HR 30000 63", "HR 15000 70"), store.changes(WearMetrics.HEART_RATE, after, limit = 10).lines)
+        // Past every row: after the newest, so only what comes next comes.
+        val caughtUp = store.seqBeforeNewerThan(WearMetrics.HEART_RATE, 90_000)
+        assertEquals(emptyList<String>(), store.changes(WearMetrics.HEART_RATE, caughtUp, limit = 10).lines)
+        store.put(WearMetrics.HEART_RATE, hr(40_000, 64))
+        assertEquals(listOf("HR 40000 64"), store.changes(WearMetrics.HEART_RATE, caughtUp, limit = 10).lines)
+        // A series with no rows starts from its first.
+        assertEquals(0L, store.seqBeforeNewerThan(WearMetrics.STEPS, 0))
+    }
+
+    @Test
     fun aPageIsLimitedAndSaysWhenMoreFollow() {
         val store = open()
         store.putAll(WearMetrics.HEART_RATE, (1..5).map { hr(it * 1_000L, 60 + it) })

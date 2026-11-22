@@ -1,7 +1,6 @@
 package tech.mmarca.openwatch.devices.wearos
 
 import java.time.Instant
-import tech.mmarca.healthcalculations.model.WearSleepMinute
 
 /**
  * What the phone can tell about the OpenWatch Wear OS app on a watch.
@@ -63,35 +62,11 @@ data class WearOsCompanionStatus(
 /** One heart rate sample the watch recorded. */
 data class WearOsHeartRateSample(val time: Instant, val beatsPerMinute: Int)
 
-/** One page of a heart rate pull. [hasMore] means the watch cut the reply at its limit. */
-data class WearOsHeartRatePage(
-    val samples: List<WearOsHeartRateSample>,
-    val hasMore: Boolean,
-)
-
-/** One page of a sleep minute pull. [hasMore] means the watch cut the reply at its limit. */
-data class WearOsSleepMinutePage(
-    val minutes: List<WearSleepMinute>,
-    val hasMore: Boolean,
-)
-
 /** The steps the watch counted in the clock minute starting at [start]. */
 data class WearOsStepMinute(val start: Instant, val steps: Int)
 
-/** One page of a step pull. [hasMore] means the watch cut the reply at its limit. */
-data class WearOsStepPage(
-    val minutes: List<WearOsStepMinute>,
-    val hasMore: Boolean,
-)
-
 /** The height the watch's barometer climbed in the clock minute starting at [start], elevators included. */
 data class WearOsAscentMinute(val start: Instant, val metres: Double)
-
-/** One page of an ascent pull. [hasMore] means the watch cut the reply at its limit. */
-data class WearOsAscentPage(
-    val minutes: List<WearOsAscentMinute>,
-    val hasMore: Boolean,
-)
 
 /** One night-time HRV window the watch measured: its start, the RMSSD and the clean beats it rests on. */
 data class WearOsHrvWindow(val start: Instant, val rmssdMillis: Double, val beats: Int)
@@ -129,33 +104,20 @@ data class WearOsWorkoutPage(
 /** One minute of skin temperature the watch recorded with the Samsung platform. */
 data class WearOsSkinMinute(val time: Instant, val celsius: Double)
 
-/** One page of a skin temperature pull. [hasMore] means the watch cut the reply at its limit. */
-data class WearOsSkinPage(
-    val minutes: List<WearOsSkinMinute>,
-    val hasMore: Boolean,
-)
-
 /** One SpO2 spot measurement the watch took with the Samsung platform. */
 data class WearOsSpo2Measurement(val time: Instant, val percent: Int)
-
-/** One page of an SpO2 pull. [hasMore] means the watch cut the reply at its limit. */
-data class WearOsSpo2Page(
-    val measurements: List<WearOsSpo2Measurement>,
-    val hasMore: Boolean,
-)
 
 /** The breathing rate of one night-time window, and how many routes agreed on it. */
 data class WearOsRespiratoryWindow(val start: Instant, val breathsPerMinute: Double, val routes: Int)
 
-/** One page of a breathing rate pull. [hasMore] means the watch cut the reply at its limit. */
-data class WearOsRespiratoryPage(
-    val windows: List<WearOsRespiratoryWindow>,
-    val hasMore: Boolean,
-)
-
-/** One page of an HRV pull. [hasMore] means the watch cut the reply at its limit. */
-data class WearOsHrvPage(
-    val windows: List<WearOsHrvWindow>,
+/**
+ * One page of a series pull ([WearOsNodePort.pullSeries]): the values the phone could read, in the
+ * order the watch wrote them, the cursor to ask with next, and whether the watch cut the reply at
+ * its limit.
+ */
+data class WearOsSeriesPage<T>(
+    val values: List<T>,
+    val cursor: String,
     val hasMore: Boolean,
 )
 
@@ -177,61 +139,18 @@ interface WearOsNodePort {
     ): WearOsCompanionStatus
 
     /**
-     * Heart rate samples newer than [since], oldest first, up to the watch's
-     * page limit. Null when no bonded watch matches. Throws a
-     * [WearOsLinkFailure] for everything else the watch could not give.
+     * One page of [series] after [cursor]: a time position (`WearLinkSince.afterTime`) or the
+     * cursor a page of the same series ended with. The values come in the order the watch wrote
+     * its rows, so a row rewritten or written late comes again after those already read. An
+     * empty page with [cursor] back when the watch does not record the series. Null when no
+     * bonded watch matches. Throws a [WearOsLinkFailure] for everything else the watch could not give.
      */
-    suspend fun pullHeartRate(
+    suspend fun <T : Any> pullSeries(
         targetAddress: String?,
         targetName: String?,
-        since: Instant,
-    ): WearOsHeartRatePage?
-
-    /**
-     * Sleep minutes newer than [since], oldest first, up to the watch's page
-     * limit. Null when no bonded watch matches. Throws a [WearOsLinkFailure]
-     * for everything else the watch could not give.
-     */
-    suspend fun pullSleepMinutes(
-        targetAddress: String?,
-        targetName: String?,
-        since: Instant,
-    ): WearOsSleepMinutePage?
-
-    /**
-     * Step minutes newer than [since], oldest first, up to the watch's page
-     * limit. Empty page: the watch app is too old to count steps. Null: no
-     * bonded watch matches. Any other failure throws [WearOsLinkFailure].
-     */
-    suspend fun pullSteps(
-        targetAddress: String?,
-        targetName: String?,
-        since: Instant,
-    ): WearOsStepPage?
-
-    /**
-     * Ascent minutes newer than [since], oldest first, up to the watch's page
-     * limit. Empty page: the watch app is too old to send ascent, or the
-     * watch has no barometer. Null: no bonded watch matches. Any other
-     * failure throws [WearOsLinkFailure].
-     */
-    suspend fun pullAscent(
-        targetAddress: String?,
-        targetName: String?,
-        since: Instant,
-    ): WearOsAscentPage?
-
-    /**
-     * Night-time HRV windows newer than [since], oldest first, up to the
-     * watch's page limit. Empty page: the watch app is too old or has no raw
-     * PPG sensor. Null: no bonded watch matches. Any other failure throws
-     * [WearOsLinkFailure].
-     */
-    suspend fun pullHrv(
-        targetAddress: String?,
-        targetName: String?,
-        since: Instant,
-    ): WearOsHrvPage?
+        series: WearSeries<T>,
+        cursor: String,
+    ): WearOsSeriesPage<T>?
 
     /**
      * Hands each heart rate reading to [onSample], on an I/O thread, as the
@@ -246,39 +165,6 @@ interface WearOsNodePort {
         targetName: String?,
         onSample: (WearOsHeartRateSample) -> Unit,
     ): Boolean
-
-    /**
-     * Breathing rates of the night-time windows newer than [since], oldest
-     * first. Empty page: the watch app is too old or measures none. Null: no
-     * bonded watch matches. Any other failure throws [WearOsLinkFailure].
-     */
-    suspend fun pullRespiratory(
-        targetAddress: String?,
-        targetName: String?,
-        since: Instant,
-    ): WearOsRespiratoryPage?
-
-    /**
-     * SpO2 spot measurements newer than [since], oldest first. Empty page:
-     * the watch app is too old or has no Samsung platform. Null: no bonded
-     * watch matches. Any other failure throws [WearOsLinkFailure].
-     */
-    suspend fun pullSpo2(
-        targetAddress: String?,
-        targetName: String?,
-        since: Instant,
-    ): WearOsSpo2Page?
-
-    /**
-     * Skin temperature minutes newer than [since], oldest first. Empty page:
-     * the watch app is too old or has no Samsung platform. Null: no bonded
-     * watch matches. Any other failure throws [WearOsLinkFailure].
-     */
-    suspend fun pullSkin(
-        targetAddress: String?,
-        targetName: String?,
-        since: Instant,
-    ): WearOsSkinPage?
 
     /**
      * The watch's own settings (`WearLinkProtocol.Preferences`). Null when

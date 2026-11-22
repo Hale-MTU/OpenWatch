@@ -28,18 +28,6 @@ class WearLinkSession internal constructor(
         if (line.trim() == WearLinkProtocol.PONG) Reply.Done(Unit) else Reply.Unexpected
     }
 
-    fun pullHeartRate(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.HeartRateSample>> =
-        pullPage(WearLinkProtocol.Request.HeartRateSince(sinceEpochMillis, limit), WearLinkProtocol::parseSample)
-
-    fun pullSleepMinutes(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.SleepMinute>> =
-        pullPage(WearLinkProtocol.Request.SleepMinutesSince(sinceEpochMillis, limit), WearLinkProtocol::parseSleepMinute)
-
-    fun pullSteps(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.StepMinute>> =
-        pullPage(WearLinkProtocol.Request.StepsSince(sinceEpochMillis, limit), WearLinkProtocol::parseStepMinute)
-
-    fun pullAscent(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.AscentMinute>> =
-        pullPage(WearLinkProtocol.Request.AscentSince(sinceEpochMillis, limit), WearLinkProtocol::parseAscentMinute)
-
     /** One live window of up to [seconds]: hands each reading to [onSample] as it arrives; the count when it ends. */
     fun liveHeartRate(seconds: Int, onSample: (WearLinkProtocol.HeartRateSample) -> Unit): WearLinkOutcome<Int> =
         exchange(WearLinkProtocol.Request.LiveHeartRate(seconds)) { line ->
@@ -47,15 +35,6 @@ class WearLinkSession internal constructor(
             WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(it.count) }
             Reply.Unexpected
         }
-
-    fun pullRespiratory(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.RespiratoryWindow>> =
-        pullPage(WearLinkProtocol.Request.RespiratorySince(sinceEpochMillis, limit), WearLinkProtocol::parseRespiratoryWindow)
-
-    fun pullSpo2(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.Spo2Measurement>> =
-        pullPage(WearLinkProtocol.Request.Spo2Since(sinceEpochMillis, limit), WearLinkProtocol::parseSpo2)
-
-    fun pullSkin(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.SkinMinute>> =
-        pullPage(WearLinkProtocol.Request.SkinSince(sinceEpochMillis, limit), WearLinkProtocol::parseSkinMinute)
 
     /** Every setting the watch holds. Only call when the peer advertised [WearLinkProtocol.CAP_PREFERENCES]. */
     fun pullPreferences(): WearLinkOutcome<Map<String, String>> {
@@ -113,34 +92,32 @@ class WearLinkSession internal constructor(
             if (WearLinkProtocol.parseEnd(line) != null) Reply.Done(Unit) else Reply.Unexpected
         }
 
-    fun pullHrv(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.HrvWindow>> =
-        pullPage(WearLinkProtocol.Request.HrvSince(sinceEpochMillis, limit), WearLinkProtocol::parseHrvWindow)
-
-    /** Closes the connection; the watch is waiting for exactly this. */
-    fun close() = connection.close()
-
     /**
-     * One page of a series: every line up to `END`, the ones [parse] reads as items. The
-     * page is refused when `END` counts more lines than arrived, so a reply cut short is
-     * never taken for a complete one. A line [parse] rejects still counts: the watch sent
-     * it, and a row the phone finds implausible must not stall the series.
+     * One page of the series [key] after [cursor] ([WearLinkSince]): every line up to `END`, as
+     * the watch stored it, for the caller to parse, and the cursor to ask with next. Refused as
+     * a protocol error when `END` counts other than the lines that arrived, so a reply cut short
+     * is never taken for a complete one, or carries no cursor. A line the caller cannot parse
+     * still counts: the watch sent it, and a row the phone finds implausible must not stall the
+     * series. Only call when the peer announced [key].
      */
-    private fun <T> pullPage(request: WearLinkProtocol.Request, parse: (String) -> T?): WearLinkOutcome<Page<T>> {
-        val items = ArrayList<T>()
-        var lines = 0
-        return exchange(request) { line ->
-            WearLinkProtocol.parseEnd(line)?.let { end ->
-                return@exchange if (end.count == lines) {
-                    Reply.Done(Page(items, end.more))
+    fun pullSince(key: String, cursor: String, limit: Int): WearLinkOutcome<WearLinkSince.Page> {
+        val lines = ArrayList<String>()
+        return exchange(WearLinkProtocol.Request.SeriesSince(key, cursor, limit)) { line ->
+            if (WearLinkProtocol.parseEnd(line) != null) {
+                val end = WearLinkSince.parseEnd(line) ?: return@exchange Reply.Mismatch("END carried no cursor")
+                return@exchange if (end.count == lines.size) {
+                    Reply.Done(WearLinkSince.Page(lines, end.more, end.cursor))
                 } else {
-                    Reply.Mismatch("END counted ${end.count} lines, $lines arrived")
+                    Reply.Mismatch("END counted ${end.count} lines, ${lines.size} arrived")
                 }
             }
-            lines += 1
-            parse(line)?.let { items += it }
+            lines += line
             Reply.More
         }
     }
+
+    /** Closes the connection; the watch is waiting for exactly this. */
+    fun close() = connection.close()
 
     private sealed class Reply<out T> {
         data object More : Reply<Nothing>()

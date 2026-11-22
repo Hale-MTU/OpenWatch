@@ -172,8 +172,14 @@ object WearMetrics {
         retentionMillis = WORKOUT_RETENTION_MILLIS,
     )
 
-    val ALL: List<WearMetric<*>> = listOf(
+    /**
+     * The series whose row is one value and one whole protocol line: what the link serves to
+     * `SINCE` by key, straight from the store. A workout is a header with its pauses and route
+     * under three keys, so it keeps its own request.
+     */
+    val SERIES: List<WearMetric<*>> = listOf(
         HEART_RATE, SLEEP_MINUTES, STEPS, ASCENT, HRV, RESPIRATORY_RATE, SKIN_TEMPERATURE, SPO2,
-        WORKOUTS, WORKOUT_PAUSES, WORKOUT_POINTS,
     )
+
+    val ALL: List<WearMetric<*>> = SERIES + listOf(WORKOUTS, WORKOUT_PAUSES, WORKOUT_POINTS)
 }

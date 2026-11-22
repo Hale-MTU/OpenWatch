@@ -141,41 +141,7 @@ class WearLinkServer(
         when (val request = WearLinkProtocol.parseRequest(line)) {
             null -> writer.line(WearLinkProtocol.formatError(WearLinkProtocol.ErrorCode.BAD_REQUEST))
             WearLinkProtocol.Request.Ping -> writer.line(WearLinkProtocol.PONG)
-            is WearLinkProtocol.Request.HeartRateSince -> {
-                val page = handler.heartRateSince(request.sinceEpochMillis, request.limit)
-                for (sample in page.items) writer.line(WearLinkProtocol.formatSample(sample.epochMillis, sample.bpm))
-                writer.line(WearLinkProtocol.formatEnd(page.items.size, page.more))
-            }
-            is WearLinkProtocol.Request.SleepMinutesSince -> {
-                val page = handler.sleepMinutesSince(request.sinceEpochMillis, request.limit)
-                for (minute in page.items) writer.line(WearLinkProtocol.formatSleepMinute(minute))
-                writer.line(WearLinkProtocol.formatEnd(page.items.size, page.more))
-            }
-            is WearLinkProtocol.Request.StepsSince -> {
-                val page = handler.stepsSince(request.sinceEpochMillis, request.limit)
-                for (minute in page.items) writer.line(WearLinkProtocol.formatStepMinute(minute))
-                writer.line(WearLinkProtocol.formatEnd(page.items.size, page.more))
-            }
-            is WearLinkProtocol.Request.AscentSince -> {
-                val page = handler.ascentSince(request.sinceEpochMillis, request.limit)
-                for (minute in page.items) writer.line(WearLinkProtocol.formatAscentMinute(minute))
-                writer.line(WearLinkProtocol.formatEnd(page.items.size, page.more))
-            }
-            is WearLinkProtocol.Request.RespiratorySince -> {
-                val page = handler.respiratorySince(request.sinceEpochMillis, request.limit)
-                for (window in page.items) writer.line(WearLinkProtocol.formatRespiratoryWindow(window))
-                writer.line(WearLinkProtocol.formatEnd(page.items.size, page.more))
-            }
-            is WearLinkProtocol.Request.Spo2Since -> {
-                val page = handler.spo2Since(request.sinceEpochMillis, request.limit)
-                for (measurement in page.items) writer.line(WearLinkProtocol.formatSpo2(measurement))
-                writer.line(WearLinkProtocol.formatEnd(page.items.size, page.more))
-            }
-            is WearLinkProtocol.Request.SkinSince -> {
-                val page = handler.skinSince(request.sinceEpochMillis, request.limit)
-                for (minute in page.items) writer.line(WearLinkProtocol.formatSkinMinute(minute))
-                writer.line(WearLinkProtocol.formatEnd(page.items.size, page.more))
-            }
+            is WearLinkProtocol.Request.SeriesSince -> answerSeries(writer, request)
             WearLinkProtocol.Request.GetPreferences -> {
                 val held = handler.heldPreferences()
                 for ((key, value) in held) writer.line(WearLinkProtocol.formatPreference(key, value))
@@ -194,11 +160,6 @@ class WearLinkServer(
                 handler.phoneActive(request.epochMillis)
                 writer.line(WearLinkProtocol.formatEnd(0, false))
             }
-            is WearLinkProtocol.Request.HrvSince -> {
-                val page = handler.hrvSince(request.sinceEpochMillis, request.limit)
-                for (window in page.items) writer.line(WearLinkProtocol.formatHrvWindow(window))
-                writer.line(WearLinkProtocol.formatEnd(page.items.size, page.more))
-            }
             is WearLinkProtocol.Request.LiveHeartRate -> {
                 // Each reading goes out at once; the phone shows it as it comes.
                 val count = handler.liveHeartRate(request.seconds) { sample ->
@@ -208,6 +169,18 @@ class WearLinkServer(
                 writer.line(WearLinkProtocol.formatEnd(count, false))
             }
         }
+    }
+
+    /** The series' stored lines as they are; one that would not travel as one line is left out, the cursor past it. */
+    private fun answerSeries(writer: LineWriter, request: WearLinkProtocol.Request.SeriesSince) {
+        val page = handler.seriesSince(request.key, request.cursor, request.limit)
+        if (page == null) {
+            writer.line(WearLinkProtocol.formatError(WearLinkProtocol.ErrorCode.BAD_REQUEST))
+            return
+        }
+        val lines = page.lines.filter(WearLinkSince::isSendable)
+        for (line in lines) writer.line(line)
+        writer.line(WearLinkSince.formatEnd(lines.size, page.more, page.cursor))
     }
 
     /** Sends one refusal line, then waits briefly for the phone to close so the line is not dropped with the socket. */

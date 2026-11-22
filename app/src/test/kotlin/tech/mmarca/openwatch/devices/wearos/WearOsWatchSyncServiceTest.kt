@@ -94,40 +94,63 @@ class WearOsWatchSyncServiceTest {
 
     /** SpO2 pages; with none queued the watch answers an empty page. */
     private val spo2Pages = ArrayDeque<WearOsSpo2Page>()
+    /**
+     * The watch as the sync sees it: one `SINCE` pull per page, answered per series from the pages
+     * and minutes above. A page's cursor names the newest time it held (`f.<millis>`), so every
+     * pull is recorded by the time it reads after, as a time cursor would have been.
+     */
     private val nodePort = object : WearOsNodePort {
         override suspend fun checkStatus(targetAddress: String?, targetName: String?) = WearOsCompanionStatus()
-        override suspend fun pullHeartRate(targetAddress: String?, targetName: String?, since: Instant): WearOsHeartRatePage? {
-            pullsSince += since
-            // Pages first; once they run out, the configured failure.
-            if (pages.isEmpty()) pullFailure?.let { throw it }
-            return pages.removeFirst()
-        }
 
-        override suspend fun pullSleepMinutes(targetAddress: String?, targetName: String?, since: Instant): WearOsSleepMinutePage? {
-            sleepPullsSince += since
-            if (sleepPages.isEmpty()) {
-                sleepPullFailure?.let { throw it }
-                return WearOsSleepMinutePage(emptyList(), hasMore = false)
+        @Suppress("UNCHECKED_CAST")
+        override suspend fun <T : Any> pullSeries(targetAddress: String?, targetName: String?, series: WearSeries<T>, cursor: String): WearOsSeriesPage<T>? {
+            asked += series.key to cursor
+            val since = sinceOf(cursor)
+            val page: WearOsSeriesPage<*>? = when (series.key) {
+                WearLinkProtocol.CAP_HEART_RATE -> {
+                    pullsSince += since
+                    // Pages first; once they run out, the configured failure.
+                    if (pages.isEmpty()) pullFailure?.let { throw it }
+                    pages.removeFirst()?.let { page(it.samples, it.hasMore, cursor) { sample -> sample.time } }
+                }
+                WearLinkProtocol.CAP_SLEEP_MINUTES -> {
+                    sleepPullsSince += since
+                    if (sleepPages.isEmpty()) sleepPullFailure?.let { throw it }
+                    val pulled = sleepPages.removeFirstOrNull() ?: WearOsSleepMinutePage(emptyList(), hasMore = false)
+                    page(pulled.minutes, pulled.hasMore, cursor) { it.time }
+                }
+                WearLinkProtocol.CAP_STEPS -> {
+                    stepPullsSince += since
+                    if (stepsNotPaired) {
+                        null
+                    } else {
+                        val after = watchSteps.filter { it.start.isAfter(since) }.sortedBy { it.start }
+                        page(after.take(STEP_PAGE), after.size > STEP_PAGE, cursor) { it.start }
+                    }
+                }
+                WearLinkProtocol.CAP_ASCENT -> {
+                    ascentPullsSince += since
+                    val pulled = ascentPages.removeFirstOrNull() ?: WearOsAscentPage(emptyList(), hasMore = false)
+                    page(pulled.minutes, pulled.hasMore, cursor) { it.start }
+                }
+                WearLinkProtocol.CAP_HRV -> {
+                    hrvPullsSince += since
+                    val pulled = if (hrvPages.isEmpty()) WearOsHrvPage(emptyList(), hasMore = false) else hrvPages.removeFirst()
+                    pulled?.let { page(it.windows, it.hasMore, cursor) { window -> window.start } }
+                }
+                WearLinkProtocol.CAP_RESPIRATORY_RATE -> {
+                    respiratoryPulls++
+                    val pulled = respiratoryPages.removeFirstOrNull() ?: WearOsRespiratoryPage(emptyList(), hasMore = false)
+                    page(pulled.windows, pulled.hasMore, cursor) { it.start }
+                }
+                WearLinkProtocol.CAP_SPO2 -> {
+                    val pulled = spo2Pages.removeFirstOrNull() ?: WearOsSpo2Page(emptyList(), hasMore = false)
+                    page(pulled.measurements, pulled.hasMore, cursor) { it.time }
+                }
+                WearLinkProtocol.CAP_SKIN_TEMPERATURE -> WearOsSeriesPage(emptyList<WearOsSkinMinute>(), cursor, hasMore = false)
+                else -> error("no such series: $series")
             }
-            return sleepPages.removeFirst()
-        }
-
-        override suspend fun pullSteps(targetAddress: String?, targetName: String?, since: Instant): WearOsStepPage? {
-            stepPullsSince += since
-            if (stepsNotPaired) return null
-            val after = watchSteps.filter { it.start.isAfter(since) }.sortedBy { it.start }
-            return WearOsStepPage(after.take(STEP_PAGE), hasMore = after.size > STEP_PAGE)
-        }
-
-        override suspend fun pullAscent(targetAddress: String?, targetName: String?, since: Instant): WearOsAscentPage? {
-            ascentPullsSince += since
-            return ascentPages.removeFirstOrNull() ?: WearOsAscentPage(emptyList(), hasMore = false)
-        }
-
-        override suspend fun pullHrv(targetAddress: String?, targetName: String?, since: Instant): WearOsHrvPage? {
-            hrvPullsSince += since
-            if (hrvPages.isEmpty()) return WearOsHrvPage(emptyList(), hasMore = false)
-            return hrvPages.removeFirst()
+            return page as WearOsSeriesPage<T>?
         }
 
         override suspend fun liveHeartRate(
@@ -135,17 +158,6 @@ class WearOsWatchSyncServiceTest {
             targetName: String?,
             onSample: (WearOsHeartRateSample) -> Unit,
         ): Boolean = false
-
-        override suspend fun pullRespiratory(targetAddress: String?, targetName: String?, since: Instant): WearOsRespiratoryPage? {
-            respiratoryPulls++
-            return respiratoryPages.removeFirstOrNull() ?: WearOsRespiratoryPage(emptyList(), hasMore = false)
-        }
-
-        override suspend fun pullSpo2(targetAddress: String?, targetName: String?, since: Instant): WearOsSpo2Page? =
-            spo2Pages.removeFirstOrNull() ?: WearOsSpo2Page(emptyList(), hasMore = false)
-
-        override suspend fun pullSkin(targetAddress: String?, targetName: String?, since: Instant): WearOsSkinPage? =
-            WearOsSkinPage(emptyList(), hasMore = false)
 
         override suspend fun pullWatchSettings(targetAddress: String?, targetName: String?): Map<String, String>? = null
 
@@ -156,6 +168,16 @@ class WearOsWatchSyncServiceTest {
 
         override suspend fun notifyPhoneActive(targetAddress: String?, targetName: String?, at: Instant): Boolean = false
     }
+
+    /** Every pull, by series key and the cursor it went out with. */
+    private val asked = mutableListOf<Pair<String, String>>()
+
+    /** A page whose cursor names its newest time; an empty one gives the cursor back, as the watch does. */
+    private fun <V> page(values: List<V>, hasMore: Boolean, cursor: String, timeOf: (V) -> Instant): WearOsSeriesPage<V> =
+        WearOsSeriesPage(values, values.maxOfOrNull(timeOf)?.let { "f.${it.toEpochMilli()}" } ?: cursor, hasMore)
+
+    /** The time a cursor reads after: a time position's own, or the newest time of the page that gave it. */
+    private fun sinceOf(cursor: String): Instant = Instant.ofEpochMilli(cursor.removePrefix("t").removePrefix("f.").toLong())
 
     /**
      * Health Connect's rule for a `clientRecordId`: a batch is refused whole
@@ -991,6 +1013,24 @@ class WearOsWatchSyncServiceTest {
     }
 
     @Test
+    fun `the first pull hands the time cursor over, and the next starts at the watch's own cursor`() = runTest {
+        cursors.setHeartRateCursor(WATCH.id, t0)
+        pages += WearOsHeartRatePage(samples(10, 20), hasMore = false)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
+        // A sample the watch wrote late, behind the newest already written: the watch's cursor brings it.
+        pages += WearOsHeartRatePage(samples(5), hasMore = false)
+
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        val newest = t0.plusSeconds(20).toEpochMilli()
+        assertEquals(listOf("t${t0.toEpochMilli()}", "f.$newest"), asked.filter { it.first == "hr" }.map { it.second })
+        assertEquals(synced(samples = 1), result)
+        assertEquals("f.${t0.plusSeconds(5).toEpochMilli()}", cursors.seriesCursor(WATCH.id, "hr"))
+        // The time cursor keeps the newest time; it only hands over.
+        assertEquals(t0.plusSeconds(20), cursors.heartRateCursor(WATCH.id))
+    }
+
+    @Test
     fun `no bonded watch fails the sync and stamps nothing`() = runTest {
         pages += null
 
@@ -1074,14 +1114,19 @@ class WearOsWatchSyncServiceTest {
     }
 
     @Test
-    fun `the next HRV pull starts at the cursor`() = runTest {
+    fun `the first HRV pull hands its time cursor over, and the next starts at the watch's cursor`() = runTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         coEvery { healthConnect.grantedPermissions() } returns setOf(HRV_WRITE)
         cursors.setHrvCursor(WATCH.id, t0)
-
+        hrvPages += WearOsHrvPage(listOf(hrvWindow(30)), hasMore = false)
         service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
-        assertEquals(listOf(t0), hrvPullsSince)
+        pages += WearOsHeartRatePage(emptyList(), hasMore = false)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        val window = t0.plusSeconds(30 * 60).toEpochMilli()
+        assertEquals(listOf("t${t0.toEpochMilli()}", "f.$window"), asked.filter { it.first == "hv" }.map { it.second })
+        assertEquals(listOf(t0, Instant.ofEpochMilli(window)), hrvPullsSince)
     }
 
     @Test
@@ -1217,3 +1262,11 @@ private fun synced(
     skipped = skipped,
     moreRemains = moreRemains,
 )
+
+// One page as the fake watch hands it out, by series: the values and whether more follow.
+private data class WearOsHeartRatePage(val samples: List<WearOsHeartRateSample>, val hasMore: Boolean)
+private data class WearOsSleepMinutePage(val minutes: List<WearSleepMinute>, val hasMore: Boolean)
+private data class WearOsAscentPage(val minutes: List<WearOsAscentMinute>, val hasMore: Boolean)
+private data class WearOsHrvPage(val windows: List<WearOsHrvWindow>, val hasMore: Boolean)
+private data class WearOsRespiratoryPage(val windows: List<WearOsRespiratoryWindow>, val hasMore: Boolean)
+private data class WearOsSpo2Page(val measurements: List<WearOsSpo2Measurement>, val hasMore: Boolean)

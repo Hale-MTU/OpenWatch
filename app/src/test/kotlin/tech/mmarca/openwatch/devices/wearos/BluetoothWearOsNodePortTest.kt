@@ -36,6 +36,7 @@ import tech.mmarca.openwatch.wearlink.WearLinkConnection
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 import tech.mmarca.openwatch.wearlink.WearLinkRequestHandler
 import tech.mmarca.openwatch.wearlink.WearLinkServer
+import tech.mmarca.openwatch.wearlink.WearLinkSince
 import tech.mmarca.openwatch.wearlink.WearLinkTrustStore
 import tech.mmarca.openwatch.wearlink.WearLinkWorkout
 
@@ -59,10 +60,10 @@ class BluetoothWearOsNodePortTest {
     @After
     fun closeLinks() = watch.links.forEach { it.dropOnWatch() }
 
-    private suspend fun pullHeartRate() = port.pullHeartRate(REGISTERED, NAME, Instant.EPOCH)
+    private suspend fun pullHeartRate() = port.pullSeries(REGISTERED, NAME, WearOsSeries.HEART_RATE, FROM_START)
 
     /** One page of a sync: the one place the link-owner tests name a series request. */
-    private suspend fun syncPage() = port.pullHeartRate(REGISTERED, NAME, Instant.EPOCH)
+    private suspend fun syncPage() = pullHeartRate()
 
     /** The live heart rate in a coroutine of its own, as the watch screen collects it. */
     private fun CoroutineScope.streamLive(): Job = launch(Dispatchers.IO) { port.liveHeartRate(REGISTERED, NAME) {} }
@@ -85,14 +86,13 @@ class BluetoothWearOsNodePortTest {
         coroutineScope {
             val first = pullHeartRate()!!
             assertTrue(first.hasMore)
-            assertEquals(62, port.pullHeartRate(REGISTERED, NAME, first.samples.last().time)!!.samples.single().beatsPerMinute)
-            port.pullSteps(REGISTERED, NAME, Instant.EPOCH)
-            port.pullAscent(REGISTERED, NAME, Instant.EPOCH)
-            port.pullSleepMinutes(REGISTERED, NAME, Instant.EPOCH)
-            port.pullHrv(REGISTERED, NAME, Instant.EPOCH)
-            port.pullRespiratory(REGISTERED, NAME, Instant.EPOCH)
-            port.pullSpo2(REGISTERED, NAME, Instant.EPOCH)
-            port.pullSkin(REGISTERED, NAME, Instant.EPOCH)
+            assertEquals(62, port.pullSeries(REGISTERED, NAME, WearOsSeries.HEART_RATE, first.cursor)!!.values.single().beatsPerMinute)
+            for (series in listOf(WearOsSeries.STEPS, WearOsSeries.ASCENT, WearOsSeries.SLEEP_MINUTES, WearOsSeries.HRV)) {
+                port.pullSeries(REGISTERED, NAME, series, FROM_START)
+            }
+            for (series in listOf(WearOsSeries.RESPIRATORY_RATE, WearOsSeries.SPO2, WearOsSeries.SKIN_TEMPERATURE)) {
+                port.pullSeries(REGISTERED, NAME, series, FROM_START)
+            }
             port.pullWorkouts(REGISTERED, NAME, Instant.EPOCH)
             assertTrue(port.setWatchSetting(REGISTERED, NAME, WearLinkProtocol.Preferences.HEART_RATE_MAX, "190"))
         }
@@ -112,10 +112,9 @@ class BluetoothWearOsNodePortTest {
 
         coroutineScope {
             pullHeartRate()
-            assertEquals(WearOsStepPage(emptyList(), false), port.pullSteps(REGISTERED, NAME, Instant.EPOCH))
-            assertEquals(WearOsAscentPage(emptyList(), false), port.pullAscent(REGISTERED, NAME, Instant.EPOCH))
-            assertEquals(WearOsHrvPage(emptyList(), false), port.pullHrv(REGISTERED, NAME, Instant.EPOCH))
-            assertEquals(WearOsSpo2Page(emptyList(), false), port.pullSpo2(REGISTERED, NAME, Instant.EPOCH))
+            for (series in listOf(WearOsSeries.STEPS, WearOsSeries.ASCENT, WearOsSeries.HRV, WearOsSeries.SPO2)) {
+                assertEquals(WearOsSeriesPage(emptyList<Any>(), FROM_START, false), port.pullSeries(REGISTERED, NAME, series, FROM_START))
+            }
             assertEquals(WearOsWorkoutPage(emptyList(), false), port.pullWorkouts(REGISTERED, NAME, Instant.EPOCH))
             assertNull(port.pullWatchSettings(REGISTERED, NAME))
             assertFalse(port.setWatchSetting(REGISTERED, NAME, WearLinkProtocol.Preferences.HEART_RATE_MAX, "190"))
@@ -147,7 +146,7 @@ class BluetoothWearOsNodePortTest {
         watch = LoopbackWatch(linkStore.tokenFor(REGISTERED, BOND), setOf(WearLinkProtocol.CAP_HEART_RATE, WearLinkProtocol.CAP_SLEEP_MINUTES))
         pullHeartRate()
         now += 8_000
-        port.pullHrv(REGISTERED, NAME, Instant.EPOCH)
+        port.pullSeries(REGISTERED, NAME, WearOsSeries.HRV, FROM_START)
 
         // Ten seconds after the last request the watch heard, not two after the skipped one.
         now += 2_000
@@ -197,7 +196,7 @@ class BluetoothWearOsNodePortTest {
 
         val page = pullHeartRate()
 
-        assertEquals(64, page!!.samples.single().beatsPerMinute)
+        assertEquals(64, page!!.values.single().beatsPerMinute)
         assertEquals(2, watch.connects.get())
         assertEquals(2, watch.data.hellos.get())
     }
@@ -449,15 +448,13 @@ class BluetoothWearOsNodePortTest {
 
         override fun localName(): String = NAME
         override fun capabilities(): Set<String> = announced.also { hellos.incrementAndGet() }
-        override fun heartRateSince(sinceEpochMillis: Long, limit: Int) =
-            asked("HR", synchronized(heartRatePages) { heartRatePages.removeFirstOrNull() } ?: Page(emptyList(), false))
-        override fun sleepMinutesSince(sinceEpochMillis: Long, limit: Int) = asked<WearLinkProtocol.SleepMinute>("SM")
-        override fun stepsSince(sinceEpochMillis: Long, limit: Int) = asked<WearLinkProtocol.StepMinute>("ST")
-        override fun ascentSince(sinceEpochMillis: Long, limit: Int) = asked<WearLinkProtocol.AscentMinute>("AS")
-        override fun hrvSince(sinceEpochMillis: Long, limit: Int) = asked<WearLinkProtocol.HrvWindow>("HV")
-        override fun respiratorySince(sinceEpochMillis: Long, limit: Int) = asked<WearLinkProtocol.RespiratoryWindow>("RR")
-        override fun spo2Since(sinceEpochMillis: Long, limit: Int) = asked<WearLinkProtocol.Spo2Measurement>("O2")
-        override fun skinSince(sinceEpochMillis: Long, limit: Int) = asked<WearLinkProtocol.SkinMinute>("SK")
+        /** `SINCE`, asked under the series' key in capitals; the heart rate hands out [heartRatePages] in turn. */
+        override fun seriesSince(key: String, cursor: String, limit: Int): WearLinkSince.Page {
+            asked += key.uppercase()
+            if (key != WearLinkProtocol.CAP_HEART_RATE) return WearLinkSince.Page(emptyList(), false, cursor)
+            val page = synchronized(heartRatePages) { heartRatePages.removeFirstOrNull() } ?: Page(emptyList(), false)
+            return WearLinkSince.Page(page.items.map { WearLinkProtocol.formatSample(it.epochMillis, it.bpm) }, page.more, "0123456789abcdef.${asked.size}")
+        }
         override fun workoutsSince(sinceEpochMillis: Long, limit: Int) = asked<WearLinkWorkout>("WO")
         override fun phoneActive(epochMillis: Long) {
             asked += "PA"
@@ -498,6 +495,7 @@ class BluetoothWearOsNodePortTest {
         const val PHONE = "AA:BB:CC:DD:EE:99"
         const val NAME = "Galaxy Watch8"
         const val T0 = 1_760_000_000_000L
+        val FROM_START = WearLinkSince.afterTime(0)
         const val BUFFER = 256 * 1024
 
         /** A live window in the loopback: long enough for a call to come during one. */

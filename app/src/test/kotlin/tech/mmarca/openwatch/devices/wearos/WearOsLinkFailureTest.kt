@@ -17,8 +17,9 @@ class WearOsLinkFailureTest {
             WearOsLinkFailure.PendingConfirmation() to WearOsAppStatus.PENDING_CONFIRMATION,
             WearOsLinkFailure.Unauthorized(WearLinkProtocol.UnauthorizedReason.MISMATCH) to WearOsAppStatus.UNAUTHORIZED_MISMATCH,
             WearOsLinkFailure.Unauthorized(WearLinkProtocol.UnauthorizedReason.BLOCKED) to WearOsAppStatus.UNAUTHORIZED_BLOCKED,
-            WearOsLinkFailure.VersionMismatch(2, 3) to WearOsAppStatus.UPDATE_WATCH,
-            WearOsLinkFailure.VersionMismatch(5, 6) to WearOsAppStatus.UPDATE_PHONE,
+            // A watch of 0.4.x speaks 4 only; one newer than this phone, from 6.
+            WearOsLinkFailure.VersionMismatch(4, 4) to WearOsAppStatus.UPDATE_WATCH,
+            WearOsLinkFailure.VersionMismatch(6, 7) to WearOsAppStatus.UPDATE_PHONE,
             WearOsLinkFailure.Protocol("garbage") to WearOsAppStatus.PROTOCOL_ERROR,
             WearOsLinkFailure.Refused(WearLinkProtocol.ErrorCode.BUSY) to WearOsAppStatus.NO_ANSWER,
         )

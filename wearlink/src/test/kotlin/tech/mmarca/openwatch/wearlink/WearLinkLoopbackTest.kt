@@ -76,53 +76,112 @@ class WearLinkLoopbackTest {
     fun `an old phone learns the versions the watch speaks`() {
         val link = trusted().connect()
 
-        assertEquals(WearLinkOutcome.VersionMismatch(4, 4), WearLinkClient.hello(link.clientConnection, hello(version = 3)))
+        assertEquals(WearLinkOutcome.VersionMismatch(5, 5), WearLinkClient.hello(link.clientConnection, hello(version = 4)))
         link.clientConnection.close()
         assertEquals(WearLinkServer.Outcome.VERSION_MISMATCH, link.serverOutcome())
     }
 
     @Test
-    fun `a page of two thousand minutes arrives whole, and two requests share one connection`() {
+    fun `a page of two thousand minutes arrives whole, and requests share one connection`() {
         val loopback = trusted()
-        loopback.handler.minutes = List(2500) { index ->
+        val watch = loopback.handler
+        val minutes = List(2500) { index ->
             WearLinkProtocol.SleepMinute(1_700_000_000_000L + index * 60_000L, WearLinkProtocol.MinuteKind.RAW, 7200, 16, 300, 0, 58, 12, 6, intArrayOf(0, 0, 1000), intArrayOf(3, 3, 3), 88, 90, 1)
         }
-        loopback.handler.heartRate = List(10) { WearLinkProtocol.HeartRateSample(1_700_000_000_000L + it * 10_000L, 60 + it) }
-        loopback.handler.steps = List(3) { WearLinkProtocol.StepMinute(1_700_000_040_000L + it * 60_000L, 90 + it) }
-        loopback.handler.ascent = listOf(WearLinkProtocol.AscentMinute(1_700_000_040_000L, 2))
-        loopback.handler.hrv = listOf(WearLinkProtocol.HrvWindow(1_700_000_100_000L, 452, 280))
+        minutes.forEach { watch.put("sm", it.epochMillis, WearLinkProtocol.formatSleepMinute(it)) }
+        repeat(10) { watch.put("hr", 1_700_000_000_000L + it * 10_000L, WearLinkProtocol.formatSample(1_700_000_000_000L + it * 10_000L, 60 + it)) }
         val link = loopback.connect()
         val session = (WearLinkClient.hello(link.clientConnection, hello()) as WearLinkOutcome.Ok).value
 
-        val page = (session.pullSleepMinutes(0, 2000) as WearLinkOutcome.Ok).value
-        assertEquals(2000, page.items.size)
+        val page = (session.pullSince("sm", WearLinkSince.afterTime(0), 2000) as WearLinkOutcome.Ok).value
+        assertEquals(2000, page.lines.size)
         assertTrue(page.more)
-        val rest = (session.pullSleepMinutes(page.items.last().epochMillis, 2000) as WearLinkOutcome.Ok).value
-        assertEquals(500, rest.items.size)
+        val rest = (session.pullSince("sm", page.cursor, 2000) as WearLinkOutcome.Ok).value
+        assertEquals(minutes.drop(2000), rest.lines.map { WearLinkProtocol.parseSleepMinute(it) })
         assertFalse(rest.more)
-        val heart = (session.pullHeartRate(0, 2000) as WearLinkOutcome.Ok).value
-        assertEquals(10, heart.items.size)
-        val steps = (session.pullSteps(0, 2000) as WearLinkOutcome.Ok).value
-        assertEquals(loopback.handler.steps, steps.items)
-        val ascent = (session.pullAscent(0, 2000) as WearLinkOutcome.Ok).value
-        assertEquals(loopback.handler.ascent, ascent.items)
-        val hrv = (session.pullHrv(0, 2000) as WearLinkOutcome.Ok).value
-        assertEquals(loopback.handler.hrv, hrv.items)
+        val heart = (session.pullSince("hr", WearLinkSince.afterTime(0), 2000) as WearLinkOutcome.Ok).value
+        assertEquals(10, heart.lines.mapNotNull(WearLinkProtocol::parseSample).size)
         assertEquals(WearLinkOutcome.Ok(Unit), session.notifyPhoneActive(1_700_000_200_000L))
-        loopback.handler.respiratory = listOf(WearLinkProtocol.RespiratoryWindow(1_700_000_100_000L, 142, 2))
-        loopback.handler.skin = listOf(WearLinkProtocol.SkinMinute(1_700_000_040_000L, 3412, 2250))
-        assertEquals(loopback.handler.respiratory, (session.pullRespiratory(0, 500) as WearLinkOutcome.Ok).value.items)
-        assertEquals(loopback.handler.skin, (session.pullSkin(0, 2000) as WearLinkOutcome.Ok).value.items)
         assertEquals(WearLinkOutcome.Ok(mapOf("hr_day" to "10")), session.pullPreferences())
         assertEquals(WearLinkOutcome.Ok(Unit), session.setPreference("hr_day", "600"))
         assertEquals(WearLinkOutcome.Ok(mapOf("hr_day" to "600")), session.pullPreferences())
         assertTrue(session.setPreference("nope", "1") !is WearLinkOutcome.Ok)
-        loopback.handler.spo2 = listOf(WearLinkProtocol.Spo2Measurement(1_700_000_300_000L, 96, 54))
-        assertEquals(loopback.handler.spo2, (session.pullSpo2(0, 500) as WearLinkOutcome.Ok).value.items)
-        assertEquals(listOf(1_700_000_200_000L), loopback.handler.phoneActive)
+        assertEquals(listOf(1_700_000_200_000L), watch.phoneActive)
         assertFalse(link.serverReturned())
         session.close()
         assertEquals(WearLinkServer.Outcome.SERVED, link.serverOutcome())
+    }
+
+    @Test
+    fun `a row rewritten in place or written late comes again after the cursor`() {
+        val loopback = trusted()
+        val watch = loopback.handler
+        watch.put("st", 120_000L, "ST 120000 10")
+        watch.put("st", 180_000L, "ST 180000 20")
+        val link = loopback.connect()
+        val session = (WearLinkClient.hello(link.clientConnection, hello()) as WearLinkOutcome.Ok).value
+        val first = (session.pullSince("st", WearLinkSince.afterTime(0), 10) as WearLinkOutcome.Ok).value
+        assertEquals(WearLinkSince.Page(listOf("ST 120000 10", "ST 180000 20"), false, "0123456789abcdef.2"), first)
+
+        watch.put("st", 180_000L, "ST 180000 35")
+        watch.put("st", 60_000L, "ST 60000 5")
+        val next = (session.pullSince("st", first.cursor, 10) as WearLinkOutcome.Ok).value
+
+        assertEquals(WearLinkSince.Page(listOf("ST 180000 35", "ST 60000 5"), false, "0123456789abcdef.4"), next)
+        // Nothing new: the same cursor back.
+        assertEquals(WearLinkSince.Page(emptyList(), false, next.cursor), (session.pullSince("st", next.cursor, 10) as WearLinkOutcome.Ok).value)
+        session.close()
+    }
+
+    @Test
+    fun `a time position hands a time cursor over to the sequence`() {
+        val loopback = trusted()
+        val watch = loopback.handler
+        // As the version 3 store numbers the rows it kept: in time order.
+        for (at in 1..4) watch.put("hr", at * 10_000L, "HR ${at * 10_000L} ${60 + at}")
+        // Written after them, behind the phone's time cursor: a late row the time cursor would never have sent.
+        watch.put("hr", 15_000L, "HR 15000 70")
+        val link = loopback.connect()
+        val session = (WearLinkClient.hello(link.clientConnection, hello()) as WearLinkOutcome.Ok).value
+
+        // The phone had pulled up to 20 000: the rows newer than that come, then everything written after them.
+        val page = (session.pullSince("hr", WearLinkSince.afterTime(20_000L), 10) as WearLinkOutcome.Ok).value
+        assertEquals(listOf("HR 30000 63", "HR 40000 64", "HR 15000 70"), page.lines)
+        // A time past every row starts after the newest: nothing again, and what comes later comes.
+        val caughtUp = (session.pullSince("hr", WearLinkSince.afterTime(90_000L), 10) as WearLinkOutcome.Ok).value
+        assertEquals(WearLinkSince.Page(emptyList(), false, "0123456789abcdef.5"), caughtUp)
+        session.close()
+    }
+
+    @Test
+    fun `another store's cursor starts over, and a key the watch lacks is refused on a connection that goes on`() {
+        val loopback = trusted()
+        loopback.handler.put("hv", 1_000L, "HV 1000 452 280")
+        val link = loopback.connect()
+        val session = (WearLinkClient.hello(link.clientConnection, hello()) as WearLinkOutcome.Ok).value
+
+        // The watch's data was cleared: its store has a new id, and the phone's cursor is of the old one.
+        val page = (session.pullSince("hv", "fedcba9876543210.99", 10) as WearLinkOutcome.Ok).value
+        assertEquals(listOf("HV 1000 452 280"), page.lines)
+        assertEquals(WearLinkOutcome.Refused(WearLinkProtocol.ErrorCode.BAD_REQUEST), session.pullSince("o2", WearLinkSince.afterTime(0), 10))
+        assertEquals(WearLinkOutcome.Ok(Unit), session.ping())
+        session.close()
+        assertEquals(WearLinkServer.Outcome.SERVED, link.serverOutcome())
+    }
+
+    @Test
+    fun `a stored line that would not travel as one line is left out, and the cursor moves past it`() {
+        val loopback = trusted()
+        loopback.handler.put("hr", 1_000L, "HR 1000 60\nEND 9 0")
+        loopback.handler.put("hr", 2_000L, "HR 2000 61")
+        val link = loopback.connect()
+        val session = (WearLinkClient.hello(link.clientConnection, hello()) as WearLinkOutcome.Ok).value
+
+        assertEquals(
+            WearLinkOutcome.Ok(WearLinkSince.Page(listOf("HR 2000 61"), false, "0123456789abcdef.2")),
+            session.pullSince("hr", WearLinkSince.afterTime(0), 10),
+        )
+        session.close()
     }
 
     @Test
@@ -223,7 +282,7 @@ class WearLinkLoopbackTest {
         val out = ByteArrayOutputStream()
         LineWriter(out).apply { line(WearLinkProtocol.formatHello(hello())); flush() }
 
-        assertTrue(out.toString(Charsets.UTF_8).startsWith("HELLO 4 hr,sm $token Pixel 6 Pro"))
+        assertTrue(out.toString(Charsets.UTF_8).startsWith("HELLO 5 hr,sm $token Pixel 6 Pro"))
     }
 
     @Test

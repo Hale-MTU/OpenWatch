@@ -23,6 +23,7 @@ import tech.mmarca.openwatch.wearlink.WearLinkOutcome
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 import tech.mmarca.openwatch.wearlink.WearLinkWorkout
 import tech.mmarca.openwatch.wearlink.WearLinkSession
+import tech.mmarca.openwatch.wearlink.WearLinkSince
 import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
 
@@ -83,48 +84,19 @@ class BluetoothWearOsNodePort internal constructor(
         )
     }
 
-    override suspend fun pullHeartRate(targetAddress: String?, targetName: String?, since: Instant): WearOsHeartRatePage? =
-        pull(targetAddress, targetName, capability = null, { it.pullHeartRate(since.toEpochMilli(), WearLinkProtocol.MAX_SAMPLES_PER_REQUEST) }) { items, more ->
-            WearOsHeartRatePage(items.map { WearOsHeartRateSample(Instant.ofEpochMilli(it.epochMillis), it.bpm) }, more)
-        }
-
-    override suspend fun pullSleepMinutes(targetAddress: String?, targetName: String?, since: Instant): WearOsSleepMinutePage? =
-        pull(targetAddress, targetName, capability = null, { it.pullSleepMinutes(since.toEpochMilli(), WearLinkProtocol.MAX_MINUTES_PER_REQUEST) }) { items, more ->
-            WearOsSleepMinutePage(items.map(WearOsSleepMinuteMapping::toDomain), more)
-        }
-
-    // A watch app from before steps would answer the request with an error.
-    override suspend fun pullSteps(targetAddress: String?, targetName: String?, since: Instant): WearOsStepPage? =
-        pull(targetAddress, targetName, WearLinkProtocol.CAP_STEPS, { it.pullSteps(since.toEpochMilli(), WearLinkProtocol.MAX_STEP_MINUTES_PER_REQUEST) }) { items, more ->
-            WearOsStepPage(items.map { WearOsStepMinute(Instant.ofEpochMilli(it.epochMillis), it.steps) }, more)
-        }
-
-    // A watch app from before ascent would answer the request with an error.
-    override suspend fun pullAscent(targetAddress: String?, targetName: String?, since: Instant): WearOsAscentPage? =
-        pull(targetAddress, targetName, WearLinkProtocol.CAP_ASCENT, { it.pullAscent(since.toEpochMilli(), WearLinkProtocol.MAX_ASCENT_MINUTES_PER_REQUEST) }) { items, more ->
-            WearOsAscentPage(items.map { WearOsAscentMinute(Instant.ofEpochMilli(it.epochMillis), it.decimetres / 10.0) }, more)
-        }
-
-    // A watch app from before HRV, or one without the raw PPG sensor, would answer with an error.
-    override suspend fun pullHrv(targetAddress: String?, targetName: String?, since: Instant): WearOsHrvPage? =
-        pull(targetAddress, targetName, WearLinkProtocol.CAP_HRV, { it.pullHrv(since.toEpochMilli(), WearLinkProtocol.MAX_HRV_WINDOWS_PER_REQUEST) }) { items, more ->
-            WearOsHrvPage(items.map { WearOsHrvWindow(Instant.ofEpochMilli(it.epochMillis), it.rmssdMillis, it.beats) }, more)
-        }
-
-    override suspend fun pullRespiratory(targetAddress: String?, targetName: String?, since: Instant): WearOsRespiratoryPage? =
-        pull(targetAddress, targetName, WearLinkProtocol.CAP_RESPIRATORY_RATE, { it.pullRespiratory(since.toEpochMilli(), WearLinkProtocol.MAX_WINDOWS_PER_REQUEST) }) { items, more ->
-            WearOsRespiratoryPage(items.map { WearOsRespiratoryWindow(Instant.ofEpochMilli(it.epochMillis), it.breathsPerMinute, it.routes) }, more)
-        }
-
-    override suspend fun pullSpo2(targetAddress: String?, targetName: String?, since: Instant): WearOsSpo2Page? =
-        pull(targetAddress, targetName, WearLinkProtocol.CAP_SPO2, { it.pullSpo2(since.toEpochMilli(), WearLinkProtocol.MAX_WINDOWS_PER_REQUEST) }) { items, more ->
-            WearOsSpo2Page(items.map { WearOsSpo2Measurement(Instant.ofEpochMilli(it.epochMillis), it.percent) }, more)
-        }
-
-    override suspend fun pullSkin(targetAddress: String?, targetName: String?, since: Instant): WearOsSkinPage? =
-        pull(targetAddress, targetName, WearLinkProtocol.CAP_SKIN_TEMPERATURE, { it.pullSkin(since.toEpochMilli(), WearLinkProtocol.MAX_SKIN_MINUTES_PER_REQUEST) }) { items, more ->
-            WearOsSkinPage(items.map { WearOsSkinMinute(Instant.ofEpochMilli(it.epochMillis), it.skinCelsius) }, more)
-        }
+    override suspend fun <T : Any> pullSeries(
+        targetAddress: String?,
+        targetName: String?,
+        series: WearSeries<T>,
+        cursor: String,
+    ): WearOsSeriesPage<T>? = onIo { owner ->
+        val match = bondedWatchOrNull(targetAddress, targetName) ?: return@onIo null
+        // A series the watch does not record costs no request: its hello said so.
+        val outcome = exchange(owner, match, targetAddress, PULL_TIMEOUT_MS, capability = series.key, ask = { it.pullSince(series.key, cursor, WearLinkSince.MAX_LIMIT) })
+            ?: return@onIo WearOsSeriesPage(emptyList(), cursor, hasMore = false)
+        val page = unwrap(outcome)
+        WearOsSeriesPage(page.lines.mapNotNull(series.parse), page.cursor, page.more)
+    }
 
     override suspend fun pullWorkouts(targetAddress: String?, targetName: String?, since: Instant): WearOsWorkoutPage? =
         pull(targetAddress, targetName, WearLinkProtocol.CAP_WORKOUTS, { it.pullWorkouts(since.toEpochMilli(), WearLinkProtocol.MAX_WORKOUTS_PER_REQUEST) }) { items, more ->

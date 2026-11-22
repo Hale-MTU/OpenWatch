@@ -2,6 +2,7 @@ package tech.mmarca.openwatch.devices.wearos
 
 import java.time.Instant
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.mmarca.openwatch.data.repository.FakeDeviceStateDao
@@ -43,10 +44,25 @@ class WearOsSyncCursorStoreTest {
     fun `clearing a watch forgets every cursor it had`() {
         store.setStepsCursor("w1", Instant.ofEpochMilli(1_000L))
         store.setSkinNightMedians("w1", listOf(33.0))
+        store.setSeriesCursor("w1", "hv", "0123456789abcdef.12")
 
         store.clear("w1")
 
         assertEquals(Instant.EPOCH, store.stepsCursor("w1"))
+        assertNull(store.seriesCursor("w1", "hv"))
         assertTrue(dao.rows.isEmpty())
+    }
+
+    @Test
+    fun `a series cursor is kept as the watch gave it, per watch and series`() {
+        assertNull(store.seriesCursor("w1", "hr"))
+
+        store.setSeriesCursor("w1", "hr", "0123456789abcdef.12")
+        store.setSeriesCursor("w2", "hr", "fedcba9876543210.3")
+
+        assertEquals("0123456789abcdef.12", store.seriesCursor("w1", "hr"))
+        assertNull(store.seriesCursor("w1", "hv"))
+        // The persisted shape: one device_state row per series, its key the series' own.
+        assertEquals("0123456789abcdef.12", dao.rows.getValue("w1" to "series_cursor_hr").value)
     }
 }

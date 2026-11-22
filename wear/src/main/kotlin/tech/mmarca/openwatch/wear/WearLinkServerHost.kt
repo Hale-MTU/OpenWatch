@@ -13,6 +13,7 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 import tech.mmarca.openwatch.wearlink.WearLinkWorkout
 import tech.mmarca.openwatch.wearlink.WearLinkRequestHandler
 import tech.mmarca.openwatch.wearlink.WearLinkServer
+import tech.mmarca.openwatch.wearlink.WearLinkSince
 
 /**
  * Hosts the RFCOMM listener and runs `WearLinkServer` for every phone that
@@ -149,17 +150,16 @@ class WearLinkServerHost(
             remove("wr")
         }
 
-        override fun heartRateSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.HeartRateSample> =
-            page(WearMetrics.HEART_RATE, sinceEpochMillis, limit)
-
-        override fun sleepMinutesSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.SleepMinute> =
-            page(WearMetrics.SLEEP_MINUTES, sinceEpochMillis, limit)
-
-        override fun stepsSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.StepMinute> =
-            page(WearMetrics.STEPS, sinceEpochMillis, limit)
-
-        override fun ascentSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.AscentMinute> =
-            page(WearMetrics.ASCENT, sinceEpochMillis, limit)
+        /** A series the watch announces, answered by its store's sequence numbers. */
+        override fun seriesSince(key: String, cursor: String, limit: Int): WearLinkSince.Page? {
+            val metric = WearMetrics.SERIES.firstOrNull { it.key == key }?.takeIf { key in capabilities() } ?: return null
+            val after = when (val position = WearLinkSince.position(cursor, store.storeId)) {
+                is WearLinkSince.Position.AfterSeq -> position.seq
+                is WearLinkSince.Position.AfterTime -> store.seqBeforeNewerThan(metric, position.epochMillis)
+            }
+            val changes = store.changes(metric, after, limit)
+            return WearLinkSince.Page(changes.lines, changes.more, WearLinkSince.cursor(store.storeId, changes.lastSeq))
+        }
 
         override fun phoneActive(epochMillis: Long) = onPhoneActive(epochMillis)
 
@@ -169,23 +169,8 @@ class WearLinkServerHost(
 
         override fun setPreference(key: String, value: String): Boolean = setPreference.invoke(key, value)
 
-        override fun respiratorySince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.RespiratoryWindow> =
-            page(WearMetrics.RESPIRATORY_RATE, sinceEpochMillis, limit)
-
-        override fun spo2Since(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.Spo2Measurement> =
-            page(WearMetrics.SPO2, sinceEpochMillis, limit)
-
-        override fun skinSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.SkinMinute> =
-            page(WearMetrics.SKIN_TEMPERATURE, sinceEpochMillis, limit)
-
-        override fun hrvSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.HrvWindow> =
-            page(WearMetrics.HRV, sinceEpochMillis, limit)
-
         override fun liveHeartRate(seconds: Int, emit: (WearLinkProtocol.HeartRateSample) -> Unit): Int =
             live.window(seconds, emit)
-
-        private fun <T> page(metric: WearMetric<T>, sinceEpochMillis: Long, limit: Int): Page<T> =
-            store.page(metric, sinceEpochMillis, limit)
     }
 
     private companion object {

@@ -49,16 +49,12 @@ interface WearLinkRequestHandler {
 
     fun capabilities(): Set<String>
 
-    fun heartRateSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.HeartRateSample>
-
-    fun sleepMinutesSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.SleepMinute>
-
-    fun stepsSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.StepMinute>
-
-    fun ascentSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.AscentMinute>
-
-    /** The night-time HRV windows newer than [sinceEpochMillis], oldest first. Only called when the watch advertised [WearLinkProtocol.CAP_HRV]. */
-    fun hrvSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.HrvWindow>
+    /**
+     * Up to [limit] stored lines of the series [key] after [cursor], in the order they were
+     * written, and the cursor that follows them ([WearLinkSince]). Null when the watch does not
+     * serve [key], which the phone sees as `ERROR bad_request`.
+     */
+    fun seriesSince(key: String, cursor: String, limit: Int): WearLinkSince.Page?
 
     /** The wearer used the phone at [epochMillis]. Only called when the watch advertised [WearLinkProtocol.CAP_PHONE_ACTIVE]. */
     fun phoneActive(epochMillis: Long)
@@ -74,15 +70,6 @@ interface WearLinkRequestHandler {
 
     /** Applies a setting the phone pushed. False for a key or value the watch does not take, which the phone sees as `ERROR bad_request`. */
     fun setPreference(key: String, value: String): Boolean
-
-    /** The night windows' breathing rates newer than [sinceEpochMillis]. Only called when the watch advertised [WearLinkProtocol.CAP_RESPIRATORY_RATE]. */
-    fun respiratorySince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.RespiratoryWindow>
-
-    /** The skin temperature minutes newer than [sinceEpochMillis]. Only called when the watch advertised [WearLinkProtocol.CAP_SKIN_TEMPERATURE]. */
-    /** The SpO2 spot measurements newer than [sinceEpochMillis]. Only called when the watch advertised [WearLinkProtocol.CAP_SPO2]. */
-    fun spo2Since(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.Spo2Measurement>
-
-    fun skinSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.SkinMinute>
 
     /**
      * Blocks for up to [seconds], handing each heart rate reading to [emit]

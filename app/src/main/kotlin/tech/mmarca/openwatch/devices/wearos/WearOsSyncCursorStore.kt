@@ -9,13 +9,15 @@ import javax.inject.Singleton
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.data.repository.DeviceStateStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
 /**
  * How far each Wear OS watch has been pulled, per device id: the time of the
  * newest heart rate sample, step minute and floor minute pulled, and the
- * time of the newest sleep minute an estimate was made from. The next sync asks the
- * watch for what is newer. A re-pull is harmless: the imports' record ids
- * are deterministic, so an upsert follows.
+ * time of the newest sleep minute an estimate was made from. A series pulled
+ * by the watch's sequence numbers keeps the watch's cursor too
+ * ([seriesCursor]), and its time cursor hands over to it once. A re-pull is
+ * harmless where the imports' record ids are deterministic, so an upsert follows.
  *
  * Kept in `device_state`, so the cursors go with their device. Until 2026-11 they were in
  * `wearos_sync_cursors`, adopted once for the devices still registered.
@@ -81,8 +83,17 @@ class WearOsSyncCursorStore(private val state: DeviceStateStore) {
 
     fun setWorkoutCursor(deviceId: String, at: Instant) = setCursor(deviceId, WORKOUT, at)
 
+    /**
+     * The cursor the watch's last `SINCE` reply for the series [seriesKey] ended with, kept as it
+     * came; null before the first, when the series' time cursor hands over (`WearLinkSince.afterTime`).
+     */
+    fun seriesCursor(deviceId: String, seriesKey: String): String? = state.get(deviceId, SERIES_PREFIX + seriesKey)
+
+    fun setSeriesCursor(deviceId: String, seriesKey: String, cursor: String) = state.put(deviceId, SERIES_PREFIX + seriesKey, cursor)
+
     fun clear(deviceId: String) {
         Keys.forEach { state.put(deviceId, it, null) }
+        SeriesKeys.forEach { state.put(deviceId, SERIES_PREFIX + it, null) }
     }
 
     private fun cursor(deviceId: String, key: String): Instant =
@@ -118,5 +129,12 @@ class WearOsSyncCursorStore(private val state: DeviceStateStore) {
         const val WORKOUT = "workout_cursor"
         const val SKIN_MEDIANS = "skin_medians"
         val Keys = listOf(HR, SLEEP, STEPS, ASCENT, HRV, RESPIRATORY, SPO2, SKIN, WORKOUT, SKIN_MEDIANS)
+
+        /** `series_cursor_<key>`: one per series the watch serves by `SINCE`, whichever this build pulls. */
+        const val SERIES_PREFIX = "series_cursor_"
+        val SeriesKeys = listOf(
+            WearLinkProtocol.CAP_HEART_RATE, WearLinkProtocol.CAP_SLEEP_MINUTES, WearLinkProtocol.CAP_STEPS, WearLinkProtocol.CAP_ASCENT,
+            WearLinkProtocol.CAP_HRV, WearLinkProtocol.CAP_RESPIRATORY_RATE, WearLinkProtocol.CAP_SPO2, WearLinkProtocol.CAP_SKIN_TEMPERATURE,
+        )
     }
 }

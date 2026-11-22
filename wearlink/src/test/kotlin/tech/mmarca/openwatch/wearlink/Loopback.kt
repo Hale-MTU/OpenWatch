@@ -76,49 +76,52 @@ class MemoryTrustStore : WearLinkTrustStore {
     }
 }
 
+/**
+ * A watch in memory. Its series rows are kept as the watch's store keeps them: one per key
+ * and time, numbered on every insert and every replace, and `SINCE` answered by those numbers.
+ */
 class MemoryHandler(
-    var heartRate: List<WearLinkProtocol.HeartRateSample> = emptyList(),
-    var minutes: List<WearLinkProtocol.SleepMinute> = emptyList(),
-    var steps: List<WearLinkProtocol.StepMinute> = emptyList(),
-    var ascent: List<WearLinkProtocol.AscentMinute> = emptyList(),
-    var hrv: List<WearLinkProtocol.HrvWindow> = emptyList(),
     val phoneActive: MutableList<Long> = mutableListOf(),
-    var respiratory: List<WearLinkProtocol.RespiratoryWindow> = emptyList(),
-    var skin: List<WearLinkProtocol.SkinMinute> = emptyList(),
-    var spo2: List<WearLinkProtocol.Spo2Measurement> = emptyList(),
     var workouts: List<WearLinkWorkout> = emptyList(),
     val preferences: MutableMap<String, String> = linkedMapOf(WearLinkProtocol.Preferences.HEART_RATE_DAY to "10"),
     /** What one `HR_LIVE` window hands out; empty is a watch off the wrist. */
     var live: List<WearLinkProtocol.HeartRateSample> = emptyList(),
     var name: String = "Galaxy Watch8 (89FZ)",
+    var announced: Set<String> = setOf(
+        WearLinkProtocol.CAP_HEART_RATE, WearLinkProtocol.CAP_SLEEP_MINUTES, WearLinkProtocol.CAP_STEPS, WearLinkProtocol.CAP_ASCENT,
+        WearLinkProtocol.CAP_HRV,
+    ),
+    var storeId: String = "0123456789abcdef",
 ) : WearLinkRequestHandler {
+    private class Row(val key: String, val time: Long, val line: String, val seq: Long)
+
+    private val rows = ArrayList<Row>()
+    private var seq = 0L
+
+    /** Stores [line] at [time] under [key]; a row at the same time is replaced and numbered again. */
+    @Synchronized
+    fun put(key: String, time: Long, line: String) {
+        rows.removeAll { it.key == key && it.time == time }
+        rows += Row(key, time, line, ++seq)
+    }
+
     override fun localName(): String = name
-    override fun capabilities(): Set<String> =
-        setOf(WearLinkProtocol.CAP_HEART_RATE, WearLinkProtocol.CAP_SLEEP_MINUTES, WearLinkProtocol.CAP_STEPS, WearLinkProtocol.CAP_ASCENT, WearLinkProtocol.CAP_HRV)
-    override fun heartRateSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.HeartRateSample> {
-        val newer = heartRate.filter { it.epochMillis > sinceEpochMillis }
-        return Page(newer.take(limit), newer.size > limit)
+    override fun capabilities(): Set<String> = announced
+
+    @Synchronized
+    override fun seriesSince(key: String, cursor: String, limit: Int): WearLinkSince.Page? {
+        if (key !in announced) return null
+        val mine = rows.filter { it.key == key }.sortedBy { it.seq }
+        val after = when (val position = WearLinkSince.position(cursor, storeId)) {
+            is WearLinkSince.Position.AfterSeq -> position.seq
+            is WearLinkSince.Position.AfterTime ->
+                mine.firstOrNull { it.time > position.epochMillis }?.let { it.seq - 1 } ?: mine.lastOrNull()?.seq ?: 0L
+        }
+        val newer = mine.filter { it.seq > after }
+        val taken = newer.take(limit)
+        return WearLinkSince.Page(taken.map { it.line }, newer.size > limit, WearLinkSince.cursor(storeId, taken.lastOrNull()?.seq ?: after))
     }
-    override fun sleepMinutesSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.SleepMinute> {
-        val newer = minutes.filter { it.epochMillis > sinceEpochMillis }
-        return Page(newer.take(limit), newer.size > limit)
-    }
-    override fun stepsSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.StepMinute> {
-        val newer = steps.filter { it.epochMillis > sinceEpochMillis }
-        return Page(newer.take(limit), newer.size > limit)
-    }
-    override fun respiratorySince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.RespiratoryWindow> {
-        val newer = respiratory.filter { it.epochMillis > sinceEpochMillis }
-        return Page(newer.take(limit), newer.size > limit)
-    }
-    override fun spo2Since(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.Spo2Measurement> {
-        val newer = spo2.filter { it.epochMillis > sinceEpochMillis }
-        return Page(newer.take(limit), newer.size > limit)
-    }
-    override fun skinSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.SkinMinute> {
-        val newer = skin.filter { it.epochMillis > sinceEpochMillis }
-        return Page(newer.take(limit), newer.size > limit)
-    }
+
     override fun heldPreferences(): Map<String, String> = preferences.toMap()
     override fun setPreference(key: String, value: String): Boolean {
         if (key !in preferences) return false
@@ -131,14 +134,6 @@ class MemoryHandler(
     }
     override fun phoneActive(epochMillis: Long) {
         phoneActive += epochMillis
-    }
-    override fun hrvSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.HrvWindow> {
-        val newer = hrv.filter { it.epochMillis > sinceEpochMillis }
-        return Page(newer.take(limit), newer.size > limit)
-    }
-    override fun ascentSince(sinceEpochMillis: Long, limit: Int): Page<WearLinkProtocol.AscentMinute> {
-        val newer = ascent.filter { it.epochMillis > sinceEpochMillis }
-        return Page(newer.take(limit), newer.size > limit)
     }
     override fun liveHeartRate(seconds: Int, emit: (WearLinkProtocol.HeartRateSample) -> Unit): Int {
         live.forEach(emit)

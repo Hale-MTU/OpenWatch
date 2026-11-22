@@ -30,7 +30,7 @@ internal class WearOsZoneSync(
     private val zone: () -> ZoneId,
 ) {
 
-    suspend fun sync(device: BleSensorDevice, retry: WearOsNightSeriesSync.Retry) {
+    suspend fun sync(device: BleSensorDevice, retry: WearOsLinkRetry) {
         val basis = try {
             val now = clock()
             val observed = healthConnect.readMaxHeartRate(now.minus(Duration.ofDays(observedMaxHeartRateLookbackDays)), now)?.toInt()
