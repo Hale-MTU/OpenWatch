@@ -1,12 +1,15 @@
 package tech.mmarca.openwatch.features.watches
 
 import android.content.Context
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.core.content.edit
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.junit.Rule
 import org.junit.Test
 import tech.mmarca.openwatch.R
@@ -81,7 +84,19 @@ class WatchNotificationAppsScreenTest {
             dispatchers = DefaultDispatcherProvider,
         )
         composeRule.setContent {
-            OpenWatchTheme { WatchNotificationAppsScreen(viewModel = viewModel) }
+            val state by viewModel.uiState.collectAsStateWithLifecycle()
+            // What the route does when the screen first appears.
+            LaunchedEffect(Unit) { viewModel.loadApps() }
+            OpenWatchTheme {
+                WatchNotificationAppsScreen(
+                    state = state,
+                    onEnabledChange = viewModel::setEnabled,
+                    onOpenAccessSettings = viewModel::openAccessSettings,
+                    onOnlyAllowedChange = viewModel::setOnlyAllowed,
+                    onHideSensitiveChange = viewModel::setHideSensitiveContent,
+                    onSendsChange = viewModel::setSends,
+                )
+            }
         }
     }
 

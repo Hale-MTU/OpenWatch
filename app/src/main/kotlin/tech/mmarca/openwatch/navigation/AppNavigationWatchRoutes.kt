@@ -6,12 +6,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import tech.mmarca.openwatch.features.watches.WatchAlarmsScreen
-import tech.mmarca.openwatch.features.watches.WatchDataScreen
+import tech.mmarca.openwatch.features.watches.WatchAlarmsRoute
+import tech.mmarca.openwatch.features.watches.WatchDataRoute
 import tech.mmarca.openwatch.features.watches.WatchDeviceScreen
-import tech.mmarca.openwatch.features.watches.WatchNotificationAppsScreen
-import tech.mmarca.openwatch.features.watches.WatchSendPointScreen
-import tech.mmarca.openwatch.features.watches.WatchSettingsScreen
+import tech.mmarca.openwatch.features.watches.WatchNotificationAppsRoute
+import tech.mmarca.openwatch.features.watches.WatchSendPointRoute
+import tech.mmarca.openwatch.features.watches.WatchSettingsRoute
 
 /** The watch-facing destinations. Plain pushed screens. */
 internal fun NavGraphBuilder.watchRoutes(
@@ -50,15 +50,15 @@ internal fun NavGraphBuilder.watchRoutes(
     }
 
     composable(Screen.WatchData.route) {
-        WatchDataScreen(viewModel = hiltViewModel())
+        WatchDataRoute()
     }
 
     composable(Screen.WatchNotifications.route) {
-        WatchNotificationAppsScreen(viewModel = hiltViewModel())
+        WatchNotificationAppsRoute()
     }
 
     composable(Screen.WatchAlarms.route) {
-        WatchAlarmsScreen(viewModel = hiltViewModel())
+        WatchAlarmsRoute()
     }
 
     // Strings, so an absent position stays absent: a number argument cannot be null.
@@ -78,8 +78,7 @@ internal fun NavGraphBuilder.watchRoutes(
             }
         },
     ) {
-        WatchSendPointScreen(
-            viewModel = hiltViewModel(),
+        WatchSendPointRoute(
             onOpenWatches = {
                 navController.navigate(Screen.Home.route) { launchSingleTop = true }
             },
@@ -89,8 +88,7 @@ internal fun NavGraphBuilder.watchRoutes(
     // A row that leads deeper pushes the same route with another screen id;
     // the screens share one held link.
     composable(Screen.WatchSettings.route) {
-        WatchSettingsScreen(
-            viewModel = hiltViewModel(),
+        WatchSettingsRoute(
             onOpenSubscreen = { deviceId, screenId ->
                 navController.navigate(Screen.WatchSettings.createRoute(deviceId, screenId))
             },

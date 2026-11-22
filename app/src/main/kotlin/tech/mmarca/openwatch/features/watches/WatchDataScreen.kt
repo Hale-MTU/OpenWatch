@@ -15,15 +15,28 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Duration
+import java.time.Instant
 import kotlin.math.roundToLong
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.domain.model.GarminWellnessMetric
 import tech.mmarca.openwatch.ui.components.DeviceValueRow
 import tech.mmarca.openwatch.ui.components.ScreenErrorContent
 import tech.mmarca.openwatch.ui.components.SectionHeader
+import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
+
+/** The watch-data destination: the only place that knows the ViewModel; [WatchDataScreen] draws. */
+@Composable
+fun WatchDataRoute(viewModel: WatchDataViewModel = hiltViewModel()) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    WatchDataScreen(state = state)
+}
 
 /**
  * Everything the watch measures that Health Connect has no type for.
@@ -31,21 +44,22 @@ import tech.mmarca.openwatch.ui.theme.Spacing
  * A metric never sent is absent; what is missing is named once at the foot.
  */
 @Composable
-fun WatchDataScreen(viewModel: WatchDataViewModel) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-
+fun WatchDataScreen(
+    state: WatchDataUiState,
+    modifier: Modifier = Modifier,
+) {
     when {
         state.isLoading -> Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
             CircularProgressIndicator()
         }
 
-        state.error != null -> ScreenErrorContent(screenError = state.error, modifier = Modifier.padding(Spacing.lg))
+        state.error != null -> ScreenErrorContent(screenError = state.error, modifier = modifier.padding(Spacing.lg))
 
         state.metrics.isEmpty -> Box(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
                 .padding(Spacing.xxl),
             contentAlignment = Alignment.Center,
@@ -58,7 +72,55 @@ fun WatchDataScreen(viewModel: WatchDataViewModel) {
             )
         }
 
-        else -> WatchDataContent(metrics = state.metrics)
+        else -> WatchDataContent(metrics = state.metrics, modifier = modifier)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WatchDataScreenLoadingPreview() {
+    OpenWatchTheme {
+        WatchDataScreen(state = WatchDataUiState())
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WatchDataScreenErrorPreview() {
+    OpenWatchTheme {
+        WatchDataScreen(
+            state = WatchDataUiState(isLoading = false, error = ScreenError.Text(R.string.screen_error_generic)),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WatchDataScreenMetricsPreview() {
+    val time = Instant.parse("2026-11-22T09:00:00Z")
+    fun reading(value: Long) = WatchMetricReading(value = value, time = time)
+    OpenWatchTheme {
+        WatchDataScreen(
+            state = WatchDataUiState(
+                isLoading = false,
+                metrics = WatchMetrics(
+                    latest = mapOf(
+                        GarminWellnessMetric.STRESS to reading(28),
+                        GarminWellnessMetric.BODY_ENERGY to reading(64),
+                        GarminWellnessMetric.MODERATE_MINUTES to reading(20),
+                        GarminWellnessMetric.VIGOROUS_MINUTES to reading(10),
+                        GarminWellnessMetric.SLEEP_SCORE to reading(81),
+                        GarminWellnessMetric.SLEEP_AWAKE_SECONDS to reading(1_380),
+                        GarminWellnessMetric.SLEEP_AWAKENINGS to reading(3),
+                        GarminWellnessMetric.SLEEP_NEED_MINUTES to reading(495),
+                        GarminWellnessMetric.SLEEP_NEED_NORMAL_MINUTES to reading(465),
+                    ),
+                    stressToday = listOf(reading(22), reading(35), reading(28)),
+                    bodyEnergyToday = listOf(reading(88), reading(72), reading(64)),
+                    intensityMinutesWeek = 95,
+                ),
+            ),
+        )
     }
 }
 
@@ -77,9 +139,9 @@ private val ExpectedMetrics = listOf(
 )
 
 @Composable
-private fun WatchDataContent(metrics: WatchMetrics) {
+private fun WatchDataContent(metrics: WatchMetrics, modifier: Modifier = Modifier) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(Spacing.lg),
         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
     ) {

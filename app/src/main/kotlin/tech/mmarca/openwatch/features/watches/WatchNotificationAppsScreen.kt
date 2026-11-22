@@ -32,7 +32,9 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -41,14 +43,16 @@ import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchCardStyle
 import tech.mmarca.openwatch.ui.components.ScreenErrorContent
 import tech.mmarca.openwatch.ui.components.SwitchRow
+import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
- * Watch notification forwarding: the master switch, the two gates and the
- * per-app blocklist. A blocklist, so a new messaging app is not silent.
+ * The watch-notifications destination: the only place that knows the ViewModel. It loads the
+ * app list, re-reads access on resume, and owns the disclosure and the access-settings launch;
+ * [WatchNotificationAppsScreen] draws.
  */
 @Composable
-fun WatchNotificationAppsScreen(viewModel: WatchNotificationAppsViewModel) {
+fun WatchNotificationAppsRoute(viewModel: WatchNotificationAppsViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Resolving every app's label is a round trip per app, so it waits for this screen.
@@ -66,16 +70,40 @@ fun WatchNotificationAppsScreen(viewModel: WatchNotificationAppsViewModel) {
         )
     }
 
+    WatchNotificationAppsScreen(
+        state = state,
+        onEnabledChange = viewModel::setEnabled,
+        onOpenAccessSettings = viewModel::openAccessSettings,
+        onOnlyAllowedChange = viewModel::setOnlyAllowed,
+        onHideSensitiveChange = viewModel::setHideSensitiveContent,
+        onSendsChange = viewModel::setSends,
+    )
+}
+
+/**
+ * Watch notification forwarding: the master switch, the two gates and the
+ * per-app blocklist. A blocklist, so a new messaging app is not silent.
+ */
+@Composable
+fun WatchNotificationAppsScreen(
+    state: WatchNotificationsUiState,
+    onEnabledChange: (Boolean) -> Unit,
+    onOpenAccessSettings: () -> Unit,
+    onOnlyAllowedChange: (Boolean) -> Unit,
+    onHideSensitiveChange: (Boolean) -> Unit,
+    onSendsChange: (packageName: String, sends: Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(Spacing.lg),
         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
     ) {
         item(key = "master") {
             MasterSwitchCard(
                 state = state,
-                onToggle = viewModel::setEnabled,
-                onOpenAccessSettings = viewModel::openAccessSettings,
+                onToggle = onEnabledChange,
+                onOpenAccessSettings = onOpenAccessSettings,
             )
         }
 
@@ -83,8 +111,8 @@ fun WatchNotificationAppsScreen(viewModel: WatchNotificationAppsViewModel) {
             item(key = "options") {
                 ForwardingOptionsCard(
                     state = state,
-                    onOnlyAllowed = viewModel::setOnlyAllowed,
-                    onHideSensitive = viewModel::setHideSensitiveContent,
+                    onOnlyAllowed = onOnlyAllowedChange,
+                    onHideSensitive = onHideSensitiveChange,
                 )
             }
             item(key = "intro") {
@@ -126,11 +154,56 @@ fun WatchNotificationAppsScreen(viewModel: WatchNotificationAppsViewModel) {
                     AppRow(
                         app = app,
                         // The mode decides which list the switch writes.
-                        onSendsChanged = { sends -> viewModel.setSends(app.packageName, sends) },
+                        onSendsChanged = { sends -> onSendsChange(app.packageName, sends) },
                     )
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WatchNotificationAppsScreenGrantedPreview() {
+    OpenWatchTheme {
+        WatchNotificationAppsScreen(
+            state = WatchNotificationsUiState(
+                enabled = true,
+                accessGranted = true,
+                disclosureAccepted = true,
+                apps = listOf(
+                    WatchNotificationApp(packageName = "org.example.messages", label = "Messages", sends = true),
+                    WatchNotificationApp(packageName = "org.example.calendar", label = "Calendar", sends = true),
+                    WatchNotificationApp(packageName = "org.example.news", label = "News", sends = false),
+                ),
+                loading = false,
+            ),
+            onEnabledChange = {},
+            onOpenAccessSettings = {},
+            onOnlyAllowedChange = {},
+            onHideSensitiveChange = {},
+            onSendsChange = { _, _ -> },
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WatchNotificationAppsScreenAccessMissingPreview() {
+    OpenWatchTheme {
+        WatchNotificationAppsScreen(
+            state = WatchNotificationsUiState(
+                enabled = true,
+                accessGranted = false,
+                disclosureAccepted = true,
+                loading = false,
+            ),
+            onEnabledChange = {},
+            onOpenAccessSettings = {},
+            onOnlyAllowedChange = {},
+            onHideSensitiveChange = {},
+            onSendsChange = { _, _ -> },
+        )
     }
 }
 

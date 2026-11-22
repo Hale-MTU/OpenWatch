@@ -42,7 +42,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.DayOfWeek
 import java.time.LocalTime
@@ -62,22 +64,50 @@ import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchOutlinedButton
 import tech.mmarca.openwatch.ui.components.OptionDropdown
 import tech.mmarca.openwatch.ui.components.SwitchRow
+import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /** The alarm being edited: a new one, or the one at [index]. */
-private data class AlarmEdit(val index: Int?, val alarm: GarminAlarm)
+data class AlarmEdit(val index: Int?, val alarm: GarminAlarm)
+
+/**
+ * The watch-alarms destination: the only place that knows the ViewModel. It holds which
+ * alarm the editor is open on; [WatchAlarmsScreen] draws.
+ */
+@Composable
+fun WatchAlarmsRoute(viewModel: WatchAlarmsViewModel = hiltViewModel()) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    var editing by remember { mutableStateOf<AlarmEdit?>(null) }
+
+    WatchAlarmsScreen(
+        state = state,
+        editing = editing,
+        onEditingChange = { editing = it },
+        onToggleAlarm = viewModel::setEnabled,
+        onSaveAlarm = viewModel::save,
+        onDeleteAlarm = viewModel::delete,
+        onSend = viewModel::send,
+    )
+}
 
 /**
  * The alarms of a watch with no settings tree. Edits stay on the phone until
  * the user taps Send, and a send replaces every alarm on the watch.
  */
 @Composable
-fun WatchAlarmsScreen(viewModel: WatchAlarmsViewModel) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-    var editing by remember { mutableStateOf<AlarmEdit?>(null) }
-
+fun WatchAlarmsScreen(
+    state: WatchAlarmsUiState,
+    /** The alarm the editor is open on; null keeps it closed. */
+    editing: AlarmEdit?,
+    onEditingChange: (AlarmEdit?) -> Unit,
+    onToggleAlarm: (index: Int, enabled: Boolean) -> Unit,
+    onSaveAlarm: (index: Int?, alarm: GarminAlarm) -> Unit,
+    onDeleteAlarm: (index: Int) -> Unit,
+    onSend: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(Spacing.lg),
@@ -99,13 +129,13 @@ fun WatchAlarmsScreen(viewModel: WatchAlarmsViewModel) {
             AlarmRow(
                 alarm = alarm,
                 enabled = !state.isSending,
-                onOpen = { editing = AlarmEdit(index, alarm) },
-                onToggle = { viewModel.setEnabled(index, it) },
+                onOpen = { onEditingChange(AlarmEdit(index, alarm)) },
+                onToggle = { onToggleAlarm(index, it) },
             )
         }
 
         OpenWatchOutlinedButton(
-            onClick = { editing = AlarmEdit(index = null, alarm = GarminAlarm(hour = 7, minute = 0)) },
+            onClick = { onEditingChange(AlarmEdit(index = null, alarm = GarminAlarm(hour = 7, minute = 0))) },
             enabled = state.canAdd,
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -126,7 +156,7 @@ fun WatchAlarmsScreen(viewModel: WatchAlarmsViewModel) {
         }
 
         OpenWatchButton(
-            onClick = viewModel::send,
+            onClick = onSend,
             enabled = state.canSend,
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -151,15 +181,40 @@ fun WatchAlarmsScreen(viewModel: WatchAlarmsViewModel) {
     editing?.let { edit ->
         AlarmEditorDialog(
             edit = edit,
-            onDismiss = { editing = null },
+            onDismiss = { onEditingChange(null) },
             onSave = { alarm ->
-                viewModel.save(edit.index, alarm)
-                editing = null
+                onSaveAlarm(edit.index, alarm)
+                onEditingChange(null)
             },
             onDelete = {
-                edit.index?.let(viewModel::delete)
-                editing = null
+                edit.index?.let(onDeleteAlarm)
+                onEditingChange(null)
             },
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WatchAlarmsScreenPreview() {
+    val alarms = listOf(
+        GarminAlarm(
+            hour = 7,
+            minute = 0,
+            days = DayOfWeek.entries.take(5).toSet(),
+            label = GarminAlarmLabel.WAKE_UP,
+        ),
+        GarminAlarm(hour = 9, minute = 30, enabled = false),
+    )
+    OpenWatchTheme {
+        WatchAlarmsScreen(
+            state = WatchAlarmsUiState(alarms = alarms, unsent = true),
+            editing = AlarmEdit(index = 0, alarm = alarms[0]),
+            onEditingChange = {},
+            onToggleAlarm = { _, _ -> },
+            onSaveAlarm = { _, _ -> },
+            onDeleteAlarm = {},
+            onSend = {},
         )
     }
 }

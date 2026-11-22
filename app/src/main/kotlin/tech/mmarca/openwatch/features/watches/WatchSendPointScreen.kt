@@ -30,19 +30,42 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.time.Instant
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.geo.GeoCoordinateError
 import tech.mmarca.openwatch.core.geo.GeoCoordinateParseResult
 import tech.mmarca.openwatch.devices.garmin.GarminSendFileResult
 import tech.mmarca.openwatch.devices.garmin.GarminSendStage
 import tech.mmarca.openwatch.devices.garmin.GarminUploadRefusal
+import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.ui.components.OpenWatchButton
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchTextButton
+import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
+
+/** The send-a-point destination: the only place that knows the ViewModel; [WatchSendPointScreen] draws. */
+@Composable
+fun WatchSendPointRoute(
+    onOpenWatches: () -> Unit,
+    viewModel: WatchSendPointViewModel = hiltViewModel(),
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    WatchSendPointScreen(
+        state = state,
+        onOpenWatches = onOpenWatches,
+        onSelectWatch = viewModel::selectWatch,
+        onNameChange = viewModel::updateName,
+        onCoordinatesChange = viewModel::updateCoordinates,
+        onSend = viewModel::send,
+    )
+}
 
 /**
  * Types or receives a position and sends it to the watch's saved locations.
@@ -51,13 +74,16 @@ import tech.mmarca.openwatch.ui.theme.Spacing
  */
 @Composable
 fun WatchSendPointScreen(
-    viewModel: WatchSendPointViewModel,
+    state: WatchSendPointUiState,
     onOpenWatches: () -> Unit,
+    onSelectWatch: (deviceId: String) -> Unit,
+    onNameChange: (String) -> Unit,
+    onCoordinatesChange: (String) -> Unit,
+    onSend: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(Spacing.lg),
@@ -66,19 +92,83 @@ fun WatchSendPointScreen(
         if (state.watches.isEmpty()) {
             NoWatchCard(onOpenWatches)
         } else {
-            SendPointForm(state, viewModel)
+            SendPointForm(
+                state = state,
+                onSelectWatch = onSelectWatch,
+                onNameChange = onNameChange,
+                onCoordinatesChange = onCoordinatesChange,
+                onSend = onSend,
+            )
         }
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-private fun SendPointForm(state: WatchSendPointUiState, viewModel: WatchSendPointViewModel) {
+private fun WatchSendPointScreenReadyPreview() {
+    OpenWatchTheme {
+        WatchSendPointScreen(
+            state = previewSendPointState(),
+            onOpenWatches = {},
+            onSelectWatch = {},
+            onNameChange = {},
+            onCoordinatesChange = {},
+            onSend = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WatchSendPointScreenSendingPreview() {
+    OpenWatchTheme {
+        WatchSendPointScreen(
+            state = previewSendPointState().copy(sendingStage = GarminSendStage.SENDING, isSending = true),
+            onOpenWatches = {},
+            onSelectWatch = {},
+            onNameChange = {},
+            onCoordinatesChange = {},
+            onSend = {},
+        )
+    }
+}
+
+/** One watch, a name and a position that reads. */
+private fun previewSendPointState(): WatchSendPointUiState {
+    val watch = BleSensorDevice(
+        id = "watch",
+        displayName = "Forerunner 265",
+        address = "00:11:22:33:44:55",
+        bluetoothName = null,
+        capabilities = emptySet(),
+        enabled = true,
+        wheelCircumferenceMm = null,
+        addedAt = Instant.parse("2026-11-01T09:00:00Z"),
+        kind = BleDeviceKind.WATCH,
+    )
+    return WatchSendPointUiState(
+        watches = listOf(watch),
+        selectedDeviceId = watch.id,
+        name = "Trailhead",
+        coordinates = "48.8584, 2.2945",
+        parsed = GeoCoordinateParseResult.Parsed(latitude = 48.8584, longitude = 2.2945),
+    )
+}
+
+@Composable
+private fun SendPointForm(
+    state: WatchSendPointUiState,
+    onSelectWatch: (String) -> Unit,
+    onNameChange: (String) -> Unit,
+    onCoordinatesChange: (String) -> Unit,
+    onSend: () -> Unit,
+) {
     OpenWatchCard {
         Column(
             modifier = Modifier.padding(Spacing.lg),
             verticalArrangement = Arrangement.spacedBy(Spacing.md),
         ) {
-            WatchChoice(state, onSelect = viewModel::selectWatch)
+            WatchChoice(state, onSelect = onSelectWatch)
 
             if (state.sharedUnreadable) {
                 Text(
@@ -90,7 +180,7 @@ private fun SendPointForm(state: WatchSendPointUiState, viewModel: WatchSendPoin
 
             OutlinedTextField(
                 value = state.name,
-                onValueChange = viewModel::updateName,
+                onValueChange = onNameChange,
                 enabled = !state.isSending,
                 singleLine = true,
                 label = { Text(stringResource(R.string.settings_watch_point_name_label)) },
@@ -101,7 +191,7 @@ private fun SendPointForm(state: WatchSendPointUiState, viewModel: WatchSendPoin
             // Text, not Decimal: the field takes letters, a minus and a degree sign.
             OutlinedTextField(
                 value = state.coordinates,
-                onValueChange = viewModel::updateCoordinates,
+                onValueChange = onCoordinatesChange,
                 enabled = !state.isSending,
                 singleLine = true,
                 isError = state.parsed is GeoCoordinateParseResult.Invalid,
@@ -115,7 +205,7 @@ private fun SendPointForm(state: WatchSendPointUiState, viewModel: WatchSendPoin
             )
 
             OpenWatchButton(
-                onClick = viewModel::send,
+                onClick = onSend,
                 enabled = state.canSend,
                 modifier = Modifier.fillMaxWidth(),
             ) {

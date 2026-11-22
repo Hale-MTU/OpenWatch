@@ -45,28 +45,34 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlin.time.Duration
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.resolve
 import tech.mmarca.openwatch.devices.garmin.GarminEntryKind
 import tech.mmarca.openwatch.devices.garmin.GarminSettingsEntry
+import tech.mmarca.openwatch.devices.garmin.GarminSettingsOption
+import tech.mmarca.openwatch.devices.garmin.GarminSettingsScreen
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
+import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
- * One screen of the watch's own settings, rendered from what the watch
- * sent. The watch's title renders as a heading inside the content, and
- * change results show as inline notices beside the rows they changed.
+ * The watch-settings destination: the only place that knows the ViewModel. It closes the
+ * screen after a delete, re-reads on resume and names the watch a subscreen opens on;
+ * [WatchSettingsScreen] draws.
  */
 @Composable
-fun WatchSettingsScreen(
-    viewModel: WatchSettingsViewModel,
+fun WatchSettingsRoute(
     onOpenSubscreen: (deviceId: String, screenId: Int) -> Unit,
     onClose: () -> Unit,
+    viewModel: WatchSettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -82,22 +88,52 @@ fun WatchSettingsScreen(
         viewModel.onResumed()
     }
 
+    WatchSettingsScreen(
+        state = state,
+        onRetry = viewModel::refresh,
+        onOpenSubscreen = { subId -> onOpenSubscreen(viewModel.deviceId, subId) },
+        onToggle = viewModel::setSwitch,
+        onChooseOption = viewModel::chooseOption,
+        onPickTime = viewModel::setTime,
+        onRunAction = viewModel::runAction,
+    )
+}
+
+/**
+ * One screen of the watch's own settings, rendered from what the watch
+ * sent. The watch's title renders as a heading inside the content, and
+ * change results show as inline notices beside the rows they changed.
+ */
+@Composable
+fun WatchSettingsScreen(
+    state: WatchSettingsUiState,
+    onRetry: () -> Unit,
+    onOpenSubscreen: (screenId: Int) -> Unit,
+    onToggle: (entryId: Int, value: Boolean) -> Unit,
+    onChooseOption: (entryId: Int, index: Int) -> Unit,
+    onPickTime: (entryId: Int, hour: Int, minute: Int) -> Unit,
+    onRunAction: (entryId: Int) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     when {
         state.isLoading -> Message(
             text = stringResource(R.string.settings_watch_settings_reading),
             busy = true,
+            modifier = modifier,
         )
 
         state.error != null -> Message(
             text = state.error.resolve() ?: stringResource(R.string.settings_watch_settings_unreachable),
             retryLabel = stringResource(R.string.settings_watch_settings_retry),
-            onRetry = viewModel::refresh,
+            onRetry = onRetry,
+            modifier = modifier,
         )
 
         state.isEmpty -> Message(
             text = stringResource(R.string.settings_watch_settings_empty),
             retryLabel = stringResource(R.string.settings_watch_settings_retry),
-            onRetry = viewModel::refresh,
+            onRetry = onRetry,
+            modifier = modifier,
         )
 
         else -> {
@@ -105,7 +141,7 @@ fun WatchSettingsScreen(
             // Blank rows are dropped: an alarm list reserves one per slot.
             val rows = screen.entries.filterNot { it.isBlank }
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = modifier.fillMaxSize(),
                 contentPadding = PaddingValues(
                     top = Spacing.sm,
                     bottom = Spacing.xxl,
@@ -122,19 +158,82 @@ fun WatchSettingsScreen(
                     EntryRow(
                         entry = entry,
                         busy = entry.id in state.busyEntryIds,
-                        onToggle = { value -> viewModel.setSwitch(entry.id, value) },
-                        onOpenSubscreen = { subId ->
-                            onOpenSubscreen(viewModel.deviceId, subId)
-                        },
-                        onChooseOption = { index -> viewModel.chooseOption(entry.id, index) },
+                        onToggle = { value -> onToggle(entry.id, value) },
+                        onOpenSubscreen = onOpenSubscreen,
+                        onChooseOption = { index -> onChooseOption(entry.id, index) },
                         onPickTime = { hour, minute ->
-                            viewModel.setTime(entry.id, hour, minute)
+                            onPickTime(entry.id, hour, minute)
                         },
-                        onRunAction = { viewModel.runAction(entry.id) },
+                        onRunAction = { onRunAction(entry.id) },
                     )
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WatchSettingsScreenPreview() {
+    OpenWatchTheme {
+        WatchSettingsScreen(
+            state = WatchSettingsUiState(
+                isLoading = false,
+                screen = GarminSettingsScreen(
+                    screenId = 1,
+                    title = "System",
+                    entries = listOf(
+                        GarminSettingsEntry(
+                            id = 1,
+                            kind = GarminEntryKind.TOGGLE,
+                            title = "Auto lock",
+                            switchedOn = true,
+                        ),
+                        GarminSettingsEntry(
+                            id = 2,
+                            kind = GarminEntryKind.OPTIONS,
+                            title = "Backlight",
+                            summary = "Auto",
+                            options = listOf(GarminSettingsOption(0, "Auto"), GarminSettingsOption(1, "Always")),
+                            selectedIndex = 0,
+                        ),
+                        // A change in flight: drawn busy.
+                        GarminSettingsEntry(
+                            id = 3,
+                            kind = GarminEntryKind.TOGGLE,
+                            title = "Do not disturb",
+                            switchedOn = false,
+                        ),
+                    ),
+                ),
+                busyEntryIds = setOf(3),
+            ),
+            onRetry = {},
+            onOpenSubscreen = {},
+            onToggle = { _, _ -> },
+            onChooseOption = { _, _ -> },
+            onPickTime = { _, _, _ -> },
+            onRunAction = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WatchSettingsScreenUnreachablePreview() {
+    OpenWatchTheme {
+        WatchSettingsScreen(
+            state = WatchSettingsUiState(
+                isLoading = false,
+                error = ScreenError.Text(R.string.settings_watch_settings_unreachable),
+            ),
+            onRetry = {},
+            onOpenSubscreen = {},
+            onToggle = { _, _ -> },
+            onChooseOption = { _, _ -> },
+            onPickTime = { _, _, _ -> },
+            onRunAction = {},
+        )
     }
 }
 
@@ -513,12 +612,13 @@ private fun ConfirmActionDialog(
 @Composable
 private fun Message(
     text: String,
+    modifier: Modifier = Modifier,
     busy: Boolean = false,
     retryLabel: String? = null,
     onRetry: (() -> Unit)? = null,
 ) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(Spacing.xxl),
         contentAlignment = Alignment.Center,
