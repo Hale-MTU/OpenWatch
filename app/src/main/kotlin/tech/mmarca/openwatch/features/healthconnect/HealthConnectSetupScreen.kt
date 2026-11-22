@@ -100,14 +100,16 @@ fun HealthConnectSetupScreen(
                 }
                 val statusRes = when (state.availability) {
                     HealthConnectAvailability.AVAILABLE ->
-                        if (state.allGranted) R.string.hc_setup_status_granted else R.string.hc_setup_status_partial
+                        if (state.allGranted) R.string.hc_setup_status_all_granted else R.string.hc_setup_status_partial
                     HealthConnectAvailability.NEEDS_PROVIDER_UPDATE -> R.string.hc_setup_status_update
                     HealthConnectAvailability.NEEDS_PLAY_STORE -> R.string.hc_setup_status_play_store
                     HealthConnectAvailability.NOT_SUPPORTED -> R.string.hc_setup_status_unavailable
                 }
                 Text(text = stringResource(R.string.hc_setup_permissions_title), style = MaterialTheme.typography.titleSmall)
                 Text(
-                    text = if (state.availability == HealthConnectAvailability.AVAILABLE) {
+                    text = if (state.availability == HealthConnectAvailability.AVAILABLE && state.allGranted) {
+                        stringResource(statusRes, state.declaredCount)
+                    } else if (state.availability == HealthConnectAvailability.AVAILABLE) {
                         stringResource(statusRes, state.grantedCount, state.declaredCount)
                     } else {
                         stringResource(statusRes)

@@ -33,6 +33,7 @@ CLDR_PLURAL_QUANTITIES = {"zero", "one", "two", "few", "many", "other"}
 # "other", and Weblate drops the "one" branch English carries. A language not
 # listed here is held to every quantity the base file has.
 CLDR_LANGUAGE_QUANTITIES = {
+    "ar": {"zero", "one", "two", "few", "many", "other"},
     "cs": {"one", "few", "many", "other"},
     "de": {"one", "other"},
     "es": {"one", "many", "other"},
@@ -196,18 +197,17 @@ def validate_locale(path: pathlib.Path, base_entries: dict[str, ResourceEntry]) 
     locale_names = set(locale_entries)
 
     translated_base_names = locale_names & translatable_base_names
-    # The floor decides whether a language is OFFERED, not whether its file may
-    # exist. generate-translation-coverage.py keeps a language out of the picker
-    # until it clears the same threshold, so a half-finished translation is
-    # already invisible to users. Failing the build for one as well would mean a
-    # language cannot be worked on incrementally at all — a translator's first
-    # commit would break CI. What still has to hold for every file, offered or
-    # not, is placeholder and plural safety, which is checked above.
+    # The floor is a note, not a failure. OpenWatch has no language picker: it
+    # follows the phone's language and ships every values-* file, so a file under
+    # the floor shows its missing strings in English. Failing the build for one
+    # would mean a language cannot be worked on incrementally at all, since a
+    # translator's first commit would break CI. What has to hold for every file
+    # is placeholder and plural safety, which is checked above.
     coverage = len(translated_base_names) / len(translatable_base_names)
     if coverage <= MIN_TRANSLATION_COVERAGE:
         print(
-            f"note: {path} is at {coverage:.1%} coverage and is not offered in the "
-            f"language picker until it passes {MIN_TRANSLATION_COVERAGE:.0%}."
+            f"note: {path} is at {coverage:.1%} coverage, under {MIN_TRANSLATION_COVERAGE:.0%}: "
+            f"a phone in that language sees most of the app in English."
         )
 
     for name in sorted(locale_names - base_names):

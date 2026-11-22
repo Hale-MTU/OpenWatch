@@ -473,7 +473,7 @@
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch 会把手表和体重秤记录的数据复制到 Health Connect，供 OpenVitals 和其他应用读取。任何数据都不会离开手机：本应用没有联网权限。</string>
     <string name="hc_setup_permissions_title">权限</string>
-    <string name="hc_setup_status_granted">已授予全部 %2$d 项权限</string>
+    <string name="hc_setup_status_all_granted">已授予全部 %1$d 项权限</string>
     <string name="hc_setup_status_partial">已授予 %1$d/%2$d 项权限。未获写入权限的记录会留在设备上。</string>
     <string name="hc_setup_status_update">需要先更新 Health Connect，OpenWatch 才能使用它。</string>
     <string name="hc_setup_status_play_store">Health Connect 的安装不含 Google Play，因此无法在此手机上使用。</string>

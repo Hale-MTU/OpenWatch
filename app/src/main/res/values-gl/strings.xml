@@ -479,7 +479,7 @@ Podes desactivalo cando queiras e revogar o acceso ás notificacións desde os a
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch copia o que rexistran o teu reloxo e a túa báscula en Health Connect, onde o len OpenVitals e outras apps. Nada sae do teléfono: a app non ten permiso de internet.</string>
     <string name="hc_setup_permissions_title">Permisos</string>
-    <string name="hc_setup_status_granted">Os %2$d permisos están concedidos</string>
+    <string name="hc_setup_status_all_granted">Os %1$d permisos están concedidos</string>
     <string name="hc_setup_status_partial">%1$d de %2$d permisos concedidos. Un rexistro cuxa escritura non está permitida queda no dispositivo.</string>
     <string name="hc_setup_status_update">Health Connect precisa unha actualización antes de que OpenWatch poida usalo.</string>
     <string name="hc_setup_status_play_store">Health Connect está instalado sen Google Play, así que non se pode usar neste teléfono.</string>

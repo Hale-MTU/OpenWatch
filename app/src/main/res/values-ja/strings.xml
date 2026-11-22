@@ -477,7 +477,7 @@
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch は、ウォッチと体重計が記録したデータを Health Connect にコピーします。OpenVitals などのアプリはそこから読み取ります。データがスマートフォンの外に出ることはありません。このアプリにはインターネットの権限がありません。</string>
     <string name="hc_setup_permissions_title">権限</string>
-    <string name="hc_setup_status_granted">%2$d 件の権限をすべて許可済み</string>
+    <string name="hc_setup_status_all_granted">%1$d 件の権限をすべて許可済み</string>
     <string name="hc_setup_status_partial">%2$d 件中 %1$d 件の権限を許可済み。書き込みが許可されていない記録はデバイスに残ります。</string>
     <string name="hc_setup_status_update">OpenWatch で使用するには、Health Connect の更新が必要です。</string>
     <string name="hc_setup_status_play_store">Health Connect が Google Play なしでインストールされているため、このスマートフォンでは使用できません。</string>

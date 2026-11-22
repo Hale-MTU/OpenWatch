@@ -477,7 +477,7 @@
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">O OpenWatch copia o que o relógio e a balança registam para o Health Connect, onde o OpenVitals e outras apps o leem. Nada sai do telemóvel: a app não tem permissão de internet.</string>
     <string name="hc_setup_permissions_title">Permissões</string>
-    <string name="hc_setup_status_granted">Todas as %2$d permissões concedidas</string>
+    <string name="hc_setup_status_all_granted">Todas as %1$d permissões concedidas</string>
     <string name="hc_setup_status_partial">%1$d de %2$d permissões concedidas. Um registo cuja escrita não foi permitida fica no dispositivo.</string>
     <string name="hc_setup_status_update">O Health Connect precisa de uma atualização antes de o OpenWatch o poder usar.</string>
     <string name="hc_setup_status_play_store">O Health Connect está instalado sem o Google Play, por isso não pode ser usado neste telemóvel.</string>

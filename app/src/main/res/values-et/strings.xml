@@ -475,7 +475,7 @@
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch kopeerib sinu kella ja kaalu salvestatu Health Connecti, kust seda loevad OpenVitals ja teised rakendused. Miski ei lahku telefonist: rakendusel pole internetiluba.</string>
     <string name="hc_setup_permissions_title">Load</string>
-    <string name="hc_setup_status_granted">Kõik %2$d luba on antud</string>
+    <string name="hc_setup_status_all_granted">Kõik %1$d luba on antud</string>
     <string name="hc_setup_status_partial">Antud %1$d luba %2$d-st. Kirje, mille kirjutamiseks luba pole, jääb seadmesse.</string>
     <string name="hc_setup_status_update">Health Connect vajab uuendamist, enne kui OpenWatch saab seda kasutada.</string>
     <string name="hc_setup_status_play_store">Health Connect on paigaldatud ilma Google Playta, seega ei saa seda selles telefonis kasutada.</string>
