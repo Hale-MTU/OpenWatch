@@ -7,6 +7,8 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import kotlinx.coroutines.flow.StateFlow
+import tech.mmarca.openwatch.wearlink.Page
+import tech.mmarca.openwatch.wearlink.WearLinkWorkout
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateSource
 import tech.mmarca.openwatch.wear.samsung.SamsungIbiSource
@@ -154,6 +156,12 @@ internal class WearGraph(private val app: Application) {
 
     val ppgLogger: PpgRawLogger by lazy { PpgRawLogger(app) }
 
+    /** When a phone last pulled, and the reminder to sync before unpulled rows are pruned. */
+    val pulls: PhonePulls by lazy { PhonePulls(app) }
+    val syncReminder: SyncReminder by lazy {
+        SyncReminder(app, pulls, firstTrustedMillis = { linkState.state.value.trusted.minOfOrNull { it.trustedAtMillis } })
+    }
+
     val link: WearLinkServerHost by lazy {
         WearLinkServerHost(
             adapter = { app.getSystemService(BluetoothManager::class.java)?.adapter },
@@ -165,11 +173,21 @@ internal class WearGraph(private val app: Application) {
             onPhoneActive = { at -> sleepMinutes.notePhoneActive(at) },
             heldPreferences = { WearPreferenceCodec.encode(WearSettings.read(app), abilities()) },
             setPreference = ::applyPhonePreference,
-            workouts = WorkoutStore(MetricStoreWorkoutRows(store))::workoutsSince,
+            workouts = ::workoutsPulled,
             localName = ::localName,
             state = linkState,
         )
     }
+
+    private val workoutStore by lazy { WorkoutStore(MetricStoreWorkoutRows(store)) }
+
+    /**
+     * The workouts a phone pulls (`WO_SINCE`), the last series of its sync:
+     * the pull is recorded here, for the status screen and the reminder to
+     * sync. Link thread.
+     */
+    private fun workoutsPulled(sinceEpochMillis: Long, limit: Int): Page<WearLinkWorkout> =
+        workoutStore.workoutsSince(sinceEpochMillis, limit).also { syncReminder.onPulled(System.currentTimeMillis()) }
 
     /** What the watch can offer the phone's settings screen, which the phone cannot change. */
     fun abilities() = WatchAbilities(

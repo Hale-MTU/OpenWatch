@@ -146,8 +146,14 @@ class WorkoutTracker(
         speedAt = fix.epochMillis
     }
 
+    /**
+     * The point to store for [fix], or null when it is too close to the last
+     * one. Every point is stored, however long the workout: the gap rules hold
+     * a day to [MAX_STORED_POINTS], and the route is thinned to what the link
+     * carries when it is read ([thinned]), so a long workout keeps its end.
+     */
     private fun keep(fix: WorkoutFix): WearLinkWorkout.RoutePoint? {
-        if (points.size >= WearLinkWorkoutLines.MAX_POINTS) return null
+        if (points.size >= MAX_STORED_POINTS) return null
         val before = lastKept
         if (before != null) {
             val gap = fix.epochMillis - before.epochMillis
@@ -166,7 +172,7 @@ class WorkoutTracker(
 
     /** Adopts a point that was stored before a restart, so the route stays whole. */
     fun restorePoint(point: WearLinkWorkout.RoutePoint) {
-        if (points.size < WearLinkWorkoutLines.MAX_POINTS) points += point
+        if (points.size < MAX_STORED_POINTS) points += point
     }
 
     /**
@@ -273,7 +279,7 @@ class WorkoutTracker(
             ascentDecimetres = ascentDecimetres().coerceAtMost(WearLinkWorkoutLines.MAX_ASCENT_DECIMETRES)
                 .takeIf { sport.elevation && ascentByMinute.isNotEmpty() },
             pauses = clipPauses(pauses, endMillis),
-            route = points.filter { it.epochMillis <= endMillis },
+            route = thinned(points.filter { it.epochMillis <= endMillis }),
         )
     }
 
@@ -316,6 +322,27 @@ class WorkoutTracker(
         private const val MIN_CADENCE_SECONDS = 20
         private const val MINUTE_MILLIS = 60_000L
         private const val EARTH_RADIUS_METRES = 6_371_000.0
+
+        /**
+         * The most points one workout stores: a day at the shortest gap between
+         * two kept points. The store reads a workout's route with this limit.
+         */
+        const val MAX_STORED_POINTS: Int = (WearLinkWorkoutLines.MAX_DURATION_MILLIS / MIN_POINT_GAP_MILLIS).toInt() + 1
+
+        /**
+         * [route] as the link carries it: at most [WearLinkWorkoutLines.MAX_POINTS]
+         * points. A longer route keeps every second point, and again until it
+         * fits, so it covers the whole workout at an even, coarser spacing
+         * instead of losing its end; the last point always stays.
+         */
+        fun thinned(route: List<WearLinkWorkout.RoutePoint>, max: Int = WearLinkWorkoutLines.MAX_POINTS): List<WearLinkWorkout.RoutePoint> {
+            var kept = route
+            while (kept.size > max && kept.size > 2) {
+                val last = kept.lastIndex
+                kept = kept.filterIndexed { index, _ -> index % 2 == 0 || index == last }
+            }
+            return kept
+        }
 
         /** [endMillis], but no later than the longest workout the link carries. */
         fun limitedEnd(startMillis: Long, endMillis: Long): Long =

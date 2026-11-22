@@ -82,7 +82,7 @@ class WorkoutStore(private val rows: WorkoutRows) {
                 (checkpoint.pauses + listOfNotNull(open?.let { WearLinkWorkout.Pause(it, end) })).take(WearLinkWorkoutLines.MAX_PAUSES),
                 end,
             ),
-            route = rows.points(checkpoint.startMillis, end),
+            route = WorkoutTracker.thinned(rows.points(checkpoint.startMillis, end)),
         )
         return workout.takeIf { finish(it, nowMillis) }
     }
@@ -90,13 +90,16 @@ class WorkoutStore(private val rows: WorkoutRows) {
     /** The points stored for the workout that began at [startMillis], for a tracker taking over after a restart. */
     fun pointsSince(startMillis: Long, untilMillis: Long): List<WearLinkWorkout.RoutePoint> = rows.points(startMillis, untilMillis)
 
-    /** What `WO_SINCE` answers: whole workouts, each with its pauses and route. */
+    /**
+     * What `WO_SINCE` answers: whole workouts, each with its pauses and its
+     * route, thinned to what the link carries ([WorkoutTracker.thinned]).
+     */
     fun workoutsSince(sinceMillis: Long, limit: Int): Page<WearLinkWorkout> {
         val headers = rows.headers(sinceMillis, limit)
         val page = headers.items.map { header ->
             header.copy(
                 pauses = rows.pauses(header.startMillis, header.endMillis),
-                route = rows.points(header.startMillis, header.endMillis),
+                route = WorkoutTracker.thinned(rows.points(header.startMillis, header.endMillis)),
             )
         }
         return Page(page, headers.more)
@@ -114,8 +117,9 @@ class MetricStoreWorkoutRows(private val store: MetricStore) : WorkoutRows {
         store.put(WearMetrics.WORKOUT_POINTS, point)
     }
 
+    /** Every point stored for the workout, up to a day's worth; the caller thins them for the link. */
     override fun points(fromMillis: Long, toMillis: Long): List<WearLinkWorkout.RoutePoint> =
-        store.since(WearMetrics.WORKOUT_POINTS, fromMillis - 1, WearLinkWorkoutLines.MAX_POINTS, toMillis + 1)
+        store.since(WearMetrics.WORKOUT_POINTS, fromMillis - 1, WorkoutTracker.MAX_STORED_POINTS, toMillis + 1)
 
     override fun deletePoints(fromMillis: Long, toMillis: Long) {
         store.deleteRange(WearMetrics.WORKOUT_POINTS, fromMillis, toMillis)

@@ -5,6 +5,7 @@ import android.database.sqlite.SQLiteException
 import tech.mmarca.openwatch.wear.PendingPhone
 import tech.mmarca.openwatch.wear.SamsungDiagnostics
 import tech.mmarca.openwatch.wear.StepRecorder
+import tech.mmarca.openwatch.wear.SyncRetention
 import tech.mmarca.openwatch.wear.WatchPreferences
 import tech.mmarca.openwatch.wear.WearAppService
 import tech.mmarca.openwatch.wear.WearGraph
@@ -43,6 +44,9 @@ internal class GraphStatusPort(private val context: Context, private val graph: 
 
     override fun read(): StatusReadings? {
         val store = graph.store
+        val now = System.currentTimeMillis()
+        val lastPulled = graph.pulls.lastPulledMillis
+        val firstTrusted = graph.linkState.state.value.trusted.minOfOrNull { it.trustedAtMillis }
         return try {
             StatusReadings(
                 heartRateGranted = WearPermissions.hasHeartRate(context),
@@ -56,6 +60,9 @@ internal class GraphStatusPort(private val context: Context, private val graph: 
                 samsungDiagnostics = SamsungDiagnostics.consentOn(context.contentResolver),
                 samsungPlatform = samsungPlatform,
                 ppgLogAvailable = graph.ppgLogger.isAvailable,
+                readAtMillis = now,
+                lastPulledMillis = lastPulled,
+                syncWarning = SyncRetention.warning(now, lastPulled, firstTrusted),
             )
         } catch (_: SQLiteException) {
             // A locked or corrupt file: the screen keeps what it showed, and the next refresh tries again.

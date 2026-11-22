@@ -22,6 +22,17 @@
     <string name="action_grant">Allow</string>
     <string name="status_link_bluetooth_off">Bluetooth is off</string>
     <string name="status_link_starting">Phone link starting…</string>
+    <!-- %1$s is the platform's relative time, such as "3 hours ago". -->
+    <string name="status_last_synced">Last sync with the phone: %1$s</string>
+    <string name="status_never_synced">No phone has synced yet</string>
+    <plurals name="status_sync_soon">
+        <item quantity="one">Sync with the phone within %1$d day: the watch keeps a week, then drops the oldest readings</item>
+        <item quantity="other">Sync with the phone within %1$d days: the watch keeps a week, then drops the oldest readings</item>
+    </plurals>
+    <string name="status_sync_pruning">Not synced for a week: the watch is dropping readings the phone never got. Open OpenWatch on the phone to sync.</string>
+    <string name="sync_reminder_channel_name">Sync reminders</string>
+    <string name="sync_reminder_title">Sync with your phone</string>
+    <string name="sync_reminder_soon_text">The watch keeps a week of readings. Sync with OpenWatch on your phone before the oldest are dropped.</string>
     <string name="status_phone_trusted">Linked to %1$s</string>
     <string name="status_phone_pending">Allow OpenWatch on %1$s?</string>
     <string name="phone_request_body">Open OpenWatch on the watch to answer</string>

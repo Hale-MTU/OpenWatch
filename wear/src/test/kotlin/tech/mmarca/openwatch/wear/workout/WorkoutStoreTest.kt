@@ -139,4 +139,17 @@ class WorkoutStoreTest {
         assertNull(store.recover(t0))
         assertNull(rows.checkpointText)
     }
+
+    @Test fun `a long workout goes to the phone with its whole route, thinned to what the link carries`() {
+        val long = WearLinkWorkout(t0, t0 + 14 * 3_600_000L, 56, null, null, null)
+        val stored = List(10_000) { WearLinkWorkout.RoutePoint(t0 + it * 5_000L, 480_000_000 + it, 110_000_000, null, null) }
+        stored.forEach(store::savePoint)
+        assertTrue(store.finish(long, long.endMillis))
+
+        val route = store.workoutsSince(t0 - 1, 1).items.single().route
+
+        assertEquals(5_001, route.size)
+        assertEquals(stored.first(), route.first())
+        assertEquals(stored.last(), route.last())
+    }
 }

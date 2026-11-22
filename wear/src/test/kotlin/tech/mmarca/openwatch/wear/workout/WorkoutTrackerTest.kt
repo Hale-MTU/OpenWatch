@@ -318,4 +318,40 @@ class WorkoutTrackerTest {
             tech.mmarca.openwatch.wearlink.WearLinkWorkoutLines.formatHeader(workout),
         ))
     }
+
+    @Test fun `a route longer than the link carries keeps its end, thinned to every second point`() {
+        val tracker = run()
+        // One kept point every five seconds, 10 m apart: 9600 points, over 13 hours.
+        val kept = (0 until 9_600).mapNotNull { tracker.onFix(fix(it * 5, it * 10.0)) }
+        assertEquals("every point is stored", 9_600, kept.size)
+
+        val route = tracker.finish(t0 + 9_600 * 5_000L).route
+
+        // 4800 of every second point, and the last, which falls between them.
+        assertEquals(4_801, route.size)
+        assertEquals(kept.first(), route.first())
+        assertEquals(kept.last(), route.last())
+        assertEquals(10_000L, route[1].epochMillis - route[0].epochMillis)
+    }
+
+    @Test fun `thinning halves as often as it takes, keeps the first and the last point, and leaves a short route alone`() {
+        val points = List(20_001) { tech.mmarca.openwatch.wearlink.WearLinkWorkout.RoutePoint(t0 + it * 5_000L, it, 0, null, null) }
+
+        val thinned = WorkoutTracker.thinned(points)
+
+        assertTrue(thinned.size <= tech.mmarca.openwatch.wearlink.WearLinkWorkoutLines.MAX_POINTS)
+        assertEquals(5_001, thinned.size)
+        assertEquals(points.first(), thinned.first())
+        assertEquals(points.last(), thinned.last())
+        assertEquals(points.take(9_000), WorkoutTracker.thinned(points.take(9_000)))
+        assertEquals(points.take(2), WorkoutTracker.thinned(points.take(2), max = 1))
+    }
+
+    @Test fun `a day of points at the shortest gap fits what the store reads for one workout`() {
+        val day = tech.mmarca.openwatch.wearlink.WearLinkWorkoutLines.MAX_DURATION_MILLIS
+        val tracker = run()
+        val kept = (0..(day / 5_000).toInt()).count { tracker.onFix(fix(it * 5, it * 10.0)) != null }
+
+        assertEquals(WorkoutTracker.MAX_STORED_POINTS, kept)
+    }
 }

@@ -127,6 +127,7 @@ class WearAppService : Service(), WearGraph.Host {
         reconcileRecorders()
         graph.worn.start()
         debugSnapshots.start()
+        graph.syncReminder.start()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -382,6 +383,7 @@ class WearAppService : Service(), WearGraph.Host {
         if (isForeground) {
             unregisterReceiver(bluetoothReceiver)
             graph.worn.stop()
+            graph.syncReminder.stop()
             bedtimeMonitor.stop()
             debugSnapshots.stop()
             mainHandler.removeCallbacksAndMessages(null)

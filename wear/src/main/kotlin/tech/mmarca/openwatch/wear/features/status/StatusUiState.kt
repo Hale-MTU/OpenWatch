@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.wear.features.status
 
+import tech.mmarca.openwatch.wear.SyncRetention
 import tech.mmarca.openwatch.wear.WatchPreferences
 import tech.mmarca.openwatch.wear.WearLinkUiState
 
@@ -20,6 +21,12 @@ internal data class StatusReadings(
     val samsungPlatform: Boolean,
     /** The raw PPG log of a debuggable build, started by a long press on the header. */
     val ppgLogAvailable: Boolean,
+    /** When these were read, the "now" of [lastPulledMillis] and [syncWarning]. */
+    val readAtMillis: Long = 0,
+    /** When a phone last pulled; null when none ever did. */
+    val lastPulledMillis: Long? = null,
+    /** The warning before the watch drops rows no phone has pulled; null while there is none. */
+    val syncWarning: SyncRetention.Warning? = null,
 )
 
 /** Everything the status screen renders. A null part is not read yet. */
