@@ -108,7 +108,7 @@ class WearAppService : Service() {
     override fun onCreate() {
         super.onCreate()
         DebugProtocol.init(this)
-        store = MetricStore(this)
+        store = metricStore
         samsungFeed = SamsungHeartRateFeed(this)
         wakeSync = SensorWakeSync(this)
         workout = WorkoutRecorder(this, store) {
@@ -443,6 +443,8 @@ class WearAppService : Service() {
 
     /** What the debug snapshots record as the plan in force. */
     private fun debugPlan(): Map<String, Any?> = mapOf(
+        "storeWriteFailures" to store.writeFailures,
+        "storeLastFailure" to store.lastWriteFailure,
         "hrSec" to recorder.interval.seconds,
         "hrSource" to recorder.source.name,
         "hrvSource" to WearSettings.hrvSource(this).name,

@@ -39,9 +39,9 @@ import kotlinx.coroutines.withContext
  * version the tile names, the hash and size of its bytes. The last few PNGs
  * are kept in the cache directory under their versions, so a resources
  * request gets exactly the image its tile was built with, even after a newer
- * tile or a restart of the service. Each read opens its own [MetricStore]
- * and closes it, so nothing closes a store under a read that is still
- * running.
+ * tile or a restart of the service. A read uses the process's one
+ * [MetricStore] ([OpenWatchWearApplication]) and never closes it: the
+ * recorders write to it in the same process.
  */
 abstract class MetricTileService : TileService() {
 
@@ -108,14 +108,11 @@ abstract class MetricTileService : TileService() {
             density = density,
             accent = accent,
         )
-        val store = MetricStore(this)
         return try {
-            read(TileDay.of(System.currentTimeMillis(), ZoneId.systemDefault()), chart, store)
+            read(TileDay.of(System.currentTimeMillis(), ZoneId.systemDefault()), chart, metricStore)
         } catch (e: SQLiteException) {
             Log.e(TAG, "Metric store unreadable", e)
             unavailable(getString(R.string.tile_read_failed))
-        } finally {
-            store.close()
         }
     }
 

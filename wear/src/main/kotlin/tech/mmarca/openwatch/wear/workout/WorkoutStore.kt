@@ -12,12 +12,16 @@ interface WorkoutRows {
     fun putPoint(point: WearLinkWorkout.RoutePoint)
     fun points(fromMillis: Long, toMillis: Long): List<WearLinkWorkout.RoutePoint>
     fun deletePoints(fromMillis: Long, toMillis: Long)
-    fun putPauses(pauses: List<WearLinkWorkout.Pause>)
-    fun pauses(fromMillis: Long, toMillis: Long): List<WearLinkWorkout.Pause>
-    fun putHeader(workout: WearLinkWorkout)
 
-    /** Headers started after [sinceMillis], oldest first, at most [limit]. */
-    fun headers(sinceMillis: Long, limit: Int): List<WearLinkWorkout>
+    /** False when the write failed. */
+    fun putPauses(pauses: List<WearLinkWorkout.Pause>): Boolean
+    fun pauses(fromMillis: Long, toMillis: Long): List<WearLinkWorkout.Pause>
+
+    /** False when the write failed. */
+    fun putHeader(workout: WearLinkWorkout): Boolean
+
+    /** Headers started after [sinceMillis], oldest first, at most [limit], and whether more are stored. */
+    fun headers(sinceMillis: Long, limit: Int): Page<WearLinkWorkout>
     fun checkpoint(): String?
     fun setCheckpoint(text: String)
     fun clearCheckpoint()
@@ -37,13 +41,15 @@ class WorkoutStore(private val rows: WorkoutRows) {
 
     /**
      * Saves [workout], or drops its route when it is shorter than [MIN_SAVED_MILLIS]: a workout
-     * started by a slip is not worth a record. Returns whether it was kept.
+     * started by a slip is not worth a record. Returns whether it was kept. One whose pauses or
+     * header could not be written is not kept now and keeps its checkpoint, so [recover] saves it
+     * at the next start.
      */
     fun finish(workout: WearLinkWorkout, nowMillis: Long): Boolean {
         val kept = workout.endMillis - workout.startMillis >= MIN_SAVED_MILLIS
         if (kept) {
-            rows.putPauses(workout.pauses)
-            rows.putHeader(workout.copy(pauses = emptyList(), route = emptyList()))
+            val saved = rows.putPauses(workout.pauses) && rows.putHeader(workout.copy(pauses = emptyList(), route = emptyList()))
+            if (!saved) return false
         } else {
             rows.deletePoints(workout.startMillis, workout.endMillis)
         }
@@ -86,14 +92,14 @@ class WorkoutStore(private val rows: WorkoutRows) {
 
     /** What `WO_SINCE` answers: whole workouts, each with its pauses and route. */
     fun workoutsSince(sinceMillis: Long, limit: Int): Page<WearLinkWorkout> {
-        val headers = rows.headers(sinceMillis, limit + 1)
-        val page = headers.take(limit).map { header ->
+        val headers = rows.headers(sinceMillis, limit)
+        val page = headers.items.map { header ->
             header.copy(
                 pauses = rows.pauses(header.startMillis, header.endMillis),
                 route = rows.points(header.startMillis, header.endMillis),
             )
         }
-        return Page(page, headers.size > limit)
+        return Page(page, headers.more)
     }
 
     companion object {
@@ -104,28 +110,35 @@ class WorkoutStore(private val rows: WorkoutRows) {
 
 /** [WorkoutRows] on the watch's [MetricStore]. */
 class MetricStoreWorkoutRows(private val store: MetricStore) : WorkoutRows {
-    override fun putPoint(point: WearLinkWorkout.RoutePoint) = store.put(WearMetrics.WORKOUT_POINTS, point)
+    override fun putPoint(point: WearLinkWorkout.RoutePoint) {
+        store.put(WearMetrics.WORKOUT_POINTS, point)
+    }
 
     override fun points(fromMillis: Long, toMillis: Long): List<WearLinkWorkout.RoutePoint> =
         store.since(WearMetrics.WORKOUT_POINTS, fromMillis - 1, WearLinkWorkoutLines.MAX_POINTS, toMillis + 1)
 
-    override fun deletePoints(fromMillis: Long, toMillis: Long) =
+    override fun deletePoints(fromMillis: Long, toMillis: Long) {
         store.deleteRange(WearMetrics.WORKOUT_POINTS, fromMillis, toMillis)
+    }
 
-    override fun putPauses(pauses: List<WearLinkWorkout.Pause>) = store.putAll(WearMetrics.WORKOUT_PAUSES, pauses)
+    override fun putPauses(pauses: List<WearLinkWorkout.Pause>): Boolean = store.putAll(WearMetrics.WORKOUT_PAUSES, pauses)
 
     override fun pauses(fromMillis: Long, toMillis: Long): List<WearLinkWorkout.Pause> =
         store.since(WearMetrics.WORKOUT_PAUSES, fromMillis - 1, WearLinkWorkoutLines.MAX_PAUSES, toMillis + 1)
 
-    override fun putHeader(workout: WearLinkWorkout) = store.put(WearMetrics.WORKOUTS, workout)
+    override fun putHeader(workout: WearLinkWorkout): Boolean = store.put(WearMetrics.WORKOUTS, workout)
 
-    override fun headers(sinceMillis: Long, limit: Int): List<WearLinkWorkout> = store.since(WearMetrics.WORKOUTS, sinceMillis, limit)
+    override fun headers(sinceMillis: Long, limit: Int): Page<WearLinkWorkout> = store.page(WearMetrics.WORKOUTS, sinceMillis, limit)
 
     override fun checkpoint(): String? = store.state(CHECKPOINT_KEY)
 
-    override fun setCheckpoint(text: String) = store.setState(CHECKPOINT_KEY, text)
+    override fun setCheckpoint(text: String) {
+        store.setState(CHECKPOINT_KEY, text)
+    }
 
-    override fun clearCheckpoint() = store.clearState(CHECKPOINT_KEY)
+    override fun clearCheckpoint() {
+        store.clearState(CHECKPOINT_KEY)
+    }
 
     override fun prune(nowMillis: Long) {
         store.prune(WearMetrics.WORKOUTS, nowMillis)

@@ -28,7 +28,7 @@ import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 class MainActivity : ComponentActivity() {
 
     private val viewModel: WearAppViewModel by viewModels()
-    private val store by lazy { MetricStore(this) }
+    private val store by lazy { metricStore }
     private val trust by lazy { WearTrustStore(this) }
 
     private var permissionsVersion by mutableStateOf(0)

@@ -184,11 +184,8 @@ class WearLinkServerHost(
         override fun liveHeartRate(seconds: Int, emit: (WearLinkProtocol.HeartRateSample) -> Unit): Int =
             live.window(seconds, emit)
 
-        private fun <T> page(metric: WearMetric<T>, sinceEpochMillis: Long, limit: Int): Page<T> {
-            // One more than asked tells whether the limit cut the reply.
-            val rows = store.since(metric, sinceEpochMillis, limit + 1)
-            return Page(rows.take(limit), rows.size > limit)
-        }
+        private fun <T> page(metric: WearMetric<T>, sinceEpochMillis: Long, limit: Int): Page<T> =
+            store.page(metric, sinceEpochMillis, limit)
     }
 
     private companion object {

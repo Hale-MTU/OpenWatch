@@ -11,6 +11,7 @@ import android.os.HandlerThread
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
+import java.util.TreeMap
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
 /**
@@ -140,13 +141,23 @@ class StepRecorder(
         }
     }
 
+    /** Minutes a failed write left unsaved, by their start; the next flush writes them with its own. Worker thread. */
+    private val unsaved = TreeMap<Long, WearLinkProtocol.StepMinute>()
+
     /** Writes the changed minutes and the last reading in one transaction. */
     private fun flush() {
         flushPending = false
         val counter = counter ?: return
         val last = counter.last ?: return
-        val rows = counter.drain()
-        store.putAll(WearMetrics.STEPS, rows, STATE_KEY, "$boot,${last.total},${last.epochMillis}")
+        // A minute's row is its whole count so far: a newer row for a minute replaces an unsaved one.
+        for (row in counter.drain()) unsaved[row.epochMillis] = row
+        val rows = unsaved.values.toList()
+        if (!store.putAll(WearMetrics.STEPS, rows, STATE_KEY, "$boot,${last.total},${last.epochMillis}")) {
+            // Kept for the next flush, a day of minutes at most.
+            while (unsaved.size > MAX_UNSAVED_MINUTES) unsaved.remove(unsaved.firstKey())
+            return
+        }
+        unsaved.clear()
         rows.forEach(::logFinishedMinute)
         if (last.epochMillis - lastPrunedAt > PRUNE_EVERY_MILLIS) {
             lastPrunedAt = last.epochMillis
@@ -211,5 +222,7 @@ class StepRecorder(
         private const val MAX_REPORT_LATENCY_MICROS = 40 * 1_000_000
 
         private const val PRUNE_EVERY_MILLIS = 6L * 60 * 60 * 1000
+
+        private const val MAX_UNSAVED_MINUTES = 24 * 60
     }
 }

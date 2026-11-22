@@ -5,6 +5,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.openwatch.wearlink.Page
 import tech.mmarca.openwatch.wearlink.WearLinkWorkout
 
 private class MemoryRows : WorkoutRows {
@@ -14,13 +15,25 @@ private class MemoryRows : WorkoutRows {
     var checkpointText: String? = null
     var pruned: Long? = null
 
+    /** False makes every header write fail, as a full disk does. */
+    var writable = true
+
     override fun putPoint(point: WearLinkWorkout.RoutePoint) { points.putIfAbsent(point.epochMillis, point) }
     override fun points(fromMillis: Long, toMillis: Long) = points.values.filter { it.epochMillis in fromMillis..toMillis }
     override fun deletePoints(fromMillis: Long, toMillis: Long) { points.keys.removeAll { it in fromMillis..toMillis } }
-    override fun putPauses(pauses: List<WearLinkWorkout.Pause>) { pauses.forEach { pauseRows.putIfAbsent(it.startMillis, it) } }
+    override fun putPauses(pauses: List<WearLinkWorkout.Pause>): Boolean {
+        pauses.forEach { pauseRows.putIfAbsent(it.startMillis, it) }
+        return true
+    }
     override fun pauses(fromMillis: Long, toMillis: Long) = pauseRows.values.filter { it.startMillis in fromMillis..toMillis }
-    override fun putHeader(workout: WearLinkWorkout) { headerRows.putIfAbsent(workout.startMillis, workout) }
-    override fun headers(sinceMillis: Long, limit: Int) = headerRows.values.filter { it.startMillis > sinceMillis }.take(limit)
+    override fun putHeader(workout: WearLinkWorkout): Boolean {
+        if (writable) headerRows.putIfAbsent(workout.startMillis, workout)
+        return writable
+    }
+    override fun headers(sinceMillis: Long, limit: Int): Page<WearLinkWorkout> {
+        val after = headerRows.values.filter { it.startMillis > sinceMillis }
+        return Page(after.take(limit), after.size > limit)
+    }
     override fun checkpoint() = checkpointText
     override fun setCheckpoint(text: String) { checkpointText = text }
     override fun clearCheckpoint() { checkpointText = null }
@@ -104,6 +117,20 @@ class WorkoutStoreTest {
         store.saveCheckpoint(WorkoutCheckpoint("swim", t0, t0 + 600_000, false, null, null, null, emptyList(), null))
 
         assertEquals(0, store.recover(t0 + 9_000_000)!!.exerciseType)
+    }
+
+    @Test fun `a workout whose header cannot be written keeps its checkpoint for the next start`() {
+        val checkpoint = WorkoutCheckpoint("56", t0, t0 + 600_000, false, null, null, null, emptyList(), null)
+        store.saveCheckpoint(checkpoint)
+        rows.writable = false
+
+        assertFalse(store.finish(workout(), t0 + 2_000_000))
+        assertEquals(checkpoint.encode(), rows.checkpointText)
+        assertNull(rows.pruned)
+
+        rows.writable = true
+        assertEquals(t0 + 600_000, store.recover(t0 + 9_000_000)?.endMillis)
+        assertNull(rows.checkpointText)
     }
 
     @Test fun `with no checkpoint, or one that cannot be read, nothing is recovered`() {
