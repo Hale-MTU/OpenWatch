@@ -78,6 +78,7 @@ internal class PpgWindowSource(context: Context, private val debug: DebugProtoco
         startedAt = startMillis
         val registered = try {
             sensorManager.registerListener(this, raw, raw.minDelay.coerceAtLeast(1), 0, handler)
+                .also { if (it) debug.registered("ppgWindow", raw, raw.minDelay.coerceAtLeast(1), 0) }
         } catch (_: SecurityException) {
             Log.w(TAG, "Raw PPG refused")
             false

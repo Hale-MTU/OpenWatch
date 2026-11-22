@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
 import android.content.ServiceConnection
 import android.os.Binder
 import android.os.Handler
@@ -248,6 +249,14 @@ internal class SamsungHealthPlatform(
             return points
         }
 
+
+        /** The platform's version code, for the debug protocol's device line; null where it is not installed. */
+        fun versionCode(context: Context): Long? =
+            try {
+                context.packageManager.getPackageInfo(SERVICE_PACKAGE, 0).longVersionCode
+            } catch (_: PackageManager.NameNotFoundException) {
+                null
+            }
 
         /** Whether this watch has the platform's tracking service, from its system image: Samsung watches only. */
         fun isInstalled(context: Context): Boolean =

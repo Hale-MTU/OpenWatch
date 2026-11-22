@@ -66,6 +66,7 @@ internal class AscentRecorder(
         }
         thread = worker
         wakeSync?.join(this)
+        debug.registered("ascent", sensor, SAMPLING_PERIOD_MICROS, MAX_REPORT_LATENCY_MICROS)
         debug.log(TAG) { "Recording ascent from ${sensor.name}" }
         return true
     }

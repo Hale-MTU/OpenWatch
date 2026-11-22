@@ -158,6 +158,7 @@ internal class SleepMinuteRecorder(
             bedtime = BedtimeMonitor(context, workerHandler) { applyHold() }.also { it.start() }
             applyHold()
         }
+        debug.registered("sleepMinutes", accelerometer, SAMPLING_PERIOD_MICROS, MAX_REPORT_LATENCY_MICROS)
         debug.log(TAG) { "Recording sleep minutes from ${accelerometer.name}" }
         return true
     }

@@ -68,6 +68,7 @@ class WornMonitor(
             Log.w(TAG, "Off-body listener not registered; heart rate stays on")
             return
         }
+        debug.registered("offBody", offBody, SensorManager.SENSOR_DELAY_NORMAL, 0)
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_POWER_DISCONNECTED)

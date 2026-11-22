@@ -2,6 +2,7 @@ package tech.mmarca.openwatch.wear
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.hardware.Sensor
 import android.util.Log
 import java.io.File
 import java.text.SimpleDateFormat
@@ -81,6 +82,29 @@ class DebugProtocol private constructor(private val dir: File?) {
             val current = counter.get()
             if (value <= current || counter.compareAndSet(current, value)) return
         }
+    }
+
+    /**
+     * A recorder registered [sensor]: the variant it took (wake-up or not),
+     * the sampling period and report latency it asked for, and the sensor's
+     * FIFO, so a report tells whether a batch fits on this watch
+     * ([SensorReport]). [sampling] is microseconds or a `SENSOR_DELAY_*`
+     * constant; [latencyMicros] is 0 for an unbatched registration.
+     */
+    fun registered(recorder: String, sensor: Sensor, sampling: Int, latencyMicros: Int) {
+        if (!isEnabled) return
+        event(
+            "Sensors", "registered",
+            "recorder" to recorder,
+            "type" to sensor.stringType,
+            "name" to sensor.name,
+            "wakeUp" to sensor.isWakeUpSensor,
+            "samplingUs" to SensorReport.samplingMicros(sampling),
+            "latencyUs" to latencyMicros,
+            "fifoReserved" to sensor.fifoReservedEventCount,
+            "fifoMax" to sensor.fifoMaxEventCount,
+            "mode" to sensor.reportingMode,
+        )
     }
 
     fun event(source: String, name: String, vararg fields: Pair<String, Any?>) {

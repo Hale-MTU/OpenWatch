@@ -97,7 +97,10 @@ internal class StepRecorder(
             Log.e(TAG, "Step counter refused", e)
             false
         }
-        if (registered) debug.log(TAG) { "Recording steps from ${sensor.name}${if (sensor.isWakeUpSensor) " (waking)" else ""}" }
+        if (registered) {
+            debug.registered("steps", sensor, SensorManager.SENSOR_DELAY_NORMAL, MAX_REPORT_LATENCY_MICROS)
+            debug.log(TAG) { "Recording steps from ${sensor.name}${if (sensor.isWakeUpSensor) " (waking)" else ""}" }
+        }
         return registered
     }
 

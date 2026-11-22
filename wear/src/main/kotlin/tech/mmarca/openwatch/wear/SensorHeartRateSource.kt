@@ -125,6 +125,7 @@ internal class SensorHeartRateSource(
     private fun registerBatched(found: Sensor, workerHandler: Handler): Boolean =
         try {
             sensorManager.registerListener(this, found, SAMPLING_PERIOD_MICROS, MAX_REPORT_LATENCY_MICROS, workerHandler)
+                .also { if (it) debug.registered("heartRate", found, SAMPLING_PERIOD_MICROS, MAX_REPORT_LATENCY_MICROS) }
         } catch (e: SecurityException) {
             // The grant was revoked between the check and the registration.
             Log.e(TAG, "Heart rate sensor refused", e)
@@ -140,6 +141,7 @@ internal class SensorHeartRateSource(
         wakeLock.acquire(WINDOW_CAP_MILLIS + WAKE_LOCK_SLACK_MILLIS)
         val registered = try {
             sensorManager.registerListener(this, found, SAMPLING_PERIOD_MICROS, 0, workerHandler)
+                .also { if (it) debug.registered("heartRateWindow", found, SAMPLING_PERIOD_MICROS, 0) }
         } catch (e: SecurityException) {
             Log.e(TAG, "Heart rate sensor refused", e)
             false

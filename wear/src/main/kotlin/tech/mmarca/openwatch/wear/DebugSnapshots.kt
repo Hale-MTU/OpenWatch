@@ -15,7 +15,9 @@ import android.os.PowerManager
  * cost. It listens to broadcasts the system sends anyway and wakes nothing.
  *
  * [plan] adds what the app runs at that moment: the heart rate interval and
- * source, the HRV source, which recorders run, bedtime and worn state.
+ * source, the HRV source, which recorders run, bedtime and worn state. At
+ * its start it also writes the watch's sensors and Samsung sources once
+ * ([SensorReport]).
  */
 class DebugSnapshots(
     private val context: Context,
@@ -63,6 +65,8 @@ class DebugSnapshots(
         } else {
             context.registerReceiver(receiver, filter, null, handler)
         }
+        // What this watch's sensors are and which Samsung sources it has, once per service start.
+        debug.event("Sensors", "device", *SensorReport.fields(context))
         write("start")
     }
 

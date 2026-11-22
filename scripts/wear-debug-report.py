@@ -14,7 +14,10 @@ one, and events from the recorders. This script pulls those files over adb
 5. the night-time HRV windows per source: started, stored, dropped and why,
    and the RMSSD each source gave;
 6. the sleep holds and the synced wake-ups, and the minutes held per day against the budget;
-7. the breathing rate of each window by route, and what the skin tracker sent.
+7. the breathing rate of each window by route, and what the skin tracker sent;
+8. the watch's sensors (name, vendor, FIFO sizes, wake-up flag), the batching each
+   recorder registered and whether its FIFO holds a batch, and which Samsung
+   sources the watch has.
 
     python3 -I scripts/wear-debug-report.py --serial 192.168.178.63:41399
     python3 -I scripts/wear-debug-report.py --save out/ --serial ...   # also keeps the raw files
@@ -248,6 +251,54 @@ def hrv(events):
     print(f"stored: {len(stored)}" + "".join(f"\n  {when(e['startedAt'])}  {e['rmssd']:.1f} ms  {e['beats']} beats" for e in stored))
 
 
+def sensors(events):
+    print("\n## 8. Sensors, batching and the Samsung sources on this watch\n")
+    devices = [e for e in events if e["src"] == "Sensors" and e["ev"] == "device"]
+    if not devices:
+        print("No device line: the watch runs a build from before the sensor report, which writes one at each service start.")
+        return
+    device = devices[-1]
+    print(f"{device.get('manufacturer')} {device.get('model')}, API {device.get('sdk')}, batching profile {device.get('batching')}")
+    present = {
+        "Health Platform": device.get("samsungPlatform"),
+        "raw PPG (hr_raw)": device.get("samsungHrRaw"),
+        "bedtime setting": device.get("samsungBedtimeSetting"),
+        "diagnostics setting": device.get("samsungDiagnosticsSetting"),
+    }
+    version = device.get("samsungPlatformVersion")
+    print("Samsung sources: " + ", ".join(f"{name} {'yes' if on else 'no'}" for name, on in present.items())
+          + (f"; platform version {version}" if version else ""))
+    print(f"\n{'type':44s} {'wake':>4s} {'fifo':>11s}  name (vendor)")
+    for s in sorted(device.get("sensors", []), key=lambda s: (s.get("type", ""), not s.get("wakeUp"))):
+        fifo = f"{s.get('fifoReserved', 0)}/{s.get('fifoMax', 0)}"
+        print(f"{s.get('type', '?'):44s} {'yes' if s.get('wakeUp') else 'no':>4s} {fifo:>11s}  {s.get('name')} ({s.get('vendor')})")
+    registered = {}
+    for e in events:
+        if e["src"] == "Sensors" and e["ev"] == "registered":
+            registered[e.get("recorder")] = e
+    if not registered:
+        return
+    print("\nWhat each recorder registered last (a batch is the latency over the sampling period):")
+    print(f"{'recorder':14s} {'type':40s} {'wake':>4s} {'every':>8s} {'latency':>8s} {'batch':>6s} {'fifo':>6s}")
+    for name, e in sorted(registered.items()):
+        sampling = e.get("samplingUs") or 0
+        latency = e.get("latencyUs") or 0
+        fifo = e.get("fifoMax") or 0
+        batch = latency // sampling if sampling and latency else 0
+        # A continuous sensor fills its batch; an on-change one (mode 1) sends at most that many.
+        continuous = e.get("mode", 0) == 0
+        if not latency:
+            verdict = "unbatched"
+        elif not fifo:
+            verdict = "no FIFO: delivered at once"
+        elif batch > fifo:
+            verdict = "overflows the FIFO" if continuous else "may overflow the FIFO"
+        else:
+            verdict = "fits" if continuous else "fits (at most)"
+        print(f"{name:14s} {e.get('type', '?'):40s} {'yes' if e.get('wakeUp') else 'no':>4s} "
+              f"{sampling / 1000:7.0f}ms {latency / 1_000_000:7.0f}s {batch:6d} {fifo:6d}  {verdict}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("files", nargs="*", help="saved protocol files; without them the watch is asked over adb")
@@ -279,6 +330,7 @@ def main():
     hrv(events)
     holds(snaps, events)
     breathing_and_skin(snaps, events)
+    sensors(events)
 
 
 if __name__ == "__main__":

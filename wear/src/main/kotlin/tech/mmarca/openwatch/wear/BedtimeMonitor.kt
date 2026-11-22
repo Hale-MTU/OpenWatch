@@ -96,9 +96,13 @@ class BedtimeMonitor(
         return doNotDisturb && BedtimeWindow.contains(clock(), zone())
     }
 
-    private companion object {
-        const val TAG = "BedtimeMonitor"
-        const val BEDTIME_SETTING = "setting_bedtime_mode_running_state"
-        const val DO_NOT_DISTURB = "do not disturb"
+    internal companion object {
+        private const val TAG = "BedtimeMonitor"
+        private const val BEDTIME_SETTING = "setting_bedtime_mode_running_state"
+        private const val DO_NOT_DISTURB = "do not disturb"
+
+        /** Whether the watch has Samsung's bedtime-mode setting, which the monitor follows before Do Not Disturb. */
+        fun hasSamsungSetting(context: Context): Boolean =
+            runCatching { Settings.Global.getString(context.contentResolver, BEDTIME_SETTING) != null }.getOrDefault(false)
     }
 }

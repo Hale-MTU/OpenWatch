@@ -138,12 +138,13 @@ class WorkoutRecorder(
         if (sport.steps) {
             sensors.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)?.let {
                 runCatching { sensors.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL, 0, h) }
+                    .onSuccess { registered -> if (registered) debug.registered("workoutSteps", it, SensorManager.SENSOR_DELAY_NORMAL, 0) }
                     .onFailure { e -> Log.w(TAG, "Step counter refused", e) }
             }
         }
         if (sport.elevation) {
             sensors.getDefaultSensor(Sensor.TYPE_PRESSURE)?.let {
-                sensors.registerListener(this, it, 1_000_000, 0, h)
+                if (sensors.registerListener(this, it, 1_000_000, 0, h)) debug.registered("workoutBarometer", it, 1_000_000, 0)
             }
         }
         if (usesGps) {
