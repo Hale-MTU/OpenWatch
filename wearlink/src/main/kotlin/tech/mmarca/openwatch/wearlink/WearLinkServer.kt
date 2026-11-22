@@ -134,7 +134,9 @@ class WearLinkServer(
             trust.notePending(peerAddress, hello.token, hello.name)
             return WearLinkProtocol.HelloReply.Pending
         }
-        return WearLinkProtocol.HelloReply.Ok(WearLinkProtocol.VERSION, handler.capabilities(), handler.localName())
+        // Only a phone that asked for the clock reads a field before the name.
+        val clock = if (WearLinkProtocol.CAP_CLOCK in hello.capabilities) handler.nowMillis() else null
+        return WearLinkProtocol.HelloReply.Ok(WearLinkProtocol.VERSION, handler.capabilities(), handler.localName(), clock)
     }
 
     private fun answer(writer: LineWriter, line: String) {

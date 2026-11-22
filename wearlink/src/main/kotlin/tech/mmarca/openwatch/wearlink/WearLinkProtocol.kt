@@ -13,9 +13,12 @@ import java.util.UUID
  * Every connection opens with one hello from the phone and one reply from the
  * watch; requests follow only after `OK`:
  * - `HELLO <version> <caps> <token> <name...>` — the phone's protocol version,
- *   its capabilities (`hr,sm` or `-`), the secret it holds for this watch
+ *   its capabilities (`tm` or `-`), the secret it holds for this watch
  *   (`WearLinkToken`) and its Bluetooth name, the rest of the line.
  * - `OK <version> <caps> <name...>` — the watch knows that token for this phone.
+ *   To a phone that announced `tm` it is `OK <version> <caps,tm> <epochMillis>
+ *   <name...>`: the watch's clock as it answered, so the phone can see skew.
+ *   Only such a phone gets the field, so no other ever reads it as the name.
  * - `PENDING` — the watch does not hold this token for this phone and is asking
  *   the wearer; the phone tries again later. That is a new phone, or a known
  *   one presenting another token (a reinstalled or reset app, or an impostor:
@@ -154,6 +157,9 @@ object WearLinkProtocol {
     /** The watch takes `GET_PREF` and `SET_PREF`: the phone can show and change its settings. */
     const val CAP_PREFERENCES: String = "pref"
 
+    /** The phone reads the watch's clock in `OK`; a watch announces it back only with the time there. */
+    const val CAP_CLOCK: String = "tm"
+
     /**
      * The settings the phone may read with `GET_PREF` and change with
      * `SET_PREF`: the watch's own ([WearSettings] on the watch). Opaque
@@ -228,7 +234,8 @@ object WearLinkProtocol {
 
     /** The watch's answer to a hello. */
     sealed class HelloReply {
-        data class Ok(val version: Int, val capabilities: Set<String>, val name: String) : HelloReply()
+        /** [clockMillis] is the watch's time as it answered, for a phone that announced [CAP_CLOCK]; [capabilities] never hold it. */
+        data class Ok(val version: Int, val capabilities: Set<String>, val name: String, val clockMillis: Long? = null) : HelloReply()
         data object Pending : HelloReply()
         data class Unauthorized(val reason: UnauthorizedReason) : HelloReply()
         data class VersionMismatch(val min: Int, val max: Int) : HelloReply()
@@ -261,7 +268,9 @@ object WearLinkProtocol {
     }
 
     fun formatHelloReply(reply: HelloReply): String = when (reply) {
-        is HelloReply.Ok -> "$OK ${reply.version} ${formatCapabilities(reply.capabilities)} ${cleanName(reply.name)}"
+        is HelloReply.Ok -> reply.clockMillis?.let { clock ->
+            "$OK ${reply.version} ${formatCapabilities(reply.capabilities + CAP_CLOCK)} $clock ${cleanName(reply.name)}"
+        } ?: "$OK ${reply.version} ${formatCapabilities(reply.capabilities - CAP_CLOCK)} ${cleanName(reply.name)}"
         HelloReply.Pending -> PENDING
         is HelloReply.Unauthorized -> "$UNAUTHORIZED ${reply.reason.word}"
         is HelloReply.VersionMismatch -> "$VERSION_WORD ${reply.min} ${reply.max}"
@@ -277,7 +286,9 @@ object WearLinkProtocol {
                 if (fields.size < 3) return null
                 val version = fields[1].toIntOrNull() ?: return null
                 val capabilities = parseCapabilities(fields[2]) ?: return null
-                HelloReply.Ok(version, capabilities, cleanName(fields.drop(3).joinToString(" ")))
+                if (CAP_CLOCK !in capabilities) return HelloReply.Ok(version, capabilities, cleanName(fields.drop(3).joinToString(" ")))
+                val clock = fields.getOrNull(3)?.toLongOrNull() ?: return null
+                HelloReply.Ok(version, capabilities - CAP_CLOCK, cleanName(fields.drop(4).joinToString(" ")), clock)
             }
             PENDING -> if (fields.size == 1) HelloReply.Pending else null
             UNAUTHORIZED -> if (fields.size == 2) UnauthorizedReason.fromWord(fields[1])?.let(HelloReply::Unauthorized) else null

@@ -185,6 +185,22 @@ class WearLinkLoopbackTest {
     }
 
     @Test
+    fun `the watch sends its clock only to a phone that asks for it`() {
+        val loopback = trusted()
+        val asking = loopback.connect()
+        val session = (WearLinkClient.hello(asking.clientConnection, hello().copy(capabilities = setOf(WearLinkProtocol.CAP_CLOCK))) as WearLinkOutcome.Ok).value
+        assertEquals(1_763_800_000_000L, session.peer.clockMillis)
+        assertEquals(setOf("as", "hr", "hv", "sm", "st"), session.peer.capabilities)
+        session.close()
+
+        // Any other phone, a 0.4.x one included, gets the line it always got: the name after the capabilities.
+        val other = loopback.connect()
+        LineWriter(other.clientConnection.output).apply { line("HELLO 5 hr,sm,st $token Pixel 6 Pro"); flush() }
+        assertEquals("OK 5 as,hr,hv,sm,st Galaxy Watch8 (89FZ)", LineReader(other.clientConnection.input).readLine())
+        other.clientConnection.close()
+    }
+
+    @Test
     fun `live windows hand out each reading and can repeat on one connection`() {
         val loopback = trusted()
         val readings = List(3) { WearLinkProtocol.HeartRateSample(1_700_000_000_000L + it * 1000L, 70 + it) }

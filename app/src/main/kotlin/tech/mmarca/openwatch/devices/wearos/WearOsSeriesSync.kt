@@ -137,3 +137,41 @@ internal class WearOsSeriesSync(
     /** A series' time cursor in [WearOsSyncCursorStore]. */
     class TimeCursor(val get: () -> Instant, val set: (Instant) -> Unit)
 }
+
+/**
+ * The first pull of a minute series kept by a time cursor (steps, ascent): a time position one
+ * millisecond before it, so the cursor's minute, which the watch may have rewritten since, comes
+ * once more.
+ */
+internal fun handOverMinutes(timeCursor: Instant): String =
+    WearLinkSince.afterTime(if (timeCursor == Instant.EPOCH) 0 else timeCursor.toEpochMilli() - 1)
+
+/**
+ * The step minutes the floors filter reads for an ascent minute: the minute and the one before
+ * ([WearOsFloorsImport]). This sync's are in hand; the watch is asked for the rest by a window
+ * from the earliest one missing, which covers every minute after it, and nothing read that way
+ * is written.
+ */
+internal class WearOsStepContext(
+    private val reader: WearOsSeriesReader,
+    private val device: BleSensorDevice,
+    pulled: List<WearOsStepMinute>,
+) {
+    private val known = HashMap<Instant, WearOsStepMinute>().apply { pulled.forEach { put(it.start, it) } }
+
+    /** Every step row newer than this is in [known]: a minute after it without one had no steps. */
+    private var readAfter: Instant? = null
+
+    /** Null when no bonded watch matches. */
+    suspend fun around(ascent: List<WearOsAscentMinute>): List<WearOsStepMinute>? {
+        val missing = ascent.flatMap { listOf(it.start, it.start.minusSeconds(60)) }
+            .filter { it !in known && readAfter?.let { after -> !it.isAfter(after) } != false }
+        if (missing.isNotEmpty()) {
+            val from = missing.min().minusMillis(1)
+            val read = reader.newerThan(device, WearOsSeries.STEPS, from) ?: return null
+            read.forEach { known[it.start] = it }
+            readAfter = readAfter?.let { minOf(it, from) } ?: from
+        }
+        return known.values.toList()
+    }
+}

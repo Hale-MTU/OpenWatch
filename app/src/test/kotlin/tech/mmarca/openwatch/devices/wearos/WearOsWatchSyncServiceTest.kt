@@ -76,7 +76,7 @@ class WearOsWatchSyncServiceTest {
     private var sleepPullFailure: Throwable? = null
 
     /** The minutes the watch holds; a pull answers those after `since`, [STEP_PAGE] at a time. */
-    private val watchSteps = mutableListOf<WearOsStepMinute>()
+    private val watchSteps = WatchStepMinutes()
     private val stepPullsSince = mutableListOf<Instant>()
     private var stepsNotPaired = false
 
@@ -105,7 +105,7 @@ class WearOsWatchSyncServiceTest {
         @Suppress("UNCHECKED_CAST")
         override suspend fun <T : Any> pullSeries(targetAddress: String?, targetName: String?, series: WearSeries<T>, cursor: String): WearOsSeriesPage<T>? {
             asked += series.key to cursor
-            val since = sinceOf(cursor)
+            val since by lazy { sinceOf(cursor) }
             val page: WearOsSeriesPage<*>? = when (series.key) {
                 WearLinkProtocol.CAP_HEART_RATE -> {
                     pullsSince += since
@@ -120,13 +120,9 @@ class WearOsWatchSyncServiceTest {
                     page(pulled.minutes, pulled.hasMore, cursor) { it.time }
                 }
                 WearLinkProtocol.CAP_STEPS -> {
-                    stepPullsSince += since
-                    if (stepsNotPaired) {
-                        null
-                    } else {
-                        val after = watchSteps.filter { it.start.isAfter(since) }.sortedBy { it.start }
-                        page(after.take(STEP_PAGE), after.size > STEP_PAGE, cursor) { it.start }
-                    }
+                    // A time position is a first pull or a window; the watch's own cursor names no time.
+                    if (cursor.startsWith("t")) stepPullsSince += since
+                    if (stepsNotPaired) null else watchSteps.page(cursor, STEP_PAGE)
                 }
                 WearLinkProtocol.CAP_ASCENT -> {
                     ascentPullsSince += since
@@ -171,6 +167,8 @@ class WearOsWatchSyncServiceTest {
 
     /** Every pull, by series key and the cursor it went out with. */
     private val asked = mutableListOf<Pair<String, String>>()
+
+    private fun stepCursors(): List<String> = asked.filter { it.first == "st" }.map { it.second }
 
     /** A page whose cursor names its newest time; an empty one gives the cursor back, as the watch does. */
     private fun <V> page(values: List<V>, hasMore: Boolean, cursor: String, timeOf: (V) -> Instant): WearOsSeriesPage<V> =
@@ -300,21 +298,21 @@ class WearOsWatchSyncServiceTest {
     }
 
     @Test
-    fun `step minutes are pulled page by page, each from the newest minute written`() = runTest {
+    fun `step minutes are pulled page by page, each from the watch's cursor`() = runTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += List(5) { WearOsStepMinute(t0.plusSeconds(60L * it), 10 + it) }
 
         val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(synced(stepMinutes = 5), result)
-        assertEquals(listOf(Instant.EPOCH, t0.plusSeconds(60), t0.plusSeconds(180)), stepPullsSince)
+        assertEquals(listOf("t0", "s.2", "s.4"), stepCursors())
         assertEquals(t0.plusSeconds(240), cursors.stepsCursor(WATCH.id))
         assertEquals((0..4).associate { t0.plusSeconds(60L * it) to 10L + it }, stepCounts())
         assertEquals((0..4).map { 10.0 + it }, insertedOf<androidx.health.connect.client.records.StepsCadenceRecord>().map { it.samples.single().rate })
     }
 
     @Test
-    fun `the next sync takes the cursor minute again, and a minute that grew replaces its record`() = runTest {
+    fun `a minute the watch rewrote comes again by its cursor, and one that grew replaces its record`() = runTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += listOf(WearOsStepMinute(t0, 40), WearOsStepMinute(t0.plusSeconds(60), 12))
         service().sync(WATCH, SyncTrigger.REQUESTED, null)
@@ -326,9 +324,27 @@ class WearOsWatchSyncServiceTest {
         insertCalls.clear()
         val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
-        assertEquals(t0.plusSeconds(60).minusMillis(1), stepPullsSince.last())
+        // After the last row the first sync read, not its minute again.
+        assertEquals(listOf("t0", "s.2"), stepCursors())
         assertEquals(synced(stepMinutes = 2), result)
         assertEquals(mapOf(t0.plusSeconds(60) to 30L, t0.plusSeconds(120) to 7L), stepCounts())
+    }
+
+    @Test
+    fun `the first steps pull after a time cursor hands over at the cursor's minute, which may have grown`() = runTest {
+        cursors.setStepsCursor(WATCH.id, t0.plusSeconds(60))
+        healthConnectVersions[WearOsStepsImport.clientRecordId(t0)] = 40L
+        healthConnectVersions[WearOsStepsImport.clientRecordId(t0.plusSeconds(60))] = 12L
+        pages += WearOsHeartRatePage(emptyList(), hasMore = false)
+        watchSteps += listOf(WearOsStepMinute(t0, 40), WearOsStepMinute(t0.plusSeconds(60), 30), WearOsStepMinute(t0.plusSeconds(120), 7))
+
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        assertEquals("t${t0.plusSeconds(60).toEpochMilli() - 1}", stepCursors().first())
+        // The minute before the cursor is not asked for again; the cursor's own grew and is replaced.
+        assertEquals(mapOf(t0.plusSeconds(60) to 30L, t0.plusSeconds(120) to 7L), stepCounts())
+        assertEquals(synced(stepMinutes = 2), result)
+        assertEquals("s.3", cursors.seriesCursor(WATCH.id, "st"))
     }
 
     @Test
@@ -509,7 +525,9 @@ class WearOsWatchSyncServiceTest {
 
         assertEquals(synced(stepMinutes = 1, skipped = setOf(SkippedSeries(HealthSeries.WALKING_ENERGY, SkipReason.PERMISSION, setOf(EXERCISE_READ)))), result)
         assertTrue(insertedOf<ActiveCaloriesBurnedRecord>().isEmpty())
-        assertEquals(t0.minusMillis(1), stepPullsSince.last())
+        // The minute was written all the same: the next sync asks after it.
+        assertEquals(t0, cursors.stepsCursor(WATCH.id))
+        assertEquals(listOf("t0", "s.1"), stepCursors())
     }
 
     @Test
@@ -601,7 +619,7 @@ class WearOsWatchSyncServiceTest {
     }
 
     @Test
-    fun `floors climbed with steps are written, an elevator ride is not, and the next pull takes the cursor minute again`() = runTest {
+    fun `floors climbed with steps are written, an elevator ride is not, and the next pull starts at the watch's cursor`() = runTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 40)
         ascentPages += WearOsAscentPage(
@@ -621,11 +639,11 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
-        assertEquals(t0.plusSeconds(600).minusMillis(1), ascentPullsSince.last())
+        assertEquals("f.${t0.plusSeconds(600).toEpochMilli()}", asked.last { it.first == "as" }.second)
     }
 
     @Test
-    fun `the step pull reaches back to the minute before the floors cursor, without writing it again`() = runTest {
+    fun `the floors read the steps of minutes this sync did not pull, without writing them again`() = runTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += List(3) { WearOsStepMinute(t0.plusSeconds(60L * it), 40) }
         ascentPages += WearOsAscentPage(listOf(WearOsAscentMinute(t0, 3.0)), hasMore = false)
@@ -638,8 +656,8 @@ class WearOsWatchSyncServiceTest {
         stepPullsSince.clear()
         service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
-        assertEquals(t0.minusSeconds(60).minusMillis(1), stepPullsSince.first())
-        // The cursor minute is read as unchanged, so no step minute is rewritten.
+        // No step changed, so the steps pull brought none; a window from the climb's minute before brings them.
+        assertEquals(listOf(t0.minusMillis(1)), stepPullsSince)
         assertEquals(emptyList<Instant>(), insertedOf<StepsRecord>().map { it.startTime })
         assertEquals(listOf(2.0), insertedOf<androidx.health.connect.client.records.FloorsClimbedRecord>().map { it.floors })
     }
@@ -1262,6 +1280,38 @@ private fun synced(
     skipped = skipped,
     moreRemains = moreRemains,
 )
+
+/**
+ * The watch's step minutes as its store keeps them: one per minute, numbered again on every
+ * write, and paged by those numbers as `SINCE` pages them (cursor `s.<number>`).
+ */
+private class WatchStepMinutes {
+    private val rows = ArrayList<Pair<Long, WearOsStepMinute>>()
+    private var seq = 0L
+
+    operator fun plusAssign(minute: WearOsStepMinute) {
+        rows.removeAll { it.second.start == minute.start }
+        rows += ++seq to minute
+    }
+
+    operator fun plusAssign(minutes: List<WearOsStepMinute>) = minutes.forEach { plusAssign(it) }
+
+    /** Rewrites the minute [minute] names, as late steps do on the watch. */
+    operator fun set(@Suppress("UNUSED_PARAMETER") index: Int, minute: WearOsStepMinute) = plusAssign(minute)
+
+    fun page(cursor: String, limit: Int): WearOsSeriesPage<WearOsStepMinute> {
+        val ordered = rows.sortedBy { it.first }
+        val after = if (cursor.startsWith("t")) {
+            val time = Instant.ofEpochMilli(cursor.drop(1).toLong())
+            ordered.firstOrNull { it.second.start.isAfter(time) }?.let { it.first - 1 } ?: ordered.lastOrNull()?.first ?: 0L
+        } else {
+            cursor.removePrefix("s.").toLong()
+        }
+        val newer = ordered.filter { it.first > after }
+        val taken = newer.take(limit)
+        return WearOsSeriesPage(taken.map { it.second }, "s.${taken.lastOrNull()?.first ?: after}", newer.size > limit)
+    }
+}
 
 // One page as the fake watch hands it out, by series: the values and whether more follow.
 private data class WearOsHeartRatePage(val samples: List<WearOsHeartRateSample>, val hasMore: Boolean)

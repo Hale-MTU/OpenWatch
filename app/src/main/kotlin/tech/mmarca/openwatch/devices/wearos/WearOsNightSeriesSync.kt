@@ -74,7 +74,9 @@ internal class WearOsNightSeriesSync(
      * The skin temperature minutes since the cursor, cut into night runs; each
      * finished run is one record against the wearer's own baseline. The
      * cursor moves to the end of the last finished run, so an unfinished one
-     * is pulled again next time. False when no bonded watch matches.
+     * is pulled again next time. A time cursor, not the watch's: a record is
+     * made from a whole run, which the phone does not keep, and each finished
+     * run's median enters the baseline once. False when no bonded watch matches.
      */
     private suspend fun syncSkin(
         device: BleSensorDevice,

@@ -49,6 +49,9 @@ interface WearLinkRequestHandler {
 
     fun capabilities(): Set<String>
 
+    /** The watch's clock, sent in `OK` to a phone that announced [WearLinkProtocol.CAP_CLOCK]. */
+    fun nowMillis(): Long = System.currentTimeMillis()
+
     /**
      * Up to [limit] stored lines of the series [key] after [cursor], in the order they were
      * written, and the cursor that follows them ([WearLinkSince]). Null when the watch does not

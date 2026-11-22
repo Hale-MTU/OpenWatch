@@ -92,6 +92,8 @@ class MemoryHandler(
         WearLinkProtocol.CAP_HRV,
     ),
     var storeId: String = "0123456789abcdef",
+    /** The watch's clock, for the `OK` of a phone that asks for it. */
+    var now: Long = 1_763_800_000_000L,
 ) : WearLinkRequestHandler {
     private class Row(val key: String, val time: Long, val line: String, val seq: Long)
 
@@ -107,6 +109,7 @@ class MemoryHandler(
 
     override fun localName(): String = name
     override fun capabilities(): Set<String> = announced
+    override fun nowMillis(): Long = now
 
     @Synchronized
     override fun seriesSince(key: String, cursor: String, limit: Int): WearLinkSince.Page? {

@@ -63,9 +63,9 @@ import tech.mmarca.openwatch.wearlink.WearLinkSince
  * page. The first pull hands the time cursor of earlier builds over to the
  * sequence ([WearOsSeriesSync]), so nothing already written is pulled again.
  *
- * Then steps, the same way, but each pull also takes the cursor's minute
- * again: the watch adds late steps only to its newest minute, and a minute
- * that grew replaces its record. Without the Health Connect grant to write
+ * Then steps, the same way: a minute the watch rewrote as late steps arrived
+ * comes again by the watch's cursor, and a minute that grew replaces its
+ * record. Without the Health Connect grant to write
  * steps, the steps stay on the watch and the sync goes on. Two estimates
  * come with the steps: cadence, and walking energy when the body weight is
  * known ([WearOsStepsImport]). If the user withheld the write permission for
@@ -254,9 +254,9 @@ class WearOsWatchSyncService(
 
     /**
      * The step minutes pulled, for the floors. Null when no bonded watch
-     * matches. The minutes written are counted on [progress]. The pull also
-     * reaches back to the minute before the floors cursor, because the floors
-     * filter needs it; those older minutes are not written again.
+     * matches. The minutes written are counted on [progress]. A minute comes
+     * once per write on the watch: the watch rewrites its newest minute as
+     * late steps arrive, and the rewrite comes with the next page.
      */
     private suspend fun pullSteps(device: BleSensorDevice, progress: WearOsSyncProgress): List<WearOsStepMinute>? {
         val granted = healthConnect.grantedPermissions()
@@ -278,12 +278,8 @@ class WearOsWatchSyncService(
             WearOsLog.log("walking energy: not written, other apps' sessions are not readable in the background")
         }
         val cursor = cursors.stepsCursor(device.id)
-        // The watch sends what is after `since`, so this takes the cursor's minute again.
-        var since = if (cursor == Instant.EPOCH) cursor else cursor.minusMillis(1)
-        val ascentCursor = cursors.ascentCursor(device.id)
-        if (ascentCursor != Instant.EPOCH) since = minOf(since, ascentCursor.minusSeconds(60).minusMillis(1))
+        val start = cursors.seriesCursor(device.id, WearOsSeries.STEPS.key) ?: handOverMinutes(cursor)
         val allMinutes = ArrayList<WearOsStepMinute>()
-        val after = since
         var pulledSteps = 0
         var energyMinutes = 0
         var energyKcal = 0.0
@@ -337,21 +333,20 @@ class WearOsWatchSyncService(
             energyKcal += written.sumOf { (record, _) -> record.energy.inKilocalories }
         }
 
-        val found = reader.pages(device, WearOsSeries.STEPS, WearLinkSince.afterTime(after.toEpochMilli())) { pulled ->
+        val found = reader.pages(device, WearOsSeries.STEPS, start) { pulled ->
             progress.page()
             // Each minute once, so every builder below works on the same minutes.
-            page = WearOsStepsImport.latestPerMinute(pulled.values.filter { it.start.isAfter(after) })
+            page = WearOsStepsImport.latestPerMinute(pulled.values)
             allMinutes += page
             pageSessionsRead = false
             val newest = page.maxOfOrNull { it.start }
             if (newest != null) {
-                // Minutes before the cursor are unchanged; the cursor minute is pulled again, and
-                // the write reads whether it grew.
-                val unwritten = page.filter { !it.start.isBefore(cursor) }
-                writeBatch(unwritten)
-                pulledSteps += unwritten.sumOf { it.steps }
+                // A minute the watch rewrote comes again; the write reads whether it grew.
+                writeBatch(page)
+                pulledSteps += page.sumOf { it.steps }
                 if (newest.isAfter(cursors.stepsCursor(device.id))) cursors.setStepsCursor(device.id, newest)
             }
+            cursors.setSeriesCursor(device.id, WearOsSeries.STEPS.key, pulled.cursor)
             true
         }
         if (!found) return null
@@ -361,7 +356,7 @@ class WearOsWatchSyncService(
         val weight = weightLookup?.getOrNull()
         // The watch has no screen for these yet; testers read this line.
         WearOsLog.log(
-            "steps: ${progress.stepMinutes} minute(s) written, $pulledSteps steps pulled (the re-pulled minute counts again); " +
+            "steps: ${progress.stepMinutes} minute(s) written, $pulledSteps steps pulled (a rewritten minute counts again); " +
                 if (energyMinutes == 0) {
                     "no walking energy written"
                 } else {
@@ -373,25 +368,33 @@ class WearOsWatchSyncService(
 
     /**
      * False when no bonded watch matches. Ascent is pulled the way steps are,
-     * taking the cursor's minute again, and written as floors only for
-     * minutes with [steps] around them; see [WearOsFloorsImport].
+     * by the watch's cursor, and written as floors only for minutes with steps
+     * around them; see [WearOsFloorsImport]. The steps of those minutes come
+     * from [steps], this sync's, or, for a minute it did not pull, from the
+     * watch ([WearOsStepContext]).
      */
     private suspend fun pullAscent(device: BleSensorDevice, progress: WearOsSyncProgress, steps: List<WearOsStepMinute>): Boolean {
         val cursor = cursors.ascentCursor(device.id)
-        val since = if (cursor == Instant.EPOCH) cursor else cursor.minusMillis(1)
+        val start = cursors.seriesCursor(device.id, WearOsSeries.ASCENT.key) ?: handOverMinutes(cursor)
+        val context = WearOsStepContext(reader, device, steps)
         var climbed = 0.0
         var credited = 0.0
-        val found = reader.pages(device, WearOsSeries.ASCENT, WearLinkSince.afterTime(since.toEpochMilli())) { pulled ->
+        var lost = false
+        val found = reader.pages(device, WearOsSeries.ASCENT, start) { pulled ->
             progress.page()
-            val minutes = pulled.values.filter { it.start.isAfter(since) }
+            val minutes = pulled.values
             val newest = minutes.maxOfOrNull { it.start }
             if (newest != null) {
-                val records = WearOsFloorsImport.records(minutes, steps, progress.salt)
-                // The cursor minute apart, as for steps.
+                val around = context.around(minutes) ?: run {
+                    lost = true
+                    return@pages false
+                }
+                val records = WearOsFloorsImport.records(minutes, around, progress.salt)
+                // A minute seen before apart: its records may be there already, and it must not make the rest fall back to one at a time.
                 for (part in records.partition { (it as FloorsClimbedRecord).startTime.isAfter(cursor) }.toList()) {
                     insertEstimates(part, "floors")
                 }
-                val elevation = WearOsFloorsImport.elevationRecords(minutes, steps, progress.salt)
+                val elevation = WearOsFloorsImport.elevationRecords(minutes, around, progress.salt)
                 for (part in elevation.partition { (it as ElevationGainedRecord).startTime.isAfter(cursor) }.toList()) {
                     insertEstimates(part, "elevation")
                 }
@@ -399,9 +402,10 @@ class WearOsWatchSyncService(
                 credited += records.sumOf { (it as FloorsClimbedRecord).floors } * AscentCredit.METRES_PER_FLOOR
                 if (newest.isAfter(cursors.ascentCursor(device.id))) cursors.setAscentCursor(device.id, newest)
             }
+            cursors.setSeriesCursor(device.id, WearOsSeries.ASCENT.key, pulled.cursor)
             true
         }
-        if (!found) return false
+        if (!found || lost) return false
         // The watch has no screen for these yet; testers read this line.
         WearOsLog.log(
             "ascent: ${"%.1f".format(Locale.ROOT, credited)} of ${"%.1f".format(Locale.ROOT, climbed)} m climbed written as floors; " +

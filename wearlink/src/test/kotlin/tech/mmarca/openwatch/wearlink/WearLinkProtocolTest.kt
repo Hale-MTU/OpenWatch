@@ -189,6 +189,20 @@ class WearLinkProtocolTest {
     }
 
     @Test
+    fun `the watch's clock sits before the name only where the reply says tm`() {
+        val ok = WearLinkProtocol.HelloReply.Ok(5, setOf("hr", "sm"), "Galaxy Watch8 (89FZ)", clockMillis = 1_763_800_000_000L)
+
+        assertEquals("OK 5 hr,sm,tm 1763800000000 Galaxy Watch8 (89FZ)", WearLinkProtocol.formatHelloReply(ok))
+        assertEquals(ok, WearLinkProtocol.parseHelloReply(WearLinkProtocol.formatHelloReply(ok)))
+        // Without tm a number is the start of the name, as every older phone reads it.
+        assertEquals(
+            WearLinkProtocol.HelloReply.Ok(5, setOf("hr"), "1763800000000 Watch"),
+            WearLinkProtocol.parseHelloReply("OK 5 hr 1763800000000 Watch"),
+        )
+        assertNull(WearLinkProtocol.parseHelloReply("OK 5 hr,tm Galaxy Watch8"))
+    }
+
+    @Test
     fun `requests parse to one type each`() {
         assertEquals(WearLinkProtocol.Request.Ping, WearLinkProtocol.parseRequest(" PING "))
         assertEquals(WearLinkProtocol.Request.SeriesSince("st", "t10", 2000), WearLinkProtocol.parseRequest("SINCE st t10 99999"))

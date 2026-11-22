@@ -212,7 +212,7 @@ class BluetoothWearOsNodePort internal constructor(
         try {
             val hello = WearLinkProtocol.Hello(
                 version = WearLinkProtocol.VERSION,
-                capabilities = setOf(WearLinkProtocol.CAP_HEART_RATE, WearLinkProtocol.CAP_SLEEP_MINUTES, WearLinkProtocol.CAP_STEPS),
+                capabilities = setOf(WearLinkProtocol.CAP_CLOCK),
                 token = linkStore.tokenFor(registeredAddress, match.address),
                 name = radio.localName(),
             )
@@ -221,6 +221,7 @@ class BluetoothWearOsNodePort internal constructor(
                 else -> throw failureOf(outcome)
             }
             lastWatchName = session.peer.name
+            WearOsClock.check(session.peer.clockMillis, System.currentTimeMillis())
             // The bond's Classic address is the surest way to find this watch again.
             linkStore.setLinkAddress(registeredAddress, match.address)
             return session
