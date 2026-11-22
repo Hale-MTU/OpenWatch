@@ -45,7 +45,7 @@ import tech.mmarca.openwatch.ui.theme.Spacing
  */
 @Composable
 fun ScalesSectionRoute(
-    onOpenScale: () -> Unit,
+    onOpenScale: (deviceId: String) -> Unit,
     viewModel: ScalesViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -78,7 +78,7 @@ fun ScalesSectionRoute(
 @Composable
 fun ScalesSection(
     state: ScalesUiState,
-    onOpenScale: () -> Unit,
+    onOpenScale: (deviceId: String) -> Unit,
     onAdd: () -> Unit,
     /** The supported-scales page, which also says where each scale's key is found. */
     onOpenSupportedScales: () -> Unit,
@@ -112,7 +112,7 @@ fun ScalesSection(
                 modifier = Modifier.padding(horizontal = Spacing.lg),
             )
         } else {
-            ScaleRow(scale = scale, onOpen = onOpenScale, modifier = Modifier.padding(horizontal = Spacing.lg))
+            ScaleRow(scale = scale, onOpen = { scale.deviceId?.let(onOpenScale) }, modifier = Modifier.padding(horizontal = Spacing.lg))
         }
     }
 
@@ -149,6 +149,7 @@ private fun ScalesSectionPreview() {
         ScalesSection(
             state = ScalesUiState(
                 scale = ScaleCardState(
+                    deviceId = "s400",
                     name = "Bathroom",
                     status = ScaleListenerStatus.LISTENING,
                     wokenBySystem = true,

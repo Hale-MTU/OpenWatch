@@ -33,13 +33,12 @@ data object BodyProfile
 @Serializable
 data object ConnectedApps
 
-/** The one scale's device view. Titled by the scale's name, like a watch. */
+/**
+ * One paired device, of any family: a watch or bike computer opens the device screen with its
+ * family's panel, the scale its own screen. Titled by the device's name.
+ */
 @Serializable
-data object ScaleDevice
-
-/** A watch or bike computer: the part every device has, and its family's panel. Titled by the device's name. */
-@Serializable
-data class WatchDevice(val deviceId: String)
+data class DeviceDetail(val deviceId: String)
 
 @Serializable
 data class WatchData(val deviceId: String)

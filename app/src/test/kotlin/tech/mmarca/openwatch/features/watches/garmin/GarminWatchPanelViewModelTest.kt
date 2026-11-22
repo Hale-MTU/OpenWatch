@@ -39,7 +39,7 @@ import tech.mmarca.openwatch.features.watches.GarminWatchActionsController
 import tech.mmarca.openwatch.features.watches.WatchFindUiState
 import tech.mmarca.openwatch.features.watches.WatchNotificationsGateway
 import tech.mmarca.openwatch.features.watches.WatchPermissionRequest
-import tech.mmarca.openwatch.navigation.WatchDevice
+import tech.mmarca.openwatch.navigation.DeviceDetail
 import tech.mmarca.openwatch.navigation.routeHandle
 import tech.mmarca.openwatch.util.MainDispatcherRule
 
@@ -66,7 +66,7 @@ class GarminWatchPanelViewModelTest {
     )
 
     private fun viewModel(deviceId: String) = GarminWatchPanelViewModel(
-        savedStateHandle = routeHandle(WatchDevice(deviceId)),
+        savedStateHandle = routeHandle(DeviceDetail(deviceId)),
         options = GarminWatchOptions(
             deviceRepository = repo,
             stateStore = stateStore,

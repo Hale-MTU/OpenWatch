@@ -32,7 +32,6 @@ import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
 import tech.mmarca.openwatch.features.healthconnect.HealthConnectSetupRoute
 import tech.mmarca.openwatch.features.home.HomeRoute
-import tech.mmarca.openwatch.features.scales.ScaleDeviceRoute
 import tech.mmarca.openwatch.features.settings.BodyProfileRoute
 import tech.mmarca.openwatch.features.settings.SettingsRoute
 import tech.mmarca.openwatch.ui.components.LocalAppBarState
@@ -126,9 +125,11 @@ fun AppNavigation(
                 composable<Home> {
                     HomeRoute(
                         onOpenWatch = { deviceId ->
-                            navController.navigate(WatchDevice(deviceId)) { launchSingleTop = true }
+                            navController.navigate(DeviceDetail(deviceId)) { launchSingleTop = true }
                         },
-                        onOpenScale = { navController.navigate(ScaleDevice) { launchSingleTop = true } },
+                        onOpenScale = { deviceId ->
+                            navController.navigate(DeviceDetail(deviceId)) { launchSingleTop = true }
+                        },
                         onOpenHealthConnect = {
                             navController.navigate(HealthConnectSetup) { launchSingleTop = true }
                         },
@@ -150,13 +151,7 @@ fun AppNavigation(
                 composable<BodyProfile> {
                     BodyProfileRoute(unitFormatter = unitFormatter)
                 }
-                composable<ScaleDevice> {
-                    ScaleDeviceRoute(
-                        onOpenBodyProfile = { navController.navigate(BodyProfile) { launchSingleTop = true } },
-                        onRemoved = { navController.popBackStack() },
-                    )
-                }
-                watchRoutes(navController)
+                deviceRoutes(navController)
             }
         }
     }

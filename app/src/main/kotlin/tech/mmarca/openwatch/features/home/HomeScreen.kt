@@ -39,7 +39,7 @@ import tech.mmarca.openwatch.ui.theme.Spacing
 @Composable
 fun HomeRoute(
     onOpenWatch: (String) -> Unit,
-    onOpenScale: () -> Unit,
+    onOpenScale: (deviceId: String) -> Unit,
     onOpenHealthConnect: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {

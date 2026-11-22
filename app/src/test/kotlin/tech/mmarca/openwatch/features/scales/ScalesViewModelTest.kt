@@ -40,6 +40,7 @@ class ScalesViewModelTest {
     private var found: CompanionDevice? = scale
     private val listener = mockk<XiaomiScaleListener>(relaxed = true) {
         every { status } returns MutableStateFlow(ScaleListenerStatus.LISTENING)
+        every { deviceId } returns MutableStateFlow("s400-row")
         coEvery { findScale() } answers { found }
         every { setUp(any(), any(), any()) } answers { store.setUp(firstArg<CompanionDevice>().address, secondArg(), thirdArg()) }
     }

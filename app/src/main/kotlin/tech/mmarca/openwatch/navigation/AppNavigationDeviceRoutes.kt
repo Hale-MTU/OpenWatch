@@ -3,19 +3,19 @@ package tech.mmarca.openwatch.navigation
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import tech.mmarca.openwatch.features.device.DeviceDetailRoute
 import tech.mmarca.openwatch.features.watches.WatchAlarmsRoute
 import tech.mmarca.openwatch.features.watches.WatchDataRoute
-import tech.mmarca.openwatch.features.watches.WatchDeviceRoute
 import tech.mmarca.openwatch.features.watches.WatchNotificationAppsRoute
 import tech.mmarca.openwatch.features.watches.WatchSendPointRoute
 import tech.mmarca.openwatch.features.watches.WatchSettingsRoute
 
-/** The watch-facing destinations. Plain pushed screens. */
-internal fun NavGraphBuilder.watchRoutes(
+/** A paired device and the screens a watch opens from it. Plain pushed screens. */
+internal fun NavGraphBuilder.deviceRoutes(
     navController: NavHostController,
 ) {
-    composable<WatchDevice> {
-        WatchDeviceRoute(
+    composable<DeviceDetail> {
+        DeviceDetailRoute(
             onOpenData = { deviceId ->
                 navController.navigate(WatchData(deviceId)) {
                     launchSingleTop = true
@@ -41,6 +41,7 @@ internal fun NavGraphBuilder.watchRoutes(
                     launchSingleTop = true
                 }
             },
+            onOpenBodyProfile = { navController.navigate(BodyProfile) { launchSingleTop = true } },
             onRemoved = { navController.popBackStack() },
         )
     }

@@ -1,8 +1,10 @@
 package tech.mmarca.openwatch.features.scales
 
 import androidx.compose.runtime.Immutable
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Instant
 import javax.inject.Inject
@@ -29,6 +31,7 @@ import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleListener
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleStore
 import tech.mmarca.healthcalculations.insights.BodyCompositionInput
 import tech.mmarca.openwatch.domain.model.ScaleWeighIn
+import tech.mmarca.openwatch.navigation.DeviceDetail
 
 /** The last weigh-in, ready to show. A null line was not measured, or could not be estimated. */
 @Immutable
@@ -88,6 +91,7 @@ private data class ScaleDeviceLocalState(
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class ScaleDeviceViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val store: XiaomiScaleStore,
     private val listener: XiaomiScaleListener,
     private val writer: ScaleWeighInWriter,
@@ -95,6 +99,11 @@ class ScaleDeviceViewModel @Inject constructor(
     private val healthConnect: HealthConnectGateway,
     private val unitFormatter: UnitFormatter,
 ) : ViewModel() {
+
+    private val deviceId: String = savedStateHandle.toRoute<DeviceDetail>().deviceId
+
+    /** The stored scale while it is still the one this screen was opened for; null once it is gone or replaced. */
+    private val scale = combine(store.config, listener.deviceId) { config, id -> config.takeIf { it.isSetUp && id == deviceId } }
 
     private val local = MutableStateFlow(ScaleDeviceLocalState())
     private var latestWeighIn: ScaleWeighIn? = null
@@ -105,26 +114,26 @@ class ScaleDeviceViewModel @Inject constructor(
     }
 
     val uiState: StateFlow<ScaleDeviceUiState> = combine(
-        store.config,
+        scale,
         listener.status,
         lastWeighIn,
         weighIns.pendingCount,
         local,
     ) { config, status, last, pending, local ->
         ScaleDeviceUiState(
-            name = if (config.isSetUp) config.name ?: config.address else null,
-            address = config.address,
-            profile = config.profile,
-            keyRejected = config.keyRejected,
+            name = config?.let { it.name ?: it.address },
+            address = config?.address,
+            profile = config?.profile,
+            keyRejected = config?.keyRejected == true,
             listenerStatus = status,
             wokenBySystem = local.wokenBySystem,
             systemWakeFailed = local.systemWakeFailed,
             lastWeighIn = last,
             hasPendingWeighIns = pending > 0,
-            writeFailure = config.writeFailure,
+            writeFailure = config?.writeFailure,
             missingWritePermissions = local.missingWritePermissions,
             missingProfileInputs = local.missingProfileInputs,
-            otherProfileIgnored = config.ignoredProfile != null,
+            otherProfileIgnored = config?.ignoredProfile != null,
             screenError = local.screenError,
             keyDialogOpen = local.keyDialogOpen,
             keyInputInvalid = local.keyInputInvalid,

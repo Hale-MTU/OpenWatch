@@ -34,7 +34,7 @@ import tech.mmarca.openwatch.devices.wearos.WearOsLinkStore
 import tech.mmarca.openwatch.devices.wearos.isWearOs
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.features.watches.WatchPermissionRequest
-import tech.mmarca.openwatch.navigation.WatchDevice
+import tech.mmarca.openwatch.navigation.DeviceDetail
 
 /** What the Wear OS panel of the device view shows: the link's status and the watch's own settings. */
 @Immutable
@@ -72,7 +72,7 @@ class WearOsWatchPanelViewModel @Inject constructor(
     private val onboardWearOsWatch: OnboardWearOsWatchUseCase,
 ) : ViewModel() {
 
-    val deviceId: String = savedStateHandle.toRoute<WatchDevice>().deviceId
+    val deviceId: String = savedStateHandle.toRoute<DeviceDetail>().deviceId
 
     private val localState = MutableStateFlow(WearOsWatchPanelUiState())
 

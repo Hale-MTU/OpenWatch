@@ -22,7 +22,7 @@ import tech.mmarca.openwatch.devices.wearos.WearOsCompanionManager
 import tech.mmarca.openwatch.devices.wearos.WearOsLinkStore
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
-import tech.mmarca.openwatch.navigation.WatchDevice
+import tech.mmarca.openwatch.navigation.DeviceDetail
 import tech.mmarca.openwatch.navigation.routeHandle
 import tech.mmarca.openwatch.util.MainDispatcherRule
 
@@ -49,7 +49,7 @@ class WearOsWatchPanelViewModelTest {
         val manager = mockk<WearOsCompanionManager>()
         coEvery { manager.checkWearOsWatchStatus(any(), any()) } throws SecurityException("BLUETOOTH_CONNECT")
         val vm = WearOsWatchPanelViewModel(
-            savedStateHandle = routeHandle(WatchDevice(watch.id)),
+            savedStateHandle = routeHandle(DeviceDetail(watch.id)),
             deviceRepository = repo,
             companionManager = manager,
             linkStore = WearOsLinkStore(FakeSharedPreferences(), testSeal()),

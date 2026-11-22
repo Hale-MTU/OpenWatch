@@ -14,7 +14,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
@@ -136,6 +139,10 @@ class XiaomiScaleListener(
     /** The scale's registry row, or null without a scale. */
     val device: BleSensorDevice?
         get() = registry.devices.firstOrNull { it.isXiaomiScale }
+
+    /** The scale's registry id as the registry changes, so a screen opened for it can tell when it is gone; null without a scale. */
+    val deviceId: Flow<String?>
+        get() = registry.devicesFlow.map { devices -> devices.firstOrNull { it.isXiaomiScale }?.id }.distinctUntilChanged()
 
     /** Adds the scale the dialog found and starts listening for it. An earlier scale's row goes. */
     fun setUp(found: CompanionDevice, name: String, key: ByteArray) {

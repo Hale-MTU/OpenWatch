@@ -23,7 +23,7 @@ import tech.mmarca.openwatch.R
 @Config(sdk = [34], application = Application::class)
 class RoutesTest {
 
-    /** Home and the watch destinations as the app declares them. Building it maps every argument to a NavType. */
+    /** Home and the device destinations as the app declares them. Building it maps every argument to a NavType. */
     private fun graph(): NavGraph {
         val navController = NavHostController(ApplicationProvider.getApplicationContext()).apply {
             navigatorProvider.addNavigator(ComposeNavigator())
@@ -31,15 +31,15 @@ class RoutesTest {
         return navController.createGraph(startDestination = Home) {
             composable<Home> {}
             composable<Onboarding> {}
-            watchRoutes(navController)
+            deviceRoutes(navController)
         }
     }
 
     @Test
-    fun `the watch destinations build, and each has its title or titles itself`() {
+    fun `the device destinations build, and each has its title or titles itself`() {
         val graph = graph()
 
-        assertNull(graph.findNode<WatchDevice>()!!.titleRes())
+        assertNull(graph.findNode<DeviceDetail>()!!.titleRes())
         assertEquals(R.string.settings_watch_data_title, graph.findNode<WatchData>()!!.titleRes())
         assertEquals(R.string.settings_watch_on_device_settings, graph.findNode<WatchSettings>()!!.titleRes())
         assertEquals(R.string.settings_watch_point_title, graph.findNode<WatchSendPoint>()!!.titleRes())
@@ -51,7 +51,7 @@ class RoutesTest {
 
         assertTrue(graph.findNode<Home>()!!.isRoot)
         assertTrue(graph.findNode<Onboarding>()!!.isRoot)
-        assertFalse(graph.findNode<WatchDevice>()!!.isRoot)
+        assertFalse(graph.findNode<DeviceDetail>()!!.isRoot)
     }
 
     @Test

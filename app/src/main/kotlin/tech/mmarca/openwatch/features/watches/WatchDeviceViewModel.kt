@@ -30,7 +30,7 @@ import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
-import tech.mmarca.openwatch.navigation.WatchDevice
+import tech.mmarca.openwatch.navigation.DeviceDetail
 import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
 
 /** What the device view shows about any device: its header, its sync and schedule, its removal. */
@@ -84,7 +84,7 @@ class WatchDeviceViewModel @Inject constructor(
     @ApplicationScope appScope: CoroutineScope,
 ) : ViewModel() {
 
-    val deviceId: String = savedStateHandle.toRoute<WatchDevice>().deviceId
+    val deviceId: String = savedStateHandle.toRoute<DeviceDetail>().deviceId
 
     /** Outlives the view-model: the unbond after a removal must not die with the screen. */
     private val housekeepingScope = appScope + dispatchers.default

@@ -30,7 +30,7 @@ import tech.mmarca.openwatch.features.watches.GarminWatchActionsController
 import tech.mmarca.openwatch.features.watches.WatchFindUiState
 import tech.mmarca.openwatch.features.watches.WatchNotificationsGateway
 import tech.mmarca.openwatch.features.watches.WatchPermissionRequest
-import tech.mmarca.openwatch.navigation.WatchDevice
+import tech.mmarca.openwatch.navigation.DeviceDetail
 
 /** What the Garmin panel of the device view shows: the actions, the rows, the switches. */
 @Immutable
@@ -94,7 +94,7 @@ class GarminWatchPanelViewModel @Inject constructor(
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
-    val deviceId: String = savedStateHandle.toRoute<WatchDevice>().deviceId
+    val deviceId: String = savedStateHandle.toRoute<DeviceDetail>().deviceId
 
     /** The grants the switches' lines depend on, read on the way in, on resume and after each dialog. */
     private data class Grants(val notificationAccess: Boolean, val calendar: Boolean, val coMaps: Boolean)

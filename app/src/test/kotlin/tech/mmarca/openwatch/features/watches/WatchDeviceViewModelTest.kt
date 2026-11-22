@@ -58,7 +58,7 @@ import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
-import tech.mmarca.openwatch.navigation.WatchDevice
+import tech.mmarca.openwatch.navigation.DeviceDetail
 import tech.mmarca.openwatch.navigation.routeHandle
 import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
 import tech.mmarca.openwatch.util.MainDispatcherRule
@@ -154,7 +154,7 @@ class WatchDeviceViewModelTest {
     )
 
     private fun viewModel(deviceId: String) = WatchDeviceViewModel(
-        savedStateHandle = routeHandle(WatchDevice(deviceId)),
+        savedStateHandle = routeHandle(DeviceDetail(deviceId)),
         deviceRepository = repo,
         syncController = mockk<DeviceSyncController>().also {
             every { it.state } returns MutableStateFlow(DeviceSyncUiState())

@@ -25,6 +25,8 @@ import tech.mmarca.openwatch.domain.model.OsPermissionCatalog
 /** The scale as its card shows it. */
 @Immutable
 data class ScaleCardState(
+    /** The scale's registry id, which its device screen opens on; null until the registry has its row. */
+    val deviceId: String?,
     val name: String,
     val status: ScaleListenerStatus,
     /** Android wakes the app when someone steps on, so "listening" holds with the app closed. */
@@ -113,14 +115,15 @@ class ScalesViewModel @Inject constructor(
     }
 
     val uiState: StateFlow<ScalesUiState> = combine(
-        store.config,
+        combine(store.config, listener.deviceId, ::Pair),
         listener.status,
         weighIns.latest,
         local,
-    ) { config, status, latest, local ->
+    ) { (config, deviceId), status, latest, local ->
         ScalesUiState(
             scale = if (config.isSetUp) {
                 ScaleCardState(
+                    deviceId = deviceId,
                     name = config.name ?: config.address.orEmpty(),
                     status = status,
                     wokenBySystem = local.wokenBySystem,
