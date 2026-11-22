@@ -1,10 +1,7 @@
 package tech.mmarca.openwatch.features.settings
 
-import android.content.Context
-import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,6 +9,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import tech.mmarca.openwatch.BuildConfig
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
+import tech.mmarca.openwatch.features.watches.WatchNotificationsGateway
 
 data class SettingsUiState(
     val syncEnabled: Boolean = true,
@@ -23,8 +21,8 @@ data class SettingsUiState(
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
     private val preferences: OpenWatchPreferences,
+    private val notifications: WatchNotificationsGateway,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -37,8 +35,7 @@ class SettingsViewModel @Inject constructor(
             it.copy(
                 syncEnabled = preferences.healthConnectSyncEnabled,
                 writeRespiratoryRate = preferences.writeRespiratoryRate,
-                notificationAccessGranted =
-                    context.packageName in NotificationManagerCompat.getEnabledListenerPackages(context),
+                notificationAccessGranted = notifications.isNotificationAccessGranted(),
             )
         }
     }

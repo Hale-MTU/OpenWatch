@@ -1,10 +1,8 @@
 package tech.mmarca.openwatch.features.connectedapps
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -18,11 +16,11 @@ import tech.mmarca.openlink.OpenLinkTrust
 import tech.mmarca.openlink.host.OpenLinkClientRecord
 import tech.mmarca.openlink.host.OpenLinkHost
 import tech.mmarca.openlink.host.OpenLinkHostCore
+import tech.mmarca.openwatch.link.AppLabelResolver
 import tech.mmarca.openwatch.link.FirstPartyApps
 import tech.mmarca.openwatch.link.LinkLiveSessions
 import tech.mmarca.openwatch.link.LinkSessionStatus
 import tech.mmarca.openwatch.link.linkSessionStatuses
-import tech.mmarca.openwatch.link.appLabel
 import tech.mmarca.openwatch.link.signerFingerprint
 
 /** One app that asked to use OpenWatch over OpenLink, as the screen shows it. */
@@ -55,15 +53,14 @@ data class ConnectedApp(
 
 @HiltViewModel
 class ConnectedAppsViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    private val appLabels: AppLabelResolver,
+    private val firstParty: FirstPartyApps,
     private val core: OpenLinkHostCore,
     host: OpenLinkHost,
     liveSessions: LinkLiveSessions,
 ) : ViewModel() {
 
     private val statuses = combine(host.activeSessions, liveSessions.activity, ::linkSessionStatuses)
-
-    private val firstParty = FirstPartyApps.from(context)
 
     val apps: StateFlow<List<ConnectedApp>> =
         combine(core.clients, host.connected, statuses, ticker()) { records, connected, sessions, now ->
@@ -87,7 +84,7 @@ class ConnectedAppsViewModel @Inject constructor(
         if (granted) core.grant(packageName, capability) else core.revoke(packageName, capability)
     }
 
-    private fun OpenLinkClientRecord.toConnectedApp() = appLabel(context, packageName).let { label -> ConnectedApp(
+    private fun OpenLinkClientRecord.toConnectedApp() = appLabels.label(packageName).let { label -> ConnectedApp(
         packageName = packageName,
         label = label,
         trust = trust,

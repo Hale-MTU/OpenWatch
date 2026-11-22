@@ -17,9 +17,11 @@ import tech.mmarca.openlink.host.OpenLinkTrustStore
 import tech.mmarca.openlink.host.SharedPreferencesTrustStorage
 import tech.mmarca.openwatch.MainActivity
 import tech.mmarca.openwatch.StartupActor
+import tech.mmarca.openwatch.link.AppLabelResolver
 import tech.mmarca.openwatch.link.FirstPartyApps
 import tech.mmarca.openwatch.link.OpenWatchLinkCapabilities
 import tech.mmarca.openwatch.link.OpenWatchLinkPublisher
+import tech.mmarca.openwatch.link.SystemAppLabelResolver
 
 /** The OpenLink host: the trust rules, the binder, and what OpenWatch offers through it. */
 @Module
@@ -33,9 +35,16 @@ object LinkModule {
 
     @Provides
     @Singleton
-    fun provideOpenLinkHostCore(@ApplicationContext context: Context): OpenLinkHostCore = OpenLinkHostCore(
+    fun provideFirstPartyApps(@ApplicationContext context: Context): FirstPartyApps = FirstPartyApps.from(context)
+
+    @Provides
+    fun provideAppLabelResolver(@ApplicationContext context: Context): AppLabelResolver = SystemAppLabelResolver(context)
+
+    @Provides
+    @Singleton
+    fun provideOpenLinkHostCore(@ApplicationContext context: Context, firstParty: FirstPartyApps): OpenLinkHostCore = OpenLinkHostCore(
         store = OpenLinkTrustStore(SharedPreferencesTrustStorage.create(context)),
-        knownClients = FirstPartyApps.from(context).knownClients,
+        knownClients = firstParty.knownClients,
     )
 
     @Provides

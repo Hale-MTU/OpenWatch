@@ -1,10 +1,8 @@
 package tech.mmarca.openwatch.features.settings
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,8 +20,8 @@ import tech.mmarca.openwatch.core.presentation.toScreenError
 import tech.mmarca.openwatch.data.repository.BodyProfileProvider
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
+import tech.mmarca.openwatch.link.AppLabelResolver
 import tech.mmarca.openwatch.link.LinkProfileSync
-import tech.mmarca.openwatch.link.appLabel
 
 data class BodyProfileUiState(
     val declared: BodyProfile = BodyProfile(),
@@ -43,7 +41,7 @@ data class BodyProfileUiState(
 class BodyProfileViewModel @Inject constructor(
     private val preferences: OpenWatchPreferences,
     private val bodyProfile: BodyProfileProvider,
-    @ApplicationContext private val context: Context,
+    private val appLabels: AppLabelResolver,
     linkCore: OpenLinkHostCore,
     profileSync: LinkProfileSync,
 ) : ViewModel() {
@@ -61,7 +59,7 @@ class BodyProfileViewModel @Inject constructor(
         viewModelScope.launch {
             combine(linkCore.clients, profileSync.updatedAtMillis) { clients, updatedAt ->
                 val peer = clients.firstOrNull { it.trust == OpenLinkTrust.TRUSTED && OpenLink.CAPABILITY_PROFILE in it.capabilities }
-                peer?.let { appLabel(context, it.packageName) } to updatedAt
+                peer?.let { appLabels.label(it.packageName) } to updatedAt
             }.collect { (peer, updatedAt) -> _uiState.update { it.copy(syncedWith = peer, syncUpdatedAtMillis = updatedAt) } }
         }
     }

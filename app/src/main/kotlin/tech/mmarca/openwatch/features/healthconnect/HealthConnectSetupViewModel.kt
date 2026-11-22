@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,7 +36,7 @@ data class HealthConnectSetupUiState(
 
 @HiltViewModel
 class HealthConnectSetupViewModel @Inject constructor(
-    @param:ApplicationContext private val context: Context,
+    private val permissionLabels: HealthPermissionLabels,
     private val healthConnect: HealthConnectGateway,
     private val preferences: OpenWatchPreferences,
 ) : ViewModel() {
@@ -72,7 +71,7 @@ class HealthConnectSetupViewModel @Inject constructor(
             _uiState.update {
                 it.copy(
                     availability = availability,
-                    missing = missing.map { permission -> healthPermissionLabel(context, permission) },
+                    missing = missing.map(permissionLabels::label),
                     missingExtraAccess = missing.any { permission -> permission in ExtraAccess },
                     grantedCount = (granted intersect healthConnect.declaredPermissions).size,
                     declaredCount = healthConnect.declaredPermissions.size,
