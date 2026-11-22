@@ -4,34 +4,30 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import kotlin.math.roundToInt
-import tech.mmarca.openwatch.wear.samsung.RawPoint
-import tech.mmarca.openwatch.wear.samsung.SamsungHealthPlatform
-import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
-import tech.mmarca.openwatch.wear.samsung.toSkinPoint
-import tech.mmarca.openwatch.wear.samsung.SkinPoint
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
 /**
- * Skin temperature at night from the Samsung Health Platform, one
- * [WearMetrics.SKIN_TEMPERATURE] row per clock minute: the mean of the
- * minute's good points, skin and ambient.
+ * Skin temperature at night, one [WearMetrics.SKIN_TEMPERATURE] row per
+ * clock minute: the mean of the minute's good points, skin and ambient. The
+ * points come from a [SpotSource]: the Samsung Health Platform's tracker, the
+ * only one, since the sensor itself is closed to ordinary apps; a watch
+ * without the platform has no skin temperature.
  *
  * Runs only while sleep is held and the wearer switched it on
- * ([WearSettings.skinTemperature]); a watch without the platform has
- * no skin temperature, since the sensor itself is closed to ordinary apps.
- * In the bench test on a Galaxy Watch7 the tracker delivered nothing; the
- * debug protocol counts what arrives (`samsung.skinPoints`, `skin.*`).
+ * ([WearSettings.skinTemperature]). In the bench test on a Galaxy Watch7 the
+ * tracker delivered nothing; the debug protocol counts what arrives
+ * (`samsung.skinPoints`, `skin.*`).
  */
 internal class SkinTemperatureRecorder(
     private val store: MetricStore,
-    private val feed: SamsungHeartRateFeed,
+    private val source: SpotSource<SkinReading>,
     private val debug: DebugProtocol,
-) : Recorder, SamsungHeartRateFeed.RawSubscriber {
+) : Recorder, SpotSource.Sink<SkinReading> {
 
     private var thread: HandlerThread? = null
 
     val isAvailable: Boolean
-        get() = feed.isAvailable
+        get() = source.isAvailable
 
     override val isRunning: Boolean
         get() = thread != null
@@ -40,13 +36,13 @@ internal class SkinTemperatureRecorder(
 
     /** Starts or stops the recorder. Main thread. */
     fun setEnabled(enabled: Boolean) {
-        if (enabled && feed.isAvailable) start() else stop()
+        if (enabled && source.isAvailable) start() else stop()
     }
 
     private fun start() {
         if (thread != null) return
         val worker = HandlerThread("SkinTemperatureRecorder").apply { start() }
-        if (!feed.subscribeRaw(SamsungHealthPlatform.TRACKER_SKIN_TEMPERATURE, this, Handler(worker.looper))) {
+        if (!source.start(Handler(worker.looper), this)) {
             worker.quitSafely()
             return
         }
@@ -56,7 +52,7 @@ internal class SkinTemperatureRecorder(
 
     override fun stop() {
         val worker = thread ?: return
-        feed.unsubscribeRaw(SamsungHealthPlatform.TRACKER_SKIN_TEMPERATURE, this)
+        source.stop()
         worker.quitSafely()
         thread = null
         Log.i(TAG, "Skin temperature off")
@@ -66,10 +62,9 @@ internal class SkinTemperatureRecorder(
         debug.event("Skin", "tracker_error")
     }
 
-    override fun onRawPoints(raw: List<RawPoint>) {
-        val points = raw.map { it.toSkinPoint() }
-        val rows = minutes(points)
-        debug.count("skin.points", points.size.toLong())
+    override fun onReadings(readings: List<SkinReading>) {
+        val rows = minutes(readings)
+        debug.count("skin.points", readings.size.toLong())
         debug.count("skin.rows", rows.size.toLong())
         if (rows.isEmpty()) return
         store.putAll(WearMetrics.SKIN_TEMPERATURE, rows)
@@ -80,15 +75,12 @@ internal class SkinTemperatureRecorder(
         private const val TAG = "SkinTemperatureRecorder"
         private const val MINUTE_MILLIS = 60_000L
 
-        /** The platform's status for a measured point. */
-        private const val STATUS_MEASURED = 0
-
         /** The minutes the good points fall in, each the mean of its points. Pure. */
-        internal fun minutes(points: List<SkinPoint>): List<WearLinkProtocol.SkinMinute> =
-            points.filter { it.status == STATUS_MEASURED && !it.objectCelsius.isNaN() && !it.ambientCelsius.isNaN() }
+        internal fun minutes(points: List<SkinReading>): List<WearLinkProtocol.SkinMinute> =
+            points.filter { it.measured && !it.skinCelsius.isNaN() && !it.ambientCelsius.isNaN() }
                 .groupBy { it.epochMillis - it.epochMillis % MINUTE_MILLIS }
                 .mapNotNull { (minute, inMinute) ->
-                    val skin = (inMinute.map { it.objectCelsius }.average() * 100).roundToInt()
+                    val skin = (inMinute.map { it.skinCelsius }.average() * 100).roundToInt()
                     val ambient = (inMinute.map { it.ambientCelsius }.average() * 100).roundToInt()
                     val row = WearLinkProtocol.SkinMinute(minute, skin, ambient)
                     row.takeIf { WearLinkProtocol.parseSkinMinute(WearLinkProtocol.formatSkinMinute(it)) != null }

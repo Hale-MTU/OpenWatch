@@ -36,7 +36,7 @@ internal class SamsungIbiSource(
     private var subscribed = false
 
     /** Whether the last window ended with a platform error or no point at all: the platform is not serving. */
-    var lastWindowFailed: Boolean = false
+    override var lastWindowFailed: Boolean = false
         private set
 
     override val isAvailable: Boolean

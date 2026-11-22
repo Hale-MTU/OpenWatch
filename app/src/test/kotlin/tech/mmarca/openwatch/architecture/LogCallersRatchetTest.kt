@@ -82,6 +82,8 @@ class LogCallersRatchetTest {
             "wear/wear/MetricTileService.kt",
             "wear/wear/NightHrvRecorder.kt",
             "wear/wear/PpgRawLogger.kt",
+            // The heart rate sensor's lines, moved out of HeartRateRecorder: a refusal passes the throwable, none carries a reading.
+            "wear/wear/SensorHeartRateSource.kt",
             "wear/wear/SkinTemperatureRecorder.kt",
             "wear/wear/SleepMinuteRecorder.kt",
             "wear/wear/Spo2Recorder.kt",

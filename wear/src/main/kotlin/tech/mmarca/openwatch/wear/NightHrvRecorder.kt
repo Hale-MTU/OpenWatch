@@ -6,8 +6,6 @@ import android.os.HandlerThread
 import android.os.PowerManager
 import android.util.Log
 import tech.mmarca.healthcalculations.signal.NightHrv
-import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
-import tech.mmarca.openwatch.wear.samsung.SamsungIbiSource
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
 /**
@@ -18,7 +16,7 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
  * The rule for when to measure is `NightHrvSchedule` (pure); the beats come
  * from an [HrvWindowSource]: Samsung's raw PPG by default ([PpgWindowSource]),
  * or the Samsung Health Platform's own intervals where the watch has the
- * platform and the wearer chose them ([WearSettings.hrvSource], [SamsungIbiSource]).
+ * platform and the wearer chose them ([WearSettings.hrvSource], `samsung/SamsungIbiSource`).
  * This class is the clock, the wake lock and the store around them. A window
  * starts only while the sleep recorder holds the processor awake
  * ([BedtimeHold.HOLDING]: bedtime mode, worn, off the charger) and the last
@@ -33,11 +31,12 @@ internal class NightHrvRecorder(
     private val debug: DebugProtocol,
     /** Whether bedtime mode holds the processor awake now; read on the recorder's thread. */
     private val isHolding: () -> Boolean,
-    samsungFeed: SamsungHeartRateFeed,
+    /** Samsung's raw PPG, the default source. */
+    private val ppg: HrvWindowSource,
+    /** The Samsung platform's own intervals, used once chosen. */
+    private val samsung: HrvWindowSource,
 ) : Recorder {
 
-    private val ppg = PpgWindowSource(context, debug)
-    private val samsung = SamsungIbiSource(samsungFeed, debug)
     private val wakeLock = (context.getSystemService(Context.POWER_SERVICE) as PowerManager)
         .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
         .apply { setReferenceCounted(false) }

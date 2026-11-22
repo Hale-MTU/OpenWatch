@@ -7,6 +7,9 @@ import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
+import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateSource
+import tech.mmarca.openwatch.wear.samsung.SamsungIbiSource
+import tech.mmarca.openwatch.wear.samsung.SamsungSpotSource
 import tech.mmarca.openwatch.wear.workout.MetricStoreWorkoutRows
 import tech.mmarca.openwatch.wear.workout.WorkoutRecorder
 import tech.mmarca.openwatch.wear.workout.WorkoutState
@@ -65,13 +68,24 @@ internal class WearGraph(private val app: Application) {
     val samsungFeed: SamsungHeartRateFeed by lazy { SamsungHeartRateFeed(app, debug) }
     val wakeSync: SensorWakeSync by lazy { SensorWakeSync(app, debug) }
 
+    /*
+     * The sources behind their interfaces: the raw sensors everywhere, the
+     * Samsung platform where the watch has it. The recorders see only the
+     * interfaces.
+     */
+    private val sensorHeartRate: HeartRateSource by lazy { SensorHeartRateSource(app, debug, wakeSync) }
+    private val samsungHeartRate: HeartRateSource? by lazy { SamsungHeartRateSource(samsungFeed).takeIf { it.isAvailable } }
+    private val ppgWindows: HrvWindowSource by lazy { PpgWindowSource(app, debug) }
+    private val samsungWindows: HrvWindowSource by lazy { SamsungIbiSource(samsungFeed, debug) }
+    private val spo2Source: SpotSource<Spo2Reading> by lazy { SamsungSpotSource.spo2(samsungFeed) }
+    private val skinSource: SpotSource<SkinReading> by lazy { SamsungSpotSource.skinTemperature(samsungFeed) }
+
     val heartRate: HeartRateRecorder by lazy {
         HeartRateRecorder(
-            app,
             store,
-            samsungFeed,
-            debug,
-            wakeSync,
+            sensor = sensorHeartRate,
+            platform = samsungHeartRate,
+            debug = debug,
             onSourceChanged = { tellHost { replan() } },
             onSample = { at, bpm ->
                 sleepMinutes.noteHeartRate(at, bpm)
@@ -100,13 +114,20 @@ internal class WearGraph(private val app: Application) {
     val ascent: AscentRecorder by lazy { AscentRecorder(app, store, debug, wakeSync) }
 
     val nightHrv: NightHrvRecorder by lazy {
-        NightHrvRecorder(app, store, debug, isHolding = { linkState.state.value.sleepHoldActive }, samsungFeed = samsungFeed)
+        NightHrvRecorder(
+            app,
+            store,
+            debug,
+            isHolding = { linkState.state.value.sleepHoldActive },
+            ppg = ppgWindows,
+            samsung = samsungWindows,
+        )
     }
 
-    val skinTemperature: SkinTemperatureRecorder by lazy { SkinTemperatureRecorder(store, samsungFeed, debug) }
+    val skinTemperature: SkinTemperatureRecorder by lazy { SkinTemperatureRecorder(store, skinSource, debug) }
 
     val spo2: Spo2Recorder by lazy {
-        Spo2Recorder(app, store, samsungFeed, debug, isHolding = { linkState.state.value.sleepHoldActive })
+        Spo2Recorder(app, store, spo2Source, debug, isHolding = { linkState.state.value.sleepHoldActive })
     }
 
     /**

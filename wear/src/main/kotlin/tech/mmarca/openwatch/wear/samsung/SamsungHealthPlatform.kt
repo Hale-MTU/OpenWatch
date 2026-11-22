@@ -13,6 +13,8 @@ import android.os.RemoteException
 import android.util.Log
 import java.util.concurrent.Executor
 import tech.mmarca.healthcalculations.signal.IbiPoint
+import tech.mmarca.openwatch.wear.SkinReading
+import tech.mmarca.openwatch.wear.Spo2Reading
 
 /** One point as the platform sends it: a time and, per value, its int and its float. */
 internal class RawPoint(val epochMillis: Long, val ints: IntArray, val floats: FloatArray)
@@ -195,27 +197,40 @@ internal class SamsungHealthPlatform(
 
         private fun bindIntent() = Intent(BIND_ACTION).setPackage(SERVICE_PACKAGE)
 
-        /** Bounds on what one callback may claim: far above a flush's points, far below an allocation that fails. */
+        /**
+         * Bounds on what one callback may claim: far above a flush's points, and
+         * far above a first heart rate point, which carried 535 intervals (1 074
+         * values) on a Galaxy Watch7. Below them, the bytes the parcel really holds
+         * bound every count: a point takes at least its presence flag, a value at
+         * least [MIN_VALUE_BYTES].
+         */
         internal const val MAX_POINTS = 100_000
-        internal const val MAX_VALUES = 64
+        internal const val MAX_VALUES = 8_192
+
+        /** A value's type, its class name (a null one is a length alone), its int, float and long. */
+        private const val MIN_VALUE_BYTES = 4 + 4 + 4 + 4 + 8
+        private const val INT_BYTES = 4
 
         /** An app the system image ships, updated or not: what Samsung's tracking service is. */
         internal fun isSystemApp(flags: Int): Boolean =
             flags and (ApplicationInfo.FLAG_SYSTEM or ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0
 
+        internal fun readPoints(p: Parcel): List<RawPoint> = readPoints(ParcelInput.of(p))
+
         /**
          * A typed list: a count, then per item a presence flag and the point. The counts come from
-         * the other process, so an absurd one fails the read instead of the allocation.
+         * the other process, so an absurd one, or one the bytes left cannot hold, fails the read
+         * before anything is allocated for it.
          */
-        internal fun readPoints(p: Parcel): List<RawPoint> {
+        internal fun readPoints(p: ParcelInput): List<RawPoint> {
             val points = ArrayList<RawPoint>()
             val size = p.readInt()
-            check(size in 0..MAX_POINTS) { "point count $size" }
+            check(size in 0..MAX_POINTS && size <= p.available / INT_BYTES) { "point count $size" }
             repeat(size) {
                 if (p.readInt() == 0) return@repeat
                 val timestamp = p.readLong()
                 val count = p.readInt()
-                check(count in 0..MAX_VALUES) { "value count $count" }
+                check(count in 0..MAX_VALUES && count <= p.available / MIN_VALUE_BYTES) { "value count $count" }
                 val ints = IntArray(count)
                 val floats = FloatArray(count)
                 for (v in 0 until count) {
@@ -226,7 +241,7 @@ internal class SamsungHealthPlatform(
                     ints[v] = p.readInt()
                     floats[v] = p.readFloat()
                     p.readLong()
-                    if (afterValue >= 0) p.setDataPosition(afterValue)
+                    if (afterValue >= 0) p.position = afterValue
                 }
                 points += RawPoint(timestamp, ints, floats)
             }
@@ -243,21 +258,54 @@ internal class SamsungHealthPlatform(
          * Newer platforms write a length before a parcelable inside a generic
          * list; older ones do not. Peek: if the next int is a plausible length
          * followed by a class name, consume it and return where the value
-         * ends; otherwise rewind and return -1.
+         * ends; otherwise rewind and return -1. The length is compared with
+         * what is left, so a huge one cannot overflow past the check.
          */
-        private fun readOptionalLengthPrefix(p: Parcel): Int {
-            val start = p.dataPosition()
+        private fun readOptionalLengthPrefix(p: ParcelInput): Int {
+            val start = p.position
             val length = p.readInt()
-            val afterLength = p.dataPosition()
-            if (length > 0 && afterLength + length <= p.dataSize()) {
+            val afterLength = p.position
+            if (length > 0 && length <= p.size - afterLength) {
                 val name = p.readString()
                 if (name != null && name.indexOf('.') > 0) {
-                    p.setDataPosition(afterLength)
+                    p.position = afterLength
                     return afterLength + length
                 }
             }
-            p.setDataPosition(start)
+            p.position = start
             return -1
+        }
+    }
+}
+
+/**
+ * What [SamsungHealthPlatform.readPoints] reads a callback from: the [Parcel]
+ * the platform sent, or, in a test, the bytes of a recorded one. Positions and
+ * sizes are in bytes.
+ */
+internal interface ParcelInput {
+    fun readInt(): Int
+    fun readLong(): Long
+    fun readFloat(): Float
+    fun readString(): String?
+    var position: Int
+    val size: Int
+
+    /** The bytes left to read. */
+    val available: Int
+        get() = (size - position).coerceAtLeast(0)
+
+    companion object {
+        fun of(parcel: Parcel): ParcelInput = object : ParcelInput {
+            override fun readInt(): Int = parcel.readInt()
+            override fun readLong(): Long = parcel.readLong()
+            override fun readFloat(): Float = parcel.readFloat()
+            override fun readString(): String? = parcel.readString()
+            override var position: Int
+                get() = parcel.dataPosition()
+                set(value) = parcel.setDataPosition(value)
+            override val size: Int
+                get() = parcel.dataSize()
         }
     }
 }
@@ -274,25 +322,29 @@ internal fun RawPoint.toHeartRatePoint(): IbiPoint {
     )
 }
 
+/** The skin temperature tracker's status for a measured point. */
+private const val SKIN_MEASURED = 0
+
 /** A skin temperature point: the object temperature at float 0, the ambient at float 1, the status at int 2. */
-internal class SkinPoint(val epochMillis: Long, val objectCelsius: Float, val ambientCelsius: Float, val status: Int)
+internal fun RawPoint.toSkinReading(): SkinReading = SkinReading(
+    epochMillis,
+    skinCelsius = floats.getOrElse(0) { Float.NaN },
+    ambientCelsius = floats.getOrElse(1) { Float.NaN },
+    measured = ints.getOrElse(2) { SKIN_MEASURED } == SKIN_MEASURED,
+)
 
-internal fun RawPoint.toSkinPoint(): SkinPoint =
-    SkinPoint(epochMillis, floats.getOrElse(0) { Float.NaN }, floats.getOrElse(1) { Float.NaN }, ints.getOrElse(2) { 0 })
+/** The SpO2 tracker's statuses, as seen on a Galaxy Watch7: -6 after the measurement ended, 0 while it runs. */
+internal const val SPO2_COMPLETED = 2
+internal const val SPO2_MOVING = -4
 
-/**
- * An SpO2 point: the status at int 0 (2 when the measurement completed, -4
- * when the watch moved, -6 after the measurement ended, 0 while it runs, as
- * seen on a Galaxy Watch7), the percentage at 1, the heart rate at 2.
- */
-internal class Spo2Point(val epochMillis: Long, val status: Int, val percent: Int, val bpm: Int) {
-    val isComplete: Boolean get() = status == STATUS_COMPLETED && percent in 70..100
-
-    companion object {
-        const val STATUS_COMPLETED = 2
-        const val STATUS_MOVING = -4
-    }
+/** An SpO2 point: the status at int 0, the percentage at 1, the heart rate at 2. A percentage counts only once completed. */
+internal fun RawPoint.toSpo2Reading(): Spo2Reading {
+    val status = ints.getOrElse(0) { 0 }
+    val percent = ints.getOrElse(1) { 0 }
+    return Spo2Reading(
+        epochMillis,
+        percent = percent.takeIf { status == SPO2_COMPLETED && it in 70..100 },
+        bpm = ints.getOrElse(2) { 0 },
+        moving = status == SPO2_MOVING,
+    )
 }
-
-internal fun RawPoint.toSpo2Point(): Spo2Point =
-    Spo2Point(epochMillis, ints.getOrElse(0) { 0 }, ints.getOrElse(1) { 0 }, ints.getOrElse(2) { 0 })

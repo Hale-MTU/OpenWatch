@@ -121,8 +121,12 @@ windows. The platform checks a permission per tracker (`PermissionUtil`): from A
 clean-room client in `wear/.../samsung/`) once chosen on the status screen. The choice
 (`WearSettings.hrvSource`) is shown only where `com.samsung.android.service.health` answers the bind
 intent from the system image, so a watch from another maker never sees it, and a store app that takes
-the package name there is never bound. A callback that claims more than 100 000 points or 64 values
-a point fails the read before anything is allocated. The tracker runs only for the five-minute
+the package name there is never bound. A callback that claims more than 100 000 points or 8 192 values
+a point, or more than the bytes it carries can hold, fails the read before anything is allocated
+(a first point of 535 intervals is 1 074 values; the earlier cap of 64 refused it). The recorders
+see the platform only through `HeartRateSource`, `HrvWindowSource` and `SpotSource`, beside the raw
+sensors' implementations, and `SamsungRecordedParcelTest` reads recorded callbacks in both parcel
+layouts (with and without the length Android 13 puts before each value). The tracker runs only for the five-minute
 window. The intervals carry no times of their own: the first point after a start held 535 of
 them (about ten minutes of history), and with the screen off the points arrive in batches, so
 `SamsungIbiWindow` times each interval back from its point and keeps the ones that ended inside
