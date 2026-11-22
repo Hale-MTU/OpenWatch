@@ -132,6 +132,17 @@
         <item quantity="other">%1$d applications en sourdine</item>
     </plurals>
     <string name="settings_watch_notifications_apps_intro">Désactivez une application pour empêcher ses notifications d\'atteindre la montre. Tout le reste continue de passer.</string>
+    <string name="settings_watch_notifications_apps_intro_allowed">Activez une application pour envoyer ses notifications à la montre. Rien d\'autre ne passe.</string>
+    <string name="settings_watch_notifications_apps_allowed_none">Aucune application n\'envoie encore à la montre</string>
+    <plurals name="settings_watch_notifications_apps_allowed">
+        <item quantity="one">%1$d application envoie à la montre</item>
+        <item quantity="many">%1$d applications envoient à la montre</item>
+        <item quantity="other">%1$d applications envoient à la montre</item>
+    </plurals>
+    <string name="settings_watch_notifications_only_allowed">Seulement les applications choisies</string>
+    <string name="settings_watch_notifications_only_allowed_body">Activé, seules les applications activées ci-dessous envoient. Désactivé, toutes les applications envoient sauf celles qui sont désactivées. Chaque liste est conservée.</string>
+    <string name="settings_watch_notifications_hide_sensitive">Masquer le contenu sensible</string>
+    <string name="settings_watch_notifications_hide_sensitive_body">Lorsque les paramètres de notification d\'Android masquent le contenu sensible d\'une application sur l\'écran de verrouillage, la montre ne reçoit que le titre.</string>
     <string name="settings_watch_notifications_apps_empty">Aucune application trouvée.</string>
     <string name="settings_watch_notifications_disclosure_title">OpenWatch lira vos notifications</string>
     <string name="settings_watch_notifications_disclosure_body">Pour afficher les notifications sur votre montre, OpenWatch lit les notifications reçues par votre téléphone, y compris leur texte.\n\nElles sont lues sur cet appareil et envoyées uniquement à la montre que vous avez appairée, via Bluetooth. Rien n\'est enregistré dans un fichier ou une base de données, et OpenWatch n\'a pas d\'autorisation Internet : les notifications ne peuvent donc être envoyées nulle part ailleurs.\n\nVous pouvez désactiver cette fonction à tout moment et révoquer l\'accès aux notifications dans les réglages Android.</string>
@@ -343,6 +354,16 @@
     <string name="settings_watch_wearos_linked_to">Lié à %1$s</string>
     <string name="settings_watch_wearos_fail_partial">La montre a cessé de répondre en cours de route. Ce qui est arrivé a été enregistré ; synchronisez à nouveau pour continuer.</string>
     <string name="settings_watch_wearos_fail_generic">La montre n’a pas pu être synchronisée. Réessayez.</string>
+    <string name="sync_failed_health_connect_permission">Santé Connect a refusé une écriture faute d\'autorisation. Autorisez OpenWatch à écrire ces données dans Santé Connect, puis synchronisez à nouveau.</string>
+    <string name="sync_failed_bluetooth_permission">Autorisez OpenWatch à rechercher les appareils à proximité et à s\'y connecter, puis synchronisez à nouveau.</string>
+    <string name="sync_failed_unreachable">L\'appareil n\'a pas répondu. Gardez-le à proximité, avec le Bluetooth activé, puis réessayez.</string>
+    <string name="sync_failed_rate_limited">Santé Connect a demandé à OpenWatch de ralentir. Ce qui est arrivé a été enregistré ; la prochaine synchronisation reprendra à partir de là.</string>
+    <string name="sync_failed_not_saved">Certains enregistrements n\'ont pas pu être écrits dans Santé Connect. La prochaine synchronisation réessaiera.</string>
+    <plurals name="sync_written_files">
+        <item quantity="one">%1$d fichier synchronisé</item>
+        <item quantity="many">%1$d fichiers synchronisés</item>
+        <item quantity="other">%1$d fichiers synchronisés</item>
+    </plurals>
     <string name="settings_watch_wearos_check_app">Vérifier l\'appli Wear OS</string>
     <string name="settings_watch_wearos_checking">Vérification de l\'appli Wear OS…</string>
     <string name="settings_watch_wearos_sync_section">Synchronisation de la montre</string>
@@ -495,6 +516,8 @@
     <string name="connected_apps_intro">Ces applications ont demandé à utiliser OpenWatch. Chacune ne voit que ce que vous autorisez ici, et rien ne quitte le téléphone.</string>
     <string name="connected_apps_empty">Aucune application ne l\'a encore demandé. OpenVitals se connecte dès que les deux applications sont installées.</string>
     <string name="connected_apps_unknown_signer">Cette app se présente comme %1$s, mais elle n\'a pas été signée par le projet OpenVitals. Ne l\'autorisez que si vous l\'avez compilée ou installée vous-même et faites confiance à sa provenance.</string>
+    <string name="connected_apps_identity">%1$s\nClé de signature %2$s</string>
+    <string name="connected_apps_lookalike">Cette app se présente comme %1$s, mais ce n\'est pas %2$s : son paquet n\'est pas celui sous lequel %2$s est distribuée. Ne l\'autorisez que si vous savez pourquoi elle utilise ce nom.</string>
     <string name="connected_apps_state_pending">Demande à se connecter</string>
     <string name="connected_apps_state_trusted">Connectée</string>
     <string name="connected_apps_state_blocked">Bloquée</string>
@@ -532,4 +555,36 @@
     <string name="watch_settings_spo2">SpO2 toutes les heures la nuit</string>
     <string name="watch_settings_allow_on_watch">Autorisez-le sur la montre : ouvrez OpenWatch dessus et activez-le une fois.</string>
     <string name="settings_watch_wearos_needs_workout_write">Entraînements non enregistrés : autorisez OpenWatch à écrire les entraînements, itinéraires et distances dans Santé Connect, puis synchronisez à nouveau.</string>
+    <string name="health_data_title">Ce qu\'OpenWatch lit et écrit</string>
+    <string name="health_data_intro">OpenWatch écrit dans Santé Connect ce qu\'a enregistré un appareil que vous avez appairé, et ne lit que ce dont une synchronisation a besoin. Chaque type nécessite votre autorisation, que vous pouvez retirer à tout moment dans Santé Connect.</string>
+    <string name="health_data_section_garmin">Écrit depuis une montre Garmin</string>
+    <string name="health_data_section_wearos">Écrit depuis une montre Wear OS</string>
+    <string name="health_data_section_scale">Écrit depuis la balance</string>
+    <string name="health_data_section_reads">Lu dans Santé Connect</string>
+    <string name="health_data_section_watch_app">Demandé par l\'app de la montre, sur la montre</string>
+    <string name="health_data_note_garmin_weight">Un poids qu\'une balance Garmin transmet via la montre.</string>
+    <string name="health_data_note_wearos_calories">Une estimation de ce que la marche a coûté, à partir de vos pas et de votre poids, et les calories d\'un entraînement.</string>
+    <string name="health_data_note_wearos_sleep">Une session estimée par nuit et par sieste.</string>
+    <string name="health_data_note_wearos_hrv">La nuit, sur une montre capable de la mesurer.</string>
+    <string name="health_data_note_wearos_workout">Un entraînement que vous enregistrez sur la montre, avec son itinéraire et sa distance.</string>
+    <string name="health_data_note_wearos_breathing">Uniquement si l\'option « Fréquence respiratoire de la montre » est activée dans Paramètres.</string>
+    <string name="health_data_note_wearos_spo2">Uniquement depuis une montre Samsung, si l\'option « SpO2 toutes les heures la nuit » est activée pour cette montre.</string>
+    <string name="health_data_note_wearos_skin">Uniquement depuis une montre Samsung, si l\'option « Température cutanée la nuit » est activée pour cette montre. Un enregistrement par nuit : l\'écart par rapport à votre propre nuit habituelle.</string>
+    <string name="health_data_note_scale_estimate">Estimé sur le téléphone à partir de la mesure de la balance et de votre profil corporel.</string>
+    <string name="health_data_read_weight">Pour les calories de marche et la composition corporelle de la balance.</string>
+    <string name="health_data_read_height">Pour la composition corporelle de la balance.</string>
+    <string name="health_data_read_exercise">Pour qu\'une minute comprise dans un entraînement ne reçoive pas une seconde estimation de calories.</string>
+    <string name="health_data_read_sleep">Pour ne pas toucher à une nuit qui contient déjà une session de sommeil.</string>
+    <string name="health_data_read_resting_heart_rate">Pour ne pas toucher à un jour qui contient déjà une fréquence cardiaque au repos, et pour les zones de fréquence cardiaque qu\'affiche la montre.</string>
+    <string name="health_data_read_heart_rate">Votre fréquence cardiaque la plus élevée, pour ces zones, et l\'énergie d\'un entraînement.</string>
+    <string name="health_data_read_history">Vos derniers poids et taille sont souvent antérieurs aux 30 jours que Santé Connect affiche sans cet accès.</string>
+    <string name="health_data_read_background">Une synchronisation planifiée, application fermée, ne voit les poids et les entraînements d\'une autre application qu\'avec cet accès.</string>
+    <string name="health_data_watch_heart_rate">Le capteur de fréquence cardiaque de la montre : fréquence cardiaque, variabilité de la fréquence cardiaque de la nuit et estimation du sommeil.</string>
+    <string name="health_data_watch_background">Pour continuer à enregistrer lorsque l\'écran de la montre est éteint.</string>
+    <string name="health_data_watch_skin">Uniquement sur une montre Samsung, et seulement si vous activez la température cutanée la nuit.</string>
+    <string name="health_data_watch_spo2">Uniquement sur une montre Samsung, et seulement si vous activez la SpO2 la nuit.</string>
+    <string name="health_data_open_body">Chaque type de données de santé, l\'appareil d\'où il provient et pourquoi.</string>
+    <string name="settings_watch_garmin_withheld">Non enregistrés dans Santé Connect, faute d\'autorisation : %1$s. Autorisez-les, et la prochaine synchronisation enregistrera ce que la montre envoie à partir de là.</string>
+    <string name="settings_watch_pair_unreachable">Impossible de joindre la montre. Réveillez-la et gardez-la à proximité, puis réessayez.</string>
+    <string name="settings_watch_pair_not_completed">L\'appairage n\'a pas abouti. Confirmez le code sur la montre pour le terminer.</string>
 </resources>

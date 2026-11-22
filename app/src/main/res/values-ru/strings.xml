@@ -177,6 +177,18 @@
         <item quantity="other">Отключено приложений: %1$d</item>
     </plurals>
     <string name="settings_watch_notifications_apps_intro">Отключите приложение, чтобы его уведомления не поступали на часы. Уведомления всех остальных приложений продолжат поступать.</string>
+    <string name="settings_watch_notifications_apps_intro_allowed">Включите приложение, чтобы его уведомления поступали на часы. Уведомления остальных приложений не поступают.</string>
+    <string name="settings_watch_notifications_apps_allowed_none">Пока ни одно приложение не отправляет уведомления на часы</string>
+    <plurals name="settings_watch_notifications_apps_allowed">
+        <item quantity="one">%1$d приложение отправляет уведомления на часы</item>
+        <item quantity="few">%1$d приложения отправляют уведомления на часы</item>
+        <item quantity="many">%1$d приложений отправляют уведомления на часы</item>
+        <item quantity="other">%1$d приложения отправляют уведомления на часы</item>
+    </plurals>
+    <string name="settings_watch_notifications_only_allowed">Только выбранные мной приложения</string>
+    <string name="settings_watch_notifications_only_allowed_body">Если включено, уведомления отправляют только приложения, включённые ниже. Если выключено, отправляют все приложения, кроме отключённых. Оба списка сохраняются.</string>
+    <string name="settings_watch_notifications_hide_sensitive">Скрывать конфиденциальное содержимое</string>
+    <string name="settings_watch_notifications_hide_sensitive_body">Если настройки уведомлений Android скрывают конфиденциальное содержимое приложения на заблокированном экране, на часы приходит только заголовок.</string>
     <string name="settings_watch_notifications_apps_empty">Приложения не найдены.</string>
     <string name="settings_watch_notifications_disclosure_title">OpenWatch будет читать ваши уведомления</string>
     <string name="settings_watch_notifications_disclosure_body">Чтобы показывать уведомления на часах, OpenWatch читает уведомления, которые получает ваш телефон, включая их текст.\n\nОни читаются на этом устройстве и отправляются только на сопряжённые с вами часы через Bluetooth. Ничего не сохраняется в файлах или базе данных, а у OpenWatch нет разрешения на доступ к интернету, поэтому уведомления не могут быть отправлены куда-либо ещё.\n\nВы можете отключить эту функцию в любое время и отозвать доступ к уведомлениям в настройках Android.</string>
@@ -344,6 +356,17 @@
     <string name="settings_watch_wearos_linked_to">Связано с %1$s</string>
     <string name="settings_watch_wearos_fail_partial">Часы перестали отвечать на середине. Полученное сохранено; синхронизируйте снова, чтобы продолжить.</string>
     <string name="settings_watch_wearos_fail_generic">Не удалось синхронизировать часы. Попробуйте снова.</string>
+    <string name="sync_failed_health_connect_permission">Health Connect отклонил запись из-за отсутствия разрешения. Разрешите OpenWatch записывать эти данные в Health Connect, затем синхронизируйте снова.</string>
+    <string name="sync_failed_bluetooth_permission">Разрешите OpenWatch находить устройства поблизости и подключаться к ним, затем синхронизируйте снова.</string>
+    <string name="sync_failed_unreachable">Устройство не ответило. Держите его рядом, включите Bluetooth и повторите попытку.</string>
+    <string name="sync_failed_rate_limited">Health Connect попросил OpenWatch снизить частоту запросов. Полученное сохранено; следующая синхронизация продолжит с этого места.</string>
+    <string name="sync_failed_not_saved">Некоторые записи не удалось сохранить в Health Connect. Следующая синхронизация попробует сохранить их снова.</string>
+    <plurals name="sync_written_files">
+        <item quantity="one">Синхронизирован %1$d файл</item>
+        <item quantity="few">Синхронизировано %1$d файла</item>
+        <item quantity="many">Синхронизировано %1$d файлов</item>
+        <item quantity="other">Синхронизировано %1$d файла</item>
+    </plurals>
     <string name="settings_watch_wearos_check_app">Проверить приложение Wear OS</string>
     <string name="settings_watch_wearos_checking">Проверка приложения Wear OS…</string>
     <string name="settings_watch_wearos_sync_section">Синхронизация часов</string>
@@ -499,6 +522,8 @@
     <string name="connected_apps_intro">Эти приложения запросили доступ к OpenWatch. Каждое видит только то, что вы разрешите здесь, и ничто не покидает телефон.</string>
     <string name="connected_apps_empty">Пока ни одно приложение не запросило доступ. OpenVitals подключится, когда оба приложения будут установлены.</string>
     <string name="connected_apps_unknown_signer">Это приложение называет себя %1$s, но оно не подписано проектом OpenVitals. Разрешайте его, только если вы сами собрали или установили его и доверяете его источнику.</string>
+    <string name="connected_apps_identity">%1$s\nКлюч подписи %2$s</string>
+    <string name="connected_apps_lookalike">Это приложение называет себя %1$s, но это не %2$s: его пакет не совпадает с пакетом %2$s. Разрешайте его, только если знаете, почему оно использует это имя.</string>
     <string name="connected_apps_state_pending">Запрашивает подключение</string>
     <string name="connected_apps_state_trusted">Подключено</string>
     <string name="connected_apps_state_blocked">Заблокировано</string>
@@ -537,4 +562,36 @@
     <string name="watch_settings_spo2">SpO2 каждый час ночью</string>
     <string name="watch_settings_allow_on_watch">Разрешите это на часах: откройте там OpenWatch и включите один раз.</string>
     <string name="settings_watch_wearos_needs_workout_write">Тренировки не записаны: разрешите OpenWatch записывать тренировки, маршруты и расстояние в Health Connect и синхронизируйте снова.</string>
+    <string name="health_data_title">Что OpenWatch читает и записывает</string>
+    <string name="health_data_intro">OpenWatch сохраняет в Health Connect то, что записало сопряжённое вами устройство, и читает только то, что нужно для синхронизации. Для каждого типа данных нужно ваше разрешение, и вы можете отозвать его в Health Connect в любое время.</string>
+    <string name="health_data_section_garmin">Записывается с часов Garmin</string>
+    <string name="health_data_section_wearos">Записывается с часов Wear OS</string>
+    <string name="health_data_section_scale">Записывается с весов</string>
+    <string name="health_data_section_reads">Читается из Health Connect</string>
+    <string name="health_data_section_watch_app">Запрашивается приложением для часов на самих часах</string>
+    <string name="health_data_note_garmin_weight">Вес, который весы Garmin передают через часы.</string>
+    <string name="health_data_note_wearos_calories">Оценка энергозатрат на ходьбу по вашим шагам и весу, а также калории тренировки.</string>
+    <string name="health_data_note_wearos_sleep">По одной оценённой сессии сна за каждую ночь и каждый дневной сон.</string>
+    <string name="health_data_note_wearos_hrv">Ночью, на часах, способных её измерять.</string>
+    <string name="health_data_note_wearos_workout">Тренировка, записанная вами на часах, с маршрутом и расстоянием.</string>
+    <string name="health_data_note_wearos_breathing">Только если в настройках включён параметр «Частота дыхания с часов».</string>
+    <string name="health_data_note_wearos_spo2">Только с часов Samsung, если для этих часов включён параметр «SpO2 каждый час ночью».</string>
+    <string name="health_data_note_wearos_skin">Только с часов Samsung, если для этих часов включён параметр «Температура кожи ночью». Одна запись за ночь: отклонение от вашей обычной ночи.</string>
+    <string name="health_data_note_scale_estimate">Рассчитывается на телефоне по измерению весов и вашему профилю тела.</string>
+    <string name="health_data_read_weight">Для калорий ходьбы и состава тела по весам.</string>
+    <string name="health_data_read_height">Для состава тела по весам.</string>
+    <string name="health_data_read_exercise">Чтобы минуты во время тренировки не получали повторную оценку калорий.</string>
+    <string name="health_data_read_sleep">Чтобы не трогать ночь, для которой уже есть сессия сна.</string>
+    <string name="health_data_read_resting_heart_rate">Чтобы не трогать день, для которого уже есть пульс в покое, а также для зон пульса, которые показывают часы.</string>
+    <string name="health_data_read_heart_rate">Ваш максимальный пульс — для этих зон, а также для расчёта энергии тренировки.</string>
+    <string name="health_data_read_history">Ваши последние вес и рост часто старше 30 дней, которые Health Connect показывает без этого разрешения.</string>
+    <string name="health_data_read_background">Синхронизация по расписанию при закрытом приложении видит вес и тренировки из других приложений только с этим разрешением.</string>
+    <string name="health_data_watch_heart_rate">Датчик пульса часов: пульс, ночная вариабельность сердечного ритма и оценка сна.</string>
+    <string name="health_data_watch_background">Чтобы продолжать запись при выключенном экране часов.</string>
+    <string name="health_data_watch_skin">Только на часах Samsung и только если вы включите измерение температуры кожи ночью.</string>
+    <string name="health_data_watch_spo2">Только на часах Samsung и только если вы включите измерение SpO2 ночью.</string>
+    <string name="health_data_open_body">Все типы данных о здоровье, откуда они поступают и зачем нужны.</string>
+    <string name="settings_watch_garmin_withheld">Не сохранено в Health Connect из-за отсутствия разрешения: %1$s. Разрешите их, и со следующей синхронизации данные, которые отправляют часы, будут сохраняться.</string>
+    <string name="settings_watch_pair_unreachable">Не удалось связаться с часами. Включите их экран и держите их рядом, затем повторите попытку.</string>
+    <string name="settings_watch_pair_not_completed">Сопряжение не завершено. Чтобы завершить его, подтвердите код на часах.</string>
 </resources>

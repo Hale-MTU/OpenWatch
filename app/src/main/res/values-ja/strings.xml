@@ -175,6 +175,15 @@
     <string name="settings_watch_notifications_grant_body">Android は独自の設定画面でこれを求めます。OpenWatch からは要求できません。</string>
     <string name="settings_watch_notifications_apps_none">すべてのアプリがウォッチに送信</string>
     <string name="settings_watch_notifications_apps_intro">アプリをオフにすると、その通知はウォッチに届かなくなります。それ以外は引き続き届きます。</string>
+    <string name="settings_watch_notifications_apps_intro_allowed">アプリをオンにすると、その通知がウォッチに送られます。それ以外は届きません。</string>
+    <string name="settings_watch_notifications_apps_allowed_none">ウォッチに送信するアプリはまだありません</string>
+    <plurals name="settings_watch_notifications_apps_allowed">
+        <item quantity="other">%1$d 個のアプリがウォッチに送信</item>
+    </plurals>
+    <string name="settings_watch_notifications_only_allowed">選んだアプリのみ</string>
+    <string name="settings_watch_notifications_only_allowed_body">オンのときは、下でオンにしたアプリだけが送信します。オフのときは、オフにしたアプリを除くすべてのアプリが送信します。どちらのリストも保持されます。</string>
+    <string name="settings_watch_notifications_hide_sensitive">機密性の高い内容を非表示</string>
+    <string name="settings_watch_notifications_hide_sensitive_body">Android の通知設定でアプリの機密性の高い内容をロック画面に表示しないようにしている場合、ウォッチにはタイトルだけが届きます。</string>
     <string name="settings_watch_notifications_apps_empty">アプリが見つかりません。</string>
     <string name="settings_watch_notifications_disclosure_title">OpenWatch が通知を読み取ります</string>
     <string name="settings_watch_notifications_disclosure_body">ウォッチに通知を表示するため、OpenWatch はスマートフォンが受け取る通知をその本文も含めて読み取ります。
@@ -346,6 +355,14 @@
     <string name="settings_watch_wearos_linked_to">%1$s と接続中</string>
     <string name="settings_watch_wearos_fail_partial">ウォッチが途中で応答しなくなりました。受信した分は保存済みです。続けるにはもう一度同期してください。</string>
     <string name="settings_watch_wearos_fail_generic">ウォッチを同期できませんでした。もう一度お試しください。</string>
+    <string name="sync_failed_health_connect_permission">権限がないため、Health Connect が書き込みを拒否しました。OpenWatch に Health Connect へのこのデータの書き込みを許可してから、もう一度同期してください。</string>
+    <string name="sync_failed_bluetooth_permission">OpenWatch に付近のデバイスの検出と接続を許可してから、もう一度同期してください。</string>
+    <string name="sync_failed_unreachable">デバイスが応答しませんでした。Bluetooth をオンにして近くに置き、もう一度お試しください。</string>
+    <string name="sync_failed_rate_limited">Health Connect から OpenWatch に処理を遅くするよう求められました。受信した分は保存済みです。次回の同期はその続きから行われます。</string>
+    <string name="sync_failed_not_saved">一部の記録を Health Connect に保存できませんでした。次回の同期で再試行されます。</string>
+    <plurals name="sync_written_files">
+        <item quantity="other">%1$d 件のファイルを同期しました</item>
+    </plurals>
     <string name="settings_watch_wearos_check_app">Wear OS アプリを確認</string>
     <string name="settings_watch_wearos_checking">Wear OS アプリを確認中…</string>
     <string name="settings_watch_wearos_sync_section">ウォッチの同期</string>
@@ -495,6 +512,8 @@
     <string name="connected_apps_intro">これらのアプリが OpenWatch の利用を求めました。各アプリが見られるのはここで許可したものだけで、データがスマートフォンの外に出ることはありません。</string>
     <string name="connected_apps_empty">まだどのアプリからも要求がありません。両方のアプリをインストールすると OpenVitals が接続します。</string>
     <string name="connected_apps_unknown_signer">このアプリは %1$s を名乗っていますが、OpenVitals プロジェクトによる署名がありません。自分でビルドまたはインストールし、入手元を信頼できる場合にのみ許可してください。</string>
+    <string name="connected_apps_identity">%1$s\n署名鍵 %2$s</string>
+    <string name="connected_apps_lookalike">このアプリは %1$s を名乗っていますが、%2$s ではありません。パッケージが %2$s のものと異なります。この名前を使う理由がわかっている場合にのみ許可してください。</string>
     <string name="connected_apps_state_pending">接続を要求中</string>
     <string name="connected_apps_state_trusted">接続済み</string>
     <string name="connected_apps_state_blocked">ブロック中</string>
@@ -531,4 +550,36 @@
     <string name="watch_settings_spo2">夜間の SpO2（1 時間ごと）</string>
     <string name="watch_settings_allow_on_watch">ウォッチで許可してください：ウォッチで OpenWatch を開き、一度オンにします。</string>
     <string name="settings_watch_wearos_needs_workout_write">ワークアウトは書き込まれていません。ワークアウト、ルート、距離の Health Connect への書き込みを OpenWatch に許可してから、もう一度同期してください。</string>
+    <string name="health_data_title">OpenWatch が読み書きするデータ</string>
+    <string name="health_data_intro">OpenWatch は、ペアリングしたデバイスが記録したデータを Health Connect に書き込み、同期に必要なデータだけを読み取ります。データの種類ごとに許可が必要で、Health Connect でいつでも取り消せます。</string>
+    <string name="health_data_section_garmin">Garmin ウォッチから書き込み</string>
+    <string name="health_data_section_wearos">Wear OS ウォッチから書き込み</string>
+    <string name="health_data_section_scale">体重計から書き込み</string>
+    <string name="health_data_section_reads">Health Connect から読み取り</string>
+    <string name="health_data_section_watch_app">ウォッチアプリがウォッチ上で要求</string>
+    <string name="health_data_note_garmin_weight">Garmin の体重計がウォッチ経由で中継する体重。</string>
+    <string name="health_data_note_wearos_calories">歩数と体重から推定した歩行の消費カロリーと、ワークアウトのカロリー。</string>
+    <string name="health_data_note_wearos_sleep">一晩ごと、仮眠ごとに 1 件の推定セッション。</string>
+    <string name="health_data_note_wearos_hrv">夜間、測定に対応したウォッチで。</string>
+    <string name="health_data_note_wearos_workout">ウォッチで記録したワークアウトと、そのルートと距離。</string>
+    <string name="health_data_note_wearos_breathing">設定で「ウォッチからの呼吸数」をオンにしている場合のみ。</string>
+    <string name="health_data_note_wearos_spo2">Samsung ウォッチで、そのウォッチの「夜間の SpO2（1 時間ごと）」をオンにしている場合のみ。</string>
+    <string name="health_data_note_wearos_skin">Samsung ウォッチで、そのウォッチの「夜間の皮膚温度」をオンにしている場合のみ。一晩に 1 件、普段の夜との差を記録します。</string>
+    <string name="health_data_note_scale_estimate">体重計の測定値と体のプロフィールから、スマートフォン上で推定。</string>
+    <string name="health_data_read_weight">歩行カロリーと体重計の体組成のため。</string>
+    <string name="health_data_read_height">体重計の体組成のため。</string>
+    <string name="health_data_read_exercise">ワークアウト中の時間にカロリーを二重に推定しないため。</string>
+    <string name="health_data_read_sleep">すでに睡眠セッションがある夜に手を加えないため。</string>
+    <string name="health_data_read_resting_heart_rate">すでに安静時心拍数がある日に手を加えないため。また、ウォッチに表示する心拍ゾーンのため。</string>
+    <string name="health_data_read_heart_rate">最大心拍数を求めるため。上記のゾーンとワークアウトのエネルギーに使います。</string>
+    <string name="health_data_read_history">最新の体重や身長は、この権限がないと Health Connect が表示する過去 30 日間より前のものであることがよくあります。</string>
+    <string name="health_data_read_background">アプリを閉じた状態でスケジュールどおりに実行される同期は、この権限がないと他のアプリの体重やワークアウトを参照できません。</string>
+    <string name="health_data_watch_heart_rate">ウォッチの心拍センサー。心拍数、夜間の心拍変動、睡眠推定に使います。</string>
+    <string name="health_data_watch_background">ウォッチの画面がオフでも記録を続けるため。</string>
+    <string name="health_data_watch_skin">Samsung ウォッチのみ。夜間の皮膚温度をオンにした場合に限ります。</string>
+    <string name="health_data_watch_spo2">Samsung ウォッチのみ。夜間の SpO2 をオンにした場合に限ります。</string>
+    <string name="health_data_open_body">すべての健康データの種類と、その取得元のデバイスと理由。</string>
+    <string name="settings_watch_garmin_withheld">権限がないため Health Connect に保存されませんでした: %1$s。許可すると、次回の同期からウォッチが送るデータが保存されます。</string>
+    <string name="settings_watch_pair_unreachable">ウォッチに接続できませんでした。ウォッチのスリープを解除して近くに置き、もう一度お試しください。</string>
+    <string name="settings_watch_pair_not_completed">ペアリングが完了しませんでした。完了するには、ウォッチでコードを確認してください。</string>
 </resources>

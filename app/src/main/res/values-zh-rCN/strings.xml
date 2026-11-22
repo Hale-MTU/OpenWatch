@@ -131,6 +131,15 @@
         <item quantity="other">已静音 %1$d 个应用</item>
     </plurals>
     <string name="settings_watch_notifications_apps_intro">关闭某应用以阻止其通知到达手表。其他一切继续送达。</string>
+    <string name="settings_watch_notifications_apps_intro_allowed">开启某应用以将其通知发送到手表。其他通知都不会送达。</string>
+    <string name="settings_watch_notifications_apps_allowed_none">尚无应用发送到手表</string>
+    <plurals name="settings_watch_notifications_apps_allowed">
+        <item quantity="other">%1$d 个应用发送到手表</item>
+    </plurals>
+    <string name="settings_watch_notifications_only_allowed">仅限我选择的应用</string>
+    <string name="settings_watch_notifications_only_allowed_body">开启时，只有下方已开启的应用会发送。关闭时，除已关闭的应用外，所有应用都会发送。两份列表都会保留。</string>
+    <string name="settings_watch_notifications_hide_sensitive">隐藏敏感内容</string>
+    <string name="settings_watch_notifications_hide_sensitive_body">如果 Android 的通知设置在锁屏上隐藏某应用的敏感内容，手表只会收到标题。</string>
     <string name="settings_watch_notifications_apps_empty">未找到应用。</string>
     <string name="settings_watch_notifications_disclosure_title">OpenWatch 将读取你的通知</string>
     <string name="settings_watch_notifications_disclosure_body">要在手表上显示通知，OpenWatch 会读取你手机收到的通知 — 包括其文字内容。\n\n它们在此设备上读取，仅通过蓝牙发送到你配对的手表。不保存到文件或数据库，且 OpenWatch 无联网权限，因此通知无法发送到其他任何地方。\n\n你可随时关闭此功能，并从 Android 设置撤销通知访问。</string>
@@ -342,6 +351,14 @@
     <string name="settings_watch_wearos_linked_to">已连接到 %1$s</string>
     <string name="settings_watch_wearos_fail_partial">手表中途停止了回应。已收到的数据已保存；请再次同步以继续。</string>
     <string name="settings_watch_wearos_fail_generic">无法同步手表。请重试。</string>
+    <string name="sync_failed_health_connect_permission">由于缺少权限，Health Connect 拒绝了写入。请允许 OpenWatch 在 Health Connect 中写入这些数据，然后再次同步。</string>
+    <string name="sync_failed_bluetooth_permission">请允许 OpenWatch 查找并连接附近的设备，然后再次同步。</string>
+    <string name="sync_failed_unreachable">设备未响应。请将其放在附近并打开蓝牙，然后重试。</string>
+    <string name="sync_failed_rate_limited">Health Connect 要求 OpenWatch 放慢速度。已收到的数据已保存；下次同步会从那里继续。</string>
+    <string name="sync_failed_not_saved">部分记录无法保存到 Health Connect。下次同步时会再次尝试。</string>
+    <plurals name="sync_written_files">
+        <item quantity="other">已同步 %1$d 个文件</item>
+    </plurals>
     <string name="settings_watch_wearos_check_app">检查 Wear OS 应用</string>
     <string name="settings_watch_wearos_checking">正在检查 Wear OS 应用…</string>
     <string name="settings_watch_wearos_sync_section">手表同步</string>
@@ -491,6 +508,8 @@
     <string name="connected_apps_intro">这些应用请求使用 OpenWatch。每个应用只能看到你在这里允许的内容，任何数据都不会离开手机。</string>
     <string name="connected_apps_empty">还没有应用提出请求。两个应用都安装后，OpenVitals 会自动连接。</string>
     <string name="connected_apps_unknown_signer">此应用自称 %1$s，但不是由 OpenVitals 项目签名的。只有在你自己构建或安装了它并信任其来源时才允许它。</string>
+    <string name="connected_apps_identity">%1$s\n签名密钥 %2$s</string>
+    <string name="connected_apps_lookalike">此应用自称 %1$s，但它不是 %2$s：它的软件包不是 %2$s 所用的软件包。只有在你知道它为何使用这个名称时才允许它。</string>
     <string name="connected_apps_state_pending">请求连接</string>
     <string name="connected_apps_state_trusted">已连接</string>
     <string name="connected_apps_state_blocked">已阻止</string>
@@ -527,4 +546,36 @@
     <string name="watch_settings_spo2">夜间每小时 SpO2</string>
     <string name="watch_settings_allow_on_watch">请在手表上允许：在手表上打开 OpenWatch 并开启一次。</string>
     <string name="settings_watch_wearos_needs_workout_write">锻炼未写入：请允许 OpenWatch 在 Health Connect 中写入锻炼、路线和距离，然后再次同步。</string>
+    <string name="health_data_title">OpenWatch 读取和写入的数据</string>
+    <string name="health_data_intro">OpenWatch 会把你配对的设备记录的数据写入 Health Connect，并且只读取同步所需的数据。每种数据类型都需要你的许可，你可以随时在 Health Connect 中撤销。</string>
+    <string name="health_data_section_garmin">从 Garmin 手表写入</string>
+    <string name="health_data_section_wearos">从 Wear OS 手表写入</string>
+    <string name="health_data_section_scale">从体重秤写入</string>
+    <string name="health_data_section_reads">从 Health Connect 读取</string>
+    <string name="health_data_section_watch_app">由手表应用在手表上请求</string>
+    <string name="health_data_note_garmin_weight">Garmin 体重秤通过手表转发的体重。</string>
+    <string name="health_data_note_wearos_calories">根据你的步数和体重估算的步行消耗，以及锻炼的卡路里。</string>
+    <string name="health_data_note_wearos_sleep">每晚和每次小睡各一条估算的睡眠记录。</string>
+    <string name="health_data_note_wearos_hrv">在夜间，仅限能够测量它的手表。</string>
+    <string name="health_data_note_wearos_workout">你在手表上记录的锻炼，包括其路线和距离。</string>
+    <string name="health_data_note_wearos_breathing">仅在设置中开启“来自手表的呼吸频率”时。</string>
+    <string name="health_data_note_wearos_spo2">仅限 Samsung 手表，且已为该手表开启“夜间每小时 SpO2”。</string>
+    <string name="health_data_note_wearos_skin">仅限 Samsung 手表，且已为该手表开启“夜间皮肤温度”。每晚一条记录：与你平常夜晚的差值。</string>
+    <string name="health_data_note_scale_estimate">由手机根据体重秤的测量值和你的身体档案估算。</string>
+    <string name="health_data_read_weight">用于步行卡路里和体重秤的身体成分。</string>
+    <string name="health_data_read_height">用于体重秤的身体成分。</string>
+    <string name="health_data_read_exercise">避免对锻炼期间的时间重复估算卡路里。</string>
+    <string name="health_data_read_sleep">避免改动已有睡眠记录的夜晚。</string>
+    <string name="health_data_read_resting_heart_rate">避免改动已有静息心率的日子，并用于手表显示的心率区间。</string>
+    <string name="health_data_read_heart_rate">你的最高心率，用于这些区间和锻炼的能量。</string>
+    <string name="health_data_read_history">你最近的体重和身高往往早于没有此权限时 Health Connect 显示的 30 天。</string>
+    <string name="health_data_read_background">在应用关闭时按计划运行的同步，只有获得此权限才能看到其他应用的体重和锻炼记录。</string>
+    <string name="health_data_watch_heart_rate">手表的心率传感器：心率、夜间心率变异性和睡眠估算。</string>
+    <string name="health_data_watch_background">在手表屏幕关闭时继续记录。</string>
+    <string name="health_data_watch_skin">仅限 Samsung 手表，并且仅在你开启夜间皮肤温度时。</string>
+    <string name="health_data_watch_spo2">仅限 Samsung 手表，并且仅在你开启夜间 SpO2 时。</string>
+    <string name="health_data_open_body">每种健康数据类型、其来源设备及原因。</string>
+    <string name="settings_watch_garmin_withheld">因缺少权限，未保存到 Health Connect：%1$s。授予这些权限后，从下次同步起会保存手表发送的数据。</string>
+    <string name="settings_watch_pair_unreachable">无法连接到手表。请唤醒手表并放在附近，然后重试。</string>
+    <string name="settings_watch_pair_not_completed">配对未完成。请在手表上确认代码以完成配对。</string>
 </resources>

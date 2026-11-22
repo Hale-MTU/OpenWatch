@@ -130,6 +130,18 @@
         <item quantity="other">%1$d aplikací umlčeno</item>
     </plurals>
     <string name="settings_watch_notifications_apps_intro">Vypněte aplikaci, aby její oznámení nechodila na hodinky. Všechno ostatní chodí dál.</string>
+    <string name="settings_watch_notifications_apps_intro_allowed">Zapněte aplikaci, aby její oznámení chodila na hodinky. Nic jiného nechodí.</string>
+    <string name="settings_watch_notifications_apps_allowed_none">Na hodinky zatím neposílá žádná aplikace</string>
+    <plurals name="settings_watch_notifications_apps_allowed">
+        <item quantity="one">%1$d aplikace posílá na hodinky</item>
+        <item quantity="few">%1$d aplikace posílají na hodinky</item>
+        <item quantity="many">%1$d aplikace posílá na hodinky</item>
+        <item quantity="other">%1$d aplikací posílá na hodinky</item>
+    </plurals>
+    <string name="settings_watch_notifications_only_allowed">Jen aplikace, které vyberu</string>
+    <string name="settings_watch_notifications_only_allowed_body">Zapnuto: posílají jen aplikace zapnuté níže. Vypnuto: posílají všechny kromě vypnutých. Oba seznamy zůstanou zachovány.</string>
+    <string name="settings_watch_notifications_hide_sensitive">Skrýt citlivý obsah</string>
+    <string name="settings_watch_notifications_hide_sensitive_body">Pokud nastavení oznámení v Androidu skrývá citlivý obsah aplikace na obrazovce uzamčení, hodinky dostanou jen nadpis.</string>
     <string name="settings_watch_notifications_apps_empty">Nebyly nalezeny žádné aplikace.</string>
     <string name="settings_watch_notifications_disclosure_title">OpenWatch bude číst vaše oznámení</string>
     <string name="settings_watch_notifications_disclosure_body">Aby mohl OpenWatch zobrazovat oznámení na hodinkách, čte oznámení, která váš telefon dostává — včetně jejich textu.\n\nČtou se v tomto zařízení a odesílají se přes Bluetooth jen na hodinky, které jste spárovali. Nic se neukládá do souboru ani do databáze a OpenWatch nemá oprávnění k internetu, takže oznámení nelze poslat nikam jinam.\n\nKdykoli to můžete vypnout a přístup k oznámením odebrat v nastavení Androidu.</string>
@@ -344,6 +356,17 @@
     <string name="settings_watch_wearos_linked_to">Propojeno s %1$s</string>
     <string name="settings_watch_wearos_fail_partial">Hodinky přestaly v průběhu odpovídat. Co dorazilo, je uloženo; pokračujte další synchronizací.</string>
     <string name="settings_watch_wearos_fail_generic">Hodinky se nepodařilo synchronizovat. Zkuste to znovu.</string>
+    <string name="sync_failed_health_connect_permission">Health Connect odmítl zápis kvůli chybějícímu oprávnění. Povolte OpenWatch zapisovat tato data do Health Connect a pak synchronizujte znovu.</string>
+    <string name="sync_failed_bluetooth_permission">Povolte OpenWatch vyhledávat zařízení v okolí a připojovat se k nim. Pak synchronizujte znovu.</string>
+    <string name="sync_failed_unreachable">Zařízení neodpovědělo. Mějte ho poblíž se zapnutým Bluetooth a zkuste to znovu.</string>
+    <string name="sync_failed_rate_limited">Health Connect požádal OpenWatch o zpomalení. Co dorazilo, je uloženo; další synchronizace bude pokračovat odtud.</string>
+    <string name="sync_failed_not_saved">Některé záznamy se nepodařilo uložit do Health Connect. Další synchronizace je zkusí znovu.</string>
+    <plurals name="sync_written_files">
+        <item quantity="one">%1$d soubor synchronizován</item>
+        <item quantity="few">%1$d soubory synchronizovány</item>
+        <item quantity="many">%1$d souboru synchronizováno</item>
+        <item quantity="other">%1$d souborů synchronizováno</item>
+    </plurals>
     <string name="settings_watch_wearos_check_app">Ověřit aplikaci Wear OS</string>
     <string name="settings_watch_wearos_checking">Kontroluji aplikaci Wear OS…</string>
     <string name="settings_watch_wearos_sync_section">Synchronizace hodinek</string>
@@ -499,6 +522,8 @@
     <string name="connected_apps_intro">Tyto aplikace požádaly o používání OpenWatch. Každá vidí jen to, co zde povolíte, a nic neopouští telefon.</string>
     <string name="connected_apps_empty">Zatím nepožádala žádná aplikace. OpenVitals se připojí, jakmile budou nainstalovány obě aplikace.</string>
     <string name="connected_apps_unknown_signer">Tato aplikace se vydává za %1$s, ale nepodepsal ji projekt OpenVitals. Povolte ji jen tehdy, pokud jste ji sami sestavili nebo nainstalovali a důvěřujete jejímu původu.</string>
+    <string name="connected_apps_identity">%1$s\nPodpisový klíč %2$s</string>
+    <string name="connected_apps_lookalike">Tato aplikace se vydává za %1$s, ale není to %2$s: její balíček není ten, pod kterým vychází %2$s. Povolte ji jen tehdy, pokud víte, proč používá tento název.</string>
     <string name="connected_apps_state_pending">Žádá o připojení</string>
     <string name="connected_apps_state_trusted">Připojeno</string>
     <string name="connected_apps_state_blocked">Blokováno</string>
@@ -537,4 +562,36 @@
     <string name="watch_settings_spo2">SpO2 každou hodinu v noci</string>
     <string name="watch_settings_allow_on_watch">Povolte to na hodinkách: otevřete tam OpenWatch a jednou to zapněte.</string>
     <string name="settings_watch_wearos_needs_workout_write">Tréninky nebyly zapsány: povolte OpenWatch zapisovat tréninky, trasy a vzdálenost do Health Connect a znovu synchronizujte.</string>
+    <string name="health_data_title">Co OpenWatch čte a zapisuje</string>
+    <string name="health_data_intro">OpenWatch zapisuje do Health Connect to, co zaznamenalo zařízení, které jste spárovali, a čte jen to, co synchronizace potřebuje. Každý typ potřebuje vaše oprávnění a v Health Connect ho můžete kdykoli odebrat.</string>
+    <string name="health_data_section_garmin">Zapisuje se z hodinek Garmin</string>
+    <string name="health_data_section_wearos">Zapisuje se z hodinek Wear OS</string>
+    <string name="health_data_section_scale">Zapisuje se z váhy</string>
+    <string name="health_data_section_reads">Čte se z Health Connect</string>
+    <string name="health_data_section_watch_app">Žádá o ně aplikace v hodinkách, přímo na hodinkách</string>
+    <string name="health_data_note_garmin_weight">Hmotnost, kterou váha Garmin předá přes hodinky.</string>
+    <string name="health_data_note_wearos_calories">Odhad, kolik energie stála chůze, podle vašich kroků a hmotnosti, a kalorie z tréninku.</string>
+    <string name="health_data_note_wearos_sleep">Jeden odhadnutý spánek za noc a za každé zdřímnutí.</string>
+    <string name="health_data_note_wearos_hrv">V noci, na hodinkách, které ji umějí měřit.</string>
+    <string name="health_data_note_wearos_workout">Trénink, který zaznamenáte na hodinkách, s jeho trasou a vzdáleností.</string>
+    <string name="health_data_note_wearos_breathing">Jen se zapnutou volbou „Dechová frekvence z hodinek“ v Nastavení.</string>
+    <string name="health_data_note_wearos_spo2">Jen z hodinek Samsung se zapnutou volbou „SpO2 každou hodinu v noci“ pro tyto hodinky.</string>
+    <string name="health_data_note_wearos_skin">Jen z hodinek Samsung se zapnutou volbou „Teplota kůže v noci“ pro tyto hodinky. Jeden záznam za noc: rozdíl oproti vaší obvyklé noci.</string>
+    <string name="health_data_note_scale_estimate">Odhadnuto v telefonu z měření váhy a vašeho tělesného profilu.</string>
+    <string name="health_data_read_weight">Pro kalorie z chůze a složení těla z váhy.</string>
+    <string name="health_data_read_height">Pro složení těla z váhy.</string>
+    <string name="health_data_read_exercise">Aby minuta během tréninku nedostala druhý odhad kalorií.</string>
+    <string name="health_data_read_sleep">Aby noc, která už spánek obsahuje, zůstala beze změny.</string>
+    <string name="health_data_read_resting_heart_rate">Aby den, který už klidový srdeční tep obsahuje, zůstal beze změny, a pro tepové zóny, které hodinky ukazují.</string>
+    <string name="health_data_read_heart_rate">Pro váš maximální tep k těmto zónám a pro energii tréninku.</string>
+    <string name="health_data_read_history">Vaše poslední hmotnost a výška bývají starší než 30 dní, které Health Connect bez tohoto přístupu ukáže.</string>
+    <string name="health_data_read_background">Synchronizace spuštěná podle plánu při zavřené aplikaci vidí hmotnosti a tréninky z jiné aplikace jen s tímto přístupem.</string>
+    <string name="health_data_watch_heart_rate">Snímač tepu v hodinkách: tep, noční variabilita srdeční frekvence a odhad spánku.</string>
+    <string name="health_data_watch_background">Aby záznam pokračoval i s vypnutou obrazovkou hodinek.</string>
+    <string name="health_data_watch_skin">Jen na hodinkách Samsung a jen když zapnete teplotu kůže v noci.</string>
+    <string name="health_data_watch_spo2">Jen na hodinkách Samsung a jen když zapnete SpO2 v noci.</string>
+    <string name="health_data_open_body">Každý typ zdravotních dat, zařízení, ze kterého pochází, a proč.</string>
+    <string name="settings_watch_garmin_withheld">Neuloženo do Health Connect kvůli chybějícímu oprávnění: %1$s. Povolte je a další synchronizace už uloží, co hodinky od té doby pošlou.</string>
+    <string name="settings_watch_pair_unreachable">K hodinkám se nepodařilo připojit. Probuďte je, mějte je poblíž a zkuste to znovu.</string>
+    <string name="settings_watch_pair_not_completed">Párování nebylo dokončeno. Pro dokončení potvrďte kód na hodinkách.</string>
 </resources>

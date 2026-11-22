@@ -127,6 +127,17 @@
         <item quantity="other">%1$d aplicações silenciadas</item>
     </plurals>
     <string name="settings_watch_notifications_apps_intro">Desative uma aplicação para que as suas notificações deixem de chegar ao relógio. Tudo o resto continua a passar.</string>
+    <string name="settings_watch_notifications_apps_intro_allowed">Ative uma aplicação para que as suas notificações cheguem ao relógio. Nada mais passa.</string>
+    <string name="settings_watch_notifications_apps_allowed_none">Ainda nenhuma aplicação envia para o relógio</string>
+    <plurals name="settings_watch_notifications_apps_allowed">
+        <item quantity="one">%1$d aplicação envia para o relógio</item>
+        <item quantity="many">%1$d aplicações enviam para o relógio</item>
+        <item quantity="other">%1$d aplicações enviam para o relógio</item>
+    </plurals>
+    <string name="settings_watch_notifications_only_allowed">Só as aplicações que eu escolher</string>
+    <string name="settings_watch_notifications_only_allowed_body">Ligado, só enviam as aplicações ativadas abaixo. Desligado, enviam todas exceto as desativadas. As duas listas são mantidas.</string>
+    <string name="settings_watch_notifications_hide_sensitive">Ocultar conteúdo sensível</string>
+    <string name="settings_watch_notifications_hide_sensitive_body">Quando as definições de notificações do Android ocultam o conteúdo sensível de uma aplicação no ecrã de bloqueio, o relógio recebe apenas o título.</string>
     <string name="settings_watch_notifications_apps_empty">Nenhuma aplicação encontrada.</string>
     <string name="settings_watch_notifications_disclosure_title">O OpenWatch vai ler as suas notificações</string>
     <string name="settings_watch_notifications_disclosure_body">Para mostrar notificações no seu relógio, o OpenWatch lê as notificações que o telemóvel recebe, incluindo o respetivo texto.\n\nSão lidas neste dispositivo e enviadas por Bluetooth apenas para o relógio que emparelhou. Nada é guardado num ficheiro ou numa base de dados, e o OpenWatch não tem permissão de internet, por isso as notificações não podem ir para mais lado nenhum.\n\nPode desativar isto a qualquer momento e revogar o acesso às notificações nas definições do Android.</string>
@@ -342,6 +353,16 @@
     <string name="settings_watch_wearos_linked_to">Ligado a %1$s</string>
     <string name="settings_watch_wearos_fail_partial">O relógio deixou de responder a meio. O que chegou foi guardado; sincronize de novo para continuar.</string>
     <string name="settings_watch_wearos_fail_generic">Não foi possível sincronizar o relógio. Tente de novo.</string>
+    <string name="sync_failed_health_connect_permission">O Health Connect recusou uma escrita por falta de permissão. Permita que o OpenWatch grave estes dados no Health Connect e sincronize novamente.</string>
+    <string name="sync_failed_bluetooth_permission">Permita que o OpenWatch encontre dispositivos próximos e se ligue a eles e, depois, sincronize novamente.</string>
+    <string name="sync_failed_unreachable">O dispositivo não respondeu. Mantenha-o perto, com o Bluetooth ligado, e tente novamente.</string>
+    <string name="sync_failed_rate_limited">O Health Connect pediu ao OpenWatch para abrandar. O que chegou foi guardado; a próxima sincronização continua a partir daí.</string>
+    <string name="sync_failed_not_saved">Não foi possível guardar alguns registos no Health Connect. A próxima sincronização volta a tentar.</string>
+    <plurals name="sync_written_files">
+        <item quantity="one">%1$d ficheiro sincronizado</item>
+        <item quantity="many">%1$d ficheiros sincronizados</item>
+        <item quantity="other">%1$d ficheiros sincronizados</item>
+    </plurals>
     <string name="settings_watch_wearos_check_app">Verificar a app Wear OS</string>
     <string name="settings_watch_wearos_checking">A verificar a app Wear OS…</string>
     <string name="settings_watch_wearos_sync_section">Sincronização do relógio</string>
@@ -491,6 +512,8 @@
     <string name="connected_apps_intro">Estas apps pediram para usar o OpenWatch. Cada uma vê apenas o que permitir aqui, e nada sai do telemóvel.</string>
     <string name="connected_apps_empty">Nenhuma app pediu ainda. O OpenVitals liga-se assim que as duas apps estiverem instaladas.</string>
     <string name="connected_apps_unknown_signer">Esta app apresenta-se como %1$s, mas não foi assinada pelo projeto OpenVitals. Permita-a apenas se a compilou ou instalou você mesmo e confia na sua origem.</string>
+    <string name="connected_apps_identity">%1$s\nChave de assinatura %2$s</string>
+    <string name="connected_apps_lookalike">Esta app apresenta-se como %1$s, mas não é %2$s: o seu pacote não é o de %2$s. Permita-a apenas se souber porque usa esse nome.</string>
     <string name="connected_apps_state_pending">Pede para se ligar</string>
     <string name="connected_apps_state_trusted">Ligada</string>
     <string name="connected_apps_state_blocked">Bloqueada</string>
@@ -527,4 +550,36 @@
     <string name="watch_settings_spo2">SpO2 de hora em hora à noite</string>
     <string name="watch_settings_allow_on_watch">Permita no relógio: abra o OpenWatch nele e ative uma vez.</string>
     <string name="settings_watch_wearos_needs_workout_write">Treinos não gravados: permita que o OpenWatch grave treinos, rotas e distância no Health Connect e sincronize novamente.</string>
+    <string name="health_data_title">O que o OpenWatch lê e escreve</string>
+    <string name="health_data_intro">O OpenWatch escreve no Health Connect o que um dispositivo que emparelhou registou, e lê apenas o que uma sincronização precisa. Cada tipo precisa da sua permissão, e pode retirá-la no Health Connect a qualquer momento.</string>
+    <string name="health_data_section_garmin">Escrito a partir de um relógio Garmin</string>
+    <string name="health_data_section_wearos">Escrito a partir de um relógio Wear OS</string>
+    <string name="health_data_section_scale">Escrito a partir da balança</string>
+    <string name="health_data_section_reads">Lido do Health Connect</string>
+    <string name="health_data_section_watch_app">Pedido pela app do relógio, no próprio relógio</string>
+    <string name="health_data_note_garmin_weight">Um peso que uma balança Garmin transmite através do relógio.</string>
+    <string name="health_data_note_wearos_calories">Uma estimativa do gasto da caminhada, a partir dos seus passos e do seu peso, e as calorias de um treino.</string>
+    <string name="health_data_note_wearos_sleep">Uma sessão estimada por noite e por sesta.</string>
+    <string name="health_data_note_wearos_hrv">À noite, num relógio que a consiga medir.</string>
+    <string name="health_data_note_wearos_workout">Um treino que regista no relógio, com a sua rota e distância.</string>
+    <string name="health_data_note_wearos_breathing">Só com «Frequência respiratória do relógio» ativada nas Definições.</string>
+    <string name="health_data_note_wearos_spo2">Só a partir de um relógio Samsung, com «SpO2 de hora em hora à noite» ativado para esse relógio.</string>
+    <string name="health_data_note_wearos_skin">Só a partir de um relógio Samsung, com «Temperatura da pele à noite» ativada para esse relógio. Um registo por noite: a diferença em relação à sua noite habitual.</string>
+    <string name="health_data_note_scale_estimate">Estimado no telemóvel a partir da medição da balança e do seu perfil corporal.</string>
+    <string name="health_data_read_weight">Para as calorias da caminhada e a composição corporal da balança.</string>
+    <string name="health_data_read_height">Para a composição corporal da balança.</string>
+    <string name="health_data_read_exercise">Para que um minuto dentro de um treino não receba uma segunda estimativa de calorias.</string>
+    <string name="health_data_read_sleep">Para que uma noite que já tem uma sessão de sono fique como está.</string>
+    <string name="health_data_read_resting_heart_rate">Para que um dia que já tem uma frequência cardíaca em repouso fique como está, e para as zonas de frequência cardíaca que o relógio mostra.</string>
+    <string name="health_data_read_heart_rate">A sua frequência cardíaca máxima, para essas zonas, e a energia de um treino.</string>
+    <string name="health_data_read_history">O seu peso e a sua altura mais recentes são muitas vezes anteriores aos 30 dias que o Health Connect mostra sem este acesso.</string>
+    <string name="health_data_read_background">Uma sincronização agendada, com a app fechada, só consegue ver os pesos e os treinos de outra app com este acesso.</string>
+    <string name="health_data_watch_heart_rate">O sensor de frequência cardíaca do relógio: a frequência cardíaca, a variabilidade da frequência cardíaca da noite e a estimativa do sono.</string>
+    <string name="health_data_watch_background">Para continuar a gravar com o ecrã do relógio desligado.</string>
+    <string name="health_data_watch_skin">Só num relógio Samsung, e só quando ativa a temperatura da pele à noite.</string>
+    <string name="health_data_watch_spo2">Só num relógio Samsung, e só quando ativa o SpO2 à noite.</string>
+    <string name="health_data_open_body">Cada tipo de dados de saúde, o dispositivo de onde vem e porquê.</string>
+    <string name="settings_watch_garmin_withheld">Não guardados no Health Connect por falta de permissão: %1$s. Conceda essas permissões e a próxima sincronização guarda o que o relógio enviar a partir daí.</string>
+    <string name="settings_watch_pair_unreachable">Não foi possível contactar o relógio. Acorde-o, mantenha-o perto e tente novamente.</string>
+    <string name="settings_watch_pair_not_completed">O emparelhamento não foi concluído. Confirme o código no relógio para terminar.</string>
 </resources>
