@@ -8,6 +8,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import dagger.multibindings.IntoSet
 import javax.inject.Singleton
 import tech.mmarca.openlink.host.OpenLinkCallerResolver
 import tech.mmarca.openlink.host.OpenLinkHost
@@ -15,13 +16,20 @@ import tech.mmarca.openlink.host.OpenLinkHostCore
 import tech.mmarca.openlink.host.OpenLinkTrustStore
 import tech.mmarca.openlink.host.SharedPreferencesTrustStorage
 import tech.mmarca.openwatch.MainActivity
+import tech.mmarca.openwatch.StartupActor
 import tech.mmarca.openwatch.link.FirstPartyApps
 import tech.mmarca.openwatch.link.OpenWatchLinkCapabilities
+import tech.mmarca.openwatch.link.OpenWatchLinkPublisher
 
 /** The OpenLink host: the trust rules, the binder, and what OpenWatch offers through it. */
 @Module
 @InstallIn(SingletonComponent::class)
 object LinkModule {
+    /** OpenLink clients hear about device and profile changes while they are bound. */
+    @Provides
+    @IntoSet
+    fun provideLinkPublisherAtStart(publisher: OpenWatchLinkPublisher) = StartupActor("openlink publisher", publisher::start)
+
 
     @Provides
     @Singleton

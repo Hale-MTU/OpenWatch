@@ -58,7 +58,17 @@ class HiltGraphTest {
     @Test
     fun `the singletons the app starts with can be built`() {
         assertThat(syncController.state.value.isSyncing).isFalse()
-        assertThat(startupActors).isNotNull()
+        // Every integration's actors and the app's own, contributed by their modules.
+        assertThat(startupActors.names).containsExactly(
+            "garmin music",
+            "garmin navigation",
+            "garmin notifications",
+            "garmin pruning",
+            "openlink publisher",
+            "phone activity",
+            "scale listener",
+            "sync schedules",
+        ).inOrder()
         assertThat(healthConnect.declaredPermissions).isNotEmpty()
     }
 }
