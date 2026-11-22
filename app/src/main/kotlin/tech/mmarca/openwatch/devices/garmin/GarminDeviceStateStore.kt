@@ -5,6 +5,10 @@ import android.content.SharedPreferences
 import tech.mmarca.openwatch.data.repository.DeviceStateStore
 import androidx.core.content.edit
 import java.time.DayOfWeek
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import org.json.JSONArray
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncIntervalStore
@@ -28,6 +32,14 @@ class GarminDeviceStateStore(
     ) {
         adoptLegacy(linkPrefs, registered)
     }
+
+    private val revision = MutableStateFlow(0)
+
+    /**
+     * Moves on after every write through this store, whoever made it: the bridge, a relay, a
+     * sync, a screen. A reader of the getters reads again on each value instead of keeping a copy.
+     */
+    val changes: StateFlow<Int> = revision.asStateFlow()
 
     /** What the watch declared in its last handshake. Empty if never synced. */
     fun capabilities(deviceId: String): Set<GarminCapability> {
@@ -63,7 +75,7 @@ class GarminDeviceStateStore(
     }
 
     fun clearSyncedFileKeys(deviceId: String) {
-        state.put(deviceId, KEY_SYNCED_KEYS, null)
+        put(deviceId, KEY_SYNCED_KEYS, null)
     }
 
     /**
@@ -74,7 +86,7 @@ class GarminDeviceStateStore(
         state.get(deviceId, KEY_SETUP_WIZARD)?.toBooleanStrictOrNull() ?: false
 
     fun setSetupWizardPending(deviceId: String, pending: Boolean) {
-        state.put(deviceId, KEY_SETUP_WIZARD, pending.toString())
+        put(deviceId, KEY_SETUP_WIZARD, pending.toString())
     }
 
     /** Whether the watch streams live readings over the held link. Off by default: it costs battery. */
@@ -82,7 +94,7 @@ class GarminDeviceStateStore(
         state.get(deviceId, KEY_LIVE_READINGS)?.toBooleanStrictOrNull() ?: false
 
     fun setLiveReadings(deviceId: String, enabled: Boolean) {
-        state.put(deviceId, KEY_LIVE_READINGS, enabled.toString())
+        put(deviceId, KEY_LIVE_READINGS, enabled.toString())
     }
 
     /** Whether the watch may read the phone's calendar. Off by default. */
@@ -90,7 +102,7 @@ class GarminDeviceStateStore(
         state.get(deviceId, KEY_CALENDAR_SYNC)?.toBooleanStrictOrNull() ?: false
 
     fun setCalendarSync(deviceId: String, enabled: Boolean) {
-        state.put(deviceId, KEY_CALENDAR_SYNC, enabled.toString())
+        put(deviceId, KEY_CALENDAR_SYNC, enabled.toString())
     }
 
     /** Whether CoMaps guidance is shown on the watch. Off by default. */
@@ -98,7 +110,7 @@ class GarminDeviceStateStore(
         state.get(deviceId, KEY_NAVIGATION_ON_WATCH)?.toBooleanStrictOrNull() ?: false
 
     fun setNavigationOnWatch(deviceId: String, enabled: Boolean) {
-        state.put(deviceId, KEY_NAVIGATION_ON_WATCH, enabled.toString())
+        put(deviceId, KEY_NAVIGATION_ON_WATCH, enabled.toString())
     }
 
     /** Whether the watch's music controls drive the phone's player. Off by default. */
@@ -106,7 +118,7 @@ class GarminDeviceStateStore(
         state.get(deviceId, KEY_MUSIC_CONTROLS)?.toBooleanStrictOrNull() ?: false
 
     fun setMusicControls(deviceId: String, enabled: Boolean) {
-        state.put(deviceId, KEY_MUSIC_CONTROLS, enabled.toString())
+        put(deviceId, KEY_MUSIC_CONTROLS, enabled.toString())
     }
 
     /**
@@ -118,7 +130,7 @@ class GarminDeviceStateStore(
         state.get(deviceId, KEY_STAY_CONNECTED)?.toBooleanStrictOrNull() ?: true
 
     fun setStayConnected(deviceId: String, enabled: Boolean) {
-        state.put(deviceId, KEY_STAY_CONNECTED, enabled.toString())
+        put(deviceId, KEY_STAY_CONNECTED, enabled.toString())
     }
 
     /**
@@ -130,7 +142,7 @@ class GarminDeviceStateStore(
         AutoSyncInterval.fromMinutes(state.get(deviceId, KEY_AUTO_SYNC)?.toIntOrNull() ?: 0)
 
     override fun setAutoSyncInterval(deviceId: String, interval: AutoSyncInterval) {
-        state.put(deviceId, KEY_AUTO_SYNC, interval.minutes.toString())
+        put(deviceId, KEY_AUTO_SYNC, interval.minutes.toString())
     }
 
     /** The listing protocol a previous sync proved for this watch. */
@@ -142,7 +154,7 @@ class GarminDeviceStateStore(
 
     fun recordSyncProtocol(deviceId: String, protocol: GarminSyncProtocol) {
         if (protocol == GarminSyncProtocol.UNKNOWN) return
-        state.put(deviceId, KEY_SYNC_PROTOCOL, protocol.name)
+        put(deviceId, KEY_SYNC_PROTOCOL, protocol.name)
     }
 
     /** The alarms set here for a watch with no settings tree. The watch's own are never read. */
@@ -171,12 +183,19 @@ class GarminDeviceStateStore(
 
     fun setHighMtu(address: String, enabled: Boolean) {
         linkPrefs.edit { putBoolean(highMtuPrefsKey(address), enabled) }
+        revision.update { it + 1 }
     }
 
     /** Everything kept for the device: by id, and the link's own flag by its [address]. */
     fun clear(deviceId: String, address: String? = null) {
         state.forget(deviceId)
         address?.let { linkPrefs.edit { remove(highMtuPrefsKey(it)) } }
+        revision.update { it + 1 }
+    }
+
+    private fun put(deviceId: String, key: String, value: String?) {
+        state.put(deviceId, key, value)
+        revision.update { it + 1 }
     }
 
     private fun readList(deviceId: String, key: String): List<String>? {
@@ -188,7 +207,7 @@ class GarminDeviceStateStore(
     }
 
     private fun writeList(deviceId: String, key: String, values: List<String>) {
-        state.put(deviceId, key, JSONArray(values).toString())
+        put(deviceId, key, JSONArray(values).toString())
     }
 
     /**

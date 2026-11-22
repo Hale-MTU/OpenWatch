@@ -1,13 +1,9 @@
 package tech.mmarca.openwatch.features.watches
 
-import android.text.format.DateUtils
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,17 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.automirrored.outlined.BluetoothSearching
-import androidx.compose.material.icons.outlined.BrightnessMedium
 import androidx.compose.material.icons.automirrored.outlined.DirectionsBike
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Insights
-import androidx.compose.material.icons.outlined.NotificationsActive
-import androidx.compose.material.icons.outlined.Place
-import androidx.compose.material.icons.outlined.Stop
-import androidx.compose.material.icons.outlined.Sync
-import androidx.compose.material.icons.outlined.WifiTethering
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -36,8 +24,8 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,70 +36,54 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.formatPercent
 import tech.mmarca.openwatch.devices.core.DeviceFeature
-import tech.mmarca.openwatch.R
-import tech.mmarca.openwatch.core.presentation.resolve
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
-import tech.mmarca.openwatch.devices.garmin.GarminAgpsFileState
-import tech.mmarca.openwatch.devices.garmin.GarminAgpsKind
-import tech.mmarca.openwatch.devices.garmin.GarminCapability
-import tech.mmarca.openwatch.devices.garmin.GarminSettingsService
-import tech.mmarca.openwatch.devices.garmin.canStorePoints
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import tech.mmarca.openwatch.features.watches.garmin.GarminWatchPanelRoute
+import tech.mmarca.openwatch.features.watches.wearos.WearOsWatchPanelRoute
 import tech.mmarca.openwatch.ui.components.ConfirmRemoveDialog
 import tech.mmarca.openwatch.ui.components.DeclareAppBar
 import tech.mmarca.openwatch.ui.components.DeviceAvatar
 import tech.mmarca.openwatch.ui.components.DeviceRowIconGap
-import tech.mmarca.openwatch.ui.components.RenameDialog
-import tech.mmarca.openwatch.ui.components.ScreenColumn
-import tech.mmarca.openwatch.ui.components.SectionHeader
-import tech.mmarca.openwatch.ui.components.formatDeviceTime
 import tech.mmarca.openwatch.ui.components.InlineGrantPrompt
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
-import tech.mmarca.openwatch.ui.components.allGranted
-import tech.mmarca.openwatch.ui.components.rememberHealthConnectPermissionLauncher
-import tech.mmarca.openwatch.ui.components.rememberRuntimePermissionRequester
-import tech.mmarca.openwatch.ui.theme.Spacing
 import tech.mmarca.openwatch.ui.components.OpenWatchIconButton
+import tech.mmarca.openwatch.ui.components.RenameDialog
 import tech.mmarca.openwatch.ui.components.ScreenAppBar
+import tech.mmarca.openwatch.ui.components.ScreenColumn
+import tech.mmarca.openwatch.ui.components.SectionHeader
 import tech.mmarca.openwatch.ui.components.SwitchCard
-import tech.mmarca.openwatch.ui.components.SwitchRow
-import tech.mmarca.openwatch.devices.garmin.isGarmin
-import tech.mmarca.openwatch.devices.wearos.isWearOs
-
-/** The watch's settings tree browser exists, so the rows that open it are live. */
-internal const val WatchSettingsTreeAvailable: Boolean = true
-
-/** The root of the watch's settings tree. */
-internal const val WatchSettingsRootScreenId: Int = GarminSettingsService.ROOT_SCREEN_ID
-
-/** The alarms screen's well-known id. */
-internal const val WatchSettingsAlarmsScreenId: Int = GarminSettingsService.ALARMS_SCREEN_ID
+import tech.mmarca.openwatch.ui.components.formatDeviceTime
+import tech.mmarca.openwatch.ui.components.rememberHealthConnectPermissionLauncher
+import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
- * One watch, and everything about it. Order: status, actions, configuration,
- * with removal at the bottom where a mis-tap cannot reach it.
+ * One device's destination: the only place that knows its ViewModel. It declares the app bar,
+ * re-reads the background grant on resume, owns the Health Connect requests (the background
+ * read, and the grants a sync left waiting) and goes back once the device is removed. The
+ * device's family brings its own panel, with its own state holder, launchers and dialog;
+ * [WatchDeviceScreen] draws.
  */
 @Composable
-fun WatchDeviceScreen(
-    viewModel: WatchDeviceViewModel,
+fun WatchDeviceRoute(
     onOpenData: (String) -> Unit,
     onOpenNotifications: (String) -> Unit,
     onOpenWatchSettings: (String, Int) -> Unit,
     onOpenSendPoint: (String) -> Unit,
     onOpenAlarms: (String) -> Unit,
     onRemoved: () -> Unit,
+    viewModel: WatchDeviceViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val device = state.device
 
-    DeclareAppBar(ScreenAppBar(title = device?.displayName))
-    // Notification access is granted in Android's settings, so it is re-read on the way back.
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refreshMusicAccess() }
+    DeclareAppBar(ScreenAppBar(title = state.device?.displayName))
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refreshBackgroundAccess() }
     val backgroundAccessLauncher = rememberHealthConnectPermissionLauncher(
         onResult = viewModel::refreshBackgroundAccess,
@@ -119,215 +91,120 @@ fun WatchDeviceScreen(
     // A sync right after a grant writes what it now may, and replaces the card's "not written" line. Not after a
     // refusal: that would hold the watch link for a run that ends where it began.
     val syncGrantLauncher = rememberHealthConnectPermissionLauncher(onGranted = viewModel::syncNow)
-    val runtimePermissions = rememberRuntimePermissionRequester { granted ->
-        viewModel.onRuntimePermissionResult(granted.allGranted())
-    }
     LaunchedEffect(state.permissionRequest) {
-        when (val request = state.permissionRequest ?: return@LaunchedEffect) {
-            is WatchPermissionRequest.HealthConnect -> backgroundAccessLauncher.launch(request.permissions)
-            is WatchPermissionRequest.Runtime -> runtimePermissions.request(listOf(request.permission))
-        }
+        val request = state.permissionRequest ?: return@LaunchedEffect
+        backgroundAccessLauncher.launch(request.permissions)
         viewModel.onPermissionRequestHandled()
     }
 
-    if (state.showMusicDisclosure) {
-        NotificationAccessDisclosureDialog(
-            title = stringResource(R.string.settings_watch_music_disclosure_title),
-            body = stringResource(R.string.settings_watch_music_disclosure_body),
-            onAccept = viewModel::acceptMusicDisclosure,
-            onDecline = viewModel::declineMusicDisclosure,
+    val screen: @Composable (WatchDevicePanel) -> Unit = { panel ->
+        WatchDeviceScreen(
+            state = state,
+            panel = panel,
+            onRename = viewModel::rename,
+            onDetectSensors = viewModel::detectBroadcastSensors,
+            onSelectAutoSync = viewModel::selectAutoSync,
+            onAllowBackgroundRead = viewModel::allowBackgroundRead,
+            onEnabledChange = viewModel::setEnabled,
+            onRemove = { deleteWatchHistory ->
+                viewModel.removeDevice(deleteWatchHistory)
+                onRemoved()
+            },
         )
     }
+    val device = state.device
+    when {
+        device == null -> screen(WatchDevicePanel.None)
+        state.family == DeviceIntegration.GARMIN -> GarminWatchPanelRoute(
+            device = device,
+            sync = state.sync,
+            onSync = viewModel::syncNow,
+            onAllowSyncGrants = syncGrantLauncher.launch,
+            onOpenData = onOpenData,
+            onOpenNotifications = onOpenNotifications,
+            onOpenWatchSettings = onOpenWatchSettings,
+            onOpenSendPoint = onOpenSendPoint,
+            onOpenAlarms = onOpenAlarms,
+            content = screen,
+        )
+        state.family == DeviceIntegration.WEAROS -> WearOsWatchPanelRoute(
+            device = device,
+            sync = state.sync,
+            onSync = viewModel::syncNow,
+            onAllowSyncGrants = syncGrantLauncher.launch,
+            content = screen,
+        )
+        else -> screen(WatchDevicePanel.None)
+    }
+}
 
+/**
+ * What a device's family adds to the device view, in the three places it goes, so the cards
+ * every device has keep one order: [afterHeader] (its status, actions and the rows that open
+ * other screens), [afterLiveSensors] (what it shows last before the Device section) and
+ * [afterSchedule] (its switches, in the Device section).
+ */
+@Immutable
+class WatchDevicePanel(
+    /** The header says "Never synced" before a first sync; otherwise it names the device, whose panel words the sync. */
+    val saysNeverSynced: Boolean = false,
+    val afterHeader: @Composable () -> Unit = {},
+    val afterLiveSensors: @Composable () -> Unit = {},
+    val afterSchedule: @Composable () -> Unit = {},
+) {
+    companion object {
+        /** A device no family claims: the shared cards alone. */
+        val None = WatchDevicePanel()
+    }
+}
+
+/**
+ * One device, and everything about it. Order: status, actions, configuration,
+ * with removal at the bottom where a mis-tap cannot reach it.
+ */
+@Composable
+fun WatchDeviceScreen(
+    state: WatchDeviceUiState,
+    panel: WatchDevicePanel,
+    onRename: (String) -> Unit,
+    onDetectSensors: () -> Unit,
+    onSelectAutoSync: (AutoSyncInterval) -> Unit,
+    onAllowBackgroundRead: () -> Unit,
+    onEnabledChange: (Boolean) -> Unit,
+    onRemove: (deleteWatchHistory: Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val device = state.device
     if (device == null) {
         // Removed while this screen was open, or opened from a stale entry.
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(stringResource(R.string.no_data))
         }
         return
     }
 
-    val ephemerisPicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-    ) { uri -> uri?.let(viewModel::importAgps) }
-
     var showRenameDialog by rememberSaveable { mutableStateOf(false) }
     var showRemoveDialog by rememberSaveable { mutableStateOf(false) }
 
-    // Only a Garmin GFDI device has sync, settings and find. WearOS speaks none of it.
-    val isGarmin = device.isGarmin
-    // A bike computer records rides, not wrist wellness; its Data view is hidden.
-    val isBikeComputer = device.isBikeComputer
-
-    ScreenColumn(
-        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
-        verticalPadding = Spacing.lg,
-    ) {
-        StatusCard(
-            device = device,
-            isGarmin = isGarmin,
-            isBikeComputer = isBikeComputer,
-            onRename = { showRenameDialog = true },
-        )
-        // A Wear OS watch's sync card says the same inside itself.
-        if (isGarmin) {
-            state.sync.lastFor(device.id)?.let { SyncOutcomeSummary(it, onAllowGrants = syncGrantLauncher.launch) }
-        }
-
-        if (device.isWearOs) {
-            val liveHeartRateBpm by viewModel.wearOsLiveHeartRateBpm.collectAsStateWithLifecycle()
-            SectionHeader(stringResource(R.string.settings_watch_wearos_status_section))
-            WearOsStatusCard(
-                status = state.wearOsStatus,
-                error = state.wearOsError,
-                isChecking = state.isCheckingWearOsStatus,
-                onCheck = viewModel::checkWearOsStatus,
-                onGrantBluetooth = viewModel::requestBluetoothConnect,
-                liveHeartRateBpm = liveHeartRateBpm,
-                onAssociate = (viewModel::associateWearOs).takeIf { state.wearOsCompanionMissing },
-            )
-            SectionHeader(stringResource(R.string.settings_watch_wearos_sync_section))
-            WearOsSyncCard(device, state.sync, onSync = viewModel::syncNow, onAllowGrants = syncGrantLauncher.launch)
-        }
-
-        if (isGarmin) {
-            ActionsRow(
-                device = device,
-                state = state,
-                isBikeComputer = isBikeComputer,
-                onOpenData = { onOpenData(device.id) },
-                onSync = viewModel::syncNow,
-                onOpenAlarms = {
-                    when (state.alarmsDestination) {
-                        AlarmsDestination.SETTINGS_TREE -> onOpenWatchSettings(device.id, WatchSettingsAlarmsScreenId)
-                        AlarmsDestination.PHONE_LIST -> onOpenAlarms(device.id)
-                    }
-                },
-                onToggleFind = viewModel::toggleFind,
-            )
-            val finding = state.find.isFindingDevice(device.id)
-            if (finding || state.find.findFailed) {
-                Text(
-                    text = if (finding) {
-                        stringResource(R.string.settings_watch_find_ringing)
-                    } else {
-                        stringResource(R.string.settings_watch_find_failed)
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (state.find.findFailed) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.primary
-                    },
-                    modifier = Modifier.padding(horizontal = Spacing.lg),
-                )
-            }
-            state.sync.failureFor(device.id)?.toScreenError().resolve()?.let { message ->
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(horizontal = Spacing.lg),
-                )
-            }
-        }
-
-        // Only for a watch that has a settings tree.
-        if (isGarmin && state.hasSettingsTree) {
-            SectionHeader(stringResource(R.string.settings_watch_settings_section))
-            OnDeviceSettingsRow(
-                onOpen = { onOpenWatchSettings(device.id, WatchSettingsRootScreenId) },
-            )
-        }
-
-        // `supports` treats an unknown capability as present, so an unsynced watch gets the row.
-        if (isGarmin && state.supports(GarminCapability.GNCS)) {
-            SectionHeader(stringResource(R.string.settings_watch_notifications_section))
-            NotificationsRow(onOpen = { onOpenNotifications(device.id) })
-        }
-
-        // The watch's answer to the upload is the real gate; this only hides the obvious no.
-        if (isGarmin && state.capabilities.canStorePoints()) {
-            SendPointRow(onOpen = { onOpenSendPoint(device.id) })
-        }
-
-        // A bike computer can broadcast BLE sensors. Opt-in here, since broadcast
-        // mode must be detected while the device is live.
-        if (device.isLiveSensorCapable) {
-            SectionHeader(stringResource(R.string.settings_bike_live_sensor_section))
-            LiveSensorSection(
-                device = device,
-                isDetecting = state.isDetectingSensors,
-                foundNothing = state.detectFoundNothing,
-                onDetect = viewModel::detectBroadcastSensors,
-            )
-        }
-
-        WearOsWatchSettingsSection(state, viewModel::loadWatchSettings, viewModel::setWatchSetting)
-        SectionHeader(stringResource(R.string.settings_watch_section_device))
-        // First: the schedule decides whether this screen is ever visited again.
-        // Anything that syncs syncs on a schedule too.
-        if (DeviceFeature.SYNC in state.features) {
-            AutoSyncCard(
-                selected = state.autoSync,
-                backgroundReadMissing = state.backgroundReadMissing,
-                onSelect = viewModel::selectAutoSync,
-                onAllowBackgroundRead = viewModel::allowBackgroundRead,
-            )
-        }
-        if (isGarmin) {
-            SwitchCard(
-                title = stringResource(R.string.settings_watch_stay_connected),
-                body = stringResource(R.string.settings_watch_stay_connected_body),
-                checked = state.stayConnected,
-                onCheckedChange = { viewModel.setStayConnected(it) },
-            )
-            // Only with the link held: a stream needs a connection.
-            if (state.stayConnected) {
-                SwitchCard(
-                    title = stringResource(R.string.settings_watch_live_readings),
-                    body = state.liveHeartRateBpm
-                        ?.let { stringResource(R.string.settings_watch_live_now, it) }
-                        ?: stringResource(R.string.settings_watch_live_readings_body),
-                    checked = state.liveReadings,
-                    onCheckedChange = { viewModel.setLiveReadings(it) },
-                )
-            }
-            CalendarSyncCard(state = state, onToggle = viewModel::toggleCalendarSync)
-            MusicControlsCard(state = state, onToggle = viewModel::setMusicControls)
-            NavigationOnWatchCard(state = state, onToggle = viewModel::toggleNavigationOnWatch)
-            HighMtuCard(state = state, onToggle = viewModel::setHighMtu)
-            EphemerisCard(
-                state = state,
-                onImport = { ephemerisPicker.launch(arrayOf("*/*")) },
-                onForget = viewModel::forgetAgps,
-            )
-        }
-        SwitchCard(
-            title = stringResource(R.string.settings_watch_enabled),
-            checked = device.enabled,
-            onCheckedChange = { viewModel.setEnabled(it) },
-        )
-        // Last, and its own card: a destructive action wants distance.
-        OpenWatchCard {
-            Text(
-                text = stringResource(R.string.settings_watch_remove),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { showRemoveDialog = true }
-                    .padding(Spacing.lg),
-            )
-        }
-    }
+    WatchDeviceContent(
+        device = device,
+        state = state,
+        panel = panel,
+        onRename = { showRenameDialog = true },
+        onDetectSensors = onDetectSensors,
+        onSelectAutoSync = onSelectAutoSync,
+        onAllowBackgroundRead = onAllowBackgroundRead,
+        onEnabledChange = onEnabledChange,
+        onRemove = { showRemoveDialog = true },
+        modifier = modifier,
+    )
 
     if (showRenameDialog) {
         RenameDialog(
             title = stringResource(R.string.settings_watch_rename),
             initialName = device.displayName,
             onSave = { name ->
-                viewModel.rename(name)
+                onRename(name)
                 showRenameDialog = false
             },
             onDismiss = { showRenameDialog = false },
@@ -338,39 +215,96 @@ fun WatchDeviceScreen(
             title = stringResource(R.string.settings_device_remove_confirm_title, device.displayName),
             body = stringResource(R.string.settings_watch_remove_confirm_body),
             // The last Garmin watch's watch-only history has no other owner left.
-            option = stringResource(R.string.settings_watch_remove_delete_history).takeIf { viewModel.offersHistoryDeletion },
+            option = stringResource(R.string.settings_watch_remove_delete_history).takeIf { state.offersHistoryDeletion },
             onConfirm = { deleteWatchHistory ->
                 showRemoveDialog = false
-                viewModel.removeDevice(deleteWatchHistory)
-                onRemoved()
+                onRemove(deleteWatchHistory)
             },
             onDismiss = { showRemoveDialog = false },
         )
     }
 }
 
+/** The header, the family's panel where it goes, the live sensors, the schedule, and the device itself. */
+@Composable
+private fun WatchDeviceContent(
+    device: BleSensorDevice,
+    state: WatchDeviceUiState,
+    panel: WatchDevicePanel,
+    onRename: () -> Unit,
+    onDetectSensors: () -> Unit,
+    onSelectAutoSync: (AutoSyncInterval) -> Unit,
+    onAllowBackgroundRead: () -> Unit,
+    onEnabledChange: (Boolean) -> Unit,
+    onRemove: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    ScreenColumn(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        verticalPadding = Spacing.lg,
+    ) {
+        StatusCard(device = device, saysNeverSynced = panel.saysNeverSynced, onRename = onRename)
+        panel.afterHeader()
+
+        // A bike computer can broadcast BLE sensors. Opt-in here, since broadcast
+        // mode must be detected while the device is live.
+        if (device.isLiveSensorCapable) {
+            SectionHeader(stringResource(R.string.settings_bike_live_sensor_section))
+            LiveSensorSection(
+                device = device,
+                isDetecting = state.isDetectingSensors,
+                foundNothing = state.detectFoundNothing,
+                onDetect = onDetectSensors,
+            )
+        }
+        panel.afterLiveSensors()
+
+        SectionHeader(stringResource(R.string.settings_watch_section_device))
+        // First: the schedule decides whether this screen is ever visited again.
+        // Anything that syncs syncs on a schedule too.
+        if (DeviceFeature.SYNC in state.features) {
+            AutoSyncCard(
+                selected = state.autoSync,
+                backgroundReadMissing = state.backgroundReadMissing,
+                onSelect = onSelectAutoSync,
+                onAllowBackgroundRead = onAllowBackgroundRead,
+            )
+        }
+        panel.afterSchedule()
+        SwitchCard(
+            title = stringResource(R.string.settings_watch_enabled),
+            checked = device.enabled,
+            onCheckedChange = onEnabledChange,
+        )
+        // Last, and its own card: a destructive action wants distance.
+        OpenWatchCard {
+            Text(
+                text = stringResource(R.string.settings_watch_remove),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onRemove)
+                    .padding(Spacing.lg),
+            )
+        }
+    }
+}
+
 @Composable
 private fun StatusCard(
     device: BleSensorDevice,
-    isGarmin: Boolean,
-    isBikeComputer: Boolean,
+    saysNeverSynced: Boolean,
     onRename: () -> Unit,
 ) {
-    // A WearOS watch never synced is named; synced, it reads like a Garmin, minus the file count.
-    val statusLine = buildString {
-        val syncedAt = device.lastSyncedAt
-        if (!isGarmin && syncedAt == null) {
-            append(device.bluetoothName ?: device.address)
-        } else if (syncedAt == null) {
-            append(stringResource(R.string.settings_watch_never_synced))
-        } else {
-            append(
-                stringResource(
-                    R.string.settings_watch_last_synced,
-                    formatDeviceTime(syncedAt),
-                ),
-            )
-        }
+    // A device never synced is named, unless its panel leaves the sync line to the header;
+    // synced, every device reads the same.
+    val syncedAt = device.lastSyncedAt
+    val statusLine = when {
+        syncedAt != null -> stringResource(R.string.settings_watch_last_synced, formatDeviceTime(syncedAt))
+        saysNeverSynced -> stringResource(R.string.settings_watch_never_synced)
+        else -> device.bluetoothName ?: device.address
     }
 
     OpenWatchCard {
@@ -382,7 +316,7 @@ private fun StatusCard(
         ) {
             DeviceAvatar(
                 size = 44,
-                icon = if (isBikeComputer) Icons.AutoMirrored.Outlined.DirectionsBike else null,
+                icon = if (device.isBikeComputer) Icons.AutoMirrored.Outlined.DirectionsBike else null,
             )
             Spacer(modifier = Modifier.width(DeviceRowIconGap))
             Column(modifier = Modifier.weight(1f)) {
@@ -417,67 +351,6 @@ private fun StatusCard(
                     contentDescription = stringResource(R.string.settings_watch_rename),
                 )
             }
-        }
-    }
-}
-
-@Composable
-internal fun ActionsRow(
-    device: BleSensorDevice,
-    state: WatchDeviceUiState,
-    isBikeComputer: Boolean,
-    onOpenData: () -> Unit,
-    onSync: () -> Unit,
-    onOpenAlarms: () -> Unit,
-    onToggleFind: () -> Unit,
-) {
-    val finding = state.find.isFindingDevice(device.id)
-    // One radio per watch: its sync and a find cannot overlap. Stopping this find stays available.
-    val busy = (state.sync.isSyncingDevice(device.id) || state.find.findingDeviceId != null) && !finding
-    Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = Spacing.lg),
-    ) {
-        if (!isBikeComputer) {
-            WatchAction(
-                icon = Icons.Outlined.Insights,
-                label = stringResource(R.string.settings_watch_action_data),
-                enabled = true,
-                onClick = onOpenData,
-            )
-        }
-        WatchAction(
-            icon = Icons.Outlined.Sync,
-            label = stringResource(R.string.settings_watch_action_sync),
-            busy = state.sync.isSyncingDevice(device.id),
-            // Disabled while this watch syncs; another one may sync beside it.
-            enabled = !busy && !finding,
-            onClick = onSync,
-        )
-        // A screen in the settings tree at a well-known id. A watch with no tree keeps
-        // its alarms on the phone; a bike computer has none.
-        if (state.hasSettingsTree || !isBikeComputer) {
-            WatchAction(
-                icon = Icons.Outlined.Alarm,
-                label = stringResource(R.string.settings_watch_action_alarms),
-                enabled = !busy,
-                onClick = onOpenAlarms,
-            )
-        }
-        if (state.supports(GarminCapability.FIND_MY_WATCH)) {
-            // A toggle: the watch alerts for a minute unless stopped, so the same control stops it.
-            WatchAction(
-                icon = if (finding) Icons.Outlined.Stop else Icons.Outlined.WifiTethering,
-                label = if (finding) {
-                    stringResource(R.string.settings_watch_find_stop)
-                } else {
-                    stringResource(R.string.settings_watch_action_find)
-                },
-                enabled = !busy,
-                onClick = onToggleFind,
-            )
         }
     }
 }
@@ -553,225 +426,6 @@ private fun AutoSyncCard(
     }
 }
 
-/** The watch's music controls. Off by default; they need Android's notification access. */
-@Composable
-private fun MusicControlsCard(
-    state: WatchDeviceUiState,
-    onToggle: (Boolean) -> Unit,
-) {
-    OpenWatchCard {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = Spacing.sm),
-        ) {
-            SwitchRow(
-                title = stringResource(R.string.settings_watch_music),
-                body = stringResource(R.string.settings_watch_music_body),
-                checked = state.musicControls,
-                onCheckedChange = onToggle,
-                contentPadding = PaddingValues(horizontal = Spacing.lg),
-            )
-            if (state.musicAccessMissing) {
-                Text(
-                    text = stringResource(R.string.settings_watch_music_no_access),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(horizontal = Spacing.lg),
-                )
-            }
-        }
-    }
-}
-
-/** The watch's calendar glance. Off by default; asks for the OS permission when switched on. */
-@Composable
-private fun CalendarSyncCard(
-    state: WatchDeviceUiState,
-    onToggle: (Boolean) -> Unit,
-) {
-    OpenWatchCard {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = Spacing.sm),
-        ) {
-            SwitchRow(
-                title = stringResource(R.string.settings_watch_calendar),
-                body = stringResource(R.string.settings_watch_calendar_body),
-                checked = state.calendarSync,
-                onCheckedChange = onToggle,
-                contentPadding = PaddingValues(horizontal = Spacing.lg),
-            )
-            if (state.calendarPermissionMissing) {
-                Text(
-                    text = stringResource(R.string.settings_watch_calendar_no_permission),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(horizontal = Spacing.lg),
-                )
-            }
-        }
-    }
-}
-
-/**
- * CoMaps guidance on the wrist, over the notification link: one
- * notification, updated in place. Off by default and complete in itself.
- */
-@Composable
-private fun NavigationOnWatchCard(
-    state: WatchDeviceUiState,
-    onToggle: (Boolean) -> Unit,
-) {
-    OpenWatchCard {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = Spacing.sm),
-        ) {
-            SwitchRow(
-                title = stringResource(R.string.settings_watch_navigation),
-                body = stringResource(R.string.settings_watch_navigation_body),
-                checked = state.navigationOnWatch,
-                onCheckedChange = onToggle,
-                contentPadding = PaddingValues(horizontal = Spacing.lg),
-            )
-            if (state.coMapsPermissionMissing) {
-                Text(
-                    text = stringResource(R.string.settings_watch_navigation_no_permission),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(horizontal = Spacing.lg),
-                )
-            }
-        }
-    }
-}
-
-/**
- * GPS ephemeris, which turns a two-minute cold fix into seconds. This app has
- * no INTERNET permission, so the user supplies the file. The URL the watch
- * asked for says which file this chipset wants.
- */
-@Composable
-private fun EphemerisCard(
-    state: WatchDeviceUiState,
-    onImport: () -> Unit,
-    onForget: (GarminAgpsKind) -> Unit,
-) {
-    val file = state.agps.files.firstOrNull()
-    OpenWatchCard {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Spacing.lg, vertical = Spacing.sm),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = stringResource(R.string.settings_watch_agps),
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.weight(1f),
-                )
-                TextButton(onClick = onImport) {
-                    Text(
-                        stringResource(
-                            if (file == null) {
-                                R.string.settings_watch_agps_import
-                            } else {
-                                R.string.settings_watch_agps_replace
-                            },
-                        ),
-                    )
-                }
-            }
-            Text(
-                text = ephemerisSummary(file),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            if (file?.problem != null) {
-                Text(
-                    text = stringResource(R.string.settings_watch_agps_unusable),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-            state.agpsMessage?.let { message ->
-                Text(
-                    text = stringResource(message),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
-            }
-            state.agps.requestedUrls.lastOrNull()?.let { url ->
-                Text(
-                    text = stringResource(R.string.settings_watch_agps_asked_for, url),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            if (file != null) {
-                TextButton(onClick = { onForget(file.kind) }) {
-                    Text(
-                        text = stringResource(R.string.settings_watch_agps_remove),
-                        color = MaterialTheme.colorScheme.error,
-                    )
-                }
-            }
-        }
-    }
-}
-
-/** What the card says under its title: the file, or the offer of one. */
-@Composable
-private fun ephemerisSummary(file: GarminAgpsFileState?): String {
-    if (file == null) return stringResource(R.string.settings_watch_agps_body)
-    val imported = DateUtils.getRelativeTimeSpanString(
-        file.importedAt.toEpochMilli(),
-        System.currentTimeMillis(),
-        DateUtils.MINUTE_IN_MILLIS,
-    ).toString()
-    val kind = stringResource(
-        when (file.kind) {
-            GarminAgpsKind.CONSTELLATION_TAR -> R.string.settings_watch_agps_kind_tar
-            GarminAgpsKind.RX_NETWORKS -> R.string.settings_watch_agps_kind_rx
-            GarminAgpsKind.SONY_CPE -> R.string.settings_watch_agps_kind_sony
-        },
-    )
-    val served = file.lastServedAt?.let {
-        DateUtils.getRelativeTimeSpanString(
-            it.toEpochMilli(),
-            System.currentTimeMillis(),
-            DateUtils.MINUTE_IN_MILLIS,
-        ).toString()
-    }
-    val detail = if (served == null) {
-        stringResource(R.string.settings_watch_agps_never_taken, imported)
-    } else {
-        stringResource(R.string.settings_watch_agps_taken, imported, served)
-    }
-    return "$kind · $detail"
-}
-
-/** The way into the watch's own settings tree. */
-@Composable
-internal fun OnDeviceSettingsRow(onOpen: () -> Unit) {
-    NavigationRow(Icons.Outlined.BrightnessMedium, R.string.settings_watch_on_device_settings, R.string.settings_watch_on_device_settings_body, onOpen)
-}
-
-/** The way to the send-a-point form. */
-@Composable
-private fun SendPointRow(onOpen: () -> Unit) {
-    NavigationRow(Icons.Outlined.Place, R.string.settings_watch_point_row, R.string.settings_watch_point_row_body, onOpen)
-}
-
-/** Mirrors phone notifications to the watch. The switches live on the notifications screen. */
-@Composable
-private fun NotificationsRow(onOpen: () -> Unit) {
-    NavigationRow(Icons.Outlined.NotificationsActive, R.string.settings_watch_notifications_title, R.string.settings_watch_notifications_body, onOpen)
-}
-
 /** The BLE broadcast controls for a bike computer: its capabilities, and a redetect button. */
 @Composable
 internal fun LiveSensorSection(
@@ -838,10 +492,7 @@ internal fun LiveSensorSection(
     }
 }
 
-/** Gap inside a status chip. */
-private val WatchChipGap = 10.dp
 /** Inline status icons, between bodySmall text sizes. */
 private val WatchInlineIconSize = 18.dp
 /** The small in-row progress spinner's stroke. */
 private val WatchProgressStroke = 2.dp
-/** Gap between a row's leading icon and its text. */

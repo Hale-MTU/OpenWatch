@@ -12,6 +12,11 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.DeviceLog
 
@@ -31,11 +36,19 @@ class WatchAutoSyncScheduler @Inject constructor(
 
     private val workManager: WorkManager get() = WorkManager.getInstance(context)
 
+    /** Moves on after each choice stored here, so [intervalFlow] reads again. */
+    private val revision = MutableStateFlow(0)
+
     fun interval(deviceId: String): AutoSyncInterval = intervals.autoSyncInterval(deviceId)
+
+    /** [interval], now and again after each change made here. */
+    fun intervalFlow(deviceId: String): Flow<AutoSyncInterval> =
+        revision.map { interval(deviceId) }.distinctUntilChanged()
 
     /** Stores the choice and re-plans from now, so a shorter interval runs sooner. */
     fun setInterval(deviceId: String, interval: AutoSyncInterval) {
         intervals.setAutoSyncInterval(deviceId, interval)
+        revision.update { it + 1 }
         if (interval.isOn) {
             enqueue(deviceId, interval, ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE)
         } else {
@@ -85,6 +98,7 @@ class WatchAutoSyncScheduler @Inject constructor(
     fun forget(deviceId: String) {
         cancel(deviceId)
         intervals.setAutoSyncInterval(deviceId, AutoSyncInterval.OFF)
+        revision.update { it + 1 }
     }
 
     private fun enqueue(

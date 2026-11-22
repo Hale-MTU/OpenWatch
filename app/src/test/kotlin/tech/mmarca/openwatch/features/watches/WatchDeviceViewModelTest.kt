@@ -1,14 +1,5 @@
 package tech.mmarca.openwatch.features.watches
 
-import tech.mmarca.openwatch.core.security.testSeal
-import tech.mmarca.openwatch.data.repository.testDeviceStateStore
-import tech.mmarca.openwatch.data.repository.testDeviceRepository
-import tech.mmarca.openwatch.devices.wearos.WearOsSyncCursorStore
-import tech.mmarca.openwatch.devices.wearos.WearOsFamily
-import tech.mmarca.openwatch.devices.garmin.GarminFamily
-import tech.mmarca.openwatch.devices.core.DeviceFamilies
-import tech.mmarca.openwatch.devices.core.pairing.CompanionFilter
-import android.Manifest
 import android.content.Context
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.lifecycle.SavedStateHandle
@@ -19,7 +10,11 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -31,26 +26,31 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import tech.mmarca.openwatch.core.security.testSeal
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import tech.mmarca.openwatch.data.repository.testDeviceRepository
+import tech.mmarca.openwatch.data.repository.testDeviceStateStore
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
+import tech.mmarca.openwatch.devices.core.DeviceFamilies
+import tech.mmarca.openwatch.devices.core.pairing.CompanionFilter
 import tech.mmarca.openwatch.devices.core.pairing.WatchBondResult
-import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
 import tech.mmarca.openwatch.devices.core.pairing.WatchPairingPort
+import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
+import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
 import tech.mmarca.openwatch.devices.garmin.GarminCapability
 import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
-import tech.mmarca.openwatch.devices.garmin.GarminAgpsState
-import tech.mmarca.openwatch.devices.garmin.GarminAgpsStore
-import tech.mmarca.openwatch.devices.garmin.GarminRealtimeStore
+import tech.mmarca.openwatch.devices.garmin.GarminFamily
 import tech.mmarca.openwatch.devices.garmin.GarminGattReport
+import tech.mmarca.openwatch.devices.garmin.GarminRealtimeStore
 import tech.mmarca.openwatch.devices.garmin.GarminTransportProbe
 import tech.mmarca.openwatch.devices.garmin.GarminTransportVariant
 import tech.mmarca.openwatch.devices.garmin.OnboardGarminWatchUseCase
 import tech.mmarca.openwatch.devices.wearos.OnboardWearOsWatchUseCase
-import tech.mmarca.openwatch.devices.wearos.WearOsCompanionManager
-import tech.mmarca.openwatch.core.presentation.ScreenError
-import io.mockk.coEvery
-import io.mockk.coVerify
+import tech.mmarca.openwatch.devices.wearos.WearOsFamily
 import tech.mmarca.openwatch.devices.wearos.WearOsLinkStore
+import tech.mmarca.openwatch.devices.wearos.WearOsSyncCursorStore
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
@@ -58,13 +58,8 @@ import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
 import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
 import tech.mmarca.openwatch.util.MainDispatcherRule
-import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.CoroutineScope
 
-/** Renaming a watch with no capabilities, the permissions its switches ask for, and what forgetting a device does and does not do at the OS level. */
+/** Renaming a watch with no capabilities, its schedule and the grant that asks for, and what forgetting a device does and does not do at the OS level. */
 class WatchDeviceViewModelTest {
 
     @get:Rule
@@ -108,7 +103,6 @@ class WatchDeviceViewModelTest {
     private lateinit var repo: BleDeviceRepository
     private lateinit var stateStore: GarminDeviceStateStore
     private lateinit var pairing: FakePairing
-    private val notificationsGateway = mockk<WatchNotificationsGateway>(relaxed = true)
     private val garminLocalData = mockk<tech.mmarca.openwatch.devices.garmin.GarminLocalData>(relaxed = true)
     private val healthConnectManager = mockk<tech.mmarca.openwatch.healthconnect.HealthConnectGateway>(relaxed = true)
     private val notificationBridge = mockk<tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge>(relaxed = true)
@@ -116,7 +110,7 @@ class WatchDeviceViewModelTest {
 
     /** The scheduler owns the stored interval and the WorkManager side, so it is one stub that remembers. */
     private lateinit var autoSyncScheduler: WatchAutoSyncScheduler
-    private val autoSyncIntervals = mutableMapOf<String, AutoSyncInterval>()
+    private val autoSyncIntervals = MutableStateFlow(emptyMap<String, AutoSyncInterval>())
 
     @Before
     fun setUp() {
@@ -125,13 +119,16 @@ class WatchDeviceViewModelTest {
         repo = testDeviceRepository()
         stateStore = GarminDeviceStateStore(testDeviceStateStore(), FakeSharedPreferences())
         pairing = FakePairing()
-        autoSyncIntervals.clear()
         autoSyncScheduler = mockk(relaxed = true)
         every { autoSyncScheduler.interval(any()) } answers {
-            autoSyncIntervals[firstArg()] ?: AutoSyncInterval.OFF
+            autoSyncIntervals.value[firstArg()] ?: AutoSyncInterval.OFF
+        }
+        every { autoSyncScheduler.intervalFlow(any()) } answers {
+            val deviceId = firstArg<String>()
+            autoSyncIntervals.map { it[deviceId] ?: AutoSyncInterval.OFF }
         }
         every { autoSyncScheduler.setInterval(any(), any()) } answers {
-            autoSyncIntervals[firstArg()] = secondArg()
+            autoSyncIntervals.update { it + (firstArg<String>() to secondArg<AutoSyncInterval>()) }
         }
     }
 
@@ -150,42 +147,18 @@ class WatchDeviceViewModelTest {
         setOf(HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND),
     )
 
-    private fun viewModel(
-        deviceId: String,
-        wearOsCompanionManager: WearOsCompanionManager = mockk(relaxed = true),
-    ) = WatchDeviceViewModel(
-        appScope = CoroutineScope(SupervisorJob()),
+    private fun viewModel(deviceId: String) = WatchDeviceViewModel(
         savedStateHandle = SavedStateHandle(mapOf(WATCH_DEVICE_ID_ARG to deviceId)),
         deviceRepository = repo,
-        stateStore = stateStore,
         syncController = mockk<DeviceSyncController>().also {
             every { it.state } returns MutableStateFlow(DeviceSyncUiState())
         },
-        actionsController = mockk<GarminWatchActionsController>().also {
-            every { it.state } returns MutableStateFlow(WatchFindUiState())
-        },
+        autoSyncScheduler = autoSyncScheduler,
         sensorCoordinator = mockk<BleSensorCoordinator>().also {
             every { it.discoveredDevices } returns MutableStateFlow(emptyList())
             every { it.stopScan() } just runs
         },
-        notificationBridge = notificationBridge,
-        realtimeStore = GarminRealtimeStore(),
-        calendarSource = mockk(relaxed = true),
-        navigationRelay = mockk(relaxed = true),
-        coMapsNavigationRepository = mockk(relaxed = true),
-        coMapsGuidanceFeed = tech.mmarca.openwatch.comaps.CoMapsGuidanceFeed(mockk(relaxed = true), CoroutineScope(SupervisorJob())),
-        agpsStore = mockk<GarminAgpsStore>(relaxed = true).also {
-            every { it.agps } returns MutableStateFlow(GarminAgpsState())
-        },
-        onboardWearOsWatch = onboardWearOsWatch,
-        autoSyncScheduler = autoSyncScheduler,
-        musicRelay = mockk(relaxed = true),
-        notificationsGateway = notificationsGateway,
         healthConnectManager = healthConnectManager,
-        // The cleanup after a removal runs on the default dispatcher. Here it runs at once.
-        dispatchers = mainDispatcherRule.dispatcherProvider,
-        wearOsCompanionManager = wearOsCompanionManager,
-        wearOsLinkStore = wearOsLinkStore,
         families = DeviceFamilies(
             mapOf(
                 "GARMIN" to GarminFamily(
@@ -196,61 +169,13 @@ class WatchDeviceViewModelTest {
                     GarminRealtimeStore(),
                     notificationBridge,
                 ),
-                "WEAROS" to WearOsFamily(wearOsLinkStore, onboardWearOsWatch, wearOsCompanionManager, WearOsSyncCursorStore(testDeviceStateStore())),
+                "WEAROS" to WearOsFamily(wearOsLinkStore, onboardWearOsWatch, mockk(relaxed = true), WearOsSyncCursorStore(testDeviceStateStore())),
             ),
         ),
+        // The cleanup after a removal runs on the default dispatcher. Here it runs at once.
+        dispatchers = mainDispatcherRule.dispatcherProvider,
+        appScope = CoroutineScope(SupervisorJob()),
     )
-
-    @Test
-    fun `switching music controls on without notification access shows the disclosure first`() = runTest {
-        val watch = addWatch()
-        every { notificationsGateway.isNotificationAccessGranted() } returns false
-        val vm = viewModel(watch.id)
-        backgroundScope.launch { vm.uiState.collect { } }
-
-        vm.setMusicControls(true)
-        runCurrent()
-
-        assertTrue(vm.uiState.value.showMusicDisclosure)
-        verify(exactly = 0) { notificationBridge.onMusicControlsChanged(any(), any()) }
-        verify(exactly = 0) { notificationsGateway.openNotificationAccessSettings() }
-    }
-
-    @Test
-    fun `accepting the disclosure switches on and opens Android's settings, declining does neither`() = runTest {
-        val watch = addWatch()
-        every { notificationsGateway.isNotificationAccessGranted() } returns false
-        val vm = viewModel(watch.id)
-        backgroundScope.launch { vm.uiState.collect { } }
-
-        vm.setMusicControls(true)
-        vm.declineMusicDisclosure()
-        runCurrent()
-        assertFalse(vm.uiState.value.showMusicDisclosure)
-        verify(exactly = 0) { notificationBridge.onMusicControlsChanged(any(), any()) }
-
-        vm.setMusicControls(true)
-        vm.acceptMusicDisclosure()
-        runCurrent()
-        assertFalse(vm.uiState.value.showMusicDisclosure)
-        verify(exactly = 1) { notificationBridge.onMusicControlsChanged(watch.id, true) }
-        verify(exactly = 1) { notificationsGateway.openNotificationAccessSettings() }
-    }
-
-    @Test
-    fun `with access granted the switch applies at once, and off never asks`() = runTest {
-        val watch = addWatch()
-        every { notificationsGateway.isNotificationAccessGranted() } returns true
-        val vm = viewModel(watch.id)
-
-        vm.setMusicControls(true)
-        every { notificationsGateway.isNotificationAccessGranted() } returns false
-        vm.setMusicControls(false)
-
-        verify(exactly = 1) { notificationBridge.onMusicControlsChanged(watch.id, true) }
-        verify(exactly = 1) { notificationBridge.onMusicControlsChanged(watch.id, false) }
-        verify(exactly = 0) { notificationsGateway.openNotificationAccessSettings() }
-    }
 
     @Test
     fun `renaming trims the new name and persists it`() = runTest {
@@ -311,7 +236,7 @@ class WatchDeviceViewModelTest {
     fun `removing the last Garmin watch clears what only served a paired watch`() = runTest {
         val watch = addWatch()
         val vm = viewModel(watch.id)
-        assertTrue(vm.offersHistoryDeletion)
+        assertTrue(vm.uiState.value.offersHistoryDeletion)
 
         vm.removeDevice()
 
@@ -341,7 +266,7 @@ class WatchDeviceViewModelTest {
             integration = DeviceIntegration.GARMIN,
         )
         val vm = viewModel(watch.id)
-        assertFalse(vm.offersHistoryDeletion)
+        assertFalse(vm.uiState.value.offersHistoryDeletion)
 
         vm.removeDevice(deleteWatchHistory = true)
 
@@ -443,7 +368,7 @@ class WatchDeviceViewModelTest {
     fun `moving between two intervals does not ask for the background read again`() = runTest {
         coEvery { healthConnectManager.isBackgroundReadGrantMissing() } returns true
         val watch = addWatch()
-        autoSyncIntervals[watch.id] = AutoSyncInterval.HOURLY
+        autoSyncIntervals.value = mapOf(watch.id to AutoSyncInterval.HOURLY)
         val vm = viewModel(watch.id)
         vm.refreshBackgroundAccess()
         runCurrent()
@@ -468,44 +393,6 @@ class WatchDeviceViewModelTest {
     }
 
     @Test
-    fun `calendar on asks for the calendar grant, and a refusal still sets the switch`() = runTest {
-        val watch = addWatch()
-        val vm = viewModel(watch.id)
-
-        vm.toggleCalendarSync(true)
-
-        assertEquals(
-            WatchPermissionRequest.Runtime(Manifest.permission.READ_CALENDAR, WatchPermissionRequest.Purpose.CALENDAR),
-            vm.uiState.value.permissionRequest,
-        )
-        // Nothing is set until the dialog answers.
-        assertFalse(vm.uiState.value.calendarSync)
-
-        vm.onPermissionRequestHandled()
-        vm.onRuntimePermissionResult(granted = false)
-
-        assertNull(vm.uiState.value.permissionRequest)
-        assertTrue(stateStore.calendarSync(watch.id))
-        assertTrue(vm.uiState.value.calendarSync)
-        // The row says what is missing.
-        assertTrue(vm.uiState.value.calendarPermissionMissing)
-    }
-
-    @Test
-    fun `alarms open in the watch's settings tree when it has one, else the phone's list`() {
-        // Unknown capabilities count as present, so a watch never synced gets the tree.
-        assertEquals(AlarmsDestination.SETTINGS_TREE, WatchDeviceUiState().alarmsDestination)
-        assertEquals(
-            AlarmsDestination.SETTINGS_TREE,
-            WatchDeviceUiState(capabilities = setOf(GarminCapability.REALTIME_SETTINGS)).alarmsDestination,
-        )
-        assertEquals(
-            AlarmsDestination.PHONE_LIST,
-            WatchDeviceUiState(capabilities = setOf(GarminCapability.SYNC)).alarmsDestination,
-        )
-    }
-
-    @Test
     fun `forgetting a watch stops its automatic sync`() = runTest {
         val watch = addWatch()
         val vm = viewModel(watch.id)
@@ -515,29 +402,5 @@ class WatchDeviceViewModelTest {
 
         // A schedule outliving the watch would wake the radio for nothing.
         verify { autoSyncScheduler.forget(watch.id) }
-    }
-
-    @Test
-    fun `a missing Bluetooth permission on the Wear OS check is a grant affordance, checked once`() = runTest {
-        val watch = repo.addDevice(
-            displayName = "Galaxy Watch8",
-            address = "7F:12:34:56:78:9A",
-            bluetoothName = "Galaxy Watch8 (3A3B) LE",
-            capabilities = emptySet(),
-            kind = BleDeviceKind.WATCH,
-            integration = DeviceIntegration.WEAROS,
-        )
-        val manager = mockk<WearOsCompanionManager>()
-        coEvery { manager.checkWearOsWatchStatus(any(), any()) } throws SecurityException("BLUETOOTH_CONNECT")
-        val vm = viewModel(watch.id, manager)
-        backgroundScope.launch { vm.uiState.collect { } }
-        runCurrent()
-
-        assertEquals(ScreenError.PermissionDenied, vm.uiState.value.wearOsError)
-        assertFalse(vm.uiState.value.isCheckingWearOsStatus)
-        // A failed check leaves no timestamp; it must not retry on every emission.
-        coVerify(exactly = 1) {
-            manager.checkWearOsWatchStatus("7F:12:34:56:78:9A", "Galaxy Watch8 (3A3B) LE")
-        }
     }
 }

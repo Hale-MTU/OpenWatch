@@ -1,79 +1,51 @@
 package tech.mmarca.openwatch.features.watches
 
-import android.Manifest
-import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Instant
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.plus
+import tech.mmarca.openwatch.core.performance.ApplicationScope
+import tech.mmarca.openwatch.core.performance.DispatcherProvider
+import tech.mmarca.openwatch.core.performance.runSuspendCatching
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
-import kotlinx.coroutines.withContext
-import tech.mmarca.openwatch.R
-import tech.mmarca.openwatch.core.permissions.RuntimePermissions
-import tech.mmarca.openwatch.core.presentation.ScreenError
-import tech.mmarca.openwatch.core.presentation.toScreenError
 import tech.mmarca.openwatch.devices.core.DeviceFamilies
 import tech.mmarca.openwatch.devices.core.DeviceFeature
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
-import tech.mmarca.openwatch.devices.garmin.GarminAgpsImport
-import tech.mmarca.openwatch.devices.garmin.GarminAgpsKind
-import tech.mmarca.openwatch.devices.garmin.GarminAgpsState
-import tech.mmarca.openwatch.devices.garmin.GarminAgpsStore
-import tech.mmarca.openwatch.devices.garmin.GarminCapability
-import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
-import tech.mmarca.openwatch.devices.wearos.OnboardWearOsWatchUseCase
-import tech.mmarca.openwatch.devices.wearos.WearOsCompanionManager
-import tech.mmarca.openwatch.devices.wearos.WearOsCompanionStatus
-import tech.mmarca.openwatch.devices.wearos.WearOsLinkSnapshot
-import tech.mmarca.openwatch.devices.wearos.WearOsLinkStore
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
+import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.navigation.WATCH_DEVICE_ID_ARG
 import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
-import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
-import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
-import kotlinx.coroutines.plus
-import tech.mmarca.openwatch.core.performance.ApplicationScope
-import tech.mmarca.openwatch.core.performance.runSuspendCatching
-import tech.mmarca.openwatch.devices.garmin.isGarmin
-import tech.mmarca.openwatch.devices.wearos.isWearOs
 
-/** Everything the device view shows about one watch. */
+/** What the device view shows about any device: its header, its sync and schedule, its removal. */
 @Immutable
 data class WatchDeviceUiState(
     /** Null while loading and after removal — the screen shows its no-data state. */
     val device: BleSensorDevice? = null,
+    /** The family that owns the device, which picks the panel below the shared cards; null for a plain sensor. */
+    val family: DeviceIntegration? = null,
     /** What the device's family says it can do; empty for a plain sensor. */
     val features: Set<DeviceFeature> = emptySet(),
-    /** What the watch declared in its last handshake. Empty means unknown, not none; see [supports]. */
-    val capabilities: Set<GarminCapability> = emptySet(),
     val sync: DeviceSyncUiState = DeviceSyncUiState(),
-    val find: WatchFindUiState = WatchFindUiState(),
     /** The bike computer's broadcast-sensor detection, in flight. */
     val isDetectingSensors: Boolean = false,
-    /** Companion mode: hold the link whenever the watch is in range. */
-    val stayConnected: Boolean = false,
-    /** Links ask the watch for large Bluetooth packets. Off is the workaround for a watch that misbehaves with them. */
-    val highMtu: Boolean = true,
+    /** The last detection connected and found nothing broadcasting. */
+    val detectFoundNothing: Boolean = false,
     /** How often the watch syncs on its own, or OFF for by-hand only. */
     val autoSync: AutoSyncInterval = AutoSyncInterval.OFF,
     /**
@@ -82,106 +54,32 @@ data class WatchDeviceUiState(
      * apps' records catches up until the app is opened.
      */
     val backgroundReadMissing: Boolean = false,
-    /** Live readings streamed over that link. */
-    val liveReadings: Boolean = false,
-    /** The watch's music controls drive the phone's player. Off by default. */
-    val musicControls: Boolean = false,
-    /** Music controls are on but Android's notification access is off. */
-    val musicAccessMissing: Boolean = false,
-    /** The disclosure that comes before the trip to Android's settings. */
-    val showMusicDisclosure: Boolean = false,
-    /** The watch may read the phone's calendar. Off by default. */
-    val calendarSync: Boolean = false,
-    /** Calendar sync is on but the OS permission has been revoked. */
-    val calendarPermissionMissing: Boolean = false,
-    /** Live CoMaps guidance is shown on the watch, recording or not. */
-    val navigationOnWatch: Boolean = false,
-    /** Guidance on the watch is on but CoMaps' own permission has been declined. */
-    val coMapsPermissionMissing: Boolean = false,
-    /** The most recent live heart rate, while one is arriving. */
-    val liveHeartRateBpm: Int? = null,
-    /** The last detection connected and found nothing broadcasting. */
-    val detectFoundNothing: Boolean = false,
-    /** GPS ephemeris the user supplied, and what the watch has asked for. */
-    val agps: GarminAgpsState = GarminAgpsState(),
-    /** The result of the last ephemeris import, until the next one. */
-    @StringRes val agpsMessage: Int? = null,
-    /** Wear OS connection and app responsiveness state. */
-    val wearOsStatus: WearOsCompanionStatus =
-        WearOsCompanionStatus(),
-    /** True while a Wear OS status check / ping is in flight. */
-    val isCheckingWearOsStatus: Boolean = false,
-    /** Why the last Wear OS check failed. [ScreenError.PermissionDenied] gets a grant affordance. */
-    val wearOsError: ScreenError? = null,
-    /**
-     * The Wear OS watch has no companion association: it was added before the association
-     * was required, or the user removed it in Android's settings.
-     */
-    val wearOsCompanionMissing: Boolean = false,
-    /** True while Android's association dialog is open. */
-    val isAssociatingWearOs: Boolean = false,
-    /** The watch's own settings as it last reported them; null until read or when it cannot serve them. */
-    val watchSettings: Map<String, String>? = null,
-    /** True while the watch's settings are read or one is being changed. */
-    val isWatchSettingsBusy: Boolean = false,
-    /** Why the last read or change of the watch's settings failed. */
-    val watchSettingsError: ScreenError? = null,
+    /** Removing this device can delete history its family keeps; the dialog then offers it. */
+    val offersHistoryDeletion: Boolean = false,
     /** A permission for the screen to ask for, once; held until [WatchDeviceViewModel.onPermissionRequestHandled]. */
-    val permissionRequest: WatchPermissionRequest? = null,
-) {
-    /** Whether the watch declared [capability]. Unknown means show: a never-synced watch has no list. */
-    fun supports(capability: GarminCapability): Boolean =
-        capabilities.isEmpty() || capability in capabilities
+    val permissionRequest: WatchPermissionRequest.HealthConnect? = null,
+)
 
-    /** Whether the watch serves its settings, alarms included, as a tree of screens. */
-    val hasSettingsTree: Boolean
-        get() = WatchSettingsTreeAvailable && supports(GarminCapability.REALTIME_SETTINGS)
-
-    /** Where the alarms action leads: the watch's own alarms screen when it has a settings tree, else the phone's list. */
-    val alarmsDestination: AlarmsDestination
-        get() = if (hasSettingsTree) AlarmsDestination.SETTINGS_TREE else AlarmsDestination.PHONE_LIST
-}
-
-/** Where the device view's alarms action leads. */
-enum class AlarmsDestination { SETTINGS_TREE, PHONE_LIST }
-
-/** A permission the device view asks Android for on the view-model's behalf. */
+/** A permission the device view asks Android for on a state holder's behalf, held in its state until launched. */
 sealed interface WatchPermissionRequest {
     /** Health Connect's own dialog; the background read is re-read once it closes. */
     data class HealthConnect(val permissions: Set<String>) : WatchPermissionRequest
 
-    /** One runtime grant. [purpose] says what its answer is for. */
-    data class Runtime(val permission: String, val purpose: Purpose) : WatchPermissionRequest
-
-    enum class Purpose { CALENDAR, COMAPS, BLUETOOTH }
+    /** One runtime grant. Its answer goes back to the state holder that asked, which knows what it was for. */
+    data class Runtime(val permission: String) : WatchPermissionRequest
 }
 
-/** One watch, and everything about it. */
+/** One device's screen, the part every device has; its family's panel has a state holder of its own. */
 @HiltViewModel
 class WatchDeviceViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
+    savedStateHandle: SavedStateHandle,
     private val deviceRepository: BleDeviceRepository,
-    private val stateStore: GarminDeviceStateStore,
     private val syncController: DeviceSyncController,
     private val autoSyncScheduler: WatchAutoSyncScheduler,
-    private val actionsController: GarminWatchActionsController,
     private val sensorCoordinator: BleSensorCoordinator,
-    private val onboardWearOsWatch: OnboardWearOsWatchUseCase,
-    private val notificationBridge: tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge,
-    private val realtimeStore: tech.mmarca.openwatch.devices.garmin.GarminRealtimeStore,
-    private val agpsStore: GarminAgpsStore,
-    private val calendarSource: tech.mmarca.openwatch.devices.garmin.GarminCalendarSource,
-    private val navigationRelay: tech.mmarca.openwatch.devices.garmin.GarminNavigationRelay,
-    private val coMapsNavigationRepository:
-        tech.mmarca.openwatch.comaps.CoMapsNavigationRepository,
-    private val coMapsGuidanceFeed: tech.mmarca.openwatch.comaps.CoMapsGuidanceFeed,
-    private val musicRelay: tech.mmarca.openwatch.devices.garmin.GarminMusicRelay,
-    private val notificationsGateway: WatchNotificationsGateway,
-    private val healthConnectManager: tech.mmarca.openwatch.healthconnect.HealthConnectGateway,
-    private val dispatchers: tech.mmarca.openwatch.core.performance.DispatcherProvider,
-    private val wearOsCompanionManager: WearOsCompanionManager,
-    private val wearOsLinkStore: WearOsLinkStore,
+    private val healthConnectManager: HealthConnectGateway,
     private val families: DeviceFamilies,
+    dispatchers: DispatcherProvider,
     @ApplicationScope appScope: CoroutineScope,
 ) : ViewModel() {
 
@@ -195,324 +93,19 @@ class WatchDeviceViewModel @Inject constructor(
     val uiState: StateFlow<WatchDeviceUiState> = combine(
         deviceRepository.devicesFlow,
         syncController.state,
-        actionsController.state,
+        autoSyncScheduler.intervalFlow(deviceId),
         localState,
-        realtimeStore.readings,
-    ) { devices, sync, find, local, live ->
+    ) { devices, sync, autoSync, local ->
         val device = devices.firstOrNull { it.id == deviceId }
         local.copy(
             device = device,
+            family = device?.let(families::of)?.id?.let(DeviceIntegration::fromStorage),
             features = device?.let(families::features).orEmpty(),
-            capabilities = if (device?.isGarmin == true) {
-                stateStore.capabilities(deviceId)
-            } else {
-                emptySet()
-            },
+            offersHistoryDeletion = device?.let(families::offersHistoryDeletion) == true,
             sync = sync,
-            find = find,
-            stayConnected = stateStore.stayConnected(deviceId),
-            highMtu = device?.let { stateStore.highMtu(it.address) } ?: true,
-            autoSync = autoSyncScheduler.interval(deviceId),
-            liveReadings = stateStore.liveReadings(deviceId),
-            musicControls = stateStore.musicControls(deviceId),
-            musicAccessMissing = stateStore.musicControls(deviceId) &&
-                !notificationsGateway.isNotificationAccessGranted(),
-            calendarSync = stateStore.calendarSync(deviceId),
-            calendarPermissionMissing = stateStore.calendarSync(deviceId) &&
-                !calendarSource.hasPermission(),
-            navigationOnWatch = stateStore.navigationOnWatch(deviceId),
-            coMapsPermissionMissing = stateStore.navigationOnWatch(deviceId) &&
-                !coMapsNavigationRepository.hasPermission(),
-            // Only this watch's: the held link may be another one's.
-            liveHeartRateBpm = live.takeIf { it.deviceId == deviceId }?.freshHeartRate(),
+            autoSync = autoSync,
         )
-    }
-        .combine(agpsStore.agps) { state, agps -> state.copy(agps = agps) }
-        .stateInViewModel(initial = WatchDeviceUiState())
-
-    /**
-     * A Wear OS watch's heart rate as it happens, null while none arrives.
-     * Streams only while the screen collects it, so the watch's sensor runs
-     * unbatched only while someone looks.
-     */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val wearOsLiveHeartRateBpm: StateFlow<Int?> = deviceRepository.devicesFlow
-        .map { devices -> devices.firstOrNull { it.id == deviceId }?.takeIf { it.isWearOs } }
-        .distinctUntilChanged { old, new -> old?.address == new?.address && old?.bluetoothName == new?.bluetoothName }
-        .flatMapLatest { device ->
-            device?.let { wearOsCompanionManager.liveHeartRate(it.address, it.bluetoothName) } ?: flowOf(null)
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(LIVE_STOP_TIMEOUT_MS), null)
-
-    init {
-        // The first check runs once the device has loaded; later ones are by hand. The watch's
-        // settings are read after it: the watch serves one connection at a time.
-        viewModelScope.launch {
-            if (uiState.first { it.device != null }.device?.isWearOs == true) {
-                checkWearOsStatus()
-                uiState.first { !it.isCheckingWearOsStatus }
-                loadWatchSettings()
-            }
-        }
-        // A sync that ends in a typed failure updates the status row without another ping.
-        viewModelScope.launch {
-            wearOsLinkStore.snapshots.collect { snapshots ->
-                val snapshot = snapshots[deviceId] ?: return@collect
-                localState.update { state ->
-                    state.copy(
-                        wearOsStatus = state.wearOsStatus.copy(
-                            appStatus = snapshot.status,
-                            watchName = snapshot.watchName ?: state.wearOsStatus.watchName,
-                            bondLost = snapshot.bondLost,
-                            lastCheckedAt = snapshot.checkedAt,
-                        ),
-                    )
-                }
-            }
-        }
-    }
-
-    /** Takes in an ephemeris file. Its contents say what it is; the message says why not. */
-    fun importAgps(uri: android.net.Uri) {
-        viewModelScope.launch {
-            val result = withContext(dispatchers.io) { agpsStore.import(uri) }
-            localState.update {
-                it.copy(
-                    agpsMessage = when (result) {
-                        is GarminAgpsImport.Imported -> R.string.settings_watch_agps_imported
-                        GarminAgpsImport.NotEphemeris -> R.string.settings_watch_agps_not_ephemeris
-                        GarminAgpsImport.Stale -> R.string.settings_watch_agps_stale
-                        GarminAgpsImport.Unreadable -> R.string.settings_watch_agps_unreadable
-                    },
-                )
-            }
-        }
-    }
-
-    fun forgetAgps(kind: GarminAgpsKind) {
-        agpsStore.forget(kind)
-        localState.update { it.copy(agpsMessage = null) }
-    }
-
-    /** Checks whether the Wear OS watch is paired and its OpenWatch app answers. */
-    fun checkWearOsStatus() {
-        val device = uiState.value.device ?: return
-        if (!device.isWearOs || localState.value.isCheckingWearOsStatus) return
-        localState.update {
-            it.copy(
-                isCheckingWearOsStatus = true,
-                wearOsCompanionMissing = !onboardWearOsWatch.isAssociated(device.address),
-            )
-        }
-        viewModelScope.launch {
-            try {
-                val status = wearOsCompanionManager.checkWearOsWatchStatus(
-                    targetAddress = device.address,
-                    targetName = device.bluetoothName,
-                )
-                localState.update { it.copy(wearOsStatus = status, wearOsError = null) }
-                wearOsLinkStore.record(
-                    device.id,
-                    WearOsLinkSnapshot(status.appStatus, watchName = status.watchName, bondLost = status.bondLost, checkedAt = Instant.now()),
-                )
-            } catch (e: Exception) {
-                val error = e.toScreenError(logTag = TAG, logMessage = "Wear OS status check failed")
-                localState.update { it.copy(wearOsError = error) }
-            } finally {
-                localState.update { it.copy(isCheckingWearOsStatus = false) }
-            }
-        }
-    }
-
-    /** Asks Android for the companion association of a Wear OS watch that has none. */
-    fun associateWearOs() {
-        val device = uiState.value.device ?: return
-        if (!device.isWearOs || localState.value.isAssociatingWearOs) return
-        localState.update { it.copy(isAssociatingWearOs = true) }
-        viewModelScope.launch {
-            val associated = onboardWearOsWatch.associate(device.address, device.displayName)
-            localState.update { it.copy(isAssociatingWearOs = false, wearOsCompanionMissing = !associated) }
-        }
-    }
-
-    /** Companion mode. The bridge owns the pref, presence observation and the held link together. */
-    fun setLiveReadings(enabled: Boolean) {
-        notificationBridge.onLiveReadingsChanged(deviceId, enabled)
-        localState.update { it.copy(liveReadings = enabled) }
-    }
-
-    /**
-     * Turns the watch's music controls on or off. Without notification
-     * access, switching on shows the disclosure first and changes nothing yet.
-     */
-    fun setMusicControls(enabled: Boolean) {
-        if (enabled && !notificationsGateway.isNotificationAccessGranted()) {
-            localState.update { it.copy(showMusicDisclosure = true) }
-            return
-        }
-        applyMusicControls(enabled)
-    }
-
-    /**
-     * The user accepted the disclosure. The switch goes on and Android's
-     * settings open; until access is granted the card says it is missing.
-     */
-    fun acceptMusicDisclosure() {
-        localState.update { it.copy(showMusicDisclosure = false) }
-        applyMusicControls(true)
-        notificationsGateway.openNotificationAccessSettings()
-    }
-
-    fun declineMusicDisclosure() {
-        localState.update { it.copy(showMusicDisclosure = false) }
-    }
-
-    private fun applyMusicControls(enabled: Boolean) {
-        notificationBridge.onMusicControlsChanged(deviceId, enabled)
-        localState.update { it.copy(musicControls = enabled) }
-    }
-
-    /** Re-checks notification access on the way back from Android's settings. */
-    fun refreshMusicAccess() {
-        musicRelay.refreshAccess()
-        localState.update { it.copy(musicControls = stateStore.musicControls(deviceId)) }
-    }
-
-    /** The calendar switch. On asks for the calendar grant first; the switch is set once the dialog answers. */
-    fun toggleCalendarSync(enabled: Boolean) {
-        if (enabled) {
-            requestRuntime(Manifest.permission.READ_CALENDAR, WatchPermissionRequest.Purpose.CALENDAR)
-        } else {
-            setCalendarSync(false)
-        }
-    }
-
-    /** Turns the calendar glance on or off. A toggle set with the permission denied still sticks. */
-    private fun setCalendarSync(enabled: Boolean) {
-        stateStore.setCalendarSync(deviceId, enabled)
-        localState.update { it.copy(calendarSync = enabled) }
-    }
-
-    /**
-     * Shows live CoMaps guidance on the watch. Works whether or not a session is running. On also
-     * asks for CoMaps' own permission, named after the installed flavour, so a wearer who never
-     * records can still grant it. The toggle sticks either way; without the grant the card says
-     * what is missing.
-     */
-    fun toggleNavigationOnWatch(enabled: Boolean) {
-        navigationRelay.onEnabledChanged(deviceId, enabled)
-        localState.update {
-            it.copy(
-                navigationOnWatch = enabled,
-                coMapsPermissionMissing = enabled && !coMapsNavigationRepository.hasPermission(),
-            )
-        }
-        // Null without a CoMaps installed: nothing to ask.
-        if (enabled) {
-            coMapsNavigationRepository.permissionName()
-                ?.let { requestRuntime(it, WatchPermissionRequest.Purpose.COMAPS) }
-        }
-    }
-
-    /**
-     * The Wear OS card's "nearby devices" grant: without it the phone cannot see the bond or open
-     * the link. Before Android 12 there is no such grant, so the check runs again at once.
-     */
-    fun requestBluetoothConnect() {
-        val permission = RuntimePermissions.bluetoothConnectPermission()
-        if (permission == null) checkWearOsStatus() else requestRuntime(permission, WatchPermissionRequest.Purpose.BLUETOOTH)
-    }
-
-    /** The screen launched [WatchDeviceUiState.permissionRequest]; a runtime one's answer comes to [onRuntimePermissionResult]. */
-    fun onPermissionRequestHandled() {
-        localState.update { it.copy(permissionRequest = null) }
-    }
-
-    /** The runtime dialog answered. What follows depends on what it was asked for. */
-    fun onRuntimePermissionResult(granted: Boolean) {
-        val purpose = savedStateHandle.remove<String>(PENDING_PERMISSION_PURPOSE_KEY)
-            ?.let { name -> WatchPermissionRequest.Purpose.entries.firstOrNull { it.name == name } }
-            ?: return
-        when (purpose) {
-            WatchPermissionRequest.Purpose.CALENDAR -> {
-                // The toggle is set either way; without the grant the row says what is missing.
-                setCalendarSync(true)
-                if (!granted) refreshCalendarPermission()
-            }
-            WatchPermissionRequest.Purpose.COMAPS -> refreshCoMapsPermission()
-            WatchPermissionRequest.Purpose.BLUETOOTH -> if (granted) checkWearOsStatus()
-        }
-    }
-
-    /** The purpose is kept apart from the request, which the screen clears on launch, for the answer to find. */
-    private fun requestRuntime(permission: String, purpose: WatchPermissionRequest.Purpose) {
-        savedStateHandle[PENDING_PERMISSION_PURPOSE_KEY] = purpose.name
-        localState.update { it.copy(permissionRequest = WatchPermissionRequest.Runtime(permission, purpose)) }
-    }
-
-    /** Re-checks CoMaps' grant after its dialog and re-opens the feed: a refused observer stays refused. */
-    private fun refreshCoMapsPermission() {
-        coMapsGuidanceFeed.refresh()
-        localState.update {
-            it.copy(
-                coMapsPermissionMissing = stateStore.navigationOnWatch(deviceId) &&
-                    !coMapsNavigationRepository.hasPermission(),
-            )
-        }
-    }
-
-    /** Re-checks the OS grant after the permission dialog closes. */
-    private fun refreshCalendarPermission() {
-        localState.update { it.copy(calendarSync = stateStore.calendarSync(deviceId)) }
-    }
-
-    fun setStayConnected(enabled: Boolean) {
-        notificationBridge.onStayConnectedChanged(deviceId, enabled)
-        // Poke the combine so the switch reflects the change immediately.
-        localState.update { it.copy(stayConnected = enabled) }
-    }
-
-    /** Whether links ask the watch for large packets. Keyed by the watch's address, as the store is. */
-    fun setHighMtu(enabled: Boolean) {
-        val address = uiState.value.device?.address ?: return
-        stateStore.setHighMtu(address, enabled)
-        localState.update { it.copy(highMtu = enabled) }
-    }
-
-    /** Reads the watch's own settings over the link. */
-    fun loadWatchSettings() {
-        val device = uiState.value.device ?: return
-        if (!device.isWearOs || localState.value.isWatchSettingsBusy) return
-        localState.update { it.copy(isWatchSettingsBusy = true) }
-        viewModelScope.launch {
-            try {
-                val held = wearOsCompanionManager.watchSettings(device.address, device.bluetoothName)
-                localState.update { it.copy(watchSettings = held, watchSettingsError = null) }
-            } catch (e: Exception) {
-                localState.update { it.copy(watchSettingsError = e.toScreenError(logTag = TAG, logMessage = "Watch settings read failed")) }
-            } finally {
-                localState.update { it.copy(isWatchSettingsBusy = false) }
-            }
-        }
-    }
-
-    /** Changes one of the watch's settings, then reads them all back: the watch is the truth. */
-    fun setWatchSetting(key: String, value: String) {
-        val device = uiState.value.device ?: return
-        if (localState.value.isWatchSettingsBusy) return
-        localState.update { state -> state.copy(isWatchSettingsBusy = true, watchSettings = state.watchSettings?.plus(key to value)) }
-        viewModelScope.launch {
-            try {
-                wearOsCompanionManager.setWatchSetting(device.address, device.bluetoothName, key, value)
-                val held = wearOsCompanionManager.watchSettings(device.address, device.bluetoothName)
-                localState.update { it.copy(watchSettings = held, watchSettingsError = null) }
-            } catch (e: Exception) {
-                localState.update { it.copy(watchSettingsError = e.toScreenError(logTag = TAG, logMessage = "Watch setting change failed")) }
-            } finally {
-                localState.update { it.copy(isWatchSettingsBusy = false) }
-            }
-        }
-    }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, WatchDeviceUiState())
 
     /**
      * Picks the auto-sync interval. The scheduler owns the stored choice and the periodic work.
@@ -522,7 +115,6 @@ class WatchDeviceViewModel @Inject constructor(
     fun selectAutoSync(interval: AutoSyncInterval) {
         val switchingOn = autoSyncScheduler.interval(deviceId) == AutoSyncInterval.OFF && interval != AutoSyncInterval.OFF
         autoSyncScheduler.setInterval(deviceId, interval)
-        localState.update { it.copy(autoSync = interval) }
         if (switchingOn && localState.value.backgroundReadMissing) allowBackgroundRead()
     }
 
@@ -530,6 +122,11 @@ class WatchDeviceViewModel @Inject constructor(
     fun allowBackgroundRead() {
         val permissions = setOf(HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND)
         localState.update { it.copy(permissionRequest = WatchPermissionRequest.HealthConnect(permissions)) }
+    }
+
+    /** The screen launched [WatchDeviceUiState.permissionRequest]. */
+    fun onPermissionRequestHandled() {
+        localState.update { it.copy(permissionRequest = null) }
     }
 
     /** Re-reads the background grant: on resume, and after the permission screen returns. */
@@ -542,10 +139,6 @@ class WatchDeviceViewModel @Inject constructor(
 
     fun syncNow() {
         syncController.syncDevice(deviceId)
-    }
-
-    fun toggleFind() {
-        actionsController.toggleFind(deviceId)
     }
 
     /** Renames the watch without touching anything else it holds. */
@@ -581,14 +174,10 @@ class WatchDeviceViewModel @Inject constructor(
         }
     }
 
-    /** True when removing this device can delete history its family keeps; the dialog then offers it. */
-    val offersHistoryDeletion: Boolean
-        get() = deviceRepository.devices.firstOrNull { it.id == deviceId }?.let(families::offersHistoryDeletion) == true
-
     /**
      * Removes the device: its registry row and schedule now, then what its family holds for it
      * (state, keys, the system's bond or association, and with [deleteWatchHistory] the history
-     * [offersHistoryDeletion] named), fire and forget.
+     * [WatchDeviceUiState.offersHistoryDeletion] named), fire and forget.
      */
     fun removeDevice(deleteWatchHistory: Boolean = false) {
         // Read the device before forgetting it: its family needs the address.
@@ -599,20 +188,4 @@ class WatchDeviceViewModel @Inject constructor(
         if (device == null) return
         housekeepingScope.launch { families.forget(device, deleteWatchHistory) }
     }
-
-    private fun <T> kotlinx.coroutines.flow.Flow<T>.stateInViewModel(initial: T): StateFlow<T> {
-        val state = MutableStateFlow(initial)
-        viewModelScope.launch {
-            collect { value -> state.value = value }
-        }
-        return state.asStateFlow()
-    }
 }
-
-private const val TAG = "WatchDeviceViewModel"
-
-/** The purpose of the runtime request outstanding, kept through a process death so its answer still lands. */
-private const val PENDING_PERMISSION_PURPOSE_KEY = "pendingPermissionPurpose"
-
-/** Keeps the live stream through a rotation; longer, and the watch's sensor runs for nothing. */
-private const val LIVE_STOP_TIMEOUT_MS = 5_000L

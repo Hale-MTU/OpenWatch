@@ -1,6 +1,5 @@
 package tech.mmarca.openwatch.navigation
 
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -8,7 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import tech.mmarca.openwatch.features.watches.WatchAlarmsRoute
 import tech.mmarca.openwatch.features.watches.WatchDataRoute
-import tech.mmarca.openwatch.features.watches.WatchDeviceScreen
+import tech.mmarca.openwatch.features.watches.WatchDeviceRoute
 import tech.mmarca.openwatch.features.watches.WatchNotificationAppsRoute
 import tech.mmarca.openwatch.features.watches.WatchSendPointRoute
 import tech.mmarca.openwatch.features.watches.WatchSettingsRoute
@@ -18,8 +17,7 @@ internal fun NavGraphBuilder.watchRoutes(
     navController: NavHostController,
 ) {
     composable(Screen.WatchDevice.route) {
-        WatchDeviceScreen(
-            viewModel = hiltViewModel(),
+        WatchDeviceRoute(
             onOpenData = { deviceId ->
                 navController.navigate(Screen.WatchData.createRoute(deviceId)) {
                     launchSingleTop = true
