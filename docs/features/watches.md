@@ -299,7 +299,9 @@ Phone notifications can be forwarded to a paired Garmin watch that supports it. 
 
 "Apps to silence" lists the apps installed on the phone. Everything sends to the watch until an app is switched off, so the list is a blocklist rather than an allow-list.
 
-Some notifications never reach the watch regardless: ongoing and foreground-service notifications, group summaries, notifications an app marks as local to the phone, notifications with neither a title nor a body, minimum-importance channels, anything at all while the phone's own Do Not Disturb is on, and OpenWatch's own notifications.
+Some notifications never reach the watch regardless: ongoing and foreground-service notifications, group summaries, notifications an app marks as local to the phone or as secret, notifications from a channel set not to show on the lock screen, notifications with neither a title nor a body, minimum-importance channels, anything at all while the phone's own Do Not Disturb is on, and OpenWatch's own notifications.
+
+A channel set in Android's notification settings to hide sensitive content on the lock screen sends only its title, or the app's public version where it gives one, and none of its actions: an action's label can carry what was held back. Every other notification arrives whole, locked phone or not; Android's own default for a notification is to show it in full. Android gives apps no mark for a one-time code, so the channel's lock-screen setting is the signal; Android 12 and newer let an app read it, and before that only an app's own secret mark is honoured.
 
 ### Calls
 

@@ -139,7 +139,7 @@ The complete list, by Health Connect permission. The app shows the same list und
 
 If you switch them on, and only then:
 
-- **Notifications.** With notification access granted, OpenWatch forwards your phone's notifications to a Garmin watch, title and text, except those of the apps you switch off in the app. The phone's Do Not Disturb is respected. They are held in memory while they are shown and are never written to storage or sent anywhere else.
+- **Notifications.** With notification access granted, OpenWatch forwards your phone's notifications to a Garmin watch, title and text, except those of the apps you switch off in the app. A notification its app marks secret, or whose channel you set not to show on the lock screen, is never forwarded; one whose channel you set to hide sensitive content on the lock screen goes as its title, or the app's public version, unless you turn that off. The phone's Do Not Disturb is respected. They are held in memory while they are shown and are never written to storage or sent anywhere else.
 - **Calendar.** With calendar permission granted, upcoming events are sent to a Garmin watch's calendar view. Nothing is stored.
 - **Music.** The title, artist and album of what your phone is playing are sent to the watch for its music controls. Nothing is stored.
 - **Navigation.** If you use the CoMaps app, its turn-by-turn guidance can be shown on a Garmin watch. OpenWatch reads the guidance from CoMaps and passes it on; it keeps none of it.

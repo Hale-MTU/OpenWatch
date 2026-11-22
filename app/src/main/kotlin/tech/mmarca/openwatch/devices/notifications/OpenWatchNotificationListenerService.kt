@@ -160,7 +160,12 @@ class OpenWatchNotificationListenerService : NotificationListenerService() {
                 enabled = settings.enabled,
                 blockedPackages = settings.blockedPackages,
                 hasWatch = sink.hasTarget(),
+                onlyAllowed = settings.onlyAllowed,
+                allowedPackages = settings.allowedPackages,
+                hideSensitiveContent = settings.hideSensitiveContent,
             )
+            val ranking = rankingOf(sbn)
+            val public = notification.publicVersion
             val extras = notification.extras
 
             // A call that was answered, or placed, leaves the wrist: only a ringing one shows.
@@ -176,8 +181,17 @@ class OpenWatchNotificationListenerService : NotificationListenerService() {
                     notification.flags and Notification.FLAG_FOREGROUND_SERVICE != 0,
                 groupSummary = notification.flags and Notification.FLAG_GROUP_SUMMARY != 0,
                 localOnly = notification.flags and Notification.FLAG_LOCAL_ONLY != 0,
-                channelImportance = importanceOf(sbn),
+                channelImportance = ranking?.importance ?: NotificationFilter.IMPORTANCE_UNSPECIFIED,
                 category = notification.category,
+                visibility = notification.visibility,
+                // Android 12 made the channel's lock-screen setting readable; before it, only the app's mark counts.
+                lockscreenOverride = if (ranking != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    ranking.lockscreenVisibilityOverride
+                } else {
+                    NotificationFilter.VISIBILITY_NO_OVERRIDE
+                },
+                publicTitle = public?.extras?.getCharSequence(Notification.EXTRA_TITLE)?.toString(),
+                publicBody = public?.let(::bodyOf),
             )
 
             // Same rules minus the content ones, so blocked apps do not leak.
@@ -202,14 +216,15 @@ class OpenWatchNotificationListenerService : NotificationListenerService() {
                 NotificationStore.retain(id, sbn)
             }
 
+            val content = NotificationFilter.content(candidate, config)
             NotificationStore.offer(
                 NotificationMsg(
                     id = id,
                     packageName = sbn.packageName,
                     appLabel = appLabel(sbn.packageName),
-                    title = candidate.title,
-                    subtitle = extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString(),
-                    body = candidate.body,
+                    title = content.title,
+                    subtitle = if (content.redacted) null else extras.getCharSequence(Notification.EXTRA_SUB_TEXT)?.toString(),
+                    body = content.body,
                     whenEpochMillis = if (notification.`when` != 0L) {
                         notification.`when`
                     } else {
@@ -217,7 +232,8 @@ class OpenWatchNotificationListenerService : NotificationListenerService() {
                     },
                     categoryOrdinal = NotificationFilter.categoryOrdinal(notification.category),
                     removed = gone,
-                    actions = if (gone) emptyList() else actionsOf(notification),
+                    // An action's title can carry what was held back ("Copy 482913").
+                    actions = if (gone || content.redacted) emptyList() else actionsOf(notification),
                     dismissable = sbn.isClearable,
                 ),
             )
@@ -315,15 +331,11 @@ class OpenWatchNotificationListenerService : NotificationListenerService() {
      * The channel importance, read off the ranking, which works from API 24.
      * Unreadable is UNSPECIFIED, which the filter allows.
      */
-    private fun importanceOf(sbn: StatusBarNotification): Int = try {
-        val ranking = Ranking()
-        if (currentRanking?.getRanking(sbn.key, ranking) == true) {
-            ranking.importance
-        } else {
-            NotificationFilter.IMPORTANCE_UNSPECIFIED
-        }
+    /** The system's ranking of [sbn]: its channel's importance, lock-screen setting and sensitivity. Null when unknown. */
+    private fun rankingOf(sbn: StatusBarNotification): Ranking? = try {
+        Ranking().takeIf { currentRanking?.getRanking(sbn.key, it) == true }
     } catch (error: Throwable) {
-        NotificationFilter.IMPORTANCE_UNSPECIFIED
+        null
     }
 
     private fun interruptionFilterOrUnknown(): Int = try {

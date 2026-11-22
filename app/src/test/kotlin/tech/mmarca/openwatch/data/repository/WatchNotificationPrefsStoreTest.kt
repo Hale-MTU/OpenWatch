@@ -150,4 +150,26 @@ class WatchNotificationPrefsStoreTest {
         // The switch the store had no value for is still taken from the copy.
         assertTrue(store.enabled)
     }
+
+    @Test
+    fun `the two modes keep their own lists, so switching back loses neither`() {
+        val store = store()
+        store.setSends("com.spam.app", sends = false)
+        assertTrue(!store.sends("com.spam.app") && store.sends("com.chat.app"))
+
+        store.onlyAllowed = true
+        store.setSends("com.chat.app", sends = true)
+        assertTrue(store.sends("com.chat.app") && !store.sends("com.other.app"))
+
+        store.onlyAllowed = false
+        assertEquals(setOf("com.spam.app"), store.blockedPackages)
+        assertEquals(setOf("com.chat.app"), store.allowedPackages)
+    }
+
+    @Test
+    fun `sensitive content is hidden unless the user says otherwise, and every app sends`() {
+        val store = store()
+        assertTrue(store.hideSensitiveContent)
+        assertFalse(store.onlyAllowed)
+    }
 }

@@ -193,4 +193,45 @@ class NotificationFilterTest {
         assertThat(NotificationFilter.Category.HEALTH_AND_FITNESS)
             .isEqualTo(garmin.indexOfFirst { it.name == "HEALTH_AND_FITNESS" })
     }
+
+    @Test
+    fun `what the app or the user keeps off the lock screen never reaches the wrist`() {
+        assertThat(verdict(candidate().copy(visibility = NotificationFilter.VISIBILITY_SECRET)))
+            .isEqualTo(NotificationFilter.Verdict.SECRET)
+        assertThat(verdict(candidate().copy(lockscreenOverride = NotificationFilter.VISIBILITY_SECRET)))
+            .isEqualTo(NotificationFilter.Verdict.SECRET)
+    }
+
+    @Test
+    fun `an ordinary notification keeps its whole content, private being Android's default`() {
+        val kept = candidate().copy(visibility = NotificationFilter.VISIBILITY_PRIVATE)
+
+        assertThat(NotificationFilter.content(kept, enabled))
+            .isEqualTo(NotificationFilter.Content(title = "Ada", body = "On my way", redacted = false))
+    }
+
+    @Test
+    fun `a channel the user set to hide sensitive content sends its public version, or the title alone`() {
+        val hidden = candidate().copy(lockscreenOverride = NotificationFilter.VISIBILITY_PRIVATE)
+
+        assertThat(NotificationFilter.content(hidden, enabled))
+            .isEqualTo(NotificationFilter.Content(title = "Ada", body = null, redacted = true))
+        assertThat(NotificationFilter.content(hidden.copy(publicTitle = "Chat", publicBody = "New message"), enabled))
+            .isEqualTo(NotificationFilter.Content(title = "Chat", body = "New message", redacted = true))
+        // Switched off, the user's setting on the phone is theirs alone.
+        assertThat(NotificationFilter.content(hidden, enabled.copy(hideSensitiveContent = false)).redacted).isFalse()
+    }
+
+    @Test
+    fun `in allow-list mode only the chosen apps send, and the block list is not read`() {
+        val allowList = enabled.copy(
+            onlyAllowed = true,
+            allowedPackages = setOf("com.example.chat"),
+            blockedPackages = setOf("com.example.chat"),
+        )
+
+        assertThat(verdict(config = allowList)).isEqualTo(NotificationFilter.Verdict.KEEP)
+        assertThat(verdict(candidate(packageName = "com.example.news"), config = allowList))
+            .isEqualTo(NotificationFilter.Verdict.NOT_ALLOWED)
+    }
 }

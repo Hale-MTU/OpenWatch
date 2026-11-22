@@ -49,6 +49,34 @@ class WatchNotificationPrefsStore(
         blockedPackages = next
     }
 
+    /** Only [allowedPackages] send, instead of every app but the blocked ones. Off by default; each list is kept. */
+    var onlyAllowed: Boolean
+        get() = prefs.getBoolean(KEY_ONLY_ALLOWED, false)
+        set(value) = prefs.edit { putBoolean(KEY_ONLY_ALLOWED, value) }
+
+    /** The apps that send while [onlyAllowed] is on. */
+    var allowedPackages: Set<String>
+        get() = prefs.getStringSet(KEY_ALLOWED, emptySet())?.toSet() ?: emptySet()
+        set(value) = prefs.edit { putStringSet(KEY_ALLOWED, value) }
+
+    /** Whether [packageName] sends under the current mode. */
+    fun sends(packageName: String): Boolean =
+        if (onlyAllowed) packageName in allowedPackages else packageName !in blockedPackages
+
+    /** Lets [packageName] send, or stops it, in the list the current mode reads. */
+    fun setSends(packageName: String, sends: Boolean) {
+        if (onlyAllowed) {
+            allowedPackages = if (sends) allowedPackages + packageName else allowedPackages - packageName
+        } else {
+            setBlocked(packageName, blocked = !sends)
+        }
+    }
+
+    /** Content the user hides on the lock screen for its channel goes as its public version or title only. On by default. */
+    var hideSensitiveContent: Boolean
+        get() = prefs.getBoolean(KEY_HIDE_SENSITIVE, true)
+        set(value) = prefs.edit { putBoolean(KEY_HIDE_SENSITIVE, value) }
+
     /** Whether the user accepted the disclosure. Required by Google Play before the request. */
     var disclosureAccepted: Boolean
         get() = prefs.getBoolean(KEY_DISCLOSURE_ACCEPTED, false)
@@ -97,6 +125,9 @@ class WatchNotificationPrefsStore(
         private const val KEY_ENABLED = "garmin_notifications_enabled"
         private const val KEY_BLOCKED = "garmin_notifications_blocked_packages"
         private const val KEY_DISCLOSURE_ACCEPTED = "garmin_notifications_disclosure_accepted"
+        private const val KEY_ONLY_ALLOWED = "notifications_only_allowed"
+        private const val KEY_ALLOWED = "notifications_allowed_packages"
+        private const val KEY_HIDE_SENSITIVE = "notifications_hide_sensitive_content"
 
         const val LISTENER_PREFS_FILE = "openwatch_notification_listener"
         private const val LISTENER_KEY_ENABLED = "forwarding_enabled"
