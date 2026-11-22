@@ -3,7 +3,6 @@ package tech.mmarca.openwatch.features.watches
 import android.text.format.DateUtils
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,6 +38,7 @@ import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -72,7 +72,9 @@ import tech.mmarca.openwatch.ui.components.SectionHeader
 import tech.mmarca.openwatch.ui.components.formatDeviceTime
 import tech.mmarca.openwatch.ui.components.InlineGrantPrompt
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
+import tech.mmarca.openwatch.ui.components.allGranted
 import tech.mmarca.openwatch.ui.components.rememberHealthConnectPermissionLauncher
+import tech.mmarca.openwatch.ui.components.rememberRuntimePermissionRequester
 import tech.mmarca.openwatch.ui.theme.Spacing
 import tech.mmarca.openwatch.ui.components.OpenWatchIconButton
 import tech.mmarca.openwatch.ui.components.ScreenAppBar
@@ -117,6 +119,16 @@ fun WatchDeviceScreen(
     // A sync right after a grant writes what it now may, and replaces the card's "not written" line. Not after a
     // refusal: that would hold the watch link for a run that ends where it began.
     val syncGrantLauncher = rememberHealthConnectPermissionLauncher(onGranted = viewModel::syncNow)
+    val runtimePermissions = rememberRuntimePermissionRequester { granted ->
+        viewModel.onRuntimePermissionResult(granted.allGranted())
+    }
+    LaunchedEffect(state.permissionRequest) {
+        when (val request = state.permissionRequest ?: return@LaunchedEffect) {
+            is WatchPermissionRequest.HealthConnect -> backgroundAccessLauncher.launch(request.permissions)
+            is WatchPermissionRequest.Runtime -> runtimePermissions.request(listOf(request.permission))
+        }
+        viewModel.onPermissionRequestHandled()
+    }
 
     if (state.showMusicDisclosure) {
         NotificationAccessDisclosureDialog(
@@ -134,25 +146,6 @@ fun WatchDeviceScreen(
         }
         return
     }
-
-    val calendarPermission = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-    ) { granted ->
-        // The toggle is set either way; without the grant the row says what is missing.
-        viewModel.setCalendarSync(true)
-        if (!granted) viewModel.refreshCalendarPermission()
-    }
-
-    // CoMaps' own permission, named after the installed flavour. Asked here so a
-    // wearer who never records can still grant it.
-    val coMapsPermission = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-    ) { viewModel.refreshCoMapsPermission() }
-
-    // Nearby devices (API 31+): without it the phone cannot see the bond or open the link.
-    val bluetoothPermission = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-    ) { granted -> if (granted) viewModel.checkWearOsStatus() }
 
     val ephemerisPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
@@ -189,9 +182,7 @@ fun WatchDeviceScreen(
                 error = state.wearOsError,
                 isChecking = state.isCheckingWearOsStatus,
                 onCheck = viewModel::checkWearOsStatus,
-                onGrantBluetooth = {
-                    bluetoothPermission.launch(android.Manifest.permission.BLUETOOTH_CONNECT)
-                },
+                onGrantBluetooth = viewModel::requestBluetoothConnect,
                 liveHeartRateBpm = liveHeartRateBpm,
                 onAssociate = (viewModel::associateWearOs).takeIf { state.wearOsCompanionMissing },
             )
@@ -207,10 +198,9 @@ fun WatchDeviceScreen(
                 onOpenData = { onOpenData(device.id) },
                 onSync = viewModel::syncNow,
                 onOpenAlarms = {
-                    if (state.hasSettingsTree) {
-                        onOpenWatchSettings(device.id, WatchSettingsAlarmsScreenId)
-                    } else {
-                        onOpenAlarms(device.id)
+                    when (state.alarmsDestination) {
+                        AlarmsDestination.SETTINGS_TREE -> onOpenWatchSettings(device.id, WatchSettingsAlarmsScreenId)
+                        AlarmsDestination.PHONE_LIST -> onOpenAlarms(device.id)
                     }
                 },
                 onToggleFind = viewModel::toggleFind,
@@ -281,17 +271,8 @@ fun WatchDeviceScreen(
             AutoSyncCard(
                 selected = state.autoSync,
                 backgroundReadMissing = state.backgroundReadMissing,
-                onSelect = { interval ->
-                    // Switching it on is the moment to ask: from now on syncs run with the app closed.
-                    val switchingOn = state.autoSync == AutoSyncInterval.OFF && interval != AutoSyncInterval.OFF
-                    viewModel.setAutoSync(interval)
-                    if (switchingOn && state.backgroundReadMissing) {
-                        backgroundAccessLauncher.launch(setOf(viewModel.backgroundReadPermission))
-                    }
-                },
-                onAllowBackgroundRead = {
-                    backgroundAccessLauncher.launch(setOf(viewModel.backgroundReadPermission))
-                },
+                onSelect = viewModel::selectAutoSync,
+                onAllowBackgroundRead = viewModel::allowBackgroundRead,
             )
         }
         if (isGarmin) {
@@ -312,25 +293,9 @@ fun WatchDeviceScreen(
                     onCheckedChange = { viewModel.setLiveReadings(it) },
                 )
             }
-            CalendarSyncCard(
-                state = state,
-                onToggle = { enabled ->
-                    if (enabled) {
-                        calendarPermission.launch(android.Manifest.permission.READ_CALENDAR)
-                    } else {
-                        viewModel.setCalendarSync(false)
-                    }
-                },
-            )
+            CalendarSyncCard(state = state, onToggle = viewModel::toggleCalendarSync)
             MusicControlsCard(state = state, onToggle = viewModel::setMusicControls)
-            NavigationOnWatchCard(
-                state = state,
-                onToggle = { enabled ->
-                    viewModel.setNavigationOnWatch(enabled)
-                    // The toggle sticks either way; without the grant the card says what is missing.
-                    if (enabled) viewModel.coMapsPermissionName()?.let(coMapsPermission::launch)
-                },
-            )
+            NavigationOnWatchCard(state = state, onToggle = viewModel::toggleNavigationOnWatch)
             HighMtuCard(state = state, onToggle = viewModel::setHighMtu)
             EphemerisCard(
                 state = state,

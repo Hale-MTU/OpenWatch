@@ -24,17 +24,6 @@
     </issue>
 
     <issue
-        id="InlinedApi"
-        message="Field requires API level 31 (current min is 26): `android.Manifest.permission#BLUETOOTH_CONNECT`"
-        errorLine1="                    bluetoothPermission.launch(android.Manifest.permission.BLUETOOTH_CONNECT)"
-        errorLine2="                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/tech/mmarca/openwatch/features/watches/WatchDeviceScreen.kt"
-            line="194"
-            column="48"/>
-    </issue>
-
-    <issue
         id="TrimLambda"
         message="The lambda argument (`{ it &lt;= &apos; &apos; }`) is unnecessary"
         errorLine1="                .trim { it &lt;= &apos; &apos; }"

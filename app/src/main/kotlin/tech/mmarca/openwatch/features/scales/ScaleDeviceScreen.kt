@@ -1,11 +1,7 @@
 package tech.mmarca.openwatch.features.scales
 
-import android.Manifest
 import android.content.Intent
-import android.os.Build
 import android.provider.Settings
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Duration
 import java.time.Instant
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.permissions.RuntimePermissions
 import tech.mmarca.openwatch.devices.xiaomi.ScaleListenerStatus
 import tech.mmarca.openwatch.ui.components.ConfirmRemoveDialog
 import tech.mmarca.openwatch.ui.components.DeclareAppBar
@@ -38,6 +35,7 @@ import tech.mmarca.openwatch.ui.components.ScreenColumn
 import tech.mmarca.openwatch.ui.components.ScreenErrorContent
 import tech.mmarca.openwatch.ui.components.SectionHeader
 import tech.mmarca.openwatch.ui.components.rememberHealthConnectPermissionLauncher
+import tech.mmarca.openwatch.ui.components.rememberRuntimePermissionRequester
 import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
 
@@ -59,23 +57,16 @@ fun ScaleDeviceRoute(
     // Grants change in Android's own screens, so everything is read again on the way back.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
     val healthConnectLauncher = rememberHealthConnectPermissionLauncher(onResult = { viewModel.refresh() })
-    val scanPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-    ) { viewModel.refresh() }
+    val permissionRequester = rememberRuntimePermissionRequester { viewModel.refresh() }
     // Android 12 gave scanning its own grant. Before that a scan rides on location.
-    val android12 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    val scanPermission = if (android12) {
-        Manifest.permission.BLUETOOTH_SCAN
-    } else {
-        Manifest.permission.ACCESS_FINE_LOCATION
-    }
+    val android12 = RuntimePermissions.hasBluetoothGrants()
 
     ScaleDeviceScreen(
         state = state,
         android12 = android12,
         onRename = viewModel::rename,
         onDeleteLastWeighIn = viewModel::deleteLastWeighIn,
-        onGrantScanPermission = { scanPermissionLauncher.launch(scanPermission) },
+        onGrantScanPermission = { permissionRequester.request(listOf(RuntimePermissions.bluetoothScanPermission())) },
         onOpenBluetoothSettings = { context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) },
         onAllowSystemWake = viewModel::allowSystemWake,
         onClaimIgnoredProfile = viewModel::claimIgnoredProfile,

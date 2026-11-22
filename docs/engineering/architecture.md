@@ -42,8 +42,8 @@ OpenWatch seams noted.
 | `data/local`, `data/repository` | Room, the repositories and the SharedPreferences stores. `BleDeviceRepository` is the device registry: the `devices` table read once into memory, every read answered from there (the first waits for the load) and every change written behind it in order on the registry's own thread; the JSON in `ble_sensor_devices` it replaced is imported once and left in place. It gives a family's first device the empty id salt and each later one its own. |
 | `comaps/` | The CoMaps guidance feed a Garmin watch relays. |
 | `sensors/ble/` | The BLE discovery scan the add-watch flow uses, and the GATT UUIDs. |
-| `core/` | `ScreenError`, `UnitFormatter`, the OS permissions service, the dispatcher provider and the foreground gate. |
-| `navigation/`, `ui/` | The routes, the app bar state, the theme and the shared components every screen uses instead of its own copy: `SwitchRow` / `SwitchCard` (the whole row is one toggle, so TalkBack reads the title with the state), `SectionHeader` (a heading), `DeviceListRow`, `RenameDialog`, `ConfirmRemoveDialog`, `ScreenErrorContent`. |
+| `core/` | `ScreenError`, `UnitFormatter`, the OS permissions service, `RuntimePermissions` (which grant a Bluetooth scan or connection takes on each Android release), the dispatcher provider and the foreground gate. |
+| `navigation/`, `ui/` | The routes, the app bar state, the theme and the shared components every screen uses instead of its own copy: `SwitchRow` / `SwitchCard` (the whole row is one toggle, so TalkBack reads the title with the state), `SectionHeader` (a heading), `DeviceListRow`, `RenameDialog`, `ConfirmRemoveDialog`, `ScreenErrorContent`, and `rememberRuntimePermissionRequester`, the one way a screen asks for runtime grants (Health Connect's go through `rememberHealthConnectPermissionLauncher`). |
 
 ## The OpenWatch Seams
 

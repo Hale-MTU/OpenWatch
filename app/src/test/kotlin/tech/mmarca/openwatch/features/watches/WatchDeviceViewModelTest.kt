@@ -8,7 +8,9 @@ import tech.mmarca.openwatch.devices.wearos.WearOsFamily
 import tech.mmarca.openwatch.devices.garmin.GarminFamily
 import tech.mmarca.openwatch.devices.core.DeviceFamilies
 import tech.mmarca.openwatch.devices.core.pairing.CompanionFilter
+import android.Manifest
 import android.content.Context
+import androidx.health.connect.client.permission.HealthPermission
 import androidx.lifecycle.SavedStateHandle
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -62,7 +64,7 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.CoroutineScope
 
-/** Renaming a watch with no capabilities, and what forgetting a device does and does not do at the OS level. */
+/** Renaming a watch with no capabilities, the permissions its switches ask for, and what forgetting a device does and does not do at the OS level. */
 class WatchDeviceViewModelTest {
 
     @get:Rule
@@ -143,6 +145,10 @@ class WatchDeviceViewModelTest {
     )
 
     private val onboardWearOsWatch = mockk<OnboardWearOsWatchUseCase>(relaxed = true)
+
+    private val backgroundReadRequest = WatchPermissionRequest.HealthConnect(
+        setOf(HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND),
+    )
 
     private fun viewModel(
         deviceId: String,
@@ -407,7 +413,7 @@ class WatchDeviceViewModelTest {
 
         assertEquals(AutoSyncInterval.OFF, vm.uiState.value.autoSync)
 
-        vm.setAutoSync(AutoSyncInterval.HOURLY)
+        vm.selectAutoSync(AutoSyncInterval.HOURLY)
 
         // Read back through the scheduler: the row must show what is actually scheduled.
         assertEquals(AutoSyncInterval.HOURLY, vm.uiState.value.autoSync)
@@ -415,10 +421,95 @@ class WatchDeviceViewModelTest {
     }
 
     @Test
+    fun `switching automatic sync on with the background read missing asks Health Connect for it`() = runTest {
+        coEvery { healthConnectManager.isBackgroundReadGrantMissing() } returns true
+        val watch = addWatch()
+        val vm = viewModel(watch.id)
+        vm.refreshBackgroundAccess()
+        runCurrent()
+
+        vm.selectAutoSync(AutoSyncInterval.HOURLY)
+
+        assertEquals(backgroundReadRequest, vm.uiState.value.permissionRequest)
+        // Asked once: the screen acknowledges the launch.
+        vm.onPermissionRequestHandled()
+        assertNull(vm.uiState.value.permissionRequest)
+        // The card's own button asks the same.
+        vm.allowBackgroundRead()
+        assertEquals(backgroundReadRequest, vm.uiState.value.permissionRequest)
+    }
+
+    @Test
+    fun `moving between two intervals does not ask for the background read again`() = runTest {
+        coEvery { healthConnectManager.isBackgroundReadGrantMissing() } returns true
+        val watch = addWatch()
+        autoSyncIntervals[watch.id] = AutoSyncInterval.HOURLY
+        val vm = viewModel(watch.id)
+        vm.refreshBackgroundAccess()
+        runCurrent()
+
+        vm.selectAutoSync(AutoSyncInterval.EVERY_2_HOURS)
+
+        assertEquals(AutoSyncInterval.EVERY_2_HOURS, vm.uiState.value.autoSync)
+        assertNull(vm.uiState.value.permissionRequest)
+    }
+
+    @Test
+    fun `switching automatic sync on with the background read granted asks nothing`() = runTest {
+        coEvery { healthConnectManager.isBackgroundReadGrantMissing() } returns false
+        val watch = addWatch()
+        val vm = viewModel(watch.id)
+        vm.refreshBackgroundAccess()
+        runCurrent()
+
+        vm.selectAutoSync(AutoSyncInterval.EVERY_30_MINUTES)
+
+        assertNull(vm.uiState.value.permissionRequest)
+    }
+
+    @Test
+    fun `calendar on asks for the calendar grant, and a refusal still sets the switch`() = runTest {
+        val watch = addWatch()
+        val vm = viewModel(watch.id)
+
+        vm.toggleCalendarSync(true)
+
+        assertEquals(
+            WatchPermissionRequest.Runtime(Manifest.permission.READ_CALENDAR, WatchPermissionRequest.Purpose.CALENDAR),
+            vm.uiState.value.permissionRequest,
+        )
+        // Nothing is set until the dialog answers.
+        assertFalse(vm.uiState.value.calendarSync)
+
+        vm.onPermissionRequestHandled()
+        vm.onRuntimePermissionResult(granted = false)
+
+        assertNull(vm.uiState.value.permissionRequest)
+        assertTrue(stateStore.calendarSync(watch.id))
+        assertTrue(vm.uiState.value.calendarSync)
+        // The row says what is missing.
+        assertTrue(vm.uiState.value.calendarPermissionMissing)
+    }
+
+    @Test
+    fun `alarms open in the watch's settings tree when it has one, else the phone's list`() {
+        // Unknown capabilities count as present, so a watch never synced gets the tree.
+        assertEquals(AlarmsDestination.SETTINGS_TREE, WatchDeviceUiState().alarmsDestination)
+        assertEquals(
+            AlarmsDestination.SETTINGS_TREE,
+            WatchDeviceUiState(capabilities = setOf(GarminCapability.REALTIME_SETTINGS)).alarmsDestination,
+        )
+        assertEquals(
+            AlarmsDestination.PHONE_LIST,
+            WatchDeviceUiState(capabilities = setOf(GarminCapability.SYNC)).alarmsDestination,
+        )
+    }
+
+    @Test
     fun `forgetting a watch stops its automatic sync`() = runTest {
         val watch = addWatch()
         val vm = viewModel(watch.id)
-        vm.setAutoSync(AutoSyncInterval.EVERY_30_MINUTES)
+        vm.selectAutoSync(AutoSyncInterval.EVERY_30_MINUTES)
 
         vm.removeDevice()
 

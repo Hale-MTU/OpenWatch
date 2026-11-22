@@ -1,8 +1,6 @@
 package tech.mmarca.openwatch.features.scales
 
 import android.content.Intent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,6 +35,7 @@ import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchTextButton
 import tech.mmarca.openwatch.ui.components.OsPermissionsDialog
 import tech.mmarca.openwatch.ui.components.formatDeviceTime
+import tech.mmarca.openwatch.ui.components.rememberRuntimePermissionRequester
 import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
 
@@ -52,9 +51,7 @@ fun ScalesSectionRoute(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val supportedScalesUrl = stringResource(R.string.settings_scales_supported_url)
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions(),
-    ) { viewModel.refreshOsPermissions() }
+    val permissionRequester = rememberRuntimePermissionRequester { viewModel.refreshOsPermissions() }
 
     // Grants change in Android's own screens, so they are re-read on the way back.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
@@ -64,9 +61,9 @@ fun ScalesSectionRoute(
         onOpenScale = onOpenScale,
         onAdd = viewModel::startAdd,
         onOpenSupportedScales = { context.startActivity(Intent(Intent.ACTION_VIEW, supportedScalesUrl.toUri())) },
-        onGrantAllPermissions = { permissionLauncher.launch(state.osPermissions.requestablePermissions.toTypedArray()) },
+        onGrantAllPermissions = { permissionRequester.request(state.osPermissions.requestablePermissions) },
         // The scale's rows are all runtime grants: no settings screen to walk.
-        onGrantPermissionRow = { row -> permissionLauncher.launch(row.permissions.toTypedArray()) },
+        onGrantPermissionRow = { row -> permissionRequester.request(row.permissions) },
         onContinueToAdd = viewModel::openAddFlow,
         onDismissPermissionsGate = viewModel::dismissPermissionsGate,
         onFind = viewModel::findScale,

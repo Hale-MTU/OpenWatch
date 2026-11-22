@@ -1,7 +1,5 @@
 package tech.mmarca.openwatch.features.watches
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -54,6 +52,7 @@ import tech.mmarca.openwatch.ui.components.OpenWatchButton
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OsPermissionsDialog
 import tech.mmarca.openwatch.ui.components.formatDeviceTime
+import tech.mmarca.openwatch.ui.components.rememberRuntimePermissionRequester
 import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
 import tech.mmarca.openwatch.ui.components.OpenWatchOutlinedButton
@@ -70,18 +69,17 @@ fun WatchesSectionRoute(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     // One batched dialog for the runtime permissions; settings-screen ones follow through the queue.
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions(),
-    ) {
+    val permissionRequester = rememberRuntimePermissionRequester {
         viewModel.refreshOsPermissions()
         viewModel.openNextSpecialPermission()
     }
 
     fun requestOsPermissions(permissions: List<String>) {
+        // Nothing to ask means no dialog and no callback: hand over the next settings screen here.
         if (permissions.isEmpty()) {
             viewModel.openNextSpecialPermission()
         } else {
-            permissionLauncher.launch(permissions.toTypedArray())
+            permissionRequester.request(permissions)
         }
     }
 

@@ -1,7 +1,9 @@
 package tech.mmarca.openwatch.features.watches
 
+import android.Manifest
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
+import androidx.health.connect.client.permission.HealthPermission
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -26,6 +28,7 @@ import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import kotlinx.coroutines.withContext
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.permissions.RuntimePermissions
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.toScreenError
 import tech.mmarca.openwatch.devices.core.DeviceFamilies
@@ -123,6 +126,8 @@ data class WatchDeviceUiState(
     val isWatchSettingsBusy: Boolean = false,
     /** Why the last read or change of the watch's settings failed. */
     val watchSettingsError: ScreenError? = null,
+    /** A permission for the screen to ask for, once; held until [WatchDeviceViewModel.onPermissionRequestHandled]. */
+    val permissionRequest: WatchPermissionRequest? = null,
 ) {
     /** Whether the watch declared [capability]. Unknown means show: a never-synced watch has no list. */
     fun supports(capability: GarminCapability): Boolean =
@@ -131,12 +136,30 @@ data class WatchDeviceUiState(
     /** Whether the watch serves its settings, alarms included, as a tree of screens. */
     val hasSettingsTree: Boolean
         get() = WatchSettingsTreeAvailable && supports(GarminCapability.REALTIME_SETTINGS)
+
+    /** Where the alarms action leads: the watch's own alarms screen when it has a settings tree, else the phone's list. */
+    val alarmsDestination: AlarmsDestination
+        get() = if (hasSettingsTree) AlarmsDestination.SETTINGS_TREE else AlarmsDestination.PHONE_LIST
+}
+
+/** Where the device view's alarms action leads. */
+enum class AlarmsDestination { SETTINGS_TREE, PHONE_LIST }
+
+/** A permission the device view asks Android for on the view-model's behalf. */
+sealed interface WatchPermissionRequest {
+    /** Health Connect's own dialog; the background read is re-read once it closes. */
+    data class HealthConnect(val permissions: Set<String>) : WatchPermissionRequest
+
+    /** One runtime grant. [purpose] says what its answer is for. */
+    data class Runtime(val permission: String, val purpose: Purpose) : WatchPermissionRequest
+
+    enum class Purpose { CALENDAR, COMAPS, BLUETOOTH }
 }
 
 /** One watch, and everything about it. */
 @HiltViewModel
 class WatchDeviceViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+    private val savedStateHandle: SavedStateHandle,
     private val deviceRepository: BleDeviceRepository,
     private val stateStore: GarminDeviceStateStore,
     private val syncController: DeviceSyncController,
@@ -355,14 +378,28 @@ class WatchDeviceViewModel @Inject constructor(
         localState.update { it.copy(musicControls = stateStore.musicControls(deviceId)) }
     }
 
+    /** The calendar switch. On asks for the calendar grant first; the switch is set once the dialog answers. */
+    fun toggleCalendarSync(enabled: Boolean) {
+        if (enabled) {
+            requestRuntime(Manifest.permission.READ_CALENDAR, WatchPermissionRequest.Purpose.CALENDAR)
+        } else {
+            setCalendarSync(false)
+        }
+    }
+
     /** Turns the calendar glance on or off. A toggle set with the permission denied still sticks. */
-    fun setCalendarSync(enabled: Boolean) {
+    private fun setCalendarSync(enabled: Boolean) {
         stateStore.setCalendarSync(deviceId, enabled)
         localState.update { it.copy(calendarSync = enabled) }
     }
 
-    /** Shows live CoMaps guidance on the watch. Works whether or not a session is running. */
-    fun setNavigationOnWatch(enabled: Boolean) {
+    /**
+     * Shows live CoMaps guidance on the watch. Works whether or not a session is running. On also
+     * asks for CoMaps' own permission, named after the installed flavour, so a wearer who never
+     * records can still grant it. The toggle sticks either way; without the grant the card says
+     * what is missing.
+     */
+    fun toggleNavigationOnWatch(enabled: Boolean) {
         navigationRelay.onEnabledChanged(deviceId, enabled)
         localState.update {
             it.copy(
@@ -370,13 +407,51 @@ class WatchDeviceViewModel @Inject constructor(
                 coMapsPermissionMissing = enabled && !coMapsNavigationRepository.hasPermission(),
             )
         }
+        // Null without a CoMaps installed: nothing to ask.
+        if (enabled) {
+            coMapsNavigationRepository.permissionName()
+                ?.let { requestRuntime(it, WatchPermissionRequest.Purpose.COMAPS) }
+        }
     }
 
-    /** The flavour-specific CoMaps permission to request, null without a CoMaps installed. */
-    fun coMapsPermissionName(): String? = coMapsNavigationRepository.permissionName()
+    /**
+     * The Wear OS card's "nearby devices" grant: without it the phone cannot see the bond or open
+     * the link. Before Android 12 there is no such grant, so the check runs again at once.
+     */
+    fun requestBluetoothConnect() {
+        val permission = RuntimePermissions.bluetoothConnectPermission()
+        if (permission == null) checkWearOsStatus() else requestRuntime(permission, WatchPermissionRequest.Purpose.BLUETOOTH)
+    }
+
+    /** The screen launched [WatchDeviceUiState.permissionRequest]; a runtime one's answer comes to [onRuntimePermissionResult]. */
+    fun onPermissionRequestHandled() {
+        localState.update { it.copy(permissionRequest = null) }
+    }
+
+    /** The runtime dialog answered. What follows depends on what it was asked for. */
+    fun onRuntimePermissionResult(granted: Boolean) {
+        val purpose = savedStateHandle.remove<String>(PENDING_PERMISSION_PURPOSE_KEY)
+            ?.let { name -> WatchPermissionRequest.Purpose.entries.firstOrNull { it.name == name } }
+            ?: return
+        when (purpose) {
+            WatchPermissionRequest.Purpose.CALENDAR -> {
+                // The toggle is set either way; without the grant the row says what is missing.
+                setCalendarSync(true)
+                if (!granted) refreshCalendarPermission()
+            }
+            WatchPermissionRequest.Purpose.COMAPS -> refreshCoMapsPermission()
+            WatchPermissionRequest.Purpose.BLUETOOTH -> if (granted) checkWearOsStatus()
+        }
+    }
+
+    /** The purpose is kept apart from the request, which the screen clears on launch, for the answer to find. */
+    private fun requestRuntime(permission: String, purpose: WatchPermissionRequest.Purpose) {
+        savedStateHandle[PENDING_PERMISSION_PURPOSE_KEY] = purpose.name
+        localState.update { it.copy(permissionRequest = WatchPermissionRequest.Runtime(permission, purpose)) }
+    }
 
     /** Re-checks CoMaps' grant after its dialog and re-opens the feed: a refused observer stays refused. */
-    fun refreshCoMapsPermission() {
+    private fun refreshCoMapsPermission() {
         coMapsGuidanceFeed.refresh()
         localState.update {
             it.copy(
@@ -387,7 +462,7 @@ class WatchDeviceViewModel @Inject constructor(
     }
 
     /** Re-checks the OS grant after the permission dialog closes. */
-    fun refreshCalendarPermission() {
+    private fun refreshCalendarPermission() {
         localState.update { it.copy(calendarSync = stateStore.calendarSync(deviceId)) }
     }
 
@@ -439,15 +514,23 @@ class WatchDeviceViewModel @Inject constructor(
         }
     }
 
-    /** Picks the auto-sync interval. The scheduler owns the stored choice and the periodic work. */
-    fun setAutoSync(interval: AutoSyncInterval) {
+    /**
+     * Picks the auto-sync interval. The scheduler owns the stored choice and the periodic work.
+     * Switching it on is the moment to ask for the background read: from now on syncs run with
+     * the app closed.
+     */
+    fun selectAutoSync(interval: AutoSyncInterval) {
+        val switchingOn = autoSyncScheduler.interval(deviceId) == AutoSyncInterval.OFF && interval != AutoSyncInterval.OFF
         autoSyncScheduler.setInterval(deviceId, interval)
         localState.update { it.copy(autoSync = interval) }
+        if (switchingOn && localState.value.backgroundReadMissing) allowBackgroundRead()
     }
 
-    /** Health Connect's permission string for background reads, for the screen's request. */
-    val backgroundReadPermission: String
-        get() = androidx.health.connect.client.permission.HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND
+    /** Asks Health Connect for the background read. */
+    fun allowBackgroundRead() {
+        val permissions = setOf(HealthPermission.PERMISSION_READ_HEALTH_DATA_IN_BACKGROUND)
+        localState.update { it.copy(permissionRequest = WatchPermissionRequest.HealthConnect(permissions)) }
+    }
 
     /** Re-reads the background grant: on resume, and after the permission screen returns. */
     fun refreshBackgroundAccess() {
@@ -527,6 +610,9 @@ class WatchDeviceViewModel @Inject constructor(
 }
 
 private const val TAG = "WatchDeviceViewModel"
+
+/** The purpose of the runtime request outstanding, kept through a process death so its answer still lands. */
+private const val PENDING_PERMISSION_PURPOSE_KEY = "pendingPermissionPurpose"
 
 /** Keeps the live stream through a rotation; longer, and the watch's sensor runs for nothing. */
 private const val LIVE_STOP_TIMEOUT_MS = 5_000L
