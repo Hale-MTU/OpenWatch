@@ -42,7 +42,7 @@ class HomeViewModel @Inject constructor(
         syncController.state,
         realtimeStore.readings,
     ) { devices, sync, live ->
-        devices.toWatchTileState(syncingDeviceId = sync.syncingDeviceId, live = live)
+        devices.toWatchTileState(syncingDeviceIds = sync.syncingDeviceIds, live = live)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun syncWatch(deviceId: String) {
@@ -52,13 +52,13 @@ class HomeViewModel @Inject constructor(
 
 /** Bike computers excluded: the tile is for a wrist. */
 internal fun List<BleSensorDevice>.toWatchTileState(
-    syncingDeviceId: String? = null,
+    syncingDeviceIds: Set<String> = emptySet(),
     live: GarminRealtimeState = GarminRealtimeState(),
     now: Instant = Instant.now(),
 ): WatchTileState? {
     val watches = filter { it.isWatch }
-    // The watch being synced owns the tile; failing that, the most recently synced.
-    val primary = watches.firstOrNull { it.id == syncingDeviceId }
+    // A watch being synced owns the tile; failing that, the most recently synced.
+    val primary = watches.firstOrNull { it.id in syncingDeviceIds }
         ?: watches.maxByOrNull { it.lastSyncedAt?.toEpochMilli() ?: Long.MIN_VALUE }
         ?: return null
     return WatchTileState(
@@ -67,9 +67,9 @@ internal fun List<BleSensorDevice>.toWatchTileState(
         batteryPercent = primary.batteryPercent,
         lastSyncedAt = primary.lastSyncedAt,
         additionalCount = watches.size - 1,
-        isSyncing = primary.id == syncingDeviceId,
-        // Only one watch can hold a link, so the live values belong to it or nothing.
-        liveHeartRateBpm = live.freshHeartRate(now),
-        liveSteps = live.freshSteps(now),
+        isSyncing = primary.id in syncingDeviceIds,
+        // The live values carry their watch, so they show only on it.
+        liveHeartRateBpm = live.takeIf { it.deviceId == primary.id }?.freshHeartRate(now),
+        liveSteps = live.takeIf { it.deviceId == primary.id }?.freshSteps(now),
     )
 }

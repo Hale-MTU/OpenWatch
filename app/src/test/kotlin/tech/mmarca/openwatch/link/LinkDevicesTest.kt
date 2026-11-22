@@ -71,7 +71,7 @@ class LinkDevicesTest {
                 device("pixel", BleDeviceKind.WATCH, DeviceIntegration.WEAROS),
                 device("strap", BleDeviceKind.SENSOR, capabilities = setOf(BleSensorCapability.HEART_RATE)),
             ),
-            syncingDeviceId = "venu",
+            syncingDeviceIds = setOf("venu"),
             families = families,
             connections = mapOf("pixel" to true),
             scale = XiaomiScaleConfig(hasKey = true, address = "11:22:33:44:55:66", name = "Bathroom"),
@@ -95,14 +95,14 @@ class LinkDevicesTest {
 
     @Test
     fun `a scale without its key is not listed yet`() {
-        val devices = linkDevices(emptyList(), null, families, emptyMap(), XiaomiScaleConfig(hasKey = false, address = "11:22"), ScaleListenerStatus.OFF)
+        val devices = linkDevices(emptyList(), emptySet(), families, emptyMap(), XiaomiScaleConfig(hasKey = false, address = "11:22"), ScaleListenerStatus.OFF)
 
         assertTrue(devices.isEmpty())
     }
 
     @Test
     fun `a legacy watch entry without an integration counts as Garmin`() {
-        val devices = linkDevices(listOf(device("fenix", BleDeviceKind.WATCH)), null, families, emptyMap(), XiaomiScaleConfig(), ScaleListenerStatus.OFF)
+        val devices = linkDevices(listOf(device("fenix", BleDeviceKind.WATCH)), emptySet(), families, emptyMap(), XiaomiScaleConfig(), ScaleListenerStatus.OFF)
 
         assertEquals(OpenLinkIntegration.GARMIN, devices.single().integration)
         assertEquals(OpenLinkConnection.UNKNOWN, devices.single().connection)
@@ -114,7 +114,7 @@ class LinkDevicesTest {
 
         val devices = linkDevices(
             listOf(device("band", BleDeviceKind.WATCH)),
-            null,
+            emptySet(),
             DeviceFamilies(mapOf("ACME" to acme)),
             emptyMap(),
             XiaomiScaleConfig(),

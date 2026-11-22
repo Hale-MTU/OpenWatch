@@ -4,6 +4,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChangedBy
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -37,15 +38,16 @@ class GarminFamily @Inject constructor(
         setOf(DeviceFeature.SYNC, DeviceFeature.FIND, DeviceFeature.LIVE_HEART_RATE, DeviceFeature.LIVE_STEPS)
 
     /**
-     * The watch's realtime heart rate and steps. Only one watch holds a link, so the readings
-     * are that watch's; collecting holds the live link open for the session.
+     * The watch's realtime heart rate and steps, and none of another watch's; collecting holds
+     * the live link open for the session.
      */
     override fun liveReadings(device: BleSensorDevice): Flow<LiveReading> {
-        val heartRate = realtime.readings
+        val own = realtime.readings.filter { it.deviceId == device.id }
+        val heartRate = own
             .distinctUntilChangedBy { it.heartRateAt }
             .map { reading -> reading.heartRateAt?.let { at -> reading.heartRateBpm?.let { LiveReading(LiveReadingKind.HEART_RATE, at.toEpochMilli(), it.toDouble()) } } }
             .filterNotNull()
-        val steps = realtime.readings
+        val steps = own
             .distinctUntilChangedBy { it.stepsAt }
             .map { reading -> reading.stepsAt?.let { at -> reading.steps?.let { LiveReading(LiveReadingKind.STEPS, at.toEpochMilli(), it.toDouble()) } } }
             .filterNotNull()

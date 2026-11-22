@@ -217,7 +217,7 @@ class GarminNotificationBridge @Inject constructor(
                     emptySet()
                 }
             },
-            onRealtimeReading = { reading -> realtimeStore.record(reading) },
+            onRealtimeReading = { reading -> deviceFor(address)?.let { realtimeStore.record(it.id, reading) } },
             music = musicRelay,
             setupWizardPending = {
                 deviceFor(address)

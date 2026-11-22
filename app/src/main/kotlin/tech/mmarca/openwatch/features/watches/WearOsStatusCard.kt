@@ -233,8 +233,8 @@ internal fun WearOsSyncCard(
             }
             OpenWatchOutlinedButton(
                 onClick = onSync,
-                // One sync at a time, whichever watch it is for.
-                enabled = !sync.isSyncing,
+                // One sync at a time for this watch; another device may sync beside it.
+                enabled = !syncingThis,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 if (syncingThis) {

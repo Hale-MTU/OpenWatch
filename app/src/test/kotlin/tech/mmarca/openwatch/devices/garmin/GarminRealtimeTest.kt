@@ -79,9 +79,9 @@ class GarminRealtimeTest {
         val store = GarminRealtimeStore()
         val now = Instant.parse("2026-08-12T10:00:00Z")
 
-        store.record(GarminRealtimeReading.HeartRate(70, 55), now)
-        store.record(GarminRealtimeReading.Steps(1200, 8000), now)
-        store.record(GarminRealtimeReading.HeartRate(74, 55), now)
+        store.record("watch", GarminRealtimeReading.HeartRate(70, 55), now)
+        store.record("watch", GarminRealtimeReading.Steps(1200, 8000), now)
+        store.record("watch", GarminRealtimeReading.HeartRate(74, 55), now)
 
         assertEquals(74, store.readings.value.heartRateBpm)
         assertEquals(1200, store.readings.value.steps)
@@ -89,10 +89,23 @@ class GarminRealtimeTest {
     }
 
     @Test
+    fun `a reading from another watch starts afresh, so no value is put on the wrong watch`() {
+        val store = GarminRealtimeStore()
+        val now = Instant.parse("2026-08-12T10:00:00Z")
+        store.record("venu", GarminRealtimeReading.Steps(1200, 8000), now)
+
+        store.record("fenix", GarminRealtimeReading.HeartRate(61, null), now)
+
+        assertEquals("fenix", store.readings.value.deviceId)
+        assertEquals(61, store.readings.value.heartRateBpm)
+        assertNull("the other watch's steps are gone", store.readings.value.steps)
+    }
+
+    @Test
     fun `a stale reading stops being live`() {
         val store = GarminRealtimeStore()
         val at = Instant.parse("2026-08-12T10:00:00Z")
-        store.record(GarminRealtimeReading.HeartRate(70, null), at)
+        store.record("watch", GarminRealtimeReading.HeartRate(70, null), at)
 
         // A quiet minute is normal; several minutes means the reading is stale.
         assertEquals(70, store.readings.value.freshHeartRate(at.plusSeconds(60)))
@@ -102,7 +115,7 @@ class GarminRealtimeTest {
     @Test
     fun `clearing drops everything when the link goes`() {
         val store = GarminRealtimeStore()
-        store.record(GarminRealtimeReading.HeartRate(70, null))
+        store.record("watch", GarminRealtimeReading.HeartRate(70, null))
 
         store.clear()
 

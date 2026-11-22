@@ -77,9 +77,9 @@ class DeviceSyncControllerTest {
         port = FakeSyncPort()
     }
 
-    private fun addWatch(): BleSensorDevice = repo.addDevice(
+    private fun addWatch(address: String = "E0:48:24:D5:F7:10"): BleSensorDevice = repo.addDevice(
         displayName = "vívoactive 5",
-        address = "E0:48:24:D5:F7:10",
+        address = address,
         bluetoothName = "vívoactive 5",
         capabilities = emptySet(),
         kind = BleDeviceKind.WATCH,
@@ -149,12 +149,11 @@ class DeviceSyncControllerTest {
         assertEquals(1, port.calls)
         assertEquals(watch.id, port.seenDevice?.id)
         assertFalse(controller.state.value.isSyncing)
-        assertNull(controller.state.value.progress)
+        assertTrue(controller.state.value.running.isEmpty())
         assertEquals(files(3), controller.state.value.lastFor(watch.id))
-        assertNull("another watch's card shows none of it", controller.state.value.lastFor("other"))
         // Scoped, so another watch's card does not show this outcome.
-        assertEquals(watch.id, controller.state.value.lastDeviceId)
-        assertNull(controller.state.value.failure)
+        assertNull("another watch's card shows none of it", controller.state.value.lastFor("other"))
+        assertNull(controller.state.value.failureFor(watch.id))
     }
 
     @Test
@@ -191,7 +190,7 @@ class DeviceSyncControllerTest {
 
         assertTrue(controller.state.value.isSyncingDevice(watch.id))
         assertFalse(controller.state.value.isSyncingDevice(other.id))
-        assertEquals(DeviceSyncProgress(DeviceSyncPhase.DOWNLOADING, total = 2, done = 1), controller.state.value.progress)
+        assertEquals(DeviceSyncProgress(DeviceSyncPhase.DOWNLOADING, total = 2, done = 1), controller.state.value.running[watch.id])
         port.gate!!.complete(Unit)
         job.join()
     }
@@ -205,12 +204,34 @@ class DeviceSyncControllerTest {
         val first = controller.syncDevice(watch.id)
         val second = controller.syncDevice(watch.id)
 
-        // One radio: the second call is dropped rather than queued.
+        // One sync per device: the second call is dropped rather than queued.
         assertNotNull(first)
         assertNull(second)
         port.gate!!.complete(Unit)
         first!!.join()
         assertEquals(1, port.calls)
+    }
+
+    @Test
+    fun `another device syncs beside a running one, each with its own state`() = runTest {
+        val watch = addWatch()
+        val other = addWatch(address = "E0:48:24:D5:F7:11")
+        port.gate = CompletableDeferred()
+        val controller = controller()
+
+        val first = controller.syncDevice(watch.id)
+        val second = controller.syncDevice(other.id)
+
+        // Each radio has its own lease, so one slow sync no longer starves the rest.
+        assertNotNull(first)
+        assertNotNull(second)
+        assertEquals(setOf(watch.id, other.id), controller.state.value.syncingDeviceIds)
+        port.gate!!.complete(Unit)
+        first!!.join()
+        second!!.join()
+        assertEquals(2, port.calls)
+        assertNotNull(controller.state.value.lastFor(watch.id))
+        assertNotNull(controller.state.value.lastFor(other.id))
     }
 
     @Test
@@ -246,7 +267,7 @@ class DeviceSyncControllerTest {
         assertFalse(controller.state.value.isSyncing)
         assertEquals(SyncFailure.Unreachable, controller.state.value.failureFor(watch.id))
         assertNull("another watch's card shows none of it", controller.state.value.failureFor("other"))
-        assertNull(controller.state.value.last)
+        assertNull(controller.state.value.lastFor(watch.id))
     }
 
     @Test
@@ -290,12 +311,12 @@ class DeviceSyncControllerTest {
         port.result = files(2)
         val controller = controller()
         controller.syncDevice(watch.id)!!.join()
-        assertNotNull(controller.state.value.last)
+        assertNotNull(controller.state.value.lastFor(watch.id))
 
         controller.clear()
 
-        assertNull(controller.state.value.last)
-        assertNull(controller.state.value.failure)
+        assertNull(controller.state.value.lastFor(watch.id))
+        assertNull(controller.state.value.failureFor(watch.id))
 
         // A running sync's state must survive a stray clear().
         port.gate = CompletableDeferred()
@@ -316,7 +337,7 @@ class DeviceSyncControllerTest {
 
         // A sync never throws. If one does, the radio must not read busy forever.
         assertFalse(controller.state.value.isSyncing)
-        assertTrue(controller.state.value.failure is SyncFailure.Unknown)
+        assertTrue(controller.state.value.failureFor(watch.id) is SyncFailure.Unknown)
         assertNotNull(controller.syncDevice(watch.id))
     }
 
@@ -330,7 +351,7 @@ class DeviceSyncControllerTest {
         controller.syncDevice(watch.id, SyncTrigger.BACKGROUND)!!.join()
 
         assertFalse(controller.state.value.isSyncing)
-        assertNull(controller.state.value.failure)
+        assertNull(controller.state.value.failureFor(watch.id))
     }
 
     @Test
@@ -341,7 +362,7 @@ class DeviceSyncControllerTest {
 
         controller.syncDevice(watch.id, SyncTrigger.BACKGROUND)!!.join()
 
-        assertEquals(files(4), controller.state.value.last)
+        assertEquals(files(4), controller.state.value.lastFor(watch.id))
     }
 
     @Test

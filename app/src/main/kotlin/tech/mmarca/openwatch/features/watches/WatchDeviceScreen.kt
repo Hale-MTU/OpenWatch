@@ -515,8 +515,8 @@ internal fun ActionsRow(
     onToggleFind: () -> Unit,
 ) {
     val finding = state.find.isFindingDevice(device.id)
-    // One radio: syncing and finding cannot overlap. Stopping this find stays available.
-    val busy = (state.sync.isSyncing || state.find.findingDeviceId != null) && !finding
+    // One radio per watch: its sync and a find cannot overlap. Stopping this find stays available.
+    val busy = (state.sync.isSyncingDevice(device.id) || state.find.findingDeviceId != null) && !finding
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
@@ -535,8 +535,8 @@ internal fun ActionsRow(
             icon = Icons.Outlined.Sync,
             label = stringResource(R.string.settings_watch_action_sync),
             busy = state.sync.isSyncingDevice(device.id),
-            // One radio: disabled while any watch is syncing.
-            enabled = !busy && !finding && !state.sync.isSyncing,
+            // Disabled while this watch syncs; another one may sync beside it.
+            enabled = !busy && !finding,
             onClick = onSync,
         )
         // A screen in the settings tree at a well-known id. A watch with no tree keeps

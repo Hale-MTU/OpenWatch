@@ -48,14 +48,14 @@ class LinkDevices @Inject constructor(
         scaleStore.config,
         scaleListener.status,
     ) { registered, sync, connections, scale, scaleStatus ->
-        linkDevices(registered, sync.syncingDeviceId, families, connections, scale, scaleStatus)
+        linkDevices(registered, sync.syncingDeviceIds, families, connections, scale, scaleStatus)
     }.distinctUntilChanged().stateIn(scope, SharingStarted.Eagerly, emptyList())
 }
 
 /** Pure, for the tests: what OpenLink shows of OpenWatch's devices. */
 internal fun linkDevices(
     registered: List<BleSensorDevice>,
-    syncingDeviceId: String?,
+    syncingDeviceIds: Set<String>,
     families: DeviceFamilies,
     connections: Map<String, Boolean>,
     scale: XiaomiScaleConfig,
@@ -79,7 +79,7 @@ internal fun linkDevices(
             batteryPercent = device.batteryPercent,
             batteryUpdatedAtMillis = device.batteryUpdatedAt?.toEpochMilli(),
             lastSyncedAtMillis = device.lastSyncedAt?.toEpochMilli(),
-            syncing = device.id == syncingDeviceId,
+            syncing = device.id in syncingDeviceIds,
             supportsSync = DeviceFeature.SYNC in features,
             supportsRecording = true,
             liveSampleTypes = buildSet {

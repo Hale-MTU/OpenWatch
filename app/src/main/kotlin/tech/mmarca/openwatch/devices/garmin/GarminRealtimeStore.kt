@@ -8,8 +8,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * The watch's live readings over the held link. In memory only: a value
- * that outlives the connection is a lie. The FIT sync keeps the record.
+ * The watch's live readings over the held link, with the watch they came from. One link is held
+ * at a time, so a reading from another watch starts afresh. In memory only: a value that
+ * outlives the connection is a lie. The FIT sync keeps the record.
  */
 @Singleton
 class GarminRealtimeStore @Inject constructor() {
@@ -17,27 +18,28 @@ class GarminRealtimeStore @Inject constructor() {
     private val state = MutableStateFlow(GarminRealtimeState())
     val readings: StateFlow<GarminRealtimeState> = state
 
-    fun record(reading: GarminRealtimeReading, now: Instant = Instant.now()) {
+    fun record(deviceId: String, reading: GarminRealtimeReading, now: Instant = Instant.now()) {
+        val current = state.value.takeIf { it.deviceId == deviceId } ?: GarminRealtimeState(deviceId = deviceId)
         state.value = when (reading) {
-            is GarminRealtimeReading.HeartRate -> state.value.copy(
+            is GarminRealtimeReading.HeartRate -> current.copy(
                 heartRateBpm = reading.bpm,
                 heartRateAt = now,
             )
-            is GarminRealtimeReading.Steps -> state.value.copy(
+            is GarminRealtimeReading.Steps -> current.copy(
                 steps = reading.steps,
                 stepGoal = reading.goal.takeIf { it > 0 },
                 stepsAt = now,
             )
-            is GarminRealtimeReading.Respiration -> state.value.copy(
+            is GarminRealtimeReading.Respiration -> current.copy(
                 breathsPerMinute = reading.breathsPerMinute,
                 respirationAt = now,
             )
-            is GarminRealtimeReading.SpO2 -> state.value.copy(
+            is GarminRealtimeReading.SpO2 -> current.copy(
                 spo2Percent = reading.percent,
                 spo2At = now,
             )
             // Beat-to-beat intervals are for a future HRV calculation; not stored yet.
-            is GarminRealtimeReading.Hrv -> state.value
+            is GarminRealtimeReading.Hrv -> current
         }
     }
 
@@ -49,6 +51,8 @@ class GarminRealtimeStore @Inject constructor() {
 
 /** The latest live values, each with its arrival time, so a stale one can be hidden. */
 data class GarminRealtimeState(
+    /** The registry id of the watch these came from; null before any reading. */
+    val deviceId: String? = null,
     val heartRateBpm: Int? = null,
     val heartRateAt: Instant? = null,
     val steps: Int? = null,

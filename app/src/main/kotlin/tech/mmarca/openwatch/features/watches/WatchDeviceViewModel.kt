@@ -200,7 +200,8 @@ class WatchDeviceViewModel @Inject constructor(
             navigationOnWatch = stateStore.navigationOnWatch(deviceId),
             coMapsPermissionMissing = stateStore.navigationOnWatch(deviceId) &&
                 !coMapsNavigationRepository.hasPermission(),
-            liveHeartRateBpm = live.freshHeartRate(),
+            // Only this watch's: the held link may be another one's.
+            liveHeartRateBpm = live.takeIf { it.deviceId == deviceId }?.freshHeartRate(),
         )
     }
         .combine(agpsStore.agps) { state, agps -> state.copy(agps = agps) }
