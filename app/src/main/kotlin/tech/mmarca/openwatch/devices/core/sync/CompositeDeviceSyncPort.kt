@@ -1,6 +1,5 @@
 package tech.mmarca.openwatch.devices.core.sync
 
-import kotlin.time.Duration
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 
 /**
@@ -15,12 +14,12 @@ class CompositeDeviceSyncPort(private val ports: Set<DeviceSyncPort>) : DeviceSy
 
     override suspend fun sync(
         device: BleSensorDevice,
-        listenAfter: Duration,
+        trigger: SyncTrigger,
         onProgress: ((DeviceSyncProgress) -> Unit)?,
     ): DeviceSyncResult {
         val owner = owner(device)
             ?: return DeviceSyncResult.Failed("No integration syncs this device.")
-        return owner.sync(device, listenAfter, onProgress)
+        return owner.sync(device, trigger, onProgress)
     }
 
     private fun owner(device: BleSensorDevice): DeviceSyncPort? = ports.firstOrNull { it.canSync(device) }

@@ -2,8 +2,6 @@ package tech.mmarca.openwatch.devices.core.sync
 
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -63,28 +61,18 @@ class DeviceSyncController @Inject constructor(
     private val _state = MutableStateFlow(DeviceSyncUiState())
     val state: StateFlow<DeviceSyncUiState> = _state.asStateFlow()
 
-    companion object {
-        /**
-         * How long a manual sync lingers after the pull. The watch runs its
-         * own errands (weather) seconds after the link comes up.
-         */
-        val MANUAL_SYNC_LINGER: Duration = 20.seconds
-    }
-
     /**
      * Syncs [deviceId], one at a time, on the controller's own scope, and returns at once:
      * for a screen or another app over OpenLink, which must not wait. A device no port claims,
-     * or a radio already busy, is null. [listenAfter] is the diagnostic window held open
-     * after the sync. [silent] is for the automatic schedule: a failure ends idle, no banner.
+     * or a radio already busy, is null. A [SyncTrigger.BACKGROUND] failure ends idle, with no banner.
      */
     fun syncDevice(
         deviceId: String,
-        listenAfter: Duration = Duration.ZERO,
-        silent: Boolean = false,
+        trigger: SyncTrigger = SyncTrigger.REQUESTED,
     ): Deferred<DeviceSyncResult>? {
         val device = claim(deviceId) ?: return null
         // No job holds the phone awake for this one; the wake lock does.
-        return scope.async { wakeLock.holding { runClaimed(device, listenAfter, silent) } }
+        return scope.async { wakeLock.holding { runClaimed(device, trigger) } }
     }
 
     /**
@@ -93,9 +81,9 @@ class DeviceSyncController @Inject constructor(
      * job, the sync is cancelled with it rather than left running unowned. Every integration
      * resumes from what it saved. Null as for [syncDevice].
      */
-    suspend fun runSync(deviceId: String, silent: Boolean = true): DeviceSyncResult? {
+    suspend fun runSync(deviceId: String, trigger: SyncTrigger = SyncTrigger.BACKGROUND): DeviceSyncResult? {
         val device = claim(deviceId) ?: return null
-        return runClaimed(device, Duration.ZERO, silent)
+        return runClaimed(device, trigger)
     }
 
     /**
@@ -115,14 +103,14 @@ class DeviceSyncController @Inject constructor(
         }
     }
 
-    private suspend fun runClaimed(device: BleSensorDevice, listenAfter: Duration, silent: Boolean): DeviceSyncResult {
+    private suspend fun runClaimed(device: BleSensorDevice, trigger: SyncTrigger): DeviceSyncResult {
         val deviceId = device.id
         // The port owns the sequence. The catch is defensive: an uncaught exception would
         // leave the radio reading busy forever.
         val result = try {
             syncPort.sync(
                 device,
-                listenAfter = listenAfter,
+                trigger = trigger,
                 onProgress = { progress ->
                     _state.update { current ->
                         if (current.syncingDeviceId != deviceId) {
@@ -156,7 +144,7 @@ class DeviceSyncController @Inject constructor(
                 lastWithheldPermissions = result.withheldPermissions,
             )
 
-            is DeviceSyncResult.Failed -> if (silent) {
+            is DeviceSyncResult.Failed -> if (trigger == SyncTrigger.BACKGROUND) {
                 DeviceSyncUiState()
             } else {
                 DeviceSyncUiState(error = result.error)

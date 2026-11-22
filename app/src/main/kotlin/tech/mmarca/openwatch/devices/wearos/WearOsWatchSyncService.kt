@@ -19,7 +19,6 @@ import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.reflect.KClass
-import kotlin.time.Duration
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -34,6 +33,7 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPhase
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
+import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.sync.UnwrittenSeries
 import tech.mmarca.openwatch.data.repository.RecordWrite
 import tech.mmarca.openwatch.data.repository.insertWithOutcomes
@@ -170,7 +170,7 @@ class WearOsWatchSyncService(
 
     override suspend fun sync(
         device: BleSensorDevice,
-        listenAfter: Duration,
+        trigger: SyncTrigger,
         onProgress: ((DeviceSyncProgress) -> Unit)?,
     ): DeviceSyncResult = syncMutex.withLock {
         syncSerially(device, onProgress)

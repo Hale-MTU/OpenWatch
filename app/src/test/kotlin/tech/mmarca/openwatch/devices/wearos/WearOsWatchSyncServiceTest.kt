@@ -7,7 +7,6 @@ import io.mockk.mockk
 import java.time.Instant
 import java.time.ZoneId
 import java.time.ZoneOffset
-import kotlin.time.Duration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -20,6 +19,7 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPhase
+import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.devices.core.sync.UnwrittenSeries
@@ -234,7 +234,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(samples(30, 40), hasMore = false)
         val progress = mutableListOf<DeviceSyncProgress>()
 
-        val result = service().sync(WATCH, Duration.ZERO) { progress += it }
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED) { progress += it }
 
         assertEquals(DeviceSyncResult.Succeeded(5), result)
         // The first pull starts at the epoch; the second at the first page's newest sample.
@@ -252,7 +252,7 @@ class WearOsWatchSyncServiceTest {
         watchSteps += List(3) { WearOsStepMinute(t0.plusSeconds(60L * it), 10) }
 
         val result = withContext(SyncBudget(deadlineMillis = 0, elapsedMillis = { 1 })) {
-            service().sync(WATCH, Duration.ZERO, null)
+            service().sync(WATCH, SyncTrigger.REQUESTED, null)
         }
 
         assertEquals(DeviceSyncResult.Succeeded(2, moreRemains = true), result)
@@ -267,7 +267,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += List(5) { WearOsStepMinute(t0.plusSeconds(60L * it), 10 + it) }
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(DeviceSyncResult.Succeeded(0, stepMinuteCount = 5), result)
         assertEquals(listOf(Instant.EPOCH, t0.plusSeconds(60), t0.plusSeconds(180)), stepPullsSince)
@@ -280,14 +280,14 @@ class WearOsWatchSyncServiceTest {
     fun `the next sync takes the cursor minute again, and a minute that grew replaces its record`() = runTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += listOf(WearOsStepMinute(t0, 40), WearOsStepMinute(t0.plusSeconds(60), 12))
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         // Late steps for the cursor minute, and a new minute.
         watchSteps[1] = WearOsStepMinute(t0.plusSeconds(60), 30)
         watchSteps += WearOsStepMinute(t0.plusSeconds(120), 7)
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         insertCalls.clear()
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(t0.plusSeconds(60).minusMillis(1), stepPullsSince.last())
         assertEquals(DeviceSyncResult.Succeeded(0, stepMinuteCount = 2), result)
@@ -298,12 +298,12 @@ class WearOsWatchSyncServiceTest {
     fun `an unchanged cursor minute does not make the new minutes fall back to one by one`() = runTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 40)
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         watchSteps += listOf(WearOsStepMinute(t0.plusSeconds(60), 5), WearOsStepMinute(t0.plusSeconds(120), 6))
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         insertCalls.clear()
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         // The cursor minute is written alone and refused as present; its cadence and energy are not tried
         // again, and no record is tried twice.
@@ -321,7 +321,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 12)
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(listOf(t0), insertedOf<StepsCadenceRecord>().map { it.startTime })
     }
@@ -333,7 +333,7 @@ class WearOsWatchSyncServiceTest {
         watchSteps += WearOsStepMinute(t0, 110)
         sleepPages += WearOsSleepMinutePage(nightMinutes(), hasMore = false)
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(DeviceSyncResult.Succeeded(0, nightCount = 1, stepMinuteCount = 1), result)
         assertEquals(t0, cursors.stepsCursor(WATCH.id))
@@ -344,7 +344,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += listOf(WearOsStepMinute(t0, 40), WearOsStepMinute(t0.plusSeconds(60), 12))
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         // 40 steps a minute costs a little more than rest; 12 does not.
         assertEquals(1, insertedOf<ActiveCaloriesBurnedRecord>().size)
@@ -356,7 +356,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 110)
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(DeviceSyncResult.Succeeded(0, stepMinuteCount = 1, missingBodyWeight = true), result)
         assertEquals(1, insertedOf<StepsRecord>().size)
@@ -370,7 +370,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 110)
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(
             DeviceSyncResult.Succeeded(
@@ -398,7 +398,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 12)
 
-        val result = counting.sync(WATCH, Duration.ZERO, null)
+        val result = counting.sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(DeviceSyncResult.Succeeded(0, stepMinuteCount = 1), result)
         assertEquals(0, weightReads)
@@ -411,7 +411,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 110)
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(DeviceSyncResult.Succeeded(0, stepMinuteCount = 1, unwritten = setOf(UnwrittenSeries.WALKING_ENERGY), withheldPermissions = setOf(CALORIES_WRITE)), result)
         assertEquals(1, insertedOf<StepsCadenceRecord>().size)
@@ -422,11 +422,11 @@ class WearOsWatchSyncServiceTest {
         weight = null
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 110)
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         watchSteps += WearOsStepMinute(t0.plusSeconds(60), 110)
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue((result as DeviceSyncResult.Succeeded).missingBodyWeight)
     }
@@ -437,7 +437,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 110)
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         // Steps go out; no energy, and no claim that the weight is missing.
         assertEquals(DeviceSyncResult.Succeeded(0, stepMinuteCount = 1), result)
@@ -450,9 +450,9 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 110)
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(DeviceSyncResult.Succeeded(0, stepMinuteCount = 1, unwritten = setOf(UnwrittenSeries.WALKING_ENERGY), withheldPermissions = setOf(EXERCISE_READ)), result)
         assertTrue(insertedOf<ActiveCaloriesBurnedRecord>().isEmpty())
@@ -466,7 +466,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 110)
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(insertedOf<ActiveCaloriesBurnedRecord>().isEmpty())
     }
@@ -477,7 +477,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 110)
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(insertedOf<ActiveCaloriesBurnedRecord>().isEmpty())
     }
@@ -486,12 +486,12 @@ class WearOsWatchSyncServiceTest {
     fun `the cursor minute and the new ones share one read of the exercise sessions`() = runTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 110)
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         watchSteps[0] = WearOsStepMinute(t0, 120)
         watchSteps += WearOsStepMinute(t0.plusSeconds(60), 110)
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         // One read per sync, though the second writes the cursor minute and the new one apart.
         coVerify(exactly = 2) { healthConnect.readExerciseSessionRanges(any(), any()) }
@@ -503,7 +503,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 12)
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(DeviceSyncResult.Succeeded(0, stepMinuteCount = 1), result)
     }
@@ -515,7 +515,7 @@ class WearOsWatchSyncServiceTest {
         watchSteps += WearOsStepMinute(t0, 40)
         sleepPages += WearOsSleepMinutePage(nightMinutes(), hasMore = false)
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(
             DeviceSyncResult.Succeeded(0, nightCount = 1, unwritten = setOf(UnwrittenSeries.STEPS), withheldPermissions = setOf(STEPS_WRITE)),
@@ -530,7 +530,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         stepsNotPaired = true
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(ScreenError.Text(R.string.settings_watch_wearos_bt_not_paired), (result as DeviceSyncResult.Failed).error)
         assertEquals(Instant.EPOCH, cursors.stepsCursor(WATCH.id))
@@ -542,7 +542,7 @@ class WearOsWatchSyncServiceTest {
         watchSteps += WearOsStepMinute(t0, 40)
         sleepPullFailure = WearOsLinkFailure.NoAnswer()
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(ScreenError.Text(R.string.settings_watch_wearos_fail_partial), (result as DeviceSyncResult.Failed).error)
     }
@@ -556,7 +556,7 @@ class WearOsWatchSyncServiceTest {
             hasMore = false,
         )
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(listOf(2.0), insertedOf<androidx.health.connect.client.records.FloorsClimbedRecord>().map { it.floors })
         assertEquals(
@@ -566,7 +566,7 @@ class WearOsWatchSyncServiceTest {
         assertEquals(t0.plusSeconds(600), cursors.ascentCursor(WATCH.id))
 
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(t0.plusSeconds(600).minusMillis(1), ascentPullsSince.last())
     }
@@ -576,14 +576,14 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += List(3) { WearOsStepMinute(t0.plusSeconds(60L * it), 40) }
         ascentPages += WearOsAscentPage(listOf(WearOsAscentMinute(t0, 3.0)), hasMore = false)
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
         // Steps reached t0 + 2 min, floors only t0.
 
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         ascentPages += WearOsAscentPage(listOf(WearOsAscentMinute(t0.plusSeconds(60), 6.0)), hasMore = false)
         insertCalls.clear()
         stepPullsSince.clear()
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(t0.minusSeconds(60).minusMillis(1), stepPullsSince.first())
         // Only the cursor minute is tried again; t0 and t0 + 1 min are not rewritten.
@@ -597,7 +597,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         ascentPages += WearOsAscentPage(listOf(WearOsAscentMinute(t0, 3.0)), hasMore = false)
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(emptyList<Instant>(), ascentPullsSince)
         assertEquals(Instant.EPOCH, cursors.ascentCursor(WATCH.id))
@@ -611,7 +611,7 @@ class WearOsWatchSyncServiceTest {
         val written = slot<List<androidx.health.connect.client.records.Record>>()
         coEvery { importRepository.insertImportedRecords(capture(written)) } returns Unit
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(DeviceSyncResult.Succeeded(0, nightCount = 1), result)
         assertEquals(listOf(Instant.EPOCH), sleepPullsSince)
@@ -625,7 +625,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         cursors.setSleepCursor(WATCH.id, Instant.parse("2026-10-08T01:00:00Z"))
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         // 18:00 local the evening before, in +02:00, one millisecond earlier for the exclusive "since".
         assertEquals(listOf(Instant.parse("2026-10-07T16:00:00Z").minusMillis(1)), sleepPullsSince)
@@ -642,7 +642,7 @@ class WearOsWatchSyncServiceTest {
             arg<suspend (List<androidx.health.connect.client.records.Record>) -> Unit>(3).invoke(listOf(foreign))
         }
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(DeviceSyncResult.Succeeded(0), result)
         assertTrue(insertedOf<SleepSessionRecord>().isEmpty())
@@ -656,7 +656,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         sleepPages += WearOsSleepMinutePage(napDayMinutes(), hasMore = false)
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(DeviceSyncResult.Succeeded(0), result)
         val session = insertedOf<SleepSessionRecord>().single()
@@ -677,7 +677,7 @@ class WearOsWatchSyncServiceTest {
             arg<suspend (List<androidx.health.connect.client.records.Record>) -> Unit>(3).invoke(listOf(foreign))
         }
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(insertedOf<SleepSessionRecord>().isEmpty())
     }
@@ -693,7 +693,7 @@ class WearOsWatchSyncServiceTest {
             arg<suspend (List<androidx.health.connect.client.records.Record>) -> Unit>(3).invoke(listOf(earlier))
         }
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         coVerify { healthConnect.deleteImportedRecordsByClientIds(SleepSessionRecord::class, listOf("wearos_nap_1")) }
         assertEquals(1, insertedOf<SleepSessionRecord>().size)
@@ -703,7 +703,7 @@ class WearOsWatchSyncServiceTest {
     fun `an estimated night also gives its nocturnal resting heart rate`() = runTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         sleepPages += WearOsSleepMinutePage(nightMinutes(), hasMore = false)
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         val resting = insertedOf<RestingHeartRateRecord>().single()
         assertEquals("wearos_rhr_est_2026-10-08", resting.metadata.clientRecordId)
@@ -724,7 +724,7 @@ class WearOsWatchSyncServiceTest {
     private suspend fun syncNight(minutes: List<WearSleepMinute> = nightMinutes()): DeviceSyncResult {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         sleepPages += WearOsSleepMinutePage(minutes, hasMore = false)
-        return service().sync(WATCH, Duration.ZERO, null)
+        return service().sync(WATCH, SyncTrigger.REQUESTED, null)
     }
 
     @Test
@@ -836,7 +836,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 110)
 
-        val result = failingService.sync(WATCH, Duration.ZERO, null)
+        val result = failingService.sync(WATCH, SyncTrigger.REQUESTED, null)
 
         // Not "add your weight": one may well be there.
         assertEquals(DeviceSyncResult.Succeeded(0, stepMinuteCount = 1), result)
@@ -850,7 +850,7 @@ class WearOsWatchSyncServiceTest {
         watchSteps += listOf(WearOsStepMinute(t0, 100), WearOsStepMinute(t0.plusSeconds(60), 100))
         coEvery { healthConnect.readExerciseSessionRanges(any(), any()) } returns listOf(t0..t0.plusSeconds(60))
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(listOf(t0.plusSeconds(60)), insertedOf<ActiveCaloriesBurnedRecord>().map { it.startTime })
     }
@@ -862,7 +862,7 @@ class WearOsWatchSyncServiceTest {
         watchSteps += WearOsStepMinute(t0, 150)
         coEvery { healthConnect.readExerciseSessionRanges(any(), any()) } returns listOf(t0..t0.plusSeconds(60))
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(DeviceSyncResult.Succeeded(0, stepMinuteCount = 1), result)
     }
@@ -874,7 +874,7 @@ class WearOsWatchSyncServiceTest {
         val from = slot<Instant>()
         coEvery { healthConnect.readExerciseSessionRanges(capture(from), any()) } returns emptyList()
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         // A two-hour run that began well before the minute is inside the window.
         assertTrue(from.captured.isBefore(t0.minusSeconds(2 * 3600)))
@@ -885,7 +885,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(samples(0, 10), hasMore = false)
         sleepPullFailure = WearOsLinkFailure.NoAnswer()
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(result is DeviceSyncResult.Failed)
         assertEquals(ScreenError.Text(R.string.settings_watch_wearos_fail_partial), (result as DeviceSyncResult.Failed).error)
@@ -897,7 +897,7 @@ class WearOsWatchSyncServiceTest {
     fun `a pending confirmation or a refusal is a typed failure that the status row shows`() = runTest {
         pullFailure = WearOsLinkFailure.PendingConfirmation()
 
-        val pending = service().sync(WATCH, Duration.ZERO, null)
+        val pending = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(ScreenError.Text(R.string.settings_watch_wearos_status_pending), (pending as DeviceSyncResult.Failed).error)
         assertEquals(WearOsAppStatus.PENDING_CONFIRMATION, linkStore.snapshots.value.getValue(WATCH.id).status)
@@ -905,7 +905,7 @@ class WearOsWatchSyncServiceTest {
         assertEquals(1, pullsSince.size)
 
         pullFailure = WearOsLinkFailure.Unauthorized(WearLinkProtocol.UnauthorizedReason.MISMATCH)
-        val refused = service().sync(WATCH, Duration.ZERO, null)
+        val refused = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(ScreenError.Text(R.string.settings_watch_wearos_status_unauthorized_mismatch), (refused as DeviceSyncResult.Failed).error)
     }
@@ -914,7 +914,7 @@ class WearOsWatchSyncServiceTest {
     fun `a success records the running status`() = runTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(WearOsAppStatus.APP_RUNNING, linkStore.snapshots.value.getValue(WATCH.id).status)
     }
@@ -924,7 +924,7 @@ class WearOsWatchSyncServiceTest {
         cursors.setHeartRateCursor(WATCH.id, t0)
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(DeviceSyncResult.Succeeded(0), result)
         assertEquals(listOf(t0), pullsSince)
@@ -937,7 +937,7 @@ class WearOsWatchSyncServiceTest {
     fun `no bonded watch fails the sync and stamps nothing`() = runTest {
         pages += null
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(result is DeviceSyncResult.Failed)
         assertEquals(ScreenError.Text(R.string.settings_watch_wearos_bt_not_paired), (result as DeviceSyncResult.Failed).error)
@@ -949,7 +949,7 @@ class WearOsWatchSyncServiceTest {
     fun `a silent watch fails the sync without moving the cursor`() = runTest {
         pullFailure = WearOsLinkFailure.NoAnswer()
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(result is DeviceSyncResult.Failed)
         assertEquals(ScreenError.Text(R.string.settings_watch_wearos_app_no_answer), (result as DeviceSyncResult.Failed).error)
@@ -963,7 +963,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(samples(0, 10), hasMore = true)
         pullFailure = WearOsLinkFailure.NoAnswer()
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(result is DeviceSyncResult.Failed)
         assertEquals(ScreenError.Text(R.string.settings_watch_wearos_fail_partial), (result as DeviceSyncResult.Failed).error)
@@ -977,7 +977,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(samples(0, 10), hasMore = false)
         coEvery { importRepository.insertImportedRecords(any()) } throws SecurityException("WRITE_HEART_RATE")
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(result is DeviceSyncResult.Failed)
         assertEquals(ScreenError.Text(R.string.settings_watch_wearos_fail_health_connect), (result as DeviceSyncResult.Failed).error)
@@ -993,7 +993,7 @@ class WearOsWatchSyncServiceTest {
         coEvery { healthConnect.grantedPermissions() } returns setOf(HRV_WRITE)
         hrvPages += WearOsHrvPage(listOf(hrvWindow(0), hrvWindow(30, 61.5)), hasMore = false)
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         val records = insertedOf<HeartRateVariabilityRmssdRecord>()
         assertEquals(listOf(45.0, 61.5), records.map { it.heartRateVariabilityMillis })
@@ -1007,11 +1007,11 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         coEvery { healthConnect.grantedPermissions() } returns setOf(HRV_WRITE)
         hrvPages += WearOsHrvPage(listOf(hrvWindow(0)), hasMore = false)
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
         cursors.setHrvCursor(WATCH.id, Instant.EPOCH)
         hrvPages += WearOsHrvPage(listOf(hrvWindow(0)), hasMore = false)
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(1, insertedOf<HeartRateVariabilityRmssdRecord>().size)
     }
@@ -1022,7 +1022,7 @@ class WearOsWatchSyncServiceTest {
         coEvery { healthConnect.grantedPermissions() } returns setOf(HRV_WRITE)
         cursors.setHrvCursor(WATCH.id, t0)
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(listOf(t0), hrvPullsSince)
     }
@@ -1032,7 +1032,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         hrvPages += WearOsHrvPage(listOf(hrvWindow(0)), hasMore = false)
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(insertedOf<HeartRateVariabilityRmssdRecord>().isEmpty())
         assertEquals(Instant.EPOCH, cursors.hrvCursor(WATCH.id))
@@ -1049,7 +1049,7 @@ class WearOsWatchSyncServiceTest {
         refused = { it is HeartRateVariabilityRmssdRecord }
         hrvPages += WearOsHrvPage(listOf(hrvWindow(0)), hasMore = false)
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(Instant.EPOCH, cursors.hrvCursor(WATCH.id))
         assertTrue(result is DeviceSyncResult.Succeeded)
@@ -1058,7 +1058,7 @@ class WearOsWatchSyncServiceTest {
     @Test
     fun `no HRV on the watch is no entry on the card`() = runTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(DeviceSyncResult.Succeeded(0), result)
         assertEquals(Instant.EPOCH, cursors.hrvCursor(WATCH.id))
@@ -1070,7 +1070,7 @@ class WearOsWatchSyncServiceTest {
         coEvery { healthConnect.grantedPermissions() } returns setOf(HRV_WRITE)
         hrvPages += WearOsHrvPage(listOf(hrvWindow(0, rmssd = 250.0)), hasMore = false)
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue(insertedOf<HeartRateVariabilityRmssdRecord>().isEmpty())
         assertEquals(t0, cursors.hrvCursor(WATCH.id))
@@ -1081,7 +1081,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         respiratoryPages += WearOsRespiratoryPage(listOf(WearOsRespiratoryWindow(t0, 14.2, 2)), hasMore = false)
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertEquals(0, respiratoryPulls)
         assertTrue(insertedOf<RespiratoryRateRecord>().isEmpty())
@@ -1094,7 +1094,7 @@ class WearOsWatchSyncServiceTest {
         coEvery { healthConnect.grantedPermissions() } returns setOf(RESPIRATORY_WRITE)
         respiratoryPages += WearOsRespiratoryPage(listOf(WearOsRespiratoryWindow(t0, 14.2, 2)), hasMore = false)
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         val record = insertedOf<RespiratoryRateRecord>().single()
         assertEquals(14.2, record.rate, 1e-9)
@@ -1108,7 +1108,7 @@ class WearOsWatchSyncServiceTest {
         coEvery { healthConnect.grantedPermissions() } returns setOf(SPO2_WRITE)
         spo2Pages += WearOsSpo2Page(listOf(WearOsSpo2Measurement(t0, 95)), hasMore = false)
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         val record = insertedOf<OxygenSaturationRecord>().single()
         assertEquals(95.0, record.percentage.value, 1e-9)

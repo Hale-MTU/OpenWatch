@@ -3,7 +3,6 @@ package tech.mmarca.openwatch.devices.core.sync
 import android.content.Context
 import io.mockk.every
 import io.mockk.mockk
-import kotlin.time.Duration
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -35,7 +34,7 @@ class DeviceSyncControllerTest {
         var result: DeviceSyncResult = DeviceSyncResult.Succeeded(0)
         var calls = 0
         var seenDevice: BleSensorDevice? = null
-        var seenListenAfter: Duration? = null
+        var seenTrigger: SyncTrigger? = null
         var progressToReport: DeviceSyncProgress? = DeviceSyncProgress(
             phase = DeviceSyncPhase.DOWNLOADING,
             filesTotal = 2,
@@ -52,12 +51,12 @@ class DeviceSyncControllerTest {
 
         override suspend fun sync(
             device: BleSensorDevice,
-            listenAfter: Duration,
+            trigger: SyncTrigger,
             onProgress: ((DeviceSyncProgress) -> Unit)?,
         ): DeviceSyncResult {
             calls++
             seenDevice = device
-            seenListenAfter = listenAfter
+            seenTrigger = trigger
             progressToReport?.let { onProgress?.invoke(it) }
             gate?.await()
             thrown?.let { throw it }
@@ -313,7 +312,7 @@ class DeviceSyncControllerTest {
         val controller = controller()
 
         // A scheduled sync out of range at 3am must not leave a red message for later.
-        controller.syncDevice(watch.id, silent = true)!!.join()
+        controller.syncDevice(watch.id, SyncTrigger.BACKGROUND)!!.join()
 
         assertFalse(controller.state.value.isSyncing)
         assertNull(controller.state.value.error)
@@ -325,7 +324,7 @@ class DeviceSyncControllerTest {
         port.result = DeviceSyncResult.Succeeded(4)
         val controller = controller()
 
-        controller.syncDevice(watch.id, silent = true)!!.join()
+        controller.syncDevice(watch.id, SyncTrigger.BACKGROUND)!!.join()
 
         assertEquals(4, controller.state.value.lastFileCount)
     }
@@ -337,18 +336,20 @@ class DeviceSyncControllerTest {
         val controller = controller()
 
         // What the scheduled run reads to decide between a retry and waiting.
-        val result = controller.syncDevice(watch.id, silent = true)!!.await()
+        val result = controller.syncDevice(watch.id, SyncTrigger.BACKGROUND)!!.await()
 
         assertEquals(DeviceSyncResult.Failed("The watch is busy (notifications)"), result)
     }
 
     @Test
-    fun `passes the listen-after diagnostic window down to the port`() = runTest {
+    fun `a tapped sync reaches the port as requested, the worker's as background`() = runTest {
         val watch = addWatch()
         val controller = controller()
 
-        controller.syncDevice(watch.id, listenAfter = Duration.ZERO)!!.join()
+        controller.syncDevice(watch.id)!!.join()
+        assertEquals(SyncTrigger.REQUESTED, port.seenTrigger)
 
-        assertEquals(Duration.ZERO, port.seenListenAfter)
+        controller.runSync(watch.id)
+        assertEquals(SyncTrigger.BACKGROUND, port.seenTrigger)
     }
 }

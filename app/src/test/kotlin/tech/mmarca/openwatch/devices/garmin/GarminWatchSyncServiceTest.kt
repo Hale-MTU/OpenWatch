@@ -11,6 +11,7 @@ import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import java.time.Instant
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
@@ -25,6 +26,7 @@ import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
+import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
@@ -49,6 +51,7 @@ class GarminWatchSyncServiceTest {
     private var pullResult: GarminPullResult = GarminPullResult(files = emptyList())
     private var pullFailure: Throwable? = null
     private var pulls = 0
+    private var heldFor: Duration? = null
 
     private val radio = object : GarminRadio {
         override suspend fun pull(
@@ -57,6 +60,7 @@ class GarminWatchSyncServiceTest {
             onProgress: ((DeviceSyncProgress) -> Unit)?,
         ): GarminPullResult {
             pulls++
+            heldFor = listenAfter
             pullFailure?.let { throw it }
             return pullResult
         }
@@ -103,7 +107,7 @@ class GarminWatchSyncServiceTest {
     fun `files that landed are imported, then the watch is stamped`() = runTest {
         pullResult = GarminPullResult(files = listOf(file(1), file(2)))
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
         assertEquals(DeviceSyncResult.Succeeded(2), result)
         coVerify(exactly = 1) { downloadImport.import(WATCH.id, pullResult.files) }
@@ -112,10 +116,19 @@ class GarminWatchSyncServiceTest {
     }
 
     @Test
+    fun `a requested sync holds the link for the watch's errands, a background one does not`() = runTest {
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
+        assertEquals(20.seconds, heldFor)
+
+        service().sync(WATCH, SyncTrigger.BACKGROUND, null)
+        assertEquals(Duration.ZERO, heldFor)
+    }
+
+    @Test
     fun `a watch out of range fails the sync and stamps nothing`() = runTest {
         pullFailure = GarminGattClientException("out of range")
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
         assertEquals(DeviceSyncResult.Failed("out of range"), result)
         coVerify(exactly = 0) { downloadImport.import(any(), any()) }
@@ -127,7 +140,7 @@ class GarminWatchSyncServiceTest {
         pullResult = GarminPullResult(files = listOf(file(1)))
         coEvery { downloadImport.import(any(), any()) } throws IllegalStateException("Health Connect is down")
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
         assertEquals(DeviceSyncResult.Failed("Health Connect is down"), result)
         coVerify(exactly = 0) { deviceRepository.markSynced(any(), any()) }
@@ -139,7 +152,7 @@ class GarminWatchSyncServiceTest {
         coEvery { downloadImport.import(any(), any()) } returns
             GarminActivityImportResult(written = 1, wellnessWithheldPermissions = setOf(WriteSleep))
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
         assertEquals(setOf(WriteSleep), (result as DeviceSyncResult.Succeeded).withheldPermissions)
         coVerify(exactly = 1) { deviceRepository.markSynced(WATCH.id, any()) }
@@ -150,7 +163,7 @@ class GarminWatchSyncServiceTest {
         pullResult = GarminPullResult(files = listOf(file(1)))
         coEvery { downloadImport.import(any(), any()) } throws SecurityException("WRITE_WEIGHT not granted")
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
         assertEquals(DeviceSyncResult.Failed(ScreenError.PermissionDenied), result)
     }
@@ -159,7 +172,7 @@ class GarminWatchSyncServiceTest {
     fun `an interrupted sync that landed files says both things`() = runTest {
         pullResult = GarminPullResult(files = listOf(file(1)), incompleteReason = "the link dropped")
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
         assertEquals(DeviceSyncResult.Failed("Imported 1 file(s), but sync was interrupted: the link dropped"), result)
         // The files did land, so they are imported before the failure is reported.
@@ -170,7 +183,7 @@ class GarminWatchSyncServiceTest {
     fun `an interrupted sync that landed nothing reports only the interruption`() = runTest {
         pullResult = GarminPullResult(files = emptyList(), incompleteReason = "the watch went away")
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
         assertEquals(DeviceSyncResult.Failed("the watch went away"), result)
     }
@@ -181,7 +194,7 @@ class GarminWatchSyncServiceTest {
         coEvery { downloadImport.import(any(), any()) } returns
             GarminActivityImportResult(written = 0, missingPermission = listOf(file(1)))
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
         val message = (result as DeviceSyncResult.Failed).message
         assertTrue(message, message.startsWith("1 workout(s) were not imported."))
@@ -192,7 +205,7 @@ class GarminWatchSyncServiceTest {
         val pending = file(9)
         fileStore.save(pending, now = Instant.parse("2026-07-22T10:00:00Z"), deviceId = WATCH.id)
 
-        service().sync(WATCH, Duration.ZERO, null)
+        service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
         // Their keys must be recorded before the listing is filtered, or they are fetched twice.
         coVerify(exactly = 1) { downloadImport.import(WATCH.id, match { it.size == 1 }) }
@@ -204,7 +217,7 @@ class GarminWatchSyncServiceTest {
         fileStore.save(file(9), now = Instant.parse("2026-07-22T10:00:00Z"), deviceId = WATCH.id)
         coEvery { downloadImport.import(any(), any()) } throws IllegalStateException("Health Connect is down")
 
-        val result = service().sync(WATCH, Duration.ZERO, null)
+        val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null)
 
         assertEquals(DeviceSyncResult.Failed("Health Connect is down"), result)
         assertEquals("pulling more would only queue more behind a write path that is down", 0, pulls)

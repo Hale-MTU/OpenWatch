@@ -26,6 +26,7 @@ import kotlinx.coroutines.plus
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 import tech.mmarca.openwatch.devices.core.RadioLeaseRegistry
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
+import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
 
@@ -382,7 +383,7 @@ class GarminNotificationBridge @Inject constructor(
      */
     private fun syncAnnouncedFile(address: String) {
         val device = deviceFor(address) ?: return
-        val running = syncController.get().syncDevice(device.id, silent = true)
+        val running = syncController.get().syncDevice(device.id, SyncTrigger.BACKGROUND)
         GarminLog.log(if (running == null) "[GARMIN-COMPANION] announced file; a sync already runs" else "[GARMIN-COMPANION] announced file; syncing now")
     }
 

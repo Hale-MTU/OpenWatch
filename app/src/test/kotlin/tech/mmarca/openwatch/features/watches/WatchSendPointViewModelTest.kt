@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import io.mockk.every
 import io.mockk.mockk
-import kotlin.time.Duration
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -23,6 +22,7 @@ import tech.mmarca.openwatch.core.geo.GeoCoordinateParseResult
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
+import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.devices.garmin.GarminCapability
@@ -57,7 +57,7 @@ class WatchSendPointViewModelTest {
 
         override suspend fun sync(
             device: BleSensorDevice,
-            listenAfter: Duration,
+            trigger: SyncTrigger,
             onProgress: ((DeviceSyncProgress) -> Unit)?,
         ): DeviceSyncResult = DeviceSyncResult.Succeeded(0)
     }

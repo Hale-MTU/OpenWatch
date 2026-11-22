@@ -452,7 +452,7 @@ class WatchDeviceViewModel @Inject constructor(
     }
 
     fun syncNow() {
-        syncController.syncDevice(deviceId, listenAfter = DeviceSyncController.MANUAL_SYNC_LINGER)
+        syncController.syncDevice(deviceId)
     }
 
     fun toggleFind() {

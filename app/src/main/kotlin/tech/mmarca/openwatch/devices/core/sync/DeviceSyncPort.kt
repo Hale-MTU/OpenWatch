@@ -1,6 +1,5 @@
 package tech.mmarca.openwatch.devices.core.sync
 
-import kotlin.time.Duration
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 
@@ -16,6 +15,18 @@ data class DeviceSyncProgress(
 
 /** A series a sync left out for want of a Health Connect grant, so the screen can say which. */
 enum class UnwrittenSeries { STEPS, WALKING_ENERGY, RESTING_HEART_RATE, HEART_RATE_VARIABILITY, RESPIRATORY_RATE, OXYGEN_SATURATION, SKIN_TEMPERATURE, WORKOUTS }
+
+/** Who asked for a sync. An integration may act on it; nothing else about the run differs. */
+enum class SyncTrigger {
+    /**
+     * Someone waits on it: a tap on a screen, or another app over OpenLink. A failure stays on
+     * the screen, and an integration may hold the link a little longer for the device's own errands.
+     */
+    REQUESTED,
+
+    /** The schedule, or a device that announced new data. A failure ends idle, with no banner. */
+    BACKGROUND,
+}
 
 /** The outcome of a whole sync-and-persist run. */
 sealed class DeviceSyncResult {
@@ -66,13 +77,10 @@ interface DeviceSyncPort {
     /** Whether this integration owns the sync-and-persist for [device]. */
     fun canSync(device: BleSensorDevice): Boolean
 
-    /**
-     * Runs the whole sequence for [device]. Never throws. [listenAfter] is
-     * a diagnostic window held open after the sync.
-     */
+    /** Runs the whole sequence for [device], asked for by [trigger]. Never throws. */
     suspend fun sync(
         device: BleSensorDevice,
-        listenAfter: Duration = Duration.ZERO,
+        trigger: SyncTrigger = SyncTrigger.REQUESTED,
         onProgress: ((DeviceSyncProgress) -> Unit)? = null,
     ): DeviceSyncResult
 }

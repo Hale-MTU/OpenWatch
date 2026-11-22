@@ -32,7 +32,7 @@ class OpenWatchLinkCapabilities @Inject constructor(
         val device = devices.devices.value.firstOrNull { it.id == deviceId } ?: return
         if (device.kind == OpenLinkDeviceKind.SCALE) return
         // One sync at a time; a request while one runs is dropped, as a tap on the button would be.
-        syncController.syncDevice(deviceId, listenAfter = DeviceSyncController.MANUAL_SYNC_LINGER)
+        syncController.syncDevice(deviceId)
     }
 
     override fun startRecording(caller: OpenLinkCaller, request: OpenLinkRecordingRequest) =

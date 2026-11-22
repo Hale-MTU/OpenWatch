@@ -5,7 +5,6 @@ import androidx.lifecycle.SavedStateHandle
 import io.mockk.every
 import io.mockk.mockk
 import java.time.DayOfWeek
-import kotlin.time.Duration
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
@@ -21,6 +20,7 @@ import org.junit.Test
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
+import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.devices.garmin.GarminAlarm
@@ -52,7 +52,7 @@ class WatchAlarmsViewModelTest {
 
         override suspend fun sync(
             device: BleSensorDevice,
-            listenAfter: Duration,
+            trigger: SyncTrigger,
             onProgress: ((DeviceSyncProgress) -> Unit)?,
         ): DeviceSyncResult = DeviceSyncResult.Succeeded(0)
     }

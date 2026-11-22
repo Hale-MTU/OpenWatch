@@ -3,7 +3,6 @@ package tech.mmarca.openwatch.features.watches
 import android.content.Context
 import io.mockk.every
 import io.mockk.mockk
-import kotlin.time.Duration
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runCurrent
@@ -17,6 +16,7 @@ import org.junit.Test
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
+import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.devices.garmin.GarminAlarm
@@ -54,7 +54,7 @@ class GarminWatchActionsControllerTest {
 
         override suspend fun sync(
             device: BleSensorDevice,
-            listenAfter: Duration,
+            trigger: SyncTrigger,
             onProgress: ((DeviceSyncProgress) -> Unit)?,
         ): DeviceSyncResult {
             syncGate.await()

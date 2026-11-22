@@ -54,7 +54,7 @@ class WatchAutoSyncWorker(
         // the job and cancelled with it when the system stops the job.
         // The budget ends a long sync cleanly before the system's ten-minute limit would cancel it.
         val result = withContext(SyncBudget.forNext(BudgetMillis)) {
-            entryPoint.deviceSyncController().runSync(deviceId, silent = true)
+            entryPoint.deviceSyncController().runSync(deviceId)
         } ?: return if (runAttemptCount < MaxAttempts) Result.retry() else Result.success()
 
         return when (result) {

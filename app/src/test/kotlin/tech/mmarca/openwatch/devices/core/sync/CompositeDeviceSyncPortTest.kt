@@ -1,7 +1,6 @@
 package tech.mmarca.openwatch.devices.core.sync
 
 import java.time.Instant
-import kotlin.time.Duration
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -18,7 +17,7 @@ class CompositeDeviceSyncPortTest {
         override fun canSync(device: BleSensorDevice) = device.integration == integration
         override suspend fun sync(
             device: BleSensorDevice,
-            listenAfter: Duration,
+            trigger: SyncTrigger,
             onProgress: ((DeviceSyncProgress) -> Unit)?,
         ): DeviceSyncResult {
             syncs++
@@ -45,8 +44,8 @@ class CompositeDeviceSyncPortTest {
 
     @Test
     fun `each device goes to the port that claims it`() = runTest {
-        assertEquals(DeviceSyncResult.Failed("wearos"), composite.sync(watch(DeviceIntegration.WEAROS), Duration.ZERO, null))
-        assertEquals(DeviceSyncResult.Failed("garmin"), composite.sync(watch(DeviceIntegration.GARMIN), Duration.ZERO, null))
+        assertEquals(DeviceSyncResult.Failed("wearos"), composite.sync(watch(DeviceIntegration.WEAROS), SyncTrigger.REQUESTED, null))
+        assertEquals(DeviceSyncResult.Failed("garmin"), composite.sync(watch(DeviceIntegration.GARMIN), SyncTrigger.REQUESTED, null))
         assertEquals(1, garmin.syncs)
         assertEquals(1, wearOs.syncs)
     }
@@ -56,7 +55,7 @@ class CompositeDeviceSyncPortTest {
         val sensor = watch(null).copy(kind = BleDeviceKind.SENSOR)
 
         assertFalse(composite.canSync(sensor))
-        assertTrue(composite.sync(sensor, Duration.ZERO, null) is DeviceSyncResult.Failed)
+        assertTrue(composite.sync(sensor, SyncTrigger.REQUESTED, null) is DeviceSyncResult.Failed)
         assertEquals(0, garmin.syncs + wearOs.syncs)
     }
 }

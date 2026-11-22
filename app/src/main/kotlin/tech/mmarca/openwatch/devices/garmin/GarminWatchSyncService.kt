@@ -26,6 +26,7 @@ import tech.mmarca.openwatch.devices.core.RadioLeaseOwner
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
+import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
 import tech.mmarca.openwatch.devices.core.withRadioLease
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import kotlinx.coroutines.plus
@@ -105,10 +106,10 @@ class GarminWatchSyncService @Inject constructor(
 
     override suspend fun sync(
         device: BleSensorDevice,
-        listenAfter: Duration,
+        trigger: SyncTrigger,
         onProgress: ((DeviceSyncProgress) -> Unit)?,
     ): DeviceSyncResult = syncMutex.withLock {
-        syncSerially(device, listenAfter, onProgress)
+        syncSerially(device, if (trigger == SyncTrigger.REQUESTED) REQUESTED_LINGER else Duration.ZERO, onProgress)
     }
 
     private suspend fun syncSerially(
@@ -267,6 +268,12 @@ class GarminWatchSyncService @Inject constructor(
     private companion object {
         /** A whole-send safety net: handover, handshake and a small file fit well inside. */
         val SEND_TIMEOUT = 45.seconds
+
+        /**
+         * How long a requested sync holds the link after the pull. The watch runs its own
+         * errands (weather) seconds after the link comes up; a background one does not wait.
+         */
+        val REQUESTED_LINGER = 20.seconds
 
     }
 }
