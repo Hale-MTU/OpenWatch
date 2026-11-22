@@ -73,10 +73,12 @@ dependency change, regenerate the module's lockfile and commit it:
 the submodules' and `build-logic/`'s included; a jar or POM that does not match fails the
 build. A lock pins the version, this pins the bytes. After a dependency or plugin change,
 rerun the gates and the release builds with `--write-verification-metadata`, so the tasks
-that resolve their own tools (lint, R8, aapt2) are covered too, and review the diff:
+that resolve their own tools (lint, R8, aapt2) are covered too, and review the diff. Run it
+from an empty Gradle home: a warm cache answers some lookups from what it already holds, and
+the POMs it skipped then fail on a clean CI runner.
 
 ```bash
-./gradlew --no-configuration-cache --write-verification-metadata sha256 \
+GRADLE_USER_HOME="$(mktemp -d)" ./gradlew --no-build-cache --write-verification-metadata sha256 \
   verifyCi verifyWearCi :app:assembleRelease :app:bundleRelease :app:assembleNightly \
   :app:bundleNightly :app:assembleDebug :wear:assembleRelease :wear:bundleRelease \
   :wear:assembleNightly :wear:bundleNightly
