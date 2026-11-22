@@ -11,9 +11,10 @@ OpenWatch seams noted.
 
 - App namespace: `tech.mmarca.openwatch`
 - Build logic: `build-logic/`, an included build with the convention plugins every module applies (`openwatch.android.application`, `openwatch.android.library`, `openwatch.jvm.library`): SDK levels, Java 17, signing from the environment, the debug, release and nightly build types, lint and dependency locking. A module's own file holds only what is its own (version codes, the `ci` type, the diagnostics flag). A change there must leave the release APKs byte-identical; compare their hashes before and after.
-- Project shape: seven Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
-  hold the pure code the app depends on (below); `:devices:garmin:protocol` is the Garmin
-  protocol, pure Kotlin ([`devices/garmin`](#devicesgarmin)); `:wear` is the Wear OS watch app
+- Project shape: eight Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
+  hold the pure code the app depends on (below); `:devices:garmin:protocol` and
+  `:devices:xiaomi:protocol` are the Garmin protocol and the S400 codec, pure Kotlin
+  ([`devices/garmin`](#devicesgarmin), [`devices/xiaomi`](#devicesxiaomi)); `:wear` is the Wear OS watch app
   with its own CI gate; `:wearlink` is the pure-Kotlin link both apps depend on. Package names
   are the same across `:app` and the modules under `core/` and `devices/`. The health calculations, shared with OpenVitals,
   come from the `health-calculations/` submodule, a composite build (below).
@@ -157,7 +158,7 @@ The Xiaomi Body Composition Scale S400. The scale takes no connection: it broadc
 
 | Layer | Files |
 |---|---|
-| Decoding, transport-free | `AesCcm` (RFC 3610 on the AES block cipher: Android ships no CCM), `S400Beacon` (header rules, nonce, the weigh-in object, the scan-filter bytes) |
+| Decoding, transport-free | `AesCcm` (RFC 3610 on the AES block cipher: Android ships no CCM), `S400Beacon` (header rules, nonce, the weigh-in object, the scan-filter bytes), `XiaomiDevices` (`isXiaomiScale`): the module `:devices:xiaomi:protocol` (`devices/xiaomi/protocol`), plain Kotlin with `explicitApi()`, linted as in the app. The scan filter type, `devices/core/ServiceDataFilter`, is `:core:model`'s, since the companion pairing builds its dialog's filters from it too |
 | Health Connect mapping | `S400WeighInImport` (record kinds, ids, record time) |
 | Listening | `ScaleScanRadio` (the one file here touching `android.bluetooth.le`; `devices/core/pairing/CompanionDevicePairing` builds the dialog's filters), `ScaleScanReceiver`, `XiaomiScaleListener` (also the `CompanionPresenceObserver`), `ScaleListeningService` and its `ScaleForeground` port, `ScaleListenerWorker`, `ScaleLog` |
 | Pipeline | `ScaleWeighInIngest` (decode, fold into Room, write), `ScaleWeighInWriter` (Room to Health Connect, retries, delete) |
@@ -192,14 +193,14 @@ The BLE discovery scan the add-watch flow uses lives in `sensors/ble`, trimmed t
 
 The app-local code that nothing in the rest of the phone app sits below, in two pure-Kotlin modules (`openwatch.jvm.library`, JDK only, no Android):
 
-- `core/model` (`:core:model`): the packages `domain/model` (the device, sleep-minute, scale and activity models), `domain/preferences` (the unit and theme choices, and the `SystemUnitSystemProvider` interface) and `core/geo` (coordinate parsing); the plain values the device protocols take from the platform sources, `devices/weather/WeatherSnapshot` and `devices/notifications/NotificationMessages`; and `core/performance/RunSuspendCatching`. The calculations it once held (the sleep and walking estimators, body composition, workout energy) are [health-calculations](#health-calculations-composite-build-health-calculations)', which it takes as an `api` dependency, since the activity models carry its route and lap types.
+- `core/model` (`:core:model`): the packages `domain/model` (the device, sleep-minute, scale and activity models), `domain/preferences` (the unit and theme choices, and the `SystemUnitSystemProvider` interface) and `core/geo` (coordinate parsing); the plain values the device protocols take from the platform sources, `devices/weather/WeatherSnapshot` and `devices/notifications/NotificationMessages`, and the scan filter `devices/core/ServiceDataFilter`; and `core/performance/RunSuspendCatching`. The calculations it once held (the sleep and walking estimators, body composition, workout energy) are [health-calculations](#health-calculations-composite-build-health-calculations)', which it takes as an `api` dependency, since the activity models carry its route and lap types.
 - `core/fit` (`:core:fit`): the FIT container codec, package `core/fit`: the decoder, the encoder, the CRC, the 16-bit float. What a record means stays with the code that reads it.
 
 Package names are unchanged, so an import does not say which module a class is in. `:app` depends on both. The one piece of `domain/preferences` that reads the platform, the locale's measurement system, is the app's `core/presentation/LocaleUnitSystemProvider`, bound to the interface in `di/AppModule`. Nothing in either module is injected: they hold no Hilt module, and their classes are constructed by the app's repositories and the app's `di/` modules.
 
 The wear sleep fixtures the app's Wear OS sync tests use are health-calculations' test fixtures (`testFixtures("tech.mmarca.healthcalculations:health-calculations")`); these modules have none of their own.
 
-The modules exist for the build and for the boundary: a change elsewhere leaves their compile and test results in the build cache, and the compiler, not a test, keeps Android and the rest of the app out of them. Their tests are plain JUnit (`:core:model:test`, `:core:fit:test`, in `verifyCiUnitTest`, as is `:devices:garmin:protocol:test`), and Android lint still checks them and the protocol module (`com.android.lint` with the app's rules, each module's `lint` in `verifyCiLint`), without its API-level check (see [development.md](development.md#lint)). What does not belong here: anything with an inbound dependency from `data/`, `healthconnect/` or `features/`, resources, and Hilt wiring. The architecture ratchets walk them through `LibraryModuleRoots` in the app's architecture tests, and `LibraryModuleRootsTest` fails on a module under `core/` or `devices/` that is not listed there.
+The modules exist for the build and for the boundary: a change elsewhere leaves their compile and test results in the build cache, and the compiler, not a test, keeps Android and the rest of the app out of them. Their tests are plain JUnit (`:core:model:test`, `:core:fit:test`, in `verifyCiUnitTest`, as are `:devices:garmin:protocol:test` and `:devices:xiaomi:protocol:test`), and Android lint still checks them and the protocol modules (`com.android.lint` with the app's rules, each module's `lint` in `verifyCiLint`), without its API-level check (see [development.md](development.md#lint)). What does not belong here: anything with an inbound dependency from `data/`, `healthconnect/` or `features/`, resources, and Hilt wiring. The architecture ratchets walk them through `LibraryModuleRoots` in the app's architecture tests, and `LibraryModuleRootsTest` fails on a module under `core/` or `devices/` that is not listed there.
 
 ## Shared module `:wearlink`
 

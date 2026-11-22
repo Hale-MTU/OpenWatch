@@ -54,6 +54,7 @@ tasks.register("verifyCiUnitTest") {
         ":core:model:test",
         ":core:fit:test",
         ":devices:garmin:protocol:test",
+        ":devices:xiaomi:protocol:test",
         ":app:testCiUnitTest",
     )
 }
@@ -81,7 +82,7 @@ tasks.register("verifyCiPreflight") {
 tasks.register("verifyCiLint") {
     group = "verification"
     description = "Runs phone app and its library modules' lint for CI."
-    dependsOn(":app:lintCi", ":core:model:lint", ":core:fit:lint", ":devices:garmin:protocol:lint")
+    dependsOn(":app:lintCi", ":core:model:lint", ":core:fit:lint", ":devices:garmin:protocol:lint", ":devices:xiaomi:protocol:lint")
 }
 
 // Phone app only. The wear module has its own gate (verifyWearCi), its own job

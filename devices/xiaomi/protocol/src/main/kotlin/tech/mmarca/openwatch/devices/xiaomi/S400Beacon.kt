@@ -4,26 +4,26 @@ import tech.mmarca.openwatch.devices.core.ServiceDataFilter
 import tech.mmarca.openwatch.domain.model.ScaleReading
 
 /** One decoded broadcast of the scale: whose weigh-in it belongs to, and what it adds. */
-data class S400Frame(
+public data class S400Frame(
     val profile: Int,
     val scaleTimestamp: Long,
     val reading: ScaleReading,
 )
 
 /** What a `0xFE95` service-data advertisement turned out to be. */
-sealed interface S400BeaconResult {
+public sealed interface S400BeaconResult {
 
     /** A measurement the bind key authenticated. */
-    data class Frame(val frame: S400Frame) : S400BeaconResult
+    public data class Frame(val frame: S400Frame) : S400BeaconResult
 
     /** Not this scale: another product, a mesh or legacy frame, or bytes that do not parse. */
-    data object NotS400 : S400BeaconResult
+    public data object NotS400 : S400BeaconResult
 
     /** The scale, with nothing to trust: an idle beacon, or an object nobody signed. */
-    data object NoReading : S400BeaconResult
+    public data object NoReading : S400BeaconResult
 
     /** A measurement frame of the scale that the bind key does not open. */
-    data object BadTag : S400BeaconResult
+    public data object BadTag : S400BeaconResult
 }
 
 /**
@@ -36,13 +36,13 @@ sealed interface S400BeaconResult {
  * and capability when their control bits say so, the sealed objects, a
  * 3-byte extended counter and a 4-byte tag.
  */
-object S400Beacon {
+public object S400Beacon {
 
     /** The service the frames are advertised under, as a 128-bit UUID. */
-    const val SERVICE_UUID = "0000fe95-0000-1000-8000-00805f9b34fb"
+    public const val SERVICE_UUID: String = "0000fe95-0000-1000-8000-00805f9b34fb"
 
     /** MJTZC01YM in its three hardware revisions, and MJTZC03YM, which sends the same object. */
-    val PRODUCT_IDS: Set<Int> = setOf(0x3BD5, 0x30D9, 0x48CF, 0x4B05)
+    public val PRODUCT_IDS: Set<Int> = setOf(0x3BD5, 0x30D9, 0x48CF, 0x4B05)
 
     private const val CONTROL_ENCRYPTED = 0x0008
     private const val CONTROL_HAS_MAC = 0x0010
@@ -72,7 +72,7 @@ object S400Beacon {
      * with, and the mask that picks it out: an encrypted object, from that
      * product. The scale's idle beacons fail it, so they wake nobody.
      */
-    val scanFilters: List<ServiceDataFilter> = PRODUCT_IDS.map { productId ->
+    public val scanFilters: List<ServiceDataFilter> = PRODUCT_IDS.map { productId ->
         val measurement = CONTROL_ENCRYPTED or CONTROL_HAS_OBJECT
         ServiceDataFilter(
             data = byteArrayOf(measurement.toByte(), 0, productId.toByte(), (productId ushr 8).toByte()),
@@ -81,7 +81,7 @@ object S400Beacon {
     }
 
     /** Any frame of each product, idle beacons included: what finds a scale that is merely awake. */
-    val discoveryFilters: List<ServiceDataFilter> = PRODUCT_IDS.map { productId ->
+    public val discoveryFilters: List<ServiceDataFilter> = PRODUCT_IDS.map { productId ->
         ServiceDataFilter(
             data = byteArrayOf(0, 0, productId.toByte(), (productId ushr 8).toByte()),
             mask = byteArrayOf(0, 0, 0xFF.toByte(), 0xFF.toByte()),
@@ -89,7 +89,7 @@ object S400Beacon {
     }
 
     /** [serviceData] is the value under [SERVICE_UUID]; [address] is the advertiser's, which seeds the nonce. */
-    fun decode(serviceData: ByteArray, address: String, bindKey: ByteArray): S400BeaconResult {
+    public fun decode(serviceData: ByteArray, address: String, bindKey: ByteArray): S400BeaconResult {
         if (serviceData.size < HEADER_SIZE) return S400BeaconResult.NotS400
         val control = serviceData.u16(0)
         if (control ushr 12 < MIN_VERSION || control and CONTROL_MESH != 0) return S400BeaconResult.NotS400

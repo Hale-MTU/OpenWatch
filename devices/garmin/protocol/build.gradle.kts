@@ -14,7 +14,8 @@ plugins {
 }
 
 // Two projects named `protocol` (Garmin's and Xiaomi's) would share one module identity under
-// the common group; the vendor in the group keeps them apart.
+// the common group, and Gradle would then resolve one in place of the other without a word.
+// The vendor in the group keeps them apart.
 group = "${group}.devices.garmin"
 
 kotlin {

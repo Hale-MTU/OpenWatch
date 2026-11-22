@@ -5,5 +5,5 @@ import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 
 /** A Xiaomi S400 scale. The Xiaomi package's own question; see [XiaomiScaleFamily]. */
-val BleSensorDevice.isXiaomiScale: Boolean
+public val BleSensorDevice.isXiaomiScale: Boolean
     get() = kind == BleDeviceKind.SCALE && integration == DeviceIntegration.XIAOMI

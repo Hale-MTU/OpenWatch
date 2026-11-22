@@ -144,6 +144,8 @@ dependencies {
     implementation(project(":core:fit"))
     // The Garmin protocol, pure Kotlin; its platform half (GATT, stores, Health Connect) is here.
     implementation(project(":devices:garmin:protocol"))
+    // The Xiaomi S400 codec, pure Kotlin; the scan, Room and Health Connect side is here.
+    implementation(project(":devices:xiaomi:protocol"))
     implementation(project(":wearlink"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -230,7 +232,7 @@ tasks.withType<Test>().configureEach {
     maxHeapSize = "1g"
     // The memory budget above assumes one test task at a time. The pure modules'
     // tests take seconds; they go first rather than beside these.
-    mustRunAfter(":core:model:test", ":core:fit:test", ":devices:garmin:protocol:test")
+    mustRunAfter(":core:model:test", ":core:fit:test", ":devices:garmin:protocol:test", ":devices:xiaomi:protocol:test")
     // The architecture tests read sources and documents as plain files: this module's
     // and the others' code, both manifests, the strings, the privacy documents. None
     // of that is on the test classpath, so it is declared here; otherwise a change to
@@ -241,6 +243,7 @@ tasks.withType<Test>().configureEach {
         "scannedCoreModelMain" to "core/model/src/main",
         "scannedCoreFitMain" to "core/fit/src/main",
         "scannedGarminProtocolMain" to "devices/garmin/protocol/src/main",
+        "scannedXiaomiProtocolMain" to "devices/xiaomi/protocol/src/main",
         "scannedWearMain" to "wear/src/main",
         "scannedWearRecordingCoreMain" to "wear/recording-core/src/main",
         "scannedWearlinkMain" to "wearlink/src/main",

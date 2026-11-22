@@ -20,7 +20,8 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   - `devices/` — the device layer: `core` (ports, the radio lease, companion pairing, the
     sync port), `garmin` (the GATT client, the links, stores and wellness import around the
     protocol module), `wearos` (the
-    phone side of the watch app), `xiaomi` (the scale), `notifications`, `media`, `weather`.
+    phone side of the watch app), `xiaomi` (the scale's scan, store and writes around its codec
+    module), `notifications`, `media`, `weather`.
     No Compose, no navigation, no Hilt module.
   - `features/` — the screens: `home`, `watches`, `scales`, `healthconnect`, `settings`.
   - `healthconnect/` — `HealthConnectGateway`, the one class that touches the client, and
@@ -39,6 +40,8 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   `explicitApi()` and the app's package names: bytes, COBS, GFDI, protobuf, the multi-link
   transport, the session, file sync, the uploads and the FIT wellness decoder. Its test
   fixtures hold the FIT test bytes the app's import tests use.
+- `devices/xiaomi/protocol` (`:devices:xiaomi:protocol`) — the S400 scale's codec, the same
+  way: MiBeacon v5 framing, AES-CCM under the bind key, the weigh-in object, the scan filters.
 - `health-calculations/` — a git submodule and composite build, like `openlink/`: the health
   calculations OpenWatch and OpenVitals share (the Wear OS night and resting heart rate, body
   composition, workout and walking energy, the watch's HRV and respiratory rate from the raw

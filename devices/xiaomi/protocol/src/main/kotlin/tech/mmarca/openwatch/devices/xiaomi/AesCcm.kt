@@ -1,6 +1,5 @@
 package tech.mmarca.openwatch.devices.xiaomi
 
-import android.annotation.SuppressLint
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
 
@@ -52,7 +51,6 @@ internal object AesCcm {
     }
 
     // CCM is built on the bare block cipher: ECB here is the primitive, not the mode of the message.
-    @SuppressLint("GetInstance")
     private fun blockCipher(key: ByteArray): Cipher =
         Cipher.getInstance("AES/ECB/NoPadding").apply {
             init(Cipher.ENCRYPT_MODE, SecretKeySpec(key, "AES"))
