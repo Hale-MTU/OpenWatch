@@ -178,8 +178,15 @@ class WatchDeviceViewModelTest {
         wearOsLinkStore = wearOsLinkStore,
         families = DeviceFamilies(
             mapOf(
-                "GARMIN" to GarminFamily(repo, stateStore, OnboardGarminWatchUseCase(pairing, repo, FakeProbe()), garminLocalData),
-                "WEAROS" to WearOsFamily(wearOsLinkStore, onboardWearOsWatch),
+                "GARMIN" to GarminFamily(
+                    repo,
+                    stateStore,
+                    OnboardGarminWatchUseCase(pairing, repo, FakeProbe()),
+                    garminLocalData,
+                    GarminRealtimeStore(),
+                    notificationBridge,
+                ),
+                "WEAROS" to WearOsFamily(wearOsLinkStore, onboardWearOsWatch, wearOsCompanionManager),
             ),
         ),
     )

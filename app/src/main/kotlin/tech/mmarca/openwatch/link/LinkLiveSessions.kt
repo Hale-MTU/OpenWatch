@@ -37,10 +37,10 @@ import tech.mmarca.openlink.OpenLinkRecordingState
 import tech.mmarca.openlink.OpenLinkSample
 import tech.mmarca.openlink.OpenLinkSampleType
 import tech.mmarca.openlink.host.OpenLinkHost
+import tech.mmarca.openwatch.devices.core.LiveReadingKind
+import tech.mmarca.openwatch.devices.core.LiveReading
+import tech.mmarca.openwatch.devices.core.DeviceFamilies
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
-import tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge
-import tech.mmarca.openwatch.devices.garmin.GarminRealtimeStore
-import tech.mmarca.openwatch.devices.wearos.WearOsCompanionManager
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /** What one session is doing, for the Connected apps screen and the streaming notification. */
@@ -66,9 +66,7 @@ data class LinkSessionDevice(val id: String, val name: String, val streaming: Bo
 class LinkLiveSessions @Inject constructor(
     private val devices: LinkDevices,
     private val deviceRepository: BleDeviceRepository,
-    private val garminBridge: GarminNotificationBridge,
-    private val garminRealtime: GarminRealtimeStore,
-    private val wearOs: WearOsCompanionManager,
+    private val families: DeviceFamilies,
     private val host: Lazy<OpenLinkHost>,
     @ApplicationScope appScope: CoroutineScope,
 ) {
@@ -198,37 +196,15 @@ class LinkLiveSessions @Inject constructor(
 
     @Synchronized
     private fun stream(device: OpenLinkDevice): SharedFlow<OpenLinkSample> = streams.getOrPut(device.id) {
-        val source: Flow<OpenLinkSample> = when (device.integration) {
-            OpenLinkIntegration.GARMIN -> garminStream(device.id)
-            OpenLinkIntegration.WEAROS -> wearOsStream(device.id)
-            OpenLinkIntegration.XIAOMI -> flowOf()
+        // The family streams it; the scale is no registered device and streams nothing.
+        val source: Flow<OpenLinkSample> = flow {
+            val registered = deviceRepository.devices.firstOrNull { it.id == device.id }
+            val readings = registered?.let { families.of(it)?.liveReadings(it) } ?: return@flow
+            emitAll(readings.map { it.toSample() })
         }
         // Runs while anyone collects; a few seconds after the last collector goes, the watch's
         // stream stops. The grace covers a session and its subscription arriving apart.
         source.shareIn(scope, SharingStarted.WhileSubscribed(stopTimeoutMillis = STREAM_GRACE_MILLIS), replay = 0)
-    }
-
-    private fun garminStream(deviceId: String): Flow<OpenLinkSample> {
-        val heartRate = garminRealtime.readings
-            .distinctUntilChangedBy { it.heartRateAt }
-            .map { reading -> reading.heartRateAt?.let { at -> reading.heartRateBpm?.let { OpenLinkSample(OpenLinkSampleType.HEART_RATE, at.toEpochMilli(), it.toDouble()) } } }
-            .filterNotNull()
-        val steps = garminRealtime.readings
-            .distinctUntilChangedBy { it.stepsAt }
-            .map { reading -> reading.stepsAt?.let { at -> reading.steps?.let { OpenLinkSample(OpenLinkSampleType.STEPS, at.toEpochMilli(), it.toDouble()) } } }
-            .filterNotNull()
-        return merge(heartRate, steps)
-            .onStart { garminBridge.holdLiveForSession(deviceId, true) }
-            .onCompletion { garminBridge.holdLiveForSession(deviceId, false) }
-    }
-
-    private fun wearOsStream(deviceId: String): Flow<OpenLinkSample> = flow {
-        val device = deviceRepository.devices.firstOrNull { it.id == deviceId }
-        emitAll(
-            wearOs.liveHeartRate(device?.address, device?.bluetoothName ?: device?.displayName)
-                .filterNotNull()
-                .map { bpm -> OpenLinkSample(OpenLinkSampleType.HEART_RATE, now(), bpm.toDouble()) },
-        )
     }
 
     private fun publish(state: OpenLinkRecordingState) {
@@ -236,6 +212,15 @@ class LinkLiveSessions @Inject constructor(
     }
 
     private fun now(): Long = System.currentTimeMillis()
+
+    private fun LiveReading.toSample() = OpenLinkSample(
+        type = when (kind) {
+            LiveReadingKind.HEART_RATE -> OpenLinkSampleType.HEART_RATE
+            LiveReadingKind.STEPS -> OpenLinkSampleType.STEPS
+        },
+        atMillis,
+        value,
+    )
 
     private companion object {
         const val TAG = "LinkLiveSessions"

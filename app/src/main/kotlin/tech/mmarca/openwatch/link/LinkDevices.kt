@@ -15,9 +15,8 @@ import tech.mmarca.openlink.OpenLinkDeviceKind
 import tech.mmarca.openlink.OpenLinkIntegration
 import tech.mmarca.openlink.OpenLinkSampleType
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
-import tech.mmarca.openwatch.devices.wearos.WearOsAppStatus
-import tech.mmarca.openwatch.devices.wearos.WearOsLinkSnapshot
-import tech.mmarca.openwatch.devices.wearos.WearOsLinkStore
+import tech.mmarca.openwatch.devices.core.DeviceFamilies
+import tech.mmarca.openwatch.devices.core.DeviceFeature
 import tech.mmarca.openwatch.devices.xiaomi.ScaleListenerStatus
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleConfig
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleListener
@@ -27,15 +26,15 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /**
- * The paired devices as OpenLink shows them: watches and bike computers from the device
- * registry, with the sync state and the Wear OS link status, and the scale. Kept as a
- * StateFlow so the binder thread reads it from memory.
+ * The paired devices as OpenLink shows them: the registered devices a family owns, with what
+ * the family says they can do and whether their link is up, the sync state, and the scale.
+ * Kept as a StateFlow so the binder thread reads it from memory.
  */
 @Singleton
 class LinkDevices @Inject constructor(
     deviceRepository: BleDeviceRepository,
     syncController: DeviceSyncController,
-    wearOsLinkStore: WearOsLinkStore,
+    families: DeviceFamilies,
     scaleStore: XiaomiScaleStore,
     scaleListener: XiaomiScaleListener,
     @ApplicationScope appScope: CoroutineScope,
@@ -45,11 +44,11 @@ class LinkDevices @Inject constructor(
     val devices: StateFlow<List<OpenLinkDevice>> = combine(
         deviceRepository.devicesFlow,
         syncController.state,
-        wearOsLinkStore.snapshots,
+        families.connections,
         scaleStore.config,
         scaleListener.status,
-    ) { registered, sync, wearOs, scale, scaleStatus ->
-        linkDevices(registered, sync.syncingDeviceId, wearOs, scale, scaleStatus)
+    ) { registered, sync, connections, scale, scaleStatus ->
+        linkDevices(registered, sync.syncingDeviceId, families, connections, scale, scaleStatus)
     }.distinctUntilChanged().stateIn(scope, SharingStarted.Eagerly, emptyList())
 }
 
@@ -57,39 +56,36 @@ class LinkDevices @Inject constructor(
 internal fun linkDevices(
     registered: List<BleSensorDevice>,
     syncingDeviceId: String?,
-    wearOs: Map<String, WearOsLinkSnapshot>,
+    families: DeviceFamilies,
+    connections: Map<String, Boolean>,
     scale: XiaomiScaleConfig,
     scaleStatus: ScaleListenerStatus,
 ): List<OpenLinkDevice> {
-    val watches = registered.filter { it.isWatch || it.isBikeComputer }.mapNotNull { device ->
-        val integration = when {
-            device.isWearosWatch -> OpenLinkIntegration.WEAROS
-            device.isGarminGfdi -> OpenLinkIntegration.GARMIN
-            else -> return@mapNotNull null
-        }
-        val live = when (integration) {
-            OpenLinkIntegration.GARMIN -> setOf(OpenLinkSampleType.HEART_RATE, OpenLinkSampleType.STEPS)
-            else -> setOf(OpenLinkSampleType.HEART_RATE)
-        }
+    val watches = registered.mapNotNull { device ->
+        val family = families.of(device) ?: return@mapNotNull null
+        // The contract names its integrations; a family it has no name for stays off OpenLink until it does.
+        val integration = OpenLinkIntegration.entries.firstOrNull { it.name == family.id } ?: return@mapNotNull null
+        val features = family.features(device)
         OpenLinkDevice(
             id = device.id,
             displayName = device.displayName,
             kind = if (device.isBikeComputer) OpenLinkDeviceKind.BIKE_COMPUTER else OpenLinkDeviceKind.WATCH,
             integration = integration,
-            connection = when (integration) {
-                OpenLinkIntegration.WEAROS -> wearOs[device.id]?.let {
-                    if (it.status == WearOsAppStatus.APP_RUNNING) OpenLinkConnection.CONNECTED else OpenLinkConnection.DISCONNECTED
-                } ?: OpenLinkConnection.UNKNOWN
-                // Nothing tracks whether a Garmin link is up between syncs.
-                else -> OpenLinkConnection.UNKNOWN
+            connection = when (connections[device.id]) {
+                true -> OpenLinkConnection.CONNECTED
+                false -> OpenLinkConnection.DISCONNECTED
+                null -> OpenLinkConnection.UNKNOWN
             },
             batteryPercent = device.batteryPercent,
             batteryUpdatedAtMillis = device.batteryUpdatedAt?.toEpochMilli(),
             lastSyncedAtMillis = device.lastSyncedAt?.toEpochMilli(),
             syncing = device.id == syncingDeviceId,
-            supportsSync = true,
+            supportsSync = DeviceFeature.SYNC in features,
             supportsRecording = true,
-            liveSampleTypes = live,
+            liveSampleTypes = buildSet {
+                if (DeviceFeature.LIVE_HEART_RATE in features) add(OpenLinkSampleType.HEART_RATE)
+                if (DeviceFeature.LIVE_STEPS in features) add(OpenLinkSampleType.STEPS)
+            },
         )
     }
     val scaleDevice = scale.address?.takeIf { scale.isSetUp }?.let { address ->

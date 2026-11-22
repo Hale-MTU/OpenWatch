@@ -8,8 +8,9 @@ import tech.mmarca.openlink.OpenLinkConnection
 import tech.mmarca.openlink.OpenLinkDeviceKind
 import tech.mmarca.openlink.OpenLinkIntegration
 import tech.mmarca.openlink.OpenLinkSampleType
-import tech.mmarca.openwatch.devices.wearos.WearOsAppStatus
-import tech.mmarca.openwatch.devices.wearos.WearOsLinkSnapshot
+import tech.mmarca.openwatch.devices.core.DeviceFamilies
+import tech.mmarca.openwatch.devices.core.DeviceFamily
+import tech.mmarca.openwatch.devices.core.DeviceFeature
 import tech.mmarca.openwatch.devices.xiaomi.ScaleListenerStatus
 import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleConfig
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
@@ -20,6 +21,26 @@ import tech.mmarca.openwatch.domain.model.DeviceIntegration
 class LinkDevicesTest {
 
     private val now = Instant.parse("2026-11-08T08:00:00Z")
+
+    /** A family as OpenLink sees one: what it owns and what those devices can do. */
+    private class StandIn(
+        override val id: String,
+        private val features: Set<DeviceFeature>,
+        private val owns: (BleSensorDevice) -> Boolean,
+    ) : DeviceFamily {
+        override fun owns(device: BleSensorDevice) = owns.invoke(device)
+        override fun features(device: BleSensorDevice) = features
+        override suspend fun forget(device: BleSensorDevice, deleteHistory: Boolean) = Unit
+    }
+
+    private val garmin = StandIn(
+        "GARMIN",
+        setOf(DeviceFeature.SYNC, DeviceFeature.FIND, DeviceFeature.LIVE_HEART_RATE, DeviceFeature.LIVE_STEPS),
+    ) { it.kind != BleDeviceKind.SENSOR && (it.integration == DeviceIntegration.GARMIN || it.integration == null) }
+    private val wearOs = StandIn("WEAROS", setOf(DeviceFeature.SYNC, DeviceFeature.LIVE_HEART_RATE)) {
+        it.kind == BleDeviceKind.WATCH && it.integration == DeviceIntegration.WEAROS
+    }
+    private val families = DeviceFamilies(mapOf("GARMIN" to garmin, "WEAROS" to wearOs))
 
     private fun device(
         id: String,
@@ -51,7 +72,8 @@ class LinkDevicesTest {
                 device("strap", BleDeviceKind.SENSOR, capabilities = setOf(BleSensorCapability.HEART_RATE)),
             ),
             syncingDeviceId = "venu",
-            wearOs = mapOf("pixel" to WearOsLinkSnapshot(WearOsAppStatus.APP_RUNNING, checkedAt = now)),
+            families = families,
+            connections = mapOf("pixel" to true),
             scale = XiaomiScaleConfig(hasKey = true, address = "11:22:33:44:55:66", name = "Bathroom"),
             scaleStatus = ScaleListenerStatus.LISTENING,
         )
@@ -73,16 +95,32 @@ class LinkDevicesTest {
 
     @Test
     fun `a scale without its key is not listed yet`() {
-        val devices = linkDevices(emptyList(), null, emptyMap(), XiaomiScaleConfig(hasKey = false, address = "11:22"), ScaleListenerStatus.OFF)
+        val devices = linkDevices(emptyList(), null, families, emptyMap(), XiaomiScaleConfig(hasKey = false, address = "11:22"), ScaleListenerStatus.OFF)
 
         assertTrue(devices.isEmpty())
     }
 
     @Test
     fun `a legacy watch entry without an integration counts as Garmin`() {
-        val devices = linkDevices(listOf(device("fenix", BleDeviceKind.WATCH)), null, emptyMap(), XiaomiScaleConfig(), ScaleListenerStatus.OFF)
+        val devices = linkDevices(listOf(device("fenix", BleDeviceKind.WATCH)), null, families, emptyMap(), XiaomiScaleConfig(), ScaleListenerStatus.OFF)
 
         assertEquals(OpenLinkIntegration.GARMIN, devices.single().integration)
         assertEquals(OpenLinkConnection.UNKNOWN, devices.single().connection)
+    }
+
+    @Test
+    fun `a family the contract has no name for stays off OpenLink until it does`() {
+        val acme = StandIn("ACME", setOf(DeviceFeature.SYNC)) { it.kind == BleDeviceKind.WATCH }
+
+        val devices = linkDevices(
+            listOf(device("band", BleDeviceKind.WATCH)),
+            null,
+            DeviceFamilies(mapOf("ACME" to acme)),
+            emptyMap(),
+            XiaomiScaleConfig(),
+            ScaleListenerStatus.OFF,
+        )
+
+        assertTrue(devices.isEmpty())
     }
 }

@@ -72,12 +72,9 @@ class PackageDirectionTest {
         val Integrations = setOf("garmin", "wearos", "xiaomi")
         val BelowIntegrations = setOf("data", "healthconnect", "core", "comaps", "activityimport", "sensors")
 
-        /** OpenLink still names the integrations; Phase 2's integration descriptor removes these. */
+        /** The scale is no registered device yet, so OpenLink lists it itself until it joins the registry. */
         val Allowed = setOf(
-            "link/LinkDevices.kt -> devices.wearos",
             "link/LinkDevices.kt -> devices.xiaomi",
-            "link/LinkLiveSessions.kt -> devices.garmin",
-            "link/LinkLiveSessions.kt -> devices.wearos",
         )
     }
 }

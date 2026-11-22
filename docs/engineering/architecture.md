@@ -217,13 +217,15 @@ recording sessions and live readings.
   per call by `OpenLinkHostCore` from the caller's signing certificate. `res/values/openlink.xml` lists the certificates trusted without asking
   (OpenVitals' release upload key and its Play app-signing key); any other app waits on the Connected apps screen.
 - `OpenWatchLinkCapabilities` answers from memory on the binder thread: `LinkDevices` (a
-  StateFlow over the registry, the sync controller, the Wear OS link store and the scale),
+  StateFlow over the registry, each device's family for what it can do and whether its link is
+  up, the sync controller and the scale; a family the contract has no integration name for is
+  not listed),
   `LinkProfileSync` (last writer wins, stamped in `openlink_profile`), and
   `LinkLiveSessions`.
 - A recording session cannot start a workout on either watch; it keeps the watch's live
-  readings flowing (a Garmin held link with its heart-rate and steps streams on, through
-  `GarminNotificationBridge.holdLiveForSession`, without touching the user's switch; the
-  Wear OS app's live heart rate) and reports `RECORDING` on the first reading. A live
+  readings flowing, from the device's family (`DeviceFamily.liveReadings`: a Garmin held link
+  with its heart-rate and steps streams on, through `GarminNotificationBridge.holdLiveForSession`,
+  without touching the user's switch; the Wear OS app's live heart rate) and reports `RECORDING` on the first reading. A live
   subscription batches those readings once a second to the app that owns the session.
 - A pending app gets no card on the home screen: any app can say hello, and `MainActivity`
   is exported, so a card could be raised from outside. Pending apps head the Connected apps
