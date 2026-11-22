@@ -93,9 +93,10 @@ and javadoc jars, which only an IDE sync downloads, are trusted by name.
 
 `app/src/main/res/values*/strings.xml` came from OpenVitals, trimmed to the keys this code
 references. `scripts/extract-strings.py --source <openvitals checkout>` redoes the trim after
-more code is copied over; `scripts/verify-translations.py` checks every locale for extra keys,
-placeholder and plural mismatches. The strings OpenWatch adds of its own live in `values/`
-only, until a translation arrives.
+more code is copied over. `scripts/verify-translations.py` (the `verifyTranslations` task)
+checks every locale of the phone app and of the watch app (`wear/src/main/res`) against that
+app's English file: extra keys, and placeholder and plural mismatches. Both apps ship the same
+languages; a string added between releases shows in English until the release translates it.
 
 ## The Watch App
 

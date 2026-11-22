@@ -11,8 +11,9 @@ import sys
 import xml.etree.ElementTree as ET
 
 
-RES_DIR = pathlib.Path("app/src/main/res")
-BASE_FILE = RES_DIR / "values" / "strings.xml"
+# The phone app and the watch app each ship their own strings, and each locale file is
+# checked against the English file of its own app.
+RES_DIRS = (pathlib.Path("app/src/main/res"), pathlib.Path("wear/src/main/res"))
 # Flags, width and precision are part of the specifier, and a check that cannot
 # see them cannot see the difference between "%1$.1f" and "%1$.1d" — the second
 # throws IllegalFormatPrecisionException the moment the string is drawn. The
@@ -231,16 +232,19 @@ def validate_locale(path: pathlib.Path, base_entries: dict[str, ResourceEntry]) 
 
 
 def main() -> int:
-    base_entries, errors = parse_resource_file(BASE_FILE)
-    if errors:
-        for error in errors:
-            print(error, file=sys.stderr)
-        return 1
-
-    locale_files = sorted(RES_DIR.glob("values-*/strings.xml"))
+    locale_count = 0
     all_errors: list[str] = []
-    for path in locale_files:
-        all_errors.extend(validate_locale(path, base_entries))
+    for res_dir in RES_DIRS:
+        base_entries, errors = parse_resource_file(res_dir / "values" / "strings.xml")
+        if errors:
+            for error in errors:
+                print(error, file=sys.stderr)
+            return 1
+
+        locale_files = sorted(res_dir.glob("values-*/strings.xml"))
+        locale_count += len(locale_files)
+        for path in locale_files:
+            all_errors.extend(validate_locale(path, base_entries))
 
     if all_errors:
         print("Translation validation failed:", file=sys.stderr)
@@ -249,7 +253,7 @@ def main() -> int:
         return 1
 
     print(
-        f"Translation validation passed for {len(locale_files)} locale files "
+        f"Translation validation passed for {locale_count} locale files "
         f"with coverage greater than {MIN_TRANSLATION_COVERAGE:.0%}."
     )
     return 0
