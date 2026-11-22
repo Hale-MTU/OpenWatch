@@ -53,6 +53,12 @@ android {
         compose = true
     }
 
+    lint {
+        // As on the phone: a string added between releases ships in English until the release
+        // translates it, and scripts/verify-translations.py checks what can break at run time.
+        disable += "MissingTranslation"
+    }
+
     // The store tests run twice: on the JVM under Robolectric, in every watch gate, and on a
     // watch as instrumented tests, against the watch's own SQLite.
     sourceSets.getByName("test").kotlin.directories.add("src/sharedTest/kotlin")

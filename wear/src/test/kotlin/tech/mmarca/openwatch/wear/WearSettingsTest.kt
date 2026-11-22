@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.wear
 import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorManager
+import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
@@ -13,6 +14,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowSensor
+import tech.mmarca.openwatch.wearlink.HeartRateInterval
 
 /** The sleep hold's default, and what counts as a choice that outlives it. */
 @RunWith(AndroidJUnit4::class)
@@ -56,6 +58,21 @@ class WearSettingsTest {
         assertFalse(WearSettings.syncedSleepHold(context))
         WearSettings.setSyncedSleepHold(context, true)
         assertTrue(WearSettings.syncedSleepHold(context))
+    }
+
+    @Test
+    fun `the settings state follows a write from the phone and one from the watch`() {
+        val settings = WearSettingsState(context)
+        assertEquals(HeartRateInterval.EVERY_10_SECONDS, settings.state.value.heartRateDay)
+
+        // The phone's SET_PREF writes every setting at once.
+        WearSettings.write(context, WearSettings.read(context).copy(heartRateDay = HeartRateInterval.POWER_SAVE))
+        shadowOf(Looper.getMainLooper()).idle()
+        assertEquals(HeartRateInterval.POWER_SAVE, settings.state.value.heartRateDay)
+
+        WearSettings.setSpo2AtNight(context, true)
+        shadowOf(Looper.getMainLooper()).idle()
+        assertTrue(settings.state.value.spo2AtNight)
     }
 
     private fun addHeartRateSensor(wakeUp: Boolean) {

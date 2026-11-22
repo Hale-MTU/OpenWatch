@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import kotlinx.coroutines.flow.StateFlow
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateSource
 import tech.mmarca.openwatch.wear.samsung.SamsungIbiSource
@@ -60,6 +61,9 @@ internal class WearGraph(private val app: Application) {
     val secretKey = WearSecretKey()
     val phoneRequests: WearPhoneRequests by lazy { WearPhoneRequests(app) }
     val store: MetricStore by lazy { MetricStore(app) }
+
+    /** The settings as they change, on the watch or from the phone. The first read loads their file: off the main thread. */
+    val settings: StateFlow<WatchPreferences> by lazy { WearSettingsState(app).state }
 
     val trust: WearTrustStore by lazy {
         WearTrustStore(app, linkState, secretKey).also { it.onPending = { pending -> phoneRequests.notify(pending) } }

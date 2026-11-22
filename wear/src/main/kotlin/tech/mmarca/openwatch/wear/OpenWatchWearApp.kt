@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.wear
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.wear.compose.material3.AppScaffold
@@ -12,16 +13,25 @@ import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
  * The whole watch UI: theme, scaffold and navigation. It renders [state];
- * nothing here reads a sensor. The dashboard opens the workout recorder's own
- * screen ([onStartWorkout]) and the link and recorder status ([statusScreen]).
+ * nothing here reads a sensor. The dashboard opens the workout
+ * ([workoutScreen]) and the link and recorder status ([statusScreen]).
+ *
+ * A running workout, or a saved one whose summary is still open, brings the
+ * workout forward when the app opens ([workoutActive]) and when the wearer
+ * asks for it from outside the app, as from the watch face pill
+ * ([workoutRequests]). Swiping it away while it runs leaves the recording
+ * running; the dashboard's button opens it again.
  */
 @Composable
 fun OpenWatchWearApp(
     state: WearUiState,
-    /** Opens the workout recorder's own screen, which picks the sport. */
-    onStartWorkout: () -> Unit = {},
-    /** Link and recorder status, permissions and paired phones; the activity owns its stores. */
-    statusScreen: @Composable () -> Unit = {},
+    workoutActive: Boolean = false,
+    /** Bumped each time the workout is asked for from outside the app. */
+    workoutRequests: Int = 0,
+    /** Link and recorder status, permissions and paired phones; it can open the workout. */
+    statusScreen: @Composable (onOpenWorkout: () -> Unit) -> Unit = {},
+    /** The workout, which closes itself when the wearer leaves the picker or the summary. */
+    workoutScreen: @Composable (onClose: () -> Unit) -> Unit = {},
 ) {
     // The nav graph is built once, so every destination reads the latest
     // state through this holder instead of a value captured at build time.
@@ -31,6 +41,7 @@ fun OpenWatchWearApp(
         // AppScaffold draws the time once, above every screen.
         AppScaffold {
             val navController = rememberSwipeDismissableNavController()
+            val openWorkout = { navController.navigate(WearRoutes.WORKOUT) { launchSingleTop = true } }
             SwipeDismissableNavHost(
                 navController = navController,
                 startDestination = WearRoutes.DASHBOARD,
@@ -40,11 +51,15 @@ fun OpenWatchWearApp(
                         tiles = MetricTile.DefaultTiles.filter { it in currentState.availableMetrics },
                         metrics = currentState.metrics,
                         unitSystem = currentState.preferences.unitSystem,
-                        onStartActivity = onStartWorkout,
+                        onStartActivity = openWorkout,
                         onOpenStatus = { navController.navigate(WearRoutes.STATUS) },
                     )
                 }
-                composable(WearRoutes.STATUS) { statusScreen() }
+                composable(WearRoutes.STATUS) { statusScreen(openWorkout) }
+                composable(WearRoutes.WORKOUT) { workoutScreen { navController.popBackStack() } }
+            }
+            LaunchedEffect(workoutActive, workoutRequests) {
+                if (workoutActive && navController.currentDestination?.route != WearRoutes.WORKOUT) openWorkout()
             }
         }
     }

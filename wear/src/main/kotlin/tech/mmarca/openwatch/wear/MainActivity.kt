@@ -1,6 +1,5 @@
 package tech.mmarca.openwatch.wear
 
-import tech.mmarca.openwatch.wear.workout.WorkoutScreen
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -9,13 +8,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
+import tech.mmarca.openwatch.wear.features.status.StatusScreen
+import tech.mmarca.openwatch.wear.workout.WorkoutScreen
 
 /**
  * The watch app: today's dashboard, with the workout recorder and the link
@@ -29,12 +27,12 @@ class MainActivity : ComponentActivity() {
     private val viewModel: WearAppViewModel by viewModels()
     private val graph by lazy { wearGraph }
 
-    private var permissionsVersion by mutableStateOf(0)
+    /** Bumped when the watch face pill opens the app again: a running workout comes forward. */
+    private var workoutRequests by mutableIntStateOf(0)
 
     private val requestPermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) {
-        permissionsVersion++
         WearAppService.startIfPermitted(this)
         // The background grant is asked on its own, and only after the foreground one.
         requestBackgroundHeartRateIfNeeded()
@@ -46,58 +44,32 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            // A running or just finished workout takes the screen.
             val workout by graph.workoutState.state.collectAsStateWithLifecycle()
-            var workoutOpen by remember { mutableStateOf(false) }
-            if (workoutOpen || workout.running || workout.finished) {
-                OpenWatchWearTheme { WorkoutScreen(graph.workoutState, onClose = { workoutOpen = false }) }
-                return@setContent
-            }
             OpenWatchWearApp(
                 state = uiState,
-                onStartWorkout = { workoutOpen = true },
-                statusScreen = { StatusScreen(onOpenWorkout = { workoutOpen = true }) },
+                workoutActive = workout.running || workout.finished,
+                workoutRequests = workoutRequests,
+                statusScreen = { onOpenWorkout ->
+                    StatusScreen(
+                        onGrant = ::requestMissingPermissions,
+                        onOpenWorkout = onOpenWorkout,
+                        onOpenBluetoothSettings = ::openBluetoothSettings,
+                    )
+                },
+                workoutScreen = { onClose -> WorkoutScreen(onClose) },
             )
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Also catches a grant made in the system settings.
-        permissionsVersion++
-        WearAppService.startIfPermitted(this)
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        workoutRequests++
     }
 
-    /** What the watch records, whether the phone can reach it, and which phones may. */
-    @Composable
-    private fun StatusScreen(onOpenWorkout: () -> Unit) {
-        val store = graph.store
-        WatchStatusScreen(
-            linkState = graph.linkState,
-            onOpenWorkout = onOpenWorkout,
-            permissionsVersion = permissionsVersion,
-            hasHeartRate = { WearPermissions.hasHeartRate(this) },
-            hasBluetooth = { WearPermissions.hasBluetooth(this) },
-            hasSteps = { WearPermissions.hasActivityRecognition(this) },
-            hasStepCounter = StepRecorder.hasStepCounter(this),
-            readLatest = { store.latest(WearMetrics.HEART_RATE) },
-            readCount = { store.count(WearMetrics.HEART_RATE) },
-            readMinuteCount = { store.count(WearMetrics.SLEEP_MINUTES) },
-            readStepMinuteCount = { store.count(WearMetrics.STEPS) },
-            ppgLogAvailable = graph.ppgLogger.isAvailable,
-            readSamsungDiagnostics = { SamsungDiagnostics.consentOn(contentResolver) },
-            onTogglePpgLog = { WearAppService.togglePpgLog(this) },
-            onGrant = ::requestMissingPermissions,
-            onAllow = { pending ->
-                graph.trust.trust(pending.address, pending.token, pending.name)
-                graph.phoneRequests.cancel()
-            },
-            onBlock = { pending ->
-                graph.trust.block(pending.address)
-                graph.phoneRequests.cancel()
-            },
-            onOpenBluetoothSettings = ::openBluetoothSettings,
-        )
+    override fun onResume() {
+        super.onResume()
+        // Also catches a grant made in the system settings; the status screen reads the grants again by itself.
+        WearAppService.startIfPermitted(this)
     }
 
     private fun openBluetoothSettings() {

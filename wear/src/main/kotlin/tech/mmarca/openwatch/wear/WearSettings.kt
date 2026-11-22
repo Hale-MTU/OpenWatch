@@ -1,8 +1,12 @@
 package tech.mmarca.openwatch.wear
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.hardware.Sensor
 import android.hardware.SensorManager
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
 
@@ -165,5 +169,27 @@ internal object WearSettings {
         prefs(context).edit().putString(key, source.name).apply()
     }
 
-    private fun prefs(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    internal fun prefs(context: Context): SharedPreferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+}
+
+/**
+ * Every setting as one [StateFlow] that follows each write: the wearer's on
+ * the status screen and the phone's `SET_PREF` alike, since both end in
+ * [WearSettings]' preferences file. One per process ([WearGraph.settings]);
+ * build it off the main thread, since the first read loads the file.
+ */
+internal class WearSettingsState(private val context: Context) {
+
+    private val flow = MutableStateFlow(WearSettings.read(context))
+
+    val state: StateFlow<WatchPreferences> = flow.asStateFlow()
+
+    // SharedPreferences keeps its listeners weakly: this field holds this one. Called on the main thread.
+    private val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> flow.value = WearSettings.read(context) }
+
+    init {
+        WearSettings.prefs(context).registerOnSharedPreferenceChangeListener(listener)
+        // A write between the first read and the registration is not missed.
+        flow.value = WearSettings.read(context)
+    }
 }
