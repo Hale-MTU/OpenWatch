@@ -308,15 +308,104 @@ class GarminProtobufTest {
         assertArrayEquals(b(0x2A), result)
     }
 
+    // Outbound chunking.
+
+    /** The envelope of a frame we sent: request id, offset, total, and the chunk's bytes. */
+    private data class Envelope(val type: Int, val requestId: Int, val offset: Int, val total: Int, val bytes: ByteArray)
+
+    private fun envelope(frame: ByteArray): Envelope {
+        val parsed = GarminGfdiFrame.parse(frame)
+        val reader = GarminByteReader(parsed.payload)
+        val requestId = reader.readShort()
+        val offset = reader.readInt().toInt()
+        val total = reader.readInt().toInt()
+        val length = reader.readInt().toInt()
+        return Envelope(parsed.messageType, requestId, offset, total, parsed.payload.copyOfRange(14, 14 + length))
+    }
+
+    private fun accepted(type: Int, requestId: Int, offset: Long?) = GarminProtobufStatus(
+        originalMessageType = type,
+        status = GarminStatus.ACK,
+        requestId = requestId,
+        dataOffset = offset,
+        chunkStatus = 0,
+        errorCode = 0,
+    )
+
     @Test
-    fun `an oversized payload is refused rather than truncated`() = runTest {
-        val transport = GarminProtobufTransport(send = { })
-        try {
-            transport.request(ByteArray(400))
-            fail("expected IllegalArgumentException")
-        } catch (expected: IllegalArgumentException) {
-            // Expected.
-        }
+    fun `a response over the chunk size goes a chunk at a time, each once the watch accepts the last`() = runTest {
+        // The vívoactive 5 NAKs a 547 B answer sent whole, and asks again a minute later.
+        val sent = mutableListOf<Envelope>()
+        val transport = GarminProtobufTransport(send = { sent += envelope(it) })
+        val payload = ByteArray(547) { it.toByte() }
+
+        transport.respond(16082, payload)
+
+        assertEquals(1, sent.size)
+        assertEquals(Triple(0, 547, GarminProtobufTransport.MAX_CHUNK_SIZE), Triple(sent[0].offset, sent[0].total, sent[0].bytes.size))
+        assertEquals(GarminMessageId.PROTOBUF_RESPONSE, sent[0].type)
+
+        // A repeat of nothing yet sent, or an ack for a request of the other direction, moves nothing.
+        transport.handleStatus(accepted(GarminMessageId.PROTOBUF_RESPONSE, 16082, offset = 375))
+        transport.handleStatus(accepted(GarminMessageId.PROTOBUF_REQUEST, 16082, offset = 0))
+        assertEquals(1, sent.size)
+
+        transport.handleStatus(accepted(GarminMessageId.PROTOBUF_RESPONSE, 16082, offset = 0))
+        assertEquals(2, sent.size)
+        assertEquals(Triple(375, 547, 172), Triple(sent[1].offset, sent[1].total, sent[1].bytes.size))
+        assertArrayEquals(payload, sent[0].bytes + sent[1].bytes)
+
+        // The last chunk accepted, the message is done: a late repeat of either ack sends nothing.
+        transport.handleStatus(accepted(GarminMessageId.PROTOBUF_RESPONSE, 16082, offset = 375))
+        transport.handleStatus(accepted(GarminMessageId.PROTOBUF_RESPONSE, 16082, offset = 0))
+        assertEquals(2, sent.size)
+    }
+
+    @Test
+    fun `a request over the chunk size goes in chunks and its reply still finds it`() = runTest {
+        val sent = mutableListOf<Envelope>()
+        lateinit var transport: GarminProtobufTransport
+        transport = GarminProtobufTransport(send = { frame ->
+            // The transport's own ack of the reply is no request envelope.
+            if (GarminGfdiFrame.parse(frame).messageType != GarminMessageId.PROTOBUF_REQUEST) return@GarminProtobufTransport
+            val message = envelope(frame)
+            sent += message
+            if (message.offset + message.bytes.size < message.total) {
+                transport.handleStatus(accepted(message.type, message.requestId, message.offset.toLong()))
+            } else {
+                transport.handleInbound(reply(message.requestId, b(0x62, 0x00)))
+            }
+        })
+
+        val result = transport.request(ByteArray(800) { 7 })
+
+        assertArrayEquals(b(0x62, 0x00), result)
+        assertEquals(listOf(0, 375, 750), sent.map { it.offset })
+        assertEquals(800, sent.sumOf { it.bytes.size })
+    }
+
+    @Test
+    fun `a chunk the watch refuses ends the message there`() = runTest {
+        val sent = mutableListOf<Envelope>()
+        val transport = GarminProtobufTransport(send = { sent += envelope(it) })
+
+        transport.respond(9, ByteArray(800))
+        transport.handleStatus(
+            GarminProtobufStatus(GarminMessageId.PROTOBUF_RESPONSE, GarminStatus.ACK, 9, dataOffset = 0, chunkStatus = 1, errorCode = 0),
+        )
+        transport.handleStatus(accepted(GarminMessageId.PROTOBUF_RESPONSE, 9, offset = 0))
+
+        assertEquals(1, sent.size)
+    }
+
+    @Test
+    fun `a message within the chunk size goes whole, as before`() = runTest {
+        val sent = mutableListOf<Envelope>()
+        val transport = GarminProtobufTransport(send = { sent += envelope(it) })
+
+        transport.respond(5, ByteArray(GarminProtobufTransport.MAX_CHUNK_SIZE))
+
+        assertEquals(Triple(0, 375, 375), Triple(sent.single().offset, sent.single().total, sent.single().bytes.size))
     }
 
     // Unsolicited chunking.

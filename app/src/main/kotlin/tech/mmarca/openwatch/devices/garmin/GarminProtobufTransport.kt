@@ -10,7 +10,13 @@ import kotlinx.coroutines.withTimeoutOrNull
  * One protobuf exchange with the watch, over GFDI messages 5043/5044. The
  * envelope is `[u16 requestId][u32 dataOffset][u32 totalLength]
  * [u32 chunkLength][bytes]`; replies are matched by request id.
- * Chunking is implemented for receiving only. Sending over the chunk size throws.
+ *
+ * A message over [MAX_CHUNK_SIZE] goes in chunks, both ways. One coming in is
+ * held by offset until complete, each chunk acknowledged at its own offset.
+ * One going out is sent a chunk at a time: the next once the watch accepts
+ * the last at its offset. A vívoactive 5 answers a frame past its packet
+ * size with a NAK for message 65535 and asks again a minute later, so an
+ * oversized message was never just slow, it was lost.
  */
 class GarminProtobufTransport(
     /** Hands a built GFDI frame to the layer below. */
@@ -24,7 +30,7 @@ class GarminProtobufTransport(
     class RejectedException(message: String) : Exception(message)
 
     companion object {
-        /** The largest payload the watch accepts in one message. */
+        /** The largest payload the watch accepts in one message: a chunk's size, both ways. */
         const val MAX_CHUNK_SIZE = 375
 
         /** How long to wait for a reply. An unanswered request must not leave a spinner forever. */
@@ -49,6 +55,17 @@ class GarminProtobufTransport(
      */
     private val incoming = mutableMapOf<Int, MutableMap<Long, ByteArray>>()
 
+    /** A message going out in chunks, and the offset of the chunk the watch has yet to accept. */
+    private class Outgoing(val payload: ByteArray) {
+        var sentOffset = 0
+    }
+
+    /**
+     * Messages going out in chunks, by message type and request id: a response carries the
+     * watch's id and a request ours, so the id alone could name two.
+     */
+    private val outgoing = mutableMapOf<Pair<Int, Int>, Outgoing>()
+
     /** Sends [payload] as a `Smart` message. Returns the reply, or null on timeout. */
     suspend fun request(
         payload: ByteArray,
@@ -56,11 +73,6 @@ class GarminProtobufTransport(
         timeout: Duration? = null,
         acceptUnmatched: ((ByteArray) -> Boolean)? = null,
     ): ByteArray? {
-        require(payload.size <= MAX_CHUNK_SIZE) {
-            "Protobuf request is ${payload.size}B, over the $MAX_CHUNK_SIZE B " +
-                "the watch accepts in one message, and outbound chunking is " +
-                "not implemented."
-        }
         val requestId = nextRequestId()
         val deferred = CompletableDeferred<ByteArray>()
         pending[requestId] = deferred
@@ -70,7 +82,7 @@ class GarminProtobufTransport(
             "[GARMIN-PB] → ${label ?: "request"} #$requestId (${payload.size}B)",
         )
         try {
-            send(frame(GarminMessageId.PROTOBUF_REQUEST, requestId, payload))
+            sendMessage(GarminMessageId.PROTOBUF_REQUEST, requestId, payload)
             val reply = withTimeoutOrNull(timeout ?: REPLY_TIMEOUT) { deferred.await() }
             if (reply == null) {
                 GarminLog.log(
@@ -83,18 +95,16 @@ class GarminProtobufTransport(
             pending.remove(requestId)
             unmatchedMatchers.remove(requestId)
             incoming.remove(requestId)
+            outgoing.remove(GarminMessageId.PROTOBUF_REQUEST to requestId)
         }
     }
 
     suspend fun sendUnanswered(payload: ByteArray, label: String? = null) {
-        require(payload.size <= MAX_CHUNK_SIZE) {
-            "Protobuf request is ${payload.size}B, over the $MAX_CHUNK_SIZE B limit"
-        }
         val requestId = nextRequestId()
         GarminLog.log(
             "[GARMIN-PB] → ${label ?: "request"} #$requestId (${payload.size}B, no wait)",
         )
-        send(frame(GarminMessageId.PROTOBUF_REQUEST, requestId, payload))
+        sendMessage(GarminMessageId.PROTOBUF_REQUEST, requestId, payload)
     }
 
     /**
@@ -177,8 +187,13 @@ class GarminProtobufTransport(
         GarminLog.log("[GARMIN-PB] watch rejects extended acks; using generic")
     }
 
-    fun handleStatus(status: GarminProtobufStatus) {
-        if (status.accepted) return
+    suspend fun handleStatus(status: GarminProtobufStatus) {
+        val key = status.requestId?.let { status.originalMessageType to it }
+        if (status.accepted) {
+            key?.let { sendNextChunk(it, status.dataOffset) }
+            return
+        }
+        key?.let(outgoing::remove)
         val detail = buildString {
             append(status.status.name)
             status.errorCode?.let { append(" protobufError=").append(it) }
@@ -223,7 +238,36 @@ class GarminProtobufTransport(
     /** Answers a watch-initiated request under the id the watch chose. */
     suspend fun respond(requestId: Int, payload: ByteArray) {
         GarminLog.log("[GARMIN-PB] → response #$requestId (${payload.size}B)")
-        send(frame(GarminMessageId.PROTOBUF_RESPONSE, requestId, payload))
+        sendMessage(GarminMessageId.PROTOBUF_RESPONSE, requestId, payload)
+    }
+
+    /** [payload] whole, or its first chunk when it is over [MAX_CHUNK_SIZE]; the rest follow the acks. */
+    private suspend fun sendMessage(messageType: Int, requestId: Int, payload: ByteArray) {
+        if (payload.size <= MAX_CHUNK_SIZE) {
+            send(frame(messageType, requestId, payload))
+            return
+        }
+        outgoing[messageType to requestId] = Outgoing(payload)
+        val chunks = (payload.size + MAX_CHUNK_SIZE - 1) / MAX_CHUNK_SIZE
+        GarminLog.log("[GARMIN-PB] → #$requestId in $chunks chunks")
+        send(chunkFrame(messageType, requestId, payload, offset = 0))
+    }
+
+    /**
+     * The watch accepted a chunk at [ackedOffset]: the next goes, or the message is done. An
+     * ack for any other offset, a late repeat, moves nothing. A short ack that names no
+     * offset is taken for the chunk last sent.
+     */
+    private suspend fun sendNextChunk(key: Pair<Int, Int>, ackedOffset: Long?) {
+        val message = outgoing[key] ?: return
+        if (ackedOffset != null && ackedOffset != message.sentOffset.toLong()) return
+        val next = message.sentOffset + MAX_CHUNK_SIZE
+        if (next >= message.payload.size) {
+            outgoing.remove(key)
+            return
+        }
+        message.sentOffset = next
+        send(chunkFrame(key.first, key.second, message.payload, offset = next))
     }
 
     /** Fails every outstanding request, so a dropped link does not wait out the timeout. */
@@ -234,6 +278,7 @@ class GarminProtobufTransport(
         pending.clear()
         unmatchedMatchers.clear()
         incoming.clear()
+        outgoing.clear()
     }
 
     private fun nextRequestId(): Int {
@@ -241,13 +286,18 @@ class GarminProtobufTransport(
         return lastRequestId
     }
 
-    private fun frame(messageType: Int, requestId: Int, payload: ByteArray): ByteArray {
+    private fun frame(messageType: Int, requestId: Int, payload: ByteArray): ByteArray =
+        chunkFrame(messageType, requestId, payload, offset = 0)
+
+    /** The chunk of [payload] at [offset], at most [MAX_CHUNK_SIZE] long, in its envelope. */
+    private fun chunkFrame(messageType: Int, requestId: Int, payload: ByteArray, offset: Int): ByteArray {
+        val end = minOf(offset + MAX_CHUNK_SIZE, payload.size)
         val writer = GarminByteWriter()
             .writeShort(requestId)
-            .writeInt(0) // dataOffset — single chunk
+            .writeInt(offset)
             .writeInt(payload.size) // total
-            .writeInt(payload.size) // this chunk
-            .writeBytes(payload)
+            .writeInt(end - offset) // this chunk
+            .writeBytes(payload.copyOfRange(offset, end))
         return GarminGfdiFrame.build(messageType, writer.toBytes())
     }
 }
