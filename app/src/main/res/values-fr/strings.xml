@@ -474,10 +474,6 @@
     <string name="home_health_connect_body">Ce qu\'OpenWatch peut lire et écrire</string>
     <string name="home_settings">Paramètres</string>
     <string name="home_settings_body">Profil corporel, accès aux notifications, à propos</string>
-    <string name="home_watch_sync">Synchroniser la montre</string>
-    <string name="home_watch_live_heart_rate">%1$d bpm en direct</string>
-    <string name="home_watch_live_steps">%1$d pas</string>
-    <string name="home_watch_battery">Batterie %1$d%%</string>
     <string name="hc_setup_title">Santé Connect</string>
     <string name="hc_setup_intro">OpenWatch copie ce que votre montre et votre balance enregistrent dans Santé Connect, où OpenVitals et d\'autres applications le lisent. Rien ne quitte le téléphone : l\'application n\'a pas d\'autorisation Internet.</string>
     <string name="hc_setup_permissions_title">Autorisations</string>
@@ -530,11 +526,6 @@
     <string name="connected_apps_capability_profile">Partager votre profil corporel (année de naissance, sexe, taille, poids) avec OpenWatch, dans les deux sens</string>
     <string name="connected_apps_capability_recording">Garder votre montre en diffusion pendant qu\'elle enregistre une activité</string>
     <string name="connected_apps_capability_live">Recevoir la fréquence cardiaque et les pas de votre montre pendant l\'enregistrement</string>
-    <plurals name="home_watch_more">
-        <item quantity="one">%1$s +%2$d</item>
-        <item quantity="many">%1$s +%2$d</item>
-        <item quantity="other">%1$s +%2$d</item>
-    </plurals>
     <string name="settings_watch_wearos_companion_required">Android n\'a pas associé la montre à OpenWatch, elle n\'a donc pas été ajoutée. OpenWatch a besoin de cette association pour enregistrer les entraînements qu\'une autre application lance sur la montre. Appuyez de nouveau sur Appairer et acceptez la demande.</string>
     <string name="settings_watch_wearos_companion_missing">Android n\'a pas associé cette montre à OpenWatch. Sans cette association, OpenWatch ne peut pas enregistrer les entraînements qu\'une autre application lance sur la montre.</string>
     <string name="settings_watch_wearos_companion_link">Associer la montre</string>

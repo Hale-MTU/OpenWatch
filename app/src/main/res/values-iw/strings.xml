@@ -8,15 +8,6 @@
     <string name="home_health_connect_body">מה מותר ל-OpenWatch לקרוא ולכתוב</string>
     <string name="home_settings">הגדרות</string>
     <string name="home_settings_body">פרופיל הגוף, גישה להתראות, אודות</string>
-    <string name="home_watch_sync">סנכרון השעון</string>
-    <string name="home_watch_live_heart_rate">%1$d פעימות לדקה בזמן אמת</string>
-    <string name="home_watch_live_steps">%1$d צעדים</string>
-    <string name="home_watch_battery">סוללה %1$d%%</string>
-    <plurals name="home_watch_more">
-        <item quantity="one">%1$s +%2$d</item>
-        <item quantity="two">%1$s +%2$d</item>
-        <item quantity="other">%1$s +%2$d</item>
-    </plurals>
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">את מה שהשעון והמשקל שלך מתעדים, OpenWatch מעתיק אל Health Connect, ומשם OpenVitals ואפליקציות אחרות קוראים אותו. שום דבר לא יוצא מהטלפון: לאפליקציה אין הרשאת גישה לאינטרנט.</string>
     <string name="hc_setup_permissions_title">הרשאות</string>

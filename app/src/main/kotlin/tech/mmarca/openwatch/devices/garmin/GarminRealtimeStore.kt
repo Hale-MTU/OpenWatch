@@ -70,12 +70,6 @@ data class GarminRealtimeState(
         return heartRateBpm
     }
 
-    fun freshSteps(now: Instant = Instant.now()): Int? {
-        val at = stepsAt ?: return null
-        if (Duration.between(at, now) > FRESHNESS) return null
-        return steps
-    }
-
     private companion object {
         val FRESHNESS: Duration = Duration.ofMinutes(2)
     }

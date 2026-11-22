@@ -32,7 +32,7 @@ OpenWatch seams noted.
 | Package | Role |
 | --- | --- |
 | `devices/` | The device layer (below). No Compose, no navigation, no Hilt module. |
-| `features/home` | The device list, the watch tile, and the way to the other screens. |
+| `features/home` | The device list and the way to the other screens. |
 | `features/watches`, `features/scales` | The device screens, as in OpenVitals. A watch's screen is the part every device has (`WatchDeviceScreen`: the header, the schedule, removal) and its family's panel, `features/watches/garmin` or `features/watches/wearos`, each with its own ViewModel. |
 | `features/healthconnect`, `features/settings` | Health Connect setup, the sync switch, the body profile, notification access. |
 | `features/connectedapps` | The apps that use OpenWatch over OpenLink: allow, block, per-capability switches, forget; a warning for a first-party name under an unknown signer; overlays hidden while it shows. |

@@ -474,10 +474,6 @@
     <string name="home_health_connect_body">Lo que OpenWatch puede leer y escribir</string>
     <string name="home_settings">Ajustes</string>
     <string name="home_settings_body">Perfil corporal, acceso a notificaciones, acerca de</string>
-    <string name="home_watch_sync">Sincronizar el reloj</string>
-    <string name="home_watch_live_heart_rate">%1$d lpm en directo</string>
-    <string name="home_watch_live_steps">%1$d pasos</string>
-    <string name="home_watch_battery">Batería %1$d%%</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch copia lo que registran tu reloj y tu báscula en Health Connect, donde lo leen OpenVitals y otras apps. Nada sale del teléfono: la app no tiene permiso de internet.</string>
     <string name="hc_setup_permissions_title">Permisos</string>
@@ -530,11 +526,6 @@
     <string name="connected_apps_capability_profile">Compartir tu perfil corporal (año de nacimiento, sexo, altura, peso) con OpenWatch, en ambos sentidos</string>
     <string name="connected_apps_capability_recording">Mantener tu reloj transmitiendo mientras graba una actividad</string>
     <string name="connected_apps_capability_live">Recibir la frecuencia cardiaca y los pasos de tu reloj mientras graba</string>
-    <plurals name="home_watch_more">
-        <item quantity="one">%1$s +%2$d</item>
-        <item quantity="many">%1$s +%2$d</item>
-        <item quantity="other">%1$s +%2$d</item>
-    </plurals>
     <string name="settings_watch_wearos_companion_required">Android no vinculó el reloj con OpenWatch, así que no se añadió. OpenWatch necesita este vínculo para grabar los entrenamientos que otra app inicia en el reloj. Toca Emparejar de nuevo y acepta la solicitud.</string>
     <string name="settings_watch_wearos_companion_missing">Android no ha vinculado este reloj con OpenWatch. Sin el vínculo, OpenWatch no puede grabar los entrenamientos que otra app inicia en el reloj.</string>
     <string name="settings_watch_wearos_companion_link">Vincular reloj</string>

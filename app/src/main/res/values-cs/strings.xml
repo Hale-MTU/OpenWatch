@@ -480,10 +480,6 @@
     <string name="home_health_connect_body">Co smí OpenWatch číst a zapisovat</string>
     <string name="home_settings">Nastavení</string>
     <string name="home_settings_body">Tělesný profil, přístup k oznámením, o aplikaci</string>
-    <string name="home_watch_sync">Synchronizovat hodinky</string>
-    <string name="home_watch_live_heart_rate">%1$d tepů/min živě</string>
-    <string name="home_watch_live_steps">%1$d kroků</string>
-    <string name="home_watch_battery">Baterie %1$d%%</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch kopíruje to, co zaznamenají vaše hodinky a váha, do Health Connect, kde to čte OpenVitals a další aplikace. Nic neopouští telefon: aplikace nemá oprávnění k internetu.</string>
     <string name="hc_setup_permissions_title">Oprávnění</string>
@@ -536,12 +532,6 @@
     <string name="connected_apps_capability_profile">Sdílet váš tělesný profil (rok narození, pohlaví, výška, váha) s OpenWatch, oběma směry</string>
     <string name="connected_apps_capability_recording">Udržovat hodinky ve vysílání, zatímco zaznamenává aktivitu</string>
     <string name="connected_apps_capability_live">Dostávat tep a kroky z hodinek, zatímco zaznamenává</string>
-    <plurals name="home_watch_more">
-        <item quantity="one">%1$s +%2$d</item>
-        <item quantity="few">%1$s +%2$d</item>
-        <item quantity="many">%1$s +%2$d</item>
-        <item quantity="other">%1$s +%2$d</item>
-    </plurals>
     <string name="settings_watch_wearos_companion_required">Android hodinky s OpenWatch nepropojil, takže nebyly přidány. OpenWatch toto propojení potřebuje k záznamu tréninků, které na hodinkách spustí jiná aplikace. Klepněte znovu na Spárovat a žádost povolte.</string>
     <string name="settings_watch_wearos_companion_missing">Android tyto hodinky s OpenWatch nepropojil. Bez propojení nemůže OpenWatch zaznamenávat tréninky, které na hodinkách spustí jiná aplikace.</string>
     <string name="settings_watch_wearos_companion_link">Propojit hodinky</string>

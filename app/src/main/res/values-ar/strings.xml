@@ -8,18 +8,6 @@
     <string name="home_health_connect_body">ما يمكن لـ OpenWatch قراءته وكتابته</string>
     <string name="home_settings">الإعدادات</string>
     <string name="home_settings_body">الملف الجسدي، والوصول إلى الإشعارات، وحول التطبيق</string>
-    <string name="home_watch_sync">مزامنة الساعة</string>
-    <string name="home_watch_live_heart_rate">%1$d نبضة/دقيقة مباشرةً</string>
-    <string name="home_watch_live_steps">%1$d خطوة</string>
-    <string name="home_watch_battery">البطارية %1$d%%</string>
-    <plurals name="home_watch_more">
-        <item quantity="zero">%1$s +%2$d</item>
-        <item quantity="one">%1$s +%2$d</item>
-        <item quantity="two">%1$s +%2$d</item>
-        <item quantity="few">%1$s +%2$d</item>
-        <item quantity="many">%1$s +%2$d</item>
-        <item quantity="other">%1$s +%2$d</item>
-    </plurals>
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">ينسخ OpenWatch ما تسجّله ساعتك وميزانك إلى Health Connect، حيث يقرؤه OpenVitals وتطبيقات أخرى. لا يغادر أي شيء الهاتف: ليس لدى التطبيق إذن الوصول إلى الإنترنت.</string>
     <string name="hc_setup_permissions_title">الأذونات</string>

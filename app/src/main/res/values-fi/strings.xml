@@ -468,10 +468,6 @@
     <string name="home_health_connect_body">Mitä OpenWatch saa lukea ja kirjoittaa</string>
     <string name="home_settings">Asetukset</string>
     <string name="home_settings_body">Kehoprofiili, ilmoitusten käyttöoikeus, tietoja</string>
-    <string name="home_watch_sync">Synkronoi kello</string>
-    <string name="home_watch_live_heart_rate">%1$d bpm reaaliajassa</string>
-    <string name="home_watch_live_steps">%1$d askelta</string>
-    <string name="home_watch_battery">Akku %1$d%%</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch kopioi kellosi ja vaakasi tallentamat tiedot Health Connectiin, josta OpenVitals ja muut sovellukset lukevat ne. Mikään ei poistu puhelimesta: sovelluksella ei ole internet-käyttöoikeutta.</string>
     <string name="hc_setup_permissions_title">Käyttöoikeudet</string>
@@ -524,10 +520,6 @@
     <string name="connected_apps_capability_profile">Jakaa kehoprofiilisi (syntymävuosi, sukupuoli, pituus, paino) OpenWatchin kanssa, molempiin suuntiin</string>
     <string name="connected_apps_capability_recording">Pitää kellosi lähettämässä, kun se tallentaa harjoitusta</string>
     <string name="connected_apps_capability_live">Vastaanottaa kellosi sykkeen ja askeleet tallennuksen aikana</string>
-    <plurals name="home_watch_more">
-        <item quantity="one">%1$s +%2$d</item>
-        <item quantity="other">%1$s +%2$d</item>
-    </plurals>
     <string name="settings_watch_wearos_companion_required">Android ei linkittänyt kelloa OpenWatchiin, joten sitä ei lisätty. OpenWatch tarvitsee tämän linkin tallentaakseen harjoitukset, jotka toinen sovellus käynnistää kellossa. Napauta Pariliitä uudelleen ja hyväksy pyyntö.</string>
     <string name="settings_watch_wearos_companion_missing">Android ei ole linkittänyt tätä kelloa OpenWatchiin. Ilman linkkiä OpenWatch ei voi tallentaa harjoituksia, jotka toinen sovellus käynnistää kellossa.</string>
     <string name="settings_watch_wearos_companion_link">Linkitä kello</string>

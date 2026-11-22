@@ -468,10 +468,6 @@
     <string name="home_health_connect_body">Mida OpenWatch tohib lugeda ja kirjutada</string>
     <string name="home_settings">Seaded</string>
     <string name="home_settings_body">Kehaprofiil, juurdepääs teavitustele, teave</string>
-    <string name="home_watch_sync">Sünkrooni kell</string>
-    <string name="home_watch_live_heart_rate">%1$d lööki/min reaalajas</string>
-    <string name="home_watch_live_steps">%1$d sammu</string>
-    <string name="home_watch_battery">Aku %1$d%%</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch kopeerib sinu kella ja kaalu salvestatu Health Connecti, kust seda loevad OpenVitals ja teised rakendused. Miski ei lahku telefonist: rakendusel pole internetiluba.</string>
     <string name="hc_setup_permissions_title">Load</string>
@@ -524,10 +520,6 @@
     <string name="connected_apps_capability_profile">Jagada sinu kehaprofiili (sünniaasta, sugu, pikkus, kehakaal) OpenWatchiga, mõlemas suunas</string>
     <string name="connected_apps_capability_recording">Hoida kella saatmas, kuni see salvestab tegevust</string>
     <string name="connected_apps_capability_live">Saada salvestamise ajal sinu kella pulssi ja samme</string>
-    <plurals name="home_watch_more">
-        <item quantity="one">%1$s +%2$d</item>
-        <item quantity="other">%1$s +%2$d</item>
-    </plurals>
     <string name="settings_watch_wearos_companion_required">Android ei sidunud kella OpenWatchiga, seega seda ei lisatud. OpenWatch vajab seda seost, et salvestada treeninguid, mille mõni teine rakendus kellas käivitab. Puuduta uuesti Seo ja luba taotlus.</string>
     <string name="settings_watch_wearos_companion_missing">Android pole seda kella OpenWatchiga sidunud. Ilma seoseta ei saa OpenWatch salvestada treeninguid, mille mõni teine rakendus kellas käivitab.</string>
     <string name="settings_watch_wearos_companion_link">Seo kell</string>

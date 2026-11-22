@@ -468,10 +468,6 @@
     <string name="home_health_connect_body">Was OpenWatch lesen und schreiben darf</string>
     <string name="home_settings">Einstellungen</string>
     <string name="home_settings_body">Körperprofil, Benachrichtigungszugriff, Über</string>
-    <string name="home_watch_sync">Uhr synchronisieren</string>
-    <string name="home_watch_live_heart_rate">%1$d bpm live</string>
-    <string name="home_watch_live_steps">%1$d Schritte</string>
-    <string name="home_watch_battery">Akku %1$d%%</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch kopiert, was deine Uhr und deine Waage aufzeichnen, nach Health Connect, wo OpenVitals und andere Apps es lesen. Nichts verlässt das Telefon: Die App hat keine Internetberechtigung.</string>
     <string name="hc_setup_permissions_title">Berechtigungen</string>
@@ -524,10 +520,6 @@
     <string name="connected_apps_capability_profile">Dein Körperprofil (Geburtsjahr, Geschlecht, Größe, Gewicht) mit OpenWatch teilen, in beide Richtungen</string>
     <string name="connected_apps_capability_recording">Deine Uhr verbunden halten, während sie eine Aktivität aufzeichnet</string>
     <string name="connected_apps_capability_live">Herzfrequenz und Schritte deiner Uhr empfangen, während sie aufzeichnet</string>
-    <plurals name="home_watch_more">
-        <item quantity="one">%1$s +%2$d</item>
-        <item quantity="other">%1$s +%2$d</item>
-    </plurals>
     <string name="settings_watch_wearos_companion_required">Android hat die Uhr nicht mit OpenWatch verknüpft, deshalb wurde sie nicht hinzugefügt. OpenWatch braucht diese Verknüpfung, um Workouts aufzuzeichnen, die eine andere App auf der Uhr startet. Tippe erneut auf Koppeln und erlaube die Anfrage.</string>
     <string name="settings_watch_wearos_companion_missing">Android hat diese Uhr nicht mit OpenWatch verknüpft. Ohne die Verknüpfung kann OpenWatch keine Workouts aufzeichnen, die eine andere App auf der Uhr startet.</string>
     <string name="settings_watch_wearos_companion_link">Uhr verknüpfen</string>

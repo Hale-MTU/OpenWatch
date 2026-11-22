@@ -480,10 +480,6 @@
     <string name="home_health_connect_body">Co OpenWatch może odczytywać i zapisywać</string>
     <string name="home_settings">Ustawienia</string>
     <string name="home_settings_body">Profil ciała, dostęp do powiadomień, o aplikacji</string>
-    <string name="home_watch_sync">Synchronizuj zegarek</string>
-    <string name="home_watch_live_heart_rate">%1$d uderzeń/min na żywo</string>
-    <string name="home_watch_live_steps">%1$d kroków</string>
-    <string name="home_watch_battery">Bateria %1$d%%</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch kopiuje to, co rejestrują zegarek i waga, do Health Connect, skąd odczytują to OpenVitals i inne aplikacje. Nic nie opuszcza telefonu: aplikacja nie ma uprawnienia do internetu.</string>
     <string name="hc_setup_permissions_title">Uprawnienia</string>
@@ -536,12 +532,6 @@
     <string name="connected_apps_capability_profile">Udostępniać profil ciała (rok urodzenia, płeć, wzrost, masa ciała) OpenWatch, w obie strony</string>
     <string name="connected_apps_capability_recording">Utrzymywać nadawanie zegarka, gdy nagrywa aktywność</string>
     <string name="connected_apps_capability_live">Odbierać tętno i kroki z zegarka podczas nagrywania</string>
-    <plurals name="home_watch_more">
-        <item quantity="one">%1$s +%2$d</item>
-        <item quantity="few">%1$s +%2$d</item>
-        <item quantity="many">%1$s +%2$d</item>
-        <item quantity="other">%1$s +%2$d</item>
-    </plurals>
     <string name="settings_watch_wearos_companion_required">Android nie powiązał zegarka z OpenWatch, więc nie został dodany. OpenWatch potrzebuje tego powiązania, aby nagrywać treningi, które inna aplikacja uruchamia na zegarku. Dotknij ponownie Sparuj i zezwól na żądanie.</string>
     <string name="settings_watch_wearos_companion_missing">Android nie powiązał tego zegarka z OpenWatch. Bez powiązania OpenWatch nie może nagrywać treningów, które inna aplikacja uruchamia na zegarku.</string>
     <string name="settings_watch_wearos_companion_link">Powiąż zegarek</string>

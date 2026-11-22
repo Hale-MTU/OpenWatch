@@ -480,10 +480,6 @@
     <string name="home_health_connect_body">Что OpenWatch может читать и записывать</string>
     <string name="home_settings">Настройки</string>
     <string name="home_settings_body">Профиль тела, доступ к уведомлениям, о приложении</string>
-    <string name="home_watch_sync">Синхронизировать часы</string>
-    <string name="home_watch_live_heart_rate">%1$d уд/мин сейчас</string>
-    <string name="home_watch_live_steps">%1$d шагов</string>
-    <string name="home_watch_battery">Заряд батареи: %1$d%%</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch копирует то, что записывают часы и весы, в Health Connect, откуда это читают OpenVitals и другие приложения. Ничто не покидает телефон: у приложения нет разрешения на доступ в интернет.</string>
     <string name="hc_setup_permissions_title">Разрешения</string>
@@ -536,12 +532,6 @@
     <string name="connected_apps_capability_profile">Обмениваться профилем тела (год рождения, пол, рост, вес) с OpenWatch в обе стороны</string>
     <string name="connected_apps_capability_recording">Поддерживать передачу с часов, пока оно записывает активность</string>
     <string name="connected_apps_capability_live">Получать пульс и шаги с часов во время записи</string>
-    <plurals name="home_watch_more">
-        <item quantity="one">%1$s +%2$d</item>
-        <item quantity="few">%1$s +%2$d</item>
-        <item quantity="many">%1$s +%2$d</item>
-        <item quantity="other">%1$s +%2$d</item>
-    </plurals>
     <string name="settings_watch_wearos_companion_required">Android не связал часы с OpenWatch, поэтому они не были добавлены. Эта связь нужна OpenWatch, чтобы записывать тренировки, которые другое приложение запускает на часах. Нажмите «Сопрячь» ещё раз и разрешите запрос.</string>
     <string name="settings_watch_wearos_companion_missing">Android не связал эти часы с OpenWatch. Без этой связи OpenWatch не может записывать тренировки, которые другое приложение запускает на часах.</string>
     <string name="settings_watch_wearos_companion_link">Связать часы</string>

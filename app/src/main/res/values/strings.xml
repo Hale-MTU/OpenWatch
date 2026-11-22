@@ -8,14 +8,6 @@
     <string name="home_health_connect_body">What OpenWatch may read and write</string>
     <string name="home_settings">Settings</string>
     <string name="home_settings_body">Body profile, notification access, about</string>
-    <string name="home_watch_sync">Sync watch</string>
-    <string name="home_watch_live_heart_rate">%1$d bpm live</string>
-    <string name="home_watch_live_steps">%1$d steps</string>
-    <string name="home_watch_battery">Battery %1$d%%</string>
-    <plurals name="home_watch_more">
-        <item quantity="one">%1$s +%2$d</item>
-        <item quantity="other">%1$s +%2$d</item>
-    </plurals>
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch copies what your watch and scale record into Health Connect, where OpenVitals and other apps read it. Nothing leaves the phone: the app has no internet permission.</string>
     <string name="hc_setup_permissions_title">Permissions</string>

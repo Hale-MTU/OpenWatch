@@ -466,10 +466,6 @@
     <string name="home_health_connect_body">OpenWatch 可以读取和写入的内容</string>
     <string name="home_settings">设置</string>
     <string name="home_settings_body">身体档案、通知访问权限、关于</string>
-    <string name="home_watch_sync">同步手表</string>
-    <string name="home_watch_live_heart_rate">实时 %1$d 次/分</string>
-    <string name="home_watch_live_steps">%1$d 步</string>
-    <string name="home_watch_battery">电量 %1$d%%</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch 会把手表和体重秤记录的数据复制到 Health Connect，供 OpenVitals 和其他应用读取。任何数据都不会离开手机：本应用没有联网权限。</string>
     <string name="hc_setup_permissions_title">权限</string>
@@ -522,10 +518,6 @@
     <string name="connected_apps_capability_profile">与 OpenWatch 双向共享身体档案（出生年份、性别、身高、体重）</string>
     <string name="connected_apps_capability_recording">在它记录活动时保持手表持续传输</string>
     <string name="connected_apps_capability_live">在它记录时接收手表的心率和步数</string>
-    <plurals name="home_watch_more">
-        <item quantity="one">%1$s +%2$d</item>
-        <item quantity="other">%1$s +%2$d</item>
-    </plurals>
     <string name="settings_watch_wearos_companion_required">Android 未将手表关联到 OpenWatch，因此没有添加。OpenWatch 需要此关联才能记录其他应用在手表上开始的锻炼。请再次点按“配对”并允许请求。</string>
     <string name="settings_watch_wearos_companion_missing">Android 尚未将此手表关联到 OpenWatch。没有此关联，OpenWatch 无法记录其他应用在手表上开始的锻炼。</string>
     <string name="settings_watch_wearos_companion_link">关联手表</string>

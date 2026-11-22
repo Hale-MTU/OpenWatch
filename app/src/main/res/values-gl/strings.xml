@@ -472,10 +472,6 @@ Podes desactivalo cando queiras e revogar o acceso ás notificacións desde os a
     <string name="home_health_connect_body">O que OpenWatch pode ler e escribir</string>
     <string name="home_settings">Axustes</string>
     <string name="home_settings_body">Perfil corporal, acceso ás notificacións, acerca de</string>
-    <string name="home_watch_sync">Sincronizar reloxo</string>
-    <string name="home_watch_live_heart_rate">%1$d ppm en directo</string>
-    <string name="home_watch_live_steps">%1$d pasos</string>
-    <string name="home_watch_battery">Batería %1$d%%</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch copia o que rexistran o teu reloxo e a túa báscula en Health Connect, onde o len OpenVitals e outras apps. Nada sae do teléfono: a app non ten permiso de internet.</string>
     <string name="hc_setup_permissions_title">Permisos</string>
@@ -528,10 +524,6 @@ Podes desactivalo cando queiras e revogar o acceso ás notificacións desde os a
     <string name="connected_apps_capability_profile">Compartir o teu perfil corporal (ano de nacemento, sexo, altura, peso) con OpenWatch, nos dous sentidos</string>
     <string name="connected_apps_capability_recording">Manter o teu reloxo transmitindo mentres grava unha actividade</string>
     <string name="connected_apps_capability_live">Recibir a frecuencia cardíaca e os pasos do teu reloxo mentres grava</string>
-    <plurals name="home_watch_more">
-        <item quantity="one">%1$s +%2$d</item>
-        <item quantity="other">%1$s +%2$d</item>
-    </plurals>
     <string name="settings_watch_wearos_companion_required">Android non vinculou o reloxo con OpenWatch, así que non se engadiu. OpenWatch precisa este vínculo para gravar os adestramentos que outra app inicia no reloxo. Toca Emparellar de novo e acepta a solicitude.</string>
     <string name="settings_watch_wearos_companion_missing">Android non vinculou este reloxo con OpenWatch. Sen o vínculo, OpenWatch non pode gravar os adestramentos que outra app inicia no reloxo.</string>
     <string name="settings_watch_wearos_companion_link">Vincular reloxo</string>

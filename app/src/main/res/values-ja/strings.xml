@@ -470,10 +470,6 @@
     <string name="home_health_connect_body">OpenWatch が読み書きできるデータ</string>
     <string name="home_settings">設定</string>
     <string name="home_settings_body">体のプロフィール、通知へのアクセス、このアプリについて</string>
-    <string name="home_watch_sync">ウォッチを同期</string>
-    <string name="home_watch_live_heart_rate">%1$d bpm（ライブ）</string>
-    <string name="home_watch_live_steps">%1$d 歩</string>
-    <string name="home_watch_battery">バッテリー %1$d%%</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="hc_setup_intro">OpenWatch は、ウォッチと体重計が記録したデータを Health Connect にコピーします。OpenVitals などのアプリはそこから読み取ります。データがスマートフォンの外に出ることはありません。このアプリにはインターネットの権限がありません。</string>
     <string name="hc_setup_permissions_title">権限</string>
@@ -526,10 +522,6 @@
     <string name="connected_apps_capability_profile">体のプロフィール（生年、性別、身長、体重）を OpenWatch と双方向で共有する</string>
     <string name="connected_apps_capability_recording">アクティビティの記録中、ウォッチのストリーミングを維持する</string>
     <string name="connected_apps_capability_live">記録中にウォッチの心拍数と歩数を受け取る</string>
-    <plurals name="home_watch_more">
-        <item quantity="one">%1$s +%2$d</item>
-        <item quantity="other">%1$s +%2$d</item>
-    </plurals>
     <string name="settings_watch_wearos_companion_required">Android がウォッチを OpenWatch にリンクしなかったため、追加されませんでした。別のアプリがウォッチで開始したワークアウトを記録するには、このリンクが必要です。もう一度「ペアリング」をタップして、リクエストを許可してください。</string>
     <string name="settings_watch_wearos_companion_missing">Android はこのウォッチを OpenWatch にリンクしていません。リンクがないと、別のアプリがウォッチで開始したワークアウトを OpenWatch は記録できません。</string>
     <string name="settings_watch_wearos_companion_link">ウォッチをリンク</string>
