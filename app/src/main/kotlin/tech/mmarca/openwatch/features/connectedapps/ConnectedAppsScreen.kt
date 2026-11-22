@@ -24,7 +24,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openlink.OpenLink
 import tech.mmarca.openwatch.MainActivity
@@ -33,19 +35,42 @@ import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.link.LinkSessionStatus
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.SwitchRow
+import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
- * The apps that asked to use OpenWatch over OpenLink: allow or block one that asks, take a
- * capability back from one that is connected, or forget it.
+ * The Connected apps destination: the only place that knows the ViewModel. It keeps other apps
+ * from drawing over the screen while it shows; [ConnectedAppsScreen] draws.
  */
 @Composable
-fun ConnectedAppsScreen(viewModel: ConnectedAppsViewModel) {
+fun ConnectedAppsRoute(viewModel: ConnectedAppsViewModel = hiltViewModel()) {
     val apps by viewModel.apps.collectAsStateWithLifecycle()
     HideOverlaysWhileShown()
 
+    ConnectedAppsScreen(
+        apps = apps,
+        onAllow = viewModel::allow,
+        onBlock = viewModel::block,
+        onForget = viewModel::forget,
+        onCapabilityChange = viewModel::setCapability,
+    )
+}
+
+/**
+ * The apps that asked to use OpenWatch over OpenLink: allow or block one that asks, take a
+ * capability back from one that is connected, or forget it. Each action names the app by its package.
+ */
+@Composable
+fun ConnectedAppsScreen(
+    apps: List<ConnectedApp>,
+    onAllow: (packageName: String) -> Unit,
+    onBlock: (packageName: String) -> Unit,
+    onForget: (packageName: String) -> Unit,
+    onCapabilityChange: (packageName: String, capability: String, granted: Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.lg, vertical = Spacing.md),
@@ -63,12 +88,59 @@ fun ConnectedAppsScreen(viewModel: ConnectedAppsViewModel) {
         apps.sortedBy { it.trust != OpenLinkTrust.PENDING }.forEach { app ->
             ConnectedAppCard(
                 app = app,
-                onAllow = { viewModel.allow(app.packageName) },
-                onBlock = { viewModel.block(app.packageName) },
-                onForget = { viewModel.forget(app.packageName) },
-                onCapability = { capability, granted -> viewModel.setCapability(app.packageName, capability, granted) },
+                onAllow = { onAllow(app.packageName) },
+                onBlock = { onBlock(app.packageName) },
+                onForget = { onForget(app.packageName) },
+                onCapability = { capability, granted -> onCapabilityChange(app.packageName, capability, granted) },
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ConnectedAppsScreenPreview() {
+    val now = 1_763_800_000_000L
+    OpenWatchTheme {
+        ConnectedAppsScreen(
+            apps = listOf(
+                ConnectedApp(
+                    packageName = "tech.mmarca.openvitals",
+                    label = "OpenVitals",
+                    trust = OpenLinkTrust.TRUSTED,
+                    requested = listOf(
+                        OpenLink.CAPABILITY_DEVICES,
+                        OpenLink.CAPABILITY_PROFILE,
+                        OpenLink.CAPABILITY_RECORDING,
+                        OpenLink.CAPABILITY_LIVE,
+                    ),
+                    granted = setOf(OpenLink.CAPABILITY_DEVICES, OpenLink.CAPABILITY_PROFILE, OpenLink.CAPABILITY_LIVE),
+                    inUse = true,
+                    profileReceivedAtMillis = now - 2 * 60 * 60_000L,
+                    sessions = listOf(
+                        LinkSessionStatus("tech.mmarca.openvitals", LinkSessionStatus.Kind.HEART_RATE, listOf("Forerunner 265")),
+                    ),
+                    nowMillis = now,
+                    firstParty = true,
+                    signerFingerprint = "0416 C065 1543 E951",
+                ),
+                ConnectedApp(
+                    packageName = "com.example.vitals",
+                    label = "OpenVitals Plus",
+                    trust = OpenLinkTrust.PENDING,
+                    requested = listOf(OpenLink.CAPABILITY_PROFILE, OpenLink.CAPABILITY_LIVE),
+                    granted = emptySet(),
+                    lastSeenAtMillis = now - 5 * 60_000L,
+                    nowMillis = now,
+                    signerFingerprint = "9F2A 61C0 D4E7 3B58",
+                    lookalikeOf = "OpenVitals",
+                ),
+            ),
+            onAllow = {},
+            onBlock = {},
+            onForget = {},
+            onCapabilityChange = { _, _, _ -> },
+        )
     }
 }
 

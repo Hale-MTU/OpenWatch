@@ -4,7 +4,7 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
-import tech.mmarca.openwatch.features.connectedapps.ConnectedAppsScreen
+import tech.mmarca.openwatch.features.connectedapps.ConnectedAppsRoute
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -31,11 +31,11 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
-import tech.mmarca.openwatch.features.healthconnect.HealthConnectSetupScreen
+import tech.mmarca.openwatch.features.healthconnect.HealthConnectSetupRoute
 import tech.mmarca.openwatch.features.home.HomeScreen
 import tech.mmarca.openwatch.features.scales.ScaleDeviceScreen
-import tech.mmarca.openwatch.features.settings.BodyProfileScreen
-import tech.mmarca.openwatch.features.settings.SettingsScreen
+import tech.mmarca.openwatch.features.settings.BodyProfileRoute
+import tech.mmarca.openwatch.features.settings.SettingsRoute
 import tech.mmarca.openwatch.ui.components.LocalAppBarState
 import tech.mmarca.openwatch.ui.components.LocalSnackbarHostState
 
@@ -113,8 +113,7 @@ fun AppNavigation(
                     .padding(padding),
             ) {
                 composable(Screen.Onboarding.route) {
-                    HealthConnectSetupScreen(
-                        viewModel = hiltViewModel(),
+                    HealthConnectSetupRoute(
                         onContinue = {
                             onSetupComplete()
                             navController.navigate(Screen.Home.route) {
@@ -124,7 +123,7 @@ fun AppNavigation(
                     )
                 }
                 composable(Screen.HealthConnectSetup.route) {
-                    HealthConnectSetupScreen(viewModel = hiltViewModel(), onContinue = null)
+                    HealthConnectSetupRoute(onContinue = null)
                 }
                 composable(Screen.Home.route) {
                     HomeScreen(
@@ -142,8 +141,7 @@ fun AppNavigation(
                     )
                 }
                 composable(Screen.Settings.route) {
-                    SettingsScreen(
-                        viewModel = hiltViewModel(),
+                    SettingsRoute(
                         onOpenHealthConnect = {
                             navController.navigate(Screen.HealthConnectSetup.route) { launchSingleTop = true }
                         },
@@ -152,10 +150,10 @@ fun AppNavigation(
                     )
                 }
                 composable(Screen.ConnectedApps.route) {
-                    ConnectedAppsScreen(viewModel = hiltViewModel())
+                    ConnectedAppsRoute()
                 }
                 composable(Screen.BodyProfile.route) {
-                    BodyProfileScreen(viewModel = hiltViewModel(), unitFormatter = unitFormatter)
+                    BodyProfileRoute(unitFormatter = unitFormatter)
                 }
                 composable(Screen.ScaleDevice.route) {
                     ScaleDeviceScreen(

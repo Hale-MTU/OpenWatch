@@ -17,13 +17,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.net.toUri
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,26 +36,83 @@ import tech.mmarca.openwatch.features.watches.NotificationAccessDisclosureDialog
 import tech.mmarca.openwatch.ui.components.LocalSnackbarHostState
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.SwitchCard
+import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
 
+/**
+ * The Settings destination: the only place that knows the ViewModel. It starts the system
+ * screens the rows lead to and owns the notification disclosure; [SettingsScreen] draws.
+ */
 @Composable
-fun SettingsScreen(
-    viewModel: SettingsViewModel,
+fun SettingsRoute(
     onOpenHealthConnect: () -> Unit,
     onOpenBodyProfile: () -> Unit,
-    onOpenConnectedApps: () -> Unit = {},
+    onOpenConnectedApps: () -> Unit,
+    viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    var showNotificationDisclosure by remember { mutableStateOf(false) }
+    var showNotificationDisclosure by rememberSaveable { mutableStateOf(false) }
     val privacyPolicyUrl = stringResource(R.string.settings_privacy_policy_url)
     val noBrowserMessage = stringResource(R.string.settings_privacy_policy_no_browser, privacyPolicyUrl)
     val snackbar = LocalSnackbarHostState.current
     val scope = rememberCoroutineScope()
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
 
+    SettingsScreen(
+        state = state,
+        onOpenHealthConnect = onOpenHealthConnect,
+        onOpenBodyProfile = onOpenBodyProfile,
+        onOpenConnectedApps = onOpenConnectedApps,
+        onSyncEnabledChange = viewModel::setSyncEnabled,
+        onWriteRespiratoryRateChange = viewModel::setWriteRespiratoryRate,
+        onOpenNotificationAccess = {
+            if (state.notificationAccessGranted) {
+                context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+            } else {
+                showNotificationDisclosure = true
+            }
+        },
+        onOpenHealthData = { context.startActivity(Intent(context, PermissionsRationaleActivity::class.java)) },
+        onOpenPrivacyPolicy = {
+            try {
+                context.startActivity(Intent(Intent.ACTION_VIEW, privacyPolicyUrl.toUri()))
+            } catch (_: ActivityNotFoundException) {
+                // This app needs no browser, so some phones that run it have none.
+                scope.launch { snackbar.showSnackbar(noBrowserMessage, duration = SnackbarDuration.Long) }
+            }
+        },
+    )
+
+    if (showNotificationDisclosure) {
+        NotificationAccessDisclosureDialog(
+            title = stringResource(R.string.settings_watch_notifications_disclosure_title),
+            body = stringResource(R.string.settings_watch_notifications_disclosure_body),
+            onAccept = {
+                showNotificationDisclosure = false
+                context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+            },
+            onDecline = { showNotificationDisclosure = false },
+        )
+    }
+}
+
+/** Settings as drawn from [state]: every action goes out through its lambda. */
+@Composable
+fun SettingsScreen(
+    state: SettingsUiState,
+    onOpenHealthConnect: () -> Unit,
+    onOpenBodyProfile: () -> Unit,
+    onOpenConnectedApps: () -> Unit,
+    onSyncEnabledChange: (Boolean) -> Unit,
+    onWriteRespiratoryRateChange: (Boolean) -> Unit,
+    onOpenNotificationAccess: () -> Unit,
+    onOpenHealthData: () -> Unit,
+    onOpenPrivacyPolicy: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.lg, vertical = Spacing.md),
@@ -73,14 +132,14 @@ fun SettingsScreen(
             title = stringResource(R.string.hc_setup_sync_title),
             body = stringResource(R.string.hc_setup_sync_body),
             checked = state.syncEnabled,
-            onCheckedChange = viewModel::setSyncEnabled,
+            onCheckedChange = onSyncEnabledChange,
             modifier = Modifier.fillMaxWidth(),
         )
         SwitchCard(
             title = stringResource(R.string.settings_respiratory_rate_title),
             body = stringResource(R.string.settings_respiratory_rate_body),
             checked = state.writeRespiratoryRate,
-            onCheckedChange = viewModel::setWriteRespiratoryRate,
+            onCheckedChange = onWriteRespiratoryRateChange,
             modifier = Modifier.fillMaxWidth(),
         )
         SettingsRow(
@@ -97,30 +156,17 @@ fun SettingsScreen(
                     R.string.settings_notification_access_body
                 },
             ),
-            onClick = {
-                if (state.notificationAccessGranted) {
-                    context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-                } else {
-                    showNotificationDisclosure = true
-                }
-            },
+            onClick = onOpenNotificationAccess,
         )
         SettingsRow(
             title = stringResource(R.string.health_data_title),
             body = stringResource(R.string.health_data_open_body),
-            onClick = { context.startActivity(Intent(context, PermissionsRationaleActivity::class.java)) },
+            onClick = onOpenHealthData,
         )
         SettingsRow(
             title = stringResource(R.string.privacy_policy_title),
             body = stringResource(R.string.settings_privacy_policy_body),
-            onClick = {
-                try {
-                    context.startActivity(Intent(Intent.ACTION_VIEW, privacyPolicyUrl.toUri()))
-                } catch (_: ActivityNotFoundException) {
-                    // This app needs no browser, so some phones that run it have none.
-                    scope.launch { snackbar.showSnackbar(noBrowserMessage, duration = SnackbarDuration.Long) }
-                }
-            },
+            onClick = onOpenPrivacyPolicy,
         )
         Text(
             text = stringResource(R.string.settings_about_version, state.versionName),
@@ -139,16 +185,22 @@ fun SettingsScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
+}
 
-    if (showNotificationDisclosure) {
-        NotificationAccessDisclosureDialog(
-            title = stringResource(R.string.settings_watch_notifications_disclosure_title),
-            body = stringResource(R.string.settings_watch_notifications_disclosure_body),
-            onAccept = {
-                showNotificationDisclosure = false
-                context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-            },
-            onDecline = { showNotificationDisclosure = false },
+@Preview(showBackground = true)
+@Composable
+private fun SettingsScreenPreview() {
+    OpenWatchTheme {
+        SettingsScreen(
+            state = SettingsUiState(syncEnabled = true, notificationAccessGranted = true, versionName = "0.4.1"),
+            onOpenHealthConnect = {},
+            onOpenBodyProfile = {},
+            onOpenConnectedApps = {},
+            onSyncEnabledChange = {},
+            onWriteRespiratoryRateChange = {},
+            onOpenNotificationAccess = {},
+            onOpenHealthData = {},
+            onOpenPrivacyPolicy = {},
         )
     }
 }

@@ -21,6 +21,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -29,6 +31,7 @@ import kotlin.math.roundToInt
 import tech.mmarca.healthcalculations.preferences.BiologicalSex
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
 import tech.mmarca.openwatch.features.connectedapps.isRealTime
@@ -36,21 +39,41 @@ import tech.mmarca.openwatch.features.connectedapps.relativeTime
 import tech.mmarca.openwatch.ui.components.OpenWatchButton
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.ScreenErrorContent
+import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
+
+/**
+ * The Body profile destination: the only place that knows the ViewModel. It re-reads the
+ * profile and Health Connect's measurements on resume and saves what [BodyProfileScreen] hands back.
+ */
+@Composable
+fun BodyProfileRoute(
+    unitFormatter: UnitFormatter,
+    viewModel: BodyProfileViewModel = hiltViewModel(),
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
+
+    BodyProfileScreen(
+        state = state,
+        unitFormatter = unitFormatter,
+        onSave = viewModel::save,
+    )
+}
 
 /**
  * The declared body: birth year, sex, height and weight. The scale's body
  * composition needs the sex and height; the walking energy needs the weight.
  * A weight or height Health Connect holds is shown and wins over the typed one.
+ * The fields are edited here; [onSave] gets the profile they make.
  */
 @Composable
 fun BodyProfileScreen(
-    viewModel: BodyProfileViewModel,
+    state: BodyProfileUiState,
     unitFormatter: UnitFormatter,
+    onSave: (BodyProfile) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    val state by viewModel.uiState.collectAsStateWithLifecycle()
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
-
     val imperial = state.unitSystem == UnitSystem.IMPERIAL
     var birthYear by remember(state.declared) { mutableStateOf(state.declared.birthYear?.toString().orEmpty()) }
     var sex by remember(state.declared) { mutableStateOf(state.declared.sex) }
@@ -62,7 +85,7 @@ fun BodyProfileScreen(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = Spacing.lg, vertical = Spacing.md),
@@ -136,7 +159,7 @@ fun BodyProfileScreen(
                 )
                 OpenWatchButton(
                     onClick = {
-                        viewModel.save(
+                        onSave(
                             BodyProfile(
                                 birthYear = birthYear.toIntOrNull(),
                                 sex = sex,
@@ -155,6 +178,37 @@ fun BodyProfileScreen(
         }
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun BodyProfileScreenPreview() {
+    OpenWatchTheme {
+        BodyProfileScreen(
+            state = previewBodyProfileState(),
+            unitFormatter = UnitFormatter(unitSystemProvider = { UnitSystem.METRIC }),
+            onSave = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun BodyProfileScreenErrorPreview() {
+    OpenWatchTheme {
+        BodyProfileScreen(
+            state = previewBodyProfileState().copy(measuredWeightKg = null, error = ScreenError.PermissionDenied),
+            unitFormatter = UnitFormatter(unitSystemProvider = { UnitSystem.METRIC }),
+            onSave = {},
+        )
+    }
+}
+
+/** A declared profile kept in sync with OpenVitals, and a newer weight from Health Connect. */
+private fun previewBodyProfileState() = BodyProfileUiState(
+    declared = BodyProfile(birthYear = 1988, weightKg = 72.5, heightCm = 178.0, sex = BiologicalSex.MALE),
+    measuredWeightKg = 71.8,
+    syncedWith = "OpenVitals",
+)
 
 private fun BiologicalSex.labelRes(): Int = when (this) {
     BiologicalSex.FEMALE -> R.string.body_profile_sex_female
