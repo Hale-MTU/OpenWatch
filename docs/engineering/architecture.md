@@ -331,6 +331,12 @@ missing. `ScreenErrorHandler.handle` checks that predicate first and returns
 `ScreenError.PermissionDenied`, which the screens render as a grant affordance. Reuse it; do
 not pattern-match on exception messages.
 
+Any other failure becomes the screen's translated fallback (`ScreenError.Text`), never the
+exception's own text, which is English and meant for the log. A state holder that catches a
+failure puts it in its state as `error: ScreenError?` and the screen shows it with
+`ScreenErrorContent`; it never turns a failed read into "nothing there".
+`SwallowedFailureRatchetTest` fails on a `ViewModel` that catches an exception without a name.
+
 ### 5. Nothing waits on the main thread
 
 - Health Connect and Room calls are `suspend` and run on `dispatchers.io`. Inject

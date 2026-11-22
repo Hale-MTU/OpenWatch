@@ -79,7 +79,7 @@ fun ScreenError?.resolve(): String? = when (this) {
 }
 
 data class ScreenErrorContext(
-    /** Shown when the throwable carries no message of its own. */
+    /** What the screen says for a failure that is neither a missing permission nor a missing feature. */
     @param:StringRes val fallback: Int = R.string.screen_error_generic,
     val logTag: String = ScreenErrorLogTag,
     val logMessage: String = "Showing throwable as screen error",
@@ -94,10 +94,8 @@ object ScreenErrorHandler {
         // A missing permission stays a type: the screens turn it into a grant affordance.
         if (throwable.isPermissionFailure()) return ScreenError.PermissionDenied
         if (throwable.isFeatureUnavailable()) return ScreenError.FeatureUnavailable
-        return throwable.message
-            ?.takeIf { it.isNotBlank() }
-            ?.let(ScreenError::Message)
-            ?: ScreenError.Text(context.fallback)
+        // Never the exception's own text: it is English, unredacted, and meant for the log.
+        return ScreenError.Text(context.fallback)
     }
 
     fun warn(tag: String, message: String, throwable: Throwable) {

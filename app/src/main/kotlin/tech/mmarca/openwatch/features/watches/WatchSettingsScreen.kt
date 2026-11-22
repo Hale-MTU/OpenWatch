@@ -51,6 +51,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlin.time.Duration
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.presentation.resolve
 import tech.mmarca.openwatch.devices.garmin.GarminEntryKind
 import tech.mmarca.openwatch.devices.garmin.GarminSettingsEntry
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
@@ -83,13 +84,13 @@ fun WatchSettingsScreen(
     }
 
     when {
-        state.loading -> Message(
+        state.isLoading -> Message(
             text = stringResource(R.string.settings_watch_settings_reading),
             busy = true,
         )
 
-        state.failed -> Message(
-            text = stringResource(R.string.settings_watch_settings_unreachable),
+        state.error != null -> Message(
+            text = state.error.resolve() ?: stringResource(R.string.settings_watch_settings_unreachable),
             retryLabel = stringResource(R.string.settings_watch_settings_retry),
             onRetry = viewModel::refresh,
         )

@@ -17,6 +17,8 @@ import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openlink.OpenLink
 import tech.mmarca.openlink.OpenLinkTrust
 import tech.mmarca.openlink.host.OpenLinkHostCore
+import tech.mmarca.openwatch.core.presentation.ScreenError
+import tech.mmarca.openwatch.core.presentation.toScreenError
 import tech.mmarca.openwatch.data.repository.BodyProfileProvider
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
@@ -33,6 +35,8 @@ data class BodyProfileUiState(
     val syncedWith: String? = null,
     /** When the profile last changed on either side of that sync. */
     val syncUpdatedAtMillis: Long = 0L,
+    /** Health Connect's measurements could not be read; the declared profile still shows. */
+    val error: ScreenError? = null,
 )
 
 @HiltViewModel
@@ -70,6 +74,7 @@ class BodyProfileViewModel @Inject constructor(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
+                _uiState.update { it.copy(error = error.toScreenError(logTag = "BodyProfile")) }
                 return@launch
             }
             val declared = preferences.bodyProfile()
@@ -77,6 +82,7 @@ class BodyProfileViewModel @Inject constructor(
                 it.copy(
                     measuredWeightKg = resolved.weightKg.takeIf { w -> w != declared.weightKg },
                     measuredHeightCm = resolved.heightCm.takeIf { h -> h != declared.heightCm },
+                    error = null,
                 )
             }
         }

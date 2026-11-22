@@ -21,6 +21,7 @@ import kotlin.math.roundToLong
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.domain.model.GarminWellnessMetric
 import tech.mmarca.openwatch.ui.components.DeviceValueRow
+import tech.mmarca.openwatch.ui.components.ScreenErrorContent
 import tech.mmarca.openwatch.ui.components.SectionHeader
 import tech.mmarca.openwatch.ui.theme.Spacing
 
@@ -40,6 +41,8 @@ fun WatchDataScreen(viewModel: WatchDataViewModel) {
         ) {
             CircularProgressIndicator()
         }
+
+        state.error != null -> ScreenErrorContent(screenError = state.error, modifier = Modifier.padding(Spacing.lg))
 
         state.metrics.isEmpty -> Box(
             modifier = Modifier

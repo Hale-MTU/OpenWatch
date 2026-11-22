@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import tech.mmarca.openwatch.core.presentation.ScreenError
+import tech.mmarca.openwatch.core.presentation.toScreenError
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminWellnessRepository
 import tech.mmarca.openwatch.domain.model.GarminWellnessMetric
@@ -121,6 +123,8 @@ internal suspend fun loadWatchMetrics(
 
 data class WatchDataUiState(
     val isLoading: Boolean = true,
+    /** A read that failed, shown as such: never as a watch that sent nothing. */
+    val error: ScreenError? = null,
     val metrics: WatchMetrics = WatchMetrics(),
 )
 
@@ -143,16 +147,14 @@ class WatchDataViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch {
-            val metrics = try {
+            _uiState.value = try {
                 val salt = deviceRepository.devices.firstOrNull { it.id == deviceId }?.idSalt.orEmpty()
-                loadWatchMetrics(wellnessRepository, salt = salt)
+                WatchDataUiState(isLoading = false, metrics = loadWatchMetrics(wellnessRepository, salt = salt))
             } catch (error: CancellationException) {
                 throw error
-            } catch (_: Exception) {
-                // The empty state covers a failed read.
-                WatchMetrics()
+            } catch (error: Exception) {
+                WatchDataUiState(isLoading = false, error = error.toScreenError(logTag = "WatchData"))
             }
-            _uiState.value = WatchDataUiState(isLoading = false, metrics = metrics)
         }
     }
 }

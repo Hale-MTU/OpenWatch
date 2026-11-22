@@ -29,6 +29,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.presentation.ScreenError
+import tech.mmarca.openwatch.core.presentation.toScreenError
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.garmin.GarminEntryKind
 import tech.mmarca.openwatch.devices.garmin.GarminGattClientException
@@ -187,7 +190,7 @@ class WatchSettingsLinks @VisibleForTesting internal constructor(
         } catch (error: CancellationException) {
             throw error
         } catch (_: Exception) {
-            // An attempt that never produced a link has nothing to close.
+            // On purpose: an attempt that never produced a link has nothing to close.
             attempt.cancel()
         }
     }
@@ -215,16 +218,16 @@ enum class WatchSettingsEvent {
 
 @Immutable
 data class WatchSettingsUiState(
-    val loading: Boolean = true,
+    val isLoading: Boolean = true,
     /** The link could not be opened, or the read threw. */
-    val failed: Boolean = false,
+    val error: ScreenError? = null,
     /** Null after loading (without failure) means the watch sent nothing. */
     val screen: GarminSettingsScreen? = null,
     /** Rows with a change in flight — drawn busy, and not re-tappable. */
     val busyEntryIds: Set<Int> = emptySet(),
     val notice: WatchSettingsNotice? = null,
 ) {
-    val isEmpty: Boolean get() = !loading && !failed && (screen?.isEmpty ?: true)
+    val isEmpty: Boolean get() = !isLoading && error == null && (screen?.isEmpty ?: true)
 }
 
 /**
@@ -299,8 +302,8 @@ class WatchSettingsViewModel @Inject constructor(
         loadJob = viewModelScope.launch {
             state.update {
                 it.copy(
-                    loading = true,
-                    failed = false,
+                    isLoading = true,
+                    error = null,
                     notice = if (clearNotice) null else it.notice,
                 )
             }
@@ -308,12 +311,13 @@ class WatchSettingsViewModel @Inject constructor(
                 val link = links.link(deviceId)
                 val screen = link.screen(screenId)
                 loadedOnce = true
-                state.update { it.copy(loading = false, failed = false, screen = screen) }
+                state.update { it.copy(isLoading = false, error = null, screen = screen) }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
                 GarminLog.log("[GARMIN-SETTINGS] could not read screen $screenId: $error")
-                state.update { it.copy(loading = false, failed = true, screen = null) }
+                val screenError = error.toScreenError(fallback = R.string.settings_watch_settings_unreachable, logTag = "WatchSettings")
+                state.update { it.copy(isLoading = false, error = screenError, screen = null) }
             }
         }
     }

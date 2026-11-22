@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,6 +14,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
+import tech.mmarca.openwatch.core.presentation.ScreenError
+import tech.mmarca.openwatch.core.presentation.toScreenError
 import tech.mmarca.openwatch.data.repository.WatchNotificationPrefsStore
 import tech.mmarca.openwatch.devices.garmin.GarminLog
 
@@ -47,6 +50,8 @@ data class WatchNotificationsUiState(
     val apps: List<WatchNotificationApp> = emptyList(),
     val loadingApps: Boolean = false,
     val loading: Boolean = true,
+    /** The app list could not be read: shown as such, not as a phone without apps. */
+    val appsError: ScreenError? = null,
 ) {
     /** Forwarding is only actually happening when both gates are open. */
     val active: Boolean get() = enabled && accessGranted
@@ -151,13 +156,15 @@ class WatchNotificationAppsViewModel @Inject constructor(
     /** Loads the app list. */
     fun loadApps() {
         if (state.value.loadingApps) return
-        state.update { it.copy(loadingApps = true) }
+        state.update { it.copy(loadingApps = true, appsError = null) }
         viewModelScope.launch {
             val installed = withContext(ioDispatcher) {
                 try {
                     gateway.listLaunchableApps()
+                } catch (error: CancellationException) {
+                    throw error
                 } catch (error: Exception) {
-                    GarminLog.log("[GARMIN-NOTIFY] could not list apps: $error")
+                    state.update { it.copy(appsError = error.toScreenError(logTag = "WatchNotificationApps")) }
                     emptyList()
                 }
             }
@@ -218,6 +225,8 @@ class WatchNotificationAppsViewModel @Inject constructor(
         withContext(ioDispatcher) {
             try {
                 gateway.pushConfiguration()
+            } catch (error: CancellationException) {
+                throw error
             } catch (error: Exception) {
                 GarminLog.log("[GARMIN-NOTIFY] could not push the config: $error")
             }
@@ -227,6 +236,8 @@ class WatchNotificationAppsViewModel @Inject constructor(
     private suspend fun readAccess(): Boolean = withContext(ioDispatcher) {
         try {
             gateway.isNotificationAccessGranted()
+        } catch (error: CancellationException) {
+            throw error
         } catch (error: Exception) {
             GarminLog.log("[GARMIN-NOTIFY] could not read notification access: $error")
             false

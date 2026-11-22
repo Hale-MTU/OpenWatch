@@ -39,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchCardStyle
+import tech.mmarca.openwatch.ui.components.ScreenErrorContent
 import tech.mmarca.openwatch.ui.components.SwitchRow
 import tech.mmarca.openwatch.ui.theme.Spacing
 
@@ -110,6 +111,9 @@ fun WatchNotificationAppsScreen(viewModel: WatchNotificationAppsViewModel) {
                     ) {
                         CircularProgressIndicator()
                     }
+                }
+                state.appsError != null -> item(key = "error") {
+                    ScreenErrorContent(screenError = state.appsError, modifier = Modifier.padding(Spacing.lg))
                 }
                 state.apps.isEmpty() -> item(key = "empty") {
                     Text(

@@ -26,6 +26,7 @@ import tech.mmarca.openwatch.ui.components.OpenWatchButton
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchOutlinedButton
 import tech.mmarca.openwatch.ui.components.OpenWatchTextButton
+import tech.mmarca.openwatch.ui.components.ScreenErrorContent
 import tech.mmarca.openwatch.ui.components.SwitchCard
 import tech.mmarca.openwatch.ui.components.rememberHealthConnectPermissionLauncher
 import tech.mmarca.openwatch.ui.theme.Spacing
@@ -60,6 +61,12 @@ fun HealthConnectSetupScreen(
                 modifier = Modifier.padding(Spacing.lg),
                 verticalArrangement = Arrangement.spacedBy(Spacing.sm),
             ) {
+                // The grants could not be read: say so, rather than "0 of 0 granted".
+                if (state.error != null) {
+                    Text(text = stringResource(R.string.hc_setup_permissions_title), style = MaterialTheme.typography.titleSmall)
+                    ScreenErrorContent(screenError = state.error)
+                    return@Column
+                }
                 val statusRes = when (state.availability) {
                     HealthConnectAvailability.AVAILABLE ->
                         if (state.allGranted) R.string.hc_setup_status_granted else R.string.hc_setup_status_partial

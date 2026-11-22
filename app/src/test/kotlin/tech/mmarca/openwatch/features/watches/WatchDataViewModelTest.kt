@@ -1,5 +1,7 @@
 package tech.mmarca.openwatch.features.watches
 
+import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import androidx.lifecycle.SavedStateHandle
 import io.mockk.coEvery
@@ -61,13 +63,14 @@ class WatchDataViewModelTest {
     }
 
     @Test
-    fun `a failed read shows the empty state, not a crash or an endless spinner`() = runTest {
+    fun `a failed read shows a failure, not the empty state of a watch that sent nothing`() = runTest {
         coEvery { repository.latest(any(), any()) } throws IllegalStateException("database is locked")
 
         val vm = WatchDataViewModel(SavedStateHandle(), repository, testDeviceRepository())
 
         assertFalse(vm.uiState.value.isLoading)
-        assertTrue(vm.uiState.value.metrics.isEmpty)
+        // The translated fallback, never the exception's own English text.
+        assertEquals(ScreenError.Text(R.string.screen_error_generic), vm.uiState.value.error)
     }
 
     @Test

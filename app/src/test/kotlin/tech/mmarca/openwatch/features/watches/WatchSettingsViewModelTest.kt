@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
@@ -51,8 +52,8 @@ class WatchSettingsViewModelTest {
         val vm = viewModel()
 
         assertSame(before, vm.uiState.value.screen)
-        assertFalse(vm.uiState.value.loading)
-        assertFalse(vm.uiState.value.failed)
+        assertFalse(vm.uiState.value.isLoading)
+        assertNull(vm.uiState.value.error)
         verify(exactly = 1) { links.retain(WATCH) }
     }
 
@@ -61,12 +62,12 @@ class WatchSettingsViewModelTest {
         coEvery { link.screen(SCREEN) } throws GarminGattClientException("out of range") andThen before
 
         val vm = viewModel()
-        assertTrue(vm.uiState.value.failed)
+        assertNotNull(vm.uiState.value.error)
         assertNull(vm.uiState.value.screen)
 
         vm.refresh()
 
-        assertFalse(vm.uiState.value.failed)
+        assertNull(vm.uiState.value.error)
         assertSame(before, vm.uiState.value.screen)
     }
 
@@ -77,7 +78,7 @@ class WatchSettingsViewModelTest {
         val vm = viewModel()
 
         assertTrue(vm.uiState.value.isEmpty)
-        assertFalse(vm.uiState.value.failed)
+        assertNull(vm.uiState.value.error)
     }
 
     @Test

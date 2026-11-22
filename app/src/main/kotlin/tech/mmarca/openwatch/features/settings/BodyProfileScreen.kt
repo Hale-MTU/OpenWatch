@@ -35,6 +35,7 @@ import tech.mmarca.openwatch.features.connectedapps.isRealTime
 import tech.mmarca.openwatch.features.connectedapps.relativeTime
 import tech.mmarca.openwatch.ui.components.OpenWatchButton
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
+import tech.mmarca.openwatch.ui.components.ScreenErrorContent
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
@@ -83,6 +84,7 @@ fun BodyProfileScreen(
                 color = MaterialTheme.colorScheme.primary,
             )
         }
+        ScreenErrorContent(screenError = state.error)
         OpenWatchCard(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = Modifier.padding(Spacing.lg),

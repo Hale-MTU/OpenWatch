@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.features.watches
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -209,8 +210,7 @@ class WatchNotificationAppsViewModelTest {
     }
 
     @Test
-    fun `an app list that cannot be read leaves the screen usable, not stuck loading`() = runTest {
-        // A host that cannot answer the query: an empty list, not a stuck spinner.
+    fun `an app list that cannot be read is shown as a failure, not stuck loading and not an empty phone`() = runTest {
         gateway.appListThrows = true
         val vm = viewModel()
 
@@ -218,6 +218,7 @@ class WatchNotificationAppsViewModelTest {
 
         assertFalse(vm.uiState.value.loadingApps)
         assertTrue(vm.uiState.value.apps.isEmpty())
+        assertNotNull(vm.uiState.value.appsError)
     }
 
     @Test

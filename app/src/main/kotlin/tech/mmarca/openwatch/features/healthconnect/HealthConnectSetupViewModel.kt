@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import tech.mmarca.openwatch.core.presentation.ScreenError
+import tech.mmarca.openwatch.core.presentation.toScreenError
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.domain.model.HealthConnectAvailability
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
@@ -27,6 +29,8 @@ data class HealthConnectSetupUiState(
     val missingExtraAccess: Boolean = false,
     val syncEnabled: Boolean = true,
     val isLoading: Boolean = true,
+    /** The grants could not be read. Shown as such, never as nothing granted. */
+    val error: ScreenError? = null,
 ) {
     val allGranted: Boolean get() = declaredCount > 0 && grantedCount == declaredCount
 }
@@ -53,7 +57,9 @@ class HealthConnectSetupViewModel @Inject constructor(
                 } catch (error: CancellationException) {
                     throw error
                 } catch (error: Exception) {
-                    emptySet()
+                    val screenError = error.toScreenError(logTag = "HealthConnectSetup")
+                    _uiState.update { it.copy(availability = availability, isLoading = false, error = screenError) }
+                    return@launch
                 }
             } else {
                 emptySet()
@@ -72,6 +78,7 @@ class HealthConnectSetupViewModel @Inject constructor(
                     declaredCount = healthConnect.declaredPermissions.size,
                     syncEnabled = preferences.healthConnectSyncEnabled,
                     isLoading = false,
+                    error = null,
                 )
             }
         }
