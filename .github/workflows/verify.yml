@@ -105,7 +105,7 @@ jobs:
   # off when the runner already has one with caches in it. A step, since a
   # job-level env cannot read the runner context.
 
-  # verifyCiUnitTest (:wearlink:test, :domain:testCiUnitTest, :app:testCiUnitTest)
+  # verifyCiUnitTest (:wearlink:test, the test task of each pure-Kotlin module, :app:testCiUnitTest)
   # and verifyCiPreflight (verifyTranslations, :app:checkCiDuplicateClasses,
   # :app:compileCiAndroidTestKotlin). No lint here, so every core gets a test
   # fork (app/build.gradle.kts reads openwatch.testForks).
@@ -123,7 +123,7 @@ jobs:
       - run: scripts/ci-android-gradle.sh -Popenwatch.testForks=4 verifyCiUnitTest verifyCiPreflight
       - run: git diff --check
 
-  # verifyCiLint (:app:lintCi, :domain:lintCi).
+  # verifyCiLint (:app:lintCi and each library module's lint).
   lint:
     needs: context
     if: needs.context.outputs.run_lint == 'true'

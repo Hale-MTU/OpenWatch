@@ -111,7 +111,7 @@ The night of 2026-11-02/03 used to check the night estimator (the estimate 01:38
 
 ## Naps
 
-`WearNaps` (in `:domain`, run on the phone) finds sleep outside the main night in the same rows. It reads the day, not only the night window, and leaves the night to `WearNight`: the night's estimate does not change, a test checks that.
+`WearNaps` (in health-calculations, run on the phone) finds sleep outside the main night in the same rows. It reads the day, not only the night window, and leaves the night to `WearNight`: the night's estimate does not change, a test checks that.
 
 A nap is a run of minutes that are all of: worn, scored as sleep by `SleepWakeScorer` (still arm, quiet pulse), and with the 5-minute median heart rate clearly under the wearer's waking level. The waking level is the lower quarter of the heart rate of the worn minutes between 06:00 and 22:00 outside the night sessions; with fewer than 90 such minutes there is no level and no nap.
 

@@ -139,7 +139,9 @@ androidComponents {
 dependencies {
     // The OpenLink host, from the openlink/ submodule (a composite build).
     implementation("tech.mmarca.openlink:host")
-    implementation(project(":domain"))
+    // The pure models, which also bring health-calculations, and the FIT codec.
+    implementation(project(":core:model"))
+    implementation(project(":core:fit"))
     implementation(project(":wearlink"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -191,7 +193,6 @@ dependencies {
     ksp(libs.hilt.android.compiler)
 
     // Testing
-    // The Wear OS sleep-minute fixtures live with the domain module.
     // The Wear OS sleep-minute fixtures, for the sync tests.
     testImplementation(testFixtures("tech.mmarca.healthcalculations:health-calculations"))
     testImplementation(libs.junit4)
@@ -223,9 +224,9 @@ tasks.withType<Test>().configureEach {
     maxParallelForks = providers.gradleProperty("openwatch.testForks").orNull?.toInt()
         ?: (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
     maxHeapSize = "1g"
-    // The memory budget above assumes one test task at a time. The domain
-    // module's tests take seconds; they go first rather than beside these.
-    mustRunAfter(":domain:testCiUnitTest")
+    // The memory budget above assumes one test task at a time. The pure modules'
+    // tests take seconds; they go first rather than beside these.
+    mustRunAfter(":core:model:test", ":core:fit:test")
     // The architecture tests read sources and documents as plain files: this module's
     // and the others' code, both manifests, the strings, the privacy documents. None
     // of that is on the test classpath, so it is declared here; otherwise a change to
@@ -233,7 +234,8 @@ tasks.withType<Test>().configureEach {
     val repository = rootProject.layout.projectDirectory
     mapOf(
         "scannedAppMain" to "app/src/main",
-        "scannedDomainMain" to "domain/src/main",
+        "scannedCoreModelMain" to "core/model/src/main",
+        "scannedCoreFitMain" to "core/fit/src/main",
         "scannedWearMain" to "wear/src/main",
         "scannedWearRecordingCoreMain" to "wear/recording-core/src/main",
         "scannedWearlinkMain" to "wearlink/src/main",

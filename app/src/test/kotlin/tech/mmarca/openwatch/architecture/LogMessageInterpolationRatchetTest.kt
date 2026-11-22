@@ -43,12 +43,11 @@ class LogMessageInterpolationRatchetTest {
     }
 
     private fun sourceFiles() =
-        File(SourceRoot).walkTopDown() + File(DomainRoot).walkTopDown() + File(WearRoot).walkTopDown() +
-            File(WearCoreRoot).walkTopDown()
+        File(SourceRoot).walkTopDown() + LibraryModuleRoots.values.asSequence().flatMap { File(it).walkTopDown() } +
+            File(WearRoot).walkTopDown() + File(WearCoreRoot).walkTopDown()
 
     private companion object {
         const val SourceRoot = "src/main/kotlin/tech/mmarca/openwatch"
-        const val DomainRoot = "../domain/src/main/kotlin/tech/mmarca/openwatch"
         const val WearRoot = "../wear/src/main/kotlin/tech/mmarca/openwatch"
         const val WearCoreRoot = "../wear/recording-core/src/main/kotlin/tech/mmarca/openwatch"
         val LogCall = Regex("""\bLog\.(?:v|d|i|w|e|wtf)\(""")

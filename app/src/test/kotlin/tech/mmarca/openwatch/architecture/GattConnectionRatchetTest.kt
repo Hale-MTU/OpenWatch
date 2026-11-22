@@ -14,7 +14,8 @@ class GattConnectionRatchetTest {
 
     @Test
     fun `connectGatt is called only where the radio lease is held`() {
-        val callers = File("src/main/kotlin/tech/mmarca/openwatch").walkTopDown()
+        val callers = (listOf("src/main/kotlin/tech/mmarca/openwatch") + LibraryModuleRoots.values).asSequence()
+            .flatMap { File(it).walkTopDown() }
             .filter { it.isFile && it.extension == "kt" }
             .filter { file -> file.readLines().any { ConnectGatt.containsMatchIn(it.substringBefore("//")) } }
             .map { it.name }

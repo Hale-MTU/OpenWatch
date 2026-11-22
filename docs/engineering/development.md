@@ -2,8 +2,9 @@
 
 ## Build
 
-The phone app, the watch app and its pure core, the pure-Kotlin link and the domain module
-build with the Gradle wrapper. JDK 17 or 21, the Android platform 37 and build-tools 37.0.0.
+The phone app, the watch app and its pure core, the pure-Kotlin link and the phone app's
+pure-Kotlin modules (`:core:model`, `:core:fit`) build with the Gradle wrapper. JDK 17 or 21,
+the Android platform 37 and build-tools 37.0.0.
 
 ```bash
 ./gradlew :app:assembleDebug
@@ -28,7 +29,7 @@ Two gates, as in OpenVitals: the phone gate and the watch gate. Both run the lin
 module's tests, since both apps compile it.
 
 ```bash
-./gradlew verifyCi        # the phone app and the domain module: unit tests, translations, duplicate classes, android-test compile, lint
+./gradlew verifyCi        # the phone app and its modules: unit tests, translations, duplicate classes, android-test compile, lint
 ./gradlew verifyWearCi    # the watch app and its pure core: unit tests, lint, build, android-test compile, and :app's architecture tests
 ```
 
@@ -85,14 +86,20 @@ set by the emulator action.
 ## Lint
 
 Lint runs on every pull request and push that touches the phone side, and in the watch
-gate. A warning fails it (`warningsAsErrors`, set for every module in `build-logic/`).
+gate. A warning fails it (`warningsAsErrors`, set in `build-logic/` for every Android module
+and every plain Kotlin one that applies `com.android.lint`). The pure-Kotlin modules that hold
+code an app's lint used to check apply it, with the same rules: `:core:model` and `:core:fit`
+in `verifyCiLint`, `:wear:recording-core` in the watch gate. `:wearlink` has none. Lint knows
+no minSdk in a plain Kotlin module, so its API-level check does not run there: a JDK method
+that Android 8 lacks fails only on such a phone. Keep their code to the Java 8 library and
+`java.time`.
 The warnings that were there when that was switched on are in each module's
 `lint-baseline.xml`; fix them from there, and never record a new one into it. A baseline
 entry that was fixed is reported as such and can be dropped by regenerating:
 
 ```bash
-./gradlew :app:updateLintBaselineCi :domain:updateLintBaselineCi :wear:updateLintBaselineCi \
-  :wear:recording-core:updateLintBaseline
+./gradlew :app:updateLintBaselineCi :core:model:updateLintBaseline :core:fit:updateLintBaseline \
+  :wear:updateLintBaselineCi :wear:recording-core:updateLintBaseline
 ```
 
 Two kinds of check are off on purpose. The version checks (`GradleDependency`,
@@ -106,8 +113,8 @@ Every module locks its dependencies (`dependencyLocking`, in `build-logic/`). Af
 dependency change, regenerate the module's lockfile and commit it:
 
 ```bash
-./gradlew :app:dependencies :domain:dependencies :wear:dependencies :wear:recording-core:dependencies \
-  :wearlink:dependencies --write-locks
+./gradlew :app:dependencies :core:model:dependencies :core:fit:dependencies :wear:dependencies \
+  :wear:recording-core:dependencies :wearlink:dependencies --write-locks
 ```
 
 ## Dependency Verification

@@ -111,10 +111,11 @@ class HealthPermissionsTest {
         }
     }
 
-    /** The Health Connect record classes a file under [roots] imports and constructs. */
+    /** The Health Connect record classes a file under [roots], in the app or a library module, imports and constructs. */
     private fun recordsBuiltUnder(roots: List<String>): Set<String> =
-        roots.asSequence()
-            .flatMap { File("$SourceRoot/$it").walkTopDown() }
+        (listOf(SourceRoot) + LibraryModuleRoots.values).asSequence()
+            .flatMap { base -> roots.asSequence().map { File("$base/$it") } }
+            .flatMap { it.walkTopDown() }
             .filter { it.isFile && it.extension == "kt" }
             .flatMap { file ->
                 val text = file.readText()

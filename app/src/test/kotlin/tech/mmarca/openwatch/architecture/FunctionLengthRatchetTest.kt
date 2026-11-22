@@ -7,8 +7,8 @@ import org.junit.Test
 /**
  * A ratchet on function length, as OpenVitals': the count of functions over [MaxLines] may
  * fall, never rise, and none passes [GiantLines] unless it is listed, and then it may not grow.
- * It reads the same sources as [FileSizeRatchetTest]: the phone app, the domain and link
- * modules, the watch app and its pure core.
+ * It reads the same sources as [FileSizeRatchetTest]: the phone app and its library modules,
+ * the link, the watch app and its pure core.
  *
  * A function ends at the next line indented no deeper than its `fun`. That holds for this code
  * base's formatting, and it counts expression bodies too. When this fails, split the function.
@@ -68,16 +68,15 @@ class FunctionLengthRatchetTest {
 
     private companion object {
         /**
-         * Each source root with the prefix its paths are reported under. The domain module keeps
-         * the app's package names, so its paths are reported as the app's.
+         * Each source root with the prefix its paths are reported under. The library modules
+         * ([LibraryModuleRoots]) keep the app's package names, so their paths are reported as the app's.
          */
         val Roots = listOf(
             "" to "src/main/kotlin/tech/mmarca/openwatch",
-            "" to "../domain/src/main/kotlin/tech/mmarca/openwatch",
             "wearlink/" to "../wearlink/src/main/kotlin/tech/mmarca/openwatch",
             "wear/" to "../wear/src/main/kotlin/tech/mmarca/openwatch",
             "wear/recording-core/" to "../wear/recording-core/src/main/kotlin/tech/mmarca/openwatch",
-        )
+        ) + LibraryModuleRoots.values.map { root -> "" to root }
 
         const val MaxLines = 150
         const val GiantLines = 450
@@ -85,7 +84,7 @@ class FunctionLengthRatchetTest {
         /**
          * The count on 2026-11-22, all three in the Garmin stack: the wellness dispatch (270
          * lines), the session's dispatch (201) and the radio link's pull (161). The watch app,
-         * its core, the link and the domain module have none.
+         * its core, the link and the library modules have none.
          */
         const val MaxLongFunctions = 3
 

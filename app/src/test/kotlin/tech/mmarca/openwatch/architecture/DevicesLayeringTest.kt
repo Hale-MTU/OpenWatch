@@ -9,7 +9,8 @@ class DevicesLayeringTest {
 
     @Test
     fun `no Hilt module is declared inside devices`() {
-        val declaring = File(SourceRoot).walkTopDown()
+        val declaring = (listOf(SourceRoot) + LibraryModuleRoots.values.map { "$it/devices" }).asSequence()
+            .flatMap { File(it).walkTopDown() }
             .filter { it.isFile && it.extension == "kt" }
             .filter { file -> file.readLines().any { it.trim() == "@Module" } }
             .map { it.name }

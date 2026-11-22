@@ -14,6 +14,7 @@ import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
 import tech.mmarca.openwatch.core.presentation.CurrentLocaleStrings
+import tech.mmarca.openwatch.core.presentation.LocaleUnitSystemProvider
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
 import tech.mmarca.openwatch.core.security.KeystoreSecretKey
 import tech.mmarca.openwatch.data.local.device.DeviceDao
@@ -90,8 +91,7 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideSystemUnitSystemProvider(): SystemUnitSystemProvider =
-        SystemUnitSystemProvider.Default
+    fun provideSystemUnitSystemProvider(): SystemUnitSystemProvider = LocaleUnitSystemProvider
 
     @Provides
     @Singleton

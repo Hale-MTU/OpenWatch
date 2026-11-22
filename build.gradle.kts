@@ -48,8 +48,8 @@ tasks.register("verifyAndroidTest") {
 
 tasks.register("verifyCiUnitTest") {
     group = "verification"
-    description = "Runs the phone app unit tests against the CI build type, and the domain and link modules'."
-    dependsOn(":wearlink:test", ":domain:testCiUnitTest", ":app:testCiUnitTest")
+    description = "Runs the phone app unit tests against the CI build type, and the pure modules' and the link's."
+    dependsOn(":wearlink:test", ":core:model:test", ":core:fit:test", ":app:testCiUnitTest")
 }
 
 tasks.register<Exec>("verifyTranslations") {
@@ -74,8 +74,8 @@ tasks.register("verifyCiPreflight") {
 // (.github/workflows/verify.yml) rather than a place in verifyCiPreflight.
 tasks.register("verifyCiLint") {
     group = "verification"
-    description = "Runs phone app and domain module lint for CI."
-    dependsOn(":app:lintCi", ":domain:lintCi")
+    description = "Runs phone app and its library modules' lint for CI."
+    dependsOn(":app:lintCi", ":core:model:lint", ":core:fit:lint")
 }
 
 // Phone app only. The wear module has its own gate (verifyWearCi), its own job

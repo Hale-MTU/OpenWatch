@@ -18,14 +18,16 @@ class PackageDirectionTest {
 
     @Test
     fun `imports follow the package direction`() {
-        val offenders = File(Root).walkTopDown()
-            .filter { it.isFile && it.extension == "kt" }
-            .flatMap { file ->
-                val from = packageOf(file)
+        // The library modules keep the app's package names: a file there is read as the app's.
+        val offenders = (listOf(Root) + LibraryModuleRoots.values).asSequence()
+            .flatMap { root -> File(root).walkTopDown().map { file -> root to file } }
+            .filter { (_, file) -> file.isFile && file.extension == "kt" }
+            .flatMap { (root, file) ->
+                val from = packageOf(file, root)
                 ImportLine.findAll(file.readText()).map { it.groupValues[1] }
                     .map { target -> target.split('.') }
                     .filter { target -> forbidden(from, target) }
-                    .map { target -> "${file.relativeTo(File(Root))} -> ${target.take(2).joinToString(".")}" }
+                    .map { target -> "${file.relativeTo(File(root))} -> ${target.take(2).joinToString(".")}" }
             }
             .filterNot { line -> Allowed.any { line.startsWith(it) } }
             .distinct()
@@ -44,8 +46,8 @@ class PackageDirectionTest {
     }
 
     /** `features`, or `devices/garmin` for an integration, or `root` for a file at the top. */
-    private fun packageOf(file: File): List<String> =
-        file.relativeTo(File(Root)).invariantSeparatorsPath.split('/').dropLast(1).let { dirs ->
+    private fun packageOf(file: File, root: String): List<String> =
+        file.relativeTo(File(root)).invariantSeparatorsPath.split('/').dropLast(1).let { dirs ->
             if (dirs.firstOrNull() == "devices") dirs.take(2) else dirs.take(1)
         }
 

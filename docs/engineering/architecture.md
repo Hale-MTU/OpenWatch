@@ -11,11 +11,11 @@ OpenWatch seams noted.
 
 - App namespace: `tech.mmarca.openwatch`
 - Build logic: `build-logic/`, an included build with the convention plugins every module applies (`openwatch.android.application`, `openwatch.android.library`, `openwatch.jvm.library`): SDK levels, Java 17, signing from the environment, the debug, release and nightly build types, lint and dependency locking. A module's own file holds only what is its own (version codes, the `ci` type, the diagnostics flag). A change there must leave the release APKs byte-identical; compare their hashes before and after.
-- Project shape: five Gradle modules. The phone app is `:app`; `:domain` holds the pure code
-  the app depends on; `:wear` is the Wear OS watch app with its own CI gate; `:wearlink` is
-  the pure-Kotlin link both apps depend on. Package names are the same across `:app` and
-  `:domain`. The health calculations, shared with OpenVitals, come from the
-  `health-calculations/` submodule, a composite build (below).
+- Project shape: six Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
+  hold the pure code the app depends on (below); `:wear` is the Wear OS watch app with its own
+  CI gate; `:wearlink` is the pure-Kotlin link both apps depend on. Package names are the same
+  across `:app` and the modules under `core/`. The health calculations, shared with OpenVitals,
+  come from the `health-calculations/` submodule, a composite build (below).
 - The watch app's pure core is `:wear:recording-core`, plain Kotlin in `wear/recording-core/`
   with the watch app's package names; only `:wear` depends on it (below).
 - Dependency wiring: Hilt in `:app`, rooted at `OpenWatchApp`; modules are `di/AppModule.kt`,
@@ -183,15 +183,18 @@ Notes worth carrying:
 
 The BLE discovery scan the add-watch flow uses lives in `sensors/ble`, trimmed to discovery: OpenWatch streams no live sensor.
 
-## Module `:domain`
+## Modules `:core:model` and `:core:fit`
 
-The app-local code that nothing in the rest of the phone app sits below, in `domain/`: the packages `domain/model` (the device, sleep-minute and scale models) and `domain/preferences`, and the primitives `core/fit` (the FIT codec) and `core/geo` (coordinate parsing). Package names are unchanged, so an import does not say which module a class is in. `:app` depends on it. The calculations it held (the sleep and walking estimators, body composition, workout energy) moved to [health-calculations](#health-calculations-composite-build-health-calculations), which it takes as an `api` dependency.
+The app-local code that nothing in the rest of the phone app sits below, in two pure-Kotlin modules (`openwatch.jvm.library`, JDK only, no Android):
 
-It is an Android library, not plain Kotlin: `SystemUnitSystemProvider` reads the platform's locale data, and Android lint then still checks it. It has the app's build types (`ci`, `nightly`), so the app's `ci` variant takes the module's `ci` variant and the module's tests and lint run on that one compile. Nothing in it is injected: it holds no Hilt module, and its classes are constructed by the app's repositories and the app's `di/` modules.
+- `core/model` (`:core:model`): the packages `domain/model` (the device, sleep-minute, scale and activity models), `domain/preferences` (the unit and theme choices, and the `SystemUnitSystemProvider` interface) and `core/geo` (coordinate parsing). The calculations it once held (the sleep and walking estimators, body composition, workout energy) are [health-calculations](#health-calculations-composite-build-health-calculations)', which it takes as an `api` dependency, since the activity models carry its route and lap types.
+- `core/fit` (`:core:fit`): the FIT container codec, package `core/fit`: the decoder, the encoder, the CRC, the 16-bit float. What a record means stays with the code that reads it.
 
-The wear sleep fixtures the app's Wear OS sync tests use are health-calculations' test fixtures (`testFixtures("tech.mmarca.healthcalculations:health-calculations")`); this module has none of its own.
+Package names are unchanged, so an import does not say which module a class is in. `:app` depends on both. The one piece of `domain/preferences` that reads the platform, the locale's measurement system, is the app's `core/presentation/LocaleUnitSystemProvider`, bound to the interface in `di/AppModule`. Nothing in either module is injected: they hold no Hilt module, and their classes are constructed by the app's repositories and the app's `di/` modules.
 
-The module exists for the build: the app's lint and tests no longer cover these lines, and a change elsewhere leaves this module's compile, lint and test results in the build cache. What does not belong here: anything with an inbound dependency from `data/`, `healthconnect/` or `features/` (`domain/query` and `domain/usecase` stay in `:app` for that reason), resources, and Hilt wiring.
+The wear sleep fixtures the app's Wear OS sync tests use are health-calculations' test fixtures (`testFixtures("tech.mmarca.healthcalculations:health-calculations")`); these modules have none of their own.
+
+The modules exist for the build and for the boundary: a change elsewhere leaves their compile and test results in the build cache, and the compiler, not a test, keeps Android and the rest of the app out of them. Their tests are plain JUnit (`:core:model:test`, `:core:fit:test`, in `verifyCiUnitTest`), and Android lint still checks them (`com.android.lint` with the app's rules, `:core:model:lint` and `:core:fit:lint` in `verifyCiLint`), without its API-level check (see [development.md](development.md#lint)). What does not belong here: anything with an inbound dependency from `data/`, `healthconnect/` or `features/`, resources, and Hilt wiring. The architecture ratchets walk them through `LibraryModuleRoots` in the app's architecture tests, and `LibraryModuleRootsTest` fails on a module under `core/` or `devices/` that is not listed there.
 
 ## Shared module `:wearlink`
 
@@ -222,13 +225,13 @@ The source ratchets in `:app`'s architecture tests (file size, function length, 
 
 ## health-calculations (composite build `health-calculations/`)
 
-The health calculations OpenWatch and OpenVitals share live in their own repository, [Hale-MTU/health-calculations](https://github.com/Hale-MTU/health-calculations), a git submodule at `health-calculations/` taken as a composite build (`includeBuild("health-calculations")`, dependency `tech.mmarca.healthcalculations:health-calculations`). It is plain Kotlin on the JDK with no dependency, so the phone app and the watch app take the same code: `:domain` with `api` (so `:app` sees it), `:wear` and `:wear:recording-core` with `implementation`.
+The health calculations OpenWatch and OpenVitals share live in their own repository, [Hale-MTU/health-calculations](https://github.com/Hale-MTU/health-calculations), a git submodule at `health-calculations/` taken as a composite build (`includeBuild("health-calculations")`, dependency `tech.mmarca.healthcalculations:health-calculations`). It is plain Kotlin on the JDK with no dependency, so the phone app and the watch app take the same code: `:core:model` with `api` (so `:app` sees it), `:wear` and `:wear:recording-core` with `implementation`.
 
 The submodule's pointer must name a commit on the library's default branch: merge the library's pull request first, then move the pointer, here and in OpenVitals. A pointer at a commit that only a pull request branch holds builds until that branch is deleted, and then no fresh clone can check the submodule out. `scripts/ci-submodule-pointers.sh` checks every submodule and is a job of the gate (`submodule-pointers` in `verify.yml`), so a pull request that points at an unmerged library branch stays red until the library is merged.
 
 The phone app reads its `insights` (the Wear OS night, the nocturnal resting heart rate, body composition, workout and walking energy, the activity type a file names), its `model` (the exercise session, the sleep-minute rows) and its `preferences` (the body profile). The watch reads its `signal` package (beats from the PPG, RMSSD, respiratory rate, the accelerometer's minute features, the Samsung inter-beat intervals) and `insights/AscentCredit`, which the phone's floors import reads too, so both count the same climb. The recorders, holds and gates that decide when a sensor runs stay in the watch app (`:wear`, the pure ones in `:wear:recording-core`): they control the device, they compute no figure.
 
-Health Connect's exercise and segment types are copied in the library under their Health Connect names; `ExerciseTypeMirrorTest` in `:domain` checks every value against the real classes, both ways. A calculation is changed in the library and reaches the apps when the submodule moves; it moves in OpenVitals in the same step, so both apps give the same number.
+Health Connect's exercise and segment types are copied in the library under their Health Connect names; `ExerciseTypeMirrorTest` in `:app`, the module with Health Connect on its test classpath, checks every value against the real classes, both ways. A calculation is changed in the library and reaches the apps when the submodule moves; it moves in OpenVitals in the same step, so both apps give the same number.
 
 ## OpenLink host (`link/`, composite build `openlink/`)
 

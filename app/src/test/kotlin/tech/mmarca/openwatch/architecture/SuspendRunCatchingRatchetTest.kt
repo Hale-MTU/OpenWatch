@@ -34,7 +34,7 @@ class SuspendRunCatchingRatchetTest {
         "src/main/kotlin/tech/mmarca/openwatch",
         "../wear/src/main/kotlin/tech/mmarca/openwatch",
         "../wear/recording-core/src/main/kotlin/tech/mmarca/openwatch",
-    )
+    ) + LibraryModuleRoots.values
 
     private companion object {
         val SwallowingAwait = Regex("""\brunCatching\s*\{[^}]*\.await\(""")
