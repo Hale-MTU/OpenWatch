@@ -12,7 +12,11 @@ import androidx.room.Upsert
  */
 @Dao
 interface DeviceDao {
-    @Query("SELECT * FROM devices ORDER BY added_at, id")
+    /**
+     * In the order the devices were added: callers take the first Garmin as the paired watch.
+     * The row id keeps that order, an upsert keeping its row's id, as the JSON list kept it.
+     */
+    @Query("SELECT * FROM devices ORDER BY rowid")
     fun all(): List<DeviceEntity>
 
     @Upsert

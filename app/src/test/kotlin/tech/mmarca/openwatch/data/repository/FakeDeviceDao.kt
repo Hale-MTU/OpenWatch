@@ -6,11 +6,12 @@ import tech.mmarca.openwatch.data.local.device.DeviceDao
 import tech.mmarca.openwatch.data.local.device.DeviceEntity
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 
-/** The `devices` table in memory, in the table's order. */
+/** The `devices` table in memory. */
 class FakeDeviceDao : DeviceDao {
     val rows = linkedMapOf<String, DeviceEntity>()
 
-    override fun all(): List<DeviceEntity> = rows.values.sortedWith(compareBy({ it.addedAt }, { it.id }))
+    /** Insertion order, as the table's row ids keep it; an upsert keeps its place. */
+    override fun all(): List<DeviceEntity> = rows.values.toList()
 
     override fun upsert(device: DeviceEntity) {
         rows[device.id] = device
