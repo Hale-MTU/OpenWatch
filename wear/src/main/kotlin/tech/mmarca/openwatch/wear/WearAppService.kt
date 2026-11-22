@@ -31,53 +31,34 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.wear.workout.WorkoutPillKey
-import tech.mmarca.openwatch.wear.workout.WorkoutState
 import tech.mmarca.openwatch.wear.workout.pillKey
 import tech.mmarca.openwatch.wear.workout.sportName
 import tech.mmarca.openwatch.wear.workout.stopwatchBaseMillis
-import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
-import tech.mmarca.openwatch.wear.workout.MetricStoreWorkoutRows
-import tech.mmarca.openwatch.wear.workout.WorkoutRecorder
-import tech.mmarca.openwatch.wear.workout.WorkoutStore
 import tech.mmarca.openwatch.wearlink.WorkoutSport
-import tech.mmarca.openwatch.wearlink.HeartRateInterval
 
 /**
- * The watch's end of the phone link, and the host of the heart rate, step,
- * ascent and sleep minute recorders. The heart rate rests while the watch
- * is off the wrist ([WornMonitor]).
+ * The watch's end of the phone link, and the host of the recorders. The
+ * heart rate rests while the watch is off the wrist ([WornMonitor]).
  *
- * The link itself is [WearLinkServerHost] over `:wearlink`; this service
- * keeps it, the recorders and the trust store alive as a foreground
- * service (a plain background service is stopped about a minute after the
- * activity closes). Its type is `connectedDevice`, plus `health` once the
- * heart rate or the step counter is granted. Bluetooth off closes the listener; on again
- * reopens it; a bond change refreshes which trusted phones are still paired.
+ * The link itself is [WearLinkServerHost] over `:wearlink`; the recorders,
+ * the link and the trust store live in the process's [WearGraph]. This
+ * service keeps them running as a foreground service (a plain background
+ * service is stopped about a minute after the activity closes), decides what
+ * runs ([RecorderPlan]) and hands that to every [Recorder]. Its type is
+ * `connectedDevice`, plus `health` once the heart rate or the step counter is
+ * granted. Bluetooth off closes the listener; on again reopens it; a bond
+ * change refreshes which trusted phones are still paired.
  *
  * The phone side is `app/.../devices/wearos/BluetoothWearOsNodePort`.
  */
-class WearAppService : Service() {
+class WearAppService : Service(), WearGraph.Host {
 
     /** False when the system refused the foreground start: nothing may run then. */
     private var isForeground = false
 
-    private lateinit var store: MetricStore
-    private lateinit var recorder: HeartRateRecorder
-    private lateinit var stepRecorder: StepRecorder
-    private lateinit var ascentRecorder: AscentRecorder
-    private lateinit var minuteRecorder: SleepMinuteRecorder
-    private lateinit var nightHrv: NightHrvRecorder
-    private lateinit var skinRecorder: SkinTemperatureRecorder
-    private lateinit var spo2Recorder: Spo2Recorder
-    private lateinit var wornMonitor: WornMonitor
+    private val graph: WearGraph by lazy { wearGraph }
     private lateinit var bedtimeMonitor: BedtimeMonitor
-    private lateinit var samsungFeed: SamsungHeartRateFeed
     private lateinit var debugSnapshots: DebugSnapshots
-    private lateinit var wakeSync: SensorWakeSync
-    private lateinit var workout: WorkoutRecorder
-    private lateinit var ppgLogger: PpgRawLogger
-    private lateinit var trust: WearTrustStore
-    private lateinit var link: WearLinkServerHost
     private val mainHandler = Handler(Looper.getMainLooper())
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -89,13 +70,13 @@ class WearAppService : Service() {
             when (intent.action) {
                 BluetoothAdapter.ACTION_STATE_CHANGED -> when (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR)) {
                     BluetoothAdapter.STATE_ON -> {
-                        WearLinkState.update { it.copy(bluetoothOn = true) }
-                        link.start()
+                        graph.linkState.update { it.copy(bluetoothOn = true) }
+                        graph.link.start()
                         refreshBondLost()
                     }
                     BluetoothAdapter.STATE_TURNING_OFF, BluetoothAdapter.STATE_OFF -> {
-                        WearLinkState.update { it.copy(bluetoothOn = false) }
-                        link.stop()
+                        graph.linkState.update { it.copy(bluetoothOn = false) }
+                        graph.link.stop()
                     }
                 }
                 BluetoothDevice.ACTION_BOND_STATE_CHANGED -> refreshBondLost()
@@ -107,81 +88,28 @@ class WearAppService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        DebugProtocol.init(this)
-        store = metricStore
-        samsungFeed = SamsungHeartRateFeed(this)
-        wakeSync = SensorWakeSync(this)
-        workout = WorkoutRecorder(this, store) {
-            // The location type is held only while a workout reads the GPS; the heart rate runs at the full rate.
-            if (isForeground) startInForeground()
-            reconcileRecorders()
-        }
-        Thread({ workout.recoverInterrupted() }, "WorkoutRecover").start()
+        val graph = graph
+        // Built here, on the main thread, before any of their threads runs.
+        graph.recorders
+        graph.worn
+        // A fall-back from an earlier run of the service does not outlive it.
+        graph.heartRate.resetFallBack()
+        graph.nightHrv.resetFallBack()
+        Thread({ graph.workout.recoverInterrupted() }, "WorkoutRecover").start()
         // A start, pause, resume or end changes the pill; the ticking of the clock does not.
         serviceScope.launch {
-            WorkoutState.state.map { it.pillKey() }.distinctUntilChanged().collect { mainHandler.post(::refreshNotification) }
+            graph.workoutState.state.map { it.pillKey() }.distinctUntilChanged().collect { mainHandler.post(::refreshNotification) }
         }
         // Off the main thread: a week of heart rate is tens of thousands of rows.
-        Thread({ LegacyStoreImport.run(this, store) }, "LegacyStoreImport").start()
-        ppgLogger = PpgRawLogger(this)
-        minuteRecorder = SleepMinuteRecorder(
-            this,
-            store,
-            isHeartRateRecording = ::isHeartRateDense,
-            stepsInMinute = ::stepsInMinute,
-            // The heart rate runs at full rate while sleep is held; the plan reads it.
-            onSleepHoldChange = { mainHandler.post { reconcileRecorders() } },
-            wakeSync = wakeSync,
-            syncedHold = { isHeartRateDense() && WearSettings.syncedSleepHold(this) },
-        )
-        recorder = HeartRateRecorder(
-            this,
-            store,
-            samsungFeed,
-            wakeSync,
-            onSourceChanged = { mainHandler.post { reconcileRecorders() } },
-            onSample = { at, bpm ->
-                minuteRecorder.noteHeartRate(at, bpm)
-                if (workout.isActive) workout.noteHeartRate(at, bpm)
-            },
-            onContact = minuteRecorder::noteHeartRateContact,
-        )
-        wornMonitor = WornMonitor(
-            this,
-            onWorn = minuteRecorder::noteWorn,
-            onHeartRateWanted = { wanted -> mainHandler.post { setHeartRateWanted(wanted) } },
-        )
-        nightHrv = NightHrvRecorder(
-            this,
-            store,
-            isHolding = { WearLinkState.state.value.sleepHoldActive },
-            samsungFeed = samsungFeed,
-        )
-        skinRecorder = SkinTemperatureRecorder(store, samsungFeed)
-        spo2Recorder = Spo2Recorder(this, store, samsungFeed, isHolding = { WearLinkState.state.value.sleepHoldActive })
+        Thread({ LegacyStoreImport.run(this, graph.store) }, "LegacyStoreImport").start()
         bedtimeMonitor = BedtimeMonitor(this, mainHandler) { reconcileRecorders() }
-        debugSnapshots = DebugSnapshots(this, mainHandler, ::debugPlan)
-        stepRecorder = StepRecorder(this, store, wakeSync)
-        ascentRecorder = AscentRecorder(this, store, wakeSync)
-        trust = WearTrustStore(this).also { it.onPending = { pending -> WearPhoneRequests.notify(this, pending) } }
-        link = WearLinkServerHost(
-            adapter = { getSystemService(BluetoothManager::class.java)?.adapter },
-            trust = trust,
-            store = store,
-            live = LiveHeartRate(this, isRecording = { recorder.isRunning }),
-            hrvAvailable = { nightHrv.hasSensor },
-            skinAvailable = { skinRecorder.isAvailable },
-            onPhoneActive = { at -> minuteRecorder.notePhoneActive(at) },
-            heldPreferences = { WearPreferenceCodec.encode(WearSettings.read(this), abilities()) },
-            setPreference = ::applyPhonePreference,
-            workouts = WorkoutStore(MetricStoreWorkoutRows(store))::workoutsSince,
-            localName = ::localName,
-        )
+        debugSnapshots = DebugSnapshots(this, mainHandler, graph.debug, ::debugPlan)
         isForeground = startInForeground()
         if (!isForeground) {
             stopSelf()
             return
         }
+        graph.host = this
         val filter = IntentFilter().apply {
             addAction(BluetoothAdapter.ACTION_STATE_CHANGED)
             addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED)
@@ -191,16 +119,13 @@ class WearAppService : Service() {
         } else {
             registerReceiver(bluetoothReceiver, filter)
         }
-        WearLinkState.update { it.copy(bluetoothOn = getSystemService(BluetoothManager::class.java)?.adapter?.isEnabled == true) }
-        link.start()
+        graph.linkState.update { it.copy(bluetoothOn = getSystemService(BluetoothManager::class.java)?.adapter?.isEnabled == true) }
+        graph.link.start()
         refreshBondLost()
         // Before the first plan: the plan reads whether bedtime mode is on.
         bedtimeMonitor.start()
-        startRecordingIfPermitted()
-        // Need no grant: the accelerometer and the barometer are open to every app.
-        minuteRecorder.start()
-        ascentRecorder.start()
-        wornMonitor.start()
+        reconcileRecorders()
+        graph.worn.start()
         debugSnapshots.start()
     }
 
@@ -209,40 +134,57 @@ class WearAppService : Service() {
         if (!isForeground) return START_NOT_STICKY
         when (intent?.action) {
             ACTION_TOGGLE_PPG_LOG -> {
-                if (ppgLogger.isRunning) ppgLogger.stop() else ppgLogger.start()
-                WearLinkState.update { it.copy(ppgLogging = ppgLogger.isRunning) }
+                val logger = graph.ppgLogger
+                if (logger.isRunning) logger.stop() else logger.start()
+                graph.linkState.update { it.copy(ppgLogging = logger.isRunning) }
             }
             ACTION_HEART_RATE_ALARM -> {
-                DebugProtocol.count("hr.alarms")
-                recorder.onAlarmFired()
+                graph.debug.count("hr.alarms")
+                graph.heartRate.onAlarmFired()
                 return START_STICKY
             }
             ACTION_WORKOUT_START -> {
                 val sport = WorkoutSport.fromId(intent.getStringExtra(EXTRA_SPORT)) ?: return START_STICKY
                 val gps = intent.getBooleanExtra(EXTRA_GPS, false) && WearPermissions.hasLocation(this)
-                workout.start(sport, gps)
+                graph.workout.start(sport, gps)
                 return START_STICKY
             }
-            ACTION_WORKOUT_PAUSE -> { workout.pause(); return START_STICKY }
-            ACTION_WORKOUT_RESUME -> { workout.resume(); return START_STICKY }
-            ACTION_WORKOUT_STOP -> { workout.stop(); return START_STICKY }
-            ACTION_SETTINGS_CHANGED -> {
-                recorder.resetFallBack()
-                nightHrv.resetFallBack()
-                reconcileRecorders()
-                debugSnapshots.write("settings")
-            }
+            ACTION_WORKOUT_PAUSE -> { graph.workout.pause(); return START_STICKY }
+            ACTION_WORKOUT_RESUME -> { graph.workout.resume(); return START_STICKY }
+            ACTION_WORKOUT_STOP -> { graph.workout.stop(); return START_STICKY }
+            ACTION_SETTINGS_CHANGED -> onSettingsChanged()
         }
-        link.start()
+        graph.link.start()
         // A grant made after the start: the type set grows to include health.
-        val newHeartRate = !recorder.isRunning && heartRateWanted && WearPermissions.hasHeartRate(this)
-        val newSteps = !stepRecorder.isRunning && stepRecorder.hasSensor && WearPermissions.hasActivityRecognition(this)
+        val newHeartRate = !graph.heartRate.isRunning && heartRateWanted && WearPermissions.hasHeartRate(this)
+        val newSteps = !graph.steps.isRunning && graph.steps.hasSensor && WearPermissions.hasActivityRecognition(this)
         // A service that fell back to the link alone takes health back once a start allows it.
         if (newHeartRate || newSteps || ForegroundStart.healthMissing(foregroundTypes, sensing(), healthTypeAvailable)) {
             startInForeground()
-            startRecordingIfPermitted()
+            reconcileRecorders()
         }
         return START_STICKY
+    }
+
+    override fun replan() = reconcileRecorders()
+
+    override fun onWornChanged(wanted: Boolean) {
+        if (!isForeground || wanted == heartRateWanted) return
+        heartRateWanted = wanted
+        reconcileRecorders()
+    }
+
+    override fun onWorkoutChanged() {
+        // The location type is held only while a workout reads the GPS; the heart rate runs at the full rate.
+        if (isForeground) startInForeground()
+        reconcileRecorders()
+    }
+
+    override fun onSettingsChanged() {
+        graph.heartRate.resetFallBack()
+        graph.nightHrv.resetFallBack()
+        reconcileRecorders()
+        debugSnapshots.write("settings")
     }
 
     /**
@@ -264,7 +206,7 @@ class WearAppService : Service() {
         if (healthTypeAvailable && sensing()) {
             types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH
         }
-        if (::workout.isInitialized && workout.usesGps && WearPermissions.hasLocation(this)) {
+        if (graph.workout.usesGps && WearPermissions.hasLocation(this)) {
             types = types or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION
         }
         var refusal: Exception? = null
@@ -344,7 +286,7 @@ class WearAppService : Service() {
     /** Shows, updates or removes the pill; on the main thread, when a workout starts, pauses, resumes or ends. */
     private fun refreshNotification() {
         val manager = getSystemService(NotificationManager::class.java)
-        val state = WorkoutState.state.value
+        val state = graph.workoutState.state.value
         val key = state.pillKey()
         if (key == null) {
             manager.cancel(WORKOUT_NOTIFICATION_ID)
@@ -353,122 +295,63 @@ class WearAppService : Service() {
         }
     }
 
-    /** Starts each recorder whose grant is in and whose sensor the watch has; the rest wait for a later call. */
-    private fun startRecordingIfPermitted() {
-        reconcileHeartRate()
-        // The raw PPG sits under the heart rate grant; the windows also need the minute rows that show a still arm.
-        nightHrv.setEnabled(WearPermissions.hasHeartRate(this))
-        when {
-            !stepRecorder.hasSensor -> Log.i(TAG, "No step counter")
-            WearPermissions.hasActivityRecognition(this) -> stepRecorder.start()
-            else -> Log.i(TAG, "Steps not granted")
-        }
-    }
-
-    private fun setHeartRateWanted(wanted: Boolean) {
-        if (!isForeground || wanted == heartRateWanted) return
-        heartRateWanted = wanted
-        reconcileHeartRate()
-    }
-
-    /** The settings, bedtime mode or a grant changed: every recorder follows. Main thread. */
+    /**
+     * The settings, bedtime mode, the wrist, a grant or the sleep hold changed:
+     * the plan is decided again ([RecorderPlan]) and every recorder follows it,
+     * the heart rate first. Main thread.
+     */
     private fun reconcileRecorders() {
         if (!isForeground) return
-        startRecordingIfPermitted()
-    }
-
-    /**
-     * The heart rate plan in force ([HeartRateSchedule]): off when not granted
-     * or off the wrist, the full rate in bedtime mode (the sleep minutes read
-     * every sample), the day setting otherwise. Main thread.
-     */
-    private fun reconcileHeartRate() {
-        val granted = WearPermissions.hasHeartRate(this)
+        val inputs = planInputs()
         when {
-            !granted -> Log.i(TAG, "Heart rate not granted")
-            !heartRateWanted -> Log.i(TAG, "Heart rate resting: not worn")
+            !inputs.heartRateGranted -> Log.i(TAG, "Heart rate not granted")
+            !inputs.worn -> Log.i(TAG, "Heart rate resting: not worn")
         }
-        val day = WearSettings.heartRateDay(this)
-        val active = ::workout.isInitialized && workout.isActive
-        val wanted = if (granted && (heartRateWanted || active)) {
-            HeartRateSchedule.interval(
-                heartRate = true,
-                sleepRecording = true,
-                bedtime = bedtimeMonitor.isBedtime || minuteRecorder.isSleepHolding,
-                day = day,
-                night = day,
-                workout = active,
-            )
-        } else {
-            HeartRateInterval.OFF
+        when {
+            !inputs.hasStepCounter -> Log.i(TAG, "No step counter")
+            !inputs.stepsGranted -> Log.i(TAG, "Steps not granted")
         }
-        val before = recorder.interval to recorder.source
-        recorder.setPlan(wanted, WearSettings.heartRateSource(this))
-        // Without the heart rate's wake-ups the step counter must wake the watch itself.
-        stepRecorder.setHeartRateRunning(isHeartRateDense())
-        // Skin temperature and SpO2 come only from the Samsung platform, at night, each switched on by itself.
-        val night = granted && heartRateWanted && minuteRecorder.isSleepHolding
-        skinRecorder.setEnabled(night && WearSettings.skinTemperature(this) && WearPermissions.hasSkinTemperature(this))
-        spo2Recorder.setEnabled(granted && WearSettings.spo2AtNight(this) && WearPermissions.hasOxygenSaturation(this))
-        if (before != (recorder.interval to recorder.source)) debugSnapshots.write("plan")
+        val heartRate = graph.heartRate
+        val before = heartRate.interval to heartRate.source
+        val plan = RecorderPlan.decide(inputs)
+        for (recorder in graph.recorders) recorder.apply(plan)
+        if (before != (heartRate.interval to heartRate.source)) debugSnapshots.write("plan")
     }
 
-    private fun abilities() = WatchAbilities(
-        samsung = samsungFeed.isAvailable,
-        skinGranted = WearPermissions.hasSkinTemperature(this),
-        spo2Granted = WearPermissions.hasOxygenSaturation(this),
+    private fun planInputs() = RecorderPlan.Inputs(
+        heartRateGranted = WearPermissions.hasHeartRate(this),
+        stepsGranted = WearPermissions.hasActivityRecognition(this),
+        skinTemperatureGranted = WearPermissions.hasSkinTemperature(this),
+        oxygenSaturationGranted = WearPermissions.hasOxygenSaturation(this),
+        settings = WearSettings.read(this),
+        hasStepCounter = graph.steps.hasSensor,
+        hasAccelerometer = graph.sleepMinutes.hasSensor,
+        hasBarometer = graph.ascent.hasSensor,
+        worn = heartRateWanted,
+        bedtime = bedtimeMonitor.isBedtime,
+        sleepHolding = graph.sleepMinutes.isSleepHolding,
+        workout = graph.workout.isActive,
     )
-
-    /** A setting the phone changed: stored, and the recorders follow as for one changed on the watch. Link thread. */
-    private fun applyPhonePreference(key: String, value: String): Boolean {
-        val next = WearPreferenceCodec.apply(WearSettings.read(this), abilities(), key, value) ?: return false
-        WearSettings.write(this, next)
-        mainHandler.post {
-            recorder.resetFallBack()
-            nightHrv.resetFallBack()
-            reconcileRecorders()
-            debugSnapshots.write("settings")
-        }
-        return true
-    }
-
-    /** The steps stored for the minute that starts at [minuteStartMillis]. Any thread. */
-    private fun stepsInMinute(minuteStartMillis: Long): Int =
-        store.since(WearMetrics.STEPS, minuteStartMillis - 1, 2)
-            .filter { it.epochMillis == minuteStartMillis }.sumOf { it.steps }
-
-    /** Whether the heart rate arrives every few seconds and wakes the processor: the full rate from the sensor. */
-    private fun isHeartRateDense(): Boolean =
-        recorder.interval == HeartRateSchedule.FULL_RATE && recorder.source == WearSettings.Source.RAW_SENSOR
 
     /** What the debug snapshots record as the plan in force. */
     private fun debugPlan(): Map<String, Any?> = mapOf(
-        "storeWriteFailures" to store.writeFailures,
-        "storeLastFailure" to store.lastWriteFailure,
-        "hrSec" to recorder.interval.seconds,
-        "hrSource" to recorder.source.name,
+        "storeWriteFailures" to graph.store.writeFailures,
+        "storeLastFailure" to graph.store.lastWriteFailure,
+        "hrSec" to graph.heartRate.interval.seconds,
+        "hrSource" to graph.heartRate.source.name,
         "hrvSource" to WearSettings.hrvSource(this).name,
-        "hrvOn" to nightHrv.isRunning,
+        "hrvOn" to graph.nightHrv.isRunning,
         "bedtime" to bedtimeMonitor.isBedtime,
-        "hold" to WearLinkState.state.value.bedtimeHold.name,
-        "sleepHold" to minuteRecorder.isSleepHolding,
+        "hold" to graph.linkState.state.value.bedtimeHold.name,
+        "sleepHold" to graph.sleepMinutes.isSleepHolding,
         "syncedHold" to WearSettings.syncedSleepHold(this),
-        "lock" to minuteRecorder.holdsLastingLock,
-        "skin" to skinRecorder.isRunning,
-        "spo2" to spo2Recorder.isRunning,
-        "workout" to workout.isActive,
+        "lock" to graph.sleepMinutes.holdsLastingLock,
+        "skin" to graph.skinTemperature.isRunning,
+        "spo2" to graph.spo2.isRunning,
+        "workout" to graph.workout.isActive,
         "worn" to heartRateWanted,
-        "steps" to stepRecorder.isRunning,
+        "steps" to graph.steps.isRunning,
     )
-
-    /** The watch's Bluetooth name, as the phone will show it. */
-    @SuppressLint("MissingPermission")
-    private fun localName(): String {
-        // The service only runs with the Bluetooth grant (startIfPermitted); the catch covers a revocation since.
-        if (!WearPermissions.hasBluetooth(this)) return Build.MODEL
-        return runCatching { getSystemService(BluetoothManager::class.java)?.adapter?.name }.getOrNull()
-            ?.takeIf { it.isNotBlank() } ?: Build.MODEL
-    }
 
     /** Trusted phones the watch is no longer bonded with: a bond the phone or the watch dropped. */
     @SuppressLint("MissingPermission")
@@ -477,33 +360,29 @@ class WearAppService : Service() {
         val bonded = runCatching {
             getSystemService(BluetoothManager::class.java)?.adapter?.bondedDevices.orEmpty().map { it.address.uppercase() }.toSet()
         }.getOrDefault(emptySet())
-        val lost = trust.trusted().filter { it.address.uppercase() !in bonded }
-        WearLinkState.update { it.copy(bondLost = lost) }
+        val lost = graph.trust.trusted().filter { it.address.uppercase() !in bonded }
+        graph.linkState.update { it.copy(bondLost = lost) }
     }
 
     override fun onDestroy() {
         serviceScope.cancel()
         // A pill must not outlive the service that records the workout.
         getSystemService(NotificationManager::class.java).cancel(WORKOUT_NOTIFICATION_ID)
+        val graph = graph
+        if (graph.host === this) graph.host = null
         if (isForeground) {
             unregisterReceiver(bluetoothReceiver)
-            wornMonitor.stop()
+            graph.worn.stop()
             bedtimeMonitor.stop()
             debugSnapshots.stop()
             mainHandler.removeCallbacksAndMessages(null)
-            recorder.stop()
-            stepRecorder.stop()
-            ascentRecorder.stop()
-            minuteRecorder.stop()
-            nightHrv.stop()
-            skinRecorder.stop()
-            spo2Recorder.stop()
-            workout.release()
-            ppgLogger.stop()
-            WearLinkState.update { it.copy(ppgLogging = false) }
+            for (recorder in graph.recorders) recorder.stop()
+            graph.workout.release()
+            graph.ppgLogger.stop()
+            graph.linkState.update { it.copy(ppgLogging = false) }
         }
-        link.stop()
-        wakeSync.shutdown()
+        graph.link.stop()
+        graph.wakeSync.release()
         super.onDestroy()
     }
 

@@ -17,9 +17,10 @@ data class WorkoutUiState(
 
 /**
  * The workout's state, written by [WorkoutRecorder] in the service and read
- * by the screens: one holder for the process, like `WearLinkState`.
+ * by the screens: one holder for the process, held by `WearGraph` like
+ * `WearLinkState`.
  */
-object WorkoutState {
+class WorkoutState {
     private val flow = MutableStateFlow(WorkoutUiState())
     val state: StateFlow<WorkoutUiState> = flow
 

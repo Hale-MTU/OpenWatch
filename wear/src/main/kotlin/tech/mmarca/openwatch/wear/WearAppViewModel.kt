@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.stateIn
 /** Puts the app-wide state together: what the watch recorded today. */
 class WearAppViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val readings = WearReadingsSource(application.metricStore)
+    private val readings = WearReadingsSource(application.wearGraph.store)
 
     private val initial = WearUiState()
 

@@ -13,20 +13,13 @@ import android.util.Log
  * The wearer's answer to a phone that asked to be allowed, new or with a
  * new key: a notification with Allow and Block, and the same two choices on
  * the status screen. The notification is posted at most once a minute per phone.
+ * One per process, held by [WearGraph].
  */
-object WearPhoneRequests {
-
-    const val CHANNEL_ID = "phone_requests"
-    const val NOTIFICATION_ID = 2
-    const val ACTION_ALLOW = "tech.mmarca.openwatch.wear.ALLOW_PHONE"
-    const val ACTION_BLOCK = "tech.mmarca.openwatch.wear.BLOCK_PHONE"
-    const val EXTRA_ADDRESS = "address"
-    const val EXTRA_TOKEN = "token"
-    const val EXTRA_NAME = "name"
+class WearPhoneRequests(private val context: Context) {
 
     private val lastNotified = HashMap<String, Long>()
 
-    fun notify(context: Context, pending: PendingPhone, nowMillis: Long = System.currentTimeMillis()) {
+    fun notify(pending: PendingPhone, nowMillis: Long = System.currentTimeMillis()) {
         synchronized(lastNotified) {
             val last = lastNotified[pending.address] ?: 0L
             if (nowMillis - last < RENOTIFY_MILLIS) return
@@ -59,7 +52,7 @@ object WearPhoneRequests {
             .onFailure { Log.w(TAG, "Cannot post the request: ${it.message}") }
     }
 
-    fun cancel(context: Context) {
+    fun cancel() {
         context.getSystemService(NotificationManager::class.java).cancel(NOTIFICATION_ID)
     }
 
@@ -78,8 +71,18 @@ object WearPhoneRequests {
         return Notification.Action.Builder(null, context.getString(label), pendingIntent).build()
     }
 
-    private const val TAG = "WearPhoneRequests"
-    private const val RENOTIFY_MILLIS = 60_000L
+    companion object {
+        const val CHANNEL_ID = "phone_requests"
+        const val NOTIFICATION_ID = 2
+        const val ACTION_ALLOW = "tech.mmarca.openwatch.wear.ALLOW_PHONE"
+        const val ACTION_BLOCK = "tech.mmarca.openwatch.wear.BLOCK_PHONE"
+        const val EXTRA_ADDRESS = "address"
+        const val EXTRA_TOKEN = "token"
+        const val EXTRA_NAME = "name"
+
+        private const val TAG = "WearPhoneRequests"
+        private const val RENOTIFY_MILLIS = 60_000L
+    }
 }
 
 /**
@@ -92,22 +95,22 @@ object WearPhoneRequests {
 class WearPhoneConfirmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val address = intent.getStringExtra(WearPhoneRequests.EXTRA_ADDRESS) ?: return
-        val pending = WearLinkState.pendingIfFresh(System.currentTimeMillis())
+        val graph = context.wearGraph
+        val pending = graph.linkState.pendingIfFresh(System.currentTimeMillis())
         if (pending == null || pending.address != address ||
             pending.token != intent.getStringExtra(WearPhoneRequests.EXTRA_TOKEN)
         ) {
-            WearPhoneRequests.cancel(context)
+            graph.phoneRequests.cancel()
             return
         }
-        val store = WearTrustStore(context)
         when (intent.action) {
             WearPhoneRequests.ACTION_ALLOW -> {
                 val token = intent.getStringExtra(WearPhoneRequests.EXTRA_TOKEN) ?: return
-                store.trust(address, token, intent.getStringExtra(WearPhoneRequests.EXTRA_NAME) ?: address)
+                graph.trust.trust(address, token, intent.getStringExtra(WearPhoneRequests.EXTRA_NAME) ?: address)
             }
-            WearPhoneRequests.ACTION_BLOCK -> store.block(address)
+            WearPhoneRequests.ACTION_BLOCK -> graph.trust.block(address)
             else -> return
         }
-        WearPhoneRequests.cancel(context)
+        graph.phoneRequests.cancel()
     }
 }

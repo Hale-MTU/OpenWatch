@@ -1,6 +1,5 @@
 package tech.mmarca.openwatch.wear
 
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -17,20 +16,15 @@ class WearTrustStoreTest {
     private var now = 1_000_000L
     private val key = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
     private val seal = SecretSeal { key }
-    private val store = WearTrustStore(prefs, seal, clock = { now })
+    private val linkState = WearLinkState()
+    private val store = WearTrustStore(prefs, seal, linkState, clock = { now })
     private val pendings = ArrayList<PendingPhone>()
     private val phone = "AA:BB:CC:DD:EE:01"
     private val token = WearLinkToken.generate()
 
     @Before
     fun listen() {
-        WearLinkState.update { WearLinkUiState() }
         store.onPending = { pendings += it }
-    }
-
-    @After
-    fun reset() {
-        WearLinkState.update { WearLinkUiState() }
     }
 
     @Test
@@ -39,15 +33,15 @@ class WearTrustStoreTest {
         store.notePending(phone, token, "Pixel")
 
         assertEquals(1, pendings.size)
-        assertEquals(PendingPhone(phone, token, "Pixel", now), WearLinkState.state.value.pending)
+        assertEquals(PendingPhone(phone, token, "Pixel", now), linkState.state.value.pending)
         assertNull(store.tokenFor(phone))
 
         store.trust(phone, token, "Pixel")
 
         assertEquals(token, store.tokenFor(phone))
-        assertNull(WearLinkState.state.value.pending)
+        assertNull(linkState.state.value.pending)
         assertEquals(listOf(TrustedPhone(phone, "Pixel", now)), store.trusted())
-        assertEquals(store.trusted(), WearLinkState.state.value.trusted)
+        assertEquals(store.trusted(), linkState.state.value.trusted)
     }
 
     @Test
@@ -55,13 +49,13 @@ class WearTrustStoreTest {
         store.notePending(phone, token, "Pixel")
         store.notePending("AA:BB:CC:DD:EE:02", WearLinkToken.generate(), "OnePlus")
 
-        assertEquals("OnePlus", WearLinkState.state.value.pending?.name)
+        assertEquals("OnePlus", linkState.state.value.pending?.name)
         assertEquals(2, pendings.size)
 
         now += WearLinkState.PENDING_TTL_MILLIS + 1
-        assertNull(WearLinkState.pendingIfFresh(now))
-        WearLinkState.expirePending(now)
-        assertNull(WearLinkState.state.value.pending)
+        assertNull(linkState.pendingIfFresh(now))
+        linkState.expirePending(now)
+        assertNull(linkState.state.value.pending)
     }
 
     @Test
@@ -85,13 +79,13 @@ class WearTrustStoreTest {
         store.trust(phone, token, "Pixel")
         store.notePending(phone, newToken, "Pixel")
 
-        assertEquals(PendingPhone(phone, newToken, "Pixel", now, newKey = true), WearLinkState.state.value.pending)
+        assertEquals(PendingPhone(phone, newToken, "Pixel", now, newKey = true), linkState.state.value.pending)
         assertEquals(token, store.tokenFor(phone))
 
         store.trust(phone, newToken, "Pixel")
 
         assertEquals(newToken, store.tokenFor(phone))
-        assertNull(WearLinkState.state.value.pending)
+        assertNull(linkState.state.value.pending)
         assertEquals(1, store.trusted().size)
     }
 
@@ -99,7 +93,7 @@ class WearTrustStoreTest {
     fun `addresses are matched regardless of case and survive a restart`() {
         store.trust(phone.lowercase(), token, "Pixel")
 
-        assertEquals(token, WearTrustStore(prefs, seal).tokenFor(phone))
+        assertEquals(token, WearTrustStore(prefs, seal, WearLinkState()).tokenFor(phone))
     }
 
     @Test
@@ -122,6 +116,6 @@ class WearTrustStoreTest {
         store.trust(phone, token, "Pixel")
         val otherKey = KeyGenerator.getInstance("AES").apply { init(256) }.generateKey()
 
-        assertNull(WearTrustStore(prefs, SecretSeal { otherKey }).tokenFor(phone))
+        assertNull(WearTrustStore(prefs, SecretSeal { otherKey }, WearLinkState()).tokenFor(phone))
     }
 }

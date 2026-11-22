@@ -19,17 +19,28 @@ import android.util.Log
  * The barometer is read once a second, batched with the heart rate's
  * latency, so both arrive in one wake-up.
  */
-class AscentRecorder(
+internal class AscentRecorder(
     context: Context,
     private val store: MetricStore,
+    private val debug: DebugProtocol,
     /** Empties the barometer's buffer at each heart rate wake-up; see [SensorWakeSync]. */
     private val wakeSync: SensorWakeSync? = null,
-) : SensorEventListener2 {
+) : Recorder, SensorEventListener2 {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private var thread: HandlerThread? = null
     private var counter: AscentMinuteCounter? = null
     private var lastPrunedAt = 0L
+
+    /** False on a watch without a barometer: then nothing will ever start. */
+    val hasSensor: Boolean = hasBarometer(context)
+
+    override val isRunning: Boolean
+        get() = thread != null
+
+    override fun apply(plan: RecorderPlan.Plan) {
+        if (plan.ascent) start() else stop()
+    }
 
     /** Starts recording. False when the watch has no barometer or the registration failed. */
     fun start(): Boolean {
@@ -59,7 +70,7 @@ class AscentRecorder(
         return true
     }
 
-    fun stop() {
+    override fun stop() {
         val worker = thread ?: return
         wakeSync?.leave(this)
         sensorManager.unregisterListener(this)
@@ -70,7 +81,7 @@ class AscentRecorder(
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_PRESSURE) return
-        DebugProtocol.arrival("baro")
+        debug.arrival("baro")
         val counter = counter ?: return
         val hectopascals = event.values.firstOrNull() ?: return
         val at = SensorTime.epochMillisOf(event.timestamp)

@@ -41,9 +41,9 @@ import tech.mmarca.openwatch.wearlink.WorkoutSport
  * without a route when it is refused.
  */
 @Composable
-internal fun WorkoutScreen(onClose: () -> Unit) {
+internal fun WorkoutScreen(workout: WorkoutState, onClose: () -> Unit) {
     val context = LocalContext.current
-    val state by WorkoutState.state.collectAsState()
+    val state by workout.state.collectAsState()
     var pending by remember { mutableStateOf<WorkoutSport?>(null) }
     val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         val sport = pending ?: return@rememberLauncherForActivityResult
@@ -65,7 +65,7 @@ internal fun WorkoutScreen(onClose: () -> Unit) {
         when {
             state.running && sport != null && snapshot != null -> Running(sport, snapshot)
             state.finished && sport != null && snapshot != null -> Summary(sport, snapshot) {
-                WorkoutState.clearFinished()
+                workout.clearFinished()
                 onClose()
             }
             else -> {

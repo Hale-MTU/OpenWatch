@@ -22,7 +22,10 @@ import tech.mmarca.openwatch.wear.NightWindowResult
  * at most [BATCH_WAIT_MILLIS], and keeps the intervals that ended inside the
  * window ([SamsungIbiWindow]).
  */
-internal class SamsungIbiSource(private val feed: SamsungHeartRateFeed) : HrvWindowSource, SamsungHeartRateFeed.Subscriber {
+internal class SamsungIbiSource(
+    private val feed: SamsungHeartRateFeed,
+    private val debug: DebugProtocol,
+) : HrvWindowSource, SamsungHeartRateFeed.Subscriber {
 
     private var handler: Handler? = null
     private var startedAt = 0L
@@ -73,7 +76,7 @@ internal class SamsungIbiSource(private val feed: SamsungHeartRateFeed) : HrvWin
             val result = if (hadError) null else HrvRmssd.ofIntervals(intervals)
             val (times, values) = SamsungIbiWindow.timedIntervals(points, startedAt, endMillis)
             val breathing = if (hadError) null else RespiratoryRate.fromIntervalSeries(times, values)
-            DebugProtocol.event(
+            debug.event(
                 "NightHrv", "samsung_window",
                 "startedAt" to startedAt,
                 "waitMs" to SystemClock.elapsedRealtime() - askedAt,

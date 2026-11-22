@@ -109,7 +109,7 @@ abstract class MetricTileService : TileService() {
             accent = accent,
         )
         return try {
-            read(TileDay.of(System.currentTimeMillis(), ZoneId.systemDefault()), chart, metricStore)
+            read(TileDay.of(System.currentTimeMillis(), ZoneId.systemDefault()), chart, wearGraph.store)
         } catch (e: SQLiteException) {
             Log.e(TAG, "Metric store unreadable", e)
             unavailable(getString(R.string.tile_read_failed))

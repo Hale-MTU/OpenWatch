@@ -28,26 +28,18 @@ import org.json.JSONObject
  *
  * The file stays in the app's private storage; `scripts/wear-debug-report.py`
  * pulls it with `run-as`. Seven days are kept.
+ *
+ * One per process, held by [WearGraph]; [off] is one that records nothing.
  */
-object DebugProtocol {
+class DebugProtocol private constructor(private val dir: File?) {
 
-    @Volatile
-    var isEnabled: Boolean = false
-        private set
+    /** True in a debuggable build; every call is a no-op otherwise. */
+    val isEnabled: Boolean = dir != null
 
-    private var dir: File? = null
-    private val writer = Executors.newSingleThreadExecutor { Thread(it, "DebugProtocol") }
+    private val writer by lazy { Executors.newSingleThreadExecutor { Thread(it, "DebugProtocol") } }
     private val counters = ConcurrentHashMap<String, AtomicLong>()
     private val lastArrival = ConcurrentHashMap<String, Long>()
     private val day = SimpleDateFormat("yyyyMMdd", Locale.US)
-
-    fun init(context: Context) {
-        if (isEnabled) return
-        if (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE == 0) return
-        dir = File(context.filesDir, "debug").apply { mkdirs() }
-        isEnabled = true
-        writer.execute { pruneOldFiles() }
-    }
 
     /** Adds [n] to the counter [key]; the next snapshot reports and resets it. */
     fun count(key: String, n: Long = 1) {
@@ -115,9 +107,20 @@ object DebugProtocol {
         files.dropLast(KEEP_DAYS).forEach { it.delete() }
     }
 
-    private const val TAG = "DebugProtocol"
-    private const val KEEP_DAYS = 7
+    companion object {
+        private const val TAG = "DebugProtocol"
+        private const val KEEP_DAYS = 7
 
-    /** Events closer than this belong to one delivery. */
-    private const val BATCH_GAP_MILLIS = 2_000L
+        /** Events closer than this belong to one delivery. */
+        private const val BATCH_GAP_MILLIS = 2_000L
+
+        /** The app's protocol: on in a debuggable build, [off] in any other. */
+        fun of(context: Context): DebugProtocol {
+            if (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE == 0) return off()
+            return DebugProtocol(File(context.filesDir, "debug").apply { mkdirs() }).apply { writer.execute { pruneOldFiles() } }
+        }
+
+        /** A protocol that records nothing, for a release build and for tests. */
+        fun off(): DebugProtocol = DebugProtocol(null)
+    }
 }

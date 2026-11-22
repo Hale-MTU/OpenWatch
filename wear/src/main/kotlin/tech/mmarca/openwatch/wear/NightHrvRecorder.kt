@@ -30,13 +30,14 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 internal class NightHrvRecorder(
     private val context: Context,
     private val store: MetricStore,
+    private val debug: DebugProtocol,
     /** Whether bedtime mode holds the processor awake now; read on the recorder's thread. */
     private val isHolding: () -> Boolean,
     samsungFeed: SamsungHeartRateFeed,
-) {
+) : Recorder {
 
-    private val ppg = PpgWindowSource(context)
-    private val samsung = SamsungIbiSource(samsungFeed)
+    private val ppg = PpgWindowSource(context, debug)
+    private val samsung = SamsungIbiSource(samsungFeed, debug)
     private val wakeLock = (context.getSystemService(Context.POWER_SERVICE) as PowerManager)
         .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
         .apply { setReferenceCounted(false) }
@@ -67,8 +68,10 @@ internal class NightHrvRecorder(
     val hasSensor: Boolean
         get() = ppg.isAvailable || samsung.isAvailable
 
-    val isRunning: Boolean
+    override val isRunning: Boolean
         get() = thread != null
+
+    override fun apply(plan: RecorderPlan.Plan) = setEnabled(plan.nightHrv)
 
     /** Starts or stops the recorder. Main thread. Does nothing without a source. */
     fun setEnabled(enabled: Boolean) {
@@ -101,7 +104,7 @@ internal class NightHrvRecorder(
         Log.i(TAG, "Night HRV on")
     }
 
-    fun stop() {
+    override fun stop() {
         val worker = thread ?: return
         handler?.removeCallbacks(tick)
         handler?.post {
@@ -122,7 +125,7 @@ internal class NightHrvRecorder(
             when {
                 !isHolding() -> {
                     Log.i(TAG, "Window dropped: no longer in bedtime hold")
-                    DebugProtocol.event("NightHrv", "window_dropped", "why" to "hold_ended")
+                    debug.event("NightHrv", "window_dropped", "why" to "hold_ended")
                     endWindow()
                 }
                 now - windowStartedAt >= NightHrv.WINDOW_MILLIS -> completeWindow(now)
@@ -147,7 +150,7 @@ internal class NightHrvRecorder(
         windowStartedAt = now
         wakeLock.acquire(NightHrv.WINDOW_MILLIS + WAKE_LOCK_SLACK_MILLIS)
         Log.i(TAG, if (chosen === samsung) "Window started, Samsung platform" else "Window started, raw PPG")
-        DebugProtocol.event("NightHrv", "window_started", "source" to if (chosen === samsung) "samsung" else "ppg")
+        debug.event("NightHrv", "window_started", "source" to if (chosen === samsung) "samsung" else "ppg")
     }
 
     /** Ends the window and queues its result until the movement rows can judge it. */
@@ -162,12 +165,12 @@ internal class NightHrvRecorder(
             if (finished === samsung && samsung.lastWindowFailed && !samsungFailed) {
                 samsungFailed = true
                 Log.w(TAG, "Samsung platform failed, the next windows use the raw PPG")
-                DebugProtocol.event("NightHrv", "fallback", "startedAt" to started)
+                debug.event("NightHrv", "fallback", "startedAt" to started)
             }
             if (wakeLock.isHeld) wakeLock.release()
             if (result.isEmpty) {
                 Log.i(TAG, "Window gave no value")
-                DebugProtocol.event("NightHrv", "window_dropped", "why" to "no_value", "startedAt" to started)
+                debug.event("NightHrv", "window_dropped", "why" to "no_value", "startedAt" to started)
                 nextAllowedAt = NightHrvSchedule.nextStartAfter(started, spoiled = true)
                 return@finish
             }
@@ -196,7 +199,7 @@ internal class NightHrvRecorder(
             if (now - waiting.endMillis > PENDING_TIMEOUT_MILLIS) {
                 pending = null
                 Log.i(TAG, "Window dropped: no movement rows for it")
-                DebugProtocol.event("NightHrv", "window_dropped", "why" to "no_rows", "startedAt" to waiting.startMillis)
+                debug.event("NightHrv", "window_dropped", "why" to "no_rows", "startedAt" to waiting.startMillis)
             }
             return
         }
@@ -204,7 +207,7 @@ internal class NightHrvRecorder(
         if (!NightHrvSchedule.wasStill(rows, waiting.startMillis, waiting.endMillis)) {
             nextAllowedAt = NightHrvSchedule.nextStartAfter(waiting.startMillis, spoiled = true)
             Log.i(TAG, "Window dropped: the arm moved")
-            DebugProtocol.event("NightHrv", "window_dropped", "why" to "movement", "startedAt" to waiting.startMillis)
+            debug.event("NightHrv", "window_dropped", "why" to "movement", "startedAt" to waiting.startMillis)
             return
         }
         val hrv = waiting.result.hrv
@@ -221,7 +224,7 @@ internal class NightHrvRecorder(
             store.prune(WearMetrics.RESPIRATORY_RATE, now)
         }
         Log.i(TAG, "Window stored (${hrv?.beatCount ?: 0} beats)")
-        DebugProtocol.event(
+        debug.event(
             "NightHrv", "window_stored",
             "startedAt" to waiting.startMillis, "rmssd" to hrv?.rmssdMillis, "beats" to hrv?.beatCount,
             "rr" to breaths, "rrRoutes" to waiting.result.breathingRoutes,

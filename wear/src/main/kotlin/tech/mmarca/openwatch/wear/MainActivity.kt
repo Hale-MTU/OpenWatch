@@ -1,7 +1,6 @@
 package tech.mmarca.openwatch.wear
 
 import tech.mmarca.openwatch.wear.workout.WorkoutScreen
-import tech.mmarca.openwatch.wear.workout.WorkoutState
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -28,8 +27,7 @@ import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 class MainActivity : ComponentActivity() {
 
     private val viewModel: WearAppViewModel by viewModels()
-    private val store by lazy { metricStore }
-    private val trust by lazy { WearTrustStore(this) }
+    private val graph by lazy { wearGraph }
 
     private var permissionsVersion by mutableStateOf(0)
 
@@ -49,10 +47,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
             // A running or just finished workout takes the screen.
-            val workout by WorkoutState.state.collectAsStateWithLifecycle()
+            val workout by graph.workoutState.state.collectAsStateWithLifecycle()
             var workoutOpen by remember { mutableStateOf(false) }
             if (workoutOpen || workout.running || workout.finished) {
-                OpenWatchWearTheme { WorkoutScreen(onClose = { workoutOpen = false }) }
+                OpenWatchWearTheme { WorkoutScreen(graph.workoutState, onClose = { workoutOpen = false }) }
                 return@setContent
             }
             OpenWatchWearApp(
@@ -73,7 +71,9 @@ class MainActivity : ComponentActivity() {
     /** What the watch records, whether the phone can reach it, and which phones may. */
     @Composable
     private fun StatusScreen(onOpenWorkout: () -> Unit) {
+        val store = graph.store
         WatchStatusScreen(
+            linkState = graph.linkState,
             onOpenWorkout = onOpenWorkout,
             permissionsVersion = permissionsVersion,
             hasHeartRate = { WearPermissions.hasHeartRate(this) },
@@ -84,17 +84,17 @@ class MainActivity : ComponentActivity() {
             readCount = { store.count(WearMetrics.HEART_RATE) },
             readMinuteCount = { store.count(WearMetrics.SLEEP_MINUTES) },
             readStepMinuteCount = { store.count(WearMetrics.STEPS) },
-            ppgLogAvailable = PpgRawLogger(this).isAvailable,
+            ppgLogAvailable = graph.ppgLogger.isAvailable,
             readSamsungDiagnostics = { SamsungDiagnostics.consentOn(contentResolver) },
             onTogglePpgLog = { WearAppService.togglePpgLog(this) },
             onGrant = ::requestMissingPermissions,
             onAllow = { pending ->
-                trust.trust(pending.address, pending.token, pending.name)
-                WearPhoneRequests.cancel(this)
+                graph.trust.trust(pending.address, pending.token, pending.name)
+                graph.phoneRequests.cancel()
             },
             onBlock = { pending ->
-                trust.block(pending.address)
-                WearPhoneRequests.cancel(this)
+                graph.trust.block(pending.address)
+                graph.phoneRequests.cancel()
             },
             onOpenBluetoothSettings = ::openBluetoothSettings,
         )

@@ -25,15 +25,18 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 internal class SkinTemperatureRecorder(
     private val store: MetricStore,
     private val feed: SamsungHeartRateFeed,
-) : SamsungHeartRateFeed.RawSubscriber {
+    private val debug: DebugProtocol,
+) : Recorder, SamsungHeartRateFeed.RawSubscriber {
 
     private var thread: HandlerThread? = null
 
     val isAvailable: Boolean
         get() = feed.isAvailable
 
-    val isRunning: Boolean
+    override val isRunning: Boolean
         get() = thread != null
+
+    override fun apply(plan: RecorderPlan.Plan) = setEnabled(plan.skinTemperature)
 
     /** Starts or stops the recorder. Main thread. */
     fun setEnabled(enabled: Boolean) {
@@ -51,7 +54,7 @@ internal class SkinTemperatureRecorder(
         Log.i(TAG, "Skin temperature on")
     }
 
-    fun stop() {
+    override fun stop() {
         val worker = thread ?: return
         feed.unsubscribeRaw(SamsungHealthPlatform.TRACKER_SKIN_TEMPERATURE, this)
         worker.quitSafely()
@@ -60,14 +63,14 @@ internal class SkinTemperatureRecorder(
     }
 
     override fun onError() {
-        DebugProtocol.event("Skin", "tracker_error")
+        debug.event("Skin", "tracker_error")
     }
 
     override fun onRawPoints(raw: List<RawPoint>) {
         val points = raw.map { it.toSkinPoint() }
         val rows = minutes(points)
-        DebugProtocol.count("skin.points", points.size.toLong())
-        DebugProtocol.count("skin.rows", rows.size.toLong())
+        debug.count("skin.points", points.size.toLong())
+        debug.count("skin.rows", rows.size.toLong())
         if (rows.isEmpty()) return
         store.putAll(WearMetrics.SKIN_TEMPERATURE, rows)
         store.prune(WearMetrics.SKIN_TEMPERATURE, System.currentTimeMillis())

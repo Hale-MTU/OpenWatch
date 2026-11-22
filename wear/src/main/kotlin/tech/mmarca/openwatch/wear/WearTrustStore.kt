@@ -17,11 +17,13 @@ import tech.mmarca.openwatch.wearlink.WearLinkTrustStore
 class WearTrustStore(
     private val prefs: SharedPreferences,
     private val seal: SecretSeal,
-    private val state: WearLinkState = WearLinkState,
+    private val state: WearLinkState,
     private val clock: () -> Long = System::currentTimeMillis,
 ) : WearLinkTrustStore {
 
-    constructor(context: Context) : this(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE), SecretSeal(WearSecretKey))
+    /** The watch's own store; [WearGraph] builds the one the process uses. */
+    constructor(context: Context, state: WearLinkState, key: WearSecretKey) :
+        this(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE), SecretSeal(key), state)
 
     /** Called when an unknown phone asks; the service turns it into a notification. */
     @Volatile

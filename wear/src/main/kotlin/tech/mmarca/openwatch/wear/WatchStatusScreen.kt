@@ -35,6 +35,7 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 /** The status screen: recording, link, and the phones that may connect. */
 @Composable
 internal fun WatchStatusScreen(
+    linkState: WearLinkState,
     permissionsVersion: Int,
     hasHeartRate: () -> Boolean,
     hasBluetooth: () -> Boolean,
@@ -57,7 +58,7 @@ internal fun WatchStatusScreen(
     var count by remember { mutableStateOf(0L) }
     var minuteCount by remember { mutableStateOf(0L) }
     var stepMinuteCount by remember { mutableStateOf(0L) }
-    val link by WearLinkState.state.collectAsState()
+    val link by linkState.state.collectAsState()
     val heartRateGranted = remember(permissionsVersion) { hasHeartRate() }
     val bluetoothGranted = remember(permissionsVersion) { hasBluetooth() }
     val stepsGranted = remember(permissionsVersion) { hasSteps() }
@@ -71,7 +72,7 @@ internal fun WatchStatusScreen(
             minuteCount = readMinuteCount()
             stepMinuteCount = readStepMinuteCount()
             samsungDiagnostics = readSamsungDiagnostics()
-            WearLinkState.expirePending(System.currentTimeMillis())
+            linkState.expirePending(System.currentTimeMillis())
             delay(3_000)
         }
     }

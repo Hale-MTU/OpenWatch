@@ -51,7 +51,7 @@ internal interface HrvWindowSource {
  * the batched sensor's gaps lose beats. Whether it can run beside the normal
  * heart rate sensor is not verified on a watch.
  */
-internal class PpgWindowSource(context: Context) : HrvWindowSource, SensorEventListener {
+internal class PpgWindowSource(context: Context, private val debug: DebugProtocol) : HrvWindowSource, SensorEventListener {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val sensor: Sensor? = sensorManager.getSensorList(Sensor.TYPE_ALL).firstOrNull {
@@ -102,7 +102,7 @@ internal class PpgWindowSource(context: Context) : HrvWindowSource, SensorEventL
         cancel()
         val result = NightHrv.analyze(t, v)
         val breathing = NightHrv.respiration(t, v)
-        DebugProtocol.event(
+        debug.event(
             "NightHrv", "ppg_window",
             "startedAt" to window, "samples" to t.size, "rmssd" to result?.rmssdMillis, "beats" to result?.beatCount,
             "rrIntervals" to breathing.fromIntervals?.breathsPerMinute, "rrIntervalsShare" to breathing.fromIntervals?.peakShare,

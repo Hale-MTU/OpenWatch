@@ -52,6 +52,7 @@ internal class HeartRateRecorder(
     private val context: Context,
     private val store: MetricStore,
     private val samsungFeed: SamsungHeartRateFeed,
+    private val debug: DebugProtocol,
     /** Told at each batch, so every sensor's buffer is emptied in the same wake-up. */
     private val wakeSync: SensorWakeSync? = null,
     /** The source in use changed by itself (a fall-back to the sensor). Called on the recorder's thread. */
@@ -60,7 +61,7 @@ internal class HeartRateRecorder(
     private val onSample: (epochMillis: Long, bpm: Int) -> Unit = { _, _ -> },
     /** False when the sensor reported no contact, an unreliable reading or 0 bpm. */
     private val onContact: (epochMillis: Long, contact: Boolean) -> Unit = { _, _ -> },
-) : SensorEventListener, SamsungHeartRateFeed.Subscriber {
+) : Recorder, SensorEventListener, SamsungHeartRateFeed.Subscriber {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -115,8 +116,16 @@ internal class HeartRateRecorder(
     private val openWindowTask = Runnable { openWindow() }
     private val closeWindowTask = Runnable { closeWindow() }
 
-    val isRunning: Boolean
+    override val isRunning: Boolean
         get() = thread != null
+
+    /** Whether the heart rate arrives every few seconds and wakes the processor: the full rate from the sensor. Any thread. */
+    val isDense: Boolean
+        get() = interval == HeartRateSchedule.FULL_RATE && source == WearSettings.Source.RAW_SENSOR
+
+    override fun apply(plan: RecorderPlan.Plan) {
+        setPlan(plan.heartRate, plan.heartRateSource)
+    }
 
     /**
      * Brings the recorder to [wanted] from [wantedSource]: starts it, changes
@@ -134,7 +143,7 @@ internal class HeartRateRecorder(
         } else {
             start(wanted)
         }
-        DebugProtocol.event("HeartRate", "plan", "intervalSec" to wanted.seconds, "source" to source.name, "started" to started)
+        debug.event("HeartRate", "plan", "intervalSec" to wanted.seconds, "source" to source.name, "started" to started)
         return started
     }
 
@@ -174,7 +183,7 @@ internal class HeartRateRecorder(
             Log.w(TAG, "Samsung platform refused")
             stop()
             samsungFailed = true
-            DebugProtocol.event("HeartRate", "fallback", "why" to "bind_refused")
+            debug.event("HeartRate", "fallback", "why" to "bind_refused")
             return start(wanted)
         }
         workerHandler.postDelayed(noDataTask, FIRST_POINT_TIMEOUT_MILLIS)
@@ -200,7 +209,7 @@ internal class HeartRateRecorder(
             false
         }
 
-    fun stop() {
+    override fun stop() {
         val worker = thread ?: return
         val workerHandler = handler
         // Pending timers would reopen the sensor after this returns.
@@ -246,7 +255,7 @@ internal class HeartRateRecorder(
         }
         if (!registered) {
             Log.w(TAG, "Heart rate window not registered")
-            DebugProtocol.event("HeartRate", "window_failed")
+            debug.event("HeartRate", "window_failed")
             if (wakeLock.isHeld) wakeLock.release()
             scheduleNextWindow()
             return
@@ -267,9 +276,9 @@ internal class HeartRateRecorder(
         sensorManager.unregisterListener(this)
         if (wakeLock.isHeld) wakeLock.release()
         val duration = SystemClock.elapsedRealtime() - windowOpenedAt
-        DebugProtocol.count("hr.windows")
-        DebugProtocol.count("hr.windowMs", duration)
-        if (windowValues == 0) DebugProtocol.count("hr.windowsEmpty")
+        debug.count("hr.windows")
+        debug.count("hr.windowMs", duration)
+        if (windowValues == 0) debug.count("hr.windowsEmpty")
         scheduleNextWindow()
     }
 
@@ -287,7 +296,7 @@ internal class HeartRateRecorder(
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_HEART_RATE) return
-        DebugProtocol.arrival("hr")
+        debug.arrival("hr")
         val arrived = SystemClock.elapsedRealtime()
         if (arrived - lastArrivalAt > BATCH_GAP_MILLIS && interval == HeartRateInterval.EVERY_10_SECONDS) wakeSync?.onWake()
         lastArrivalAt = arrived
@@ -315,7 +324,7 @@ internal class HeartRateRecorder(
         if (source != WearSettings.Source.SAMSUNG_PLATFORM || thread == null) return
         val keep = interval
         Log.w(TAG, "Samsung platform failed, falling back to the sensor")
-        DebugProtocol.event("HeartRate", "fallback", "why" to why)
+        debug.event("HeartRate", "fallback", "why" to why)
         samsungFailed = true
         stop()
         start(keep)
@@ -349,8 +358,8 @@ internal class HeartRateRecorder(
         store.put(WearMetrics.HEART_RATE, WearLinkProtocol.HeartRateSample(at, bpm))
         onSample(at, bpm)
         windowValues++
-        DebugProtocol.count("hr.stored")
-        DebugProtocol.max("hr.lagMs.max", System.currentTimeMillis() - at)
+        debug.count("hr.stored")
+        debug.max("hr.lagMs.max", System.currentTimeMillis() - at)
         if (at - lastPrunedAt > PRUNE_EVERY_MILLIS) {
             lastPrunedAt = at
             store.prune(WearMetrics.HEART_RATE, at)

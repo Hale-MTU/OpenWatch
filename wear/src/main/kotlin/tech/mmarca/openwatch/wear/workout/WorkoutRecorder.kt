@@ -37,6 +37,8 @@ import tech.mmarca.openwatch.wearlink.WearLinkWorkoutLines
 class WorkoutRecorder(
     private val context: Context,
     metricStore: MetricStore,
+    private val state: WorkoutState,
+    private val debug: DebugProtocol,
     /** Called on the main thread when a workout starts or ends, so the service can adjust itself. */
     private val onActiveChange: () -> Unit,
 ) : SensorEventListener, LocationListener {
@@ -78,22 +80,22 @@ class WorkoutRecorder(
         ascent = AscentMinuteCounter(null)
         wakeLock = context.getSystemService(PowerManager::class.java)
             .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "OpenVitals:workout").apply { acquire() }
-        DebugProtocol.event("Workout", "start", "sport" to sport.id, "gps" to usesGps)
+        debug.event("Workout", "start", "sport" to sport.id, "gps" to usesGps)
         h.post { registerSensors(sport, now) }
         h.post(tick)
-        WorkoutState.update { WorkoutUiState(sport = sport, running = true, snapshot = t.snapshot(now)) }
+        state.update { WorkoutUiState(sport = sport, running = true, snapshot = t.snapshot(now)) }
         onActiveChange()
         return true
     }
 
     fun pause() = post {
-        DebugProtocol.event("Workout", "pause")
+        debug.event("Workout", "pause")
         it.pause(System.currentTimeMillis())
         publish(it)
     }
 
     fun resume() = post {
-        DebugProtocol.event("Workout", "resume")
+        debug.event("Workout", "resume")
         it.resume(System.currentTimeMillis())
         publish(it)
     }
@@ -172,7 +174,7 @@ class WorkoutRecorder(
 
     private fun publish(t: WorkoutTracker, now: Long = System.currentTimeMillis()) {
         val snapshot = t.snapshot(now)
-        WorkoutState.update { it.copy(snapshot = snapshot) }
+        state.update { it.copy(snapshot = snapshot) }
     }
 
     override fun onSensorChanged(event: SensorEvent) {
@@ -209,13 +211,13 @@ class WorkoutRecorder(
         val workout = t.finish(end)
         val kept = store.finish(workout, end)
         val last = t.snapshot(end)
-        DebugProtocol.event(
+        debug.event(
             "Workout", "stop",
             "sport" to t.sport.id, "durationMs" to workout.endMillis - workout.startMillis, "steps" to workout.steps, "saved" to kept,
         )
         teardown(keepState = false)
-        WorkoutState.update { WorkoutUiState(sport = t.sport, running = false, snapshot = last, finished = kept) }
-        if (!kept) WorkoutState.clearFinished()
+        state.update { WorkoutUiState(sport = t.sport, running = false, snapshot = last, finished = kept) }
+        if (!kept) state.clearFinished()
         Haptics.play(context, hapticCueForWorkoutEnd(kept))
     }
 
@@ -232,7 +234,7 @@ class WorkoutRecorder(
         thread?.quitSafely()
         thread = null
         handler = null
-        if (keepState) WorkoutState.update { WorkoutUiState() }
+        if (keepState) state.update { WorkoutUiState() }
         mainHandler.post(onActiveChange)
     }
 

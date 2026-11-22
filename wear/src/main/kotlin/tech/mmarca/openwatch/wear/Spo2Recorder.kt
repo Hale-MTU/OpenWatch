@@ -31,9 +31,10 @@ internal class Spo2Recorder(
     context: Context,
     private val store: MetricStore,
     private val feed: SamsungHeartRateFeed,
+    private val debug: DebugProtocol,
     /** Whether sleep is held now; read on the recorder's thread. */
     private val isHolding: () -> Boolean,
-) : SamsungHeartRateFeed.RawSubscriber {
+) : Recorder, SamsungHeartRateFeed.RawSubscriber {
 
     private val wakeLock = (context.getSystemService(Context.POWER_SERVICE) as PowerManager)
         .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
@@ -51,8 +52,10 @@ internal class Spo2Recorder(
     val isAvailable: Boolean
         get() = feed.isAvailable
 
-    val isRunning: Boolean
+    override val isRunning: Boolean
         get() = thread != null
+
+    override fun apply(plan: RecorderPlan.Plan) = setEnabled(plan.spo2)
 
     /** Starts or stops the recorder. Main thread. */
     fun setEnabled(enabled: Boolean) {
@@ -72,7 +75,7 @@ internal class Spo2Recorder(
         Log.i(TAG, "SpO2 at night on")
     }
 
-    fun stop() {
+    override fun stop() {
         val worker = thread ?: return
         handler?.removeCallbacks(tick)
         handler?.post { endMeasurement(null, "stopped") }
@@ -96,14 +99,14 @@ internal class Spo2Recorder(
         val workerHandler = handler ?: return
         if (!feed.subscribeRaw(SamsungHealthPlatform.TRACKER_SPO2, this, workerHandler)) {
             nextAllowedAt = now + RETRY_GAP_MILLIS
-            DebugProtocol.event("Spo2", "refused")
+            debug.event("Spo2", "refused")
             return
         }
         measuringSince = now
         sawMoving = false
         wakeLock.acquire(MEASUREMENT_TIMEOUT_MILLIS + WAKE_LOCK_SLACK_MILLIS)
         workerHandler.postDelayed(timeout, MEASUREMENT_TIMEOUT_MILLIS)
-        DebugProtocol.event("Spo2", "started")
+        debug.event("Spo2", "started")
     }
 
     override fun onError() {
@@ -127,7 +130,7 @@ internal class Spo2Recorder(
         feed.unsubscribeRaw(SamsungHealthPlatform.TRACKER_SPO2, this)
         if (wakeLock.isHeld) wakeLock.release()
         val now = System.currentTimeMillis()
-        DebugProtocol.event(
+        debug.event(
             "Spo2", "ended",
             "why" to why, "afterMs" to now - started, "moving" to sawMoving,
             "percent" to result?.percent, "bpm" to result?.bpm,

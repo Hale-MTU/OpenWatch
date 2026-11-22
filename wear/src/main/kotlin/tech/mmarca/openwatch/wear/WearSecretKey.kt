@@ -9,14 +9,16 @@ import tech.mmarca.openwatch.wearlink.SecretSeal
 
 /**
  * The watch's key for [SecretSeal], made in the Android Keystore on first use and kept there,
- * so the phones' tokens open on this watch only. One per process; null when the Keystore
- * fails, and asked again next time.
+ * so the phones' tokens open on this watch only. One per process, held by [WearGraph]; null
+ * when the Keystore fails, and asked again next time.
  */
-object WearSecretKey : () -> SecretKey? {
+class WearSecretKey : () -> SecretKey? {
 
-    /** Persisted: a new alias is a new key, and every allowed phone would be asked about again. */
-    private const val ALIAS = "openwatch_wear_secrets_v1"
-    private const val PROVIDER = "AndroidKeyStore"
+    private companion object {
+        /** Persisted: a new alias is a new key, and every allowed phone would be asked about again. */
+        const val ALIAS = "openwatch_wear_secrets_v1"
+        const val PROVIDER = "AndroidKeyStore"
+    }
 
     @Volatile
     private var key: SecretKey? = null

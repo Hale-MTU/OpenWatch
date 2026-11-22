@@ -38,7 +38,7 @@ class WearLinkServerHost(
     /** The finished workouts the phone pulls. Called on the link's thread. */
     workouts: (sinceEpochMillis: Long, limit: Int) -> Page<WearLinkWorkout>,
     private val localName: () -> String,
-    private val state: WearLinkState = WearLinkState,
+    private val state: WearLinkState,
 ) {
     private val server = WearLinkServer(trust, Handler(store, live, hrvAvailable, skinAvailable, onPhoneActive, heldPreferences, setPreference, workouts, localName))
 

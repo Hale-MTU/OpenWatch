@@ -32,12 +32,15 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
  * transaction with the last reading. So a restart neither loses nor
  * double-counts steps: what was not written is in the next difference.
  */
-class StepRecorder(
+internal class StepRecorder(
     context: Context,
     private val store: MetricStore,
+    private val debug: DebugProtocol,
     /** Empties the counter's buffer at each heart rate wake-up; see [SensorWakeSync]. */
     private val wakeSync: SensorWakeSync? = null,
-) : SensorEventListener2 {
+    /** Whether the heart rate's wake-ups bring the readings ([HeartRateRecorder.isDense]); read at each plan. */
+    private val heartRateDense: () -> Boolean = { true },
+) : Recorder, SensorEventListener2 {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val boot: Int = Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT, -1)
@@ -49,7 +52,7 @@ class StepRecorder(
     private var counter: StepMinuteCounter? = null
     private var lastPrunedAt = 0L
 
-    val isRunning: Boolean
+    override val isRunning: Boolean
         get() = thread != null
 
     /** False on a watch without a step counter: then nothing will ever start. */
@@ -57,6 +60,13 @@ class StepRecorder(
 
     /** True while the heart rate's wake-ups bring the readings; false asks for the waking counter. */
     private var heartRateRunning = true
+
+    /** The heart rate recorder applies its plan first ([WearGraph.recorders]), so its density is the new one. */
+    override fun apply(plan: RecorderPlan.Plan) {
+        // Without the heart rate's wake-ups the step counter must wake the watch itself.
+        setHeartRateRunning(heartRateDense())
+        if (plan.steps) start() else stop()
+    }
 
     /** Switches between the two variants of the counter. A running recorder registers again. */
     fun setHeartRateRunning(running: Boolean) {
@@ -117,7 +127,7 @@ class StepRecorder(
         return true
     }
 
-    fun stop() {
+    override fun stop() {
         val worker = thread ?: return
         wakeSync?.leave(this)
         sensorManager.unregisterListener(this)
@@ -131,7 +141,7 @@ class StepRecorder(
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_STEP_COUNTER) return
-        DebugProtocol.arrival("steps")
+        debug.arrival("steps")
         val counter = counter ?: return
         val total = event.values.firstOrNull()?.toLong() ?: return
         counter.onTotal(SensorTime.epochMillisOf(event.timestamp), total)
