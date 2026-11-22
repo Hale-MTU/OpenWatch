@@ -13,7 +13,7 @@ one, and events from the recorders. This script pulls those files over adb
 4. the Samsung platform: bind, first delivery, flush answers, lag, errors;
 5. the night-time HRV windows per source: started, stored, dropped and why,
    and the RMSSD each source gave;
-6. the sleep holds and the synced wake-ups;
+6. the sleep holds and the synced wake-ups, and the minutes held per day against the budget;
 7. the breathing rate of each window by route, and what the skin tracker sent.
 
     python3 -I scripts/wear-debug-report.py --serial 192.168.178.63:41399
@@ -210,6 +210,13 @@ def holds(snaps, events):
         c.update({k: v for k, v in s.get("c", {}).items() if k.startswith("wake.")})
     if c.get("wake.cycles"):
         print(f"flush cycles {c['wake.cycles']}, mean {c.get('wake.flushMs', 0) / c['wake.cycles']:.0f} ms awake each, timeouts {c.get('wake.timeouts', 0)}")
+    # Held minutes per day against the lock's budget: a line per finished day, and today's from the last snapshot.
+    for e in (e for e in hold if e["ev"] == "day"):
+        over = " (over budget)" if e.get("lockMin", 0) > e.get("budgetMin", 0) else ""
+        print(f"held {e.get('date')}: lock {e.get('lockMin')} min, synced {e.get('syncedMin')} min, budget {e.get('budgetMin')} min{over}")
+    last = next((s for s in reversed(snaps) if "holdLockMin" in s), None)
+    if last:
+        print(f"held today so far: lock {last['holdLockMin']} min, synced {last.get('holdSyncedMin', 0)} min, budget {last.get('holdBudgetMin')} min")
     print("accelerometer completeness: compare accel/h per state in section 2; whole minutes hold 375 readings, 22,500 an hour")
 
 

@@ -1,6 +1,8 @@
 package tech.mmarca.openwatch.wear
 
 import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
 
@@ -25,7 +27,13 @@ internal object WearSettings {
     private const val KEY_HEART_RATE_DAY = "heart_rate_day"
     private const val KEY_HEART_RATE_SOURCE = "heart_rate_source"
     private const val KEY_HRV_SOURCE = "hrv_source"
+    /** Earlier builds' key: the hold in force, written with every other setting. Read, and written with a choice. */
     private const val KEY_SYNCED_SLEEP_HOLD = "synced_sleep_hold"
+
+    /** Written only when the wearer or the phone chooses: [CHOICE_SYNCED] or [CHOICE_LOCK]. */
+    private const val KEY_SLEEP_HOLD_CHOICE = "sleep_hold_choice"
+    private const val CHOICE_SYNCED = "synced"
+    private const val CHOICE_LOCK = "lock"
     private const val KEY_SKIN_TEMPERATURE = "skin_temperature"
     private const val KEY_SPO2 = "spo2_at_night"
     private const val KEY_MAX_HEART_RATE = "max_heart_rate"
@@ -49,17 +57,50 @@ internal object WearSettings {
     fun setHrvSource(context: Context, source: Source) = setSource(context, KEY_HRV_SOURCE, source)
 
     /**
-     * How a sleep hold keeps every minute whole: false (the default) with a
-     * lasting wake lock, true with the heart rate's wake-ups and a flush of
-     * every sensor at each ([SensorWakeSync]), which lets the processor sleep
-     * in between. The second is the one to measure; it falls back to the
-     * lock while the heart rate is not dense from the sensor.
+     * How a sleep hold keeps every minute whole: true with the heart rate's
+     * wake-ups and a flush of every sensor at each ([SensorWakeSync]), which
+     * lets the processor sleep in between; false with a lasting wake lock.
+     * It falls back to the lock while the heart rate is not dense from the
+     * sensor. The wearer's or the phone's choice holds; without one, the
+     * synced hold wherever the heart rate sensor wakes the processor
+     * ([syncedSleepHoldOf]).
      */
-    fun syncedSleepHold(context: Context): Boolean = prefs(context).getBoolean(KEY_SYNCED_SLEEP_HOLD, false)
-
-    fun setSyncedSleepHold(context: Context, synced: Boolean) {
-        prefs(context).edit().putBoolean(KEY_SYNCED_SLEEP_HOLD, synced).apply()
+    fun syncedSleepHold(context: Context): Boolean {
+        val prefs = prefs(context)
+        return syncedSleepHoldOf(
+            choice = prefs.getString(KEY_SLEEP_HOLD_CHOICE, null),
+            legacySynced = prefs.getBoolean(KEY_SYNCED_SLEEP_HOLD, false),
+            wakeUpHeartRate = hasWakeUpHeartRate(context),
+        )
     }
+
+    /** The wearer or the phone chose how a sleep hold works: the choice is kept whatever the default becomes. */
+    fun setSyncedSleepHold(context: Context, synced: Boolean) {
+        prefs(context).edit()
+            .putString(KEY_SLEEP_HOLD_CHOICE, if (synced) CHOICE_SYNCED else CHOICE_LOCK)
+            // What an older build reads, should the watch go back to one.
+            .putBoolean(KEY_SYNCED_SLEEP_HOLD, synced)
+            .apply()
+    }
+
+    /**
+     * The sleep hold in force. A [choice] of the wearer or the phone wins.
+     * Without one, a `true` under the key of earlier builds is a choice too
+     * (their default was the lock, so only a choice wrote it), while a
+     * `false` there says nothing: those builds wrote every setting each time
+     * the phone changed one, so it is on nearly every watch. Then the synced
+     * hold where the heart rate sensor is a wake-up sensor, the lock where it
+     * is not. Pure.
+     */
+    internal fun syncedSleepHoldOf(choice: String?, legacySynced: Boolean, wakeUpHeartRate: Boolean): Boolean = when (choice) {
+        CHOICE_SYNCED -> true
+        CHOICE_LOCK -> false
+        else -> legacySynced || wakeUpHeartRate
+    }
+
+    /** Whether the watch's heart rate sensor has a wake-up variant, the one [SensorHeartRateSource] registers. */
+    private fun hasWakeUpHeartRate(context: Context): Boolean =
+        (context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager)?.getDefaultSensor(Sensor.TYPE_HEART_RATE, true) != null
 
     /** Skin temperature at night from the Samsung platform, the only source. Off by default. */
     fun skinTemperature(context: Context): Boolean = prefs(context).getBoolean(KEY_SKIN_TEMPERATURE, false)
@@ -97,12 +138,16 @@ internal object WearSettings {
         restingHeartRate = restingHeartRate(context),
     )
 
-    /** Stores every setting of [preferences], for the phone's `SET_PREF`. */
+    /**
+     * Stores every setting of [preferences], for the phone's `SET_PREF`. The
+     * phone changes one setting at a time and this writes them all, so the
+     * sleep hold is recorded as a choice only when it changed.
+     */
     fun write(context: Context, preferences: WatchPreferences) {
         setHeartRateDay(context, preferences.heartRateDay)
         setHeartRateSource(context, preferences.heartRateSource)
         setHrvSource(context, preferences.hrvSource)
-        setSyncedSleepHold(context, preferences.syncedSleepHold)
+        if (preferences.syncedSleepHold != syncedSleepHold(context)) setSyncedSleepHold(context, preferences.syncedSleepHold)
         setSkinTemperature(context, preferences.skinTemperature)
         setSpo2AtNight(context, preferences.spo2AtNight)
         prefs(context).edit()

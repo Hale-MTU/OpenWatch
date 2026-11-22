@@ -333,8 +333,17 @@ class WearAppService : Service(), WearGraph.Host {
         workout = graph.workout.isActive,
     )
 
-    /** What the debug snapshots record as the plan in force. */
-    private fun debugPlan(): Map<String, Any?> = mapOf(
+    /** What the debug snapshots record as the plan in force, and today's held minutes against their budget. */
+    private fun debugPlan(): Map<String, Any?> {
+        val held = graph.sleepMinutes.holdBudget.today(System.currentTimeMillis())
+        return planFields() + mapOf(
+            "holdLockMin" to held.lockMinutes,
+            "holdSyncedMin" to held.syncedMinutes,
+            "holdBudgetMin" to SleepHoldBudget.LOCK_BUDGET_MINUTES,
+        )
+    }
+
+    private fun planFields(): Map<String, Any?> = mapOf(
         "storeWriteFailures" to graph.store.writeFailures,
         "storeLastFailure" to graph.store.lastWriteFailure,
         "hrSec" to graph.heartRate.interval.seconds,

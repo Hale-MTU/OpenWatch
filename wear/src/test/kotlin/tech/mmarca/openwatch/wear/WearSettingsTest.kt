@@ -1,0 +1,66 @@
+package tech.mmarca.openwatch.wear
+
+import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorManager
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowSensor
+
+/** The sleep hold's default, and what counts as a choice that outlives it. */
+@RunWith(AndroidJUnit4::class)
+class WearSettingsTest {
+
+    private val context: Context = ApplicationProvider.getApplicationContext()
+    private val prefs = context.getSharedPreferences("wear_settings", Context.MODE_PRIVATE)
+
+    @Test
+    fun `without a choice the hold is synced exactly where the heart rate sensor wakes the watch`() {
+        assertTrue(WearSettings.syncedSleepHoldOf(choice = null, legacySynced = false, wakeUpHeartRate = true))
+        assertFalse(WearSettings.syncedSleepHoldOf(choice = null, legacySynced = false, wakeUpHeartRate = false))
+    }
+
+    @Test
+    fun `a choice holds whatever the sensor, and so does a synced hold an earlier build stored`() {
+        assertFalse(WearSettings.syncedSleepHoldOf(choice = "lock", legacySynced = true, wakeUpHeartRate = true))
+        assertTrue(WearSettings.syncedSleepHoldOf(choice = "synced", legacySynced = false, wakeUpHeartRate = false))
+        assertTrue(WearSettings.syncedSleepHoldOf(choice = null, legacySynced = true, wakeUpHeartRate = false))
+    }
+
+    @Test
+    fun `the phone setting another value records no choice of the hold, changing the hold does`() {
+        addHeartRateSensor(wakeUp = true)
+        assertTrue(WearSettings.syncedSleepHold(context))
+
+        WearSettings.write(context, WearSettings.read(context).copy(maxHeartRate = 182))
+        assertNull(prefs.getString("sleep_hold_choice", null))
+        assertTrue(WearSettings.syncedSleepHold(context))
+
+        WearSettings.write(context, WearSettings.read(context).copy(syncedSleepHold = false))
+        assertEquals("lock", prefs.getString("sleep_hold_choice", null))
+        assertFalse(WearSettings.syncedSleepHold(context))
+        assertFalse("an older build reads the same hold", prefs.getBoolean("synced_sleep_hold", true))
+    }
+
+    @Test
+    fun `a watch whose heart rate sensor cannot wake it keeps the lock by default`() {
+        addHeartRateSensor(wakeUp = false)
+
+        assertFalse(WearSettings.syncedSleepHold(context))
+        WearSettings.setSyncedSleepHold(context, true)
+        assertTrue(WearSettings.syncedSleepHold(context))
+    }
+
+    private fun addHeartRateSensor(wakeUp: Boolean) {
+        val sensor = ShadowSensor.newInstance(Sensor.TYPE_HEART_RATE)
+        shadowOf(sensor).setWakeUpFlag(wakeUp)
+        shadowOf(context.getSystemService(SensorManager::class.java)).addSensor(sensor)
+    }
+}

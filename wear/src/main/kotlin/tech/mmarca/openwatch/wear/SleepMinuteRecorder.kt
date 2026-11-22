@@ -30,9 +30,12 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
  * two share their wake-ups. On a watch whose hub lets a still arm sleep for
  * minutes, that is not enough: while bedtime mode is on, or [SleepHold] sees
  * sleep starting (a still wrist and a falling pulse, any time of day), the
- * watch is worn and off the charger, a wake lock keeps the processor up so
- * every minute is recorded whole ([BedtimeHold]). Everything runs on one handler thread;
- * the heart rate recorder posts to it.
+ * watch is worn and off the charger, the hold keeps every minute whole
+ * ([BedtimeHold]): with the heart rate sensor's wake-ups and a flush of every
+ * sensor at each ([syncedHold], the default where that sensor is a wake-up
+ * one), or with a lasting wake lock. [holdBudget] counts the minutes held per
+ * day for the debug protocol. Everything runs on one handler thread; the
+ * heart rate recorder posts to it.
  */
 internal class SleepMinuteRecorder(
     private val context: Context,
@@ -91,6 +94,9 @@ internal class SleepMinuteRecorder(
     /** Whether the hold keeps a lasting wake lock now (false for a synced hold, or no hold). */
     val holdsLastingLock: Boolean
         get() = wakeLock.isHeld
+
+    /** The minutes held today and on the days before, by how; kept across runs, read by the debug snapshots. */
+    val holdBudget = SleepHoldBudget()
     private val wakeLock = (context.getSystemService(Context.POWER_SERVICE) as PowerManager)
         .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
         .apply { setReferenceCounted(false) }
@@ -168,6 +174,7 @@ internal class SleepMinuteRecorder(
             hold = BedtimeHold.OFF
             autoHold.onNotWorn()
             setSleepHolding(false)
+            countHold(System.currentTimeMillis(), SleepHoldBudget.Mode.NONE)
             linkState.update { it.copy(bedtimeHold = BedtimeHold.OFF) }
         }
         worker.quitSafely()
@@ -252,6 +259,26 @@ internal class SleepMinuteRecorder(
             linkState.update { it.copy(bedtimeHold = next) }
         }
         setSleepHolding(holding)
+        val mode = when {
+            !holding -> SleepHoldBudget.Mode.NONE
+            lasting -> SleepHoldBudget.Mode.LOCK
+            else -> SleepHoldBudget.Mode.SYNCED
+        }
+        countHold(System.currentTimeMillis(), mode)
+    }
+
+    /** The minutes held per day, for the debug protocol: a line per finished day, one when today's lock passes the budget. */
+    private fun countHold(now: Long, mode: SleepHoldBudget.Mode) {
+        for (day in holdBudget.update(now, mode)) {
+            debug.event(
+                "SleepHold", "day",
+                "date" to day.date.toString(), "lockMin" to day.lockMinutes, "syncedMin" to day.syncedMinutes,
+                "budgetMin" to SleepHoldBudget.LOCK_BUDGET_MINUTES,
+            )
+        }
+        holdBudget.newlyOverBudget(now)?.let { day ->
+            debug.event("SleepHold", "over_budget", "lockMin" to day.lockMinutes, "budgetMin" to SleepHoldBudget.LOCK_BUDGET_MINUTES)
+        }
     }
 
     private fun setSleepHolding(holding: Boolean) {
