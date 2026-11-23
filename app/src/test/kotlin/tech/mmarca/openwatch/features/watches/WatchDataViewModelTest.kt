@@ -15,7 +15,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.data.repository.contract.GarminWellnessRepository
 import tech.mmarca.openwatch.data.repository.testDeviceRepository

@@ -16,7 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R
 
 /** A compact choice dropdown. "Not specified" is listed first so an optional choice can be cleared. */
 @OptIn(ExperimentalMaterial3Api::class)

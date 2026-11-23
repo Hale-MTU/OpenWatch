@@ -19,6 +19,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openwatch.PermissionsRationaleActivity
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.domain.model.HealthConnectAvailability
 import tech.mmarca.openwatch.healthconnect.openHealthConnectPermissionSettings
@@ -205,7 +206,7 @@ private fun HealthConnectSetupScreenErrorPreview() {
                 availability = HealthConnectAvailability.AVAILABLE,
                 syncEnabled = true,
                 isLoading = false,
-                error = ScreenError.Text(R.string.screen_error_generic),
+                error = ScreenError.Text(UiR.string.screen_error_generic),
             ),
             onContinue = null,
             onGrantPermissions = {},

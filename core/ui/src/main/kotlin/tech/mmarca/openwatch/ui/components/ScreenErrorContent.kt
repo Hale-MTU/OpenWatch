@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.resolve
 import tech.mmarca.openwatch.healthconnect.openHealthConnectPermissionSettings

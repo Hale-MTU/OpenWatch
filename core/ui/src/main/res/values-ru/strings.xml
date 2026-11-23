@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">Отмена</string>
+    <string name="action_save">Сохранить</string>
+    <string name="action_grant">Предоставить</string>
+    <string name="action_grant_permission">Предоставить разрешение</string>
+    <string name="action_not_now">Не сейчас</string>
+    <string name="screen_error_not_found">Запрошенный элемент не найден.</string>
+    <string name="screen_error_missing_argument">Необходимая информация отсутствует.</string>
+    <string name="screen_error_permission_denied">Для загрузки этих данных требуется разрешение.</string>
+    <string name="screen_error_health_connect_unavailable">Health Connect недоступен на этом устройстве.</string>
+    <string name="screen_error_feature_unavailable">Недоступно на этом устройстве.</string>
+    <string name="message_missing_permissions_title">Некоторые разрешения отсутствуют</string>
+    <string name="watch_permissions_continue">Всё равно продолжить</string>
+    <string name="onboarding_os_bluetooth">Bluetooth</string>
+    <string name="onboarding_os_bluetooth_desc">Поиск и подключение часов, нагрудных пульсометров и других датчиков.</string>
+    <string name="onboarding_os_notifications">Уведомления</string>
+    <string name="onboarding_os_notifications_desc">Прогресс синхронизации, напоминания и уведомления о тренировках.</string>
+    <string name="onboarding_os_location">Местоположение</string>
+    <string name="onboarding_os_location_desc">Необходимо для поиска Bluetooth-устройств в старых версиях Android.</string>
+    <string name="onboarding_os_battery">Неограниченное использование батареи</string>
+    <string name="onboarding_os_battery_desc">Позволяет завершать фоновую синхронизацию, не приостанавливая её из-за энергосбережения. Открывает настройки Android.</string>
+    <string name="onboarding_os_notification_forwarding">Пересылка уведомлений</string>
+    <string name="onboarding_os_notification_forwarding_desc">Отправка уведомлений телефона на подключённые часы. Открывает настройки Android.</string>
+    <string name="onboarding_action_grant_all">Предоставить все</string>
+    <string name="option_not_specified">Не указано</string>
+    <string name="settings_watch_name_label">Название</string>
+    <string name="action_remove">Удалить</string>
+    <string name="screen_error_generic">Не удалось выполнить запрос.</string>
+</resources>

@@ -11,7 +11,7 @@ import dagger.hilt.components.SingletonComponent
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 
 class HealthConnectPermissionLauncherState internal constructor(
-    internal val launch: (Set<String>) -> Unit,
+    val launch: (Set<String>) -> Unit,
 )
 
 @EntryPoint

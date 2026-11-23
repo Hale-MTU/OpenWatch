@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Duration
 import java.time.Instant
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.core.presentation.resolve
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
@@ -182,7 +183,7 @@ private fun AddDeviceDialog(state: DevicesUiState, actions: DevicesSectionAction
                     OutlinedTextField(
                         value = state.nameInput,
                         onValueChange = actions.onNameChange,
-                        label = { Text(stringResource(R.string.settings_watch_name_label)) },
+                        label = { Text(stringResource(UiR.string.settings_watch_name_label)) },
                         singleLine = true,
                         enabled = !state.isPairing,
                     )
@@ -205,7 +206,7 @@ private fun AddDeviceDialog(state: DevicesUiState, actions: DevicesSectionAction
             }
         },
         dismissButton = {
-            TextButton(onClick = actions.onClose, enabled = !state.isPairing) { Text(stringResource(R.string.action_cancel)) }
+            TextButton(onClick = actions.onClose, enabled = !state.isPairing) { Text(stringResource(UiR.string.action_cancel)) }
         },
     )
 }

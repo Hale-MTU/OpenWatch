@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_save">Gardar</string>
+    <string name="action_grant">Permitir</string>
+    <string name="action_grant_permission">Conceder permiso</string>
+    <string name="action_not_now">Agora non</string>
+    <string name="screen_error_not_found">Non se atopa o elemento solicitado.</string>
+    <string name="screen_error_missing_argument">Non se atopa a información solicitada.</string>
+    <string name="screen_error_permission_denied">Precísase permiso para cargar estes datos.</string>
+    <string name="screen_error_health_connect_unavailable">Saúde Conectada non está dispoñible neste dispositivo.</string>
+    <string name="screen_error_feature_unavailable">Non dispoñible neste dispositivo.</string>
+    <string name="message_missing_permissions_title">Faltan algúns permisos</string>
+    <string name="watch_permissions_continue">Continuar igualmente</string>
+    <string name="onboarding_os_bluetooth">Bluetooth</string>
+    <string name="onboarding_os_bluetooth_desc">Atopar e conectar reloxos, bandas de frecuencia cardíaca e outros sensores.</string>
+    <string name="onboarding_os_notifications">Notificacións</string>
+    <string name="onboarding_os_notifications_desc">Progreso da sincronización, recordatorios e alertas de adestramento.</string>
+    <string name="onboarding_os_location">Localización</string>
+    <string name="onboarding_os_location_desc">Necesario para buscar dispositivos Bluetooth en versións antigas de Android.</string>
+    <string name="onboarding_os_battery">Uso de batería sen restricións</string>
+    <string name="onboarding_os_battery_desc">Permite que as sincronizacións en segundo plano rematen en vez de ser pausadas polo aforro de batería. Abre os axustes de Android.</string>
+    <string name="onboarding_os_notification_forwarding">Reenvío de notificacións</string>
+    <string name="onboarding_os_notification_forwarding_desc">Envía as notificacións do teléfono a un reloxo conectado. Abre os axustes de Android.</string>
+    <string name="onboarding_action_grant_all">Conceder todo</string>
+    <string name="option_not_specified">Sen especificar</string>
+    <string name="settings_watch_name_label">Nome</string>
+    <string name="action_remove">Eliminar</string>
+    <string name="screen_error_generic">Non se puido completar a solicitude.</string>
+</resources>

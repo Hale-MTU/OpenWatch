@@ -53,6 +53,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlin.time.Duration
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.resolve
 import tech.mmarca.openwatch.devices.garmin.GarminEntryKind
@@ -535,7 +536,7 @@ private fun OptionsDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
+                Text(stringResource(UiR.string.action_cancel))
             }
         },
     )
@@ -563,12 +564,12 @@ private fun EntryTimePickerDialog(
             TextButton(
                 onClick = { onConfirm(timePickerState.hour, timePickerState.minute) },
             ) {
-                Text(stringResource(R.string.action_save))
+                Text(stringResource(UiR.string.action_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
+                Text(stringResource(UiR.string.action_cancel))
             }
         },
     ) {
@@ -604,7 +605,7 @@ private fun ConfirmActionDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
+                Text(stringResource(UiR.string.action_cancel))
             }
         },
     )

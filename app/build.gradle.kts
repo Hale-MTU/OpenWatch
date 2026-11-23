@@ -148,6 +148,8 @@ dependencies {
     implementation(project(":core:health-api"))
     // Health Connect as the app reaches it: the gateway, the record sink, the activity writes, the catalog.
     implementation(project(":core:health"))
+    // The theme, the shared components, the formatters and ScreenError, the OS permission checks.
+    implementation(project(":core:ui"))
     // What every device family shares on Android: the radio lease, the GATT link and the BLE
     // scanner, companion pairing, the sync controller and its schedule.
     implementation(project(":devices:core"))
@@ -257,6 +259,7 @@ tasks.withType<Test>().configureEach {
         ":core:devices-api:test",
         ":core:health-api:testCiUnitTest",
         ":core:health:testCiUnitTest",
+        ":core:ui:testCiUnitTest",
         ":devices:core:testCiUnitTest",
         ":devices:garmin:testCiUnitTest",
         ":devices:garmin:protocol:test",
@@ -278,6 +281,7 @@ tasks.withType<Test>().configureEach {
         "scannedCoreDevicesApiMain" to "core/devices-api/src/main",
         "scannedCoreHealthApiMain" to "core/health-api/src/main",
         "scannedCoreHealthMain" to "core/health/src/main",
+        "scannedCoreUiMain" to "core/ui/src/main",
         "scannedDevicesCoreMain" to "devices/core/src/main",
         "scannedGarminMain" to "devices/garmin/src/main",
         "scannedGarminProtocolMain" to "devices/garmin/protocol/src/main",

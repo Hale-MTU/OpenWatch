@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.core.presentation.localizedList
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.devices.core.sync.HealthSeries
@@ -65,7 +66,7 @@ internal fun SyncOutcomeSummary(
             val unnamed = if (labels.isEmpty()) null else stringResource(R.string.settings_watch_garmin_withheld, labels)
             InlineGrantPrompt(
                 message = (named + listOfNotNull(unnamed)).joinToString("\n"),
-                actionLabel = stringResource(R.string.action_grant_permission),
+                actionLabel = stringResource(UiR.string.action_grant_permission),
                 onGrant = { onAllowGrants(lines.grants) },
             )
         }

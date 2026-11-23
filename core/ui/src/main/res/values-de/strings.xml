@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_save">Speichern</string>
+    <string name="action_grant">Erteilen</string>
+    <string name="action_grant_permission">Berechtigung erteilen</string>
+    <string name="action_not_now">Jetzt nicht</string>
+    <string name="screen_error_not_found">Der angeforderte Eintrag wurde nicht gefunden.</string>
+    <string name="screen_error_missing_argument">Erforderliche Informationen fehlen.</string>
+    <string name="screen_error_permission_denied">Zum Laden dieser Daten ist eine Berechtigung erforderlich.</string>
+    <string name="screen_error_health_connect_unavailable">Health Connect ist auf diesem Gerät nicht verfügbar.</string>
+    <string name="screen_error_feature_unavailable">Auf diesem Gerät nicht verfügbar.</string>
+    <string name="message_missing_permissions_title">Einige Berechtigungen fehlen</string>
+    <string name="watch_permissions_continue">Trotzdem fortfahren</string>
+    <string name="onboarding_os_bluetooth">Bluetooth</string>
+    <string name="onboarding_os_bluetooth_desc">Uhren, Herzfrequenzgurte und andere Sensoren finden und verbinden.</string>
+    <string name="onboarding_os_notifications">Benachrichtigungen</string>
+    <string name="onboarding_os_notifications_desc">Synchronisierungsfortschritt, Erinnerungen und Trainingshinweise.</string>
+    <string name="onboarding_os_location">Standort</string>
+    <string name="onboarding_os_location_desc">Auf älteren Android-Versionen nötig, um nach Bluetooth-Geräten zu suchen.</string>
+    <string name="onboarding_os_battery">Uneingeschränkte Akkunutzung</string>
+    <string name="onboarding_os_battery_desc">Lässt Synchronisierungen im Hintergrund zu Ende laufen, statt sie durch Energiesparen zu pausieren. Öffnet die Android-Einstellungen.</string>
+    <string name="onboarding_os_notification_forwarding">Benachrichtigungen weiterleiten</string>
+    <string name="onboarding_os_notification_forwarding_desc">Telefonbenachrichtigungen an eine verbundene Uhr senden. Öffnet die Android-Einstellungen.</string>
+    <string name="onboarding_action_grant_all">Alle erteilen</string>
+    <string name="settings_watch_name_label">Name</string>
+    <string name="action_remove">Entfernen</string>
+    <string name="option_not_specified">Nicht angegeben</string>
+    <string name="screen_error_generic">Die Anfrage konnte nicht abgeschlossen werden.</string>
+</resources>

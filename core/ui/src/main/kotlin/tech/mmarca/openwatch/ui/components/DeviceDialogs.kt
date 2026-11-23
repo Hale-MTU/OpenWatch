@@ -22,7 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R
 import tech.mmarca.openwatch.ui.theme.Spacing
 
 /** Renames a paired device: [title] names what is renamed, [onSave] gets the text as typed. */

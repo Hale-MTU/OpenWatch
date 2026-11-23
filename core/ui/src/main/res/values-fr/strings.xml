@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_save">Sauvegarder</string>
+    <string name="action_grant">Accorder</string>
+    <string name="action_grant_permission">Accorder l\'autorisation</string>
+    <string name="action_not_now">Pas maintenant</string>
+    <string name="screen_error_not_found">L\'élément demandé n\'a pas été trouvé.</string>
+    <string name="screen_error_missing_argument">Informations obligatoires manquantes.</string>
+    <string name="screen_error_permission_denied">Une permission est nécessaire pour charger ces données.</string>
+    <string name="screen_error_health_connect_unavailable">Santé Connect n\'est pas disponible sur cet appareil.</string>
+    <string name="screen_error_feature_unavailable">Non disponible sur cet appareil.</string>
+    <string name="message_missing_permissions_title">Certaines autorisations manquent</string>
+    <string name="watch_permissions_continue">Continuer quand même</string>
+    <string name="onboarding_os_bluetooth">Bluetooth</string>
+    <string name="onboarding_os_bluetooth_desc">Détecter et connecter des montres, ceintures cardiaques et autres capteurs.</string>
+    <string name="onboarding_os_notifications">Notifications</string>
+    <string name="onboarding_os_notifications_desc">Progression de la synchronisation, rappels et alertes d\'entraînement.</string>
+    <string name="onboarding_os_location">Position</string>
+    <string name="onboarding_os_location_desc">Requise pour rechercher des appareils Bluetooth sur les anciennes versions d\'Android.</string>
+    <string name="onboarding_os_battery">Utilisation illimitée de la batterie</string>
+    <string name="onboarding_os_battery_desc">Permet aux synchronisations en arrière-plan de se terminer au lieu d\'être suspendues par l\'économie de batterie. Ouvre les réglages Android.</string>
+    <string name="onboarding_os_notification_forwarding">Transfert des notifications</string>
+    <string name="onboarding_os_notification_forwarding_desc">Envoyer les notifications du téléphone vers une montre connectée. Ouvre les réglages Android.</string>
+    <string name="onboarding_action_grant_all">Tout accorder</string>
+    <string name="option_not_specified">Non précisé</string>
+    <string name="settings_watch_name_label">Nom</string>
+    <string name="action_remove">Supprimer</string>
+    <string name="screen_error_generic">Impossible de terminer la demande.</string>
+</resources>

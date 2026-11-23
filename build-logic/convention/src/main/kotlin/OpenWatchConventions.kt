@@ -183,6 +183,16 @@ class OpenWatchAndroidLibraryPlugin : Plugin<Project> {
 }
 
 /**
+ * An Android library whose unit tests run on Robolectric: the same runtime the apps' tests run
+ * on, resolved and checked as a dependency and used offline ([configureRobolectricRuntime]).
+ * Only the modules that need it apply it, since it copies the runtime into each one's build
+ * directory.
+ */
+class OpenWatchRobolectricPlugin : Plugin<Project> {
+    override fun apply(target: Project) = target.configureRobolectricRuntime()
+}
+
+/**
  * A pure-JVM module, compiled for Java 17 like the apps. One that also applies
  * `com.android.lint` (code moved out of an app, which lint checked there) gets the
  * Android modules' lint rules.

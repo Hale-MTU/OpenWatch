@@ -31,6 +31,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevice
 import tech.mmarca.openwatch.ui.components.OpenWatchTextButton
 import tech.mmarca.openwatch.ui.components.OpenWatchTonalButton
@@ -84,12 +85,12 @@ internal fun AddScaleDialog(
         },
         confirmButton = {
             if (state.addStep == AddScaleStep.KEY) {
-                TextButton(onClick = onSave) { Text(text = stringResource(R.string.action_save)) }
+                TextButton(onClick = onSave) { Text(text = stringResource(UiR.string.action_save)) }
             }
         },
         dismissButton = {
             TextButton(onClick = onClose, enabled = !state.isFinding) {
-                Text(text = stringResource(R.string.action_cancel))
+                Text(text = stringResource(UiR.string.action_cancel))
             }
         },
     )
@@ -137,7 +138,7 @@ private fun KeyStep(
         OutlinedTextField(
             value = state.nameInput,
             onValueChange = onNameChange,
-            label = { Text(stringResource(R.string.settings_watch_name_label)) },
+            label = { Text(stringResource(UiR.string.settings_watch_name_label)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )

@@ -17,6 +17,10 @@ gradlePlugin {
             id = "openwatch.android.library"
             implementationClass = "OpenWatchAndroidLibraryPlugin"
         }
+        register("robolectric") {
+            id = "openwatch.robolectric"
+            implementationClass = "OpenWatchRobolectricPlugin"
+        }
         register("jvmLibrary") {
             id = "openwatch.jvm.library"
             implementationClass = "OpenWatchJvmLibraryPlugin"

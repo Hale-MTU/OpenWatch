@@ -39,6 +39,7 @@ import java.time.Duration
 import java.time.Instant
 import tech.mmarca.openwatch.core.presentation.resolve
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.devices.garmin.GarminOnboardStep
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleDiscoveredDevice
@@ -423,7 +424,7 @@ private fun AddWatchDialog(
                     OutlinedTextField(
                         value = state.addDisplayName,
                         onValueChange = onNameChange,
-                        label = { Text(stringResource(R.string.settings_watch_name_label)) },
+                        label = { Text(stringResource(UiR.string.settings_watch_name_label)) },
                         singleLine = true,
                         enabled = !state.isOnboarding,
                     )
@@ -466,7 +467,7 @@ private fun AddWatchDialog(
                 onClick = onClose,
                 enabled = !state.isOnboarding,
             ) {
-                Text(stringResource(R.string.action_cancel))
+                Text(stringResource(UiR.string.action_cancel))
             }
         },
     )

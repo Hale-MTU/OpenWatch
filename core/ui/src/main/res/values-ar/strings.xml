@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_save">حفظ</string>
+    <string name="action_grant">منح</string>
+    <string name="action_grant_permission">منح الإذن</string>
+    <string name="action_not_now">ليس الآن</string>
+    <string name="screen_error_not_found">لم يتم العثور على العنصر المطلوب.</string>
+    <string name="screen_error_missing_argument">بعض المعلومات المطلوبة مفقودة.</string>
+    <string name="screen_error_permission_denied">يلزم إذن لتحميل هذه البيانات.</string>
+    <string name="screen_error_health_connect_unavailable">لا يتوفر Health Connect على هذا الجهاز.</string>
+    <string name="screen_error_feature_unavailable">غير متوفر على هذا الجهاز.</string>
+    <string name="screen_error_generic">تعذّر إكمال الطلب.</string>
+    <string name="message_missing_permissions_title">بعض الأذونات غير ممنوحة</string>
+    <string name="watch_permissions_continue">المتابعة على أي حال</string>
+    <string name="onboarding_os_bluetooth">Bluetooth</string>
+    <string name="onboarding_os_bluetooth_desc">العثور على الساعات وأحزمة قياس نبضات القلب وأجهزة الاستشعار الأخرى والاتصال بها.</string>
+    <string name="onboarding_os_notifications">الإشعارات</string>
+    <string name="onboarding_os_notifications_desc">تقدّم المزامنة والتذكيرات وتنبيهات التمارين.</string>
+    <string name="onboarding_os_location">الموقع الجغرافي</string>
+    <string name="onboarding_os_location_desc">مطلوب للبحث عن أجهزة Bluetooth في إصدارات Android الأقدم.</string>
+    <string name="onboarding_os_battery">استخدام البطارية بلا قيود</string>
+    <string name="onboarding_os_battery_desc">يتيح إكمال المزامنة في الخلفية بدلاً من إيقافها مؤقتًا بسبب توفير شحن البطارية. يفتح إعدادات Android.</string>
+    <string name="onboarding_os_notification_forwarding">إعادة توجيه الإشعارات</string>
+    <string name="onboarding_os_notification_forwarding_desc">إرسال إشعارات الهاتف إلى ساعة متصلة. يفتح إعدادات Android.</string>
+    <string name="onboarding_action_grant_all">منح الكل</string>
+    <string name="option_not_specified">غير محدد</string>
+    <string name="settings_watch_name_label">الاسم</string>
+    <string name="action_remove">إزالة</string>
+</resources>

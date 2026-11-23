@@ -5,7 +5,7 @@ import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import kotlinx.coroutines.CancellationException
-import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R
 
 sealed interface ScreenError {
     /** Text from outside the app, such as an exception message. Shown as it is. */

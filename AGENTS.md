@@ -67,6 +67,9 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   the store, the pipeline to Room and Health Connect, the strings its notification shows, and
   `XiaomiScaleModule`, which binds its family, ports and store. The weigh-in table's contract
   (`ScaleWeighInRepository`) is its own; Room implements it in `:app`.
+- `core/ui` (`:core:ui`) — what every screen shares: the theme and the shared components
+  (`ui/theme`, `ui/components`), the formatters and `ScreenError` (`core/presentation`) and the
+  OS permission checks (`core/permissions`). It knows no device family.
 - `core/health` (`:core:health`) — Health Connect as the app reaches it, in `healthconnect/`:
   `HealthConnectGateway`, the one class that touches the client, `ActivityRecordWriter`, the
   activity write path copied from OpenVitals, the sync gate, the intents and

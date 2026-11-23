@@ -22,6 +22,7 @@ import java.time.Duration
 import java.time.Instant
 import kotlin.math.roundToLong
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.localizedList
 import tech.mmarca.openwatch.domain.model.GarminWellnessMetric
@@ -91,7 +92,7 @@ private fun WatchDataScreenLoadingPreview() {
 private fun WatchDataScreenErrorPreview() {
     OpenWatchTheme {
         WatchDataScreen(
-            state = WatchDataUiState(isLoading = false, error = ScreenError.Text(R.string.screen_error_generic)),
+            state = WatchDataUiState(isLoading = false, error = ScreenError.Text(UiR.string.screen_error_generic)),
         )
     }
 }

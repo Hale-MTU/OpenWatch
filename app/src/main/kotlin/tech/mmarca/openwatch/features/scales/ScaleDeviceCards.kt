@@ -28,6 +28,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.devices.xiaomi.ScaleListenerStatus
 import tech.mmarca.openwatch.devices.xiaomi.ScaleWriteFailure
 import tech.mmarca.openwatch.ui.components.DeviceAvatar
@@ -130,7 +131,7 @@ internal fun ScaleListeningCard(
                     isError = true,
                 )
                 OpenWatchTonalButton(onClick = onGrantScanPermission) {
-                    Text(stringResource(R.string.action_grant_permission))
+                    Text(stringResource(UiR.string.action_grant_permission))
                 }
             }
 
@@ -175,7 +176,7 @@ internal fun ScaleHealthConnectCard(
         if (state.missingWritePermissions.isNotEmpty()) {
             Note(R.string.settings_scales_health_connect_missing)
             OpenWatchTonalButton(onClick = onGrantHealthConnect) {
-                Text(stringResource(R.string.action_grant_permission))
+                Text(stringResource(UiR.string.action_grant_permission))
             }
         }
         if (state.missingProfileInputs.isNotEmpty()) {
@@ -263,10 +264,10 @@ internal fun ScaleKeyDialog(invalid: Boolean, onEdit: () -> Unit, onSave: (Strin
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(key) }) { Text(stringResource(R.string.action_save)) }
+            TextButton(onClick = { onSave(key) }) { Text(stringResource(UiR.string.action_save)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+            TextButton(onClick = onDismiss) { Text(stringResource(UiR.string.action_cancel)) }
         },
     )
 }
@@ -287,7 +288,7 @@ internal fun ScaleConfirmDialog(
             TextButton(onClick = onConfirm) { Text(text = confirm, color = MaterialTheme.colorScheme.error) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+            TextButton(onClick = onDismiss) { Text(stringResource(UiR.string.action_cancel)) }
         },
     )
 }

@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.DeviceFamilies
 import tech.mmarca.openwatch.devices.core.DeviceFeature
@@ -153,7 +154,7 @@ internal fun BacklogCard(backlog: MeasurementOutcome, onGrant: () -> Unit) {
             if (backlog.withheld.isNotEmpty()) {
                 InlineGrantPrompt(
                     message = stringResource(R.string.device_readings_waiting_grant, waiting),
-                    actionLabel = stringResource(R.string.action_grant_permission),
+                    actionLabel = stringResource(UiR.string.action_grant_permission),
                     onGrant = onGrant,
                 )
             } else {

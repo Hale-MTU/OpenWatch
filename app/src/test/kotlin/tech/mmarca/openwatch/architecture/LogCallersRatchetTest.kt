@@ -48,7 +48,6 @@ class LogCallersRatchetTest {
 
         val Allowed = setOf(
             "app/AppStartupActors.kt",
-            "app/core/presentation/ScreenError.kt",
             "app/data/repository/BleDeviceRepository.kt",
             "app/data/repository/DeviceStateStore.kt",
             "app/link/LinkLiveSessions.kt",
@@ -58,6 +57,7 @@ class LogCallersRatchetTest {
             "core/health/healthconnect/ActivityRecordWriter.kt",
             "core/health/healthconnect/HealthConnectAvailabilityService.kt",
             "core/health/healthconnect/HealthConnectGateway.kt",
+            "core/ui/core/presentation/ScreenError.kt",
             // The scans' refusals, moved out of BleSensorCoordinator and ScaleScanRadio: a code or the grant's exception.
             "devices/core/devices/core/ble/BleScanner.kt",
             "devices/core/devices/core/DeviceLog.kt",

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">取消</string>
+    <string name="action_save">保存</string>
+    <string name="action_grant">授予</string>
+    <string name="action_grant_permission">授予权限</string>
+    <string name="action_not_now">暂不</string>
+    <string name="screen_error_not_found">未找到请求的内容。</string>
+    <string name="screen_error_missing_argument">缺少必要信息。</string>
+    <string name="screen_error_permission_denied">需要权限才能加载此数据。</string>
+    <string name="screen_error_health_connect_unavailable">此设备不支持 Health Connect。</string>
+    <string name="screen_error_feature_unavailable">此设备不支持。</string>
+    <string name="message_missing_permissions_title">缺少部分权限</string>
+    <string name="watch_permissions_continue">仍然继续</string>
+    <string name="onboarding_os_bluetooth">蓝牙</string>
+    <string name="onboarding_os_bluetooth_desc">查找并连接手表、心率带和其他传感器。</string>
+    <string name="onboarding_os_notifications">通知</string>
+    <string name="onboarding_os_notifications_desc">同步进度、提醒和锻炼提醒。</string>
+    <string name="onboarding_os_location">位置</string>
+    <string name="onboarding_os_location_desc">在较旧 Android 版本上扫描蓝牙设备所需。</string>
+    <string name="onboarding_os_battery">无限制电池使用</string>
+    <string name="onboarding_os_battery_desc">让后台同步完成而非被省电暂停。打开 Android 设置。</string>
+    <string name="onboarding_os_notification_forwarding">通知转发</string>
+    <string name="onboarding_os_notification_forwarding_desc">将手机通知发送到已连接的手表。打开 Android 设置。</string>
+    <string name="onboarding_action_grant_all">全部授予</string>
+    <string name="option_not_specified">未指定</string>
+    <string name="settings_watch_name_label">名称</string>
+    <string name="action_remove">移除</string>
+    <string name="screen_error_generic">无法完成请求。</string>
+</resources>

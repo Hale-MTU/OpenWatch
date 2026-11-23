@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">Tühista</string>
+    <string name="action_save">Salvesta</string>
+    <string name="action_grant">Anna luba</string>
+    <string name="action_grant_permission">Anna luba</string>
+    <string name="action_not_now">Mitte praegu</string>
+    <string name="screen_error_not_found">Soovitud kirjet ei leitud.</string>
+    <string name="screen_error_missing_argument">Vajalik teave puudub.</string>
+    <string name="screen_error_permission_denied">Nende andmete laadimiseks on vaja luba.</string>
+    <string name="screen_error_health_connect_unavailable">Health Connect ei ole selles seadmes saadaval.</string>
+    <string name="screen_error_feature_unavailable">Selles seadmes pole saadaval.</string>
+    <string name="message_missing_permissions_title">Mõned load puuduvad</string>
+    <string name="watch_permissions_continue">Jätka siiski</string>
+    <string name="onboarding_os_bluetooth">Bluetooth</string>
+    <string name="onboarding_os_bluetooth_desc">Kellade, pulsivööde ja muude andurite leidmine ja ühendamine.</string>
+    <string name="onboarding_os_notifications">Teavitused</string>
+    <string name="onboarding_os_notifications_desc">Sünkroonimise edenemine, meeldetuletused ja treeninguteated.</string>
+    <string name="onboarding_os_location">Asukoht</string>
+    <string name="onboarding_os_location_desc">Vajalik Bluetooth-seadmete otsimiseks vanemates Androidi versioonides.</string>
+    <string name="onboarding_os_battery">Piiramatu akukasutus</string>
+    <string name="onboarding_os_battery_desc">Laseb taustal toimuval sünkroonimisel lõpuni jõuda, selle asemel et akusäästja selle peataks. Avab Androidi seaded.</string>
+    <string name="onboarding_os_notification_forwarding">Teavituste edastamine</string>
+    <string name="onboarding_os_notification_forwarding_desc">Telefoni teavituste saatmine ühendatud kella. Avab Androidi seaded.</string>
+    <string name="onboarding_action_grant_all">Anna kõik</string>
+    <string name="settings_watch_name_label">Nimi</string>
+    <string name="action_remove">Eemalda</string>
+    <string name="option_not_specified">Määramata</string>
+    <string name="screen_error_generic">Päringut ei õnnestunud lõpule viia.</string>
+</resources>

@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.junit.Rule
 import org.junit.Test
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
 import tech.mmarca.openwatch.data.repository.WatchNotificationPrefsStore
 import tech.mmarca.openwatch.testing.string
@@ -59,8 +60,8 @@ class WatchNotificationAppsScreenTest {
         // A host that cannot answer must not spin forever, nor pass for a phone with no apps.
         setScreen(FakeGateway(apps = emptyList(), throwsOnList = true))
 
-        awaitText(string(R.string.screen_error_generic))
-        composeRule.onNodeWithText(string(R.string.screen_error_generic)).assertIsDisplayed()
+        awaitText(string(UiR.string.screen_error_generic))
+        composeRule.onNodeWithText(string(UiR.string.screen_error_generic)).assertIsDisplayed()
         composeRule.onAllNodesWithText(string(R.string.settings_watch_notifications_apps_empty)).assertCountEquals(0)
     }
 

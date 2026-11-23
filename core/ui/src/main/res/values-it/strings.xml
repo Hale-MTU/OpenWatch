@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">Annulla</string>
+    <string name="action_save">Salva</string>
+    <string name="action_grant">Concedi</string>
+    <string name="action_grant_permission">Concedi l\'autorizzazione</string>
+    <string name="action_not_now">Non ora</string>
+    <string name="screen_error_not_found">L\'elemento richiesto non è stato trovato.</string>
+    <string name="screen_error_missing_argument">Informazioni obbligatorie mancanti.</string>
+    <string name="screen_error_permission_denied">È necessaria l\'autorizzazione per caricare questi dati.</string>
+    <string name="screen_error_health_connect_unavailable">Health Connect non è disponibile su questo dispositivo.</string>
+    <string name="screen_error_feature_unavailable">Non disponibile su questo dispositivo.</string>
+    <string name="message_missing_permissions_title">Alcune autorizzazioni mancanti</string>
+    <string name="watch_permissions_continue">Continua comunque</string>
+    <string name="onboarding_os_bluetooth">Bluetooth</string>
+    <string name="onboarding_os_bluetooth_desc">Trovare e connettere orologi, fasce cardio e altri sensori.</string>
+    <string name="onboarding_os_notifications">Notifiche</string>
+    <string name="onboarding_os_notifications_desc">Avanzamento della sincronizzazione, promemoria e avvisi di allenamento.</string>
+    <string name="onboarding_os_location">Posizione</string>
+    <string name="onboarding_os_location_desc">Necessaria per cercare dispositivi Bluetooth sulle versioni meno recenti di Android.</string>
+    <string name="onboarding_os_battery">Uso della batteria senza limiti</string>
+    <string name="onboarding_os_battery_desc">Permette alle sincronizzazioni in background di finire invece di essere sospese dal risparmio energetico. Apre le impostazioni di Android.</string>
+    <string name="onboarding_os_notification_forwarding">Inoltro delle notifiche</string>
+    <string name="onboarding_os_notification_forwarding_desc">Inviare le notifiche del telefono a un orologio connesso. Apre le impostazioni di Android.</string>
+    <string name="onboarding_action_grant_all">Concedi tutto</string>
+    <string name="settings_watch_name_label">Nome</string>
+    <string name="action_remove">Rimuovi</string>
+    <string name="option_not_specified">Non specificato</string>
+    <string name="screen_error_generic">Impossibile completare la richiesta.</string>
+</resources>

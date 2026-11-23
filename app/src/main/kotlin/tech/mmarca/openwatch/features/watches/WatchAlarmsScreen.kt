@@ -51,6 +51,7 @@ import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.core.presentation.joinParts
 import tech.mmarca.openwatch.core.presentation.localizedList
 import tech.mmarca.openwatch.devices.garmin.GarminAlarm
@@ -328,7 +329,7 @@ private fun AlarmEditorDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = { onSave(alarm) }) { Text(stringResource(R.string.action_save)) }
+            TextButton(onClick = { onSave(alarm) }) { Text(stringResource(UiR.string.action_save)) }
         },
         dismissButton = {
             Row {
@@ -340,7 +341,7 @@ private fun AlarmEditorDialog(
                         )
                     }
                 }
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+                TextButton(onClick = onDismiss) { Text(stringResource(UiR.string.action_cancel)) }
             }
         },
     )
@@ -361,12 +362,12 @@ private fun AlarmEditorDialog(
                         showTimePicker = false
                     },
                 ) {
-                    Text(stringResource(R.string.action_save))
+                    Text(stringResource(UiR.string.action_save))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showTimePicker = false }) {
-                    Text(stringResource(R.string.action_cancel))
+                    Text(stringResource(UiR.string.action_cancel))
                 }
             },
         ) {
@@ -450,7 +451,7 @@ private fun alarmSoundText(sound: GarminAlarmSound): Int = when (sound) {
 
 @StringRes
 private fun alarmLabelText(label: GarminAlarmLabel): Int = when (label) {
-    GarminAlarmLabel.NONE -> R.string.option_not_specified
+    GarminAlarmLabel.NONE -> UiR.string.option_not_specified
     GarminAlarmLabel.WAKE_UP -> R.string.settings_watch_alarms_label_wake_up
     GarminAlarmLabel.WORKOUT -> R.string.settings_watch_alarms_label_workout
     GarminAlarmLabel.REMINDER -> R.string.settings_watch_alarms_label_reminder

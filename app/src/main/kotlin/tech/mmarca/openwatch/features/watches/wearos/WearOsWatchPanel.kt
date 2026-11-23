@@ -45,6 +45,7 @@ import tech.mmarca.openwatch.devices.wearos.WearOsAppStatus
 import tech.mmarca.openwatch.devices.wearos.WearOsCompanionStatus
 import tech.mmarca.openwatch.devices.wearos.messageRes
 import tech.mmarca.openwatch.devices.wearos.R as WearOsR
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
@@ -175,7 +176,7 @@ private fun WearOsStatusCard(
     val context = LocalContext.current
     if (error == ScreenError.PermissionDenied) {
         PermissionCallout(
-            title = stringResource(R.string.message_missing_permissions_title),
+            title = stringResource(UiR.string.message_missing_permissions_title),
             body = stringResource(R.string.settings_watch_wearos_bt_permission),
             onGrant = onGrantBluetooth,
         )

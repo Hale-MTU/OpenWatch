@@ -19,7 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R
 import tech.mmarca.openwatch.domain.model.OsPermissionCatalog
 import tech.mmarca.openwatch.domain.model.OsPermissionId
 import tech.mmarca.openwatch.domain.model.OsPermissionRow
