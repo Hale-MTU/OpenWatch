@@ -26,7 +26,6 @@ import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoMap
 import dagger.multibindings.StringKey
 import javax.inject.Inject
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.devices.core.pairing.WatchBondResult
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState

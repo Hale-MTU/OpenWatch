@@ -38,8 +38,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.ui.R as UiR
+import tech.mmarca.openwatch.features.watches.garmin.R
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchCardStyle
 import tech.mmarca.openwatch.ui.components.ScreenErrorContent

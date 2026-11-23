@@ -11,7 +11,7 @@ OpenWatch seams noted.
 
 - App namespace: `tech.mmarca.openwatch`
 - Build logic: `build-logic/`, an included build with the convention plugins every module applies (`openwatch.android.application`, `openwatch.android.library`, `openwatch.jvm.library`, and `openwatch.robolectric` for a library whose tests run on Robolectric): SDK levels, Java 17, signing from the environment, the debug, release and nightly build types, lint and dependency locking. A module's own file holds only what is its own (version codes, the `ci` type, the diagnostics flag). A change there must leave the release APKs byte-identical; compare their hashes before and after.
-- Project shape: twenty-seven Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
+- Project shape: twenty-eight Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
   hold the pure code the app depends on (below); `:core:devices-api` the device contracts
   ([`devices/core`](#devicescore)); `:core:health-api` how the devices talk to Health Connect
   ([rule 3](#3-health-connect-is-reached-through-healthconnectgateway-only)); `:core:health`

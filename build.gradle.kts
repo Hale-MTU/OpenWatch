@@ -73,6 +73,7 @@ tasks.register("verifyCiUnitTest") {
         ":feature:device:testCiUnitTest",
         ":feature:watches-wearos:testCiUnitTest",
         ":feature:scales-xiaomi:testCiUnitTest",
+        ":feature:watches-garmin:testCiUnitTest",
         ":link-host:testCiUnitTest",
         ":app:testCiUnitTest",
     )
@@ -125,6 +126,7 @@ tasks.register("verifyCiLint") {
         ":feature:device:lintCi",
         ":feature:watches-wearos:lintCi",
         ":feature:scales-xiaomi:lintCi",
+        ":feature:watches-garmin:lintCi",
         ":link-host:lintCi",
     )
 }

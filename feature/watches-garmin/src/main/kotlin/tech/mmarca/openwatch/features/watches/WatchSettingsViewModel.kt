@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
-import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.features.watches.garmin.R
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
 import tech.mmarca.openwatch.core.presentation.ScreenError

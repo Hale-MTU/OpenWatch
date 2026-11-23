@@ -13,8 +13,8 @@ import androidx.core.content.edit
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.junit.Rule
 import org.junit.Test
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.ui.R as UiR
+import tech.mmarca.openwatch.features.watches.garmin.R
 import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
 import tech.mmarca.openwatch.data.repository.WatchNotificationPrefsStore
 import tech.mmarca.openwatch.testing.string

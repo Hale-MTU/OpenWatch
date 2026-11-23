@@ -21,8 +21,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Duration
 import java.time.Instant
 import kotlin.math.roundToLong
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.ui.R as UiR
+import tech.mmarca.openwatch.features.watches.garmin.R
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.localizedList
 import tech.mmarca.openwatch.domain.model.GarminWellnessMetric

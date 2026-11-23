@@ -32,8 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Instant
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.features.device.R as DeviceR
+import tech.mmarca.openwatch.features.watches.garmin.R
 import tech.mmarca.openwatch.core.geo.GeoCoordinateError
 import tech.mmarca.openwatch.core.geo.GeoCoordinateParseResult
 import tech.mmarca.openwatch.devices.garmin.GarminSendFileResult

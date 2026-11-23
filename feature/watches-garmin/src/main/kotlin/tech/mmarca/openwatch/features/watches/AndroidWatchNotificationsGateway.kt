@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.features.watches
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
@@ -34,6 +35,8 @@ class AndroidWatchNotificationsGateway @Inject constructor(
         }
     }
 
+    // The launcher <queries> entry is the app's manifest's, which this module's lint does not see.
+    @SuppressLint("QueryPermissionsNeeded")
     override fun listLaunchableApps(): List<InstalledApp> {
         val manager = context.packageManager
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)

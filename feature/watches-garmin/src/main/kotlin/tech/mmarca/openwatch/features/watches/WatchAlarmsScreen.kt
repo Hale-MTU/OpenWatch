@@ -50,9 +50,9 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.time.format.TextStyle
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.features.device.R as DeviceR
+import tech.mmarca.openwatch.features.watches.garmin.R
 import tech.mmarca.openwatch.core.presentation.joinParts
 import tech.mmarca.openwatch.core.presentation.localizedList
 import tech.mmarca.openwatch.devices.garmin.GarminAlarm

@@ -13,8 +13,8 @@ import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.features.device.R as DeviceR
+import tech.mmarca.openwatch.features.watches.garmin.R
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice

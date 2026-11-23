@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
 import tech.mmarca.openwatch.devices.garmin.GarminAgpsImport
 import tech.mmarca.openwatch.devices.garmin.GarminAgpsKind

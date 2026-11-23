@@ -16,7 +16,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
-import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.features.watches.garmin.R
+import tech.mmarca.openwatch.R as AppR
 
 /** The typed destinations: Navigation takes every argument type they use, and each has its title. */
 @RunWith(RobolectricTestRunner::class)
@@ -41,7 +42,7 @@ class RoutesTest {
         assertNull(graph.findNode<DeviceDetail>()!!.titleRes())
         assertEquals(R.string.settings_watch_data_title, graph.findNode<WatchData>()!!.titleRes())
         assertEquals(R.string.settings_watch_on_device_settings, graph.findNode<WatchSettings>()!!.titleRes())
-        assertEquals(R.string.settings_watch_point_title, graph.findNode<WatchSendPoint>()!!.titleRes())
+        assertEquals(AppR.string.settings_watch_point_title, graph.findNode<WatchSendPoint>()!!.titleRes())
     }
 
     @Test

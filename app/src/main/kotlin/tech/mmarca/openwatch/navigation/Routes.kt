@@ -9,6 +9,7 @@ import kotlin.reflect.KClass
 import kotlinx.serialization.Serializable
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.features.settings.R as SettingsR
+import tech.mmarca.openwatch.features.watches.garmin.R as GarminR
 
 /*
  * The app's destinations. Each is a @Serializable type whose properties are its arguments:
@@ -36,34 +37,6 @@ data object BodyProfile
 @Serializable
 data object ConnectedApps
 
-@Serializable
-data class WatchData(val deviceId: String)
-
-@Serializable
-data class WatchNotifications(val deviceId: String)
-
-/** Alarms kept on the phone, for a watch with no settings tree. */
-@Serializable
-data class WatchAlarms(val deviceId: String)
-
-/** One screen of the watch's own settings tree; a row that leads deeper pushes another. */
-@Serializable
-data class WatchSettings(val deviceId: String, val screenId: Int)
-
-/**
- * Send a point to a watch. Every argument is optional: a shared location arrives with a
- * position and no watch, the watch screen with a watch only. [unreadable] is set when another
- * app shared something that held no position.
- */
-@Serializable
-data class WatchSendPoint(
-    val deviceId: String? = null,
-    val latitude: Double? = null,
-    val longitude: Double? = null,
-    val name: String? = null,
-    val unreadable: Boolean = false,
-)
-
 /** The app bar title of each destination that does not title itself. */
 private val routeTitles: List<Pair<KClass<*>, Int>> = listOf(
     Home::class to R.string.app_name,
@@ -72,10 +45,10 @@ private val routeTitles: List<Pair<KClass<*>, Int>> = listOf(
     Settings::class to R.string.settings_title,
     BodyProfile::class to SettingsR.string.body_profile_title,
     ConnectedApps::class to SettingsR.string.connected_apps_title,
-    WatchData::class to R.string.settings_watch_data_title,
+    WatchData::class to GarminR.string.settings_watch_data_title,
     WatchNotifications::class to R.string.screen_watch_notifications,
-    WatchAlarms::class to R.string.settings_watch_action_alarms,
-    WatchSettings::class to R.string.settings_watch_on_device_settings,
+    WatchAlarms::class to GarminR.string.settings_watch_action_alarms,
+    WatchSettings::class to GarminR.string.settings_watch_on_device_settings,
     WatchSendPoint::class to R.string.settings_watch_point_title,
 )
 
