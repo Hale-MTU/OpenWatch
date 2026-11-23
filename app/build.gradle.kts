@@ -223,12 +223,13 @@ dependencies {
     ksp(libs.hilt.android.compiler)
 
     // Testing
+    // The app's own tests: the architecture tests, the Hilt graph, the routes, the add-a-watch
+    // flow over both watch families' pairings, the tables a family's contract is joined to.
+    // Every screen's and module's other tests live with their code.
     // The shared fakes of the device contracts: a sync port, a pairing, a family.
     testImplementation(testFixtures(project(":core:devices-api")))
     // The FIT test bytes the FIT codec's tests build their files with.
     testImplementation(testFixtures(project(":devices:garmin:protocol")))
-    // Health Connect's writes in memory, for the write helpers' callers.
-    testImplementation(testFixtures(project(":core:health-api")))
     // SharedPreferences in memory and a SecretSeal on a software key, shared with the device modules.
     testImplementation(testFixtures(project(":devices:core")))
     // The main dispatcher swapped for the tests' (MainDispatcherRule).
@@ -237,12 +238,9 @@ dependencies {
     testImplementation(testFixtures(project(":feature:device")))
     // The registry and the body profile in memory.
     testImplementation(testFixtures(project(":core:data")))
-    // The weigh-in table in memory, for the Scales screens.
-    testImplementation(testFixtures(project(":devices:xiaomi")))
     testImplementation(libs.junit4)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.health.connect.testing)
     testImplementation(libs.truth)
     // Real org.json for local tests (the android.jar copy is a throwing stub).
     testImplementation(libs.org.json)

@@ -16,7 +16,8 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 
 ## Map
 
-- `app/src/main/kotlin/tech/mmarca/openwatch/`
+- `app/src/main/kotlin/tech/mmarca/openwatch/` — the shell: the application, the activities,
+  the navigation, the Hilt root (`docs/engineering/architecture.md`, Phone modules).
   - `features/home/HomeRoute.kt` — Home's route, which fills Home's slots with each family's
     section; every screen is a module under `feature/` (below).
   - `data/repository` — what joins a device family's own contract to `:core:data`: the Garmin
@@ -175,9 +176,12 @@ Do not break these without an explicit decision.
 - **A device family is a module that binds itself** (decision 4, 2026-11). A family in a Gradle
   module of its own, `:devices:<vendor>`, declares its own Hilt module, which binds its family
   into the `DeviceFamily` map (`@StringKey` with its persisted name), its ports, stores and
-  startup actors. Only `:app` and those modules declare Hilt modules (not `:devices:core`, a
-  contract or a protocol module, nor the app's `devices/` packages), and a device module
-  depends on no other family, on no feature and not on the app. `DevicesLayeringTest` holds it.
+  startup actors. Only `:app`, those modules and the screen modules (`:feature:*`) declare Hilt
+  modules (not `:devices:core`, a contract or a protocol module, a `:core:*` module, the link
+  host, nor the app's `devices/` packages), and a device module depends on no other family, on
+  no screen module and not on the app. A screen module depends on no device family but the one
+  its name ends with (`:feature:<screens>-<family>`, a family's own screens).
+  `DevicesLayeringTest` holds it.
 - **The ratchets hold.** `DevicesLayeringTest` (who declares Hilt modules, see above),
   `CompanionPairingWiringTest` (an Activity calls `attachToActivity`),
   `GarminSessionConfinementTest`, `FileSizeRatchetTest` (800 lines, with a ceiling list),

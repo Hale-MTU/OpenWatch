@@ -11,7 +11,9 @@ OpenWatch seams noted.
 
 - App namespace: `tech.mmarca.openwatch`
 - Build logic: `build-logic/`, an included build with the convention plugins every module applies (`openwatch.android.application`, `openwatch.android.library`, `openwatch.jvm.library`, and `openwatch.robolectric` for a library whose tests run on Robolectric): SDK levels, Java 17, signing from the environment, the debug, release and nightly build types, lint and dependency locking. A module's own file holds only what is its own (version codes, the `ci` type, the diagnostics flag). A change there must leave the release APKs byte-identical; compare their hashes before and after.
-- Project shape: twenty-eight Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
+- Project shape: twenty-eight Gradle modules. The phone app is `:app`, the shell ([Phone modules](#phone-modules)):
+  the application, the activities, the navigation and the Hilt root. The screens are the
+  `:feature:*` modules; `:core:model` and `:core:fit`
   hold the pure code the app depends on (below); `:core:devices-api` the device contracts
   ([`devices/core`](#devicescore)); `:core:health-api` how the devices talk to Health Connect
   ([rule 3](#3-health-connect-is-reached-through-healthconnectgateway-only)); `:core:health`
@@ -26,14 +28,16 @@ OpenWatch seams noted.
   `:devices:xiaomi:protocol` and `:devices:ble-standard:protocol` are the Garmin protocol, the S400 codec and the standard profiles' bytes, pure Kotlin
   ([`devices/garmin`](#devicesgarmin), [`devices/xiaomi`](#devicesxiaomi), [`devices/blestandard`](#devicesblestandard)); `:link-host` is the OpenLink host ([below](#openlink-host-link-composite-build-openlink)); `:wear` is the Wear OS watch app
   with its own CI gate; `:wearlink` is the pure-Kotlin link both apps depend on. Package names
-  are the same across `:app` and the modules under `core/` and `devices/`. The health calculations, shared with OpenVitals,
+  are the same across `:app` and the modules under `core/`, `devices/` and `feature/`. The health calculations, shared with OpenVitals,
   come from the `health-calculations/` submodule, a composite build (below).
 - The watch app's pure core is `:wear:recording-core`, plain Kotlin in `wear/recording-core/`
   with the watch app's package names; only `:wear` depends on it (below).
 - Dependency wiring: Hilt in `:app`, rooted at `OpenWatchApp`; modules are `di/AppModule.kt`,
-  `di/RepositoryModule.kt`, `di/DevicesModule.kt` and `di/LinkModule.kt`, and each device
-  module's own (`GarminModule`, `WearOsModule`, `XiaomiScaleModule`, `BleStandardModule`), which the graph installs from the module's classes
-  ([Hilt wiring](#hilt-wiring)).
+  `di/RepositoryModule.kt`, `di/DevicesModule.kt` and `di/LinkModule.kt`, each device
+  module's own (`GarminModule`, `WearOsModule`, `XiaomiScaleModule`, `BleStandardModule`), and the
+  screen modules' (a family's screens bind their contributions, `GarminFeatureModule`,
+  `WearOsFeatureModule`, `XiaomiScaleFeatureModule`; `:feature:device` declares the maps), which
+  the graph installs from the modules' classes ([Hilt wiring](#hilt-wiring)).
 - UI stack: Jetpack Compose + Material 3 + Navigation Compose + `ViewModel` + coroutines.
 - Health data backend: the Health Connect AndroidX client, behind
   [`HealthConnectGateway`](../../core/health/src/main/kotlin/tech/mmarca/openwatch/healthconnect/HealthConnectGateway.kt).
@@ -78,7 +82,7 @@ Where the copied code met an OpenVitals class that did not come along, it meets 
 
 ## Device Layer
 
-`devices/` is a layer, not a feature. It owns everything that talks to a physical device over Bluetooth and exposes ports that features consume. It has no Compose code and no navigation. The user-facing screens live in `features/watches` and `features/scales`.
+`devices/` is a layer, not a feature. It owns everything that talks to a physical device over Bluetooth and exposes ports that features consume. It has no Compose code and no navigation. The user-facing screens are the screen modules: the generic ones in `:feature:device`, a family's own in `:feature:watches-garmin`, `:feature:watches-wearos` and `:feature:scales-xiaomi` ([Phone modules](#phone-modules)).
 
 ### `devices/core`
 
@@ -241,6 +245,53 @@ The BLE discovery scan the add-a-device flows use lives in `sensors/ble` (`:devi
 A family whose devices need no flow of their own (no bind key, no watch app) declares a `DevicePairing` on its `DeviceFamily`: the services its devices advertise, which scanned device it claims and as what kind, and how one is paired (a bond, a companion association, then its registry row). The app then lists its devices in Home's "Other devices" section and pairs them through one generic dialog, and opens them on the device screen with the generic panel (`features/watches/generic/GenericDevicePanel`): the live heart rate while the screen is open, when the family streams one, and what the device pushed that waits for Health Connect, with the grant that would let it. The section shows nothing while no family declares a pairing.
 
 Data reaches Health Connect two ways. A watch is pulled: `DeviceSyncPort`. A device that pushes (a cuff that indicates a reading, a meter or scale that hands over what it stored, a strap that streams) gives each measurement to the `MeasurementSink`: `DeviceMeasurementSink` (`:devices:core`, `devices/core/measure`) keeps it in the device's own `device_state` first (key `measurement.<its key>`, value the family's payload; it goes with the device), then reads every kept one back through the family's `MeasurementRecords` (bound `@IntoMap @StringKey` by family id; the app declares the map with `@Multibinds`), writes in one batch through the record sink what the grants allow, forgets what was written and stamps the device's last sync. One whose first record's grant is missing stays kept, the grant named in `backlog`; one that gives no record is dropped; a failed write keeps them all. The next measurement, the device screen (on a grant) and every start (`pending measurements`) try again. The family builds each record's `clientRecordId` from the measurement's key, salted by the device (`saltedRecordId`), so a measurement handed over twice is one record. It is the S400 pipeline's rule, Room before Health Connect, for any family; the S400 keeps its own table.
+
+## Phone modules
+
+Who depends on whom (`api` where a module's signatures carry the other's types):
+
+```
+:app (the shell)
+  -> every :feature:*, every :devices:<family>, :link-host, :core:*
+:feature:home, :feature:healthconnect, :feature:settings, :feature:connectedapps
+  -> :core:ui, :core:data; :feature:settings and :feature:connectedapps also :link-host
+:feature:device            the screens every family shares, and the contributions they take
+  -> :core:ui, :core:data, :devices:core (api)
+:feature:watches-garmin    -> :feature:device, :devices:garmin, :core:ui, :core:data
+:feature:watches-wearos    -> :feature:device, :devices:wearos, :core:ui, :core:data
+:feature:scales-xiaomi     -> :feature:device, :devices:xiaomi, :core:ui, :core:data
+:link-host                 -> openlink:host (api), :core:data (api), :devices:core, :core:ui
+:core:data                 -> :core:health (api), :core:devices-api (api), :core:model (api)
+:core:ui                   -> :core:health, :core:model (api), Compose (api)
+:core:health               -> :core:health-api (api), :core:devices-api (api), :core:model (api), :devices:core
+:devices:<family>          -> :devices:core (api), its :protocol; never a screen, never another family
+:devices:core              -> :core:devices-api (api), :core:health-api (api), :core:fit
+```
+
+A screen module never depends on a device family, except a family's own screens, which depend
+on that family and are named for it (`feature/<screens>-<family>`); `DevicesLayeringTest` holds
+both rules, and no screen module depends on the app. A generic screen reaches a family's
+through the contributions in `features/device/DeviceContributions.kt` ([Device Layer](#device-layer)).
+A device module holds no screen. A route a screen reads back with `toRoute` is declared in
+that screen's module, in the package `navigation`, so its serial name is the one it always
+had (`DeviceDetail` in `:feature:device`, the Garmin screens' five in `:feature:watches-garmin`);
+the app's `navigation/` declares the rest, the titles and the graph, and the R8 keep check
+reads every screen module's sources beside the app's.
+
+What `:app` still holds, and why: `OpenWatchApp`, `MainActivity` and the two Health Connect
+activities (the manifest's entries), the navigation (the graph, the list-detail layout, the
+roots' routes), `features/home/HomeRoute.kt` (it fills Home's slots with each family's
+section, which only the app sees), the Hilt modules of `di/`, `core/security/KeystoreSecretKey`
+(the key the Hilt root seals with), and in `data/repository` what joins a family's own
+contract to `:core:data` (the Garmin and scale tables over their DAOs, the Garmin and Wear OS
+preferences over `OpenWatchPreferences`): `:core:data` depends on no family and a family on no
+core module but its contracts, so the app is where the two meet. Its tests are the
+architecture tests, the Hilt graph, the routes, the add-a-watch flow over both watch families'
+pairings, and the instrumented tests, which run against the app's own APK.
+
+A screen module's strings live in its own `res`, every translation with its key; a string two
+screen modules share is `:core:ui`'s, or `:feature:device`'s when only a family's screens and the
+device screen share it.
 
 ## Modules `:core:model` and `:core:fit`
 
