@@ -9,11 +9,13 @@ import tech.mmarca.openwatch.data.repository.ActivityWriteRepository
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.data.repository.BodyProfileProvider
 import tech.mmarca.openwatch.data.repository.DeviceStateStore
+import tech.mmarca.openwatch.data.repository.GarminActivityPreferencesStore
 import tech.mmarca.openwatch.comaps.CoMapsNavigationRepositoryImpl
 import tech.mmarca.openwatch.data.repository.GarminSleepMinuteRepositoryImpl
 import tech.mmarca.openwatch.data.repository.GarminWellnessRepositoryImpl
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.data.repository.ScaleWeighInRepositoryImpl
+import tech.mmarca.openwatch.data.repository.WearOsSyncPreferencesStore
 import tech.mmarca.openwatch.data.repository.contract.ActivityRepository
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
 import tech.mmarca.openwatch.data.repository.contract.BodyProfileRepository
@@ -72,11 +74,11 @@ abstract class RepositoryModule {
 
     /** The exercise type the Garmin activity import falls back to (:devices:garmin). */
     @Binds
-    abstract fun bindGarminActivityPreferences(impl: OpenWatchPreferences): GarminActivityPreferences
+    abstract fun bindGarminActivityPreferences(impl: GarminActivityPreferencesStore): GarminActivityPreferences
 
     /** The one preference the Wear OS sync reads (:devices:wearos). */
     @Binds
-    abstract fun bindWearOsSyncPreferences(impl: OpenWatchPreferences): WearOsSyncPreferences
+    abstract fun bindWearOsSyncPreferences(impl: WearOsSyncPreferencesStore): WearOsSyncPreferences
 
     /** The body the device estimates use (:core:devices-api): declared, with Health Connect's on top. */
     @Binds

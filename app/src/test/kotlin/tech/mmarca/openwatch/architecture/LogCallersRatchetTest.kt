@@ -48,11 +48,11 @@ class LogCallersRatchetTest {
 
         val Allowed = setOf(
             "app/AppStartupActors.kt",
-            "app/data/repository/BleDeviceRepository.kt",
-            "app/data/repository/DeviceStateStore.kt",
             "app/link/LinkLiveSessions.kt",
             "app/sensors/ble/BleSensorCoordinator.kt",
             // A library module's files are keyed by its directory, then the package path.
+            "core/data/data/repository/BleDeviceRepository.kt",
+            "core/data/data/repository/DeviceStateStore.kt",
             "core/health/data/repository/ActivityWriteRepository.kt",
             "core/health/healthconnect/ActivityRecordWriter.kt",
             "core/health/healthconnect/HealthConnectAvailabilityService.kt",

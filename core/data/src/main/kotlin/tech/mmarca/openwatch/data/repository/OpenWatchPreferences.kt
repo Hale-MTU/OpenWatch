@@ -13,8 +13,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import tech.mmarca.healthcalculations.preferences.BiologicalSex
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
-import tech.mmarca.openwatch.data.repository.contract.GarminActivityPreferences
-import tech.mmarca.openwatch.data.repository.contract.WearOsSyncPreferences
 import tech.mmarca.openwatch.domain.preferences.SystemUnitSystemProvider
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncSwitch
@@ -23,13 +21,15 @@ import tech.mmarca.openwatch.healthconnect.HealthConnectSyncSwitch
  * The few app-wide preferences OpenWatch keeps: whether Health Connect writes
  * are paused, the declared body profile, the exercise type an imported
  * activity falls back to, and whether setup was finished. Plain
- * SharedPreferences, as every store in the device layer.
+ * SharedPreferences, as every store in the device layer. What a device family reads from here
+ * it reads through its own contract, which the app implements over this store (no family's
+ * module is a dependency of this one).
  */
 @Singleton
 class OpenWatchPreferences(
     private val prefs: SharedPreferences,
     private val unitSystemProvider: SystemUnitSystemProvider,
-) : BodyProfilePreferences, HealthConnectSyncSwitch, WearOsSyncPreferences, GarminActivityPreferences {
+) : BodyProfilePreferences, HealthConnectSyncSwitch {
 
     @Inject
     constructor(@ApplicationContext context: Context, unitSystemProvider: SystemUnitSystemProvider) : this(
@@ -47,7 +47,7 @@ class OpenWatchPreferences(
     /** Whether the watch's breathing rate is written to Health Connect. Off by default: not yet checked against a reference. */
     val writeRespiratoryRateFlow: StateFlow<Boolean> = _writeRespiratoryRate.asStateFlow()
 
-    override var writeRespiratoryRate: Boolean
+    var writeRespiratoryRate: Boolean
         get() = _writeRespiratoryRate.value
         set(value) {
             prefs.edit { putBoolean(KEY_WRITE_RESPIRATORY_RATE, value) }
@@ -114,7 +114,7 @@ class OpenWatchPreferences(
         ).normalized()
 
     /** The exercise type the last imported activity carried; an unnamed file takes it. */
-    override var lastActivityExerciseType: Int?
+    var lastActivityExerciseType: Int?
         get() = prefs.getInt(KEY_LAST_ACTIVITY_EXERCISE_TYPE, MISSING_INT).takeIf { it != MISSING_INT }
         set(value) {
             prefs.edit {
@@ -123,7 +123,7 @@ class OpenWatchPreferences(
         }
 
     /** A preferred exercise type, asked before [lastActivityExerciseType]. OpenWatch has no screen for it yet. */
-    override var favoriteActivityExerciseType: Int?
+    var favoriteActivityExerciseType: Int?
         get() = prefs.getInt(KEY_FAVORITE_ACTIVITY_EXERCISE_TYPE, MISSING_INT).takeIf { it != MISSING_INT }
         set(value) {
             prefs.edit {

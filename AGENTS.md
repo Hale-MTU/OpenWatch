@@ -19,7 +19,9 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 - `app/src/main/kotlin/tech/mmarca/openwatch/`
   - `features/` — the screens: `home`, `device` (the device route and the generic add flow), `watches`, `scales`,
     `healthconnect`, `settings`.
-  - `data/` — the Room database (three tables), the repositories and the preference stores.
+  - `data/repository` — what joins a device family's own contract to `:core:data`: the Garmin
+    and scale tables over their DAOs, the Garmin and Wear OS preferences over
+    `OpenWatchPreferences`.
   - `sensors/ble/` — the BLE discovery scan the add-a-device flows share.
   - `di/` — the Hilt modules. `DevicesModule` binds what every family shares and the rules
     across families (the classifiers' order); each family binds itself in its own module.
@@ -66,7 +68,12 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   scan, the receiver and the listening service (in its manifest), the listener and its worker,
   the store, the pipeline to Room and Health Connect, the strings its notification shows, and
   `XiaomiScaleModule`, which binds its family, ports and store. The weigh-in table's contract
-  (`ScaleWeighInRepository`) is its own; Room implements it in `:app`.
+  (`ScaleWeighInRepository`) is its own; the app implements it over `:core:data`'s DAO.
+- `core/data` (`:core:data`) — what the phone keeps: the Room database (`data/local`, its
+  schemas in `core/data/schemas`), the registry (`BleDeviceRepository`), the per-device state,
+  `OpenWatchPreferences` and the body profile. It depends on no device family. Its test
+  fixtures are the registry and the body profile in memory (`FakeDeviceDao`,
+  `testDeviceRepository()`, `FakeBodyProfilePreferences`).
 - `core/ui` (`:core:ui`) — what every screen shares: the theme and the shared components
   (`ui/theme`, `ui/components`), the formatters and `ScreenError` (`core/presentation`) and the
   OS permission checks (`core/permissions`). It knows no device family.
@@ -148,7 +155,8 @@ Do not break these without an explicit decision.
 - **Every locale ships complete for the copied strings.** A key that comes from OpenVitals is
   re-extracted with `scripts/extract-strings.py`; a key OpenWatch adds lives in `values/`
   until it is translated. `python3 scripts/verify-translations.py` checks the files.
-- **Room is at version 2.** A change means a `MIGRATION_2_3` in `data/local/OpenWatchMigrations`, a bump
+- **Room is at version 2.** The database is `:core:data`'s, its exported schemas in
+  `core/data/schemas`. A change means a `MIGRATION_2_3` in `data/local/OpenWatchMigrations`, a bump
   and its case in `OpenWatchDatabaseMigrationTest`, never `fallbackToDestructiveMigration`. The three
   device tables are named as OpenVitals' are, and also key their rows by the device's id salt.
 - **A device family is a module that binds itself** (decision 4, 2026-11). A family in a Gradle

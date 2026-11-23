@@ -11,12 +11,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-// Room writes the schema of each database version here. The files are committed: a migration
-// can only be tested against a version whose schema was kept.
-ksp {
-    arg("room.schemaLocation", "$projectDir/schemas")
-}
-
 // Signing, R8 and the shared build types: openwatch.android.application (build-logic/).
 val apkAbiFilters = System.getenv("OPENWATCH_APK_ABI_FILTERS")
     ?.split(',')
@@ -85,11 +79,6 @@ android {
     // Robolectric reads the merged manifest and resources for the Hilt graph test.
     testOptions.unitTests.isIncludeAndroidResources = true
 
-    // The exported Room schemas, for the migration tests. Robolectric reads the tested variant's
-    // merged assets, not the test source set's, so they go into the ci variant, which only CI
-    // tests and nothing ships.
-    sourceSets.getByName("ci").assets.directories.add("$projectDir/schemas")
-
     lint {
         // Tests do not ship. Analysing them cost as much as the app itself.
         ignoreTestSources = true
@@ -150,6 +139,9 @@ dependencies {
     implementation(project(":core:health"))
     // The theme, the shared components, the formatters and ScreenError, the OS permission checks.
     implementation(project(":core:ui"))
+    // Room, the registry, the per-device state and the preferences. The database is built here
+    // (di/AppModule); a family's own table contract is implemented here over its DAO.
+    implementation(project(":core:data"))
     // What every device family shares on Android: the radio lease, the GATT link and the BLE
     // scanner, companion pairing, the sync controller and its schedule.
     implementation(project(":devices:core"))
@@ -199,10 +191,9 @@ dependencies {
     // Background work
     implementation(libs.androidx.work.runtime.ktx)
 
-    // Local metric storage
+    // The database is built here; its entities, DAOs and migrations are :core:data's.
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
 
     // Health Connect
     implementation(libs.health.connect.client)
@@ -220,6 +211,8 @@ dependencies {
     testImplementation(testFixtures(project(":core:health-api")))
     // SharedPreferences in memory and a SecretSeal on a software key, shared with the device modules.
     testImplementation(testFixtures(project(":devices:core")))
+    // The registry and the body profile in memory.
+    testImplementation(testFixtures(project(":core:data")))
     // The weigh-in table in memory, for the Scales screens.
     testImplementation(testFixtures(project(":devices:xiaomi")))
     testImplementation(libs.junit4)
@@ -233,7 +226,6 @@ dependencies {
     testImplementation(libs.robolectric)
     testImplementation(libs.androidx.test.core)
     testImplementation(libs.hilt.android.testing)
-    testImplementation(libs.androidx.room.testing)
     kspTest(libs.hilt.android.compiler)
     androidTestImplementation(composeBom)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -260,6 +252,7 @@ tasks.withType<Test>().configureEach {
         ":core:health-api:testCiUnitTest",
         ":core:health:testCiUnitTest",
         ":core:ui:testCiUnitTest",
+        ":core:data:testCiUnitTest",
         ":devices:core:testCiUnitTest",
         ":devices:garmin:testCiUnitTest",
         ":devices:garmin:protocol:test",
@@ -282,6 +275,7 @@ tasks.withType<Test>().configureEach {
         "scannedCoreHealthApiMain" to "core/health-api/src/main",
         "scannedCoreHealthMain" to "core/health/src/main",
         "scannedCoreUiMain" to "core/ui/src/main",
+        "scannedCoreDataMain" to "core/data/src/main",
         "scannedDevicesCoreMain" to "devices/core/src/main",
         "scannedGarminMain" to "devices/garmin/src/main",
         "scannedGarminProtocolMain" to "devices/garmin/protocol/src/main",

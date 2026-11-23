@@ -11,14 +11,15 @@ OpenWatch seams noted.
 
 - App namespace: `tech.mmarca.openwatch`
 - Build logic: `build-logic/`, an included build with the convention plugins every module applies (`openwatch.android.application`, `openwatch.android.library`, `openwatch.jvm.library`, and `openwatch.robolectric` for a library whose tests run on Robolectric): SDK levels, Java 17, signing from the environment, the debug, release and nightly build types, lint and dependency locking. A module's own file holds only what is its own (version codes, the `ci` type, the diagnostics flag). A change there must leave the release APKs byte-identical; compare their hashes before and after.
-- Project shape: eighteen Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
+- Project shape: nineteen Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
   hold the pure code the app depends on (below); `:core:devices-api` the device contracts
   ([`devices/core`](#devicescore)); `:core:health-api` how the devices talk to Health Connect
   ([rule 3](#3-health-connect-is-reached-through-healthconnectgateway-only)); `:core:health`
   Health Connect as the app reaches it, which implements those contracts (the gateway, the record
   sink, the activity writes, the sync gate, the data catalog; [rule 3](#3-health-connect-is-reached-through-healthconnectgateway-only)); `:core:ui`
   what every screen shares (the theme, the shared components, `core/presentation`'s formatters
-  and `ScreenError`, `core/permissions`); `:devices:core` the
+  and `ScreenError`, `core/permissions`); `:core:data` what the phone keeps (the Room database, the registry,
+  the per-device state, the preferences; [below](#module-coredata)); `:devices:core` the
   platform half every device family shares ([below](#module-devicescore)); `:devices:garmin`,
   `:devices:wearos`, `:devices:xiaomi` and `:devices:ble-standard` are the families' platform halves, device modules that bind
   themselves ([`devices/garmin`](#devicesgarmin), [`devices/wearos`](#deviceswearos), [`devices/xiaomi`](#devicesxiaomi), [`devices/blestandard`](#devicesblestandard)); `:devices:garmin:protocol`,
@@ -54,7 +55,7 @@ OpenWatch seams noted.
 | `link/` | The OpenLink host: the exported service, the device list and profile as OpenLink shows them, recording sessions and live readings for another app. |
 | `healthconnect/` | `HealthConnectGateway`, `ActivityRecordWriter`, the sync gate, intents and availability, and the data catalog; in `:core:health`, with `data/repository/ImportedRecordRepository` and `ActivityWriteRepository`. |
 | `activityimport/` | FIT activity files into `ActivityWriteRequest`s; in `:devices:core`. |
-| `data/local`, `data/repository` | Room, the repositories and the SharedPreferences stores. `BleDeviceRepository` is the device registry: the `devices` table read once into memory, every read answered from there (the first waits for the load) and every change written behind it in order on the registry's own thread; the JSON in `ble_sensor_devices` it replaced is imported once and left in place. It gives a family's first device the empty id salt and each later one its own. A row of a family this version does not bind (`RegisteredFamilies`), from a newer build, stays in the table unread, never taken for another family's device; a kind is any name a family gave. |
+| `data/local`, `data/repository` | Room, the repositories and the SharedPreferences stores, in `:core:data`; the app keeps what joins a family's own contract to them (the Garmin and scale tables over their DAOs, the Garmin and Wear OS preferences over `OpenWatchPreferences`). `BleDeviceRepository` is the device registry: the `devices` table read once into memory, every read answered from there (the first waits for the load) and every change written behind it in order on the registry's own thread; the JSON in `ble_sensor_devices` it replaced is imported once and left in place. It gives a family's first device the empty id salt and each later one its own. A row of a family this version does not bind (`RegisteredFamilies`), from a newer build, stays in the table unread, never taken for another family's device; a kind is any name a family gave. |
 | `comaps/` | The CoMaps guidance feed a Garmin watch relays; in `:devices:core` ([below](#module-devicescore)). |
 | `sensors/ble/` | The BLE discovery scan the add-a-device flows use, for the services they name, with every advertised service of a device kept for the families that pair by a standard profile. |
 | `core/` | `ScreenError`, `UnitFormatter`, the OS permissions service, `RuntimePermissions` (which grant a Bluetooth scan or connection takes on each Android release), all four in `:core:ui`; the dispatcher provider (`:core:model`'s) and the foreground gate (`:devices:core`'s), which the app and the device modules share; `core/security`, the Keystore key the app seals its secrets under. |
@@ -264,6 +265,21 @@ The phone-to-watch link, in `wearlink/`, pure Kotlin on the JDK with no Android 
 - `SecretSeal` — how both apps keep a secret at rest: AES-GCM under a key made in and held by the Android Keystore (`core/security/KeystoreSecretKey` on the phone, `WearSecretKey` on the watch), stored as `v1:` and Base64. It seals the link tokens on both sides and the scale's bind key. A value from before sealing reads as it is and is sealed on that read; a value whose Keystore key is gone opens to nothing, so the watch asks the wearer again and the scale screen asks for the key.
 
 Its tests run in both gates (`verifyCiUnitTest` and `verifyWearCi` depend on `:wearlink:test`), its lockfile is `wearlink/gradle.lockfile`, and the file-size ratchet holds its files to the same limit as the phone app's.
+
+## Module `:core:data`
+
+The data the phone keeps, an Android library in the app's packages: the Room database
+(`data/local`: `OpenWatchDatabase`, its migrations, the entities and DAOs of the five tables),
+the registry over it (`BleDeviceRepository`), the per-device state (`DeviceStateStore`),
+`OpenWatchPreferences` and `BodyProfileProvider`. The database name, version, migrations and
+the exported schemas are the ones the app has always had; the schemas moved with the
+database to `core/data/schemas`, where `room.schemaLocation` points, and the migration test
+reads them from the module's `ci` assets. The module depends on no device family: a family's
+own table or preference contract is the family's (`GarminWellnessRepository`,
+`ScaleWeighInRepository`, `GarminActivityPreferences`, `WearOsSyncPreferences`), and the app
+implements it over this module's DAO or store, in its `data/repository`. The Hilt bindings,
+the database among them, are the app's (`di/AppModule`, `di/RepositoryModule`). Its test
+fixtures, the registry and the body profile in memory, are what the screens' tests build on.
 
 ## Module `:devices:core`
 
