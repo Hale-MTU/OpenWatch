@@ -13,7 +13,7 @@ import org.junit.Test
 class GarminSessionConfinementTest {
 
     private val link = File(
-        "src/main/kotlin/tech/mmarca/openwatch/devices/garmin/GarminRadioLink.kt",
+        "../devices/garmin/src/main/kotlin/tech/mmarca/openwatch/devices/garmin/GarminRadioLink.kt",
     ).readText()
 
     @Test

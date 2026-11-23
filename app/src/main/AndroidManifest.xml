@@ -274,9 +274,8 @@
              receiver, GenericWeatherReceiver, are declared by :devices:core
              (devices/core/src/main/AndroidManifest.xml) and merged in. -->
 
-        <receiver
-            android:name=".devices.garmin.GarminFindPhoneStopReceiver"
-            android:exported="false" />
+        <!-- The Garmin find-my-phone stop receiver, GarminFindPhoneStopReceiver, is declared by
+             :devices:garmin (devices/garmin/src/main/AndroidManifest.xml) and merged in. -->
 
         <!-- The bathroom scale's receiver and listening service, ScaleScanReceiver and
              ScaleListeningService, are declared by :devices:xiaomi

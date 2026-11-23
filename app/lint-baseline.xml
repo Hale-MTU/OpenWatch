@@ -658,22 +658,6 @@
     </issue>
 
     <issue
-        id="LaunchActivityFromNotification"
-        message="Notifications should only launch a `BroadcastReceiver` from notification actions (`addAction`)"
-        errorLine1="            .setContentIntent(stopIntent)"
-        errorLine2="             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/tech/mmarca/openwatch/devices/garmin/GarminFindPhoneRinger.kt"
-            line="129"
-            column="14"/>
-        <location
-            file="src/main/kotlin/tech/mmarca/openwatch/devices/garmin/GarminFindPhoneRinger.kt"
-            line="113"
-            column="26"
-            message="This `BroadcastReceiver` intent is launched from a notification; this is discouraged except as notification actions"/>
-    </issue>
-
-    <issue
         id="UseTomlInstead"
         message="Use version catalog instead"
         errorLine1="    implementation(&quot;tech.mmarca.openlink:host&quot;)"

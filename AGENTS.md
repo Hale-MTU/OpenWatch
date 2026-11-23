@@ -17,17 +17,14 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 ## Map
 
 - `app/src/main/kotlin/tech/mmarca/openwatch/`
-  - `devices/` — the device code not yet in a module of its own: `garmin` (the GATT client,
-    the links, stores and wellness import around the protocol module).
-    No Compose, no navigation, no Hilt module: `di/DevicesModule` binds it.
   - `features/` — the screens: `home`, `watches`, `scales`, `healthconnect`, `settings`.
   - `healthconnect/` — `HealthConnectGateway`, the one class that touches the client, and
     `ActivityRecordWriter`, the activity write path copied from OpenVitals.
-  - `activityimport/` — FIT activity files into activity write requests.
   - `data/` — the Room database (three tables), the repositories and the preference stores.
   - `sensors/ble/` — the BLE discovery scan.
-  - `di/` — the Hilt modules. `DevicesModule` binds what every family shares and the families
-    still in the app; a family in a module of its own binds itself there.
+  - `di/` — the Hilt modules. `DevicesModule` binds what every family shares and the rules
+    across families (the classifiers' order); each family binds itself in its own module.
+    The device layer itself is the modules under `devices/` (below); the app holds none of it.
 - `core/model` (`:core:model`) and `core/fit` (`:core:fit`) — pure Kotlin on the JDK, with
   the app's package names: `domain/model`, `domain/preferences` and `core/geo` in the first, the
   FIT codec `core/fit` in the second. The unit-system provider that reads the platform's locale
@@ -50,8 +47,17 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   the phone's sources a watch relays, each in its own package: the notification listener and
   its filter (`devices/notifications`, with `WatchNotificationPrefsStore`), the media sessions
   (`devices/media`), the weather broadcasts (`devices/weather`) and the CoMaps guidance feed
-  (`comaps`). Its test fixtures are `FakeSharedPreferences` and `testSeal()`, which the device
-  modules' tests and the app's share.
+  (`comaps`); the FIT activity file import (`activityimport`) and the app's foreground gate
+  (`core/performance/AppForegroundGate`). Its test fixtures are `FakeSharedPreferences`,
+  `testSeal()` and `activityimport/FitTestFiles`, which the device modules' tests and the app's
+  share.
+- `devices/garmin` (`:devices:garmin`) — the Garmin watches' platform half, a device module: the
+  GATT client over `GattLink`, the radio, notification and settings links, the relays, the
+  stores, the file import into Health Connect, the onboarding, the family, the find-phone
+  notification's strings and receiver, and `GarminModule`, which binds its family, sync port,
+  radio, notification bridge and stores. Its tables' contracts (`GarminWellnessRepository`,
+  `GarminSleepMinuteRepository`) and its one preference (`GarminActivityPreferences`) are its
+  own; the app implements them.
 - `devices/wearos` (`:devices:wearos`) — the phone side of the watch app, a device module: the
   RFCOMM link and its session cache, the series sync and its Health Connect mapping, the
   onboarding, the family, the link states' strings, and `WearOsModule`, which binds its family,

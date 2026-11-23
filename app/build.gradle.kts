@@ -149,8 +149,8 @@ dependencies {
     // What every device family shares on Android: the radio lease, the GATT link and the BLE
     // scanner, companion pairing, the sync controller and its schedule.
     implementation(project(":devices:core"))
-    // The Garmin protocol, pure Kotlin; its platform half (GATT, stores, Health Connect) is here.
-    implementation(project(":devices:garmin:protocol"))
+    // The Garmin watches, which bind themselves (GarminModule); the protocol comes with them.
+    implementation(project(":devices:garmin"))
     // The Wear OS watch's phone side, which binds itself (WearOsModule).
     implementation(project(":devices:wearos"))
     // The Xiaomi S400 scale, which binds itself (XiaomiScaleModule); its codec comes with it.
@@ -206,10 +206,10 @@ dependencies {
     ksp(libs.hilt.android.compiler)
 
     // Testing
-    // The FIT test bytes the wellness import tests build their files with.
-    testImplementation(testFixtures(project(":devices:garmin:protocol")))
     // The shared fakes of the device contracts: a sync port, a pairing, a family.
     testImplementation(testFixtures(project(":core:devices-api")))
+    // The FIT test bytes the FIT codec's tests build their files with.
+    testImplementation(testFixtures(project(":devices:garmin:protocol")))
     // Health Connect's writes in memory, for the write helpers' callers.
     testImplementation(testFixtures(project(":core:health-api")))
     // SharedPreferences in memory and a SecretSeal on a software key, shared with the device modules.
@@ -253,6 +253,7 @@ tasks.withType<Test>().configureEach {
         ":core:devices-api:test",
         ":core:health-api:testCiUnitTest",
         ":devices:core:testCiUnitTest",
+        ":devices:garmin:testCiUnitTest",
         ":devices:garmin:protocol:test",
         ":devices:wearos:testCiUnitTest",
         ":devices:xiaomi:testCiUnitTest",
@@ -270,6 +271,7 @@ tasks.withType<Test>().configureEach {
         "scannedCoreDevicesApiMain" to "core/devices-api/src/main",
         "scannedCoreHealthApiMain" to "core/health-api/src/main",
         "scannedDevicesCoreMain" to "devices/core/src/main",
+        "scannedGarminMain" to "devices/garmin/src/main",
         "scannedGarminProtocolMain" to "devices/garmin/protocol/src/main",
         "scannedWearOsMain" to "devices/wearos/src/main",
         "scannedXiaomiMain" to "devices/xiaomi/src/main",
@@ -282,6 +284,7 @@ tasks.withType<Test>().configureEach {
     }
     mapOf(
         // DevicesLayeringTest reads which modules a device module depends on.
+        "scannedGarminBuild" to "devices/garmin/build.gradle.kts",
         "scannedWearOsBuild" to "devices/wearos/build.gradle.kts",
         "scannedXiaomiBuild" to "devices/xiaomi/build.gradle.kts",
         "scannedPrivacyPolicy" to "PRIVACY.md",

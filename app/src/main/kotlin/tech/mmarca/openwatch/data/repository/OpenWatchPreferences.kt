@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import tech.mmarca.healthcalculations.preferences.BiologicalSex
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
+import tech.mmarca.openwatch.data.repository.contract.GarminActivityPreferences
 import tech.mmarca.openwatch.data.repository.contract.WearOsSyncPreferences
 import tech.mmarca.openwatch.domain.preferences.SystemUnitSystemProvider
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
@@ -28,7 +29,7 @@ import tech.mmarca.openwatch.healthconnect.HealthConnectSyncSwitch
 class OpenWatchPreferences(
     private val prefs: SharedPreferences,
     private val unitSystemProvider: SystemUnitSystemProvider,
-) : BodyProfilePreferences, HealthConnectSyncSwitch, WearOsSyncPreferences {
+) : BodyProfilePreferences, HealthConnectSyncSwitch, WearOsSyncPreferences, GarminActivityPreferences {
 
     @Inject
     constructor(@ApplicationContext context: Context, unitSystemProvider: SystemUnitSystemProvider) : this(
@@ -113,7 +114,7 @@ class OpenWatchPreferences(
         ).normalized()
 
     /** The exercise type the last imported activity carried; an unnamed file takes it. */
-    var lastActivityExerciseType: Int?
+    override var lastActivityExerciseType: Int?
         get() = prefs.getInt(KEY_LAST_ACTIVITY_EXERCISE_TYPE, MISSING_INT).takeIf { it != MISSING_INT }
         set(value) {
             prefs.edit {
@@ -122,7 +123,7 @@ class OpenWatchPreferences(
         }
 
     /** A preferred exercise type, asked before [lastActivityExerciseType]. OpenWatch has no screen for it yet. */
-    var favoriteActivityExerciseType: Int?
+    override var favoriteActivityExerciseType: Int?
         get() = prefs.getInt(KEY_FAVORITE_ACTIVITY_EXERCISE_TYPE, MISSING_INT).takeIf { it != MISSING_INT }
         set(value) {
             prefs.edit {

@@ -14,6 +14,7 @@ internal val LibraryModuleRoots: Map<String, String> = listOf(
     "core/devices-api",
     "core/health-api",
     "devices/core",
+    "devices/garmin",
     "devices/garmin/protocol",
     "devices/wearos",
     "devices/xiaomi",

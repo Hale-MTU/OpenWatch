@@ -1,24 +1,16 @@
 package tech.mmarca.openwatch.di
 
-import android.content.Context
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import dagger.multibindings.IntoMap
 import dagger.multibindings.IntoSet
-import dagger.multibindings.StringKey
 import javax.inject.Singleton
-import tech.mmarca.openwatch.data.repository.BleDeviceRepository
-import tech.mmarca.openwatch.data.repository.DeviceStateStore
 import tech.mmarca.openwatch.StartupActor
 import tech.mmarca.openwatch.devices.core.DeviceClassifier
-import tech.mmarca.openwatch.devices.core.DeviceFamily
 import tech.mmarca.openwatch.devices.core.DeviceScanClassifier
 import tech.mmarca.openwatch.devices.core.pairing.BleWatchPairing
-import tech.mmarca.openwatch.devices.core.pairing.CompanionPresenceObserver
 import tech.mmarca.openwatch.devices.core.pairing.WatchPairingPort
 import tech.mmarca.openwatch.devices.core.sync.AndroidSyncWakeLock
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncIntervalStore
@@ -26,32 +18,19 @@ import tech.mmarca.openwatch.devices.core.sync.CompositeDeviceSyncPort
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
 import tech.mmarca.openwatch.devices.core.sync.SyncWakeLock
 import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
-import tech.mmarca.openwatch.devices.garmin.GarminCounterWatermarkStore
 import tech.mmarca.openwatch.devices.garmin.GarminDeviceClassifier
 import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
-import tech.mmarca.openwatch.devices.garmin.GarminFamily
-import tech.mmarca.openwatch.devices.garmin.GarminFileStore
-import tech.mmarca.openwatch.devices.garmin.GarminGattProbe
-import tech.mmarca.openwatch.devices.garmin.GarminGattRadio
-import tech.mmarca.openwatch.devices.garmin.GarminLocalData
-import tech.mmarca.openwatch.devices.garmin.GarminMusicRelay
-import tech.mmarca.openwatch.devices.garmin.GarminNavigationRelay
-import tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge
-import tech.mmarca.openwatch.devices.garmin.GarminRadio
 import tech.mmarca.openwatch.devices.garmin.GarminScanClassifier
-import tech.mmarca.openwatch.devices.garmin.GarminTransportProbe
-import tech.mmarca.openwatch.devices.garmin.GarminWatchSyncService
-import tech.mmarca.openwatch.devices.garmin.garminFileStore
 import tech.mmarca.openwatch.devices.media.AndroidPhoneMediaSource
 import tech.mmarca.openwatch.devices.media.PhoneMediaSource
-import tech.mmarca.openwatch.devices.notifications.NotificationSink
 import tech.mmarca.openwatch.devices.wearos.WearOsDeviceClassifier
 
 /**
- * Wiring for the `devices/` layer, kept apart so [AppModule] carries no watch knowledge: what
- * every family shares (`:devices:core`'s pieces, the composite sync port) and the families not
- * yet in a module of their own. A family in a module of its own binds itself there
- * (`:devices:xiaomi`'s `XiaomiScaleModule`, `:devices:wearos`'s `WearOsModule`).
+ * Wiring for the device layer, kept apart so [AppModule] carries no watch knowledge: what every
+ * family shares (`:devices:core`'s pieces, the composite sync port) and the rules across
+ * families (the classifiers' order, where every watch's sync interval is kept). Each family
+ * binds itself in its own module: `:devices:garmin`'s `GarminModule`, `:devices:wearos`'s
+ * `WearOsModule`, `:devices:xiaomi`'s `XiaomiScaleModule`.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -61,27 +40,9 @@ abstract class DevicesModule {
     @Singleton
     abstract fun bindWatchPairingPort(impl: BleWatchPairing): WatchPairingPort
 
-    // One port per integration; the composite hands each device to the one that claims it.
-    @Binds
-    @IntoSet
-    abstract fun bindGarminSyncPort(impl: GarminWatchSyncService): DeviceSyncPort
-
     @Binds
     @Singleton
     abstract fun bindPhoneMediaSource(impl: AndroidPhoneMediaSource): PhoneMediaSource
-
-    @Binds
-    @Singleton
-    abstract fun bindGarminRadio(impl: GarminGattRadio): GarminRadio
-
-    // What OpenWatchCompanionDeviceService tells when an associated device comes into range.
-    @Binds
-    @IntoSet
-    abstract fun bindWatchPresenceObserver(impl: GarminNotificationBridge): CompanionPresenceObserver
-
-    // The one integration that mirrors the phone's notifications today.
-    @Binds
-    abstract fun bindNotificationSink(impl: GarminNotificationBridge): NotificationSink
 
     // Every watch's sync interval, Wear OS included, lives in the Garmin store under its old key.
     @Binds
@@ -90,45 +51,17 @@ abstract class DevicesModule {
     @Binds
     abstract fun bindSyncWakeLock(impl: AndroidSyncWakeLock): SyncWakeLock
 
-    // Each family by its persisted name; DeviceFamilies checks the key against the family's id.
-    @Binds
-    @IntoMap
-    @StringKey("GARMIN")
-    abstract fun bindGarminFamily(impl: GarminFamily): DeviceFamily
-
     companion object {
-        // What each integration starts at every process start (AppStartupActors).
-        @Provides
-        @IntoSet
-        fun provideGarminNotificationsAtStart(bridge: GarminNotificationBridge) =
-            // Companion mode must be re-armed on every start.
-            StartupActor("garmin notifications", bridge::onAppStart)
-
-        @Provides
-        @IntoSet
-        fun provideGarminNavigationAtStart(relay: GarminNavigationRelay) = StartupActor("garmin navigation", relay::start)
-
-        @Provides
-        @IntoSet
-        fun provideGarminMusicAtStart(relay: GarminMusicRelay) = StartupActor("garmin music", relay::start)
-
-        @Provides
-        @IntoSet
-        fun provideGarminPruningAtStart(localData: GarminLocalData) =
-            // Watch files and sleep minutes age out even when no watch syncs any more.
-            StartupActor("garmin pruning", localData::pruneOnAppStart)
-
         @Provides
         @IntoSet
         fun provideSyncSchedulesAtStart(scheduler: WatchAutoSyncScheduler) =
             // Re-plans the sync schedules after what WorkManager does not cover.
             StartupActor("sync schedules", scheduler::restoreAll)
 
-
         /**
          * Each integration's verdict on a scanned device. A list, not a set: the first that
          * claims a device wins, so the order is part of the rule, across families, and stays
-         * here even for a family that binds the rest of itself in its own module. A new
+         * here though each family binds the rest of itself in its own module. A new
          * integration adds its classifier here, and nothing in `sensors/` changes.
          */
         @Provides
@@ -143,32 +76,5 @@ abstract class DevicesModule {
         @Singleton
         fun provideDeviceSyncPort(ports: Set<@JvmSuppressWildcards DeviceSyncPort>): DeviceSyncPort =
             CompositeDeviceSyncPort(ports)
-
-        @Provides
-        @Singleton
-        fun provideGarminTransportProbe(
-            @ApplicationContext context: Context,
-        ): GarminTransportProbe = GarminGattProbe(context)
-
-        @Provides
-        @Singleton
-        fun provideGarminDeviceStateStore(
-            @ApplicationContext context: Context,
-            state: DeviceStateStore,
-            registry: BleDeviceRepository,
-        ): GarminDeviceStateStore = GarminDeviceStateStore(context, state, registry.devices.mapTo(HashSet()) { it.id })
-
-        // One instance: the store finds a file's pending note by the object that saved it.
-        @Provides
-        @Singleton
-        fun provideGarminFileStore(
-            @ApplicationContext context: Context,
-        ): GarminFileStore = garminFileStore(context)
-
-        @Provides
-        @Singleton
-        fun provideGarminCounterWatermarkStore(
-            @ApplicationContext context: Context,
-        ): GarminCounterWatermarkStore = GarminCounterWatermarkStore(context)
     }
 }

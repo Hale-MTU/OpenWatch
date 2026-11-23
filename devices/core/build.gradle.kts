@@ -70,6 +70,8 @@ dependencies {
     implementation(libs.androidx.activity)
     // The scheduled sync's worker and its schedule.
     implementation(libs.androidx.work.runtime.ktx)
+    // The activity import reads FIT files (activityimport).
+    implementation(project(":core:fit"))
     // The companion service and the worker's entry point are Hilt's; the rest is constructor injection.
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)

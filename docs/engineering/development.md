@@ -5,7 +5,7 @@
 The phone app, the watch app and its pure core, the pure-Kotlin link, the phone app's
 pure-Kotlin modules (`:core:model`, `:core:fit`, `:core:devices-api`, `:devices:garmin:protocol`,
 `:devices:xiaomi:protocol`) and its Android libraries (`:core:health-api`, `:devices:core`,
-`:devices:wearos`, `:devices:xiaomi`) build with the Gradle wrapper. JDK 17 or 21, the Android platform
+`:devices:garmin`, `:devices:wearos`, `:devices:xiaomi`) build with the Gradle wrapper. JDK 17 or 21, the Android platform
 37 and build-tools 37.0.0.
 
 ```bash
@@ -93,7 +93,7 @@ and every plain Kotlin one that applies `com.android.lint`). The pure-Kotlin mod
 code an app's lint used to check apply it, with the same rules: `:core:model`, `:core:fit`,
 `:core:devices-api`, `:devices:garmin:protocol` and `:devices:xiaomi:protocol` in
 `verifyCiLint`, `:wear:recording-core` in the watch gate. The Android libraries (`:core:health-api`,
-`:devices:core`, `:devices:wearos`, `:devices:xiaomi`) run `lintCi` there too. A library's lint sees its own manifest only, not the
+`:devices:core`, `:devices:garmin`, `:devices:wearos`, `:devices:xiaomi`) run `lintCi` there too. A library's lint sees its own manifest only, not the
 permissions the app declares, so a call that needs one carries `@SuppressLint("MissingPermission")`
 and checks the grant at run time, as the app's own calls do. `:wearlink` has none. Lint knows no
 minSdk in a plain Kotlin module, so its API-level check does not run there: a JDK method that
@@ -106,7 +106,7 @@ entry that was fixed is reported as such and can be dropped by regenerating:
 ```bash
 ./gradlew :app:updateLintBaselineCi :core:model:updateLintBaseline :core:fit:updateLintBaseline \
   :core:devices-api:updateLintBaseline :core:health-api:updateLintBaselineCi :devices:core:updateLintBaselineCi \
-  :devices:wearos:updateLintBaselineCi :devices:xiaomi:updateLintBaselineCi \
+  :devices:garmin:updateLintBaselineCi :devices:wearos:updateLintBaselineCi :devices:xiaomi:updateLintBaselineCi \
   :devices:garmin:protocol:updateLintBaseline :devices:xiaomi:protocol:updateLintBaseline \
   :wear:updateLintBaselineCi :wear:recording-core:updateLintBaseline
 ```
@@ -123,7 +123,7 @@ dependency change, regenerate the module's lockfile and commit it:
 
 ```bash
 ./gradlew :app:dependencies :core:model:dependencies :core:fit:dependencies :core:devices-api:dependencies \
-  :core:health-api:dependencies :devices:core:dependencies :devices:wearos:dependencies \
+  :core:health-api:dependencies :devices:core:dependencies :devices:garmin:dependencies :devices:wearos:dependencies \
   :devices:xiaomi:dependencies \
   :devices:garmin:protocol:dependencies :devices:xiaomi:protocol:dependencies \
   :wear:dependencies :wear:recording-core:dependencies :wearlink:dependencies --write-locks
@@ -161,9 +161,10 @@ app's English file: extra keys, and placeholder and plural mismatches. Both apps
 languages; a string added between releases shows in English until the release translates it.
 
 A device module carries the strings its own code shows, in `devices/<vendor>/src/main/res`,
-moved there with every translation (`:devices:xiaomi`: the weigh-in notification;
-`:devices:wearos`: the watch link's states; `:devices:core`: what every family says, such as
-Bluetooth being off). The
+moved there with every translation (`:devices:garmin`: the find-phone notification;
+`:devices:xiaomi`: the weigh-in notification; `:devices:wearos`: the watch link's states;
+`:devices:core`: what every family says, such as Bluetooth being off, the notification
+listener's label and the activity import's exercise types). The
 translation check reads every module's `res` beside the apps'. `extract-strings.py` trims and
 refreshes the app's files only, so a key that moved keeps the translations it moved with, and
 the translation platform needs each module's file as a component of its own.

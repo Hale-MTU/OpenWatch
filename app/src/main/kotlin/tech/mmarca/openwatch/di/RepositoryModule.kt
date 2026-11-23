@@ -19,6 +19,7 @@ import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
 import tech.mmarca.openwatch.data.repository.contract.BodyProfileRepository
 import tech.mmarca.openwatch.data.repository.contract.DeviceRegistry
 import tech.mmarca.openwatch.data.repository.contract.DeviceStateRepository
+import tech.mmarca.openwatch.data.repository.contract.GarminActivityPreferences
 import tech.mmarca.openwatch.data.repository.contract.WearOsSyncPreferences
 import tech.mmarca.openwatch.comaps.CoMapsNavigationRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminSleepMinuteRepository
@@ -68,6 +69,10 @@ abstract class RepositoryModule {
     /** What each integration keeps per device (:core:devices-api), on the device_state table. */
     @Binds
     abstract fun bindDeviceStateRepository(impl: DeviceStateStore): DeviceStateRepository
+
+    /** The exercise type the Garmin activity import falls back to (:devices:garmin). */
+    @Binds
+    abstract fun bindGarminActivityPreferences(impl: OpenWatchPreferences): GarminActivityPreferences
 
     /** The one preference the Wear OS sync reads (:devices:wearos). */
     @Binds
