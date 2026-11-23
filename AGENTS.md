@@ -81,7 +81,8 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 - `devices/xiaomi/protocol` (`:devices:xiaomi:protocol`) — the S400 scale's codec, the same
   way: MiBeacon v5 framing, AES-CCM under the bind key, the weigh-in object, the scan filters.
 - `devices/ble-standard` (`:devices:ble-standard`, package `devices/blestandard`) — the devices
-  of the Bluetooth standard health profiles as one family, `BLE_STANDARD`: a heart rate strap.
+  of the Bluetooth standard health profiles as one family, `BLE_STANDARD`: a heart rate strap,
+  a blood pressure monitor, a weight scale and a glucose meter.
   Its pairing for the app's add flow, its link over `GattLink`, its live stream and the Health
   Connect mapping of what it pushes through the `MeasurementSink`; `BleStandardModule` binds it.
   Its bytes are `:devices:ble-standard:protocol`, pure Kotlin: the measurement characteristics

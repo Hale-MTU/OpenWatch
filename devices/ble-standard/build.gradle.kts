@@ -1,7 +1,8 @@
 // The devices that speak the Bluetooth SIG's standard health profiles, as one device family:
-// a heart rate strap (Heart Rate Service). Its bytes are :devices:ble-standard:protocol's; here
-// are the link over the shared GattLink, the pairing the app's add flow runs, the live stream
-// and the Health Connect mapping of what it pushes. In the app's package `devices/blestandard`.
+// a heart rate strap, a blood pressure monitor, a weight scale and a glucose meter. Its bytes are
+// :devices:ble-standard:protocol's; here are the link over the shared GattLink, the pairing the
+// app's add flow runs, the strap's live stream, the collector a pushed device's wake starts, and
+// the Health Connect mapping of what they push. In the app's package `devices/blestandard`.
 // It binds its own family (BleStandardModule), depends on the shared device core and on no
 // other family, and declares no manifest component.
 plugins {

@@ -18,7 +18,7 @@ OpenWatch is designed to keep health data on your device.
 - No ads are shown.
 - No analytics SDKs are included.
 - No health data is sold or shared with third parties.
-- Data travels only over Bluetooth, between your watch or scale and your phone, and inside the phone to apps you connect (see "Apps You Connect On Your Phone").
+- Data travels only over Bluetooth, between the devices you pair (a watch, a scale, a strap or a meter) and your phone, and inside the phone to apps you connect (see "Apps You Connect On Your Phone").
 - OpenWatch writes to Health Connect only what a device you paired recorded, and only after you grant the relevant Android permissions.
 - OpenWatch reads from Health Connect only the few things a sync needs, listed below.
 
@@ -29,6 +29,7 @@ OpenWatch uses Bluetooth to reach the devices you add in the app, and nothing el
 - A Garmin watch, over Garmin's own Bluetooth protocol, after you pair it in the app. Android's companion device pairing lets the app notice the watch coming into range so a sync can run on its own.
 - A Wear OS watch running the OpenWatch watch app, over Bluetooth. The first time a phone connects, the watch asks you to allow or block it; an allowed phone's token is kept on the watch, and no other phone is answered.
 - A heart rate strap that uses Bluetooth's standard Heart Rate profile, after you add it in the app. OpenWatch connects to it only while its screen in the app is open, or while an app you allowed records with it, and reads its heart rate and its battery level. It asks for no pairing and keeps no link otherwise.
+- A blood pressure monitor, a glucose meter or a weight scale that uses Bluetooth's standard Blood Pressure, Glucose or Weight Scale profile, after you add it in the app. It is paired with your phone, and Android's companion device pairing tells the app when it wakes after a measurement; OpenWatch then connects, takes the readings it hands over (from a glucose meter, the ones it stored since the last time) and disconnects. When the device names a user, only the readings of the first user it named are kept: on a device several people share, the others' readings are left out.
 - A Xiaomi Body Composition Scale S400 or S400 Pro. The scale broadcasts each weigh-in; OpenWatch decodes the broadcast with the key you take from your Xiaomi account and type into the app. The key is stored in the app's private preferences and is used for nothing else.
 
 The app asks for Bluetooth and, on Android 11 and older, the location permission, because Android requires them to scan for and connect to Bluetooth devices. On those older versions, where the phone app holds that permission, a Garmin watch that asks for the phone's position is given the last one Android already has; OpenWatch requests no position fix of its own. It keeps no location history.
@@ -40,6 +41,7 @@ What a paired device recorded, when you sync it or when a sync runs on a schedul
 - From a Garmin watch: activities with their route and sensor samples, steps, distance, calories, heart rate, resting heart rate, heart rate variability, oxygen saturation, respiratory rate, VO2 max, basal metabolic rate, sleep, and the weight a Garmin scale relays through the watch.
 - From a Wear OS watch: heart rate, steps (with their cadence and an estimate of the calories walking cost), floors and elevation gained recorded on the watch, an estimated sleep session per night, the night's resting heart rate and, where the watch can measure it, heart rate variability, and workouts recorded on the watch with their route, distance and calories. If you switch them on: the breathing rate at night, and, on a Samsung watch, blood oxygen and skin temperature at night. Skin temperature is written as the difference from your own usual night.
 - From a heart rate strap: the heart rate it measured while OpenWatch was connected to it, one record per minute.
+- From a blood pressure monitor: each reading's systolic and diastolic pressure, and the pulse it measured as a heart rate. From a glucose meter: each blood glucose reading, with where the sample came from and how it stood to a meal when the meter says so; a check with control solution is not written. From a weight scale on the standard profile: each weight.
 - From the scale: weight and heart rate as the scale measured them, and the body fat, lean mass and body water the app estimates from the scale's measurement and your body profile.
 
 Each record names OpenWatch as its source. Records OpenWatch wrote can be deleted from Health Connect's own settings at any time. Records written by other apps are never changed.
@@ -118,6 +120,9 @@ The complete list, by Health Connect permission. The app shows the same list und
 | Permission | When, or what for |
 | --- | --- |
 | `WRITE_HEART_RATE` | From a heart rate strap, while its screen is open or an app you allowed records with it: one record per minute. |
+| `WRITE_BLOOD_PRESSURE` | From a blood pressure monitor, each reading it hands over when it wakes, with the pulse it measured written as a heart rate. |
+| `WRITE_BLOOD_GLUCOSE` | From a glucose meter, the readings it stored, handed over when it wakes. A check with control solution is not written. |
+| `WRITE_WEIGHT` | From a scale on the standard Weight Scale profile, each weigh-in it hands over when it wakes. |
 
 **Read from Health Connect**
 

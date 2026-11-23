@@ -29,7 +29,9 @@ What a scale weigh-in writes: `WRITE_WEIGHT`, `WRITE_BODY_FAT`, `WRITE_LEAN_BODY
 
 What a heart rate strap on Bluetooth's standard Heart Rate profile writes: `WRITE_HEART_RATE`, one
 record per minute of what it streamed while its screen was open or an app you allowed recorded
-with it. What a device of the standard profiles hands over waits on the phone until its grant is
+with it. What a device on the standard Blood Pressure, Glucose or Weight Scale profile hands over
+when it wakes: `WRITE_BLOOD_PRESSURE` (with the pulse as `WRITE_HEART_RATE`),
+`WRITE_BLOOD_GLUCOSE` and `WRITE_WEIGHT`. What a device of the standard profiles hands over waits on the phone until its grant is
 in, and its device screen asks for it.
 
 A record whose write is not granted stays on the device; the rest of a sync goes on.
@@ -114,6 +116,9 @@ it fails `HealthPermissionsTest`.
 | Permission | When, or what for |
 | --- | --- |
 | `WRITE_HEART_RATE` | From a heart rate strap, while its screen is open or an app you allowed records with it: one record per minute. |
+| `WRITE_BLOOD_PRESSURE` | From a blood pressure monitor, each reading it hands over when it wakes, with the pulse it measured written as a heart rate. |
+| `WRITE_BLOOD_GLUCOSE` | From a glucose meter, the readings it stored, handed over when it wakes. A check with control solution is not written. |
+| `WRITE_WEIGHT` | From a scale on the standard Weight Scale profile, each weigh-in it hands over when it wakes. |
 
 **Read from Health Connect**
 
@@ -172,7 +177,9 @@ and `REQUEST_OBSERVE_COMPANION_DEVICE_PRESENCE`: install-time grants with no pro
 own. The user's consent is the system "Allow OpenWatch to access <device>?" dialog. The
 association keeps the app alive while a watch is in range, so a file sync that runs for
 minutes is not killed; for the scale, it is what lets Android wake the app for the two seconds
-a weigh-in is on the air. For a Garmin watch, declining is supported: the watch is bonded and
+a weigh-in is on the air, and for a blood pressure monitor, a glucose meter or a standard
+scale, it is how Android tells the app the device woke with a reading, so such a device is added
+only with it. For a Garmin watch, declining is supported: the watch is bonded and
 syncs regardless. A Wear OS watch is added only with the association, because Android lets an
 app start a foreground service from the background only for an associated device. OpenWatch
 starts none for a watch today; the association keeps that open for a workout another app starts

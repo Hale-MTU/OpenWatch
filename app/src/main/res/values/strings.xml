@@ -468,6 +468,9 @@
     <string name="health_data_section_scale">Written from the scale</string>
     <string name="health_data_section_standard">Written from a device on a standard Bluetooth profile</string>
     <string name="health_data_note_standard_heart_rate">From a heart rate strap, while its screen is open or an app you allowed records with it: one record per minute.</string>
+    <string name="health_data_note_standard_blood_pressure">From a blood pressure monitor, each reading it hands over when it wakes, with the pulse it measured written as a heart rate.</string>
+    <string name="health_data_note_standard_blood_glucose">From a glucose meter, the readings it stored, handed over when it wakes. A check with control solution is not written.</string>
+    <string name="health_data_note_standard_weight">From a scale on the standard Weight Scale profile, each weigh-in it hands over when it wakes.</string>
     <string name="health_data_section_reads">Read from Health Connect</string>
     <string name="health_data_section_watch_app">Asked by the watch app, on the watch</string>
     <string name="health_data_note_garmin_weight">A weight a Garmin scale relays through the watch.</string>

@@ -3,6 +3,8 @@ package tech.mmarca.openwatch.data.repository
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.BasalMetabolicRateRecord
+import androidx.health.connect.client.records.BloodGlucoseRecord
+import androidx.health.connect.client.records.BloodPressureRecord
 import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.BodyWaterMassRecord
 import androidx.health.connect.client.records.CyclingPedalingCadenceRecord
@@ -181,6 +183,8 @@ internal fun Record.timeSpan(): ClosedRange<Instant>? = when (this) {
     is TotalCaloriesBurnedRecord -> startTime..endTime
     is SkinTemperatureRecord -> startTime..endTime
     is BasalMetabolicRateRecord -> time..time
+    is BloodGlucoseRecord -> time..time
+    is BloodPressureRecord -> time..time
     is BodyFatRecord -> time..time
     is BodyWaterMassRecord -> time..time
     is HeartRateVariabilityRmssdRecord -> time..time

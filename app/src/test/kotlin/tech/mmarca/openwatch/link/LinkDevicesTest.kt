@@ -105,4 +105,25 @@ class LinkDevicesTest {
         assertEquals("ACME", devices.single().integration.name)
         assertEquals(OpenLinkDeviceKind.WATCH, devices.single().kind)
     }
+
+    @Test
+    fun `only a device that streams can be recorded with, whatever its kind`() {
+        val acme = FakeDeviceFamily("ACME", emptySet()) { it.integration == DeviceIntegration("ACME") && it.kind != BleDeviceKind.SENSOR }
+        val strapFamily = FakeDeviceFamily("STRAPS", setOf(DeviceFeature.LIVE_HEART_RATE)) { it.integration == DeviceIntegration("STRAPS") }
+
+        val devices = linkDevices(
+            listOf(
+                device("cuff", BleDeviceKind("BLOOD_PRESSURE_MONITOR"), DeviceIntegration("ACME")),
+                device("strap", BleDeviceKind.SENSOR, DeviceIntegration("STRAPS")),
+            ),
+            emptySet(),
+            DeviceFamilies(mapOf("ACME" to acme, "STRAPS" to strapFamily)),
+            emptyMap(),
+        )
+
+        assertEquals("BLOOD_PRESSURE_MONITOR", devices[0].kind.name)
+        assertEquals(false, devices[0].supportsRecording)
+        assertEquals(true, devices[1].supportsRecording)
+        assertEquals(setOf(OpenLinkSampleType.HEART_RATE), devices[1].liveSampleTypes)
+    }
 }

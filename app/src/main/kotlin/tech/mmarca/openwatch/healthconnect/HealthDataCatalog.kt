@@ -4,6 +4,8 @@ import androidx.annotation.StringRes
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.BasalMetabolicRateRecord
+import androidx.health.connect.client.records.BloodGlucoseRecord
+import androidx.health.connect.client.records.BloodPressureRecord
 import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.BodyWaterMassRecord
 import androidx.health.connect.client.records.DistanceRecord
@@ -114,6 +116,9 @@ object HealthDataCatalog {
         ),
         HealthDataSection.STANDARD_DEVICES to listOf(
             write(HeartRateRecord::class, R.string.health_data_note_standard_heart_rate),
+            write(BloodPressureRecord::class, R.string.health_data_note_standard_blood_pressure),
+            write(BloodGlucoseRecord::class, R.string.health_data_note_standard_blood_glucose),
+            write(WeightRecord::class, R.string.health_data_note_standard_weight),
         ),
         HealthDataSection.READS to listOf(
             read(WeightRecord::class, R.string.health_data_read_weight),

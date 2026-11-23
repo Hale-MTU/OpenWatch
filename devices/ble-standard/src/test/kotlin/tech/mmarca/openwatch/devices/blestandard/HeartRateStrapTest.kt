@@ -29,6 +29,7 @@ import tech.mmarca.openwatch.devices.core.LiveReading
 import tech.mmarca.openwatch.devices.core.LiveReadingKind
 import tech.mmarca.openwatch.devices.core.RadioLeaseOwner
 import tech.mmarca.openwatch.devices.core.measure.DeviceMeasurementSink
+import tech.mmarca.openwatch.devices.core.pairing.FakeWatchPairing
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleDiscoveredDevice
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
@@ -70,7 +71,8 @@ class HeartRateStrapTest {
             registry, state, store, reads, mapOf(StandardProfiles.FAMILY_ID to StandardMeasurementRecords()),
         ) { clock }
         val stream = HeartRateStream(radio, sink, registry, scope, { clock }, { ZoneId.of("Europe/Madrid") })
-        return StandardDeviceFamily(registry, state, stream)
+        val collector = MeasurementCollector(radio, sink, registry, state, scope, { clock }, { ZoneId.of("Europe/Madrid") })
+        return StandardDeviceFamily(registry, state, stream, FakeWatchPairing(), collector)
     }
 
     @Test
@@ -79,7 +81,7 @@ class HeartRateStrapTest {
 
         assertEquals(BleDeviceKind.SENSOR, family.claim(strap))
         assertNull(family.claim(strap.copy(advertisedServiceUuids = setOf("00001816-0000-1000-8000-00805f9b34fb"))))
-        assertEquals(setOf("0000180d-0000-1000-8000-00805f9b34fb"), family.scanServiceUuids)
+        assertTrue("0000180d-0000-1000-8000-00805f9b34fb" in family.scanServiceUuids)
 
         val result = family.pair(strap, "Chest strap")
 
@@ -90,7 +92,7 @@ class HeartRateStrapTest {
         assertEquals(setOf(BleSensorCapability.HEART_RATE), device.capabilities)
         assertTrue(family.owns(device))
         assertEquals(setOf(DeviceFeature.LIVE_HEART_RATE), family.features(device))
-        // Nothing was dialled to pair it.
+        // Nothing was dialled, bonded or associated to pair it.
         assertTrue(radio.links.isEmpty())
     }
 

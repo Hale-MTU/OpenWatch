@@ -53,7 +53,7 @@ class HiltGraphTest {
         assertThat(syncPorts.map { it::class.simpleName })
             .containsExactly("GarminWatchSyncService", "WearOsWatchSyncService")
         assertThat(presenceObservers.map { it::class.simpleName })
-            .containsExactly("XiaomiScaleListener", "GarminNotificationBridge")
+            .containsExactly("XiaomiScaleListener", "GarminNotificationBridge", "MeasurementCollector")
         // Each family by its persisted name, whether the app or its own module binds it.
         assertThat(families.mapValues { it.value::class.simpleName })
             .containsExactly(

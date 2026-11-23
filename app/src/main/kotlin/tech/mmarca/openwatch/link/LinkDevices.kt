@@ -17,7 +17,6 @@ import tech.mmarca.openlink.OpenLinkSampleType
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.DeviceFamilies
 import tech.mmarca.openwatch.devices.core.DeviceFeature
-import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
 import tech.mmarca.openwatch.core.performance.ApplicationScope
@@ -73,8 +72,9 @@ internal fun linkDevices(
             lastSyncedAtMillis = device.lastSyncedAt?.toEpochMilli(),
             syncing = device.id in syncingDeviceIds,
             supportsSync = DeviceFeature.SYNC in features,
-            // A recording reads a wrist or a bike; a scale has neither.
-            supportsRecording = device.kind != BleDeviceKind.SCALE,
+            // A recording keeps a device's live readings flowing: one that streams none
+            // (a scale, a cuff, a meter) has nothing to record.
+            supportsRecording = features.any { it == DeviceFeature.LIVE_HEART_RATE || it == DeviceFeature.LIVE_STEPS },
             liveSampleTypes = buildSet {
                 if (DeviceFeature.LIVE_HEART_RATE in features) add(OpenLinkSampleType.HEART_RATE)
                 if (DeviceFeature.LIVE_STEPS in features) add(OpenLinkSampleType.STEPS)
