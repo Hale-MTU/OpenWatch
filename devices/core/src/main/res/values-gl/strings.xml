@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_watch_wearos_status_bluetooth_off">O Bluetooth deste teléfono está apagado.</string>
+    <string name="notification_listener_label">Notificacións do reloxo</string>
 </resources>

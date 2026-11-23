@@ -165,7 +165,6 @@
     <string name="privacy_policy_title">Polityka prywatności</string>
     <string name="privacy_policy_body_2">Ta aplikacja nie wysyła Twoich danych zdrowotnych do chmury, nie zawiera reklam i nie udostępnia danych osobom trzecim.</string>
     <string name="privacy_policy_body_3">OpenWatch nie jest wyrobem medycznym i nie jest przeznaczony do diagnozowania, leczenia, wyleczenia ani zapobiegania jakimkolwiek chorobom lub stanom zdrowia. Nie zastępuje porady, diagnozy ani leczenia przez wykwalifikowanego pracownika ochrony zdrowia.</string>
-    <string name="notification_listener_label">Powiadomienia na zegarku</string>
     <string name="screen_watch_notifications">Powiadomienia na zegarku</string>
     <string name="settings_watch_notifications_section">Powiadomienia</string>
     <string name="settings_watch_notifications_title">Wysyłaj powiadomienia na zegarek</string>

@@ -166,7 +166,6 @@
     <string name="privacy_policy_title">プライバシーポリシー</string>
     <string name="privacy_policy_body_2">このアプリは健康データをクラウドサービスにアップロードせず、広告を含まず、第三者とデータを共有しません。</string>
     <string name="privacy_policy_body_3">OpenWatch は医療機器ではなく、いかなる疾患や病状の診断、治療、治癒、予防も行いません。資格のある医療専門家による医学的助言、診断、治療の代わりにはなりません。</string>
-    <string name="notification_listener_label">ウォッチの通知</string>
     <string name="screen_watch_notifications">ウォッチの通知</string>
     <string name="settings_watch_notifications_section">通知</string>
     <string name="settings_watch_notifications_title">通知をウォッチに送る</string>

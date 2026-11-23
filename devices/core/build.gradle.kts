@@ -1,7 +1,9 @@
 // The platform half every device family shares, on Android: the radio lease, the GATT link
 // (dial, redial, MTU, discovery, notifications, writes) and the BLE scanner, companion pairing
 // and presence (the app's primary companion service), and the sync controller, its schedule and
-// its worker. In the app's package `devices/core`. The contracts are :core:devices-api's; each
+// its worker; and the phone's sources a watch relays (the notification listener, the media
+// sessions, the weather broadcasts, the CoMaps guidance feed). In the app's packages
+// (`devices/core`, `devices/notifications`, `devices/media`, `devices/weather`, `comaps`). The contracts are :core:devices-api's; each
 // family's own half is its module, :devices:<vendor>, which depends on this one and on no
 // other family.
 plugins {
@@ -18,6 +20,9 @@ android {
         minSdk = 26
         // DeviceLog.isEnabled: the device layer logs to logcat in a debuggable build only.
         buildConfigField("boolean", "DEVICE_DEBUG_LOGS", "false")
+        // The notification listener's narration (devices/notifications/Diagnostics): the app's
+        // flag of the same name, on in debug, ci and nightly builds.
+        buildConfigField("boolean", "OPENWATCH_DIAGNOSTICS", "false")
     }
 
     buildTypes {
@@ -27,10 +32,15 @@ android {
             // does not follow that, so this field does.
             val published = providers.environmentVariable("OPENWATCH_PUBLISHED_DEBUG_APK").orNull == "true"
             buildConfigField("boolean", "DEVICE_DEBUG_LOGS", (!published).toString())
+            buildConfigField("boolean", "OPENWATCH_DIAGNOSTICS", "true")
         }
-        // Made from debug by the convention plugin before the field above was set.
+        // Made from debug by the convention plugin before the fields above were set.
         getByName("ci") {
             buildConfigField("boolean", "DEVICE_DEBUG_LOGS", "true")
+            buildConfigField("boolean", "OPENWATCH_DIAGNOSTICS", "true")
+        }
+        getByName("nightly") {
+            buildConfigField("boolean", "OPENWATCH_DIAGNOSTICS", "true")
         }
     }
 
@@ -71,4 +81,7 @@ dependencies {
     testImplementation(libs.junit4)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.truth)
+    // Real org.json for the weather payload's tests (the android.jar copy is a throwing stub).
+    testImplementation(libs.org.json)
 }

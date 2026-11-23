@@ -162,7 +162,6 @@
     <string name="privacy_policy_title">Политика конфиденциальности</string>
     <string name="privacy_policy_body_2">Это приложение не загружает данные о здоровье в облачный сервис, не содержит рекламы и не передаёт данные третьим сторонам.</string>
     <string name="privacy_policy_body_3">OpenWatch не является медицинским устройством и не предназначен для диагностики, лечения, излечения или профилактики заболеваний и состояний. Приложение не заменяет консультацию, диагностику или лечение у квалифицированного медицинского специалиста.</string>
-    <string name="notification_listener_label">Уведомления на часах</string>
     <string name="screen_watch_notifications">Уведомления на часах</string>
     <string name="settings_watch_notifications_section">Уведомления</string>
     <string name="settings_watch_notifications_title">Отправлять уведомления на часы</string>

@@ -169,7 +169,6 @@
     <string name="privacy_policy_title">Tietosuojakäytäntö</string>
     <string name="privacy_policy_body_2">Tämä sovellus ei lataa terveystietojasi pilvipalveluun, ei sisällä mainoksia eikä jaa tietoja kolmansille osapuolille.</string>
     <string name="privacy_policy_body_3">OpenWatch ei ole lääkinnällinen laite eikä diagnosoi, hoida, paranna tai ehkäise mitään sairautta tai terveydentilaa. Se ei korvaa pätevän terveydenhuollon ammattilaisen lääketieteellistä neuvoa, diagnoosia tai hoitoa.</string>
-    <string name="notification_listener_label">Kellon ilmoitukset</string>
     <string name="screen_watch_notifications">Kellon ilmoitukset</string>
     <string name="settings_watch_notifications_section">Ilmoitukset</string>
     <string name="settings_watch_notifications_title">Lähetä ilmoitukset kelloon</string>

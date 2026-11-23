@@ -206,7 +206,6 @@
     <string name="privacy_policy_title">מדיניות פרטיות</string>
     <string name="privacy_policy_body_2">האפליקציה הזו לא מעלה את נתוני הבריאות שלך לשירות ענן, לא כוללת פרסומות ולא משתפת נתונים עם צדדים שלישיים.</string>
     <string name="privacy_policy_body_3">\u200FOpenWatch אינו מכשיר רפואי, ואינו מאבחן, מטפל, מרפא או מונע מחלה או מצב רפואי כלשהם. הוא אינו תחליף לייעוץ רפואי, לאבחון או לטיפול מאיש מקצוע מוסמך בתחום הבריאות.</string>
-    <string name="notification_listener_label">התראות בשעון</string>
     <string name="screen_watch_notifications">התראות בשעון</string>
     <string name="settings_watch_notifications_section">התראות</string>
     <string name="settings_watch_notifications_title">שליחת התראות לשעון</string>

@@ -118,7 +118,6 @@
     <string name="privacy_policy_title">隐私政策</string>
     <string name="privacy_policy_body_2">此应用不会将你的健康数据上传到云服务，不包含广告，也不与第三方分享数据。</string>
     <string name="privacy_policy_body_3">OpenWatch 不是医疗器械，不诊断、治疗、治愈或预防任何疾病或身体状况。它不能替代合格医疗专业人士的医疗建议、诊断或治疗。</string>
-    <string name="notification_listener_label">手表通知</string>
     <string name="screen_watch_notifications">手表通知</string>
     <string name="settings_watch_notifications_section">通知</string>
     <string name="settings_watch_notifications_title">将通知发送到手表</string>

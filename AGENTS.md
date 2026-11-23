@@ -18,15 +18,14 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 
 - `app/src/main/kotlin/tech/mmarca/openwatch/`
   - `devices/` — the device code not yet in a module of its own: `garmin` (the GATT client,
-    the links, stores and wellness import around the protocol module), `notifications`,
-    `media`, `weather`.
+    the links, stores and wellness import around the protocol module).
     No Compose, no navigation, no Hilt module: `di/DevicesModule` binds it.
   - `features/` — the screens: `home`, `watches`, `scales`, `healthconnect`, `settings`.
   - `healthconnect/` — `HealthConnectGateway`, the one class that touches the client, and
     `ActivityRecordWriter`, the activity write path copied from OpenVitals.
   - `activityimport/` — FIT activity files into activity write requests.
   - `data/` — the Room database (three tables), the repositories and the preference stores.
-  - `comaps/`, `sensors/ble/` — the CoMaps guidance feed and the BLE discovery scan.
+  - `sensors/ble/` — the BLE discovery scan.
   - `di/` — the Hilt modules. `DevicesModule` binds what every family shares and the families
     still in the app; a family in a module of its own binds itself there.
 - `core/model` (`:core:model`) and `core/fit` (`:core:fit`) — pure Kotlin on the JDK, with
@@ -47,9 +46,12 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   library in `devices/core`'s packages: the radio lease, `DeviceLog`, the GATT link (`GattLink`:
   the dial and its redial, the MTU, discovery, notifications, writes) and the BLE scanner
   (`BleScanner`), companion pairing and its service (`OpenWatchCompanionDeviceService`, in the
-  module's manifest), and the sync controller, its schedule, worker, budget and wake lock. Its
-  test fixtures are `FakeSharedPreferences` and `testSeal()`, which the device modules' tests and
-  the app's share.
+  module's manifest), and the sync controller, its schedule, worker, budget and wake lock; and
+  the phone's sources a watch relays, each in its own package: the notification listener and
+  its filter (`devices/notifications`, with `WatchNotificationPrefsStore`), the media sessions
+  (`devices/media`), the weather broadcasts (`devices/weather`) and the CoMaps guidance feed
+  (`comaps`). Its test fixtures are `FakeSharedPreferences` and `testSeal()`, which the device
+  modules' tests and the app's share.
 - `devices/wearos` (`:devices:wearos`) — the phone side of the watch app, a device module: the
   RFCOMM link and its session cache, the series sync and its Health Connect mapping, the
   onboarding, the family, the link states' strings, and `WearOsModule`, which binds its family,

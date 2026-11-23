@@ -640,17 +640,6 @@
     </issue>
 
     <issue
-        id="ExportedReceiver"
-        message="Exported receiver does not require permission"
-        errorLine1="        &lt;receiver"
-        errorLine2="         ~~~~~~~~">
-        <location
-            file="src/main/AndroidManifest.xml"
-            line="324"
-            column="10"/>
-    </issue>
-
-    <issue
         id="ExportedService"
         message="Exported service does not require permission"
         errorLine1="        &lt;service"
@@ -682,83 +671,6 @@
             line="113"
             column="26"
             message="This `BroadcastReceiver` intent is launched from a notification; this is discouraged except as notification actions"/>
-    </issue>
-
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="                Uri.parse(&quot;content://$authority/live&quot;),"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/tech/mmarca/openwatch/comaps/CoMapsNavigationSource.kt"
-            line="93"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="                    Uri.parse(&quot;content://$authority/live&quot;),"
-        errorLine2="                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/tech/mmarca/openwatch/comaps/CoMapsNavigationSource.kt"
-            line="135"
-            column="21"/>
-    </issue>
-
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="                Uri.parse(&quot;content://$authority/route&quot;),"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/tech/mmarca/openwatch/comaps/CoMapsNavigationSource.kt"
-            line="180"
-            column="17"/>
-    </issue>
-
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="                data = Uri.parse(&quot;cm://map?v=1&amp;ll=$latitude,$longitude&amp;n=OpenWatch&quot;)"
-        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/tech/mmarca/openwatch/comaps/CoMapsNavigationSource.kt"
-            line="228"
-            column="24"/>
-    </issue>
-
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="                data = Uri.parse(&quot;cm://map?v=1&amp;ll=$latitude,$longitude&amp;n=OpenWatch&quot;)"
-        errorLine2="                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/tech/mmarca/openwatch/comaps/CoMapsNavigationSource.kt"
-            line="228"
-            column="24"/>
-    </issue>
-
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `String.toUri` instead?"
-        errorLine1="            Uri.parse(&quot;content://$authority/route&quot;),"
-        errorLine2="            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/tech/mmarca/openwatch/comaps/CoMapsNavigationSource.kt"
-            line="287"
-            column="13"/>
-    </issue>
-
-    <issue
-        id="UseKtx"
-        message="Use the KTX extension function `SharedPreferences.edit` instead?"
-        errorLine1="        prefs(context).edit()"
-        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/tech/mmarca/openwatch/devices/notifications/NotificationStore.kt"
-            line="48"
-            column="9"/>
     </issue>
 
     <issue

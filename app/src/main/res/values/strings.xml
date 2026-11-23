@@ -209,7 +209,6 @@
     <string name="privacy_policy_title">Privacy policy</string>
     <string name="privacy_policy_body_2">This app does not upload your health data to a cloud service, does not include ads, and does not share data with third parties.</string>
     <string name="privacy_policy_body_3">OpenWatch is not a medical device and does not diagnose, treat, cure, or prevent any disease or medical condition. It is not a substitute for medical advice, diagnosis, or treatment from a qualified healthcare professional.</string>
-    <string name="notification_listener_label">Watch notifications</string>
     <string name="screen_watch_notifications">Watch notifications</string>
     <string name="settings_watch_notifications_section">Notifications</string>
     <string name="settings_watch_notifications_title">Send notifications to the watch</string>

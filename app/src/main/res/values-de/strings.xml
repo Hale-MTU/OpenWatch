@@ -114,7 +114,6 @@
     <string name="onboarding_os_notification_forwarding_desc">Telefonbenachrichtigungen an eine verbundene Uhr senden. Öffnet die Android-Einstellungen.</string>
     <string name="onboarding_action_grant_all">Alle erteilen</string>
     <string name="settings_body_profile_group_title">Körperprofil</string>
-    <string name="notification_listener_label">Uhrenbenachrichtigungen</string>
     <string name="screen_watch_notifications">Uhrenbenachrichtigungen</string>
     <string name="settings_watch_notifications_section">Benachrichtigungen</string>
     <string name="settings_watch_notifications_title">Benachrichtigungen an die Uhr senden</string>

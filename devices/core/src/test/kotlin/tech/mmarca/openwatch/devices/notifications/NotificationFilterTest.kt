@@ -182,17 +182,8 @@ class NotificationFilterTest {
             .isEqualTo(NotificationFilter.Category.OTHER)
     }
 
-    @Test
-    fun `the category duplicates track the real Garmin enum's ordinals`() {
-        // The duplication policy stayed after the Pigeon boundary went; this pin keeps the two from drifting.
-        val garmin = tech.mmarca.openwatch.devices.garmin.GarminNotificationCategory.entries
-        assertThat(NotificationFilter.Category.INCOMING_CALL)
-            .isEqualTo(garmin.indexOfFirst { it.name == "INCOMING_CALL" })
-        assertThat(NotificationFilter.Category.SMS)
-            .isEqualTo(garmin.indexOfFirst { it.name == "SMS" })
-        assertThat(NotificationFilter.Category.HEALTH_AND_FITNESS)
-            .isEqualTo(garmin.indexOfFirst { it.name == "HEALTH_AND_FITNESS" })
-    }
+    // That the category numbers track Garmin's enum is the app's NotificationCategoryParityTest:
+    // only the app sees both modules.
 
     @Test
     fun `what the app or the user keeps off the lock screen never reaches the wrist`() {

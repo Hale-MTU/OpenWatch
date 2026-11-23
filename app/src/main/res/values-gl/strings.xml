@@ -166,7 +166,6 @@
     <string name="privacy_policy_title">Política de privacidade</string>
     <string name="privacy_policy_body_2">Esta app non sobe os teus datos de saúde a ningún servizo na nube, non inclúe anuncios e non comparte datos con terceiros.</string>
     <string name="privacy_policy_body_3">OpenWatch non é un dispositivo médico e non diagnostica, trata, cura nin prevén ningunha enfermidade ou condición médica. Non substitúe o consello, diagnóstico ou tratamento dun profesional sanitario cualificado.</string>
-    <string name="notification_listener_label">Notificacións do reloxo</string>
     <string name="screen_watch_notifications">Notificacións do reloxo</string>
     <string name="settings_watch_notifications_section">Notificacións</string>
     <string name="settings_watch_notifications_title">Enviar notificacións ao reloxo</string>

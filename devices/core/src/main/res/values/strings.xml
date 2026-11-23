@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_watch_wearos_status_bluetooth_off">Bluetooth is off on this phone.</string>
+    <string name="notification_listener_label">Watch notifications</string>
 </resources>

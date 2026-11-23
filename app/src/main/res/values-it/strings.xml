@@ -114,7 +114,6 @@
     <string name="onboarding_os_notification_forwarding_desc">Inviare le notifiche del telefono a un orologio connesso. Apre le impostazioni di Android.</string>
     <string name="onboarding_action_grant_all">Concedi tutto</string>
     <string name="settings_body_profile_group_title">Profilo corporeo</string>
-    <string name="notification_listener_label">Notifiche sull\'orologio</string>
     <string name="screen_watch_notifications">Notifiche sull\'orologio</string>
     <string name="settings_watch_notifications_section">Notifiche</string>
     <string name="settings_watch_notifications_title">Invia le notifiche all\'orologio</string>

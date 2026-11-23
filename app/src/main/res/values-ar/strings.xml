@@ -206,7 +206,6 @@
     <string name="privacy_policy_title">سياسة الخصوصية</string>
     <string name="privacy_policy_body_2">لا يرفع هذا التطبيق بياناتك الصحية إلى خدمة سحابية، ولا يتضمن إعلانات، ولا يشارك البيانات مع جهات خارجية.</string>
     <string name="privacy_policy_body_3">لا يُعد OpenWatch جهازًا طبيًا، ولا يشخّص أي مرض أو حالة طبية أو يعالجها أو يشفيها أو يقي منها. وهو ليس بديلاً عن المشورة الطبية أو التشخيص أو العلاج من أخصائي رعاية صحية مؤهل.</string>
-    <string name="notification_listener_label">إشعارات الساعة</string>
     <string name="screen_watch_notifications">إشعارات الساعة</string>
     <string name="settings_watch_notifications_section">الإشعارات</string>
     <string name="settings_watch_notifications_title">إرسال الإشعارات إلى الساعة</string>

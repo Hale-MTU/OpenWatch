@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_watch_wearos_status_bluetooth_off">Le Bluetooth de ce téléphone est désactivé.</string>
+    <string name="notification_listener_label">Notifications sur la montre</string>
 </resources>

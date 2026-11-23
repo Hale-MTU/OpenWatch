@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_watch_wearos_status_bluetooth_off">Bluetooth на этом телефоне выключен.</string>
+    <string name="notification_listener_label">Уведомления на часах</string>
 </resources>

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_watch_wearos_status_bluetooth_off">Bluetooth je v tomto telefonu vypnutý.</string>
+    <string name="notification_listener_label">Oznámení na hodinkách</string>
 </resources>
