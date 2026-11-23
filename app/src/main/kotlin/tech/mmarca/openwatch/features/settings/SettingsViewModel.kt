@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import tech.mmarca.openwatch.BuildConfig
+import tech.mmarca.openwatch.core.presentation.AppVersionName
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.features.watches.WatchNotificationsGateway
 
@@ -16,17 +16,22 @@ data class SettingsUiState(
     /** Whether the system lets this app read notifications, for the watch forwarder. */
     val notificationAccessGranted: Boolean = false,
     val writeRespiratoryRate: Boolean = false,
-    val versionName: String = BuildConfig.VERSION_NAME,
+    val versionName: String = "",
 )
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val preferences: OpenWatchPreferences,
     private val notifications: WatchNotificationsGateway,
+    @AppVersionName versionName: String,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
-        SettingsUiState(syncEnabled = preferences.healthConnectSyncEnabled, writeRespiratoryRate = preferences.writeRespiratoryRate),
+        SettingsUiState(
+            syncEnabled = preferences.healthConnectSyncEnabled,
+            writeRespiratoryRate = preferences.writeRespiratoryRate,
+            versionName = versionName,
+        ),
     )
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 

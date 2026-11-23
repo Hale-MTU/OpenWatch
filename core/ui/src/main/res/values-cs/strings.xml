@@ -27,4 +27,7 @@
     <string name="settings_watch_name_label">Název</string>
     <string name="action_remove">Odebrat</string>
     <string name="screen_error_generic">Požadavek se nepodařilo dokončit.</string>
+    <string name="settings_watch_notifications_disclosure_accept">Pokračovat</string>
+    <string name="settings_watch_notifications_disclosure_decline">Teď ne</string>
+    <string name="time_just_now">právě teď</string>
 </resources>

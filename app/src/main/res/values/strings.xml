@@ -138,8 +138,6 @@
     <string name="settings_watch_notifications_apps_empty">No apps found.</string>
     <string name="settings_watch_notifications_disclosure_title">OpenWatch will read your notifications</string>
     <string name="settings_watch_notifications_disclosure_body">To show notifications on your watch, OpenWatch reads the notifications your phone receives — including their text.\n\nThey are read on this device and sent only to the watch you paired, over Bluetooth. Nothing is saved to a file or a database, and OpenWatch has no internet permission, so notifications cannot be sent anywhere else.\n\nYou can turn this off at any time, and revoke notification access from Android settings.</string>
-    <string name="settings_watch_notifications_disclosure_accept">Continue</string>
-    <string name="settings_watch_notifications_disclosure_decline">Not now</string>
     <string name="settings_watches_intro">Copies what your watch recorded into OpenWatch. Nothing is sent to the internet.</string>
     <string name="settings_watches_empty_title">No watch paired</string>
     <string name="settings_watches_empty_body">Pairing a watch lets OpenWatch copy what it recorded — sleep stages, resting heart rate, stress and Body Battery — without sending anything to the internet.</string>
@@ -400,7 +398,6 @@
     <string name="connected_apps_capability_live">Receive your watch\'s heart rate and steps while it records</string>
     <string name="hc_setup_missing_title">Not granted yet:</string>
     <string name="hc_setup_missing_extra">Background and history access sit on their own page: open Health Connect settings, then OpenWatch, then Additional access.</string>
-    <string name="time_just_now">just now</string>
     <string name="connected_apps_in_use">In use now</string>
     <string name="connected_apps_last_connected">Last connected %1$s</string>
     <string name="connected_apps_profile_received">Last profile received %1$s</string>

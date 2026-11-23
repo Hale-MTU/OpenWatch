@@ -89,8 +89,6 @@
     <string name="settings_watch_notifications_apps_empty">Keine Apps gefunden.</string>
     <string name="settings_watch_notifications_disclosure_title">OpenWatch liest deine Benachrichtigungen</string>
     <string name="settings_watch_notifications_disclosure_body">Um Benachrichtigungen auf deiner Uhr zu zeigen, liest OpenWatch die Benachrichtigungen, die dein Telefon empfängt, einschließlich ihres Textes.\n\nSie werden auf diesem Gerät gelesen und nur über Bluetooth an die gekoppelte Uhr gesendet. Nichts wird in einer Datei oder einer Datenbank gespeichert, und OpenWatch hat keine Internetberechtigung, deshalb können Benachrichtigungen nirgendwo anders hingelangen.\n\nDu kannst das jederzeit ausschalten und den Benachrichtigungszugriff in den Android-Einstellungen widerrufen.</string>
-    <string name="settings_watch_notifications_disclosure_accept">Weiter</string>
-    <string name="settings_watch_notifications_disclosure_decline">Jetzt nicht</string>
     <string name="settings_watches_intro">Überträgt in OpenWatch, was deine Uhr aufgezeichnet hat. Nichts wird ins Internet gesendet.</string>
     <string name="settings_watches_empty_title">Keine Uhr gekoppelt</string>
     <string name="settings_watches_empty_body">Mit einer gekoppelten Uhr kann OpenWatch ihre Aufzeichnungen übernehmen: Schlafphasen, Ruheherzfrequenz, Stress und Body Battery, ohne etwas ins Internet zu senden.</string>
@@ -332,7 +330,6 @@
     <string name="settings_scales_remove_body">OpenWatch lauscht nicht mehr und vergisst den Schlüssel. Bereits gespeicherte Messungen bleiben.</string>
     <string name="hc_setup_missing_title">Noch nicht erteilt:</string>
     <string name="hc_setup_missing_extra">Hintergrund- und Verlaufszugriff stehen auf einer eigenen Seite: Health-Connect-Einstellungen öffnen, dann OpenWatch, dann Zusätzlicher Zugriff.</string>
-    <string name="time_just_now">gerade eben</string>
     <string name="connected_apps_in_use">Gerade in Verwendung</string>
     <string name="connected_apps_last_connected">Zuletzt verbunden %1$s</string>
     <string name="connected_apps_profile_received">Letztes Profil empfangen %1$s</string>

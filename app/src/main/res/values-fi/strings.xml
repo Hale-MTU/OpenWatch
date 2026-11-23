@@ -94,8 +94,6 @@
     <string name="settings_watch_notifications_apps_empty">Sovelluksia ei löytynyt.</string>
     <string name="settings_watch_notifications_disclosure_title">OpenWatch lukee ilmoituksesi</string>
     <string name="settings_watch_notifications_disclosure_body">Näyttääkseen ilmoitukset kellossasi OpenWatch lukee puhelimesi vastaanottamat ilmoitukset — myös niiden tekstin.\n\nNe luetaan tällä laitteella ja lähetetään vain pariliitettyyn kelloosi Bluetoothin kautta. Mitään ei tallenneta tiedostoon tai tietokantaan, eikä OpenWatchilla ole internet-oikeutta, joten ilmoituksia ei voida lähettää minnekään muualle.\n\nVoit kytkeä tämän pois milloin tahansa ja peruuttaa ilmoitusten käyttöoikeuden Androidin asetuksista.</string>
-    <string name="settings_watch_notifications_disclosure_accept">Jatka</string>
-    <string name="settings_watch_notifications_disclosure_decline">Ei nyt</string>
     <string name="settings_watches_intro">Kopioi kellosi tallentamat tiedot OpenWatchiin. Mitään ei lähetetä internetiin.</string>
     <string name="settings_watches_empty_title">Ei pariliitettyä kelloa</string>
     <string name="settings_watches_empty_body">Kellon pariliitos antaa OpenWatchin kopioida sen tallentamat tiedot — univaiheet, leposykkeen, stressin ja Body Batteryn — lähettämättä mitään internetiin.</string>
@@ -332,7 +330,6 @@
     <string name="settings_scales_remove_body">OpenWatch lopettaa kuuntelun ja unohtaa avaimen. Jo tallennetut punnitukset säilyvät.</string>
     <string name="hc_setup_missing_title">Ei vielä myönnetty:</string>
     <string name="hc_setup_missing_extra">Taustakäyttö ja historian käyttö ovat omalla sivullaan: avaa Health Connectin asetukset, sitten OpenWatch ja sitten Lisäkäyttöoikeudet.</string>
-    <string name="time_just_now">juuri nyt</string>
     <string name="connected_apps_in_use">Käytössä nyt</string>
     <string name="connected_apps_last_connected">Viimeksi yhdistetty %1$s</string>
     <string name="connected_apps_profile_received">Viimeisin profiili vastaanotettu %1$s</string>

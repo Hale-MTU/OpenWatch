@@ -4,18 +4,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.PrivacyTip
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -99,36 +92,3 @@ internal fun capabilityLabel(
 
 /** The small in-row progress spinner's stroke. */
 private val WatchProgressStroke = 2.dp
-
-/**
- * The prominent disclosure Google Play requires before notification access.
- * Each feature that asks for the grant says what it reads. Dismissing declines.
- */
-@Composable
-fun NotificationAccessDisclosureDialog(
-    title: String,
-    body: String,
-    onAccept: () -> Unit,
-    onDecline: () -> Unit,
-) {
-    AlertDialog(
-        onDismissRequest = onDecline,
-        icon = { Icon(imageVector = Icons.Outlined.PrivacyTip, contentDescription = null) },
-        title = { Text(title) },
-        text = {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
-                Text(body)
-            }
-        },
-        confirmButton = {
-            FilledTonalButton(onClick = onAccept) {
-                Text(stringResource(R.string.settings_watch_notifications_disclosure_accept))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDecline) {
-                Text(stringResource(R.string.settings_watch_notifications_disclosure_decline))
-            }
-        },
-    )
-}

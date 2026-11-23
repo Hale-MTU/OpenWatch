@@ -32,10 +32,11 @@ import tech.mmarca.openwatch.navigation.Onboarding
 import tech.mmarca.openwatch.navigation.WatchSendPoint
 import tech.mmarca.openwatch.ui.components.AppBarState
 import tech.mmarca.openwatch.ui.components.LocalAppBarState
+import tech.mmarca.openwatch.ui.components.ObscuredTouchGuard
 import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ObscuredTouchGuard {
 
     @Inject lateinit var preferences: OpenWatchPreferences
     @Inject lateinit var healthConnect: HealthConnectGateway
@@ -105,7 +106,7 @@ class MainActivity : AppCompatActivity() {
      * cannot steer a tap. The check `View.filterTouchesWhenObscured` makes, done here because
      * Compose's view does not make it.
      */
-    var dropObscuredTouches: Boolean = false
+    override var dropObscuredTouches: Boolean = false
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         if (dropObscuredTouches && event.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0) return true

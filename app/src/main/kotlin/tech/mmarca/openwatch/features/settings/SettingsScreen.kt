@@ -27,7 +27,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
-import tech.mmarca.openwatch.PermissionsRationaleActivity
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.features.watches.NotificationAccessDisclosureDialog
 import tech.mmarca.openwatch.ui.components.LocalSnackbarHostState
@@ -46,6 +45,8 @@ fun SettingsRoute(
     onOpenHealthConnect: () -> Unit,
     onOpenBodyProfile: () -> Unit,
     onOpenConnectedApps: () -> Unit,
+    /** The list of the health data the app reads and writes, the app's own activity. */
+    onOpenHealthData: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -71,7 +72,7 @@ fun SettingsRoute(
                 showNotificationDisclosure = true
             }
         },
-        onOpenHealthData = { context.startActivity(Intent(context, PermissionsRationaleActivity::class.java)) },
+        onOpenHealthData = onOpenHealthData,
         onOpenPrivacyPolicy = {
             try {
                 context.startActivity(Intent(Intent.ACTION_VIEW, privacyPolicyUrl.toUri()))

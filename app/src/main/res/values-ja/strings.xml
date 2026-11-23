@@ -95,8 +95,6 @@
 通知はこのデバイスで読み取られ、ペアリングしたウォッチにのみ Bluetooth で送られます。ファイルやデータベースには保存されず、OpenWatch にはインターネット権限がないため、通知が他の場所に送られることはありません。
 
 いつでもオフにでき、Android の設定から通知へのアクセスを取り消せます。</string>
-    <string name="settings_watch_notifications_disclosure_accept">続行</string>
-    <string name="settings_watch_notifications_disclosure_decline">今はしない</string>
     <string name="settings_watches_intro">ウォッチが記録した内容を OpenWatch にコピーします。インターネットには何も送られません。</string>
     <string name="settings_watches_empty_title">ウォッチがペアリングされていません</string>
     <string name="settings_watches_empty_body">ウォッチをペアリングすると、睡眠ステージ、安静時心拍数、ストレス、Body Battery など記録した内容を、インターネットに何も送らずに OpenWatch にコピーできます。</string>
@@ -334,7 +332,6 @@
     <string name="settings_scales_remove_body">OpenWatch は受信を停止し、キーを消去します。保存済みの測定は残ります。</string>
     <string name="hc_setup_missing_title">未許可:</string>
     <string name="hc_setup_missing_extra">バックグラウンドと履歴へのアクセスは別のページにあります。ヘルスコネクトの設定を開き、OpenWatch、追加のアクセスの順に進んでください。</string>
-    <string name="time_just_now">たった今</string>
     <string name="connected_apps_in_use">使用中</string>
     <string name="connected_apps_last_connected">最終接続: %1$s</string>
     <string name="connected_apps_profile_received">最終プロフィール受信: %1$s</string>

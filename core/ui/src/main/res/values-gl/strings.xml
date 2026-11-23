@@ -27,4 +27,7 @@
     <string name="settings_watch_name_label">Nome</string>
     <string name="action_remove">Eliminar</string>
     <string name="screen_error_generic">Non se puido completar a solicitude.</string>
+    <string name="settings_watch_notifications_disclosure_accept">Continuar</string>
+    <string name="settings_watch_notifications_disclosure_decline">Agora non</string>
+    <string name="time_just_now">agora mesmo</string>
 </resources>

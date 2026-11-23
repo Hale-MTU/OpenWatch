@@ -27,4 +27,7 @@
     <string name="option_not_specified">Ei määritetty</string>
     <string name="settings_watch_name_label">Nimi</string>
     <string name="action_remove">Poista</string>
+    <string name="settings_watch_notifications_disclosure_accept">Jatka</string>
+    <string name="settings_watch_notifications_disclosure_decline">Ei nyt</string>
+    <string name="time_just_now">juuri nyt</string>
 </resources>

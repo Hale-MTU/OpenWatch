@@ -96,8 +96,6 @@
     <string name="settings_watch_notifications_apps_empty">Приложения не найдены.</string>
     <string name="settings_watch_notifications_disclosure_title">OpenWatch будет читать ваши уведомления</string>
     <string name="settings_watch_notifications_disclosure_body">Чтобы показывать уведомления на часах, OpenWatch читает уведомления, которые получает ваш телефон, включая их текст.\n\nОни читаются на этом устройстве и отправляются только на сопряжённые с вами часы через Bluetooth. Ничего не сохраняется в файлах или базе данных, а у OpenWatch нет разрешения на доступ к интернету, поэтому уведомления не могут быть отправлены куда-либо ещё.\n\nВы можете отключить эту функцию в любое время и отозвать доступ к уведомлениям в настройках Android.</string>
-    <string name="settings_watch_notifications_disclosure_accept">Продолжить</string>
-    <string name="settings_watch_notifications_disclosure_decline">Не сейчас</string>
     <string name="settings_watches_intro">Копирует в OpenWatch данные, записанные вашими часами. Ничего не отправляется в интернет.</string>
     <string name="settings_watches_empty_title">Часы не сопряжены</string>
     <string name="settings_watches_empty_body">Сопряжение часов позволяет OpenWatch копировать записанные ими данные — фазы сна, пульс в покое, стресс и Body Battery — без отправки данных в интернет.</string>
@@ -344,7 +342,6 @@
     <string name="settings_scales_remove_body">OpenWatch перестанет слушать и забудет ключ. Уже сохранённые взвешивания останутся.</string>
     <string name="hc_setup_missing_title">Ещё не выдано:</string>
     <string name="hc_setup_missing_extra">Доступ в фоне и к истории находится на отдельной странице: откройте настройки Health Connect, затем OpenWatch, затем «Дополнительный доступ».</string>
-    <string name="time_just_now">только что</string>
     <string name="connected_apps_in_use">Используется сейчас</string>
     <string name="connected_apps_last_connected">Последнее подключение: %1$s</string>
     <string name="connected_apps_profile_received">Последний профиль получен: %1$s</string>

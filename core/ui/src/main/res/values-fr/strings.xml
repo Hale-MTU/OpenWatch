@@ -27,4 +27,7 @@
     <string name="settings_watch_name_label">Nom</string>
     <string name="action_remove">Supprimer</string>
     <string name="screen_error_generic">Impossible de terminer la demande.</string>
+    <string name="settings_watch_notifications_disclosure_accept">Continuer</string>
+    <string name="settings_watch_notifications_disclosure_decline">Pas maintenant</string>
+    <string name="time_just_now">à l\'instant</string>
 </resources>

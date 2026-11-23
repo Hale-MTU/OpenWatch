@@ -90,8 +90,6 @@
     <string name="settings_watch_notifications_apps_empty">Nessuna app trovata.</string>
     <string name="settings_watch_notifications_disclosure_title">OpenWatch leggerà le tue notifiche</string>
     <string name="settings_watch_notifications_disclosure_body">Per mostrare le notifiche sul tuo orologio, OpenWatch legge le notifiche che il telefono riceve, testo compreso.\n\nVengono lette su questo dispositivo e inviate via Bluetooth solo all\'orologio che hai associato. Nulla viene salvato in un file o in un database, e OpenWatch non ha il permesso di accedere a internet, quindi le notifiche non possono finire altrove.\n\nPuoi disattivarlo quando vuoi e revocare l\'accesso alle notifiche dalle impostazioni di Android.</string>
-    <string name="settings_watch_notifications_disclosure_accept">Continua</string>
-    <string name="settings_watch_notifications_disclosure_decline">Non ora</string>
     <string name="settings_watches_intro">Copia in OpenWatch ciò che il tuo orologio ha registrato. Non viene inviato nulla a internet.</string>
     <string name="settings_watches_empty_title">Nessun orologio associato</string>
     <string name="settings_watches_empty_body">Associare un orologio permette a OpenWatch di copiare ciò che ha registrato: fasi del sonno, frequenza cardiaca a riposo, stress e Body Battery, senza inviare nulla a internet.</string>
@@ -334,7 +332,6 @@
     <string name="settings_scales_remove_body">OpenWatch smette di ascoltare e dimentica la chiave. Le pesate già salvate restano.</string>
     <string name="hc_setup_missing_title">Non ancora concessi:</string>
     <string name="hc_setup_missing_extra">L\'accesso in background e alla cronologia è in una pagina a parte: apri le impostazioni di Connessione Salute, poi OpenWatch, poi Accesso aggiuntivo.</string>
-    <string name="time_just_now">proprio ora</string>
     <string name="connected_apps_in_use">In uso ora</string>
     <string name="connected_apps_last_connected">Ultima connessione %1$s</string>
     <string name="connected_apps_profile_received">Ultimo profilo ricevuto %1$s</string>

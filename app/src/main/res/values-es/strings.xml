@@ -91,8 +91,6 @@
     <string name="settings_watch_notifications_apps_empty">No se encontraron apps.</string>
     <string name="settings_watch_notifications_disclosure_title">OpenWatch leerá tus notificaciones</string>
     <string name="settings_watch_notifications_disclosure_body">Para mostrar notificaciones en tu reloj, OpenWatch lee las notificaciones que recibe tu teléfono, incluido su texto.\n\nSe leen en este dispositivo y se envían por Bluetooth solo al reloj que has emparejado. No se guarda nada en un archivo ni en una base de datos, y OpenWatch no tiene permiso de internet, así que las notificaciones no pueden ir a ningún otro sitio.\n\nPuedes desactivarlo cuando quieras y revocar el acceso a las notificaciones desde los ajustes de Android.</string>
-    <string name="settings_watch_notifications_disclosure_accept">Continuar</string>
-    <string name="settings_watch_notifications_disclosure_decline">Ahora no</string>
     <string name="settings_watches_intro">Copia en OpenWatch lo que grabó tu reloj. No se envía nada a internet.</string>
     <string name="settings_watches_empty_title">Ningún reloj emparejado</string>
     <string name="settings_watches_empty_body">Emparejar un reloj permite que OpenWatch copie lo que grabó: fases de sueño, frecuencia cardiaca en reposo, estrés y Body Battery, sin enviar nada a internet.</string>
@@ -338,7 +336,6 @@
     <string name="settings_scales_remove_body">OpenWatch deja de escuchar y olvida la clave. Los pesajes ya guardados se conservan.</string>
     <string name="hc_setup_missing_title">Aún sin conceder:</string>
     <string name="hc_setup_missing_extra">El acceso en segundo plano y al historial está en su propia página: abre los ajustes de Health Connect, luego OpenWatch y luego Acceso adicional.</string>
-    <string name="time_just_now">ahora mismo</string>
     <string name="connected_apps_in_use">En uso ahora</string>
     <string name="connected_apps_last_connected">Última conexión %1$s</string>
     <string name="connected_apps_profile_received">Último perfil recibido %1$s</string>

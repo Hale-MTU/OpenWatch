@@ -25,7 +25,7 @@ class SettingsViewModelTest {
 
     @Test
     fun `a refresh reads the switches and whether notification access was granted`() {
-        val vm = SettingsViewModel(preferences, notifications)
+        val vm = SettingsViewModel(preferences, notifications, versionName = "0.4.1")
         preferences.healthConnectSyncEnabled = false
         accessGranted = true
 
@@ -37,7 +37,7 @@ class SettingsViewModelTest {
 
     @Test
     fun `the switches are stored`() {
-        val vm = SettingsViewModel(preferences, notifications)
+        val vm = SettingsViewModel(preferences, notifications, versionName = "0.4.1")
 
         vm.setSyncEnabled(false)
         vm.setWriteRespiratoryRate(true)

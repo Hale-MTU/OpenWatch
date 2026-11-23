@@ -26,11 +26,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openlink.OpenLink
-import tech.mmarca.openwatch.MainActivity
 import tech.mmarca.openlink.OpenLinkTrust
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.localizedList
 import tech.mmarca.openwatch.link.LinkSessionStatus
+import tech.mmarca.openwatch.ui.components.ObscuredTouchGuard
 import tech.mmarca.openwatch.ui.components.BulletRow
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.ScreenColumn
@@ -268,10 +268,10 @@ private fun HideOverlaysWhileShown() {
     DisposableEffect(view) {
         val activity = view.context.findActivity()
         val window = activity?.window
-        (activity as? MainActivity)?.dropObscuredTouches = true
+        (activity as? ObscuredTouchGuard)?.dropObscuredTouches = true
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) window?.setHideOverlayWindows(true)
         onDispose {
-            (activity as? MainActivity)?.dropObscuredTouches = false
+            (activity as? ObscuredTouchGuard)?.dropObscuredTouches = false
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) window?.setHideOverlayWindows(false)
         }
     }

@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.navigation
 
+import android.content.Intent
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.CompositionLocalProvider
@@ -28,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -36,6 +38,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import tech.mmarca.openwatch.PermissionsRationaleActivity
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.UnitFormatter
 import tech.mmarca.openwatch.features.healthconnect.HealthConnectSetupRoute
@@ -197,6 +200,7 @@ private fun AppNavHost(
     onSetupComplete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -229,6 +233,7 @@ private fun AppNavHost(
                 },
                 onOpenBodyProfile = { navController.navigate(BodyProfile) { launchSingleTop = true } },
                 onOpenConnectedApps = { navController.navigate(ConnectedApps) { launchSingleTop = true } },
+                onOpenHealthData = { context.startActivity(Intent(context, PermissionsRationaleActivity::class.java)) },
             )
         }
         composable<ConnectedApps> {

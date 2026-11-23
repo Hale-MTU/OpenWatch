@@ -1,6 +1,5 @@
 package tech.mmarca.openwatch.features.healthconnect
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -98,18 +97,3 @@ internal val ExtraAccess = setOf(
 /** The declared permissions not granted: the data types first, in name order, then the extra access. */
 internal fun missingPermissions(declared: Set<String>, granted: Set<String>): List<String> =
     (declared - granted).sortedWith(compareBy<String> { it in ExtraAccess }.thenBy { it })
-
-/**
- * The permission's name as Android shows it ("Read heart rate"), in the phone's language;
- * the constant made readable if the platform has no label for it.
- */
-internal fun healthPermissionLabel(context: Context, permission: String): String {
-    val pm = context.packageManager
-    val label = runCatching { pm.getPermissionInfo(permission, 0).loadLabel(pm).toString() }.getOrNull()
-        ?.takeIf { it.isNotBlank() && it != permission }
-    return (label ?: readablePermission(permission)).replaceFirstChar { it.titlecase() }
-}
-
-/** "android.permission.health.WRITE_HEART_RATE" → "Write heart rate". */
-internal fun readablePermission(permission: String): String =
-    permission.substringAfterLast('.').lowercase().replace('_', ' ').replaceFirstChar { it.titlecase() }

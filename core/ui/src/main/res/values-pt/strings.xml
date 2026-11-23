@@ -27,4 +27,7 @@
     <string name="action_remove">Remover</string>
     <string name="option_not_specified">Não especificado</string>
     <string name="screen_error_generic">Não foi possível concluir o pedido.</string>
+    <string name="settings_watch_notifications_disclosure_accept">Continuar</string>
+    <string name="settings_watch_notifications_disclosure_decline">Agora não</string>
+    <string name="time_just_now">agora mesmo</string>
 </resources>

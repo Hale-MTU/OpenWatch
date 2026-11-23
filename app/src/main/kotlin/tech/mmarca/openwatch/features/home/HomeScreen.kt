@@ -28,39 +28,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import tech.mmarca.openwatch.R
-import tech.mmarca.openwatch.features.device.DevicesSectionRoute
-import tech.mmarca.openwatch.features.scales.ScalesSectionRoute
-import tech.mmarca.openwatch.features.watches.WatchesSectionRoute
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.ScreenColumn
 import tech.mmarca.openwatch.ui.components.SectionHeader
 import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
-
-/**
- * The Home destination, and the list side of the list-detail layout on a wide screen. It has no
- * state of its own: it fills [HomeScreen]'s watch, scale and device slots with their section
- * routes. [selectedDeviceId] is the device shown beside the list, marked in it.
- */
-@Composable
-fun HomeRoute(
-    onOpenWatch: (String) -> Unit,
-    onOpenScale: (deviceId: String) -> Unit,
-    onOpenDevice: (deviceId: String) -> Unit,
-    onOpenHealthConnect: () -> Unit,
-    onOpenSettings: () -> Unit,
-    modifier: Modifier = Modifier,
-    selectedDeviceId: String? = null,
-) {
-    HomeScreen(
-        onOpenHealthConnect = onOpenHealthConnect,
-        onOpenSettings = onOpenSettings,
-        watchesSection = { WatchesSectionRoute(onOpenWatch = onOpenWatch, selectedDeviceId = selectedDeviceId) },
-        scalesSection = { ScalesSectionRoute(onOpenScale = onOpenScale, selectedDeviceId = selectedDeviceId) },
-        devicesSection = { DevicesSectionRoute(onOpenDevice = onOpenDevice, selectedDeviceId = selectedDeviceId) },
-        modifier = modifier,
-    )
-}
 
 /** The detail side of the list-detail layout before anything is opened from the list. */
 @Composable

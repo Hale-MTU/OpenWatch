@@ -10,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import javax.inject.Singleton
+import tech.mmarca.openwatch.BuildConfig
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
@@ -27,6 +28,7 @@ import tech.mmarca.openwatch.data.local.garmin.GarminWellnessDao
 import tech.mmarca.openwatch.data.local.scale.ScaleWeighInDao
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.domain.preferences.SystemUnitSystemProvider
+import tech.mmarca.openwatch.core.presentation.AppVersionName
 import tech.mmarca.openwatch.wearlink.SecretSeal
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.CoroutineScope
@@ -88,6 +90,11 @@ object AppModule {
     @Singleton
     fun provideScaleWeighInDao(database: OpenWatchDatabase): ScaleWeighInDao =
         database.scaleWeighInDao()
+
+    /** The version Settings shows: this build's, suffixes included. */
+    @Provides
+    @AppVersionName
+    fun provideAppVersionName(): String = BuildConfig.VERSION_NAME
 
     @Provides
     @Singleton

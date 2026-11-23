@@ -89,8 +89,6 @@
     <string name="settings_watch_notifications_apps_empty">Rakendusi ei leitud.</string>
     <string name="settings_watch_notifications_disclosure_title">OpenWatch hakkab lugema sinu teavitusi</string>
     <string name="settings_watch_notifications_disclosure_body">Et teavitusi sinu kellas näidata, loeb OpenWatch teavitusi, mida su telefon saab, koos nende tekstiga.\n\nNeid loetakse selles seadmes ja saadetakse Bluetoothi kaudu ainult sellesse kella, mille sa sidusid. Midagi ei salvestata faili ega andmebaasi ning OpenWatchil pole internetiluba, seega ei saa teavitused kuhugi mujale minna.\n\nVõid selle igal ajal välja lülitada ja teavituste juurdepääsu Androidi seadetes tühistada.</string>
-    <string name="settings_watch_notifications_disclosure_accept">Jätka</string>
-    <string name="settings_watch_notifications_disclosure_decline">Mitte praegu</string>
     <string name="settings_watches_intro">Kopeerib OpenWatchi selle, mida su kell salvestas. Internetti ei saadeta midagi.</string>
     <string name="settings_watches_empty_title">Ühtegi kella pole seotud</string>
     <string name="settings_watches_empty_body">Kella sidumine laseb OpenWatchil kopeerida selle, mida kell salvestas: unefaasid, puhkeoleku pulsi, stressi ja Body Battery näidu, ilma et midagi internetti saadetaks.</string>
@@ -332,7 +330,6 @@
     <string name="settings_scales_remove_body">OpenWatch lõpetab kuulamise ja unustab võtme. Juba salvestatud kaalumised jäävad alles.</string>
     <string name="hc_setup_missing_title">Veel andmata:</string>
     <string name="hc_setup_missing_extra">Taustal ja ajaloo juurdepääs on eraldi lehel: ava Health Connecti seaded, siis OpenWatch, siis Täiendav juurdepääs.</string>
-    <string name="time_just_now">just praegu</string>
     <string name="connected_apps_in_use">Praegu kasutusel</string>
     <string name="connected_apps_last_connected">Viimati ühendatud %1$s</string>
     <string name="connected_apps_profile_received">Viimane profiil saadud %1$s</string>
