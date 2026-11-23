@@ -4,31 +4,10 @@
     <string name="home_section_watches">الساعات</string>
     <string name="home_section_scale">الميزان</string>
     <string name="home_section_app">التطبيق</string>
-    <string name="home_health_connect">Health Connect</string>
-    <string name="home_health_connect_body">ما يمكن لـ OpenWatch قراءته وكتابته</string>
     <string name="home_settings">الإعدادات</string>
     <string name="home_settings_body">الملف الجسدي، والوصول إلى الإشعارات، وحول التطبيق</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="settings_title">الإعدادات</string>
-    <string name="settings_notification_access_title">الوصول إلى الإشعارات</string>
-    <string name="settings_notification_access_body">يتيح لساعة Garmin مقترنة عرض إشعارات الهاتف. غير مفعّل.</string>
-    <string name="settings_notification_access_granted">ممنوح. انقر لتغييره في إعدادات Android.</string>
-    <string name="settings_about_version">OpenWatch %1$s</string>
-    <string name="settings_privacy_policy_body">ما يقرؤه OpenWatch ويكتبه ويحتفظ به. يُفتح في المتصفح.</string>
-    <string name="settings_privacy_policy_no_browser">لا يوجد تطبيق على هذا الهاتف يمكنه فتح الرابط. السياسة متاحة على %1$s</string>
-    <string name="settings_about_body">مفتوح المصدر بموجب ترخيص AGPL-3.0-or-later. الرمز البرمجي للساعة والميزان والمزامنة مأخوذ من OpenVitals.</string>
-    <string name="body_profile_title">الملف الجسدي</string>
-    <string name="body_profile_settings_body">سنة الميلاد والجنس والطول والوزن للتقديرات</string>
-    <string name="body_profile_intro">يحتاج تقدير الطاقة المستهلكة أثناء المشي إلى وزنك. يُستخدم الوزن أو الطول المحفوظ في Health Connect بدلاً من القيمة المُدخلة هنا.</string>
-    <string name="body_profile_birth_year">سنة الميلاد</string>
-    <string name="body_profile_sex">الجنس</string>
-    <string name="body_profile_sex_female">أنثى</string>
-    <string name="body_profile_sex_male">ذكر</string>
-    <string name="body_profile_height_cm">الطول (سم)</string>
-    <string name="body_profile_height_in">الطول (بوصة)</string>
-    <string name="body_profile_weight_kg">الوزن (كغ)</string>
-    <string name="body_profile_weight_lb">الوزن (رطل)</string>
-    <string name="body_profile_measured">من Health Connect: %1$s</string>
     <string name="app_name">OpenWatch</string>
     <string name="action_close">إغلق</string>
     <string name="action_delete">مسح</string>
@@ -95,7 +74,6 @@
     <string name="settings_health_connect_group_title">Health Connect</string>
     <string name="health_connect_sync_paused">المزامنة مع Health Connect متوقفة مؤقتًا</string>
     <string name="dashboard_summary_today">اليوم</string>
-    <string name="privacy_policy_title">سياسة الخصوصية</string>
     <string name="privacy_policy_body_2">لا يرفع هذا التطبيق بياناتك الصحية إلى خدمة سحابية، ولا يتضمن إعلانات، ولا يشارك البيانات مع جهات خارجية.</string>
     <string name="privacy_policy_body_3">لا يُعد OpenWatch جهازًا طبيًا، ولا يشخّص أي مرض أو حالة طبية أو يعالجها أو يشفيها أو يقي منها. وهو ليس بديلاً عن المشورة الطبية أو التشخيص أو العلاج من أخصائي رعاية صحية مؤهل.</string>
     <string name="screen_watch_notifications">إشعارات الساعة</string>
@@ -129,8 +107,6 @@
     <string name="settings_watch_notifications_hide_sensitive">إخفاء المحتوى الحساس</string>
     <string name="settings_watch_notifications_hide_sensitive_body">عندما تخفي إعدادات الإشعارات في Android المحتوى الحساس لتطبيق ما على شاشة القفل، لا تتلقى الساعة سوى العنوان.</string>
     <string name="settings_watch_notifications_apps_empty">لم يتم العثور على تطبيقات.</string>
-    <string name="settings_watch_notifications_disclosure_title">سيقرأ OpenWatch إشعاراتك</string>
-    <string name="settings_watch_notifications_disclosure_body">لعرض الإشعارات على ساعتك، يقرأ OpenWatch الإشعارات التي يتلقاها هاتفك، بما في ذلك نصها.\n\nتُقرأ على هذا الجهاز وتُرسَل عبر Bluetooth إلى الساعة التي أقرنتها فقط. لا يُحفظ أي شيء في ملف أو قاعدة بيانات، وليس لدى OpenWatch إذن الوصول إلى الإنترنت، لذا لا يمكن إرسال الإشعارات إلى أي مكان آخر.\n\nيمكنك إيقاف هذا في أي وقت، وإلغاء الوصول إلى الإشعارات من إعدادات Android.</string>
     <string name="settings_watches_intro">ينسخ ما سجّلته ساعتك إلى OpenWatch. لا يُرسَل أي شيء إلى الإنترنت.</string>
     <string name="settings_watches_empty_title">لا توجد ساعة مقترنة</string>
     <string name="settings_watches_empty_body">يتيح إقران ساعة لـ OpenWatch نسخ ما سجّلته (مراحل النوم ومعدل نبض القلب أثناء الراحة والإجهاد و Body Battery) دون إرسال أي شيء إلى الإنترنت.</string>
@@ -306,10 +282,6 @@
     <string name="settings_watch_wearos_needs_weight_read">لم تُقدَّر سعرات المشي: أضف وزنك في الملف الجسدي، أو اسمح لـ OpenWatch بقراءة وزنك في Health Connect.</string>
     <string name="settings_watch_wearos_needs_steps_write">لم تُكتب الخطوات: اسمح لـ OpenWatch بكتابة الخطوات في Health Connect، ثم زامن مرة أخرى.</string>
     <string name="settings_watch_wearos_needs_calories_write">لم تُكتب سعرات المشي: اسمح لـ OpenWatch بكتابة السعرات الحرارية النشطة وقراءة التمارين في Health Connect لتقديرها بدءًا من المزامنة التالية.</string>
-    <string name="body_profile_synced">متزامن مع %1$s</string>
-    <string name="body_profile_synced_updated">متزامن مع %1$s · حُدّث %2$s</string>
-    <string name="settings_respiratory_rate_title">معدل التنفس من الساعة (تجريبي)</string>
-    <string name="settings_respiratory_rate_body">يكتب في Health Connect معدل التنفس المقيس خلال نوافذ قياس HRV الليلية على الساعة. لم تتم مقارنته بعد بجهاز مرجعي.</string>
     <string name="watch_settings_section">إعدادات الساعة</string>
     <string name="watch_settings_not_read">تحتفظ الساعة بهذه الإعدادات بنفسها. اقرأها لتغييرها من هنا.</string>
     <string name="watch_settings_unreachable">لم تستجب الساعة. هل هي قريبة وتطبيق OpenWatch عليها يعمل؟</string>
@@ -326,7 +298,6 @@
     <string name="watch_settings_allow_on_watch">اسمح بذلك على الساعة: افتح OpenWatch هناك وفعّله مرة واحدة.</string>
     <string name="settings_watch_wearos_needs_workout_write">لم تُكتب التمارين: اسمح لـ OpenWatch بكتابة التمارين والمسارات والمسافة في Health Connect، ثم زامن مرة أخرى.</string>
     <string name="health_data_intro">يكتب OpenWatch في Health Connect ما سجّله جهاز أقرنته، ولا يقرأ إلا ما تحتاج إليه المزامنة. يحتاج كل نوع إلى إذنك، ويمكنك سحبه في Health Connect في أي وقت.</string>
-    <string name="health_data_open_body">كل نوع من البيانات الصحية، والجهاز الذي يأتي منه، والسبب.</string>
     <string name="settings_watch_garmin_withheld">لم يُحفظ في Health Connect لعدم توفر الإذن: %1$s. اسمح بها، وستحفظ المزامنة التالية ما ترسله الساعة من ذلك الحين فصاعدًا.</string>
     <string name="settings_watch_pair_unreachable">تعذّر الوصول إلى الساعة. أيقظها وأبقِها قريبة، ثم أعد المحاولة.</string>
     <string name="settings_watch_pair_not_completed">لم يكتمل الإقران. أكّد الرمز على الساعة لإنهائه.</string>
@@ -408,6 +379,4 @@
     <string name="settings_scales_delete_body">ستتم إزالة الوزن ومعدل نبض القلب وتكوين الجسم الخاصة به من Health Connect.</string>
     <string name="settings_scales_remove">إزالة الميزان</string>
     <string name="settings_scales_remove_body">يتوقف OpenWatch عن الاستماع وينسى المفتاح. تبقى قياسات الوزن المحفوظة بالفعل.</string>
-    <string name="connected_apps_title">التطبيقات المتصلة</string>
-    <string name="connected_apps_settings_body">التطبيقات التي تستخدم ساعاتك وميزانك وملفك الجسدي عبر OpenWatch، وما يُسمح لكل منها بفعله</string>
 </resources>

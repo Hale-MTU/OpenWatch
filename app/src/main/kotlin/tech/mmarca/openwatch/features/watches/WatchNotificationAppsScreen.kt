@@ -39,6 +39,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.OpenWatchCardStyle
 import tech.mmarca.openwatch.ui.components.ScreenErrorContent
@@ -64,8 +65,8 @@ fun WatchNotificationAppsRoute(viewModel: WatchNotificationAppsViewModel = hiltV
 
     if (state.showDisclosure) {
         NotificationAccessDisclosureDialog(
-            title = stringResource(R.string.settings_watch_notifications_disclosure_title),
-            body = stringResource(R.string.settings_watch_notifications_disclosure_body),
+            title = stringResource(UiR.string.settings_watch_notifications_disclosure_title),
+            body = stringResource(UiR.string.settings_watch_notifications_disclosure_body),
             onAccept = viewModel::acceptDisclosure,
             onDecline = viewModel::declineDisclosure,
         )

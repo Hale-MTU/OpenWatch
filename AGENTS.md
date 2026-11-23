@@ -17,8 +17,7 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 ## Map
 
 - `app/src/main/kotlin/tech/mmarca/openwatch/`
-  - `features/` — the screens still in the app: `home`, `device` (the device route and the generic add flow), `watches`, `scales`,
-    `settings`. The others are modules under `feature/` (below).
+  - `features/` — the screens still in the app: `home`, `device` (the device route and the generic add flow), `watches`, `scales`. The others are modules under `feature/` (below).
   - `data/repository` — what joins a device family's own contract to `:core:data`: the Garmin
     and scale tables over their DAOs, the Garmin and Wear OS preferences over
     `OpenWatchPreferences`.
@@ -30,6 +29,7 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   health data list, which the app's rationale activity shows. A screen module: it names no device
   family and not the app; what only the app has (its activities) comes in as a callback.
 - `feature/connectedapps` (`:feature:connectedapps`) — the apps that use OpenWatch over OpenLink: allow, block, the switches per capability, forget. It depends on `:link-host`.
+- `feature/settings` (`:feature:settings`) — Settings and the body profile, with its exchange with OpenVitals over OpenLink (`:link-host`). The version name comes in through Hilt (`@AppVersionName`).
 - `core/model` (`:core:model`) and `core/fit` (`:core:fit`) — pure Kotlin on the JDK, with
   the app's package names: `domain/model`, `domain/preferences` and `core/geo` in the first, the
   FIT codec `core/fit` in the second. The unit-system provider that reads the platform's locale

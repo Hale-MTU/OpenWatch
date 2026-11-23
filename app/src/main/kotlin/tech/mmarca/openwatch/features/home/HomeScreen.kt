@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
 import tech.mmarca.openwatch.ui.components.ScreenColumn
 import tech.mmarca.openwatch.ui.components.SectionHeader
@@ -88,8 +89,8 @@ fun HomeScreen(
         SectionHeader(stringResource(R.string.home_section_app))
         HomeRow(
             icon = Icons.Outlined.FavoriteBorder,
-            title = stringResource(R.string.home_health_connect),
-            subtitle = stringResource(R.string.home_health_connect_body),
+            title = stringResource(UiR.string.home_health_connect),
+            subtitle = stringResource(UiR.string.home_health_connect_body),
             onClick = onOpenHealthConnect,
         )
         HomeRow(

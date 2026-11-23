@@ -4,34 +4,11 @@
     <string name="home_section_watches">Watches</string>
     <string name="home_section_scale">Scale</string>
     <string name="home_section_app">App</string>
-    <string name="home_health_connect">Health Connect</string>
-    <string name="home_health_connect_body">What OpenWatch may read and write</string>
     <string name="home_settings">Settings</string>
     <string name="home_settings_body">Body profile, notification access, about</string>
     <string name="home_detail_placeholder">Choose a device to see it here.</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="settings_title">Settings</string>
-    <string name="settings_notification_access_title">Notification access</string>
-    <string name="settings_notification_access_body">Lets a paired Garmin watch show the phone\'s notifications. Off.</string>
-    <string name="settings_notification_access_granted">Granted. Tap to change it in Android settings.</string>
-    <string name="settings_about_version">OpenWatch %1$s</string>
-    <string name="settings_privacy_policy_body">What OpenWatch reads, writes and keeps. Opens in the browser.</string>
-    <string name="settings_privacy_policy_url" translatable="false">https://github.com/Hale-MTU/OpenWatch/blob/main/PRIVACY.md</string>
-    <string name="settings_privacy_policy_no_browser">No app on this phone can open the link. The policy is at %1$s</string>
-    <string name="settings_app_publisher" translatable="false">Hale · hale.ngo</string>
-    <string name="settings_about_body">Open source under the AGPL-3.0-or-later. The watch, scale and sync code comes from OpenVitals.</string>
-    <string name="body_profile_title">Body profile</string>
-    <string name="body_profile_settings_body">Birth year, sex, height and weight for the estimates</string>
-    <string name="body_profile_intro">The walking-energy estimate needs your weight. A weight or height Health Connect holds is used instead of the one typed here.</string>
-    <string name="body_profile_birth_year">Birth year</string>
-    <string name="body_profile_sex">Sex</string>
-    <string name="body_profile_sex_female">Female</string>
-    <string name="body_profile_sex_male">Male</string>
-    <string name="body_profile_height_cm">Height (cm)</string>
-    <string name="body_profile_height_in">Height (in)</string>
-    <string name="body_profile_weight_kg">Weight (kg)</string>
-    <string name="body_profile_weight_lb">Weight (lb)</string>
-    <string name="body_profile_measured">Health Connect: %1$s</string>
     <string name="app_name">OpenWatch</string>
     <string name="action_close">Close</string>
     <string name="action_delete">Delete</string>
@@ -98,7 +75,6 @@
     <string name="settings_health_connect_group_title">Health Connect</string>
     <string name="health_connect_sync_paused">Health Connect sync is paused</string>
     <string name="dashboard_summary_today">Today</string>
-    <string name="privacy_policy_title">Privacy policy</string>
     <string name="privacy_policy_body_2">This app does not upload your health data to a cloud service, does not include ads, and does not share data with third parties.</string>
     <string name="privacy_policy_body_3">OpenWatch is not a medical device and does not diagnose, treat, cure, or prevent any disease or medical condition. It is not a substitute for medical advice, diagnosis, or treatment from a qualified healthcare professional.</string>
     <string name="screen_watch_notifications">Watch notifications</string>
@@ -124,8 +100,6 @@
     <string name="settings_watch_notifications_hide_sensitive">Hide sensitive content</string>
     <string name="settings_watch_notifications_hide_sensitive_body">Where Android\'s notification settings hide an app\'s sensitive content on the lock screen, the watch gets the title only.</string>
     <string name="settings_watch_notifications_apps_empty">No apps found.</string>
-    <string name="settings_watch_notifications_disclosure_title">OpenWatch will read your notifications</string>
-    <string name="settings_watch_notifications_disclosure_body">To show notifications on your watch, OpenWatch reads the notifications your phone receives — including their text.\n\nThey are read on this device and sent only to the watch you paired, over Bluetooth. Nothing is saved to a file or a database, and OpenWatch has no internet permission, so notifications cannot be sent anywhere else.\n\nYou can turn this off at any time, and revoke notification access from Android settings.</string>
     <string name="settings_watches_intro">Copies what your watch recorded into OpenWatch. Nothing is sent to the internet.</string>
     <string name="settings_watches_empty_title">No watch paired</string>
     <string name="settings_watches_empty_body">Pairing a watch lets OpenWatch copy what it recorded — sleep stages, resting heart rate, stress and Body Battery — without sending anything to the internet.</string>
@@ -365,12 +339,6 @@
     <string name="settings_scales_remove">Remove scale</string>
     <string name="settings_scales_remove_body">OpenWatch stops listening and forgets the key. Weigh-ins already saved stay.</string>
     <!-- OpenLink: other apps that use OpenWatch (features/connectedapps) -->
-    <string name="connected_apps_title">Connected apps</string>
-    <string name="connected_apps_settings_body">Apps that use your watches, scale and body profile through OpenWatch, and what each may do</string>
-    <string name="body_profile_synced">Kept in sync with %1$s</string>
-    <string name="body_profile_synced_updated">Kept in sync with %1$s · updated %2$s</string>
-    <string name="settings_respiratory_rate_title">Breathing rate from the watch (experimental)</string>
-    <string name="settings_respiratory_rate_body">Writes the breathing rate of the watch\'s night-time HRV windows to Health Connect. Not yet checked against a reference device.</string>
     <string name="watch_settings_section">Watch settings</string>
     <string name="watch_settings_not_read">The watch keeps these settings itself. Read them to change them here.</string>
     <string name="watch_settings_unreachable">The watch did not answer. Is it near and its OpenWatch app running?</string>
@@ -387,7 +355,6 @@
     <string name="watch_settings_allow_on_watch">Allow it on the watch: open OpenWatch there and switch it on once.</string>
     <string name="settings_watch_wearos_needs_workout_write">Workouts not written: allow OpenWatch to write workouts, routes and distance in Health Connect, then sync again.</string>
     <string name="health_data_intro">OpenWatch writes to Health Connect what a device you paired recorded, and reads only what a sync needs. Each type needs your permission, and you can take it back in Health Connect at any time.</string>
-    <string name="health_data_open_body">Every health data type, the device it comes from and why.</string>
     <string name="settings_watch_garmin_withheld">Not saved to Health Connect, for want of permission: %1$s. Allow them, and the next sync saves what the watch sends from then on.</string>
     <string name="settings_watch_pair_unreachable">Could not reach the watch. Wake it up and keep it close, then try again.</string>
     <string name="settings_watch_pair_not_completed">Pairing was not completed. Confirm the code on the watch to finish.</string>

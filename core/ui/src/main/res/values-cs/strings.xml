@@ -33,4 +33,8 @@
     <string name="hc_setup_sync_title">Zapisovat do Health Connect</string>
     <string name="hc_setup_sync_body">Vypnutí pozastaví každý zápis. Zařízení si uchovají, co zaznamenala, dokud zápis znovu nezapnete.</string>
     <string name="health_data_title">Co OpenWatch čte a zapisuje</string>
+    <string name="settings_watch_notifications_disclosure_title">OpenWatch bude číst vaše oznámení</string>
+    <string name="settings_watch_notifications_disclosure_body">Aby mohl OpenWatch zobrazovat oznámení na hodinkách, čte oznámení, která váš telefon dostává — včetně jejich textu.\n\nČtou se v tomto zařízení a odesílají se přes Bluetooth jen na hodinky, které jste spárovali. Nic se neukládá do souboru ani do databáze a OpenWatch nemá oprávnění k internetu, takže oznámení nelze poslat nikam jinam.\n\nKdykoli to můžete vypnout a přístup k oznámením odebrat v nastavení Androidu.</string>
+    <string name="home_health_connect">Health Connect</string>
+    <string name="home_health_connect_body">Co smí OpenWatch číst a zapisovat</string>
 </resources>

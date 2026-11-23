@@ -33,4 +33,8 @@
     <string name="hc_setup_sync_title">Записывать в Health Connect</string>
     <string name="hc_setup_sync_body">Выключение приостанавливает любую запись. Устройства хранят записанное, пока запись снова не включат.</string>
     <string name="health_data_title">Что OpenWatch читает и записывает</string>
+    <string name="settings_watch_notifications_disclosure_title">OpenWatch будет читать ваши уведомления</string>
+    <string name="settings_watch_notifications_disclosure_body">Чтобы показывать уведомления на часах, OpenWatch читает уведомления, которые получает ваш телефон, включая их текст.\n\nОни читаются на этом устройстве и отправляются только на сопряжённые с вами часы через Bluetooth. Ничего не сохраняется в файлах или базе данных, а у OpenWatch нет разрешения на доступ к интернету, поэтому уведомления не могут быть отправлены куда-либо ещё.\n\nВы можете отключить эту функцию в любое время и отозвать доступ к уведомлениям в настройках Android.</string>
+    <string name="home_health_connect">Health Connect</string>
+    <string name="home_health_connect_body">Что OpenWatch может читать и записывать</string>
 </resources>

@@ -27,7 +27,6 @@ import java.util.Locale
 import kotlin.math.roundToInt
 import tech.mmarca.healthcalculations.preferences.BiologicalSex
 import tech.mmarca.healthcalculations.preferences.BodyProfile
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.UnitFormatter

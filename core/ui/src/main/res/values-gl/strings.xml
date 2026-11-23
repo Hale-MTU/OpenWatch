@@ -33,4 +33,12 @@
     <string name="hc_setup_sync_title">Escribir en Health Connect</string>
     <string name="hc_setup_sync_body">Desactivado pausa todas as escrituras. Os dispositivos conservan o rexistrado ata que se volva activar.</string>
     <string name="health_data_title">O que le e escribe OpenWatch</string>
+    <string name="settings_watch_notifications_disclosure_title">OpenWatch lerá as túas notificacións</string>
+    <string name="settings_watch_notifications_disclosure_body">Para mostrar as notificacións no reloxo, OpenWatch le as notificacións que recibe o teu teléfono, incluído o seu texto.
+
+Lense neste dispositivo e envíanse só ao reloxo emparellado, por Bluetooth. Non se garda nada nun ficheiro nin nunha base de datos, e OpenWatch non ten permiso de internet, así que as notificacións non se poden enviar a ningún outro sitio.
+
+Podes desactivalo cando queiras e revogar o acceso ás notificacións desde os axustes de Android.</string>
+    <string name="home_health_connect">Health Connect</string>
+    <string name="home_health_connect_body">O que OpenWatch pode ler e escribir</string>
 </resources>

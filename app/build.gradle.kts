@@ -130,6 +130,8 @@ dependencies {
     // submodule, a composite build) as its api; the trust store and the binder are built in
     // di/LinkModule.
     implementation(project(":link-host"))
+    // Settings and the body profile.
+    implementation(project(":feature:settings"))
     // The apps that use OpenWatch over OpenLink.
     implementation(project(":feature:connectedapps"))
     // The Health Connect setup screen and the health data list.
@@ -270,6 +272,7 @@ tasks.withType<Test>().configureEach {
         ":devices:ble-standard:testCiUnitTest",
         ":devices:ble-standard:protocol:test",
         ":link-host:testCiUnitTest",
+        ":feature:settings:testCiUnitTest",
         ":feature:connectedapps:testCiUnitTest",
         ":feature:healthconnect:testCiUnitTest",
     )
@@ -296,6 +299,7 @@ tasks.withType<Test>().configureEach {
         "scannedBleStandardMain" to "devices/ble-standard/src/main",
         "scannedBleStandardProtocolMain" to "devices/ble-standard/protocol/src/main",
         "scannedLinkHostMain" to "link-host/src/main",
+        "scannedFeatureSettingsMain" to "feature/settings/src/main",
         "scannedFeatureConnectedappsMain" to "feature/connectedapps/src/main",
         "scannedFeatureHealthconnectMain" to "feature/healthconnect/src/main",
         "scannedWearMain" to "wear/src/main",
@@ -313,6 +317,7 @@ tasks.withType<Test>().configureEach {
         // ...and which device modules a screen module depends on.
         "scannedFeatureHealthconnectBuild" to "feature/healthconnect/build.gradle.kts",
         "scannedFeatureConnectedappsBuild" to "feature/connectedapps/build.gradle.kts",
+        "scannedFeatureSettingsBuild" to "feature/settings/build.gradle.kts",
         "scannedPrivacyPolicy" to "PRIVACY.md",
         "scannedPermissionsDoc" to "docs/app/permissions.md",
     ).forEach { (name, path) ->

@@ -25,6 +25,7 @@ internal val LibraryModuleRoots: Map<String, String> = listOf(
     "devices/ble-standard",
     "devices/ble-standard/protocol",
     "link-host",
+    "feature/settings",
     "feature/connectedapps",
     "feature/healthconnect",
 ).associateWith { module -> "../$module/src/main/kotlin/tech/mmarca/openwatch" }

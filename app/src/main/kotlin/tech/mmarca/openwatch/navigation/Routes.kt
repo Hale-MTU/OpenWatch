@@ -8,6 +8,7 @@ import androidx.navigation.toRoute
 import kotlin.reflect.KClass
 import kotlinx.serialization.Serializable
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.features.settings.R as SettingsR
 
 /*
  * The app's destinations. Each is a @Serializable type whose properties are its arguments:
@@ -76,8 +77,8 @@ private val routeTitles: List<Pair<KClass<*>, Int>> = listOf(
     Onboarding::class to R.string.hc_setup_title,
     HealthConnectSetup::class to R.string.hc_setup_title,
     Settings::class to R.string.settings_title,
-    BodyProfile::class to R.string.body_profile_title,
-    ConnectedApps::class to R.string.connected_apps_title,
+    BodyProfile::class to SettingsR.string.body_profile_title,
+    ConnectedApps::class to SettingsR.string.connected_apps_title,
     WatchData::class to R.string.settings_watch_data_title,
     WatchNotifications::class to R.string.screen_watch_notifications,
     WatchAlarms::class to R.string.settings_watch_action_alarms,

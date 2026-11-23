@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="privacy_policy_title">プライバシーポリシー</string>
+    <string name="body_profile_synced">%1$s と同期</string>
+    <string name="body_profile_synced_updated">%1$s と同期 · %2$s に更新</string>
+    <string name="connected_apps_title">接続済みのアプリ</string>
+    <string name="connected_apps_settings_body">OpenWatch を通じてウォッチ、体重計、体のプロフィールを使うアプリと、それぞれに許可する内容</string>
+    <string name="settings_notification_access_title">通知へのアクセス</string>
+    <string name="settings_notification_access_body">ペアリングした Garmin ウォッチにスマートフォンの通知を表示できるようにします。オフ。</string>
+    <string name="settings_notification_access_granted">許可済み。タップすると Android の設定で変更できます。</string>
+    <string name="settings_about_version">OpenWatch %1$s</string>
+    <string name="settings_privacy_policy_body">OpenWatch が読み取り、書き込み、保持するデータ。ブラウザで開きます。</string>
+    <string name="settings_privacy_policy_no_browser">このスマートフォンにはリンクを開けるアプリがありません。ポリシーは %1$s にあります</string>
+    <string name="settings_about_body">AGPL-3.0-or-later のオープンソースです。ウォッチ、体重計、同期のコードは OpenVitals に由来します。</string>
+    <string name="body_profile_title">体のプロフィール</string>
+    <string name="body_profile_settings_body">推定に使う生年、性別、身長、体重</string>
+    <string name="body_profile_intro">体重計の体組成には性別と身長が、歩行エネルギーの推定には体重が必要です。Health Connect に体重や身長がある場合は、ここで入力した値の代わりにそちらが使われます。</string>
+    <string name="body_profile_birth_year">生年</string>
+    <string name="body_profile_sex">性別</string>
+    <string name="body_profile_sex_female">女性</string>
+    <string name="body_profile_sex_male">男性</string>
+    <string name="body_profile_height_cm">身長 (cm)</string>
+    <string name="body_profile_height_in">身長 (in)</string>
+    <string name="body_profile_weight_kg">体重 (kg)</string>
+    <string name="body_profile_weight_lb">体重 (lb)</string>
+    <string name="body_profile_measured">Health Connect: %1$s</string>
+    <string name="settings_respiratory_rate_title">ウォッチからの呼吸数（試験運用）</string>
+    <string name="settings_respiratory_rate_body">ウォッチの夜間 HRV ウィンドウから得た呼吸数を Health Connect に書き込みます。基準となるデバイスとの比較はまだ行っていません。</string>
+    <string name="health_data_open_body">すべての健康データの種類と、その取得元のデバイスと理由。</string>
+</resources>

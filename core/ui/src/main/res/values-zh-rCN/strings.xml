@@ -33,4 +33,8 @@
     <string name="hc_setup_sync_title">写入 Health Connect</string>
     <string name="hc_setup_sync_body">关闭后会暂停所有写入。设备会保留已记录的数据，直到重新开启。</string>
     <string name="health_data_title">OpenWatch 读取和写入的数据</string>
+    <string name="settings_watch_notifications_disclosure_title">OpenWatch 将读取你的通知</string>
+    <string name="settings_watch_notifications_disclosure_body">要在手表上显示通知，OpenWatch 会读取你手机收到的通知 — 包括其文字内容。\n\n它们在此设备上读取，仅通过蓝牙发送到你配对的手表。不保存到文件或数据库，且 OpenWatch 无联网权限，因此通知无法发送到其他任何地方。\n\n你可随时关闭此功能，并从 Android 设置撤销通知访问。</string>
+    <string name="home_health_connect">Health Connect</string>
+    <string name="home_health_connect_body">OpenWatch 可以读取和写入的内容</string>
 </resources>

@@ -27,7 +27,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.features.watches.NotificationAccessDisclosureDialog
 import tech.mmarca.openwatch.ui.components.LocalSnackbarHostState
@@ -86,8 +85,8 @@ fun SettingsRoute(
 
     if (showNotificationDisclosure) {
         NotificationAccessDisclosureDialog(
-            title = stringResource(R.string.settings_watch_notifications_disclosure_title),
-            body = stringResource(R.string.settings_watch_notifications_disclosure_body),
+            title = stringResource(UiR.string.settings_watch_notifications_disclosure_title),
+            body = stringResource(UiR.string.settings_watch_notifications_disclosure_body),
             onAccept = {
                 showNotificationDisclosure = false
                 context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
@@ -116,8 +115,8 @@ fun SettingsScreen(
         verticalArrangement = Arrangement.spacedBy(Spacing.sm),
     ) {
         SettingsRow(
-            title = stringResource(R.string.home_health_connect),
-            body = stringResource(R.string.home_health_connect_body),
+            title = stringResource(UiR.string.home_health_connect),
+            body = stringResource(UiR.string.home_health_connect_body),
             onClick = onOpenHealthConnect,
         )
         SettingsRow(
