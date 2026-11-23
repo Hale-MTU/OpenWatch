@@ -4,8 +4,8 @@
 
 The phone app, the watch app and its pure core, the pure-Kotlin link, the phone app's
 pure-Kotlin modules (`:core:model`, `:core:fit`, `:core:devices-api`, `:devices:garmin:protocol`,
-`:devices:xiaomi:protocol`) and its Android libraries (`:core:health-api`, `:devices:core`,
-`:devices:garmin`, `:devices:wearos`, `:devices:xiaomi`) build with the Gradle wrapper. JDK 17 or 21, the Android platform
+`:devices:xiaomi:protocol`, `:devices:ble-standard:protocol`) and its Android libraries (`:core:health-api`, `:devices:core`,
+`:devices:garmin`, `:devices:wearos`, `:devices:xiaomi`, `:devices:ble-standard`) build with the Gradle wrapper. JDK 17 or 21, the Android platform
 37 and build-tools 37.0.0.
 
 ```bash
@@ -91,9 +91,9 @@ Lint runs on every pull request and push that touches the phone side, and in the
 gate. A warning fails it (`warningsAsErrors`, set in `build-logic/` for every Android module
 and every plain Kotlin one that applies `com.android.lint`). The pure-Kotlin modules that hold
 code an app's lint used to check apply it, with the same rules: `:core:model`, `:core:fit`,
-`:core:devices-api`, `:devices:garmin:protocol` and `:devices:xiaomi:protocol` in
+`:core:devices-api`, `:devices:garmin:protocol`, `:devices:xiaomi:protocol` and `:devices:ble-standard:protocol` in
 `verifyCiLint`, `:wear:recording-core` in the watch gate. The Android libraries (`:core:health-api`,
-`:devices:core`, `:devices:garmin`, `:devices:wearos`, `:devices:xiaomi`) run `lintCi` there too. A library's lint sees its own manifest only, not the
+`:devices:core`, `:devices:garmin`, `:devices:wearos`, `:devices:xiaomi`, `:devices:ble-standard`) run `lintCi` there too. A library's lint sees its own manifest only, not the
 permissions the app declares, so a call that needs one carries `@SuppressLint("MissingPermission")`
 and checks the grant at run time, as the app's own calls do. `:wearlink` has none. Lint knows no
 minSdk in a plain Kotlin module, so its API-level check does not run there: a JDK method that
@@ -108,6 +108,7 @@ entry that was fixed is reported as such and can be dropped by regenerating:
   :core:devices-api:updateLintBaseline :core:health-api:updateLintBaselineCi :devices:core:updateLintBaselineCi \
   :devices:garmin:updateLintBaselineCi :devices:wearos:updateLintBaselineCi :devices:xiaomi:updateLintBaselineCi \
   :devices:garmin:protocol:updateLintBaseline :devices:xiaomi:protocol:updateLintBaseline \
+  :devices:ble-standard:updateLintBaselineCi :devices:ble-standard:protocol:updateLintBaseline \
   :wear:updateLintBaselineCi :wear:recording-core:updateLintBaseline
 ```
 
@@ -126,6 +127,7 @@ dependency change, regenerate the module's lockfile and commit it:
   :core:health-api:dependencies :devices:core:dependencies :devices:garmin:dependencies :devices:wearos:dependencies \
   :devices:xiaomi:dependencies \
   :devices:garmin:protocol:dependencies :devices:xiaomi:protocol:dependencies \
+  :devices:ble-standard:dependencies :devices:ble-standard:protocol:dependencies \
   :wear:dependencies :wear:recording-core:dependencies :wearlink:dependencies --write-locks
 ```
 

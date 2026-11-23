@@ -1,8 +1,8 @@
 # OpenWatch Privacy Policy
 
-Last updated: November 21, 2026
+Last updated: November 23, 2026
 
-OpenWatch is a local-first Android app that pairs a Garmin or Wear OS watch and a Xiaomi body composition scale with your phone and writes what they record to Health Connect.
+OpenWatch is a local-first Android app that pairs a Garmin or Wear OS watch, a Xiaomi body composition scale and devices that use Bluetooth's standard health profiles, such as a heart rate strap, with your phone and writes what they record to Health Connect.
 
 This policy applies to the OpenWatch phone app and the OpenWatch Wear OS app, both published under the package name `tech.mmarca.openwatch` by Mittetulundusühing Hale (MTÜ Hale), a non-profit association registered in Estonia, registry code 80677610.
 
@@ -28,6 +28,7 @@ OpenWatch uses Bluetooth to reach the devices you add in the app, and nothing el
 
 - A Garmin watch, over Garmin's own Bluetooth protocol, after you pair it in the app. Android's companion device pairing lets the app notice the watch coming into range so a sync can run on its own.
 - A Wear OS watch running the OpenWatch watch app, over Bluetooth. The first time a phone connects, the watch asks you to allow or block it; an allowed phone's token is kept on the watch, and no other phone is answered.
+- A heart rate strap that uses Bluetooth's standard Heart Rate profile, after you add it in the app. OpenWatch connects to it only while its screen in the app is open, or while an app you allowed records with it, and reads its heart rate and its battery level. It asks for no pairing and keeps no link otherwise.
 - A Xiaomi Body Composition Scale S400 or S400 Pro. The scale broadcasts each weigh-in; OpenWatch decodes the broadcast with the key you take from your Xiaomi account and type into the app. The key is stored in the app's private preferences and is used for nothing else.
 
 The app asks for Bluetooth and, on Android 11 and older, the location permission, because Android requires them to scan for and connect to Bluetooth devices. On those older versions, where the phone app holds that permission, a Garmin watch that asks for the phone's position is given the last one Android already has; OpenWatch requests no position fix of its own. It keeps no location history.
@@ -38,6 +39,7 @@ What a paired device recorded, when you sync it or when a sync runs on a schedul
 
 - From a Garmin watch: activities with their route and sensor samples, steps, distance, calories, heart rate, resting heart rate, heart rate variability, oxygen saturation, respiratory rate, VO2 max, basal metabolic rate, sleep, and the weight a Garmin scale relays through the watch.
 - From a Wear OS watch: heart rate, steps (with their cadence and an estimate of the calories walking cost), floors and elevation gained recorded on the watch, an estimated sleep session per night, the night's resting heart rate and, where the watch can measure it, heart rate variability, and workouts recorded on the watch with their route, distance and calories. If you switch them on: the breathing rate at night, and, on a Samsung watch, blood oxygen and skin temperature at night. Skin temperature is written as the difference from your own usual night.
+- From a heart rate strap: the heart rate it measured while OpenWatch was connected to it, one record per minute.
 - From the scale: weight and heart rate as the scale measured them, and the body fat, lean mass and body water the app estimates from the scale's measurement and your body profile.
 
 Each record names OpenWatch as its source. Records OpenWatch wrote can be deleted from Health Connect's own settings at any time. Records written by other apps are never changed.
@@ -111,6 +113,12 @@ The complete list, by Health Connect permission. The app shows the same list und
 | `WRITE_LEAN_BODY_MASS` | Estimated on the phone from the scale's measurement and your body profile. |
 | `WRITE_BODY_WATER_MASS` | Estimated on the phone from the scale's measurement and your body profile. |
 
+**Written from a device on a standard Bluetooth profile**
+
+| Permission | When, or what for |
+| --- | --- |
+| `WRITE_HEART_RATE` | From a heart rate strap, while its screen is open or an app you allowed records with it: one record per minute. |
+
 **Read from Health Connect**
 
 | Permission | When, or what for |
@@ -163,6 +171,7 @@ Health Connect is the source of truth for every record it has a type for. OpenWa
 - App preferences: the paired devices, the sync schedule, the notification apps you chose, your body profile, the scale's key, and the acknowledged prompts.
 - A small database of the watch measurements Health Connect has no record type for (such as stress, Body Battery and sleep scores from a Garmin watch), shown on the Watch Data screen.
 - Sync cursors and file watermarks, so a sync fetches only what is new.
+- Readings a device handed over that Health Connect has not taken yet (a permission missing, sync paused), kept until they are written or you remove the device.
 
 The Wear OS watch app keeps a week of sensor readings and a month of recorded workouts in its own private storage on the watch, whether or not the phone has collected them, and deletes them after that.
 
@@ -198,7 +207,7 @@ OpenWatch does not include advertising SDKs or analytics SDKs.
 
 Health data in Health Connect is controlled by your device and Health Connect settings. Records OpenWatch wrote there stay after you uninstall the app; you can delete them from Health Connect's own settings at any time.
 
-Removing a watch or the scale in the app deletes its local data and forgets its pairing. You can revoke OpenWatch permissions at any time from Android Settings or Health Connect settings. You can delete all local OpenWatch data by clearing the app's storage in Android settings or uninstalling the app.
+Removing a watch, the scale or another device in the app deletes its local data and forgets its pairing. You can revoke OpenWatch permissions at any time from Android Settings or Health Connect settings. You can delete all local OpenWatch data by clearing the app's storage in Android settings or uninstalling the app.
 
 ## Security
 

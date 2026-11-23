@@ -466,6 +466,8 @@
     <string name="health_data_section_garmin">Written from a Garmin watch</string>
     <string name="health_data_section_wearos">Written from a Wear OS watch</string>
     <string name="health_data_section_scale">Written from the scale</string>
+    <string name="health_data_section_standard">Written from a device on a standard Bluetooth profile</string>
+    <string name="health_data_note_standard_heart_rate">From a heart rate strap, while its screen is open or an app you allowed records with it: one record per minute.</string>
     <string name="health_data_section_reads">Read from Health Connect</string>
     <string name="health_data_section_watch_app">Asked by the watch app, on the watch</string>
     <string name="health_data_note_garmin_weight">A weight a Garmin scale relays through the watch.</string>

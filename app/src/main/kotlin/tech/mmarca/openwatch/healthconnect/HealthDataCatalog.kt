@@ -34,6 +34,9 @@ enum class HealthDataSection(@param:StringRes val titleRes: Int) {
     GARMIN_WATCH(R.string.health_data_section_garmin),
     WEAROS_WATCH(R.string.health_data_section_wearos),
     SCALE(R.string.health_data_section_scale),
+
+    /** The devices of the Bluetooth standard health profiles (`:devices:ble-standard`). */
+    STANDARD_DEVICES(R.string.health_data_section_standard),
     READS(R.string.health_data_section_reads),
 
     /** What the watch app asks for on the watch, to read the watch's own sensors. */
@@ -108,6 +111,9 @@ object HealthDataCatalog {
             write(BodyFatRecord::class, R.string.health_data_note_scale_estimate),
             write(LeanBodyMassRecord::class, R.string.health_data_note_scale_estimate),
             write(BodyWaterMassRecord::class, R.string.health_data_note_scale_estimate),
+        ),
+        HealthDataSection.STANDARD_DEVICES to listOf(
+            write(HeartRateRecord::class, R.string.health_data_note_standard_heart_rate),
         ),
         HealthDataSection.READS to listOf(
             read(WeightRecord::class, R.string.health_data_read_weight),

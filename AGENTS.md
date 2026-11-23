@@ -6,8 +6,8 @@ The implementation guide for anyone, agent or person, working in this repository
 
 OpenWatch is the devices half of OpenVitals: the Wear OS watch app (`:wear`), the
 phone-to-watch link (`:wearlink`), and a phone app (`:app`) that pairs Garmin and Wear OS
-watches and a Xiaomi S400 scale, writes what they record to Health Connect, and manages
-them. OpenVitals is the dashboard. The two share no code at run time; this repository's
+watches, a Xiaomi S400 scale and devices of the Bluetooth standard health profiles (a heart
+rate strap), writes what they record to Health Connect, and manages them. OpenVitals is the dashboard. The two share no code at run time; this repository's
 device code was copied from OpenVitals 2.16.0 and adapted at a few seams
 (`docs/engineering/architecture.md` lists them).
 
@@ -80,6 +80,12 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   fixtures hold the FIT test bytes the app's import tests use.
 - `devices/xiaomi/protocol` (`:devices:xiaomi:protocol`) — the S400 scale's codec, the same
   way: MiBeacon v5 framing, AES-CCM under the bind key, the weigh-in object, the scan filters.
+- `devices/ble-standard` (`:devices:ble-standard`, package `devices/blestandard`) — the devices
+  of the Bluetooth standard health profiles as one family, `BLE_STANDARD`: a heart rate strap.
+  Its pairing for the app's add flow, its link over `GattLink`, its live stream and the Health
+  Connect mapping of what it pushes through the `MeasurementSink`; `BleStandardModule` binds it.
+  Its bytes are `:devices:ble-standard:protocol`, pure Kotlin: the measurement characteristics
+  as the specifications lay them out, and the payloads it keeps a measurement in.
 - `health-calculations/` — a git submodule and composite build, like `openlink/`: the health
   calculations OpenWatch and OpenVitals share (the Wear OS night and resting heart rate, body
   composition, workout and walking energy, the watch's HRV and respiratory rate from the raw

@@ -155,6 +155,8 @@ dependencies {
     implementation(project(":devices:wearos"))
     // The Xiaomi S400 scale, which binds itself (XiaomiScaleModule); its codec comes with it.
     implementation(project(":devices:xiaomi"))
+    // The devices of the Bluetooth standard health profiles, which bind themselves (BleStandardModule).
+    implementation(project(":devices:ble-standard"))
     implementation(project(":wearlink"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -258,6 +260,8 @@ tasks.withType<Test>().configureEach {
         ":devices:wearos:testCiUnitTest",
         ":devices:xiaomi:testCiUnitTest",
         ":devices:xiaomi:protocol:test",
+        ":devices:ble-standard:testCiUnitTest",
+        ":devices:ble-standard:protocol:test",
     )
     // The architecture tests read sources and documents as plain files: this module's
     // and the others' code, both manifests, the strings, the privacy documents. None
@@ -276,6 +280,8 @@ tasks.withType<Test>().configureEach {
         "scannedWearOsMain" to "devices/wearos/src/main",
         "scannedXiaomiMain" to "devices/xiaomi/src/main",
         "scannedXiaomiProtocolMain" to "devices/xiaomi/protocol/src/main",
+        "scannedBleStandardMain" to "devices/ble-standard/src/main",
+        "scannedBleStandardProtocolMain" to "devices/ble-standard/protocol/src/main",
         "scannedWearMain" to "wear/src/main",
         "scannedWearRecordingCoreMain" to "wear/recording-core/src/main",
         "scannedWearlinkMain" to "wearlink/src/main",
@@ -287,6 +293,7 @@ tasks.withType<Test>().configureEach {
         "scannedGarminBuild" to "devices/garmin/build.gradle.kts",
         "scannedWearOsBuild" to "devices/wearos/build.gradle.kts",
         "scannedXiaomiBuild" to "devices/xiaomi/build.gradle.kts",
+        "scannedBleStandardBuild" to "devices/ble-standard/build.gradle.kts",
         "scannedPrivacyPolicy" to "PRIVACY.md",
         "scannedPermissionsDoc" to "docs/app/permissions.md",
     ).forEach { (name, path) ->

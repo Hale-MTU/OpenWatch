@@ -56,7 +56,12 @@ class HiltGraphTest {
             .containsExactly("XiaomiScaleListener", "GarminNotificationBridge")
         // Each family by its persisted name, whether the app or its own module binds it.
         assertThat(families.mapValues { it.value::class.simpleName })
-            .containsExactly("GARMIN", "GarminFamily", "WEAROS", "WearOsFamily", "XIAOMI", "XiaomiScaleFamily")
+            .containsExactly(
+                "GARMIN", "GarminFamily",
+                "WEAROS", "WearOsFamily",
+                "XIAOMI", "XiaomiScaleFamily",
+                "BLE_STANDARD", "StandardDeviceFamily",
+            )
         // Order is the rule here: the first classifier that claims a device wins.
         assertThat(deviceClassifiers.map { it::class.simpleName })
             .containsExactly("GarminDeviceClassifier", "WearOsDeviceClassifier").inOrder()

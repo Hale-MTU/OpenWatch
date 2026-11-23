@@ -27,6 +27,11 @@ A Garmin watch's oxygen saturation and respiratory rate come with its files.
 What a scale weigh-in writes: `WRITE_WEIGHT`, `WRITE_BODY_FAT`, `WRITE_LEAN_BODY_MASS`,
 `WRITE_BODY_WATER_MASS`.
 
+What a heart rate strap on Bluetooth's standard Heart Rate profile writes: `WRITE_HEART_RATE`, one
+record per minute of what it streamed while its screen was open or an app you allowed recorded
+with it. What a device of the standard profiles hands over waits on the phone until its grant is
+in, and its device screen asks for it.
+
 A record whose write is not granted stays on the device; the rest of a sync goes on.
 
 ## Health Connect Read Permissions
@@ -103,6 +108,12 @@ it fails `HealthPermissionsTest`.
 | `WRITE_BODY_FAT` | Estimated on the phone from the scale's measurement and your body profile. |
 | `WRITE_LEAN_BODY_MASS` | Estimated on the phone from the scale's measurement and your body profile. |
 | `WRITE_BODY_WATER_MASS` | Estimated on the phone from the scale's measurement and your body profile. |
+
+**Written from a device on a standard Bluetooth profile**
+
+| Permission | When, or what for |
+| --- | --- |
+| `WRITE_HEART_RATE` | From a heart rate strap, while its screen is open or an app you allowed records with it: one record per minute. |
 
 **Read from Health Connect**
 

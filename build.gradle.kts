@@ -61,6 +61,8 @@ tasks.register("verifyCiUnitTest") {
         ":devices:wearos:testCiUnitTest",
         ":devices:xiaomi:testCiUnitTest",
         ":devices:xiaomi:protocol:test",
+        ":devices:ble-standard:testCiUnitTest",
+        ":devices:ble-standard:protocol:test",
         ":app:testCiUnitTest",
     )
 }
@@ -100,6 +102,8 @@ tasks.register("verifyCiLint") {
         ":devices:wearos:lintCi",
         ":devices:xiaomi:lintCi",
         ":devices:xiaomi:protocol:lint",
+        ":devices:ble-standard:lintCi",
+        ":devices:ble-standard:protocol:lint",
     )
 }
 

@@ -11,15 +11,15 @@ OpenWatch seams noted.
 
 - App namespace: `tech.mmarca.openwatch`
 - Build logic: `build-logic/`, an included build with the convention plugins every module applies (`openwatch.android.application`, `openwatch.android.library`, `openwatch.jvm.library`): SDK levels, Java 17, signing from the environment, the debug, release and nightly build types, lint and dependency locking. A module's own file holds only what is its own (version codes, the `ci` type, the diagnostics flag). A change there must leave the release APKs byte-identical; compare their hashes before and after.
-- Project shape: fourteen Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
+- Project shape: sixteen Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
   hold the pure code the app depends on (below); `:core:devices-api` the device contracts
   ([`devices/core`](#devicescore)); `:core:health-api` how the devices talk to Health Connect
   ([rule 3](#3-health-connect-is-reached-through-healthconnectgateway-only)); `:devices:core` the
   platform half every device family shares ([below](#module-devicescore)); `:devices:garmin`,
-  `:devices:wearos` and `:devices:xiaomi` are the families' platform halves, device modules that bind
-  themselves ([`devices/garmin`](#devicesgarmin), [`devices/wearos`](#deviceswearos), [`devices/xiaomi`](#devicesxiaomi)); `:devices:garmin:protocol` and
-  `:devices:xiaomi:protocol` are the Garmin protocol and the S400 codec, pure Kotlin
-  ([`devices/garmin`](#devicesgarmin), [`devices/xiaomi`](#devicesxiaomi)); `:wear` is the Wear OS watch app
+  `:devices:wearos`, `:devices:xiaomi` and `:devices:ble-standard` are the families' platform halves, device modules that bind
+  themselves ([`devices/garmin`](#devicesgarmin), [`devices/wearos`](#deviceswearos), [`devices/xiaomi`](#devicesxiaomi), [`devices/blestandard`](#devicesblestandard)); `:devices:garmin:protocol`,
+  `:devices:xiaomi:protocol` and `:devices:ble-standard:protocol` are the Garmin protocol, the S400 codec and the standard profiles' bytes, pure Kotlin
+  ([`devices/garmin`](#devicesgarmin), [`devices/xiaomi`](#devicesxiaomi), [`devices/blestandard`](#devicesblestandard)); `:wear` is the Wear OS watch app
   with its own CI gate; `:wearlink` is the pure-Kotlin link both apps depend on. Package names
   are the same across `:app` and the modules under `core/` and `devices/`. The health calculations, shared with OpenVitals,
   come from the `health-calculations/` submodule, a composite build (below).
@@ -27,7 +27,7 @@ OpenWatch seams noted.
   with the watch app's package names; only `:wear` depends on it (below).
 - Dependency wiring: Hilt in `:app`, rooted at `OpenWatchApp`; modules are `di/AppModule.kt`,
   `di/RepositoryModule.kt`, `di/DevicesModule.kt` and `di/LinkModule.kt`, and each device
-  module's own (`GarminModule`, `WearOsModule`, `XiaomiScaleModule`), which the graph installs from the module's classes
+  module's own (`GarminModule`, `WearOsModule`, `XiaomiScaleModule`, `BleStandardModule`), which the graph installs from the module's classes
   ([Hilt wiring](#hilt-wiring)).
 - UI stack: Jetpack Compose + Material 3 + Navigation Compose + `ViewModel` + coroutines.
 - Health data backend: the Health Connect AndroidX client, behind
@@ -196,6 +196,23 @@ Notes worth carrying:
 - Body composition is an estimate from Sun et al. (2003) in health-calculations' `insights/BioimpedanceComposition`, not what the scale displays. No basal metabolic rate is written: a second source would evict `BmrEstimateService`'s daily estimate on weigh-in days.
 - Never log the key, a decrypted payload, a measurement or the address.
 
+### `devices/blestandard`
+
+The devices that speak a Bluetooth SIG standard health profile, as one family, `BLE_STANDARD`: a heart rate strap (the Heart Rate Service, `0x180D`). It is the first family built on the foundation of Phase 5, and it needed nothing outside its module, its Hilt binding and its permission rows: the app's add flow, Home's "Other devices" list, the generic device panel, OpenLink and the measurement sink take it from its contracts.
+
+Its bytes are the module `:devices:ble-standard:protocol` (`devices/ble-standard/protocol`, plain Kotlin with `explicitApi()`, in the package `devices/blestandard`): `HeartRateMeasurement` (the measurement, `0x2A37`, read whole as the specification lays it out: flags, a uint8 or uint16 value, the sensor contact, the energy expended and the RR intervals in 1/1024 s) and `HeartRateSamples` (a clock minute's samples as the family keeps them until Health Connect has them, `hr1;<offset>;<millis>:<bpm>,...`, under the key `hr_<first millis>`, and `HeartRateMinutes`, which cuts a stream into those minutes). Its platform half is the module `:devices:ble-standard` (`devices/ble-standard`, an Android library, namespace `tech.mmarca.openwatch.devices.blestandard`), which depends on `:devices:core` and its protocol and on no other family, and declares no manifest component:
+
+| File | What it holds |
+|---|---|
+| `StandardProfiles` | The family's persisted names (`BLE_STANDARD`, the record id prefix `ble_standard_`) and the profiles' UUIDs, the Heart Rate and Battery ones taken from the app's `BleUuids` |
+| `ProfileRadio` | The port the family opens a link through (`withLink(address, owner) { link -> }`: has, enable a notification or indication, read, write, the values as a flow that fails when the link drops), and `GattProfileRadio`, its implementation over `GattLink` under the radio lease |
+| `HeartRateStream` | A strap's stream: one link per strap however many collect it (the device screen, OpenLink), held as `LIVE` while collected and five seconds after, dialled again ten seconds after a drop while collected. Each usable measurement (on the skin, above zero) is a `LiveReading`; each clock minute goes to the `MeasurementSink` as one run, and the minute under way when the stream stops. The battery level is read once per link |
+| `StandardMeasurementRecords` | The family's `MeasurementRecords`: a run is one `HeartRateRecord`, auto-recorded by a chest strap, id `ble_standard_<key>` salted by the device |
+| `StandardDeviceFamily` | The family and its `DevicePairing`: a device that advertises the Heart Rate Service is offered as a `SENSOR`; pairing asks for no bond and no association (the profile needs neither, and the strap is read only while collected) and registers it with the `HEART_RATE` capability, as the registry has always kept a sensor. Its feature is `LIVE_HEART_RATE`. Forgetting one drops its stream and what it kept |
+| `BleStandardModule` | Binds the family and its mapping by `BLE_STANDARD`, and the radio |
+
+The RR intervals a measurement carries are read and tested, and written nowhere: Health Connect has no beat-to-beat record, and a variability figure from them would be a health calculation, which belongs in health-calculations. The family's tests run its stream end to end over a fake radio (`FakeProfileRadio`) into the real `DeviceMeasurementSink` and `FakeHealthRecordStore`; nothing of it has run against a strap.
+
 ### `devices/notifications`
 
 In `:devices:core`, with `devices/media` (`PhoneMediaSource` and the media sessions it reads through the listener's component), `devices/weather` (the generic-weather broadcast, its receiver and `WeatherStore`) and `comaps`: the phone's sources a watch relays, vendor-neutral, so a second family relays them without reaching into Garmin. The listener and the weather receiver are declared in that module's manifest under their names, and `Diagnostics` reads its build config's `OPENWATCH_DIAGNOSTICS`, set as the app's is. That the filter's category numbers follow Garmin's enum is the app's `NotificationCategoryParityTest`, the one place both are visible.
@@ -204,7 +221,7 @@ In `:devices:core`, with `devices/media` (`PhoneMediaSource` and the media sessi
 
 ### Hilt wiring
 
-A device family that is a Gradle module of its own binds itself (the owner's decision 4, 2026-11, which reversed the rule that only `di/DevicesModule.kt` bound the layer): its Hilt module, `@InstallIn(SingletonComponent::class)` and in the family's package, binds its family into the `DeviceFamily` map under its persisted name (`@StringKey`, which `DeviceFamilies` checks against the family's id), its sync port and presence observer `@IntoSet`, its ports and stores, and its startup actors. Hilt and KSP run in the module, so the app's graph installs the module from its classes; the app names the module in its build file and nowhere else. `:devices:garmin`'s is `GarminModule`, `:devices:wearos`'s `WearOsModule`, `:devices:xiaomi`'s `XiaomiScaleModule`.
+A device family that is a Gradle module of its own binds itself (the owner's decision 4, 2026-11, which reversed the rule that only `di/DevicesModule.kt` bound the layer): its Hilt module, `@InstallIn(SingletonComponent::class)` and in the family's package, binds its family into the `DeviceFamily` map under its persisted name (`@StringKey`, which `DeviceFamilies` checks against the family's id), its sync port and presence observer `@IntoSet`, its ports and stores, and its startup actors. Hilt and KSP run in the module, so the app's graph installs the module from its classes; the app names the module in its build file and nowhere else. `:devices:garmin`'s is `GarminModule`, `:devices:wearos`'s `WearOsModule`, `:devices:xiaomi`'s `XiaomiScaleModule`, `:devices:ble-standard`'s `BleStandardModule`.
 
 `di/DevicesModule.kt` binds what every family shares and the families still in the app: `BleWatchPairing` to `WatchPairingPort`, `DeviceMeasurementSink` to `MeasurementSink` with the families' `MeasurementRecords` map (`@Multibinds`, so none is needed) and its startup actor, `RegisteredFamilies` (the families' persisted names, from the map's keys through providers, which the registry reads its rows against), `AndroidSyncWakeLock`, the composite `DeviceSyncPort` over the set, the classifiers in their order, the schedule's startup actor, and the auto-sync interval store (every watch's interval is kept in the Garmin store, under its old key). The app's `RepositoryModule` binds the contracts the device modules take to the app's implementations: `DeviceRegistry`, `DeviceStateRepository`, `BodyProfileRepository`, `ActivityRepository`, `GarminWellnessRepository`, `GarminSleepMinuteRepository`, `GarminActivityPreferences`, `ScaleWeighInRepository`, `WearOsSyncPreferences`. Everything else is constructor injection. Only `:app` and the device modules declare Hilt modules: not the app's `devices/` packages, not `:devices:core`, a contract or a protocol module. A device module depends on no other device module, no feature and not on the app. `DevicesLayeringTest` holds the three (and that each device module binds its family), and `HiltGraphTest` that every family, sync port, presence observer and classifier is in the built graph.
 

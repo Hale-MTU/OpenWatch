@@ -139,6 +139,7 @@ class HealthPermissionsTest {
                 listOf("devices/garmin", "devices/core/sync", "activityimport", "healthconnect/ActivityRecordWriter.kt"),
             HealthDataSection.WEAROS_WATCH to listOf("devices/wearos", "devices/core/sync"),
             HealthDataSection.SCALE to listOf("devices/xiaomi"),
+            HealthDataSection.STANDARD_DEVICES to listOf("devices/blestandard"),
         )
     }
 }
