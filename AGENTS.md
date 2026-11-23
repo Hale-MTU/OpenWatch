@@ -18,8 +18,8 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 
 - `app/src/main/kotlin/tech/mmarca/openwatch/`
   - `devices/` — the device code not yet in a module of its own: `garmin` (the GATT client,
-    the links, stores and wellness import around the protocol module), `wearos` (the
-    phone side of the watch app), `notifications`, `media`, `weather`.
+    the links, stores and wellness import around the protocol module), `notifications`,
+    `media`, `weather`.
     No Compose, no navigation, no Hilt module: `di/DevicesModule` binds it.
   - `features/` — the screens: `home`, `watches`, `scales`, `healthconnect`, `settings`.
   - `healthconnect/` — `HealthConnectGateway`, the one class that touches the client, and
@@ -50,6 +50,11 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   module's manifest), and the sync controller, its schedule, worker, budget and wake lock. Its
   test fixtures are `FakeSharedPreferences` and `testSeal()`, which the device modules' tests and
   the app's share.
+- `devices/wearos` (`:devices:wearos`) — the phone side of the watch app, a device module: the
+  RFCOMM link and its session cache, the series sync and its Health Connect mapping, the
+  onboarding, the family, the link states' strings, and `WearOsModule`, which binds its family,
+  sync port and node port. The one preference it reads is its own contract
+  (`WearOsSyncPreferences`); `OpenWatchPreferences` implements it.
 - `devices/xiaomi` (`:devices:xiaomi`) — the S400 scale's platform half, a device module: the
   scan, the receiver and the listening service (in its manifest), the listener and its worker,
   the store, the pipeline to Room and Health Connect, the strings its notification shows, and

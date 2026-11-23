@@ -772,15 +772,4 @@
             column="20"/>
     </issue>
 
-    <issue
-        id="UseTomlInstead"
-        message="Use version catalog instead"
-        errorLine1="    testImplementation(testFixtures(&quot;tech.mmarca.healthcalculations:health-calculations&quot;))"
-        errorLine2="                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="build.gradle.kts"
-            line="193"
-            column="37"/>
-    </issue>
-
 </issues>

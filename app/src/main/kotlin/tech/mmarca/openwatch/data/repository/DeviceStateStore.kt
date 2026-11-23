@@ -9,6 +9,7 @@ import javax.inject.Singleton
 import tech.mmarca.openwatch.data.local.device.DeviceStateDao
 import tech.mmarca.openwatch.data.local.device.DeviceStateEntity
 import tech.mmarca.openwatch.data.local.device.DeviceStorageExecutor
+import tech.mmarca.openwatch.data.repository.contract.DeviceStateRepository
 
 /**
  * What integrations keep per device, by device id and key: the `device_state` table, read once
@@ -23,7 +24,7 @@ class DeviceStateStore @Inject constructor(
     private val dao: DeviceStateDao,
     @param:DeviceStorageExecutor private val writer: Executor,
     @Suppress("unused") registry: BleDeviceRepository,
-) {
+) : DeviceStateRepository {
     private val loaded = CountDownLatch(1)
     private val values = ConcurrentHashMap<String, ConcurrentHashMap<String, String>>()
 
@@ -39,13 +40,13 @@ class DeviceStateStore @Inject constructor(
         }
     }
 
-    fun get(deviceId: String, key: String): String? {
+    override fun get(deviceId: String, key: String): String? {
         loaded.await()
         return values[deviceId]?.get(key)
     }
 
     /** Keeps [value] for [deviceId]'s [key]; null forgets it. */
-    fun put(deviceId: String, key: String, value: String?) {
+    override fun put(deviceId: String, key: String, value: String?) {
         loaded.await()
         if (value == null) {
             values[deviceId]?.remove(key) ?: return
@@ -60,7 +61,7 @@ class DeviceStateStore @Inject constructor(
      * Takes over values an integration kept elsewhere, for the devices [registered], once:
      * only where nothing is kept yet. A value for a device no longer registered is dropped.
      */
-    fun adopt(values: Map<String, Map<String, String>>, registered: Set<String>) {
+    override fun adopt(values: Map<String, Map<String, String>>, registered: Set<String>) {
         for ((deviceId, pairs) in values) {
             if (deviceId !in registered) continue
             for ((key, value) in pairs) if (get(deviceId, key) == null) put(deviceId, key, value)
@@ -68,7 +69,7 @@ class DeviceStateStore @Inject constructor(
     }
 
     /** Forgets everything kept for [deviceId], as removing its registry row also does in the table. */
-    fun forget(deviceId: String) {
+    override fun forget(deviceId: String) {
         val keys = values.remove(deviceId)?.keys.orEmpty()
         persist { keys.forEach { dao.delete(deviceId, it) } }
     }

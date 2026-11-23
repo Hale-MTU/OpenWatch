@@ -43,6 +43,11 @@ android {
     testFixtures {
         enable = true
     }
+
+    lint {
+        // As the app's: Weblate translates the strings, a language at a time.
+        disable += setOf("MissingTranslation")
+    }
 }
 
 dependencies {

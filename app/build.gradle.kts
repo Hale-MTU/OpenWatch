@@ -151,6 +151,8 @@ dependencies {
     implementation(project(":devices:core"))
     // The Garmin protocol, pure Kotlin; its platform half (GATT, stores, Health Connect) is here.
     implementation(project(":devices:garmin:protocol"))
+    // The Wear OS watch's phone side, which binds itself (WearOsModule).
+    implementation(project(":devices:wearos"))
     // The Xiaomi S400 scale, which binds itself (XiaomiScaleModule); its codec comes with it.
     implementation(project(":devices:xiaomi"))
     implementation(project(":wearlink"))
@@ -204,8 +206,6 @@ dependencies {
     ksp(libs.hilt.android.compiler)
 
     // Testing
-    // The Wear OS sleep-minute fixtures, for the sync tests.
-    testImplementation(testFixtures("tech.mmarca.healthcalculations:health-calculations"))
     // The FIT test bytes the wellness import tests build their files with.
     testImplementation(testFixtures(project(":devices:garmin:protocol")))
     // The shared fakes of the device contracts: a sync port, a pairing, a family.
@@ -254,6 +254,7 @@ tasks.withType<Test>().configureEach {
         ":core:health-api:testCiUnitTest",
         ":devices:core:testCiUnitTest",
         ":devices:garmin:protocol:test",
+        ":devices:wearos:testCiUnitTest",
         ":devices:xiaomi:testCiUnitTest",
         ":devices:xiaomi:protocol:test",
     )
@@ -270,6 +271,7 @@ tasks.withType<Test>().configureEach {
         "scannedCoreHealthApiMain" to "core/health-api/src/main",
         "scannedDevicesCoreMain" to "devices/core/src/main",
         "scannedGarminProtocolMain" to "devices/garmin/protocol/src/main",
+        "scannedWearOsMain" to "devices/wearos/src/main",
         "scannedXiaomiMain" to "devices/xiaomi/src/main",
         "scannedXiaomiProtocolMain" to "devices/xiaomi/protocol/src/main",
         "scannedWearMain" to "wear/src/main",
@@ -280,6 +282,7 @@ tasks.withType<Test>().configureEach {
     }
     mapOf(
         // DevicesLayeringTest reads which modules a device module depends on.
+        "scannedWearOsBuild" to "devices/wearos/build.gradle.kts",
         "scannedXiaomiBuild" to "devices/xiaomi/build.gradle.kts",
         "scannedPrivacyPolicy" to "PRIVACY.md",
         "scannedPermissionsDoc" to "docs/app/permissions.md",

@@ -44,6 +44,7 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
 import tech.mmarca.openwatch.devices.wearos.WearOsAppStatus
 import tech.mmarca.openwatch.devices.wearos.WearOsCompanionStatus
 import tech.mmarca.openwatch.devices.wearos.messageRes
+import tech.mmarca.openwatch.devices.wearos.R as WearOsR
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
@@ -207,7 +208,7 @@ private fun WearOsStatusCard(
                     text = if (status.isPaired) {
                         stringResource(R.string.settings_watch_wearos_bt_paired)
                     } else {
-                        stringResource(R.string.settings_watch_wearos_bt_not_paired)
+                        stringResource(WearOsR.string.settings_watch_wearos_bt_not_paired)
                     },
                     style = MaterialTheme.typography.bodyMedium,
                 )
@@ -233,7 +234,7 @@ private fun WearOsStatusCard(
                     text = when (status.appStatus) {
                         WearOsAppStatus.APP_RUNNING -> status.watchName
                             ?.let { stringResource(R.string.settings_watch_wearos_linked_to, it) }
-                            ?: stringResource(R.string.settings_watch_wearos_app_running)
+                            ?: stringResource(WearOsR.string.settings_watch_wearos_app_running)
                         WearOsAppStatus.NOT_PAIRED -> stringResource(R.string.settings_watch_not_connected)
                         else -> stringResource(status.appStatus.messageRes())
                     },

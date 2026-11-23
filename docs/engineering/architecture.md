@@ -11,12 +11,13 @@ OpenWatch seams noted.
 
 - App namespace: `tech.mmarca.openwatch`
 - Build logic: `build-logic/`, an included build with the convention plugins every module applies (`openwatch.android.application`, `openwatch.android.library`, `openwatch.jvm.library`): SDK levels, Java 17, signing from the environment, the debug, release and nightly build types, lint and dependency locking. A module's own file holds only what is its own (version codes, the `ci` type, the diagnostics flag). A change there must leave the release APKs byte-identical; compare their hashes before and after.
-- Project shape: twelve Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
+- Project shape: thirteen Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
   hold the pure code the app depends on (below); `:core:devices-api` the device contracts
   ([`devices/core`](#devicescore)); `:core:health-api` how the devices talk to Health Connect
   ([rule 3](#3-health-connect-is-reached-through-healthconnectgateway-only)); `:devices:core` the
-  platform half every device family shares ([below](#module-devicescore)); `:devices:xiaomi` is the
-  scale's platform half, a device module that binds itself ([`devices/xiaomi`](#devicesxiaomi)); `:devices:garmin:protocol` and
+  platform half every device family shares ([below](#module-devicescore)); `:devices:wearos` and
+  `:devices:xiaomi` are the Wear OS watch's and the scale's platform halves, device modules that bind
+  themselves ([`devices/wearos`](#deviceswearos), [`devices/xiaomi`](#devicesxiaomi)); `:devices:garmin:protocol` and
   `:devices:xiaomi:protocol` are the Garmin protocol and the S400 codec, pure Kotlin
   ([`devices/garmin`](#devicesgarmin), [`devices/xiaomi`](#devicesxiaomi)); `:wear` is the Wear OS watch app
   with its own CI gate; `:wearlink` is the pure-Kotlin link both apps depend on. Package names
@@ -26,7 +27,7 @@ OpenWatch seams noted.
   with the watch app's package names; only `:wear` depends on it (below).
 - Dependency wiring: Hilt in `:app`, rooted at `OpenWatchApp`; modules are `di/AppModule.kt`,
   `di/RepositoryModule.kt`, `di/DevicesModule.kt` and `di/LinkModule.kt`, and each device
-  module's own (`XiaomiScaleModule`), which the graph installs from the module's classes
+  module's own (`WearOsModule`, `XiaomiScaleModule`), which the graph installs from the module's classes
   ([Hilt wiring](#hilt-wiring)).
 - UI stack: Jetpack Compose + Material 3 + Navigation Compose + `ViewModel` + coroutines.
 - Health data backend: the Health Connect AndroidX client, behind
@@ -138,6 +139,8 @@ Notes worth carrying:
 
 A Wear OS watch is a registered device plus a Bluetooth Classic link to the OpenWatch watch app (`:wear`). There is no vendor protocol to speak: the watch runs our own app, and the phone talks to it over an RFCOMM socket on AOSP APIs only.
 
+The phone side is the module `:devices:wearos` (`devices/wearos`, an Android library, namespace `tech.mmarca.openwatch.devices.wearos`), every file below, in the app's package `devices/wearos`. It depends on `:devices:core` and `:wearlink` (`api`: the link's types are in its signatures; the watch app compiles the same module), Hilt, and no other family. It binds itself (`WearOsModule`): its family as `WEAROS`, `WearOsWatchSyncService` into the sync port set, `BluetoothWearOsNodePort` to `WearOsNodePort`, and its startup actor (`phone activity`); its classifier is ranked in the app's `DevicesModule` with Garmin's. It declares no manifest component. It takes the registry, the per-device state (`DeviceStateRepository`, which the app's `DeviceStateStore` implements on `device_state`) and the body profile as contracts, and owns the one preference it reads, `data/repository/contract/WearOsSyncPreferences` (whether to write the breathing rate), which `OpenWatchPreferences` implements. The link states' sentences (`WearOsAppStatus.messageRes`) are its strings, moved with their translations; "Bluetooth is off", which every family's sync failure says too, is `:devices:core`'s. The classes the sync runs on (`WearOsSessionCache`, the series readers and syncs, the progress) are `internal` to the module; what the watch screen, onboarding, OpenLink and the app's graph use is public: the family, the sync port, the node port and its status types, `WearOsCompanionManager`, `WearOsLinkStore` and its snapshot, `WearOsSyncCursorStore`, the onboarding use case and outcome, the classifier, `isWearOs`. Its tests (165, over `FakeDeviceStateRepository`, mocks of the contracts and health-calculations' wear sleep fixtures) run on the JVM in the phone gate (`:devices:wearos:testCiUnitTest`).
+
 - `WearOsDeviceClassifier` / `WearOsDeviceNames` — claims a scanned device as `(WEAROS, WATCH)` when its name is a known smartwatch family or its SDP record lists the OpenWatch app UUID. A wrist-watch Bluetooth class alone is not enough.
 - `OnboardWearOsWatchUseCase` — a single optional `ASSOCIATING` step, no bond and no probe; the device is registered with no capabilities, off the Garmin sync path. The bond itself comes from Android's Bluetooth settings, or from the vendor's onboarding.
 - `WearOsNodePort` — the port: pairing and reachability of the watch app. `WearOsAppStatus` is `NOT_PAIRED`, `NO_ANSWER` or `APP_RUNNING`; a bond alone is never shown as connected.
@@ -197,9 +200,9 @@ Notes worth carrying:
 
 ### Hilt wiring
 
-A device family that is a Gradle module of its own binds itself (the owner's decision 4, 2026-11, which reversed the rule that only `di/DevicesModule.kt` bound the layer): its Hilt module, `@InstallIn(SingletonComponent::class)` and in the family's package, binds its family into the `DeviceFamily` map under its persisted name (`@StringKey`, which `DeviceFamilies` checks against the family's id), its sync port and presence observer `@IntoSet`, its ports and stores, and its startup actors. Hilt and KSP run in the module, so the app's graph installs the module from its classes; the app names the module in its build file and nowhere else. `:devices:xiaomi`'s is `XiaomiScaleModule`.
+A device family that is a Gradle module of its own binds itself (the owner's decision 4, 2026-11, which reversed the rule that only `di/DevicesModule.kt` bound the layer): its Hilt module, `@InstallIn(SingletonComponent::class)` and in the family's package, binds its family into the `DeviceFamily` map under its persisted name (`@StringKey`, which `DeviceFamilies` checks against the family's id), its sync port and presence observer `@IntoSet`, its ports and stores, and its startup actors. Hilt and KSP run in the module, so the app's graph installs the module from its classes; the app names the module in its build file and nowhere else. `:devices:wearos`'s is `WearOsModule`, `:devices:xiaomi`'s `XiaomiScaleModule`.
 
-`di/DevicesModule.kt` binds what every family shares and the families still in the app: `BleWatchPairing` to `WatchPairingPort`, `AndroidSyncWakeLock`, the composite `DeviceSyncPort` over the set, the classifiers in their order, the schedule's startup actor, and for Garmin and Wear OS their ports, stores and actors. Everything else is constructor injection. Only `:app` and the device modules declare Hilt modules: not the app's `devices/` packages, not `:devices:core`, a contract or a protocol module. A device module depends on no other device module, no feature and not on the app. `DevicesLayeringTest` holds the three (and that each device module binds its family), and `HiltGraphTest` that every family, sync port, presence observer and classifier is in the built graph.
+`di/DevicesModule.kt` binds what every family shares and the families still in the app: `BleWatchPairing` to `WatchPairingPort`, `AndroidSyncWakeLock`, the composite `DeviceSyncPort` over the set, the classifiers in their order, the schedule's startup actor, the auto-sync interval store (every watch's interval is kept in the Garmin store, under its old key), and for Garmin, still in the app, its ports, stores and actors. The app's `RepositoryModule` binds the contracts the device modules take to the app's implementations: `DeviceRegistry`, `DeviceStateRepository`, `BodyProfileRepository`, `ScaleWeighInRepository`, `WearOsSyncPreferences`. Everything else is constructor injection. Only `:app` and the device modules declare Hilt modules: not the app's `devices/` packages, not `:devices:core`, a contract or a protocol module. A device module depends on no other device module, no feature and not on the app. `DevicesLayeringTest` holds the three (and that each device module binds its family), and `HiltGraphTest` that every family, sync port, presence observer and classifier is in the built graph.
 
 The BLE discovery scan the add-watch flow uses lives in `sensors/ble`, trimmed to discovery: OpenWatch streams no live sensor.
 

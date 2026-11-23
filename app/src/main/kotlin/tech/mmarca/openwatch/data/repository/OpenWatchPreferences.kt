@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import tech.mmarca.healthcalculations.preferences.BiologicalSex
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
+import tech.mmarca.openwatch.data.repository.contract.WearOsSyncPreferences
 import tech.mmarca.openwatch.domain.preferences.SystemUnitSystemProvider
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncSwitch
@@ -27,7 +28,7 @@ import tech.mmarca.openwatch.healthconnect.HealthConnectSyncSwitch
 class OpenWatchPreferences(
     private val prefs: SharedPreferences,
     private val unitSystemProvider: SystemUnitSystemProvider,
-) : BodyProfilePreferences, HealthConnectSyncSwitch {
+) : BodyProfilePreferences, HealthConnectSyncSwitch, WearOsSyncPreferences {
 
     @Inject
     constructor(@ApplicationContext context: Context, unitSystemProvider: SystemUnitSystemProvider) : this(
@@ -45,7 +46,7 @@ class OpenWatchPreferences(
     /** Whether the watch's breathing rate is written to Health Connect. Off by default: not yet checked against a reference. */
     val writeRespiratoryRateFlow: StateFlow<Boolean> = _writeRespiratoryRate.asStateFlow()
 
-    var writeRespiratoryRate: Boolean
+    override var writeRespiratoryRate: Boolean
         get() = _writeRespiratoryRate.value
         set(value) {
             prefs.edit { putBoolean(KEY_WRITE_RESPIRATORY_RATE, value) }

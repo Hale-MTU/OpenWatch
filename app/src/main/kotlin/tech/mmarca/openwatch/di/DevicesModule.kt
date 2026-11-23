@@ -45,18 +45,13 @@ import tech.mmarca.openwatch.devices.garmin.garminFileStore
 import tech.mmarca.openwatch.devices.media.AndroidPhoneMediaSource
 import tech.mmarca.openwatch.devices.media.PhoneMediaSource
 import tech.mmarca.openwatch.devices.notifications.NotificationSink
-import tech.mmarca.openwatch.devices.wearos.BluetoothWearOsNodePort
 import tech.mmarca.openwatch.devices.wearos.WearOsDeviceClassifier
-import tech.mmarca.openwatch.devices.wearos.WearOsFamily
-import tech.mmarca.openwatch.devices.wearos.WearOsNodePort
-import tech.mmarca.openwatch.devices.wearos.WearOsPhoneActivity
-import tech.mmarca.openwatch.devices.wearos.WearOsWatchSyncService
 
 /**
  * Wiring for the `devices/` layer, kept apart so [AppModule] carries no watch knowledge: what
  * every family shares (`:devices:core`'s pieces, the composite sync port) and the families not
  * yet in a module of their own. A family in a module of its own binds itself there
- * (`:devices:xiaomi`'s `XiaomiScaleModule`).
+ * (`:devices:xiaomi`'s `XiaomiScaleModule`, `:devices:wearos`'s `WearOsModule`).
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -70,10 +65,6 @@ abstract class DevicesModule {
     @Binds
     @IntoSet
     abstract fun bindGarminSyncPort(impl: GarminWatchSyncService): DeviceSyncPort
-
-    @Binds
-    @IntoSet
-    abstract fun bindWearOsSyncPort(impl: WearOsWatchSyncService): DeviceSyncPort
 
     @Binds
     @Singleton
@@ -92,10 +83,6 @@ abstract class DevicesModule {
     @Binds
     abstract fun bindNotificationSink(impl: GarminNotificationBridge): NotificationSink
 
-    @Binds
-    @Singleton
-    abstract fun bindWearOsNodePort(impl: BluetoothWearOsNodePort): WearOsNodePort
-
     // Every watch's sync interval, Wear OS included, lives in the Garmin store under its old key.
     @Binds
     abstract fun bindAutoSyncIntervalStore(impl: GarminDeviceStateStore): AutoSyncIntervalStore
@@ -108,11 +95,6 @@ abstract class DevicesModule {
     @IntoMap
     @StringKey("GARMIN")
     abstract fun bindGarminFamily(impl: GarminFamily): DeviceFamily
-
-    @Binds
-    @IntoMap
-    @StringKey("WEAROS")
-    abstract fun bindWearOsFamily(impl: WearOsFamily): DeviceFamily
 
     companion object {
         // What each integration starts at every process start (AppStartupActors).
@@ -138,12 +120,6 @@ abstract class DevicesModule {
 
         @Provides
         @IntoSet
-        fun provideWearOsPhoneActivityAtStart(activity: WearOsPhoneActivity) =
-            // Tells the watches when the phone is unlocked, so they end a sleep hold they started.
-            StartupActor("phone activity", activity::start)
-
-        @Provides
-        @IntoSet
         fun provideSyncSchedulesAtStart(scheduler: WatchAutoSyncScheduler) =
             // Re-plans the sync schedules after what WorkManager does not cover.
             StartupActor("sync schedules", scheduler::restoreAll)
@@ -151,8 +127,9 @@ abstract class DevicesModule {
 
         /**
          * Each integration's verdict on a scanned device. A list, not a set: the first that
-         * claims a device wins, so the order is part of the rule. A new integration adds its
-         * classifier here, and nothing in `sensors/` changes.
+         * claims a device wins, so the order is part of the rule, across families, and stays
+         * here even for a family that binds the rest of itself in its own module. A new
+         * integration adds its classifier here, and nothing in `sensors/` changes.
          */
         @Provides
         fun provideDeviceClassifiers(): List<@JvmSuppressWildcards DeviceClassifier> =

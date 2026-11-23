@@ -9,7 +9,7 @@ internal fun SyncFailure.toScreenError(): ScreenError = ScreenError.Text(
     when (this) {
         SyncFailure.HealthConnectPermission -> R.string.sync_failed_health_connect_permission
         SyncFailure.BluetoothPermission -> R.string.sync_failed_bluetooth_permission
-        SyncFailure.BluetoothOff -> R.string.settings_watch_wearos_status_bluetooth_off
+        SyncFailure.BluetoothOff -> tech.mmarca.openwatch.devices.core.R.string.settings_watch_wearos_status_bluetooth_off
         SyncFailure.SyncPaused -> R.string.health_connect_sync_paused
         SyncFailure.RadioBusy -> R.string.settings_watch_point_failed_busy
         SyncFailure.Unreachable -> R.string.sync_failed_unreachable

@@ -8,6 +8,7 @@ import javax.inject.Singleton
 import tech.mmarca.openwatch.data.repository.ActivityWriteRepository
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.data.repository.BodyProfileProvider
+import tech.mmarca.openwatch.data.repository.DeviceStateStore
 import tech.mmarca.openwatch.comaps.CoMapsNavigationRepositoryImpl
 import tech.mmarca.openwatch.data.repository.GarminSleepMinuteRepositoryImpl
 import tech.mmarca.openwatch.data.repository.GarminWellnessRepositoryImpl
@@ -17,6 +18,8 @@ import tech.mmarca.openwatch.data.repository.contract.ActivityRepository
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
 import tech.mmarca.openwatch.data.repository.contract.BodyProfileRepository
 import tech.mmarca.openwatch.data.repository.contract.DeviceRegistry
+import tech.mmarca.openwatch.data.repository.contract.DeviceStateRepository
+import tech.mmarca.openwatch.data.repository.contract.WearOsSyncPreferences
 import tech.mmarca.openwatch.comaps.CoMapsNavigationRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminSleepMinuteRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminWellnessRepository
@@ -61,6 +64,14 @@ abstract class RepositoryModule {
     /** The registry as the device modules see it (:core:devices-api); the one instance. */
     @Binds
     abstract fun bindDeviceRegistry(impl: BleDeviceRepository): DeviceRegistry
+
+    /** What each integration keeps per device (:core:devices-api), on the device_state table. */
+    @Binds
+    abstract fun bindDeviceStateRepository(impl: DeviceStateStore): DeviceStateRepository
+
+    /** The one preference the Wear OS sync reads (:devices:wearos). */
+    @Binds
+    abstract fun bindWearOsSyncPreferences(impl: OpenWatchPreferences): WearOsSyncPreferences
 
     /** The body the device estimates use (:core:devices-api): declared, with Health Connect's on top. */
     @Binds
