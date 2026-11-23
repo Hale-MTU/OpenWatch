@@ -23,6 +23,7 @@ import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.data.local.device.DeviceDao
 import tech.mmarca.openwatch.data.local.device.DeviceEntity
 import tech.mmarca.openwatch.data.local.device.DeviceStorageExecutor
+import tech.mmarca.openwatch.data.repository.contract.DeviceRegistry
 
 /**
  * The paired devices: the `devices` table, read once into memory and written behind it.
@@ -41,7 +42,7 @@ class BleDeviceRepository(
     private val dao: DeviceDao,
     private val legacy: SharedPreferences?,
     private val writer: Executor,
-) {
+) : DeviceRegistry {
     @Inject
     constructor(
         dao: DeviceDao,
@@ -58,9 +59,9 @@ class BleDeviceRepository(
     private val _devices = MutableStateFlow<List<BleSensorDevice>?>(null)
 
     /** The devices, from the first load on. */
-    val devicesFlow: Flow<List<BleSensorDevice>> = _devices.filterNotNull()
+    override val devicesFlow: Flow<List<BleSensorDevice>> = _devices.filterNotNull()
 
-    val devices: List<BleSensorDevice>
+    override val devices: List<BleSensorDevice>
         get() {
             loaded.await()
             return _devices.value.orEmpty()
@@ -99,14 +100,14 @@ class BleDeviceRepository(
      * The Sensors screen owns [capabilities], watch onboarding owns [kind]
      * and [integration]; each update leaves the other half alone.
      */
-    fun addDevice(
+    override fun addDevice(
         displayName: String,
         address: String,
         bluetoothName: String?,
         capabilities: Set<BleSensorCapability>,
-        wheelCircumferenceMm: Int? = null,
-        kind: BleDeviceKind? = null,
-        integration: DeviceIntegration? = null,
+        wheelCircumferenceMm: Int?,
+        kind: BleDeviceKind?,
+        integration: DeviceIntegration?,
     ): BleSensorDevice = synchronized(lock) {
         val normalizedAddress = address.uppercase()
         val existing = devices.firstOrNull { it.address.equals(normalizedAddress, ignoreCase = true) }
@@ -140,16 +141,16 @@ class BleDeviceRepository(
         device
     }
 
-    fun updateDevice(
+    override fun updateDevice(
         deviceId: String,
-        displayName: String? = null,
+        displayName: String?,
         /** The advertised name, which a re-add refreshes; null keeps the stored one. */
-        bluetoothName: String? = null,
-        capabilities: Set<BleSensorCapability>? = null,
-        enabled: Boolean? = null,
-        wheelCircumferenceMm: Int? = null,
-        kind: BleDeviceKind? = null,
-        integration: DeviceIntegration? = null,
+        bluetoothName: String?,
+        capabilities: Set<BleSensorCapability>?,
+        enabled: Boolean?,
+        wheelCircumferenceMm: Int?,
+        kind: BleDeviceKind?,
+        integration: DeviceIntegration?,
     ): BleSensorDevice = synchronized(lock) {
         val current = devices.firstOrNull { it.id == deviceId }
             ?: error("Unknown BLE device: $deviceId")
@@ -176,7 +177,7 @@ class BleDeviceRepository(
         updated
     }
 
-    fun removeDevice(deviceId: String) = synchronized(lock) {
+    override fun removeDevice(deviceId: String) = synchronized(lock) {
         if (devices.none { it.id == deviceId }) return@synchronized
         // What an integration kept in device_state goes with the row; the rest is its family's to forget.
         write(devices.filterNot { it.id == deviceId }, removedId = deviceId)
@@ -186,7 +187,7 @@ class BleDeviceRepository(
         updateDevice(deviceId = deviceId, enabled = enabled)
     }
 
-    fun updateBatteryLevel(deviceId: String, batteryPercent: Int) = synchronized(lock) {
+    override fun updateBatteryLevel(deviceId: String, batteryPercent: Int) = synchronized(lock) {
         val percent = batteryPercent.coerceIn(0, 100)
         // Only a changed reading is written; the stamp says when the level moved.
         val current = devices.firstOrNull { it.id == deviceId } ?: return@synchronized
@@ -196,7 +197,7 @@ class BleDeviceRepository(
     }
 
     /** Stamps a watch's last completed file pull. A no-op for an unknown id. */
-    fun markSynced(deviceId: String, at: Instant) = synchronized(lock) {
+    override fun markSynced(deviceId: String, at: Instant) = synchronized(lock) {
         val current = devices.firstOrNull { it.id == deviceId } ?: return@synchronized
         val updated = current.copy(lastSyncedAt = at)
         write(devices.map { if (it.id == deviceId) updated else it }, changed = updated)

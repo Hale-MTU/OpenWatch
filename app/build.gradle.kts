@@ -146,6 +146,9 @@ dependencies {
     implementation(project(":core:devices-api"))
     // The devices' Health Connect contracts: the record sink, its write helpers, the strict reads.
     implementation(project(":core:health-api"))
+    // What every device family shares on Android: the radio lease, the GATT link and the BLE
+    // scanner, companion pairing, the sync controller and its schedule.
+    implementation(project(":devices:core"))
     // The Garmin protocol, pure Kotlin; its platform half (GATT, stores, Health Connect) is here.
     implementation(project(":devices:garmin:protocol"))
     // The Xiaomi S400 codec, pure Kotlin; the scan, Room and Health Connect side is here.
@@ -245,6 +248,7 @@ tasks.withType<Test>().configureEach {
         ":core:fit:test",
         ":core:devices-api:test",
         ":core:health-api:testCiUnitTest",
+        ":devices:core:testCiUnitTest",
         ":devices:garmin:protocol:test",
         ":devices:xiaomi:protocol:test",
     )
@@ -259,6 +263,7 @@ tasks.withType<Test>().configureEach {
         "scannedCoreFitMain" to "core/fit/src/main",
         "scannedCoreDevicesApiMain" to "core/devices-api/src/main",
         "scannedCoreHealthApiMain" to "core/health-api/src/main",
+        "scannedDevicesCoreMain" to "devices/core/src/main",
         "scannedGarminProtocolMain" to "devices/garmin/protocol/src/main",
         "scannedXiaomiProtocolMain" to "devices/xiaomi/protocol/src/main",
         "scannedWearMain" to "wear/src/main",

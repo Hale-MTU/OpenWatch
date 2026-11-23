@@ -2,9 +2,10 @@
 
 ## Build
 
-The phone app, the watch app and its pure core, the pure-Kotlin link and the phone app's
+The phone app, the watch app and its pure core, the pure-Kotlin link, the phone app's
 pure-Kotlin modules (`:core:model`, `:core:fit`, `:core:devices-api`, `:devices:garmin:protocol`,
-`:devices:xiaomi:protocol`) build with the Gradle wrapper. JDK 17 or 21, the Android platform
+`:devices:xiaomi:protocol`) and its Android libraries (`:core:health-api`, `:devices:core`)
+build with the Gradle wrapper. JDK 17 or 21, the Android platform
 37 and build-tools 37.0.0.
 
 ```bash
@@ -91,7 +92,10 @@ gate. A warning fails it (`warningsAsErrors`, set in `build-logic/` for every An
 and every plain Kotlin one that applies `com.android.lint`). The pure-Kotlin modules that hold
 code an app's lint used to check apply it, with the same rules: `:core:model`, `:core:fit`,
 `:core:devices-api`, `:devices:garmin:protocol` and `:devices:xiaomi:protocol` in
-`verifyCiLint`, `:wear:recording-core` in the watch gate. `:wearlink` has none. Lint knows no
+`verifyCiLint`, `:wear:recording-core` in the watch gate. The Android libraries (`:core:health-api`,
+`:devices:core`) run `lintCi` there too. A library's lint sees its own manifest only, not the
+permissions the app declares, so a call that needs one carries `@SuppressLint("MissingPermission")`
+and checks the grant at run time, as the app's own calls do. `:wearlink` has none. Lint knows no
 minSdk in a plain Kotlin module, so its API-level check does not run there: a JDK method that
 Android 8 lacks fails only on such a phone. Keep their code to the Java 8 library and
 `java.time`.
@@ -101,7 +105,7 @@ entry that was fixed is reported as such and can be dropped by regenerating:
 
 ```bash
 ./gradlew :app:updateLintBaselineCi :core:model:updateLintBaseline :core:fit:updateLintBaseline \
-  :core:devices-api:updateLintBaseline :core:health-api:updateLintBaselineCi \
+  :core:devices-api:updateLintBaseline :core:health-api:updateLintBaselineCi :devices:core:updateLintBaselineCi \
   :devices:garmin:protocol:updateLintBaseline :devices:xiaomi:protocol:updateLintBaseline \
   :wear:updateLintBaselineCi :wear:recording-core:updateLintBaseline
 ```
@@ -118,7 +122,8 @@ dependency change, regenerate the module's lockfile and commit it:
 
 ```bash
 ./gradlew :app:dependencies :core:model:dependencies :core:fit:dependencies :core:devices-api:dependencies \
-  :core:health-api:dependencies :devices:garmin:protocol:dependencies :devices:xiaomi:protocol:dependencies \
+  :core:health-api:dependencies :devices:core:dependencies \
+  :devices:garmin:protocol:dependencies :devices:xiaomi:protocol:dependencies \
   :wear:dependencies :wear:recording-core:dependencies :wearlink:dependencies --write-locks
 ```
 

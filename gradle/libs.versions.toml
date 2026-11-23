@@ -52,6 +52,8 @@ androidx-compose-material-icons-extended = { group = "androidx.compose.material"
 
 # Activity + Navigation
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activity-compose" }
+# The activity result launcher the companion dialog answers through (:devices:core); the app takes it through activity-compose.
+androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity-compose" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation-compose" }
 androidx-hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hilt-navigation-compose" }
 

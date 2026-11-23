@@ -30,8 +30,10 @@ class GattConnectionRatchetTest {
         val ConnectGatt = Regex("""\.connectGatt\(""")
 
         val Allowed = setOf(
-            // Opened by GarminWatchSyncService, the forwarder and the settings link, each under its lease.
-            "GarminGattClient.kt",
+            // The shared GATT link in :devices:core. Its owners hold the lease for its whole life:
+            // the Garmin client, opened by GarminWatchSyncService, the forwarder and the settings
+            // link, each under its own.
+            "GattLink.kt",
             // The capability probe, under RadioLeaseOwner.PROBE.
             "BleSensorCoordinator.kt",
         )

@@ -17,9 +17,8 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 ## Map
 
 - `app/src/main/kotlin/tech/mmarca/openwatch/`
-  - `devices/` — the device layer: `core` (ports, the radio lease, companion pairing, the
-    sync port), `garmin` (the GATT client, the links, stores and wellness import around the
-    protocol module), `wearos` (the
+  - `devices/` — the device layer: `garmin` (the GATT client, the links, stores and wellness
+    import around the protocol module), `wearos` (the
     phone side of the watch app), `xiaomi` (the scale's scan, store and writes around its codec
     module), `notifications`, `media`, `weather`.
     No Compose, no navigation, no Hilt module.
@@ -35,12 +34,20 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   FIT codec `core/fit` in the second. The unit-system provider that reads the platform's locale
   data is the app's (`core/presentation/LocaleUnitSystemProvider`). `:core:model` also holds the
   plain values the device protocols read from the platform sources (`WeatherSnapshot`,
-  `NotificationMsg`) and `runSuspendCatching`.
+  `NotificationMsg`), `runSuspendCatching`, the injected `DispatcherProvider` and the
+  `@ApplicationScope` qualifier.
 - `core/devices-api` (`:core:devices-api`) — the device contracts in `devices/core`, pure
   Kotlin: `DeviceFamily` and `DeviceFamilies`, `DeviceFeature`, live readings, the classifiers,
   `BleUuids`, `WatchPairingPort`, `CompanionPresenceObserver`, the sync port and its outcome and
-  failure types, the auto-sync interval, `SyncWakeLock`, the record id salt. Its test fixtures
-  are the shared fakes (`FakeDeviceSyncPort`, `FakeWatchPairing`, `FakeDeviceFamily`).
+  failure types, the auto-sync interval, `SyncWakeLock`, the record id salt, and the registry as
+  a device sees it (`data/repository/contract/DeviceRegistry`, which `BleDeviceRepository`
+  implements). Its test fixtures are the shared fakes (`FakeDeviceSyncPort`, `FakeWatchPairing`,
+  `FakeDeviceFamily`, `FakeDeviceRegistry`).
+- `devices/core` (`:devices:core`) — the platform half every device family shares, an Android
+  library in `devices/core`'s packages: the radio lease, `DeviceLog`, the GATT link (`GattLink`:
+  the dial and its redial, the MTU, discovery, notifications, writes) and the BLE scanner
+  (`BleScanner`), companion pairing and its service (`OpenWatchCompanionDeviceService`, in the
+  module's manifest), and the sync controller, its schedule, worker, budget and wake lock.
 - `core/health-api` (`:core:health-api`) — how the devices talk to Health Connect, as
   contracts: the record sink `HealthRecordStore` and its write helpers (`ImportedRecordWrites`),
   the strict reads `HealthConnectReads`, the paused-sync exception and the rate-limit check. An
@@ -80,8 +87,9 @@ Do not break these without an explicit decision.
   is the one service the app starts without a tap. A watch sync runs with no foreground
   service; its process-priority story is the companion association.
 - **One BLE radio, leased per address.** Everything that opens a BLE link takes a lease from
-  `devices/core/RadioLease.kt` under one of the four owner tags: `SYNC`, `FIND`, `SETTINGS`,
-  `NOTIFICATIONS`. A scan opens no link and takes no lease.
+  `devices/core/RadioLease.kt` (`:devices:core`) under one of the four owner tags: `SYNC`, `FIND`,
+  `SETTINGS`, `NOTIFICATIONS`. A scan opens no link and takes no lease. A new GATT device opens
+  its link through `GattLink`, never its own `connectGatt`.
 - **One companion device service.** `OpenWatchCompanionDeviceService` is the primary one; it
   fans out to every `CompanionPresenceObserver` bound `@IntoSet` in `DevicesModule`.
 - **Health Connect is reached through `HealthConnectGateway` only.** A device takes the

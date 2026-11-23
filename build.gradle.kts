@@ -55,6 +55,7 @@ tasks.register("verifyCiUnitTest") {
         ":core:fit:test",
         ":core:devices-api:test",
         ":core:health-api:testCiUnitTest",
+        ":devices:core:testCiUnitTest",
         ":devices:garmin:protocol:test",
         ":devices:xiaomi:protocol:test",
         ":app:testCiUnitTest",
@@ -90,6 +91,7 @@ tasks.register("verifyCiLint") {
         ":core:fit:lint",
         ":core:devices-api:lint",
         ":core:health-api:lintCi",
+        ":devices:core:lintCi",
         ":devices:garmin:protocol:lint",
         ":devices:xiaomi:protocol:lint",
     )

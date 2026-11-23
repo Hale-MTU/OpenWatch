@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Merged into the app's manifest. The permissions these components need are declared there,
+     with the reasons the privacy documents give. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <!-- Bound by the OS while an associated device is in range. For a watch the
+             binding elevates this process's priority so a multi-minute BLE file sync
+             is not killed. The primary companion service: the only one Android tells
+             that a device appeared, which it passes on (CompanionPresenceObserver) to
+             the watch's notification bridge and the scale listener. The app declares
+             no other companion service, so this one is the first. -->
+        <service
+            android:name="tech.mmarca.openwatch.devices.core.pairing.OpenWatchCompanionDeviceService"
+            android:exported="true"
+            android:permission="android.permission.BIND_COMPANION_DEVICE_SERVICE"
+            tools:targetApi="s">
+            <intent-filter>
+                <action android:name="android.companion.CompanionDeviceService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

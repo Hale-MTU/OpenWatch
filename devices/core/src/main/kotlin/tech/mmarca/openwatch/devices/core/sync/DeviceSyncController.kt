@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import tech.mmarca.openwatch.data.repository.contract.DeviceRegistry
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 
@@ -47,7 +47,7 @@ data class DeviceSyncUiState(
  */
 @Singleton
 class DeviceSyncController @Inject constructor(
-    private val deviceRepository: BleDeviceRepository,
+    private val deviceRepository: DeviceRegistry,
     private val syncPort: DeviceSyncPort,
     @param:ApplicationScope private val scope: CoroutineScope,
     private val wakeLock: SyncWakeLock = SyncWakeLock.None,

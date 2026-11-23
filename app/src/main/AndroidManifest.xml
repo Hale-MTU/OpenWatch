@@ -269,20 +269,8 @@
             </intent-filter>
         </activity-alias>
 
-        <!-- Bound by the OS while an associated device is in range. For a watch the
-             binding elevates this process's priority so a multi-minute BLE file sync
-             is not killed. The primary companion service: the only one Android tells
-             that a device appeared, which it passes on (CompanionPresenceObserver) to
-             the watch's notification bridge and the scale listener. -->
-        <service
-            android:name=".devices.core.pairing.OpenWatchCompanionDeviceService"
-            android:exported="true"
-            android:permission="android.permission.BIND_COMPANION_DEVICE_SERVICE"
-            tools:targetApi="s">
-            <intent-filter>
-                <action android:name="android.companion.CompanionDeviceService" />
-            </intent-filter>
-        </service>
+        <!-- The primary companion service, OpenWatchCompanionDeviceService, is declared
+             by :devices:core (devices/core/src/main/AndroidManifest.xml) and merged in. -->
 
         <!--
             devices/notifications: reads the phone's notifications so they can be

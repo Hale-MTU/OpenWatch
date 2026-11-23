@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
-import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import tech.mmarca.openwatch.data.repository.contract.DeviceRegistry
 import tech.mmarca.openwatch.devices.core.DeviceLog
 
 /**
@@ -29,7 +29,7 @@ import tech.mmarca.openwatch.devices.core.DeviceLog
 @Singleton
 class WatchAutoSyncScheduler @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val deviceRepository: BleDeviceRepository,
+    private val deviceRepository: DeviceRegistry,
     private val intervals: AutoSyncIntervalStore,
     private val syncPort: DeviceSyncPort,
 ) {

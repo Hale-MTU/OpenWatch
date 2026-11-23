@@ -8,7 +8,7 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
-import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import tech.mmarca.openwatch.data.repository.contract.DeviceRegistry
 import tech.mmarca.openwatch.devices.core.DeviceLog
 import kotlinx.coroutines.withContext
 
@@ -39,7 +39,7 @@ class WatchAutoSyncWorker(
             return Result.success()
         }
 
-        val device = entryPoint.bleDeviceRepository().devices.firstOrNull { it.id == deviceId }
+        val device = entryPoint.deviceRegistry().devices.firstOrNull { it.id == deviceId }
         if (device == null) {
             // The watch was removed while this run was queued.
             scheduler.cancel(deviceId)
@@ -100,7 +100,7 @@ class WatchAutoSyncWorker(
 interface WatchAutoSyncWorkerEntryPoint {
     fun deviceSyncController(): DeviceSyncController
 
-    fun bleDeviceRepository(): BleDeviceRepository
+    fun deviceRegistry(): DeviceRegistry
 
     fun watchAutoSyncScheduler(): WatchAutoSyncScheduler
 }

@@ -1,8 +1,5 @@
 package tech.mmarca.openwatch.devices.core.sync
 
-import android.content.Context
-import io.mockk.every
-import io.mockk.mockk
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -13,15 +10,12 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import tech.mmarca.openwatch.data.repository.testDeviceRepository
-import tech.mmarca.openwatch.data.repository.BleDeviceRepository
-import tech.mmarca.openwatch.devices.FakeSharedPreferences
+import tech.mmarca.openwatch.data.repository.contract.FakeDeviceRegistry
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import kotlinx.coroutines.launch
-import tech.mmarca.openwatch.devices.garmin.isGarmin
 
 /**
  * Row-state discipline: one sync at a time, progress scoped to the syncing device,
@@ -32,15 +26,14 @@ class DeviceSyncControllerTest {
 
     private fun files(count: Int) = DeviceSyncResult.Succeeded(written = mapOf(SyncTally.FILES to count))
 
-    private lateinit var repo: BleDeviceRepository
+    private lateinit var repo: FakeDeviceRegistry
     private lateinit var port: FakeDeviceSyncPort
 
     @Before
     fun setUp() {
-        val context = mockk<Context>()
-        every { context.getSharedPreferences(any(), any()) } returns FakeSharedPreferences()
-        repo = testDeviceRepository()
-        port = FakeDeviceSyncPort(canSync = { it.isGarmin }).apply {
+        repo = FakeDeviceRegistry()
+        // A Garmin watch syncs; a plain sensor does not.
+        port = FakeDeviceSyncPort(canSync = { it.integration == DeviceIntegration.GARMIN }).apply {
             progressToReport = DeviceSyncProgress(phase = DeviceSyncPhase.DOWNLOADING, total = 2, done = 1)
         }
     }

@@ -6,6 +6,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import tech.mmarca.openwatch.data.repository.ActivityWriteRepository
+import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.comaps.CoMapsNavigationRepositoryImpl
 import tech.mmarca.openwatch.data.repository.GarminSleepMinuteRepositoryImpl
 import tech.mmarca.openwatch.data.repository.GarminWellnessRepositoryImpl
@@ -13,6 +14,7 @@ import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.data.repository.ScaleWeighInRepositoryImpl
 import tech.mmarca.openwatch.data.repository.contract.ActivityRepository
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
+import tech.mmarca.openwatch.data.repository.contract.DeviceRegistry
 import tech.mmarca.openwatch.comaps.CoMapsNavigationRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminSleepMinuteRepository
 import tech.mmarca.openwatch.data.repository.contract.GarminWellnessRepository
@@ -53,6 +55,10 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindBodyProfilePreferences(impl: OpenWatchPreferences): BodyProfilePreferences
+
+    /** The registry as the device modules see it (:core:devices-api); the one instance. */
+    @Binds
+    abstract fun bindDeviceRegistry(impl: BleDeviceRepository): DeviceRegistry
 
     /** The record sink the devices write through (:core:health-api). */
     @Binds

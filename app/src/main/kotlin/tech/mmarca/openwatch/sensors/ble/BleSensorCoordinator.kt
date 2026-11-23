@@ -11,7 +11,6 @@ import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
-import android.bluetooth.le.ScanSettings
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -40,6 +39,7 @@ import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import tech.mmarca.openwatch.devices.core.ble.BleScanner
 import tech.mmarca.openwatch.devices.core.ble.BleUuids
 import tech.mmarca.openwatch.devices.core.withRadioLease
 import tech.mmarca.openwatch.devices.core.RadioLeaseBusyException
@@ -62,6 +62,7 @@ class BleSensorCoordinator @Inject constructor(
     /** The `(integration, kind)` verdicts, strongest first; bound in `di/DevicesModule`. */
     private val deviceClassifiers: List<@JvmSuppressWildcards DeviceClassifier>,
     private val radioLeases: RadioLeaseRegistry,
+    private val scanner: BleScanner,
     private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
 ) {
     private val bleThread = HandlerThread("OpenWatchBle").apply { start() }
@@ -104,17 +105,8 @@ class BleSensorCoordinator @Inject constructor(
             }
         }
         scanCallback = callback
-        try {
-            adapter.bluetoothLeScanner?.startScan(
-                filters,
-                ScanSettings.Builder()
-                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-                    .build(),
-                callback,
-            )
-        } catch (error: SecurityException) {
-            // A revoked grant must not crash the add-device flow.
-            Log.w(TAG, "BLE scan refused: ${error.message}")
+        // A revoked grant must not crash the add-device flow: the scanner says no instead.
+        if (!scanner.startDiscovery(filters, callback)) {
             scanCallback = null
             return
         }
@@ -186,9 +178,7 @@ class BleSensorCoordinator @Inject constructor(
 
     @SuppressLint("MissingPermission")
     fun stopScan() {
-        scanCallback?.let { callback ->
-            bluetoothAdapter?.bluetoothLeScanner?.stopScan(callback)
-        }
+        scanCallback?.let(scanner::stopDiscovery)
         scanCallback = null
         sdpReceiver?.let { receiver -> runCatching { context.unregisterReceiver(receiver) } }
         sdpReceiver = null

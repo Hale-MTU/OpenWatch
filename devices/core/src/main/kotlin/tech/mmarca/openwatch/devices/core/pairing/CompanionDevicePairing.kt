@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.devices.core.pairing
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.le.ScanFilter
@@ -283,8 +284,10 @@ class CompanionDevicePairing @Inject constructor(
         }
     }
 
-    // Presence observation (API 31+): what wakes OpenWatchCompanionDeviceService.
+    // Presence observation (API 31+): what wakes OpenWatchCompanionDeviceService. The app's
+    // manifest declares REQUEST_OBSERVE_COMPANION_DEVICE_PRESENCE; this module's lint cannot see it.
 
+    @SuppressLint("MissingPermission")
     private fun startObservingPresence(address: String) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
         val manager = manager() ?: return
@@ -296,6 +299,7 @@ class CompanionDevicePairing @Inject constructor(
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun stopObservingPresence(address: String) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
         val manager = manager() ?: return
