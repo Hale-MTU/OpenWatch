@@ -340,8 +340,6 @@
     <string name="settings_scales_delete_body">Его вес, пульс и состав тела будут удалены из Health Connect.</string>
     <string name="settings_scales_remove">Удалить весы</string>
     <string name="settings_scales_remove_body">OpenWatch перестанет слушать и забудет ключ. Уже сохранённые взвешивания останутся.</string>
-    <string name="hc_setup_missing_title">Ещё не выдано:</string>
-    <string name="hc_setup_missing_extra">Доступ в фоне и к истории находится на отдельной странице: откройте настройки Health Connect, затем OpenWatch, затем «Дополнительный доступ».</string>
     <string name="connected_apps_in_use">Используется сейчас</string>
     <string name="connected_apps_last_connected">Последнее подключение: %1$s</string>
     <string name="connected_apps_profile_received">Последний профиль получен: %1$s</string>
@@ -360,18 +358,6 @@
     <string name="home_settings">Настройки</string>
     <string name="home_settings_body">Профиль тела, доступ к уведомлениям, о приложении</string>
     <string name="hc_setup_title">Health Connect</string>
-    <string name="hc_setup_intro">OpenWatch копирует то, что записывают часы и весы, в Health Connect, откуда это читают OpenVitals и другие приложения. Ничто не покидает телефон: у приложения нет разрешения на доступ в интернет.</string>
-    <string name="hc_setup_permissions_title">Разрешения</string>
-    <string name="hc_setup_status_all_granted">Все разрешения предоставлены (%1$d)</string>
-    <string name="hc_setup_status_partial">Предоставлено разрешений: %1$d из %2$d. Запись, на сохранение которой нет разрешения, остаётся на устройстве.</string>
-    <string name="hc_setup_status_update">Health Connect нужно обновить, прежде чем OpenWatch сможет его использовать.</string>
-    <string name="hc_setup_status_play_store">Health Connect установлен без Google Play, поэтому его нельзя использовать на этом телефоне.</string>
-    <string name="hc_setup_status_unavailable">Health Connect недоступен на этом телефоне.</string>
-    <string name="hc_setup_grant">Предоставить разрешения</string>
-    <string name="hc_setup_open_settings">Открыть настройки Health Connect</string>
-    <string name="hc_setup_sync_title">Записывать в Health Connect</string>
-    <string name="hc_setup_sync_body">Выключение приостанавливает любую запись. Устройства хранят записанное, пока запись снова не включат.</string>
-    <string name="hc_setup_continue">Продолжить</string>
     <string name="settings_title">Настройки</string>
     <string name="settings_notification_access_title">Доступ к уведомлениям</string>
     <string name="settings_notification_access_body">Позволяет сопряжённым часам Garmin показывать уведомления телефона. Выключено.</string>
@@ -431,7 +417,6 @@
     <string name="watch_settings_spo2">SpO2 каждый час ночью</string>
     <string name="watch_settings_allow_on_watch">Разрешите это на часах: откройте там OpenWatch и включите один раз.</string>
     <string name="settings_watch_wearos_needs_workout_write">Тренировки не записаны: разрешите OpenWatch записывать тренировки, маршруты и расстояние в Health Connect и синхронизируйте снова.</string>
-    <string name="health_data_title">Что OpenWatch читает и записывает</string>
     <string name="health_data_intro">OpenWatch сохраняет в Health Connect то, что записало сопряжённое вами устройство, и читает только то, что нужно для синхронизации. Для каждого типа данных нужно ваше разрешение, и вы можете отозвать его в Health Connect в любое время.</string>
     <string name="health_data_open_body">Все типы данных о здоровье, откуда они поступают и зачем нужны.</string>
     <string name="settings_watch_garmin_withheld">Не сохранено в Health Connect из-за отсутствия разрешения: %1$s. Разрешите их, и со следующей синхронизации данные, которые отправляют часы, будут сохраняться.</string>

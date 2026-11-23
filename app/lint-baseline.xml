@@ -145,17 +145,6 @@
     </issue>
 
     <issue
-        id="Typos"
-        message="&quot;leem&quot; is a common misspelling; did you mean &quot;lêem&quot;?"
-        errorLine1="    &lt;string name=&quot;hc_setup_intro&quot;>O OpenWatch copia o que o relógio e a balança registam para o Health Connect, onde o OpenVitals e outras apps o leem. Nada sai do telemóvel: a app não tem permissão de internet.&lt;/string>"
-        errorLine2="                                                                                                                                                  ~~~~">
-        <location
-            file="src/main/res/values-pt/strings.xml"
-            line="462"
-            column="147"/>
-    </issue>
-
-    <issue
         id="PluralsCandidate"
         message="Formatting %d followed by words (&quot;steps&quot;): This should probably be a plural rather than a string"
         errorLine1="    &lt;string name=&quot;home_watch_live_steps&quot;>%1$d steps&lt;/string>"
@@ -163,28 +152,6 @@
         <location
             file="src/main/res/values/strings.xml"
             line="13"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="PluralsCandidate"
-        message="Formatting %d followed by words (&quot;permissions&quot;): This should probably be a plural rather than a string"
-        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="22"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="PluralsCandidate"
-        message="Formatting %d followed by words (&quot;permissions&quot;): This should probably be a plural rather than a string"
-        errorLine1="    &lt;string name=&quot;hc_setup_status_partial&quot;>%1$d of %2$d permissions granted. A record whose write is not granted stays on the device.&lt;/string>"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="23"
             column="5"/>
     </issue>
 

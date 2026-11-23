@@ -340,8 +340,6 @@
     <string name="settings_scales_delete_body">Jeho hmotnost, srdeční tep a složení těla se odstraní z Health Connect.</string>
     <string name="settings_scales_remove">Odebrat váhu</string>
     <string name="settings_scales_remove_body">OpenWatch přestane poslouchat a zapomene klíč. Už uložená vážení zůstanou.</string>
-    <string name="hc_setup_missing_title">Zatím neuděleno:</string>
-    <string name="hc_setup_missing_extra">Přístup na pozadí a k historii je na samostatné stránce: otevřete nastavení Health Connect, pak OpenWatch, pak Další přístup.</string>
     <string name="connected_apps_in_use">Právě se používá</string>
     <string name="connected_apps_last_connected">Naposledy připojeno %1$s</string>
     <string name="connected_apps_profile_received">Poslední profil přijat %1$s</string>
@@ -360,18 +358,6 @@
     <string name="home_settings">Nastavení</string>
     <string name="home_settings_body">Tělesný profil, přístup k oznámením, o aplikaci</string>
     <string name="hc_setup_title">Health Connect</string>
-    <string name="hc_setup_intro">OpenWatch kopíruje to, co zaznamenají vaše hodinky a váha, do Health Connect, kde to čte OpenVitals a další aplikace. Nic neopouští telefon: aplikace nemá oprávnění k internetu.</string>
-    <string name="hc_setup_permissions_title">Oprávnění</string>
-    <string name="hc_setup_status_all_granted">Všech %1$d oprávnění uděleno</string>
-    <string name="hc_setup_status_partial">Uděleno %1$d z %2$d oprávnění. Záznam, jehož zápis není povolen, zůstává v zařízení.</string>
-    <string name="hc_setup_status_update">Health Connect je potřeba aktualizovat, než ho OpenWatch bude moci používat.</string>
-    <string name="hc_setup_status_play_store">Health Connect je nainstalován bez Google Play, takže ho na tomto telefonu nelze používat.</string>
-    <string name="hc_setup_status_unavailable">Health Connect není na tomto telefonu k dispozici.</string>
-    <string name="hc_setup_grant">Udělit oprávnění</string>
-    <string name="hc_setup_open_settings">Otevřít nastavení Health Connect</string>
-    <string name="hc_setup_sync_title">Zapisovat do Health Connect</string>
-    <string name="hc_setup_sync_body">Vypnutí pozastaví každý zápis. Zařízení si uchovají, co zaznamenala, dokud zápis znovu nezapnete.</string>
-    <string name="hc_setup_continue">Pokračovat</string>
     <string name="settings_title">Nastavení</string>
     <string name="settings_notification_access_title">Přístup k oznámením</string>
     <string name="settings_notification_access_body">Umožní spárovaným hodinkám Garmin zobrazovat oznámení z telefonu. Vypnuto.</string>
@@ -431,7 +417,6 @@
     <string name="watch_settings_spo2">SpO2 každou hodinu v noci</string>
     <string name="watch_settings_allow_on_watch">Povolte to na hodinkách: otevřete tam OpenWatch a jednou to zapněte.</string>
     <string name="settings_watch_wearos_needs_workout_write">Tréninky nebyly zapsány: povolte OpenWatch zapisovat tréninky, trasy a vzdálenost do Health Connect a znovu synchronizujte.</string>
-    <string name="health_data_title">Co OpenWatch čte a zapisuje</string>
     <string name="health_data_intro">OpenWatch zapisuje do Health Connect to, co zaznamenalo zařízení, které jste spárovali, a čte jen to, co synchronizace potřebuje. Každý typ potřebuje vaše oprávnění a v Health Connect ho můžete kdykoli odebrat.</string>
     <string name="health_data_open_body">Každý typ zdravotních dat, zařízení, ze kterého pochází, a proč.</string>
     <string name="settings_watch_garmin_withheld">Neuloženo do Health Connect kvůli chybějícímu oprávnění: %1$s. Povolte je a další synchronizace už uloží, co hodinky od té doby pošlou.</string>

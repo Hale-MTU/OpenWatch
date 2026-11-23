@@ -9,18 +9,6 @@
     <string name="home_settings">الإعدادات</string>
     <string name="home_settings_body">الملف الجسدي، والوصول إلى الإشعارات، وحول التطبيق</string>
     <string name="hc_setup_title">Health Connect</string>
-    <string name="hc_setup_intro">ينسخ OpenWatch ما تسجّله ساعتك وميزانك إلى Health Connect، حيث يقرؤه OpenVitals وتطبيقات أخرى. لا يغادر أي شيء الهاتف: ليس لدى التطبيق إذن الوصول إلى الإنترنت.</string>
-    <string name="hc_setup_permissions_title">الأذونات</string>
-    <string name="hc_setup_status_all_granted">مُنحت جميع الأذونات (%1$d)</string>
-    <string name="hc_setup_status_partial">الأذونات الممنوحة: %1$d من %2$d. يبقى السجلّ الذي لم يُمنح إذن كتابته على الجهاز.</string>
-    <string name="hc_setup_status_update">يحتاج Health Connect إلى تحديث قبل أن يتمكن OpenWatch من استخدامه.</string>
-    <string name="hc_setup_status_play_store">تم تثبيت Health Connect بدون Google Play، لذا لا يمكن استخدامه على هذا الهاتف.</string>
-    <string name="hc_setup_status_unavailable">لا يتوفر Health Connect على هذا الهاتف.</string>
-    <string name="hc_setup_grant">منح الأذونات</string>
-    <string name="hc_setup_open_settings">فتح إعدادات Health Connect</string>
-    <string name="hc_setup_sync_title">الكتابة في Health Connect</string>
-    <string name="hc_setup_sync_body">يؤدي الإيقاف إلى إيقاف كل عمليات الكتابة مؤقتًا. تحتفظ الأجهزة بما سجّلته حتى يُعاد التفعيل.</string>
-    <string name="hc_setup_continue">متابعة</string>
     <string name="settings_title">الإعدادات</string>
     <string name="settings_notification_access_title">الوصول إلى الإشعارات</string>
     <string name="settings_notification_access_body">يتيح لساعة Garmin مقترنة عرض إشعارات الهاتف. غير مفعّل.</string>
@@ -318,8 +306,6 @@
     <string name="settings_watch_wearos_needs_weight_read">لم تُقدَّر سعرات المشي: أضف وزنك في الملف الجسدي، أو اسمح لـ OpenWatch بقراءة وزنك في Health Connect.</string>
     <string name="settings_watch_wearos_needs_steps_write">لم تُكتب الخطوات: اسمح لـ OpenWatch بكتابة الخطوات في Health Connect، ثم زامن مرة أخرى.</string>
     <string name="settings_watch_wearos_needs_calories_write">لم تُكتب سعرات المشي: اسمح لـ OpenWatch بكتابة السعرات الحرارية النشطة وقراءة التمارين في Health Connect لتقديرها بدءًا من المزامنة التالية.</string>
-    <string name="hc_setup_missing_title">لم تُمنح بعد:</string>
-    <string name="hc_setup_missing_extra">الوصول في الخلفية وإلى السجل في صفحة مستقلة: افتح إعدادات Health Connect، ثم OpenWatch، ثم الوصول الإضافي.</string>
     <string name="connected_apps_in_use">قيد الاستخدام الآن</string>
     <string name="connected_apps_last_connected">آخر اتصال %1$s</string>
     <string name="connected_apps_profile_received">آخر ملف شخصي مستلم %1$s</string>
@@ -346,7 +332,6 @@
     <string name="watch_settings_spo2">قياس SpO2 كل ساعة ليلًا</string>
     <string name="watch_settings_allow_on_watch">اسمح بذلك على الساعة: افتح OpenWatch هناك وفعّله مرة واحدة.</string>
     <string name="settings_watch_wearos_needs_workout_write">لم تُكتب التمارين: اسمح لـ OpenWatch بكتابة التمارين والمسارات والمسافة في Health Connect، ثم زامن مرة أخرى.</string>
-    <string name="health_data_title">ما يقرؤه OpenWatch ويكتبه</string>
     <string name="health_data_intro">يكتب OpenWatch في Health Connect ما سجّله جهاز أقرنته، ولا يقرأ إلا ما تحتاج إليه المزامنة. يحتاج كل نوع إلى إذنك، ويمكنك سحبه في Health Connect في أي وقت.</string>
     <string name="health_data_open_body">كل نوع من البيانات الصحية، والجهاز الذي يأتي منه، والسبب.</string>
     <string name="settings_watch_garmin_withheld">لم يُحفظ في Health Connect لعدم توفر الإذن: %1$s. اسمح بها، وستحفظ المزامنة التالية ما ترسله الساعة من ذلك الحين فصاعدًا.</string>

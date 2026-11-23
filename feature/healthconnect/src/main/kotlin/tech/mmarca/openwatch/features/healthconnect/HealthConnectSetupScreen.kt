@@ -1,6 +1,5 @@
 package tech.mmarca.openwatch.features.healthconnect
 
-import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,8 +16,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import tech.mmarca.openwatch.PermissionsRationaleActivity
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.domain.model.HealthConnectAvailability
@@ -44,6 +41,8 @@ import tech.mmarca.openwatch.ui.theme.Spacing
 fun HealthConnectSetupRoute(
     /** Continue to Home, during onboarding; null on the page Settings and Home open. */
     onContinue: (() -> Unit)?,
+    /** The list of the health data the app reads and writes, the app's own activity. */
+    onOpenHealthData: () -> Unit,
     viewModel: HealthConnectSetupViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -57,7 +56,7 @@ fun HealthConnectSetupRoute(
         onContinue = onContinue,
         onGrantPermissions = { permissionLauncher.launch(viewModel.requestablePermissions) },
         onOpenHealthConnectSettings = { openHealthConnectPermissionSettings(context) },
-        onOpenHealthData = { context.startActivity(Intent(context, PermissionsRationaleActivity::class.java)) },
+        onOpenHealthData = onOpenHealthData,
         onSyncEnabledChange = viewModel::setSyncEnabled,
     )
 }
@@ -149,14 +148,14 @@ fun HealthConnectSetupScreen(
                     onClick = onOpenHealthData,
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(stringResource(R.string.health_data_title))
+                    Text(stringResource(UiR.string.health_data_title))
                 }
             }
         }
 
         SwitchCard(
-            title = stringResource(R.string.hc_setup_sync_title),
-            body = stringResource(R.string.hc_setup_sync_body),
+            title = stringResource(UiR.string.hc_setup_sync_title),
+            body = stringResource(UiR.string.hc_setup_sync_body),
             checked = state.syncEnabled,
             onCheckedChange = onSyncEnabledChange,
             modifier = Modifier.fillMaxWidth(),

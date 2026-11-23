@@ -330,8 +330,6 @@
     <string name="settings_scales_delete_body">体重、心拍数、体組成が Health Connect から削除されます。</string>
     <string name="settings_scales_remove">体重計を削除</string>
     <string name="settings_scales_remove_body">OpenWatch は受信を停止し、キーを消去します。保存済みの測定は残ります。</string>
-    <string name="hc_setup_missing_title">未許可:</string>
-    <string name="hc_setup_missing_extra">バックグラウンドと履歴へのアクセスは別のページにあります。ヘルスコネクトの設定を開き、OpenWatch、追加のアクセスの順に進んでください。</string>
     <string name="connected_apps_in_use">使用中</string>
     <string name="connected_apps_last_connected">最終接続: %1$s</string>
     <string name="connected_apps_profile_received">最終プロフィール受信: %1$s</string>
@@ -350,18 +348,6 @@
     <string name="home_settings">設定</string>
     <string name="home_settings_body">体のプロフィール、通知へのアクセス、このアプリについて</string>
     <string name="hc_setup_title">Health Connect</string>
-    <string name="hc_setup_intro">OpenWatch は、ウォッチと体重計が記録したデータを Health Connect にコピーします。OpenVitals などのアプリはそこから読み取ります。データがスマートフォンの外に出ることはありません。このアプリにはインターネットの権限がありません。</string>
-    <string name="hc_setup_permissions_title">権限</string>
-    <string name="hc_setup_status_all_granted">%1$d 件の権限をすべて許可済み</string>
-    <string name="hc_setup_status_partial">%2$d 件中 %1$d 件の権限を許可済み。書き込みが許可されていない記録はデバイスに残ります。</string>
-    <string name="hc_setup_status_update">OpenWatch で使用するには、Health Connect の更新が必要です。</string>
-    <string name="hc_setup_status_play_store">Health Connect が Google Play なしでインストールされているため、このスマートフォンでは使用できません。</string>
-    <string name="hc_setup_status_unavailable">このスマートフォンでは Health Connect を利用できません。</string>
-    <string name="hc_setup_grant">権限を許可</string>
-    <string name="hc_setup_open_settings">Health Connect の設定を開く</string>
-    <string name="hc_setup_sync_title">Health Connect に書き込む</string>
-    <string name="hc_setup_sync_body">オフにするとすべての書き込みが一時停止します。再びオンにするまで、デバイスが記録を保持します。</string>
-    <string name="hc_setup_continue">続行</string>
     <string name="settings_title">設定</string>
     <string name="settings_notification_access_title">通知へのアクセス</string>
     <string name="settings_notification_access_body">ペアリングした Garmin ウォッチにスマートフォンの通知を表示できるようにします。オフ。</string>
@@ -421,7 +407,6 @@
     <string name="watch_settings_spo2">夜間の SpO2（1 時間ごと）</string>
     <string name="watch_settings_allow_on_watch">ウォッチで許可してください：ウォッチで OpenWatch を開き、一度オンにします。</string>
     <string name="settings_watch_wearos_needs_workout_write">ワークアウトは書き込まれていません。ワークアウト、ルート、距離の Health Connect への書き込みを OpenWatch に許可してから、もう一度同期してください。</string>
-    <string name="health_data_title">OpenWatch が読み書きするデータ</string>
     <string name="health_data_intro">OpenWatch は、ペアリングしたデバイスが記録したデータを Health Connect に書き込み、同期に必要なデータだけを読み取ります。データの種類ごとに許可が必要で、Health Connect でいつでも取り消せます。</string>
     <string name="health_data_open_body">すべての健康データの種類と、その取得元のデバイスと理由。</string>
     <string name="settings_watch_garmin_withheld">権限がないため Health Connect に保存されませんでした: %1$s。許可すると、次回の同期からウォッチが送るデータが保存されます。</string>

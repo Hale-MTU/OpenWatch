@@ -30,4 +30,7 @@
     <string name="settings_watch_notifications_disclosure_accept">続行</string>
     <string name="settings_watch_notifications_disclosure_decline">今はしない</string>
     <string name="time_just_now">たった今</string>
+    <string name="hc_setup_sync_title">Health Connect に書き込む</string>
+    <string name="hc_setup_sync_body">オフにするとすべての書き込みが一時停止します。再びオンにするまで、デバイスが記録を保持します。</string>
+    <string name="health_data_title">OpenWatch が読み書きするデータ</string>
 </resources>

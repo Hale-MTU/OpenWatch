@@ -15,7 +15,7 @@ class SwallowedFailureRatchetTest {
 
     @Test
     fun `no ViewModel swallows an exception into a default`() {
-        val offenders = File(Root).walkTopDown()
+        val offenders = Roots.asSequence().flatMap { File(it).walkTopDown() }
             .filter { it.isFile && it.name.endsWith("ViewModel.kt") }
             .flatMap { file ->
                 val lines = file.readLines()
@@ -24,7 +24,7 @@ class SwallowedFailureRatchetTest {
                     .filterNot { index ->
                         (index - 1..index + 1).any { lines.getOrNull(it)?.contains("on purpose", ignoreCase = true) == true }
                     }
-                    .map { index -> "${file.relativeTo(File(Root))}:${index + 1}" }
+                    .map { index -> "${file.invariantSeparatorsPath.substringAfter("/openwatch/")}:${index + 1}" }
             }
             .toList()
 
@@ -34,7 +34,9 @@ class SwallowedFailureRatchetTest {
     }
 
     private companion object {
-        const val Root = "src/main/kotlin/tech/mmarca/openwatch/features"
+        /** The app's screens and those of the modules under `feature/`, which keep the app's packages. */
+        val Roots = listOf("src/main/kotlin/tech/mmarca/openwatch/features") +
+            LibraryModuleRoots.filterKeys { it.startsWith("feature/") }.values.map { "$it/features" }
         val Unnamed = Regex("""catch\s*\(\s*_\s*:\s*(Exception|Throwable)\s*\)""")
     }
 }

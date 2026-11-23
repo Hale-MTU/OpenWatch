@@ -328,8 +328,6 @@
     <string name="settings_scales_delete_body">Selle kaal, pulss ja keha koostis eemaldatakse Health Connectist.</string>
     <string name="settings_scales_remove">Eemalda kaal</string>
     <string name="settings_scales_remove_body">OpenWatch lõpetab kuulamise ja unustab võtme. Juba salvestatud kaalumised jäävad alles.</string>
-    <string name="hc_setup_missing_title">Veel andmata:</string>
-    <string name="hc_setup_missing_extra">Taustal ja ajaloo juurdepääs on eraldi lehel: ava Health Connecti seaded, siis OpenWatch, siis Täiendav juurdepääs.</string>
     <string name="connected_apps_in_use">Praegu kasutusel</string>
     <string name="connected_apps_last_connected">Viimati ühendatud %1$s</string>
     <string name="connected_apps_profile_received">Viimane profiil saadud %1$s</string>
@@ -348,18 +346,6 @@
     <string name="home_settings">Seaded</string>
     <string name="home_settings_body">Kehaprofiil, juurdepääs teavitustele, teave</string>
     <string name="hc_setup_title">Health Connect</string>
-    <string name="hc_setup_intro">OpenWatch kopeerib sinu kella ja kaalu salvestatu Health Connecti, kust seda loevad OpenVitals ja teised rakendused. Miski ei lahku telefonist: rakendusel pole internetiluba.</string>
-    <string name="hc_setup_permissions_title">Load</string>
-    <string name="hc_setup_status_all_granted">Kõik %1$d luba on antud</string>
-    <string name="hc_setup_status_partial">Antud %1$d luba %2$d-st. Kirje, mille kirjutamiseks luba pole, jääb seadmesse.</string>
-    <string name="hc_setup_status_update">Health Connect vajab uuendamist, enne kui OpenWatch saab seda kasutada.</string>
-    <string name="hc_setup_status_play_store">Health Connect on paigaldatud ilma Google Playta, seega ei saa seda selles telefonis kasutada.</string>
-    <string name="hc_setup_status_unavailable">Health Connect pole selles telefonis saadaval.</string>
-    <string name="hc_setup_grant">Anna load</string>
-    <string name="hc_setup_open_settings">Ava Health Connecti seaded</string>
-    <string name="hc_setup_sync_title">Kirjuta Health Connecti</string>
-    <string name="hc_setup_sync_body">Väljalülitamine peatab kõik kirjutamised. Seadmed hoiavad salvestatut, kuni see uuesti sisse lülitatakse.</string>
-    <string name="hc_setup_continue">Jätka</string>
     <string name="settings_title">Seaded</string>
     <string name="settings_notification_access_title">Juurdepääs teavitustele</string>
     <string name="settings_notification_access_body">Laseb seotud Garmini kellal näidata telefoni teavitusi. Väljas.</string>
@@ -419,7 +405,6 @@
     <string name="watch_settings_spo2">SpO2 iga tund öösel</string>
     <string name="watch_settings_allow_on_watch">Luba see kellas: ava seal OpenWatch ja lülita see üks kord sisse.</string>
     <string name="settings_watch_wearos_needs_workout_write">Treeninguid ei kirjutatud: luba OpenWatchil kirjutada treeningud, marsruudid ja vahemaa Health Connecti ning sünkrooni uuesti.</string>
-    <string name="health_data_title">Mida OpenWatch loeb ja kirjutab</string>
     <string name="health_data_intro">OpenWatch kirjutab Health Connecti selle, mille sinu seotud seade salvestas, ja loeb ainult seda, mida sünkroonimine vajab. Iga andmetüüp vajab sinu luba ja saad selle Health Connectis igal ajal tagasi võtta.</string>
     <string name="health_data_open_body">Iga terviseandmete tüüp, seade, kust see pärineb, ja miks.</string>
     <string name="settings_watch_garmin_withheld">Health Connecti ei salvestatud, kuna luba puudub: %1$s. Luba need ja järgmisest sünkroonimisest alates salvestatakse see, mida kell saadab.</string>

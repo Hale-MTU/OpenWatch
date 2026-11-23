@@ -23,6 +23,7 @@ import tech.mmarca.openwatch.features.healthconnect.HealthDataList
 import tech.mmarca.openwatch.ui.components.OpenWatchButton
 import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 import tech.mmarca.openwatch.ui.theme.Spacing
+import tech.mmarca.openwatch.core.ui.R as UiR
 
 /**
  * What OpenWatch reads and writes, and why. Health Connect opens this from its own
@@ -46,7 +47,7 @@ class PermissionsRationaleActivity : ComponentActivity() {
                         verticalArrangement = Arrangement.spacedBy(Spacing.md),
                     ) {
                         Text(
-                            text = stringResource(R.string.health_data_title),
+                            text = stringResource(UiR.string.health_data_title),
                             style = MaterialTheme.typography.headlineSmall,
                             modifier = Modifier.semantics { heading() },
                         )

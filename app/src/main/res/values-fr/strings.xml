@@ -334,8 +334,6 @@
     <string name="settings_scales_delete_body">Son poids, sa fréquence cardiaque et sa composition corporelle sont supprimés de Santé Connect.</string>
     <string name="settings_scales_remove">Retirer la balance</string>
     <string name="settings_scales_remove_body">OpenWatch cesse d’écouter et oublie la clé. Les pesées déjà enregistrées sont conservées.</string>
-    <string name="hc_setup_missing_title">Pas encore accordées :</string>
-    <string name="hc_setup_missing_extra">L\'accès en arrière-plan et à l\'historique est sur une page à part : ouvrez les paramètres de Santé Connect, puis OpenWatch, puis Accès supplémentaire.</string>
     <string name="connected_apps_in_use">Utilisée en ce moment</string>
     <string name="connected_apps_last_connected">Dernière connexion %1$s</string>
     <string name="connected_apps_profile_received">Dernier profil reçu %1$s</string>
@@ -354,18 +352,6 @@
     <string name="home_settings">Paramètres</string>
     <string name="home_settings_body">Profil corporel, accès aux notifications, à propos</string>
     <string name="hc_setup_title">Santé Connect</string>
-    <string name="hc_setup_intro">OpenWatch copie ce que votre montre et votre balance enregistrent dans Santé Connect, où OpenVitals et d\'autres applications le lisent. Rien ne quitte le téléphone : l\'application n\'a pas d\'autorisation Internet.</string>
-    <string name="hc_setup_permissions_title">Autorisations</string>
-    <string name="hc_setup_status_all_granted">Les %1$d autorisations sont accordées</string>
-    <string name="hc_setup_status_partial">%1$d autorisations sur %2$d accordées. Un enregistrement dont l\'écriture n\'est pas autorisée reste sur l\'appareil.</string>
-    <string name="hc_setup_status_update">Santé Connect doit être mis à jour avant qu\'OpenWatch puisse l\'utiliser.</string>
-    <string name="hc_setup_status_play_store">Santé Connect est installé sans Google Play et ne peut donc pas être utilisé sur ce téléphone.</string>
-    <string name="hc_setup_status_unavailable">Santé Connect n\'est pas disponible sur ce téléphone.</string>
-    <string name="hc_setup_grant">Accorder les autorisations</string>
-    <string name="hc_setup_open_settings">Ouvrir les paramètres de Santé Connect</string>
-    <string name="hc_setup_sync_title">Écrire dans Santé Connect</string>
-    <string name="hc_setup_sync_body">Désactivé, toute écriture est suspendue. Les appareils gardent ce qu\'ils ont enregistré jusqu\'à la réactivation.</string>
-    <string name="hc_setup_continue">Continuer</string>
     <string name="settings_title">Paramètres</string>
     <string name="settings_notification_access_title">Accès aux notifications</string>
     <string name="settings_notification_access_body">Permet à une montre Garmin associée d\'afficher les notifications du téléphone. Désactivé.</string>
@@ -425,7 +411,6 @@
     <string name="watch_settings_spo2">SpO2 toutes les heures la nuit</string>
     <string name="watch_settings_allow_on_watch">Autorisez-le sur la montre : ouvrez OpenWatch dessus et activez-le une fois.</string>
     <string name="settings_watch_wearos_needs_workout_write">Entraînements non enregistrés : autorisez OpenWatch à écrire les entraînements, itinéraires et distances dans Santé Connect, puis synchronisez à nouveau.</string>
-    <string name="health_data_title">Ce qu\'OpenWatch lit et écrit</string>
     <string name="health_data_intro">OpenWatch écrit dans Santé Connect ce qu\'a enregistré un appareil que vous avez appairé, et ne lit que ce dont une synchronisation a besoin. Chaque type nécessite votre autorisation, que vous pouvez retirer à tout moment dans Santé Connect.</string>
     <string name="health_data_open_body">Chaque type de données de santé, l\'appareil d\'où il provient et pourquoi.</string>
     <string name="settings_watch_garmin_withheld">Non enregistrés dans Santé Connect, faute d\'autorisation : %1$s. Autorisez-les, et la prochaine synchronisation enregistrera ce que la montre envoie à partir de là.</string>

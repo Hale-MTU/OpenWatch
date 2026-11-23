@@ -328,8 +328,6 @@
     <string name="settings_scales_delete_body">Gewicht, Herzfrequenz und Körperzusammensetzung werden aus Health Connect entfernt.</string>
     <string name="settings_scales_remove">Waage entfernen</string>
     <string name="settings_scales_remove_body">OpenWatch lauscht nicht mehr und vergisst den Schlüssel. Bereits gespeicherte Messungen bleiben.</string>
-    <string name="hc_setup_missing_title">Noch nicht erteilt:</string>
-    <string name="hc_setup_missing_extra">Hintergrund- und Verlaufszugriff stehen auf einer eigenen Seite: Health-Connect-Einstellungen öffnen, dann OpenWatch, dann Zusätzlicher Zugriff.</string>
     <string name="connected_apps_in_use">Gerade in Verwendung</string>
     <string name="connected_apps_last_connected">Zuletzt verbunden %1$s</string>
     <string name="connected_apps_profile_received">Letztes Profil empfangen %1$s</string>
@@ -348,18 +346,6 @@
     <string name="home_settings">Einstellungen</string>
     <string name="home_settings_body">Körperprofil, Benachrichtigungszugriff, Über</string>
     <string name="hc_setup_title">Health Connect</string>
-    <string name="hc_setup_intro">OpenWatch kopiert, was deine Uhr und deine Waage aufzeichnen, nach Health Connect, wo OpenVitals und andere Apps es lesen. Nichts verlässt das Telefon: Die App hat keine Internetberechtigung.</string>
-    <string name="hc_setup_permissions_title">Berechtigungen</string>
-    <string name="hc_setup_status_all_granted">Alle %1$d Berechtigungen erteilt</string>
-    <string name="hc_setup_status_partial">%1$d von %2$d Berechtigungen erteilt. Ein Eintrag, dessen Schreiben nicht erlaubt ist, bleibt auf dem Gerät.</string>
-    <string name="hc_setup_status_update">Health Connect muss aktualisiert werden, bevor OpenWatch es nutzen kann.</string>
-    <string name="hc_setup_status_play_store">Health Connect ist ohne Google Play installiert und kann deshalb auf diesem Telefon nicht verwendet werden.</string>
-    <string name="hc_setup_status_unavailable">Health Connect ist auf diesem Telefon nicht verfügbar.</string>
-    <string name="hc_setup_grant">Berechtigungen erteilen</string>
-    <string name="hc_setup_open_settings">Health-Connect-Einstellungen öffnen</string>
-    <string name="hc_setup_sync_title">In Health Connect schreiben</string>
-    <string name="hc_setup_sync_body">Aus pausiert jedes Schreiben. Die Geräte behalten ihre Aufzeichnungen, bis es wieder an ist.</string>
-    <string name="hc_setup_continue">Weiter</string>
     <string name="settings_title">Einstellungen</string>
     <string name="settings_notification_access_title">Benachrichtigungszugriff</string>
     <string name="settings_notification_access_body">Lässt eine gekoppelte Garmin-Uhr die Benachrichtigungen des Telefons anzeigen. Aus.</string>
@@ -419,7 +405,6 @@
     <string name="watch_settings_spo2">SpO2 stündlich in der Nacht</string>
     <string name="watch_settings_allow_on_watch">Erlaube es auf der Uhr: Öffne dort OpenWatch und schalte es einmal ein.</string>
     <string name="settings_watch_wearos_needs_workout_write">Trainings nicht geschrieben: Erlaube OpenWatch, Trainings, Routen und Distanz in Health Connect zu schreiben, und synchronisiere dann erneut.</string>
-    <string name="health_data_title">Was OpenWatch liest und schreibt</string>
     <string name="health_data_intro">OpenWatch schreibt in Health Connect, was ein von dir gekoppeltes Gerät aufgezeichnet hat, und liest nur, was eine Synchronisierung braucht. Jeder Typ braucht deine Berechtigung, und du kannst sie in Health Connect jederzeit widerrufen.</string>
     <string name="health_data_open_body">Jeder Gesundheitsdatentyp, das Gerät, von dem er stammt, und warum.</string>
     <string name="settings_watch_garmin_withheld">Mangels Berechtigung nicht in Health Connect gespeichert: %1$s. Erlaube sie, dann speichert die nächste Synchronisierung ab da, was die Uhr sendet.</string>

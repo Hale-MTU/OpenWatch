@@ -27,6 +27,7 @@ class HealthConnectOnboardingActivity : AppCompatActivity() {
                         )
                         finish()
                     },
+                    onOpenHealthData = { startActivity(Intent(this, PermissionsRationaleActivity::class.java)) },
                 )
             }
         }

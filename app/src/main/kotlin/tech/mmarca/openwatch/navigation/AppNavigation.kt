@@ -201,6 +201,8 @@ private fun AppNavHost(
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
+    // The list of the health data the app reads and writes: the app's own activity.
+    val openHealthData = { context.startActivity(Intent(context, PermissionsRationaleActivity::class.java)) }
     NavHost(
         navController = navController,
         startDestination = startDestination,
@@ -214,10 +216,11 @@ private fun AppNavHost(
                         popUpTo<Onboarding> { inclusive = true }
                     }
                 },
+                onOpenHealthData = openHealthData,
             )
         }
         composable<HealthConnectSetup> {
-            HealthConnectSetupRoute(onContinue = null)
+            HealthConnectSetupRoute(onContinue = null, onOpenHealthData = openHealthData)
         }
         composable<Home> {
             if (LocalListDetail.current) {
@@ -233,7 +236,7 @@ private fun AppNavHost(
                 },
                 onOpenBodyProfile = { navController.navigate(BodyProfile) { launchSingleTop = true } },
                 onOpenConnectedApps = { navController.navigate(ConnectedApps) { launchSingleTop = true } },
-                onOpenHealthData = { context.startActivity(Intent(context, PermissionsRationaleActivity::class.java)) },
+                onOpenHealthData = openHealthData,
             )
         }
         composable<ConnectedApps> {

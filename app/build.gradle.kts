@@ -130,6 +130,8 @@ dependencies {
     // submodule, a composite build) as its api; the trust store and the binder are built in
     // di/LinkModule.
     implementation(project(":link-host"))
+    // The Health Connect setup screen and the health data list.
+    implementation(project(":feature:healthconnect"))
     // The pure models, which also bring health-calculations, and the FIT codec.
     implementation(project(":core:model"))
     implementation(project(":core:fit"))
@@ -213,6 +215,8 @@ dependencies {
     testImplementation(testFixtures(project(":core:health-api")))
     // SharedPreferences in memory and a SecretSeal on a software key, shared with the device modules.
     testImplementation(testFixtures(project(":devices:core")))
+    // The main dispatcher swapped for the tests' (MainDispatcherRule).
+    testImplementation(testFixtures(project(":core:model")))
     // The registry and the body profile in memory.
     testImplementation(testFixtures(project(":core:data")))
     // The weigh-in table in memory, for the Scales screens.
@@ -264,6 +268,7 @@ tasks.withType<Test>().configureEach {
         ":devices:ble-standard:testCiUnitTest",
         ":devices:ble-standard:protocol:test",
         ":link-host:testCiUnitTest",
+        ":feature:healthconnect:testCiUnitTest",
     )
     // The architecture tests read sources and documents as plain files: this module's
     // and the others' code, both manifests, the strings, the privacy documents. None
@@ -288,6 +293,7 @@ tasks.withType<Test>().configureEach {
         "scannedBleStandardMain" to "devices/ble-standard/src/main",
         "scannedBleStandardProtocolMain" to "devices/ble-standard/protocol/src/main",
         "scannedLinkHostMain" to "link-host/src/main",
+        "scannedFeatureHealthconnectMain" to "feature/healthconnect/src/main",
         "scannedWearMain" to "wear/src/main",
         "scannedWearRecordingCoreMain" to "wear/recording-core/src/main",
         "scannedWearlinkMain" to "wearlink/src/main",
@@ -300,6 +306,8 @@ tasks.withType<Test>().configureEach {
         "scannedWearOsBuild" to "devices/wearos/build.gradle.kts",
         "scannedXiaomiBuild" to "devices/xiaomi/build.gradle.kts",
         "scannedBleStandardBuild" to "devices/ble-standard/build.gradle.kts",
+        // ...and which device modules a screen module depends on.
+        "scannedFeatureHealthconnectBuild" to "feature/healthconnect/build.gradle.kts",
         "scannedPrivacyPolicy" to "PRIVACY.md",
         "scannedPermissionsDoc" to "docs/app/permissions.md",
     ).forEach { (name, path) ->

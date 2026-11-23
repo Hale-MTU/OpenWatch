@@ -30,4 +30,7 @@
     <string name="settings_watch_notifications_disclosure_accept">Continuar</string>
     <string name="settings_watch_notifications_disclosure_decline">Ahora no</string>
     <string name="time_just_now">ahora mismo</string>
+    <string name="hc_setup_sync_title">Escribir en Health Connect</string>
+    <string name="hc_setup_sync_body">Desactivado pausa todas las escrituras. Los dispositivos conservan lo registrado hasta que se vuelva a activar.</string>
+    <string name="health_data_title">Qué lee y escribe OpenWatch</string>
 </resources>

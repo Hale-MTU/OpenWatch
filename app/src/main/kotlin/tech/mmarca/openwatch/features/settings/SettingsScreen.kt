@@ -28,6 +28,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.features.watches.NotificationAccessDisclosureDialog
 import tech.mmarca.openwatch.ui.components.LocalSnackbarHostState
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
@@ -125,8 +126,8 @@ fun SettingsScreen(
             onClick = onOpenBodyProfile,
         )
         SwitchCard(
-            title = stringResource(R.string.hc_setup_sync_title),
-            body = stringResource(R.string.hc_setup_sync_body),
+            title = stringResource(UiR.string.hc_setup_sync_title),
+            body = stringResource(UiR.string.hc_setup_sync_body),
             checked = state.syncEnabled,
             onCheckedChange = onSyncEnabledChange,
             modifier = Modifier.fillMaxWidth(),
@@ -155,7 +156,7 @@ fun SettingsScreen(
             onClick = onOpenNotificationAccess,
         )
         SettingsRow(
-            title = stringResource(R.string.health_data_title),
+            title = stringResource(UiR.string.health_data_title),
             body = stringResource(R.string.health_data_open_body),
             onClick = onOpenHealthData,
         )

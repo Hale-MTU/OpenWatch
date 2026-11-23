@@ -10,18 +10,6 @@
     <string name="home_settings_body">Body profile, notification access, about</string>
     <string name="home_detail_placeholder">Choose a device to see it here.</string>
     <string name="hc_setup_title">Health Connect</string>
-    <string name="hc_setup_intro">OpenWatch copies what your watch and scale record into Health Connect, where OpenVitals and other apps read it. Nothing leaves the phone: the app has no internet permission.</string>
-    <string name="hc_setup_permissions_title">Permissions</string>
-    <string name="hc_setup_status_all_granted">All %1$d permissions granted</string>
-    <string name="hc_setup_status_partial">%1$d of %2$d permissions granted. A record whose write is not granted stays on the device.</string>
-    <string name="hc_setup_status_update">Health Connect needs an update before OpenWatch can use it.</string>
-    <string name="hc_setup_status_play_store">Health Connect is installed without Google Play, so it cannot be used on this phone.</string>
-    <string name="hc_setup_status_unavailable">Health Connect is not available on this phone.</string>
-    <string name="hc_setup_grant">Grant permissions</string>
-    <string name="hc_setup_open_settings">Open Health Connect settings</string>
-    <string name="hc_setup_sync_title">Write to Health Connect</string>
-    <string name="hc_setup_sync_body">Off pauses every write. The devices keep what they recorded until it is on again.</string>
-    <string name="hc_setup_continue">Continue</string>
     <string name="settings_title">Settings</string>
     <string name="settings_notification_access_title">Notification access</string>
     <string name="settings_notification_access_body">Lets a paired Garmin watch show the phone\'s notifications. Off.</string>
@@ -396,8 +384,6 @@
     <string name="connected_apps_capability_profile">Share your body profile (birth year, sex, height, weight) with OpenWatch, both ways</string>
     <string name="connected_apps_capability_recording">Keep your watch streaming while it records an activity</string>
     <string name="connected_apps_capability_live">Receive your watch\'s heart rate and steps while it records</string>
-    <string name="hc_setup_missing_title">Not granted yet:</string>
-    <string name="hc_setup_missing_extra">Background and history access sit on their own page: open Health Connect settings, then OpenWatch, then Additional access.</string>
     <string name="connected_apps_in_use">In use now</string>
     <string name="connected_apps_last_connected">Last connected %1$s</string>
     <string name="connected_apps_profile_received">Last profile received %1$s</string>
@@ -424,7 +410,6 @@
     <string name="watch_settings_spo2">SpO2 hourly at night</string>
     <string name="watch_settings_allow_on_watch">Allow it on the watch: open OpenWatch there and switch it on once.</string>
     <string name="settings_watch_wearos_needs_workout_write">Workouts not written: allow OpenWatch to write workouts, routes and distance in Health Connect, then sync again.</string>
-    <string name="health_data_title">What OpenWatch reads and writes</string>
     <string name="health_data_intro">OpenWatch writes to Health Connect what a device you paired recorded, and reads only what a sync needs. Each type needs your permission, and you can take it back in Health Connect at any time.</string>
     <string name="health_data_open_body">Every health data type, the device it comes from and why.</string>
     <string name="settings_watch_garmin_withheld">Not saved to Health Connect, for want of permission: %1$s. Allow them, and the next sync saves what the watch sends from then on.</string>

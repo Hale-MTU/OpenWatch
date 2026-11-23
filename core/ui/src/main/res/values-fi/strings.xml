@@ -30,4 +30,7 @@
     <string name="settings_watch_notifications_disclosure_accept">Jatka</string>
     <string name="settings_watch_notifications_disclosure_decline">Ei nyt</string>
     <string name="time_just_now">juuri nyt</string>
+    <string name="hc_setup_sync_title">Kirjoita Health Connectiin</string>
+    <string name="hc_setup_sync_body">Pois päältä -tila keskeyttää kaiken kirjoittamisen. Laitteet säilyttävät tallentamansa, kunnes asetus on taas päällä.</string>
+    <string name="health_data_title">Mitä OpenWatch lukee ja kirjoittaa</string>
 </resources>

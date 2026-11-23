@@ -326,8 +326,6 @@
     <string name="settings_scales_delete_body">其体重、心率和身体成分将从 Health Connect 中移除。</string>
     <string name="settings_scales_remove">移除体重秤</string>
     <string name="settings_scales_remove_body">OpenWatch 将停止接收并忘记密钥。已保存的称重记录会保留。</string>
-    <string name="hc_setup_missing_title">尚未授予：</string>
-    <string name="hc_setup_missing_extra">后台访问和历史记录访问在单独的页面：打开 Health Connect 设置，然后选择 OpenWatch，再选择“其他访问权限”。</string>
     <string name="connected_apps_in_use">正在使用</string>
     <string name="connected_apps_last_connected">上次连接：%1$s</string>
     <string name="connected_apps_profile_received">上次收到个人资料：%1$s</string>
@@ -346,18 +344,6 @@
     <string name="home_settings">设置</string>
     <string name="home_settings_body">身体档案、通知访问权限、关于</string>
     <string name="hc_setup_title">Health Connect</string>
-    <string name="hc_setup_intro">OpenWatch 会把手表和体重秤记录的数据复制到 Health Connect，供 OpenVitals 和其他应用读取。任何数据都不会离开手机：本应用没有联网权限。</string>
-    <string name="hc_setup_permissions_title">权限</string>
-    <string name="hc_setup_status_all_granted">已授予全部 %1$d 项权限</string>
-    <string name="hc_setup_status_partial">已授予 %1$d/%2$d 项权限。未获写入权限的记录会留在设备上。</string>
-    <string name="hc_setup_status_update">需要先更新 Health Connect，OpenWatch 才能使用它。</string>
-    <string name="hc_setup_status_play_store">Health Connect 的安装不含 Google Play，因此无法在此手机上使用。</string>
-    <string name="hc_setup_status_unavailable">此手机无法使用 Health Connect。</string>
-    <string name="hc_setup_grant">授予权限</string>
-    <string name="hc_setup_open_settings">打开 Health Connect 设置</string>
-    <string name="hc_setup_sync_title">写入 Health Connect</string>
-    <string name="hc_setup_sync_body">关闭后会暂停所有写入。设备会保留已记录的数据，直到重新开启。</string>
-    <string name="hc_setup_continue">继续</string>
     <string name="settings_title">设置</string>
     <string name="settings_notification_access_title">通知访问权限</string>
     <string name="settings_notification_access_body">让已配对的 Garmin 手表显示手机通知。已关闭。</string>
@@ -417,7 +403,6 @@
     <string name="watch_settings_spo2">夜间每小时 SpO2</string>
     <string name="watch_settings_allow_on_watch">请在手表上允许：在手表上打开 OpenWatch 并开启一次。</string>
     <string name="settings_watch_wearos_needs_workout_write">锻炼未写入：请允许 OpenWatch 在 Health Connect 中写入锻炼、路线和距离，然后再次同步。</string>
-    <string name="health_data_title">OpenWatch 读取和写入的数据</string>
     <string name="health_data_intro">OpenWatch 会把你配对的设备记录的数据写入 Health Connect，并且只读取同步所需的数据。每种数据类型都需要你的许可，你可以随时在 Health Connect 中撤销。</string>
     <string name="health_data_open_body">每种健康数据类型、其来源设备及原因。</string>
     <string name="settings_watch_garmin_withheld">因缺少权限，未保存到 Health Connect：%1$s。授予这些权限后，从下次同步起会保存手表发送的数据。</string>

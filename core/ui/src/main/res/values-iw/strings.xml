@@ -30,4 +30,7 @@
     <string name="settings_watch_notifications_disclosure_accept">המשך</string>
     <string name="settings_watch_notifications_disclosure_decline">לא עכשיו</string>
     <string name="time_just_now">ממש עכשיו</string>
+    <string name="hc_setup_sync_title">כתיבה ל-Health Connect</string>
+    <string name="hc_setup_sync_body">כשהאפשרות כבויה, כל הכתיבה מושהית. המכשירים שומרים את מה שהם תיעדו עד שהיא מופעלת שוב.</string>
+    <string name="health_data_title">מה OpenWatch קורא וכותב</string>
 </resources>

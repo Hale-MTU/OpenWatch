@@ -9,6 +9,8 @@ plugins {
     id("openwatch.jvm.library")
     // Android lint checked these files in :domain; it still does, with the same rules (build-logic/).
     id("com.android.lint")
+    // MainDispatcherRule, for every screen's state holder tests.
+    `java-test-fixtures`
 }
 
 dependencies {
@@ -19,6 +21,10 @@ dependencies {
     // qualifier, read by Dagger in the modules that inject it.
     api(libs.kotlinx.coroutines.core)
     implementation(libs.javax.inject)
+
+    // MainDispatcherRule is a JUnit rule that swaps the main dispatcher for the coroutines' test one.
+    testFixturesApi(libs.junit4)
+    testFixturesApi(libs.kotlinx.coroutines.test)
 
     testImplementation(libs.junit4)
     testImplementation(libs.kotlinx.coroutines.test)

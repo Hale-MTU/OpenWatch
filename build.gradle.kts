@@ -66,6 +66,7 @@ tasks.register("verifyCiUnitTest") {
         ":devices:xiaomi:protocol:test",
         ":devices:ble-standard:testCiUnitTest",
         ":devices:ble-standard:protocol:test",
+        ":feature:healthconnect:testCiUnitTest",
         ":link-host:testCiUnitTest",
         ":app:testCiUnitTest",
     )
@@ -111,6 +112,7 @@ tasks.register("verifyCiLint") {
         ":devices:xiaomi:protocol:lint",
         ":devices:ble-standard:lintCi",
         ":devices:ble-standard:protocol:lint",
+        ":feature:healthconnect:lintCi",
         ":link-host:lintCi",
     )
 }

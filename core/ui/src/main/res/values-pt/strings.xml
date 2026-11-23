@@ -30,4 +30,7 @@
     <string name="settings_watch_notifications_disclosure_accept">Continuar</string>
     <string name="settings_watch_notifications_disclosure_decline">Agora não</string>
     <string name="time_just_now">agora mesmo</string>
+    <string name="hc_setup_sync_title">Escrever no Health Connect</string>
+    <string name="hc_setup_sync_body">Desligado suspende todas as escritas. Os dispositivos guardam o que registaram até voltar a ser ligado.</string>
+    <string name="health_data_title">O que o OpenWatch lê e escreve</string>
 </resources>

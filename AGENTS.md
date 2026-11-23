@@ -17,8 +17,8 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 ## Map
 
 - `app/src/main/kotlin/tech/mmarca/openwatch/`
-  - `features/` — the screens: `home`, `device` (the device route and the generic add flow), `watches`, `scales`,
-    `healthconnect`, `settings`.
+  - `features/` — the screens still in the app: `home`, `device` (the device route and the generic add flow), `watches`, `scales`,
+    `settings`. The others are modules under `feature/` (below).
   - `data/repository` — what joins a device family's own contract to `:core:data`: the Garmin
     and scale tables over their DAOs, the Garmin and Wear OS preferences over
     `OpenWatchPreferences`.
@@ -26,13 +26,17 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   - `di/` — the Hilt modules. `DevicesModule` binds what every family shares and the rules
     across families (the classifiers' order); each family binds itself in its own module.
     The device layer itself is the modules under `devices/` (below); the app holds none of it.
+- `feature/healthconnect` (`:feature:healthconnect`) — the Health Connect setup screen and the
+  health data list, which the app's rationale activity shows. A screen module: it names no device
+  family and not the app; what only the app has (its activities) comes in as a callback.
 - `core/model` (`:core:model`) and `core/fit` (`:core:fit`) — pure Kotlin on the JDK, with
   the app's package names: `domain/model`, `domain/preferences` and `core/geo` in the first, the
   FIT codec `core/fit` in the second. The unit-system provider that reads the platform's locale
   data is the app's (`core/presentation/LocaleUnitSystemProvider`). `:core:model` also holds the
   plain values the device protocols read from the platform sources (`WeatherSnapshot`,
   `NotificationMsg`), `runSuspendCatching`, the injected `DispatcherProvider` and the
-  `@ApplicationScope` qualifier.
+  `@ApplicationScope` qualifier. Its test fixture is `MainDispatcherRule`, which every screen's
+  state holder tests run under.
 - `core/devices-api` (`:core:devices-api`) — the device contracts in `devices/core`, pure
   Kotlin: `DeviceFamily` and `DeviceFamilies`, `DeviceFeature`, live readings, the classifiers,
   `BleUuids`, `WatchPairingPort`, `CompanionPresenceObserver`, the sync port and its outcome and
