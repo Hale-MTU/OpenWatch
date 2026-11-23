@@ -354,13 +354,6 @@
     <string name="connected_apps_session_waiting">Nagrywanie: oczekiwanie na odczyt z %1$s</string>
     <string name="body_profile_synced">Synchronizowane z %1$s</string>
     <string name="body_profile_synced_updated">Synchronizowane z %1$s · zaktualizowano %2$s</string>
-    <string name="link_streaming_channel">Odczyty na żywo dla innych aplikacji</string>
-    <string name="link_streaming_heart_rate">Przesyłanie tętna do %1$s</string>
-    <string name="link_streaming_heart_rate_steps">Przesyłanie tętna i kroków do %1$s</string>
-    <string name="link_streaming_keeping">Zegarek nadal nadaje dla %1$s</string>
-    <string name="link_streaming_waiting">Oczekiwanie na zegarek, dla %1$s</string>
-    <string name="link_streaming_from">Z %1$s</string>
-    <string name="link_streaming_waiting_for">Oczekiwanie na odczyt z %1$s</string>
     <string name="action_back">Powrót</string>
     <string name="home_section_watches">Zegarki</string>
     <string name="home_section_scale">Waga</string>

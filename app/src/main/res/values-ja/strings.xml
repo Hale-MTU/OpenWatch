@@ -344,13 +344,6 @@
     <string name="connected_apps_session_waiting">記録中: %1$s からの測定値を待機中</string>
     <string name="body_profile_synced">%1$s と同期</string>
     <string name="body_profile_synced_updated">%1$s と同期 · %2$s に更新</string>
-    <string name="link_streaming_channel">他のアプリ向けのリアルタイム測定値</string>
-    <string name="link_streaming_heart_rate">%1$s に心拍数を送信中</string>
-    <string name="link_streaming_heart_rate_steps">%1$s に心拍数と歩数を送信中</string>
-    <string name="link_streaming_keeping">%1$s のためにウォッチのストリーミングを維持中</string>
-    <string name="link_streaming_waiting">%1$s のためにウォッチを待機中</string>
-    <string name="link_streaming_from">%1$s から</string>
-    <string name="link_streaming_waiting_for">%1$s からの測定値を待機中</string>
     <string name="action_back">戻る</string>
     <string name="home_section_watches">ウォッチ</string>
     <string name="home_section_scale">体重計</string>

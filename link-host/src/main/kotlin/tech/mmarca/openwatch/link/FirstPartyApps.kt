@@ -1,7 +1,6 @@
 package tech.mmarca.openwatch.link
 
 import android.content.Context
-import tech.mmarca.openwatch.R
 
 /**
  * The first-party OpenLink clients OpenWatch knows: their package names and the signers it

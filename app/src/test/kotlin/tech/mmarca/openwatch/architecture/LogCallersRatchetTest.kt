@@ -48,7 +48,6 @@ class LogCallersRatchetTest {
 
         val Allowed = setOf(
             "app/AppStartupActors.kt",
-            "app/link/LinkLiveSessions.kt",
             "app/sensors/ble/BleSensorCoordinator.kt",
             // A library module's files are keyed by its directory, then the package path.
             "core/data/data/repository/BleDeviceRepository.kt",
@@ -74,6 +73,7 @@ class LogCallersRatchetTest {
             "devices/xiaomi/devices/xiaomi/ScaleListeningService.kt",
             "devices/xiaomi/devices/xiaomi/ScaleLog.kt",
             "devices/xiaomi/devices/xiaomi/XiaomiScaleListener.kt",
+            "link-host/link/LinkLiveSessions.kt",
             "wear/wear/AscentRecorder.kt",
             "wear/wear/BedtimeMonitor.kt",
             "wear/wear/DebugProtocol.kt",

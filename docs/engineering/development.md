@@ -4,7 +4,7 @@
 
 The phone app, the watch app and its pure core, the pure-Kotlin link, the phone app's
 pure-Kotlin modules (`:core:model`, `:core:fit`, `:core:devices-api`, `:devices:garmin:protocol`,
-`:devices:xiaomi:protocol`, `:devices:ble-standard:protocol`) and its Android libraries (`:core:health-api`, `:core:health`, `:core:ui`, `:core:data`, `:devices:core`,
+`:devices:xiaomi:protocol`, `:devices:ble-standard:protocol`) and its Android libraries (`:core:health-api`, `:core:health`, `:core:ui`, `:core:data`, `:link-host`, `:devices:core`,
 `:devices:garmin`, `:devices:wearos`, `:devices:xiaomi`, `:devices:ble-standard`) build with the Gradle wrapper. JDK 17 or 21, the Android platform
 37 and build-tools 37.0.0.
 
@@ -92,7 +92,7 @@ gate. A warning fails it (`warningsAsErrors`, set in `build-logic/` for every An
 and every plain Kotlin one that applies `com.android.lint`). The pure-Kotlin modules that hold
 code an app's lint used to check apply it, with the same rules: `:core:model`, `:core:fit`,
 `:core:devices-api`, `:devices:garmin:protocol`, `:devices:xiaomi:protocol` and `:devices:ble-standard:protocol` in
-`verifyCiLint`, `:wear:recording-core` in the watch gate. The Android libraries (`:core:health-api`, `:core:health`, `:core:ui`, `:core:data`,
+`verifyCiLint`, `:wear:recording-core` in the watch gate. The Android libraries (`:core:health-api`, `:core:health`, `:core:ui`, `:core:data`, `:link-host`,
 `:devices:core`, `:devices:garmin`, `:devices:wearos`, `:devices:xiaomi`, `:devices:ble-standard`) run `lintCi` there too. A library's lint sees its own manifest only, not the
 permissions the app declares, so a call that needs one carries `@SuppressLint("MissingPermission")`
 and checks the grant at run time, as the app's own calls do. `:wearlink` has none. Lint knows no
@@ -109,7 +109,7 @@ entry that was fixed is reported as such and can be dropped by regenerating:
   :devices:core:updateLintBaselineCi \
   :devices:garmin:updateLintBaselineCi :devices:wearos:updateLintBaselineCi :devices:xiaomi:updateLintBaselineCi \
   :devices:garmin:protocol:updateLintBaseline :devices:xiaomi:protocol:updateLintBaseline \
-  :devices:ble-standard:updateLintBaselineCi :devices:ble-standard:protocol:updateLintBaseline \
+  :devices:ble-standard:updateLintBaselineCi :devices:ble-standard:protocol:updateLintBaseline :link-host:updateLintBaselineCi \
   :wear:updateLintBaselineCi :wear:recording-core:updateLintBaseline
 ```
 
@@ -128,7 +128,7 @@ dependency change, regenerate the module's lockfile and commit it:
   :core:health-api:dependencies :core:health:dependencies :core:ui:dependencies :core:data:dependencies :devices:core:dependencies :devices:garmin:dependencies :devices:wearos:dependencies \
   :devices:xiaomi:dependencies \
   :devices:garmin:protocol:dependencies :devices:xiaomi:protocol:dependencies \
-  :devices:ble-standard:dependencies :devices:ble-standard:protocol:dependencies \
+  :devices:ble-standard:dependencies :devices:ble-standard:protocol:dependencies :link-host:dependencies \
   :wear:dependencies :wear:recording-core:dependencies :wearlink:dependencies --write-locks
 ```
 
@@ -167,7 +167,9 @@ A device module carries the strings its own code shows, in `devices/<vendor>/src
 moved there with every translation (`:devices:garmin`: the find-phone notification;
 `:devices:xiaomi`: the weigh-in notification; `:devices:wearos`: the watch link's states;
 `:devices:core`: what every family says, such as Bluetooth being off, the notification
-listener's label and the activity import's exercise types). The
+listener's label and the activity import's exercise types). So does every other module whose
+code shows text: `:core:health` (the data catalog), `:core:ui` (the shared components and
+`ScreenError`), `:link-host` (the streaming notification). The
 translation check reads every module's `res` beside the apps'. `extract-strings.py` trims and
 refreshes the app's files only, so a key that moved keeps the translations it moved with, and
 the translation platform needs each module's file as a component of its own.

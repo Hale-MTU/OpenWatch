@@ -354,13 +354,6 @@
     <string name="connected_apps_session_waiting">Запись: ожидание показаний с %1$s</string>
     <string name="body_profile_synced">Синхронизируется с %1$s</string>
     <string name="body_profile_synced_updated">Синхронизируется с %1$s · обновлено %2$s</string>
-    <string name="link_streaming_channel">Показания в реальном времени для других приложений</string>
-    <string name="link_streaming_heart_rate">Пульс передаётся в %1$s</string>
-    <string name="link_streaming_heart_rate_steps">Пульс и шаги передаются в %1$s</string>
-    <string name="link_streaming_keeping">Часы продолжают передачу для %1$s</string>
-    <string name="link_streaming_waiting">Ожидание часов для %1$s</string>
-    <string name="link_streaming_from">С %1$s</string>
-    <string name="link_streaming_waiting_for">Ожидание показаний с %1$s</string>
     <string name="action_back">Назад</string>
     <string name="home_section_watches">Часы</string>
     <string name="home_section_scale">Весы</string>

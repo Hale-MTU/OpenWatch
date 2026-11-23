@@ -324,13 +324,6 @@
     <string name="connected_apps_session_waiting">הקלטה: ממתין לקריאה מ-%1$s</string>
     <string name="body_profile_synced">מסונכרן עם %1$s</string>
     <string name="body_profile_synced_updated">מסונכרן עם %1$s · עודכן %2$s</string>
-    <string name="link_streaming_channel">קריאות חיות לאפליקציות אחרות</string>
-    <string name="link_streaming_heart_rate">הדופק נשלח אל %1$s</string>
-    <string name="link_streaming_heart_rate_steps">הדופק והצעדים נשלחים אל %1$s</string>
-    <string name="link_streaming_keeping">השעון ממשיך לשדר עבור %1$s</string>
-    <string name="link_streaming_waiting">ממתין לשעון, עבור %1$s</string>
-    <string name="link_streaming_from">מ-%1$s</string>
-    <string name="link_streaming_waiting_for">ממתין לקריאה מ-%1$s</string>
     <string name="settings_respiratory_rate_title">קצב נשימה מהשעון (ניסיוני)</string>
     <string name="settings_respiratory_rate_body">קצב הנשימה מחלונות ה-HRV הליליים של השעון נכתב ל-Health Connect. עדיין לא נבדק מול מכשיר ייחוס.</string>
     <string name="watch_settings_section">הגדרות השעון</string>

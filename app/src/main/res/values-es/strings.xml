@@ -348,13 +348,6 @@
     <string name="connected_apps_session_waiting">Grabando: esperando una lectura de %1$s</string>
     <string name="body_profile_synced">Sincronizado con %1$s</string>
     <string name="body_profile_synced_updated">Sincronizado con %1$s · actualizado %2$s</string>
-    <string name="link_streaming_channel">Lecturas en directo para otras apps</string>
-    <string name="link_streaming_heart_rate">Enviando la frecuencia cardiaca a %1$s</string>
-    <string name="link_streaming_heart_rate_steps">Enviando la frecuencia cardiaca y los pasos a %1$s</string>
-    <string name="link_streaming_keeping">Manteniendo tu reloj transmitiendo para %1$s</string>
-    <string name="link_streaming_waiting">Esperando a tu reloj, para %1$s</string>
-    <string name="link_streaming_from">De %1$s</string>
-    <string name="link_streaming_waiting_for">Esperando una lectura de %1$s</string>
     <string name="action_back">Atrás</string>
     <string name="home_section_watches">Relojes</string>
     <string name="home_section_scale">Báscula</string>

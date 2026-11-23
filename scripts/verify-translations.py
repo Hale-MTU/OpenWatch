@@ -12,15 +12,15 @@ import xml.etree.ElementTree as ET
 
 
 # The phone app and the watch app each ship their own strings, and so does each library
-# module under core/ and devices/ whose code has text of its own (a device family's
-# notifications, its link states). Each locale file is checked against the English file of
+# module under core/, devices/ and feature/, and the OpenLink host, whose code has text of its
+# own (a device family's notifications, its link states, a screen's words). Each locale file is checked against the English file of
 # its own module.
 RES_DIRS = (
     pathlib.Path("app/src/main/res"),
     pathlib.Path("wear/src/main/res"),
     *(
         res
-        for root in ("core", "devices")
+        for root in ("core", "devices", "feature", "link-host")
         for res in sorted(pathlib.Path(root).glob("**/src/main/res"))
         if (res / "values" / "strings.xml").is_file()
     ),

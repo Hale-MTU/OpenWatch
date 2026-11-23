@@ -1,11 +1,10 @@
 package tech.mmarca.openwatch.link
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -17,8 +16,6 @@ import javax.inject.Singleton
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import tech.mmarca.openlink.host.OpenLinkHost
-import tech.mmarca.openwatch.MainActivity
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.localizedList
 
 /**
@@ -31,6 +28,7 @@ class LinkStreamingNotifier @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val host: OpenLinkHost,
     private val sessions: LinkLiveSessions,
+    private val connectedApps: ConnectedAppsIntent,
 ) {
     /** Runs for the app's life, from [OpenWatchLinkPublisher]. */
     suspend fun run() {
@@ -39,6 +37,9 @@ class LinkStreamingNotifier @Inject constructor(
             .collect(::show)
     }
 
+    // The app declares POST_NOTIFICATIONS, which this module's own manifest does not show its
+    // lint; the grant is checked before the notification is posted.
+    @SuppressLint("MissingPermission")
     private fun show(statuses: List<LinkSessionStatus>) {
         val manager = NotificationManagerCompat.from(context)
         val first = statuses.firstOrNull()
@@ -60,14 +61,7 @@ class LinkStreamingNotifier @Inject constructor(
         } else {
             context.getString(R.string.link_streaming_from, devices)
         }
-        val open = PendingIntent.getActivity(
-            context,
-            NOTIFICATION_ID,
-            Intent(context, MainActivity::class.java)
-                .setAction(MainActivity.ACTION_OPENLINK_CONSENT)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-        )
+        val open = connectedApps.pendingIntent(NOTIFICATION_ID)
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(tech.mmarca.openwatch.devices.core.R.drawable.ic_stat_activity_recording)
             .setContentTitle(title)

@@ -18,6 +18,7 @@ import tech.mmarca.openlink.host.SharedPreferencesTrustStorage
 import tech.mmarca.openwatch.MainActivity
 import tech.mmarca.openwatch.StartupActor
 import tech.mmarca.openwatch.link.AppLabelResolver
+import tech.mmarca.openwatch.link.ConnectedAppsIntent
 import tech.mmarca.openwatch.link.FirstPartyApps
 import tech.mmarca.openwatch.link.OpenWatchLinkCapabilities
 import tech.mmarca.openwatch.link.OpenWatchLinkPublisher
@@ -37,6 +38,23 @@ object LinkModule {
     @Singleton
     fun provideFirstPartyApps(@ApplicationContext context: Context): FirstPartyApps = FirstPartyApps.from(context)
 
+    /**
+     * The Connected apps screen, which a consent request and the streaming notification open:
+     * the app's own activity with the consent action, one pending intent per request code.
+     */
+    @Provides
+    fun provideConnectedAppsIntent(@ApplicationContext context: Context): ConnectedAppsIntent =
+        ConnectedAppsIntent { requestCode ->
+            PendingIntent.getActivity(
+                context,
+                requestCode,
+                Intent(context, MainActivity::class.java)
+                    .setAction(MainActivity.ACTION_OPENLINK_CONSENT)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+            )
+        }
+
     @Provides
     fun provideAppLabelResolver(@ApplicationContext context: Context): AppLabelResolver = SystemAppLabelResolver(context)
 
@@ -53,19 +71,11 @@ object LinkModule {
         @ApplicationContext context: Context,
         core: OpenLinkHostCore,
         capabilities: OpenWatchLinkCapabilities,
+        connectedApps: ConnectedAppsIntent,
     ): OpenLinkHost = OpenLinkHost(
         core = core,
         resolver = OpenLinkCallerResolver(context),
         capabilities = capabilities,
-        consentIntent = { packageName ->
-            PendingIntent.getActivity(
-                context,
-                packageName.hashCode(),
-                Intent(context, MainActivity::class.java)
-                    .setAction(MainActivity.ACTION_OPENLINK_CONSENT)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
-                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-            )
-        },
+        consentIntent = { packageName -> connectedApps.pendingIntent(packageName.hashCode()) },
     )
 }

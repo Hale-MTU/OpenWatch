@@ -37,6 +37,10 @@ dependencies {
     api(libs.androidx.compose.ui.graphics)
     api(libs.androidx.compose.material3)
     api(project(":core:model"))
+    // Compose's own lifecycle artifacts at the version the app ships. Without it, a module that
+    // takes these components and no lifecycle library of its own (the link host's notifier)
+    // compiles against the older lifecycle Compose names, which no other module resolves.
+    api(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.compose.material.icons.extended)
     // The permission launchers and the view model store a screen's app bar is declared against.
     implementation(libs.androidx.activity.compose)

@@ -100,6 +100,9 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   Connect mapping of what it pushes through the `MeasurementSink`; `BleStandardModule` binds it.
   Its bytes are `:devices:ble-standard:protocol`, pure Kotlin: the measurement characteristics
   as the specifications lay them out, and the payloads it keeps a measurement in.
+- `link-host` (`:link-host`, package `link`) — the OpenLink host: the exported
+  `OpenWatchLinkService` (in its manifest), the capabilities, the first-party list and the
+  streaming notification. The app's `di/LinkModule` builds the trust store and the binder.
 - `health-calculations/` — a git submodule and composite build, like `openlink/`: the health
   calculations OpenWatch and OpenVitals share (the Wear OS night and resting heart rate, body
   composition, workout and walking energy, the watch's HRV and respiratory rate from the raw

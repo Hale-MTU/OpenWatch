@@ -11,7 +11,7 @@ OpenWatch seams noted.
 
 - App namespace: `tech.mmarca.openwatch`
 - Build logic: `build-logic/`, an included build with the convention plugins every module applies (`openwatch.android.application`, `openwatch.android.library`, `openwatch.jvm.library`, and `openwatch.robolectric` for a library whose tests run on Robolectric): SDK levels, Java 17, signing from the environment, the debug, release and nightly build types, lint and dependency locking. A module's own file holds only what is its own (version codes, the `ci` type, the diagnostics flag). A change there must leave the release APKs byte-identical; compare their hashes before and after.
-- Project shape: nineteen Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
+- Project shape: twenty Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
   hold the pure code the app depends on (below); `:core:devices-api` the device contracts
   ([`devices/core`](#devicescore)); `:core:health-api` how the devices talk to Health Connect
   ([rule 3](#3-health-connect-is-reached-through-healthconnectgateway-only)); `:core:health`
@@ -24,7 +24,7 @@ OpenWatch seams noted.
   `:devices:wearos`, `:devices:xiaomi` and `:devices:ble-standard` are the families' platform halves, device modules that bind
   themselves ([`devices/garmin`](#devicesgarmin), [`devices/wearos`](#deviceswearos), [`devices/xiaomi`](#devicesxiaomi), [`devices/blestandard`](#devicesblestandard)); `:devices:garmin:protocol`,
   `:devices:xiaomi:protocol` and `:devices:ble-standard:protocol` are the Garmin protocol, the S400 codec and the standard profiles' bytes, pure Kotlin
-  ([`devices/garmin`](#devicesgarmin), [`devices/xiaomi`](#devicesxiaomi), [`devices/blestandard`](#devicesblestandard)); `:wear` is the Wear OS watch app
+  ([`devices/garmin`](#devicesgarmin), [`devices/xiaomi`](#devicesxiaomi), [`devices/blestandard`](#devicesblestandard)); `:link-host` is the OpenLink host ([below](#openlink-host-link-composite-build-openlink)); `:wear` is the Wear OS watch app
   with its own CI gate; `:wearlink` is the pure-Kotlin link both apps depend on. Package names
   are the same across `:app` and the modules under `core/` and `devices/`. The health calculations, shared with OpenVitals,
   come from the `health-calculations/` submodule, a composite build (below).
@@ -52,7 +52,7 @@ OpenWatch seams noted.
 | `features/device`, `features/watches`, `features/scales` | The device screens, as in OpenVitals, and Home's "Other devices" section (`features/device/DevicesSection`): the devices of every family that pairs through the app's own flow (`DevicePairing`), and that flow, which scans for the services the families name, offers each device one of them claims and no watch family does, and pairs it through its family; it names no family. Every paired device opens on one route, `DeviceDetail(deviceId)`; `features/device` picks its screen once from the registry: the scale its own, everything else the device screen. A watch's screen is the part every device has (`WatchDeviceScreen`: the header, the schedule, removal) and its family's panel, `features/watches/garmin` or `features/watches/wearos`, each with its own ViewModel. |
 | `features/healthconnect`, `features/settings` | Health Connect setup, the sync switch, the body profile, notification access. |
 | `features/connectedapps` | The apps that use OpenWatch over OpenLink: allow, block, per-capability switches, forget; a warning for a first-party name under an unknown signer; overlays hidden while it shows. |
-| `link/` | The OpenLink host: the exported service, the device list and profile as OpenLink shows them, recording sessions and live readings for another app. |
+| `link/` | The OpenLink host, the module `:link-host`: the exported service, the device list and profile as OpenLink shows them, recording sessions and live readings for another app. |
 | `healthconnect/` | `HealthConnectGateway`, `ActivityRecordWriter`, the sync gate, intents and availability, and the data catalog; in `:core:health`, with `data/repository/ImportedRecordRepository` and `ActivityWriteRepository`. |
 | `activityimport/` | FIT activity files into `ActivityWriteRequest`s; in `:devices:core`. |
 | `data/local`, `data/repository` | Room, the repositories and the SharedPreferences stores, in `:core:data`; the app keeps what joins a family's own contract to them (the Garmin and scale tables over their DAOs, the Garmin and Wear OS preferences over `OpenWatchPreferences`). `BleDeviceRepository` is the device registry: the `devices` table read once into memory, every read answered from there (the first waits for the load) and every change written behind it in order on the registry's own thread; the JSON in `ble_sensor_devices` it replaced is imported once and left in place. It gives a family's first device the empty id salt and each later one its own. A row of a family this version does not bind (`RegisteredFamilies`), from a newer build, stays in the table unread, never taken for another family's device; a kind is any name a family gave. |
@@ -321,6 +321,15 @@ composite build (`includeBuild("openlink")`, dependency `tech.mmarca.openlink:ho
 protocol and trust rules are `openlink/docs/spec.md`. Health data still travels through
 Health Connect; OpenLink carries the body profile, the device list with "sync now",
 recording sessions and live readings.
+
+The host is the module `:link-host` (`link-host/`, package `link`), an Android library: the
+service, declared in the module's manifest, the capabilities, the first-party list
+(`res/values/openlink.xml`) and the streaming notification with its strings. It depends on
+`:core:data` (the registry, the body profile), `:devices:core` (the families, the sync
+controller) and `:core:ui` (the notification's list of names), never on a device family or a
+screen. The trust store and the binder are built in the app's `di/LinkModule`, which also makes
+the one way in that names the app's activity: `ConnectedAppsIntent`, the Connected apps screen a
+consent request and the notification open.
 
 - `OpenWatchLinkService` is exported with no permission (a custom one is granted only if
   OpenWatch was installed first, and a normal one protects nothing); the trust is decided

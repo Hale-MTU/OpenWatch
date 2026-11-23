@@ -24,6 +24,7 @@ internal val LibraryModuleRoots: Map<String, String> = listOf(
     "devices/xiaomi/protocol",
     "devices/ble-standard",
     "devices/ble-standard/protocol",
+    "link-host",
 ).associateWith { module -> "../$module/src/main/kotlin/tech/mmarca/openwatch" }
 
 /** The root of [LibraryModuleRoots] this file is under, or null for a file of another module. */

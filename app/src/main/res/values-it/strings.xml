@@ -344,13 +344,6 @@
     <string name="connected_apps_session_waiting">Registrazione: in attesa di una lettura da %1$s</string>
     <string name="body_profile_synced">Sincronizzato con %1$s</string>
     <string name="body_profile_synced_updated">Sincronizzato con %1$s · aggiornato %2$s</string>
-    <string name="link_streaming_channel">Letture in diretta per altre app</string>
-    <string name="link_streaming_heart_rate">Invio della frequenza cardiaca a %1$s</string>
-    <string name="link_streaming_heart_rate_steps">Invio di frequenza cardiaca e passi a %1$s</string>
-    <string name="link_streaming_keeping">L\'orologio resta in trasmissione per %1$s</string>
-    <string name="link_streaming_waiting">In attesa dell\'orologio, per %1$s</string>
-    <string name="link_streaming_from">Da %1$s</string>
-    <string name="link_streaming_waiting_for">In attesa di una lettura da %1$s</string>
     <string name="action_back">Indietro</string>
     <string name="home_section_watches">Orologi</string>
     <string name="home_section_scale">Bilancia</string>

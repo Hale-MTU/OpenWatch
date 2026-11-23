@@ -340,13 +340,6 @@
     <string name="connected_apps_session_waiting">记录中：正在等待 %1$s 的读数</string>
     <string name="body_profile_synced">与 %1$s 保持同步</string>
     <string name="body_profile_synced_updated">与 %1$s 保持同步 · 更新于%2$s</string>
-    <string name="link_streaming_channel">供其他应用使用的实时读数</string>
-    <string name="link_streaming_heart_rate">正在向 %1$s 传送心率</string>
-    <string name="link_streaming_heart_rate_steps">正在向 %1$s 传送心率和步数</string>
-    <string name="link_streaming_keeping">正在为 %1$s 保持手表持续传输</string>
-    <string name="link_streaming_waiting">正在为 %1$s 等待手表</string>
-    <string name="link_streaming_from">来自 %1$s</string>
-    <string name="link_streaming_waiting_for">正在等待 %1$s 的读数</string>
     <string name="action_back">返回</string>
     <string name="home_section_watches">手表</string>
     <string name="home_section_scale">体重秤</string>

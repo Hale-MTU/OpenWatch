@@ -126,8 +126,10 @@ androidComponents {
 }
 
 dependencies {
-    // The OpenLink host, from the openlink/ submodule (a composite build).
-    implementation("tech.mmarca.openlink:host")
+    // The OpenLink host: what OpenWatch offers through it, with the library (the openlink/
+    // submodule, a composite build) as its api; the trust store and the binder are built in
+    // di/LinkModule.
+    implementation(project(":link-host"))
     // The pure models, which also bring health-calculations, and the FIT codec.
     implementation(project(":core:model"))
     implementation(project(":core:fit"))
@@ -261,6 +263,7 @@ tasks.withType<Test>().configureEach {
         ":devices:xiaomi:protocol:test",
         ":devices:ble-standard:testCiUnitTest",
         ":devices:ble-standard:protocol:test",
+        ":link-host:testCiUnitTest",
     )
     // The architecture tests read sources and documents as plain files: this module's
     // and the others' code, both manifests, the strings, the privacy documents. None
@@ -284,6 +287,7 @@ tasks.withType<Test>().configureEach {
         "scannedXiaomiProtocolMain" to "devices/xiaomi/protocol/src/main",
         "scannedBleStandardMain" to "devices/ble-standard/src/main",
         "scannedBleStandardProtocolMain" to "devices/ble-standard/protocol/src/main",
+        "scannedLinkHostMain" to "link-host/src/main",
         "scannedWearMain" to "wear/src/main",
         "scannedWearRecordingCoreMain" to "wear/recording-core/src/main",
         "scannedWearlinkMain" to "wearlink/src/main",
