@@ -81,4 +81,5 @@
     <string name="settings_watch_wearos_needs_workout_write">锻炼未写入：请允许 OpenWatch 在 Health Connect 中写入锻炼、路线和距离，然后再次同步。</string>
     <string name="settings_watch_garmin_withheld">因缺少权限，未保存到 Health Connect：%1$s。授予这些权限后，从下次同步起会保存手表发送的数据。</string>
     <string name="settings_watch_wearos_companion_required">Android 未将手表关联到 OpenWatch，因此没有添加。OpenWatch 需要此关联才能记录其他应用在手表上开始的锻炼。请再次点按“配对”并允许请求。</string>
+    <string name="settings_sensors_open_bluetooth">打开蓝牙设置</string>
 </resources>

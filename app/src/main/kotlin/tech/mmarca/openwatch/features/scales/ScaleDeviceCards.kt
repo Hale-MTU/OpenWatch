@@ -139,7 +139,7 @@ internal fun ScaleListeningCard(
             ScaleListenerStatus.BLUETOOTH_OFF -> {
                 Note(R.string.settings_scales_bluetooth_off, isError = true)
                 OpenWatchTonalButton(onClick = onOpenBluetoothSettings) {
-                    Text(stringResource(R.string.settings_sensors_open_bluetooth))
+                    Text(stringResource(DeviceR.string.settings_sensors_open_bluetooth))
                 }
             }
 

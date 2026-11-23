@@ -82,4 +82,5 @@
     <string name="settings_watch_wearos_needs_workout_write">Treeninguid ei kirjutatud: luba OpenWatchil kirjutada treeningud, marsruudid ja vahemaa Health Connecti ning sünkrooni uuesti.</string>
     <string name="settings_watch_garmin_withheld">Health Connecti ei salvestatud, kuna luba puudub: %1$s. Luba need ja järgmisest sünkroonimisest alates salvestatakse see, mida kell saadab.</string>
     <string name="settings_watch_wearos_companion_required">Android ei sidunud kella OpenWatchiga, seega seda ei lisatud. OpenWatch vajab seda seost, et salvestada treeninguid, mille mõni teine rakendus kellas käivitab. Puuduta uuesti Seo ja luba taotlus.</string>
+    <string name="settings_sensors_open_bluetooth">Ava Bluetoothi seaded</string>
 </resources>

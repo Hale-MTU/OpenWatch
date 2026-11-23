@@ -4,7 +4,7 @@
 
 The phone app, the watch app and its pure core, the pure-Kotlin link, the phone app's
 pure-Kotlin modules (`:core:model`, `:core:fit`, `:core:devices-api`, `:devices:garmin:protocol`,
-`:devices:xiaomi:protocol`, `:devices:ble-standard:protocol`) and its Android libraries (`:core:health-api`, `:core:health`, `:core:ui`, `:core:data`, `:link-host`, `:feature:device`, `:feature:home`, `:feature:settings`, `:feature:connectedapps`, `:feature:healthconnect`, `:devices:core`,
+`:devices:xiaomi:protocol`, `:devices:ble-standard:protocol`) and its Android libraries (`:core:health-api`, `:core:health`, `:core:ui`, `:core:data`, `:link-host`, `:feature:watches-wearos`, `:feature:device`, `:feature:home`, `:feature:settings`, `:feature:connectedapps`, `:feature:healthconnect`, `:devices:core`,
 `:devices:garmin`, `:devices:wearos`, `:devices:xiaomi`, `:devices:ble-standard`) build with the Gradle wrapper. JDK 17 or 21, the Android platform
 37 and build-tools 37.0.0.
 
@@ -92,7 +92,7 @@ gate. A warning fails it (`warningsAsErrors`, set in `build-logic/` for every An
 and every plain Kotlin one that applies `com.android.lint`). The pure-Kotlin modules that hold
 code an app's lint used to check apply it, with the same rules: `:core:model`, `:core:fit`,
 `:core:devices-api`, `:devices:garmin:protocol`, `:devices:xiaomi:protocol` and `:devices:ble-standard:protocol` in
-`verifyCiLint`, `:wear:recording-core` in the watch gate. The Android libraries (`:core:health-api`, `:core:health`, `:core:ui`, `:core:data`, `:link-host`, `:feature:device`, `:feature:home`, `:feature:settings`, `:feature:connectedapps`, `:feature:healthconnect`,
+`verifyCiLint`, `:wear:recording-core` in the watch gate. The Android libraries (`:core:health-api`, `:core:health`, `:core:ui`, `:core:data`, `:link-host`, `:feature:watches-wearos`, `:feature:device`, `:feature:home`, `:feature:settings`, `:feature:connectedapps`, `:feature:healthconnect`,
 `:devices:core`, `:devices:garmin`, `:devices:wearos`, `:devices:xiaomi`, `:devices:ble-standard`) run `lintCi` there too. A library's lint sees its own manifest only, not the
 permissions the app declares, so a call that needs one carries `@SuppressLint("MissingPermission")`
 and checks the grant at run time, as the app's own calls do. `:wearlink` has none. Lint knows no
@@ -110,6 +110,7 @@ entry that was fixed is reported as such and can be dropped by regenerating:
   :devices:garmin:updateLintBaselineCi :devices:wearos:updateLintBaselineCi :devices:xiaomi:updateLintBaselineCi \
   :devices:garmin:protocol:updateLintBaseline :devices:xiaomi:protocol:updateLintBaseline \
   :devices:ble-standard:updateLintBaselineCi :devices:ble-standard:protocol:updateLintBaseline :link-host:updateLintBaselineCi \
+  :feature:watches-wearos:updateLintBaselineCi \
   :feature:device:updateLintBaselineCi \
   :feature:home:updateLintBaselineCi \
   :feature:settings:updateLintBaselineCi \
@@ -134,6 +135,7 @@ dependency change, regenerate the module's lockfile and commit it:
   :devices:xiaomi:dependencies \
   :devices:garmin:protocol:dependencies :devices:xiaomi:protocol:dependencies \
   :devices:ble-standard:dependencies :devices:ble-standard:protocol:dependencies :link-host:dependencies \
+  :feature:watches-wearos:dependencies \
   :feature:device:dependencies \
   :feature:home:dependencies \
   :feature:settings:dependencies \

@@ -98,4 +98,5 @@
         <item quantity="many">تم تقدير النوم لـ %1$d ليلةً</item>
         <item quantity="other">تم تقدير النوم لـ %1$d ليلة</item>
     </plurals>
+    <string name="settings_sensors_open_bluetooth">فتح إعدادات Bluetooth</string>
 </resources>

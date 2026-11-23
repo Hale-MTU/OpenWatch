@@ -82,4 +82,5 @@
     <string name="settings_watch_wearos_needs_workout_write">Trainings nicht geschrieben: Erlaube OpenWatch, Trainings, Routen und Distanz in Health Connect zu schreiben, und synchronisiere dann erneut.</string>
     <string name="settings_watch_garmin_withheld">Mangels Berechtigung nicht in Health Connect gespeichert: %1$s. Erlaube sie, dann speichert die nächste Synchronisierung ab da, was die Uhr sendet.</string>
     <string name="settings_watch_wearos_companion_required">Android hat die Uhr nicht mit OpenWatch verknüpft, deshalb wurde sie nicht hinzugefügt. OpenWatch braucht diese Verknüpfung, um Workouts aufzuzeichnen, die eine andere App auf der Uhr startet. Tippe erneut auf Koppeln und erlaube die Anfrage.</string>
+    <string name="settings_sensors_open_bluetooth">Bluetooth-Einstellungen öffnen</string>
 </resources>

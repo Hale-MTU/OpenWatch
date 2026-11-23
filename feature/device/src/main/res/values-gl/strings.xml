@@ -82,4 +82,5 @@
     <string name="settings_watch_wearos_needs_workout_write">Adestramentos sen escribir: permite que OpenWatch escriba adestramentos, rutas e distancia en Health Connect e sincroniza de novo.</string>
     <string name="settings_watch_garmin_withheld">Sen gardar en Health Connect por falta de permiso: %1$s. Concede eses permisos e a próxima sincronización gardará o que envíe o reloxo desde entón.</string>
     <string name="settings_watch_wearos_companion_required">Android non vinculou o reloxo con OpenWatch, así que non se engadiu. OpenWatch precisa este vínculo para gravar os adestramentos que outra app inicia no reloxo. Toca Emparellar de novo e acepta a solicitude.</string>
+    <string name="settings_sensors_open_bluetooth">Abrir os axustes de Bluetooth</string>
 </resources>

@@ -82,4 +82,5 @@
     <string name="settings_watch_wearos_needs_workout_write">Harjoituksia ei kirjoitettu: salli OpenWatchin kirjoittaa harjoitukset, reitit ja matka Health Connectiin ja synkronoi uudelleen.</string>
     <string name="settings_watch_garmin_withheld">Ei tallennettu Health Connectiin puuttuvan käyttöoikeuden vuoksi: %1$s. Salli ne, niin kellon lähettämät tiedot tallennetaan seuraavasta synkronoinnista alkaen.</string>
     <string name="settings_watch_wearos_companion_required">Android ei linkittänyt kelloa OpenWatchiin, joten sitä ei lisätty. OpenWatch tarvitsee tämän linkin tallentaakseen harjoitukset, jotka toinen sovellus käynnistää kellossa. Napauta Pariliitä uudelleen ja hyväksy pyyntö.</string>
+    <string name="settings_sensors_open_bluetooth">Avaa Bluetooth-asetukset</string>
 </resources>

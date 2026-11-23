@@ -90,4 +90,5 @@
     <string name="settings_watch_wearos_needs_workout_write">Tréninky nebyly zapsány: povolte OpenWatch zapisovat tréninky, trasy a vzdálenost do Health Connect a znovu synchronizujte.</string>
     <string name="settings_watch_garmin_withheld">Neuloženo do Health Connect kvůli chybějícímu oprávnění: %1$s. Povolte je a další synchronizace už uloží, co hodinky od té doby pošlou.</string>
     <string name="settings_watch_wearos_companion_required">Android hodinky s OpenWatch nepropojil, takže nebyly přidány. OpenWatch toto propojení potřebuje k záznamu tréninků, které na hodinkách spustí jiná aplikace. Klepněte znovu na Spárovat a žádost povolte.</string>
+    <string name="settings_sensors_open_bluetooth">Otevřít nastavení Bluetooth</string>
 </resources>

@@ -71,6 +71,7 @@ tasks.register("verifyCiUnitTest") {
         ":feature:settings:testCiUnitTest",
         ":feature:home:testCiUnitTest",
         ":feature:device:testCiUnitTest",
+        ":feature:watches-wearos:testCiUnitTest",
         ":link-host:testCiUnitTest",
         ":app:testCiUnitTest",
     )
@@ -121,6 +122,7 @@ tasks.register("verifyCiLint") {
         ":feature:settings:lintCi",
         ":feature:home:lintCi",
         ":feature:device:lintCi",
+        ":feature:watches-wearos:lintCi",
         ":link-host:lintCi",
     )
 }

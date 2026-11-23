@@ -25,6 +25,7 @@ internal val LibraryModuleRoots: Map<String, String> = listOf(
     "devices/ble-standard",
     "devices/ble-standard/protocol",
     "link-host",
+    "feature/watches-wearos",
     "feature/device",
     "feature/home",
     "feature/settings",

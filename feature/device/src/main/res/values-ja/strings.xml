@@ -81,4 +81,5 @@
     <string name="settings_watch_wearos_needs_workout_write">ワークアウトは書き込まれていません。ワークアウト、ルート、距離の Health Connect への書き込みを OpenWatch に許可してから、もう一度同期してください。</string>
     <string name="settings_watch_garmin_withheld">権限がないため Health Connect に保存されませんでした: %1$s。許可すると、次回の同期からウォッチが送るデータが保存されます。</string>
     <string name="settings_watch_wearos_companion_required">Android がウォッチを OpenWatch にリンクしなかったため、追加されませんでした。別のアプリがウォッチで開始したワークアウトを記録するには、このリンクが必要です。もう一度「ペアリング」をタップして、リクエストを許可してください。</string>
+    <string name="settings_sensors_open_bluetooth">Bluetooth 設定を開く</string>
 </resources>

@@ -90,4 +90,5 @@
     <string name="settings_watch_wearos_needs_workout_write">Treningi nie zostały zapisane: zezwól OpenWatch na zapis treningów, tras i dystansu w Health Connect i zsynchronizuj ponownie.</string>
     <string name="settings_watch_garmin_withheld">Nie zapisano w Health Connect z powodu braku uprawnień: %1$s. Zezwól na nie, a następna synchronizacja zapisze to, co zegarek wyśle od tej chwili.</string>
     <string name="settings_watch_wearos_companion_required">Android nie powiązał zegarka z OpenWatch, więc nie został dodany. OpenWatch potrzebuje tego powiązania, aby nagrywać treningi, które inna aplikacja uruchamia na zegarku. Dotknij ponownie Sparuj i zezwól na żądanie.</string>
+    <string name="settings_sensors_open_bluetooth">Otwórz ustawienia Bluetooth</string>
 </resources>

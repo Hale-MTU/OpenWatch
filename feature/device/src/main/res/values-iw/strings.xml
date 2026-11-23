@@ -86,4 +86,5 @@
         <item quantity="two">שינה הוערכה עבור %1$d לילות</item>
         <item quantity="other">שינה הוערכה עבור %1$d לילות</item>
     </plurals>
+    <string name="settings_sensors_open_bluetooth">פתיחת הגדרות Bluetooth</string>
 </resources>

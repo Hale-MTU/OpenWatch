@@ -83,4 +83,5 @@
     <string name="settings_watch_wearos_needs_workout_write">Treinos não gravados: permita que o OpenWatch grave treinos, rotas e distância no Health Connect e sincronize novamente.</string>
     <string name="settings_watch_garmin_withheld">Não guardados no Health Connect por falta de permissão: %1$s. Conceda essas permissões e a próxima sincronização guarda o que o relógio enviar a partir daí.</string>
     <string name="settings_watch_wearos_companion_required">O Android não associou o relógio ao OpenWatch, por isso não foi adicionado. O OpenWatch precisa desta associação para gravar os treinos que outra app inicia no relógio. Toque de novo em Emparelhar e aceite o pedido.</string>
+    <string name="settings_sensors_open_bluetooth">Abrir definições de Bluetooth</string>
 </resources>

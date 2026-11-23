@@ -45,7 +45,6 @@
     <string name="metric_body_water_mass">Body water mass</string>
     <string name="screen_heart_rate">Heart rate</string>
     <string name="unit_bpm">bpm</string>
-    <string name="settings_sensors_open_bluetooth">Open Bluetooth settings</string>
     <string name="settings_body_profile_group_title">Body profile</string>
     <string name="settings_health_connect_group_title">Health Connect</string>
     <string name="dashboard_summary_today">Today</string>
@@ -80,8 +79,6 @@
     <string name="settings_watch_step_associating">Asking Android for access</string>
     <string name="settings_watch_step_associating_hint">Optional. Allowing this lets syncing continue reliably in the background.</string>
     <string name="settings_watch_step_probing">Checking what the watch supports</string>
-    <string name="settings_watch_wearos_companion_missing">Android has not linked this watch to OpenWatch. Without the link, OpenWatch cannot record workouts that another app starts on the watch.</string>
-    <string name="settings_watch_wearos_companion_link">Link watch</string>
     <string name="settings_watch_action_data">Data</string>
     <string name="settings_watch_action_sync">Sync</string>
     <string name="settings_watch_action_alarms">Alarms</string>
@@ -191,17 +188,6 @@
     <string name="settings_watch_metric_restless_moments">Restless moments</string>
     <string name="settings_watch_metric_watts">%1$d W</string>
     <string name="settings_watch_average_prefix">%1$s average</string>
-    <string name="settings_watch_wearos_status_section">Wear OS App Status</string>
-    <string name="settings_watch_wearos_bt_paired">Watch paired with this phone</string>
-    <string name="settings_watch_wearos_bt_permission">OpenWatch needs the Nearby devices permission to reach the watch.</string>
-    <string name="settings_watch_wearos_status_bond_lost">The watch is not paired with this phone. Open Bluetooth settings and pair it; make the watch discoverable from its own Bluetooth settings first.</string>
-    <string name="settings_watch_wearos_linked_to">Linked to %1$s</string>
-    <string name="settings_watch_wearos_check_app">Validate Wear OS App</string>
-    <string name="settings_watch_wearos_checking">Checking Wear OS app…</string>
-    <string name="settings_watch_wearos_sync_section">Watch Sync</string>
-    <string name="settings_watch_wearos_sync_body">The OpenWatch app on the watch records your heart rate and what a sleep estimate needs, and keeps a week of it. Sync copies the new heart rate into Health Connect and writes one estimated sleep session per night.</string>
-    <string name="settings_watch_wearos_sync_now">Sync watch</string>
-    <string name="settings_watch_wearos_syncing">Syncing watch…</string>
     <string name="settings_scales_empty_title">No scale set up</string>
     <string name="settings_scales_empty_body">Add a scale, and every weigh-in lands in Health Connect.</string>
     <string name="settings_scales_add">Add a scale</string>
@@ -253,20 +239,6 @@
     <string name="settings_scales_remove">Remove scale</string>
     <string name="settings_scales_remove_body">OpenWatch stops listening and forgets the key. Weigh-ins already saved stay.</string>
     <!-- OpenLink: other apps that use OpenWatch (features/connectedapps) -->
-    <string name="watch_settings_section">Watch settings</string>
-    <string name="watch_settings_not_read">The watch keeps these settings itself. Read them to change them here.</string>
-    <string name="watch_settings_unreachable">The watch did not answer. Is it near and its OpenWatch app running?</string>
-    <string name="watch_settings_read">Read from the watch</string>
-    <string name="watch_settings_power_save">Power-save heart rate</string>
-    <string name="watch_settings_power_save_body">About every 10 minutes outside bedtime mode. Bedtime mode always measures every 10 seconds.</string>
-    <string name="watch_settings_synced">Synced wake-ups during sleep</string>
-    <string name="watch_settings_synced_body">Keeps every sleep minute with the heart rate sensor\'s wake-ups instead of a lasting wake lock. Works only with the heart rate from the sensor.</string>
-    <string name="watch_settings_samsung_note">Samsung platform: needs Health Platform Developer Mode on the watch. Without it the platform asks Samsung about this app. A Samsung source that fails falls back to the sensor.</string>
-    <string name="watch_settings_hr_samsung">Heart rate from the Samsung platform</string>
-    <string name="watch_settings_hrv_samsung">HRV from the Samsung platform</string>
-    <string name="watch_settings_skin">Skin temperature at night</string>
-    <string name="watch_settings_spo2">SpO2 hourly at night</string>
-    <string name="watch_settings_allow_on_watch">Allow it on the watch: open OpenWatch there and switch it on once.</string>
     <string name="health_data_intro">OpenWatch writes to Health Connect what a device you paired recorded, and reads only what a sync needs. Each type needs your permission, and you can take it back in Health Connect at any time.</string>
     <string name="settings_watch_pair_unreachable">Could not reach the watch. Wake it up and keep it close, then try again.</string>
     <string name="settings_watch_pair_not_completed">Pairing was not completed. Confirm the code on the watch to finish.</string>

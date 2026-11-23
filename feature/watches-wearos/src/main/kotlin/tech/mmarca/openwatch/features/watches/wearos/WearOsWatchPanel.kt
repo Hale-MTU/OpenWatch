@@ -34,7 +34,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Duration
 import java.time.Instant
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.resolve
 import tech.mmarca.openwatch.devices.core.DeviceFeature
@@ -264,7 +263,7 @@ private fun WearOsStatusCard(
                     onClick = { runCatching { context.startActivity(Intent(Settings.ACTION_BLUETOOTH_SETTINGS)) } },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(stringResource(R.string.settings_sensors_open_bluetooth))
+                    Text(stringResource(DeviceR.string.settings_sensors_open_bluetooth))
                 }
             }
 

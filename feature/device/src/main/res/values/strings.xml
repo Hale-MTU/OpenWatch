@@ -102,4 +102,5 @@
         <item quantity="other">%1$d readings not yet in Health Connect</item>
     </plurals>
     <string name="device_readings_waiting_grant">%1$s. Allow OpenWatch to write them in Health Connect, and they are saved.</string>
+    <string name="settings_sensors_open_bluetooth">Open Bluetooth settings</string>
 </resources>

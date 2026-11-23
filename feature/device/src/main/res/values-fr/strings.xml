@@ -86,4 +86,5 @@
     <string name="settings_watch_wearos_needs_workout_write">Entraînements non enregistrés : autorisez OpenWatch à écrire les entraînements, itinéraires et distances dans Santé Connect, puis synchronisez à nouveau.</string>
     <string name="settings_watch_garmin_withheld">Non enregistrés dans Santé Connect, faute d\'autorisation : %1$s. Autorisez-les, et la prochaine synchronisation enregistrera ce que la montre envoie à partir de là.</string>
     <string name="settings_watch_wearos_companion_required">Android n\'a pas associé la montre à OpenWatch, elle n\'a donc pas été ajoutée. OpenWatch a besoin de cette association pour enregistrer les entraînements qu\'une autre application lance sur la montre. Appuyez de nouveau sur Appairer et acceptez la demande.</string>
+    <string name="settings_sensors_open_bluetooth">Ouvrir les réglages Bluetooth</string>
 </resources>

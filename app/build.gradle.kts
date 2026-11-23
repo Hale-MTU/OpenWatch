@@ -132,6 +132,8 @@ dependencies {
     // submodule, a composite build) as its api; the trust store and the binder are built in
     // di/LinkModule.
     implementation(project(":link-host"))
+    // The Wear OS watch's screens, bound into the device screen's contributions.
+    implementation(project(":feature:watches-wearos"))
     // The screens every device family shares, and the contributions a family's screens plug in through.
     implementation(project(":feature:device"))
     // Home's frame; the app's HomeRoute fills its sections.
@@ -280,6 +282,7 @@ tasks.withType<Test>().configureEach {
         ":devices:ble-standard:testCiUnitTest",
         ":devices:ble-standard:protocol:test",
         ":link-host:testCiUnitTest",
+        ":feature:watches-wearos:testCiUnitTest",
         ":feature:device:testCiUnitTest",
         ":feature:home:testCiUnitTest",
         ":feature:settings:testCiUnitTest",
@@ -309,6 +312,7 @@ tasks.withType<Test>().configureEach {
         "scannedBleStandardMain" to "devices/ble-standard/src/main",
         "scannedBleStandardProtocolMain" to "devices/ble-standard/protocol/src/main",
         "scannedLinkHostMain" to "link-host/src/main",
+        "scannedFeatureWatchesWearosMain" to "feature/watches-wearos/src/main",
         "scannedFeatureDeviceMain" to "feature/device/src/main",
         "scannedFeatureHomeMain" to "feature/home/src/main",
         "scannedFeatureSettingsMain" to "feature/settings/src/main",
@@ -332,6 +336,7 @@ tasks.withType<Test>().configureEach {
         "scannedFeatureSettingsBuild" to "feature/settings/build.gradle.kts",
         "scannedFeatureHomeBuild" to "feature/home/build.gradle.kts",
         "scannedFeatureDeviceBuild" to "feature/device/build.gradle.kts",
+        "scannedFeatureWatchesWearosBuild" to "feature/watches-wearos/build.gradle.kts",
         "scannedPrivacyPolicy" to "PRIVACY.md",
         "scannedPermissionsDoc" to "docs/app/permissions.md",
     ).forEach { (name, path) ->
