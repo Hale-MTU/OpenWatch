@@ -25,6 +25,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Duration
 import java.time.Instant
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.features.device.R as DeviceR
 import tech.mmarca.openwatch.core.permissions.RuntimePermissions
 import tech.mmarca.openwatch.devices.xiaomi.ScaleListenerStatus
 import tech.mmarca.openwatch.ui.components.ConfirmRemoveDialog
@@ -112,7 +113,7 @@ fun ScaleDeviceScreen(
     if (name == null) {
         // Removed while this screen was open.
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(stringResource(R.string.no_data))
+            Text(stringResource(DeviceR.string.no_data))
         }
         return
     }
@@ -177,7 +178,7 @@ fun ScaleDeviceScreen(
     }
     if (showRemoveDialog) {
         ConfirmRemoveDialog(
-            title = stringResource(R.string.settings_device_remove_confirm_title, name),
+            title = stringResource(DeviceR.string.settings_device_remove_confirm_title, name),
             body = stringResource(R.string.settings_scales_remove_body),
             onConfirm = {
                 showRemoveDialog = false

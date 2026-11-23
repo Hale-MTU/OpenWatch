@@ -2,17 +2,6 @@
 <issues format="6" by="lint 9.4.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.4.1)" variant="all" version="9.4.1">
 
     <issue
-        id="EmptySuperCall"
-        message="No need to call `super.onCleared`; the super method is defined to be empty"
-        errorLine1="        super.onCleared()"
-        errorLine2="              ~~~~~~~~~">
-        <location
-            file="src/main/kotlin/tech/mmarca/openwatch/features/watches/WatchesViewModel.kt"
-            line="308"
-            column="15"/>
-    </issue>
-
-    <issue
         id="MissingQuantity"
         message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
         errorLine1="    &lt;plurals name=&quot;settings_watch_notifications_apps_blocked&quot;>"
@@ -53,72 +42,6 @@
         <location
             file="src/main/res/values-pt/strings.xml"
             line="153"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="MissingQuantity"
-        message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;settings_watch_wearos_synced_samples&quot;>"
-        errorLine2="    ^">
-        <location
-            file="src/main/res/values-it/strings.xml"
-            line="367"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="MissingQuantity"
-        message="For locale &quot;pt&quot; (Portuguese) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;settings_watch_wearos_synced_samples&quot;>"
-        errorLine2="    ^">
-        <location
-            file="src/main/res/values-pt/strings.xml"
-            line="367"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="MissingQuantity"
-        message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;settings_watch_wearos_synced_step_minutes&quot;>"
-        errorLine2="    ^">
-        <location
-            file="src/main/res/values-it/strings.xml"
-            line="371"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="MissingQuantity"
-        message="For locale &quot;pt&quot; (Portuguese) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;settings_watch_wearos_synced_step_minutes&quot;>"
-        errorLine2="    ^">
-        <location
-            file="src/main/res/values-pt/strings.xml"
-            line="371"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="MissingQuantity"
-        message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;settings_watch_wearos_synced_nights&quot;>"
-        errorLine2="    ^">
-        <location
-            file="src/main/res/values-it/strings.xml"
-            line="375"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="MissingQuantity"
-        message="For locale &quot;pt&quot; (Portuguese) the following quantity should also be defined: `many`"
-        errorLine1="    &lt;plurals name=&quot;settings_watch_wearos_synced_nights&quot;>"
-        errorLine2="    ^">
-        <location
-            file="src/main/res/values-pt/strings.xml"
-            line="375"
             column="5"/>
     </issue>
 
@@ -504,72 +427,6 @@
         <location
             file="src/main/res/values-zh-rCN/strings.xml"
             line="157"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="UnusedQuantity"
-        message="For language &quot;zh&quot; (Chinese) the following quantities are not relevant: `one`"
-        errorLine1="    &lt;plurals name=&quot;settings_watch_wearos_synced_samples&quot;>"
-        errorLine2="    ^">
-        <location
-            file="src/main/res/values-zh-rCN/strings.xml"
-            line="367"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="UnusedQuantity"
-        message="For language &quot;ja&quot; (Japanese) the following quantities are not relevant: `one`"
-        errorLine1="    &lt;plurals name=&quot;settings_watch_wearos_synced_samples&quot;>"
-        errorLine2="    ^">
-        <location
-            file="src/main/res/values-ja/strings.xml"
-            line="371"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="UnusedQuantity"
-        message="For language &quot;zh&quot; (Chinese) the following quantities are not relevant: `one`"
-        errorLine1="    &lt;plurals name=&quot;settings_watch_wearos_synced_step_minutes&quot;>"
-        errorLine2="    ^">
-        <location
-            file="src/main/res/values-zh-rCN/strings.xml"
-            line="371"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="UnusedQuantity"
-        message="For language &quot;ja&quot; (Japanese) the following quantities are not relevant: `one`"
-        errorLine1="    &lt;plurals name=&quot;settings_watch_wearos_synced_step_minutes&quot;>"
-        errorLine2="    ^">
-        <location
-            file="src/main/res/values-ja/strings.xml"
-            line="375"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="UnusedQuantity"
-        message="For language &quot;zh&quot; (Chinese) the following quantities are not relevant: `one`"
-        errorLine1="    &lt;plurals name=&quot;settings_watch_wearos_synced_nights&quot;>"
-        errorLine2="    ^">
-        <location
-            file="src/main/res/values-zh-rCN/strings.xml"
-            line="375"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="UnusedQuantity"
-        message="For language &quot;ja&quot; (Japanese) the following quantities are not relevant: `one`"
-        errorLine1="    &lt;plurals name=&quot;settings_watch_wearos_synced_nights&quot;>"
-        errorLine2="    ^">
-        <location
-            file="src/main/res/values-ja/strings.xml"
-            line="379"
             column="5"/>
     </issue>
 

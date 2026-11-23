@@ -33,6 +33,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Instant
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.features.device.R as DeviceR
 import tech.mmarca.openwatch.core.geo.GeoCoordinateError
 import tech.mmarca.openwatch.core.geo.GeoCoordinateParseResult
 import tech.mmarca.openwatch.devices.garmin.GarminSendFileResult
@@ -302,7 +303,7 @@ private fun SendStatus(state: WatchSendPointUiState) {
     val (text, isError) = when {
         state.isSending -> sendStageText(stage) to false
         result != null -> sendResultText(result) to (result != GarminSendFileResult.Sent)
-        state.radioBusy -> R.string.settings_watch_point_failed_busy to false
+        state.radioBusy -> DeviceR.string.settings_watch_point_failed_busy to false
         else -> return
     }
     Text(
@@ -337,7 +338,7 @@ internal fun sendResultText(result: GarminSendFileResult): Int = when (result) {
     is GarminSendFileResult.Refused -> refusalText(result.reason)
     GarminSendFileResult.NoAnswer,
     GarminSendFileResult.HandshakeTimeout -> R.string.settings_watch_point_failed_no_answer
-    is GarminSendFileResult.Busy -> R.string.settings_watch_point_failed_busy
+    is GarminSendFileResult.Busy -> DeviceR.string.settings_watch_point_failed_busy
     GarminSendFileResult.SyncRunning -> R.string.settings_watch_point_failed_sync_running
     GarminSendFileResult.RecordingActive -> R.string.settings_watch_point_failed_recording
     GarminSendFileResult.Unreachable -> R.string.settings_watch_point_failed_unreachable

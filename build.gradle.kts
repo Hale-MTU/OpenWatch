@@ -70,6 +70,7 @@ tasks.register("verifyCiUnitTest") {
         ":feature:connectedapps:testCiUnitTest",
         ":feature:settings:testCiUnitTest",
         ":feature:home:testCiUnitTest",
+        ":feature:device:testCiUnitTest",
         ":link-host:testCiUnitTest",
         ":app:testCiUnitTest",
     )
@@ -119,6 +120,7 @@ tasks.register("verifyCiLint") {
         ":feature:connectedapps:lintCi",
         ":feature:settings:lintCi",
         ":feature:home:lintCi",
+        ":feature:device:lintCi",
         ":link-host:lintCi",
     )
 }

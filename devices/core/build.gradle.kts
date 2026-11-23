@@ -3,8 +3,9 @@
 // scanner, companion pairing and presence (the app's primary companion service), the sync
 // controller, its schedule and its worker, and the sink pushed measurements go through; and the
 // phone's sources a watch relays (the notification listener, the media
-// sessions, the weather broadcasts, the CoMaps guidance feed). In the app's packages
-// (`devices/core`, `devices/notifications`, `devices/media`, `devices/weather`, `comaps`). The contracts are :core:devices-api's; each
+// sessions, the weather broadcasts, the CoMaps guidance feed), and the BLE discovery scan the
+// add-a-device flows share. In the app's packages (`devices/core`, `devices/notifications`,
+// `devices/media`, `devices/weather`, `comaps`, `sensors/ble`). The contracts are :core:devices-api's; each
 // family's own half is its module, :devices:<vendor>, which depends on this one and on no
 // other family.
 plugins {

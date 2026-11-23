@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="no_data">Andmed puuduvad</string>
+    <string name="settings_watch_live_now">Praegu: %1$d bpm</string>
+    <string name="settings_watch_auto_sync">Automaatne sünkroonimine</string>
+    <string name="settings_watch_auto_sync_body">Sünkroonib kella ise, nii et uni ja aktiivsus jõuavad kohale ilma rakendust avamata. Kell peab olema levialas ja täpse hetke otsustab Android, seega üks ring võib pisut hilineda. Väljas tähendab, et kella sünkroonitakse ainult sinu palvel.</string>
+    <string name="settings_watch_auto_sync_off">Väljas</string>
+    <string name="settings_watch_auto_sync_30m">30 min</string>
+    <string name="settings_watch_auto_sync_1h">1 h</string>
+    <string name="settings_watch_auto_sync_2h">2 h</string>
+    <string name="settings_sensors_scanning">Otsin läheduses olevaid andureid…</string>
+    <string name="settings_sensors_scan_stopped">Otsing peatatud</string>
+    <string name="settings_sensors_capability_heart_rate">Pulss</string>
+    <string name="settings_sensors_capability_cycling_cadence">Rattasõidu sagedus</string>
+    <string name="settings_sensors_capability_cycling_power">Rattasõidu võimsus</string>
+    <string name="settings_sensors_capability_cycling_speed">Rattasõidu kiirus</string>
+    <string name="settings_sensors_capability_running_speed_cadence">Jooksu kiirus/sagedus</string>
+    <string name="health_connect_sync_paused">Health Connecti sünkroonimine on peatatud</string>
+    <string name="watch_permissions_title">Load sinu kella jaoks</string>
+    <string name="watch_permissions_body">Android küsib neid Health Connectist eraldi. Ilma nendeta ei leia kella üles ja taustal toimuv sünkroonimine lakkab vaikselt.</string>
+    <string name="settings_watches_intro">Kopeerib OpenWatchi selle, mida su kell salvestas. Internetti ei saadeta midagi.</string>
+    <string name="settings_watches_empty_title">Ühtegi kella pole seotud</string>
+    <string name="settings_watches_empty_body">Kella sidumine laseb OpenWatchil kopeerida selle, mida kell salvestas: unefaasid, puhkeoleku pulsi, stressi ja Body Battery näidu, ilma et midagi internetti saadetaks.</string>
+    <string name="settings_watches_add">Seo kell</string>
+    <string name="settings_watches_scan_empty">Ühtegi kella pole veel leitud. Veendu, et su kell on ärkvel ja telefoni lähedal.</string>
+    <string name="settings_watch_pair_action">Seo</string>
+    <string name="settings_watch_unsupported_notice">Seotud, kuid see kell kasutab ühendust, mida OpenWatch veel ei toeta, seega sünkroonida ei saa.</string>
+    <string name="settings_watch_no_companion_notice">Seotud, kuid Androidi juurdepääsu ei antud. Sünkroonimine töötab, kuni OpenWatch on avatud.</string>
+    <string name="settings_watch_connected">Ühendatud</string>
+    <string name="settings_watch_not_connected">Pole ühendatud</string>
+    <string name="settings_watch_never_synced">Pole kunagi sünkroonitud</string>
+    <string name="settings_watch_last_synced">Viimati sünkroonitud %1$s</string>
+    <string name="settings_watch_point_failed_busy">Kell on hõivatud. Proovi hetke pärast uuesti.</string>
+    <string name="settings_watch_section_device">Seade</string>
+    <string name="settings_watch_enabled">Sisse lülitatud</string>
+    <string name="settings_watch_rename">Nimeta kell ümber</string>
+    <string name="settings_watch_remove">Eemalda kell</string>
+    <string name="settings_device_remove_confirm_title">Kas eemaldada %1$s?</string>
+    <string name="settings_watch_remove_confirm_body">OpenWatch katkestab kellaga sidumise ja unustab, millised failid on juba kopeeritud, nii et tulevane sidumine algab puhtalt lehelt. Health Connecti juba salvestatud andmed jäävad alles.</string>
+    <string name="settings_bike_live_sensor_section">Reaalajas andur</string>
+    <string name="settings_bike_live_sensor_body">Edasta pulssi, kiirust, kadentsi või võimsust, et see tegevuse ajal reaalajas salvestada. Lülita seadmes esmalt edastamine sisse.</string>
+    <string name="settings_bike_detect_sensors">Tuvasta edastavad andurid</string>
+    <string name="settings_bike_detecting">Tuvastan…</string>
+    <string name="settings_bike_no_broadcast">Edastavaid andureid ei leitud. Lülita seadmes edastamine sisse ja proovi uuesti.</string>
+    <string name="settings_watch_remove_delete_history">Kustuta ka stressi, Body Battery ja skooride ajalugu, mida hoiab ainult see telefon</string>
+    <string name="settings_watch_wearos_fail_partial">Kell lõpetas poole pealt vastamise. Saabunu on salvestatud; jätkamiseks sünkrooni uuesti.</string>
+    <string name="settings_watch_wearos_fail_generic">Kella ei õnnestunud sünkroonida. Proovi uuesti.</string>
+    <string name="sync_failed_health_connect_permission">Health Connect keeldus kirjutamisest, kuna luba puudub. Luba OpenWatchil need andmed Health Connectis kirjutada ja sünkrooni siis uuesti.</string>
+    <string name="sync_failed_bluetooth_permission">Luba OpenWatchil läheduses olevaid seadmeid leida ja nendega ühenduda ning sünkrooni siis uuesti.</string>
+    <string name="sync_failed_unreachable">Seade ei vastanud. Hoia see lähedal, lülita Bluetooth sisse ja proovi uuesti.</string>
+    <string name="sync_failed_rate_limited">Health Connect palus OpenWatchil aeglustada. Saabunu on salvestatud; järgmine sünkroonimine jätkab sealt.</string>
+    <string name="sync_failed_not_saved">Mõnda kirjet ei õnnestunud Health Connecti salvestada. Järgmine sünkroonimine proovib neid uuesti.</string>
+    <plurals name="sync_written_files">
+        <item quantity="one">%1$d fail sünkroonitud</item>
+        <item quantity="other">%1$d faili sünkroonitud</item>
+    </plurals>
+    <string name="settings_watch_wearos_synced_none">Kellas pole midagi uut</string>
+    <string name="settings_watch_garmin_needs_weight">Treeningu kaloreid ei hinnatud: lisa oma kaal Kehaprofiili või salvesta see Health Connecti.</string>
+    <string name="settings_watch_wearos_needs_weight">Kõndimise kaloreid ei hinnatud: lisa oma kaal Kehaprofiili või salvesta see Health Connecti.</string>
+    <string name="settings_watch_wearos_needs_weight_read">Kõndimise kaloreid ei hinnatud: lisa oma kaal Kehaprofiili või luba OpenWatchil lugeda sinu kaalu Health Connectist.</string>
+    <string name="settings_watch_wearos_needs_steps_write">Samme ei kirjutatud: luba OpenWatchil kirjutada Health Connecti samme ja sünkrooni uuesti.</string>
+    <string name="settings_watch_wearos_needs_calories_write">Kõndimise kaloreid ei kirjutatud: luba OpenWatchil Health Connectis aktiivseid kaloreid kirjutada ja treeninguid lugeda, et neid järgmisest sünkroonimisest alates hinnata.</string>
+    <string name="settings_watch_wearos_needs_hrv_write">Südame löögisageduse varieeruvust ei kirjutatud: luba OpenWatchil see Health Connectis kirjutada ja sünkrooni siis uuesti.</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">Hingamissagedust ei kirjutatud: luba OpenWatchil see Health Connectis kirjutada ja sünkrooni siis uuesti.</string>
+    <string name="settings_watch_wearos_needs_spo2_write">Vere hapnikusisaldust ei kirjutatud: luba OpenWatchil see Health Connectis kirjutada ja sünkrooni siis uuesti.</string>
+    <string name="settings_watch_wearos_needs_skin_write">Naha temperatuuri ei kirjutatud: luba OpenWatchil see Health Connectis kirjutada ja sünkrooni siis uuesti.</string>
+    <string name="settings_watch_wearos_needs_resting_heart_rate">Puhkeoleku pulssi ei kirjutatud: luba OpenWatchil Health Connectis puhkeoleku pulssi lugeda ja kirjutada, et seda järgmisest sünkroonimisest alates hinnata.</string>
+    <plurals name="settings_watch_wearos_synced_samples">
+        <item quantity="one">%1$d pulsinäit sünkroonitud</item>
+        <item quantity="other">%1$d pulsinäitu sünkroonitud</item>
+    </plurals>
+    <plurals name="settings_watch_wearos_synced_step_minutes">
+        <item quantity="one">Sammud %1$d minuti kohta</item>
+        <item quantity="other">Sammud %1$d minuti kohta</item>
+    </plurals>
+    <plurals name="settings_watch_wearos_synced_nights">
+        <item quantity="one">%1$d öö uni hinnatud</item>
+        <item quantity="other">%1$d öö uni hinnatud</item>
+    </plurals>
+    <string name="settings_watch_auto_sync_background_access">Health Connecti taustajuurdepääs on välja lülitatud. Sünkroonimine, mis toimub siis, kui OpenWatch on suletud, salvestab kella andmed siiski. Kehaenergia ja ajaloo graafikud jõuavad järele alles siis, kui rakenduse avad.</string>
+    <string name="settings_watch_auto_sync_background_access_action">Luba taustajuurdepääs</string>
+    <string name="settings_watch_wearos_needs_workout_write">Treeninguid ei kirjutatud: luba OpenWatchil kirjutada treeningud, marsruudid ja vahemaa Health Connecti ning sünkrooni uuesti.</string>
+    <string name="settings_watch_garmin_withheld">Health Connecti ei salvestatud, kuna luba puudub: %1$s. Luba need ja järgmisest sünkroonimisest alates salvestatakse see, mida kell saadab.</string>
+    <string name="settings_watch_wearos_companion_required">Android ei sidunud kella OpenWatchiga, seega seda ei lisatud. OpenWatch vajab seda seost, et salvestada treeninguid, mille mõni teine rakendus kellas käivitab. Puuduta uuesti Seo ja luba taotlus.</string>
+</resources>

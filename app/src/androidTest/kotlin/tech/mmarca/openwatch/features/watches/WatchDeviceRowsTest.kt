@@ -14,6 +14,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.features.device.R as DeviceR
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
@@ -65,7 +66,7 @@ class WatchDeviceRowsTest {
             }
         }
 
-        composeRule.onNodeWithText(string(R.string.settings_bike_detect_sensors))
+        composeRule.onNodeWithText(string(DeviceR.string.settings_bike_detect_sensors))
             .assertIsEnabled()
             .performClick()
 

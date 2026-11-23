@@ -48,7 +48,6 @@ class LogCallersRatchetTest {
 
         val Allowed = setOf(
             "app/AppStartupActors.kt",
-            "app/sensors/ble/BleSensorCoordinator.kt",
             // A library module's files are keyed by its directory, then the package path.
             "core/data/data/repository/BleDeviceRepository.kt",
             "core/data/data/repository/DeviceStateStore.kt",
@@ -65,6 +64,7 @@ class LogCallersRatchetTest {
             "devices/core/devices/core/pairing/OpenWatchCompanionDeviceService.kt",
             "devices/core/devices/notifications/Diagnostics.kt",
             "devices/core/devices/notifications/OpenWatchNotificationListenerService.kt",
+            "devices/core/sensors/ble/BleSensorCoordinator.kt",
             "devices/garmin/devices/garmin/GarminLogcatSink.kt",
             "devices/garmin/devices/garmin/GarminNotificationBridge.kt",
             "devices/wearos/devices/wearos/BluetoothWearOsNodePort.kt",

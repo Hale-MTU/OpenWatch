@@ -100,13 +100,16 @@ androidComponents {
         val mapping = variant.artifacts.get(SingleArtifact.OBFUSCATION_MAPPING_FILE)
         val manifest = variant.artifacts.get(SingleArtifact.MERGED_MANIFEST)
         val script = rootProject.file("scripts/verify-r8-keeps.py")
-        val sources = file("src/main/kotlin")
+        // The app's sources and its screen modules', which declare the routes they read back.
+        val sources = listOf(file("src/main/kotlin")) +
+            rootProject.file("feature").listFiles().orEmpty().map { it.resolve("src/main/kotlin") }.filter { it.isDirectory }.sorted()
         val verifyR8Keeps = tasks.register<Exec>("verify${variantName}R8Keeps") {
             group = "verification"
             description = "Checks that R8 kept what the ${variant.name} build reaches by name."
             workingDir(rootProject.projectDir)
             inputs.file(mapping)
             inputs.file(manifest)
+            inputs.files(sources).withPropertyName("routeSources").withPathSensitivity(PathSensitivity.RELATIVE)
             executable("python3")
             argumentProviders.add(
                 CommandLineArgumentProvider {
@@ -114,8 +117,7 @@ androidComponents {
                         script.path,
                         "--mapping", mapping.get().asFile.path,
                         "--manifest", manifest.get().asFile.path,
-                        "--sources", sources.path,
-                    )
+                    ) + sources.flatMap { listOf("--sources", it.path) }
                 },
             )
         }
@@ -130,6 +132,8 @@ dependencies {
     // submodule, a composite build) as its api; the trust store and the binder are built in
     // di/LinkModule.
     implementation(project(":link-host"))
+    // The screens every device family shares, and the contributions a family's screens plug in through.
+    implementation(project(":feature:device"))
     // Home's frame; the app's HomeRoute fills its sections.
     implementation(project(":feature:home"))
     // Settings and the body profile.
@@ -223,6 +227,8 @@ dependencies {
     testImplementation(testFixtures(project(":devices:core")))
     // The main dispatcher swapped for the tests' (MainDispatcherRule).
     testImplementation(testFixtures(project(":core:model")))
+    // routeHandle(): the SavedStateHandle Navigation gives a route.
+    testImplementation(testFixtures(project(":feature:device")))
     // The registry and the body profile in memory.
     testImplementation(testFixtures(project(":core:data")))
     // The weigh-in table in memory, for the Scales screens.
@@ -274,6 +280,7 @@ tasks.withType<Test>().configureEach {
         ":devices:ble-standard:testCiUnitTest",
         ":devices:ble-standard:protocol:test",
         ":link-host:testCiUnitTest",
+        ":feature:device:testCiUnitTest",
         ":feature:home:testCiUnitTest",
         ":feature:settings:testCiUnitTest",
         ":feature:connectedapps:testCiUnitTest",
@@ -302,6 +309,7 @@ tasks.withType<Test>().configureEach {
         "scannedBleStandardMain" to "devices/ble-standard/src/main",
         "scannedBleStandardProtocolMain" to "devices/ble-standard/protocol/src/main",
         "scannedLinkHostMain" to "link-host/src/main",
+        "scannedFeatureDeviceMain" to "feature/device/src/main",
         "scannedFeatureHomeMain" to "feature/home/src/main",
         "scannedFeatureSettingsMain" to "feature/settings/src/main",
         "scannedFeatureConnectedappsMain" to "feature/connectedapps/src/main",
@@ -323,6 +331,7 @@ tasks.withType<Test>().configureEach {
         "scannedFeatureConnectedappsBuild" to "feature/connectedapps/build.gradle.kts",
         "scannedFeatureSettingsBuild" to "feature/settings/build.gradle.kts",
         "scannedFeatureHomeBuild" to "feature/home/build.gradle.kts",
+        "scannedFeatureDeviceBuild" to "feature/device/build.gradle.kts",
         "scannedPrivacyPolicy" to "PRIVACY.md",
         "scannedPermissionsDoc" to "docs/app/permissions.md",
     ).forEach { (name, path) ->

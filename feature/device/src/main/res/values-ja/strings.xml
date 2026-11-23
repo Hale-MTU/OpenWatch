@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="no_data">データはありません</string>
+    <string name="settings_watch_live_now">現在: %1$d bpm</string>
+    <string name="settings_watch_auto_sync">自動同期</string>
+    <string name="settings_watch_auto_sync_body">アプリを開かなくても睡眠やアクティビティが届くよう、ウォッチを自動で同期します。ウォッチが範囲内にある必要があり、正確なタイミングは Android が決めるため、少し遅れることがあります。オフにすると、要求したときのみ同期します。</string>
+    <string name="settings_watch_auto_sync_off">オフ</string>
+    <string name="settings_watch_auto_sync_30m">30 分</string>
+    <string name="settings_watch_auto_sync_1h">1 時間</string>
+    <string name="settings_watch_auto_sync_2h">2 時間</string>
+    <string name="watch_permissions_title">ウォッチの権限</string>
+    <string name="watch_permissions_body">Android は Health Connect とは別にこれらを求めます。ないとウォッチを見つけられず、バックグラウンド同期が静かに止まります。</string>
+    <string name="settings_sensors_scanning">近くのセンサーをスキャン中…</string>
+    <string name="settings_sensors_scan_stopped">スキャン停止</string>
+    <string name="settings_sensors_capability_heart_rate">心拍数</string>
+    <string name="settings_sensors_capability_cycling_cadence">サイクリングケイデンス</string>
+    <string name="settings_sensors_capability_cycling_power">サイクリングパワー</string>
+    <string name="settings_sensors_capability_cycling_speed">サイクリング速度</string>
+    <string name="settings_sensors_capability_running_speed_cadence">ランニング速度/ケイデンス</string>
+    <string name="health_connect_sync_paused">Health Connect の同期は一時停止中</string>
+    <string name="settings_watches_intro">ウォッチが記録した内容を OpenWatch にコピーします。インターネットには何も送られません。</string>
+    <string name="settings_watches_empty_title">ウォッチがペアリングされていません</string>
+    <string name="settings_watches_empty_body">ウォッチをペアリングすると、睡眠ステージ、安静時心拍数、ストレス、Body Battery など記録した内容を、インターネットに何も送らずに OpenWatch にコピーできます。</string>
+    <string name="settings_watches_add">ウォッチをペアリング</string>
+    <string name="settings_watches_scan_empty">ウォッチはまだ見つかりません。ウォッチが起動していてスマートフォンの近くにあることを確認してください。</string>
+    <string name="settings_watch_pair_action">ペアリング</string>
+    <string name="settings_watch_unsupported_notice">ペアリングされましたが、このウォッチは OpenWatch が未対応の接続方式を使うため同期できません。</string>
+    <string name="settings_watch_no_companion_notice">ペアリングされましたが、Android のアクセスが許可されませんでした。OpenWatch を開いている間は同期が機能します。</string>
+    <string name="settings_watch_connected">接続済み</string>
+    <string name="settings_watch_not_connected">未接続</string>
+    <string name="settings_watch_never_synced">未同期</string>
+    <string name="settings_watch_last_synced">最終同期 %1$s</string>
+    <string name="settings_watch_point_failed_busy">ウォッチが処理中です。少し待ってからもう一度お試しください。</string>
+    <string name="settings_watch_section_device">デバイス</string>
+    <string name="settings_watch_enabled">有効</string>
+    <string name="settings_watch_rename">ウォッチの名前を変更</string>
+    <string name="settings_watch_remove">ウォッチを削除</string>
+    <string name="settings_device_remove_confirm_title">%1$s を削除しますか？</string>
+    <string name="settings_watch_remove_confirm_body">OpenWatch はウォッチのペアリングを解除し、コピー済みファイルの記録を忘れるため、次回のペアリングは最初からになります。Health Connect に保存済みのデータは保持されます。</string>
+    <string name="settings_bike_live_sensor_section">ライブセンサー</string>
+    <string name="settings_bike_live_sensor_body">心拍数、速度、ケイデンス、パワーをブロードキャストしてアクティビティ中にライブ記録します。まずデバイスでブロードキャストをオンにしてください。</string>
+    <string name="settings_bike_detect_sensors">ブロードキャストセンサーを検出</string>
+    <string name="settings_bike_detecting">検出中…</string>
+    <string name="settings_bike_no_broadcast">ブロードキャストセンサーが見つかりません。デバイスでブロードキャストをオンにしてもう一度お試しください。</string>
+    <string name="settings_watch_remove_delete_history">このスマートフォンだけが保持しているストレス、Body Battery、スコアの履歴も削除する</string>
+    <string name="settings_watch_wearos_fail_partial">ウォッチが途中で応答しなくなりました。受信した分は保存済みです。続けるにはもう一度同期してください。</string>
+    <string name="settings_watch_wearos_fail_generic">ウォッチを同期できませんでした。もう一度お試しください。</string>
+    <string name="sync_failed_health_connect_permission">権限がないため、Health Connect が書き込みを拒否しました。OpenWatch に Health Connect へのこのデータの書き込みを許可してから、もう一度同期してください。</string>
+    <string name="sync_failed_bluetooth_permission">OpenWatch に付近のデバイスの検出と接続を許可してから、もう一度同期してください。</string>
+    <string name="sync_failed_unreachable">デバイスが応答しませんでした。Bluetooth をオンにして近くに置き、もう一度お試しください。</string>
+    <string name="sync_failed_rate_limited">Health Connect から OpenWatch に処理を遅くするよう求められました。受信した分は保存済みです。次回の同期はその続きから行われます。</string>
+    <string name="sync_failed_not_saved">一部の記録を Health Connect に保存できませんでした。次回の同期で再試行されます。</string>
+    <plurals name="sync_written_files">
+        <item quantity="other">%1$d 件のファイルを同期しました</item>
+    </plurals>
+    <string name="settings_watch_wearos_synced_none">ウォッチに新しいデータはありません</string>
+    <string name="settings_watch_garmin_needs_weight">ワークアウトのカロリーは推定されていません。体のプロフィールに体重を追加するか、Health Connect に記録してください。</string>
+    <string name="settings_watch_wearos_needs_weight">歩行カロリーは推定されていません。体のプロフィールに体重を追加するか、Health Connect に記録してください。</string>
+    <string name="settings_watch_wearos_needs_weight_read">歩行カロリーは推定されていません。体のプロフィールに体重を追加するか、OpenWatch に Health Connect の体重の読み取りを許可してください。</string>
+    <string name="settings_watch_wearos_needs_steps_write">歩数を書き込めませんでした。OpenWatch に Health Connect への歩数の書き込みを許可してから、もう一度同期してください。</string>
+    <string name="settings_watch_wearos_needs_calories_write">歩行カロリーを書き込めませんでした。OpenWatch に Health Connect でのアクティブカロリーの書き込みとワークアウトの読み取りを許可すると、次回の同期から推定されます。</string>
+    <string name="settings_watch_wearos_needs_hrv_write">心拍変動を書き込めませんでした。OpenWatch に Health Connect への書き込みを許可してから、もう一度同期してください。</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">呼吸数を書き込めませんでした。OpenWatch に Health Connect への書き込みを許可してから、もう一度同期してください。</string>
+    <string name="settings_watch_wearos_needs_spo2_write">血中酸素を書き込めませんでした。OpenWatch に Health Connect への書き込みを許可してから、もう一度同期してください。</string>
+    <string name="settings_watch_wearos_needs_skin_write">皮膚温度を書き込めませんでした。OpenWatch に Health Connect への書き込みを許可してから、もう一度同期してください。</string>
+    <string name="settings_watch_wearos_needs_resting_heart_rate">安静時心拍数を書き込めませんでした。OpenWatch に Health Connect での安静時心拍数の読み取りと書き込みを許可すると、次回の同期から推定されます。</string>
+    <plurals name="settings_watch_wearos_synced_samples">
+        <item quantity="one">%1$d 件の心拍数サンプルを同期しました</item>
+        <item quantity="other">%1$d 件の心拍数サンプルを同期しました</item>
+    </plurals>
+    <plurals name="settings_watch_wearos_synced_step_minutes">
+        <item quantity="one">%1$d 分間の歩数</item>
+        <item quantity="other">%1$d 分間の歩数</item>
+    </plurals>
+    <plurals name="settings_watch_wearos_synced_nights">
+        <item quantity="one">%1$d 晩の睡眠を推定しました</item>
+        <item quantity="other">%1$d 晩の睡眠を推定しました</item>
+    </plurals>
+    <string name="settings_watch_auto_sync_background_access">Health Connect のバックグラウンドアクセスがオフです。OpenWatch を閉じている間の同期でもウォッチのデータは保存されます。身体エネルギーと履歴グラフはアプリを開いたときにのみ更新されます。</string>
+    <string name="settings_watch_auto_sync_background_access_action">バックグラウンドアクセスを許可</string>
+    <string name="settings_watch_wearos_needs_workout_write">ワークアウトは書き込まれていません。ワークアウト、ルート、距離の Health Connect への書き込みを OpenWatch に許可してから、もう一度同期してください。</string>
+    <string name="settings_watch_garmin_withheld">権限がないため Health Connect に保存されませんでした: %1$s。許可すると、次回の同期からウォッチが送るデータが保存されます。</string>
+    <string name="settings_watch_wearos_companion_required">Android がウォッチを OpenWatch にリンクしなかったため、追加されませんでした。別のアプリがウォッチで開始したワークアウトを記録するには、このリンクが必要です。もう一度「ペアリング」をタップして、リクエストを許可してください。</string>
+</resources>

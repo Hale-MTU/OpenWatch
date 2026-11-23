@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="no_data">暂无数据</string>
+    <string name="settings_watch_live_now">当前：%1$d bpm</string>
+    <string name="settings_watch_auto_sync">自动同步</string>
+    <string name="settings_watch_auto_sync_body">自动同步手表，无需打开应用即可获取睡眠和活动。手表需在范围内，由 Android 决定同步时机，因此一次跑步可能会稍晚到达。关闭则仅在你请求时同步手表。</string>
+    <string name="settings_watch_auto_sync_off">关闭</string>
+    <string name="settings_watch_auto_sync_30m">30 分钟</string>
+    <string name="settings_watch_auto_sync_1h">1 小时</string>
+    <string name="settings_watch_auto_sync_2h">2 小时</string>
+    <string name="watch_permissions_title">手表权限</string>
+    <string name="watch_permissions_body">Android 会将这些权限与 Health Connect 分开申请。没有它们手表无法被发现，后台同步也会悄然停止。</string>
+    <string name="settings_sensors_scanning">正在扫描附近传感器…</string>
+    <string name="settings_sensors_scan_stopped">扫描已停止</string>
+    <string name="settings_sensors_capability_heart_rate">心率</string>
+    <string name="settings_sensors_capability_cycling_cadence">骑行踏频</string>
+    <string name="settings_sensors_capability_cycling_power">骑行功率</string>
+    <string name="settings_sensors_capability_cycling_speed">骑行速度</string>
+    <string name="settings_sensors_capability_running_speed_cadence">跑步速度/踏频</string>
+    <string name="health_connect_sync_paused">Health Connect 同步已暂停</string>
+    <string name="settings_watches_intro">将手表记录的内容复制到 OpenWatch。不发送到互联网。</string>
+    <string name="settings_watches_empty_title">未配对手表</string>
+    <string name="settings_watches_empty_body">配对手表可让 OpenWatch 复制其记录 — 睡眠分期、静息心率、压力和身体电量 — 而不向互联网发送任何内容。</string>
+    <string name="settings_watches_add">配对手表</string>
+    <string name="settings_watches_scan_empty">尚未找到手表。请确保手表已唤醒且靠近手机。</string>
+    <string name="settings_watch_pair_action">配对</string>
+    <string name="settings_watch_unsupported_notice">已配对，但此手表使用 OpenWatch 尚不支持的连接方式，因此无法同步。</string>
+    <string name="settings_watch_no_companion_notice">已配对，但未授予 Android 访问权限。OpenWatch 打开时同步可用。</string>
+    <string name="settings_watch_connected">已连接</string>
+    <string name="settings_watch_not_connected">未连接</string>
+    <string name="settings_watch_never_synced">从未同步</string>
+    <string name="settings_watch_last_synced">上次同步 %1$s</string>
+    <string name="settings_watch_point_failed_busy">手表正忙。请稍后重试。</string>
+    <string name="settings_watch_section_device">设备</string>
+    <string name="settings_watch_enabled">已启用</string>
+    <string name="settings_watch_rename">重命名手表</string>
+    <string name="settings_watch_remove">移除手表</string>
+    <string name="settings_device_remove_confirm_title">移除 %1$s？</string>
+    <string name="settings_watch_remove_confirm_body">OpenWatch 将取消配对手表并忘记已复制的文件，以便将来配对从新开始。已保存到 Health Connect 的数据保留。</string>
+    <string name="settings_bike_live_sensor_section">实时传感器</string>
+    <string name="settings_bike_live_sensor_body">广播心率、速度、踏频或功率以在活动中实时记录。请先在设备上开启广播。</string>
+    <string name="settings_bike_detect_sensors">检测广播传感器</string>
+    <string name="settings_bike_detecting">检测中…</string>
+    <string name="settings_bike_no_broadcast">未找到广播传感器。请在设备上开启广播后重试。</string>
+    <string name="settings_watch_remove_delete_history">同时删除仅保存在此手机上的压力、Body Battery 和评分历史</string>
+    <string name="settings_watch_wearos_fail_partial">手表中途停止了回应。已收到的数据已保存；请再次同步以继续。</string>
+    <string name="settings_watch_wearos_fail_generic">无法同步手表。请重试。</string>
+    <string name="sync_failed_health_connect_permission">由于缺少权限，Health Connect 拒绝了写入。请允许 OpenWatch 在 Health Connect 中写入这些数据，然后再次同步。</string>
+    <string name="sync_failed_bluetooth_permission">请允许 OpenWatch 查找并连接附近的设备，然后再次同步。</string>
+    <string name="sync_failed_unreachable">设备未响应。请将其放在附近并打开蓝牙，然后重试。</string>
+    <string name="sync_failed_rate_limited">Health Connect 要求 OpenWatch 放慢速度。已收到的数据已保存；下次同步会从那里继续。</string>
+    <string name="sync_failed_not_saved">部分记录无法保存到 Health Connect。下次同步时会再次尝试。</string>
+    <plurals name="sync_written_files">
+        <item quantity="other">已同步 %1$d 个文件</item>
+    </plurals>
+    <string name="settings_watch_wearos_synced_none">手表上没有新数据</string>
+    <string name="settings_watch_garmin_needs_weight">未估算锻炼卡路里：请在身体档案中添加体重，或在 Health Connect 中记录体重。</string>
+    <string name="settings_watch_wearos_needs_weight">未估算步行卡路里：请在身体档案中添加体重，或在 Health Connect 中记录体重。</string>
+    <string name="settings_watch_wearos_needs_weight_read">未估算步行卡路里：请在身体档案中添加体重，或允许 OpenWatch 读取 Health Connect 中的体重。</string>
+    <string name="settings_watch_wearos_needs_steps_write">未写入步数：请允许 OpenWatch 向 Health Connect 写入步数，然后重新同步。</string>
+    <string name="settings_watch_wearos_needs_calories_write">未写入步行卡路里：请允许 OpenWatch 在 Health Connect 中写入活动卡路里并读取锻炼记录，从下次同步起即可估算。</string>
+    <string name="settings_watch_wearos_needs_hrv_write">未写入心率变异性：请允许 OpenWatch 在 Health Connect 中写入，然后再次同步。</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">未写入呼吸频率：请允许 OpenWatch 在 Health Connect 中写入，然后再次同步。</string>
+    <string name="settings_watch_wearos_needs_spo2_write">未写入血氧：请允许 OpenWatch 在 Health Connect 中写入，然后再次同步。</string>
+    <string name="settings_watch_wearos_needs_skin_write">未写入皮肤温度：请允许 OpenWatch 在 Health Connect 中写入，然后再次同步。</string>
+    <string name="settings_watch_wearos_needs_resting_heart_rate">未写入静息心率：请允许 OpenWatch 在 Health Connect 中读取并写入静息心率，从下次同步起即可估算。</string>
+    <plurals name="settings_watch_wearos_synced_samples">
+        <item quantity="one">已同步 %1$d 个心率样本</item>
+        <item quantity="other">已同步 %1$d 个心率样本</item>
+    </plurals>
+    <plurals name="settings_watch_wearos_synced_step_minutes">
+        <item quantity="one">%1$d 分钟的步数</item>
+        <item quantity="other">%1$d 分钟的步数</item>
+    </plurals>
+    <plurals name="settings_watch_wearos_synced_nights">
+        <item quantity="one">已估算 %1$d 晚的睡眠</item>
+        <item quantity="other">已估算 %1$d 晚的睡眠</item>
+    </plurals>
+    <string name="settings_watch_auto_sync_background_access">Health Connect 后台访问已关闭。OpenWatch 关闭时运行的同步仍会保存手表数据。身体电量和历史图表只会在打开应用时更新。</string>
+    <string name="settings_watch_auto_sync_background_access_action">允许后台访问</string>
+    <string name="settings_watch_wearos_needs_workout_write">锻炼未写入：请允许 OpenWatch 在 Health Connect 中写入锻炼、路线和距离，然后再次同步。</string>
+    <string name="settings_watch_garmin_withheld">因缺少权限，未保存到 Health Connect：%1$s。授予这些权限后，从下次同步起会保存手表发送的数据。</string>
+    <string name="settings_watch_wearos_companion_required">Android 未将手表关联到 OpenWatch，因此没有添加。OpenWatch 需要此关联才能记录其他应用在手表上开始的锻炼。请再次点按“配对”并允许请求。</string>
+</resources>

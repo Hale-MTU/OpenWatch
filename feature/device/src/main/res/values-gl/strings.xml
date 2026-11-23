@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="no_data">Sen datos</string>
+    <string name="settings_watch_live_now">Agora: %1$d ppm</string>
+    <string name="settings_watch_auto_sync">Sincronización automática</string>
+    <string name="settings_watch_auto_sync_body">Sincroniza o reloxo por si só, para que o sono e a actividade cheguen sen abrir a app. O reloxo ten que estar ao alcance, e Android decide o momento exacto, así que unha carreira pode chegar algo tarde. Desactivado significa que só se sincroniza cando o pidas.</string>
+    <string name="settings_watch_auto_sync_off">Desactivado</string>
+    <string name="settings_watch_auto_sync_30m">30 min</string>
+    <string name="settings_watch_auto_sync_1h">1 h</string>
+    <string name="settings_watch_auto_sync_2h">2 h</string>
+    <string name="watch_permissions_title">Permisos para o teu reloxo</string>
+    <string name="watch_permissions_body">Android pídeos por separado de Health Connect. Sen eles non se pode atopar un reloxo e as sincronizacións en segundo plano páranse en silencio.</string>
+    <string name="settings_sensors_scanning">Buscando sensores próximos…</string>
+    <string name="settings_sensors_scan_stopped">Busca detida</string>
+    <string name="settings_sensors_capability_heart_rate">Frecuencia cardíaca</string>
+    <string name="settings_sensors_capability_cycling_cadence">Cadencia de pedaleo</string>
+    <string name="settings_sensors_capability_cycling_power">Potencia de ciclismo</string>
+    <string name="settings_sensors_capability_cycling_speed">Velocidade de ciclismo</string>
+    <string name="settings_sensors_capability_running_speed_cadence">Velocidade/cadencia de carreira</string>
+    <string name="health_connect_sync_paused">A sincronización con Health Connect está en pausa</string>
+    <string name="settings_watches_intro">Copia o que gravou o teu reloxo a OpenWatch. Non se envía nada a internet.</string>
+    <string name="settings_watches_empty_title">Ningún reloxo emparellado</string>
+    <string name="settings_watches_empty_body">Emparellar un reloxo permite a OpenWatch copiar o que gravou (fases de sono, frecuencia cardíaca en repouso, estrés e Body Battery) sen enviar nada a internet.</string>
+    <string name="settings_watches_add">Emparellar un reloxo</string>
+    <string name="settings_watches_scan_empty">Aínda non se atoparon reloxos. Asegúrate de que o reloxo está esperto e preto do teléfono.</string>
+    <string name="settings_watch_pair_action">Emparellar</string>
+    <string name="settings_watch_unsupported_notice">Emparellado, pero este reloxo usa unha conexión que OpenWatch aínda non admite, así que non pode sincronizar.</string>
+    <string name="settings_watch_no_companion_notice">Emparellado, pero non se concedeu o acceso de Android. A sincronización funciona mentres OpenWatch está aberto.</string>
+    <string name="settings_watch_connected">Conectado</string>
+    <string name="settings_watch_not_connected">Non conectado</string>
+    <string name="settings_watch_never_synced">Nunca sincronizado</string>
+    <string name="settings_watch_last_synced">Última sincronización %1$s</string>
+    <string name="settings_watch_point_failed_busy">O reloxo está ocupado. Téntao de novo nun momento.</string>
+    <string name="settings_watch_section_device">Dispositivo</string>
+    <string name="settings_watch_enabled">Activado</string>
+    <string name="settings_watch_rename">Renomear reloxo</string>
+    <string name="settings_watch_remove">Eliminar reloxo</string>
+    <string name="settings_device_remove_confirm_title">Eliminar %1$s?</string>
+    <string name="settings_watch_remove_confirm_body">OpenWatch desemparellará o reloxo e esquecerá que ficheiros xa copiou, así que un futuro emparellamento empeza de cero. Os datos xa gardados en Health Connect consérvanse.</string>
+    <string name="settings_bike_live_sensor_section">Sensor en directo</string>
+    <string name="settings_bike_live_sensor_body">Emite frecuencia cardíaca, velocidade, cadencia ou potencia para gravalas en directo durante unha actividade. Activa antes a emisión no dispositivo.</string>
+    <string name="settings_bike_detect_sensors">Detectar sensores en emisión</string>
+    <string name="settings_bike_detecting">Detectando…</string>
+    <string name="settings_bike_no_broadcast">Non se atoparon sensores en emisión. Activa a emisión no dispositivo e téntao de novo.</string>
+    <string name="settings_watch_remove_delete_history">Eliminar tamén o historial de estrés, Body Battery e puntuacións que só garda este teléfono</string>
+    <string name="settings_watch_wearos_fail_partial">O reloxo deixou de responder a medias. O recibido gardouse; sincroniza de novo para continuar.</string>
+    <string name="settings_watch_wearos_fail_generic">Non se puido sincronizar o reloxo. Téntao de novo.</string>
+    <string name="sync_failed_health_connect_permission">Health Connect rexeitou unha escritura por falta de permiso. Permite que OpenWatch escriba estes datos en Health Connect e sincroniza de novo.</string>
+    <string name="sync_failed_bluetooth_permission">Permite que OpenWatch atope os dispositivos próximos e se conecte a eles, e despois sincroniza de novo.</string>
+    <string name="sync_failed_unreachable">O dispositivo non respondeu. Achégao, co Bluetooth activado, e téntao de novo.</string>
+    <string name="sync_failed_rate_limited">Health Connect pediu a OpenWatch que fose máis amodo. O que chegou gardouse; a próxima sincronización continúa desde aí.</string>
+    <string name="sync_failed_not_saved">Non se puideron gardar algúns rexistros en Health Connect. A próxima sincronización volve intentalos.</string>
+    <plurals name="sync_written_files">
+        <item quantity="one">%1$d ficheiro sincronizado</item>
+        <item quantity="other">%1$d ficheiros sincronizados</item>
+    </plurals>
+    <string name="settings_watch_wearos_synced_none">Non hai nada novo no reloxo</string>
+    <string name="settings_watch_garmin_needs_weight">Calorías de adestramento sen estimar: engade o teu peso en Perfil corporal ou rexístrao en Health Connect.</string>
+    <string name="settings_watch_wearos_needs_weight">Calorías ao camiñar sen estimar: engade o teu peso en Perfil corporal ou rexístrao en Health Connect.</string>
+    <string name="settings_watch_wearos_needs_weight_read">Calorías ao camiñar sen estimar: engade o teu peso en Perfil corporal ou permite que OpenWatch lea o teu peso en Health Connect.</string>
+    <string name="settings_watch_wearos_needs_steps_write">Pasos sen escribir: permite que OpenWatch escriba pasos en Health Connect e volve sincronizar.</string>
+    <string name="settings_watch_wearos_needs_calories_write">Calorías ao camiñar sen escribir: permite que OpenWatch escriba calorías activas e lea adestramentos en Health Connect para estimalas desde a próxima sincronización.</string>
+    <string name="settings_watch_wearos_needs_hrv_write">Variabilidade da frecuencia cardíaca sen escribir: permite que OpenWatch a escriba en Health Connect e sincroniza de novo.</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">Frecuencia respiratoria sen escribir: permite que OpenWatch a escriba en Health Connect e sincroniza de novo.</string>
+    <string name="settings_watch_wearos_needs_spo2_write">Osíxeno en sangue sen escribir: permite que OpenWatch o escriba en Health Connect e sincroniza de novo.</string>
+    <string name="settings_watch_wearos_needs_skin_write">Temperatura da pel sen escribir: permite que OpenWatch a escriba en Health Connect e sincroniza de novo.</string>
+    <string name="settings_watch_wearos_needs_resting_heart_rate">Frecuencia cardíaca en repouso sen escribir: permite que OpenWatch lea e escriba a frecuencia cardíaca en repouso en Health Connect para estimala desde a próxima sincronización.</string>
+    <plurals name="settings_watch_wearos_synced_samples">
+        <item quantity="one">%1$d mostra de frecuencia cardíaca sincronizada</item>
+        <item quantity="other">%1$d mostras de frecuencia cardíaca sincronizadas</item>
+    </plurals>
+    <plurals name="settings_watch_wearos_synced_step_minutes">
+        <item quantity="one">Pasos de %1$d minuto</item>
+        <item quantity="other">Pasos de %1$d minutos</item>
+    </plurals>
+    <plurals name="settings_watch_wearos_synced_nights">
+        <item quantity="one">%1$d noite de sono estimada</item>
+        <item quantity="other">%1$d noites de sono estimadas</item>
+    </plurals>
+    <string name="settings_watch_auto_sync_background_access">O acceso en segundo plano a Health Connect está desactivado. Unha sincronización que se execute con OpenWatch pechado garda igualmente os datos do reloxo. A enerxía corporal e as gráficas de historial só se actualizan cando abres a app.</string>
+    <string name="settings_watch_auto_sync_background_access_action">Permitir o acceso en segundo plano</string>
+    <string name="settings_watch_wearos_needs_workout_write">Adestramentos sen escribir: permite que OpenWatch escriba adestramentos, rutas e distancia en Health Connect e sincroniza de novo.</string>
+    <string name="settings_watch_garmin_withheld">Sen gardar en Health Connect por falta de permiso: %1$s. Concede eses permisos e a próxima sincronización gardará o que envíe o reloxo desde entón.</string>
+    <string name="settings_watch_wearos_companion_required">Android non vinculou o reloxo con OpenWatch, así que non se engadiu. OpenWatch precisa este vínculo para gravar os adestramentos que outra app inicia no reloxo. Toca Emparellar de novo e acepta a solicitude.</string>
+</resources>

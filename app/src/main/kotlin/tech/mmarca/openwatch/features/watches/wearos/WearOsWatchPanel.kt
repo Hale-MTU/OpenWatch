@@ -46,6 +46,7 @@ import tech.mmarca.openwatch.devices.wearos.WearOsCompanionStatus
 import tech.mmarca.openwatch.devices.wearos.messageRes
 import tech.mmarca.openwatch.devices.wearos.R as WearOsR
 import tech.mmarca.openwatch.core.ui.R as UiR
+import tech.mmarca.openwatch.features.device.R as DeviceR
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
@@ -236,7 +237,7 @@ private fun WearOsStatusCard(
                         WearOsAppStatus.APP_RUNNING -> status.watchName
                             ?.let { stringResource(R.string.settings_watch_wearos_linked_to, it) }
                             ?: stringResource(WearOsR.string.settings_watch_wearos_app_running)
-                        WearOsAppStatus.NOT_PAIRED -> stringResource(R.string.settings_watch_not_connected)
+                        WearOsAppStatus.NOT_PAIRED -> stringResource(DeviceR.string.settings_watch_not_connected)
                         else -> stringResource(status.appStatus.messageRes())
                     },
                     style = MaterialTheme.typography.bodyMedium,
@@ -249,7 +250,7 @@ private fun WearOsStatusCard(
             }
             liveHeartRateBpm?.let { bpm ->
                 Text(
-                    text = stringResource(R.string.settings_watch_live_now, bpm),
+                    text = stringResource(DeviceR.string.settings_watch_live_now, bpm),
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -337,9 +338,9 @@ private fun WearOsSyncCard(
             val syncedAt = device.lastSyncedAt
             Text(
                 text = if (syncedAt == null) {
-                    stringResource(R.string.settings_watch_never_synced)
+                    stringResource(DeviceR.string.settings_watch_never_synced)
                 } else {
-                    stringResource(R.string.settings_watch_last_synced, formatDeviceTime(syncedAt))
+                    stringResource(DeviceR.string.settings_watch_last_synced, formatDeviceTime(syncedAt))
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,

@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Duration
 import java.time.Instant
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.features.device.R as DeviceR
 import tech.mmarca.openwatch.core.presentation.resolve
 import tech.mmarca.openwatch.devices.core.DeviceFeature
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
@@ -261,7 +262,7 @@ private fun GarminWatchSwitches(state: GarminWatchPanelUiState, actions: GarminW
         SwitchCard(
             title = stringResource(R.string.settings_watch_live_readings),
             body = state.liveHeartRateBpm
-                ?.let { stringResource(R.string.settings_watch_live_now, it) }
+                ?.let { stringResource(DeviceR.string.settings_watch_live_now, it) }
                 ?: stringResource(R.string.settings_watch_live_readings_body),
             checked = state.liveReadings,
             onCheckedChange = actions.onLiveReadingsChange,

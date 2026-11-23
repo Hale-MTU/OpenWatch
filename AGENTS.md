@@ -17,11 +17,10 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 ## Map
 
 - `app/src/main/kotlin/tech/mmarca/openwatch/`
-  - `features/` — the screens still in the app: `device` (the device route and the generic add flow), `watches`, `scales`. The others are modules under `feature/` (below).
+  - `features/` — the screens still in the app: `watches`, `scales`. The others are modules under `feature/` (below).
   - `data/repository` — what joins a device family's own contract to `:core:data`: the Garmin
     and scale tables over their DAOs, the Garmin and Wear OS preferences over
     `OpenWatchPreferences`.
-  - `sensors/ble/` — the BLE discovery scan the add-a-device flows share.
   - `di/` — the Hilt modules. `DevicesModule` binds what every family shares and the rules
     across families (the classifiers' order); each family binds itself in its own module.
     The device layer itself is the modules under `devices/` (below); the app holds none of it.
@@ -31,6 +30,7 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 - `feature/connectedapps` (`:feature:connectedapps`) — the apps that use OpenWatch over OpenLink: allow, block, the switches per capability, forget. It depends on `:link-host`.
 - `feature/settings` (`:feature:settings`) — Settings and the body profile, with its exchange with OpenVitals over OpenLink (`:link-host`). The version name comes in through Hilt (`@AppVersionName`).
 - `feature/home` (`:feature:home`) — Home's frame: a slot for each family's section, which the app's `features/home/HomeRoute` fills, Health Connect's and Settings' rows, and the empty side of the list-detail layout.
+- `feature/device` (`:feature:device`) — the screens every device family shares, which name none: the device route and the device screen with the generic panel, Home's watch list with the add-a-watch flow and its "Other devices" section with the app's own add flow, a sync's summary, and the contributions a family's screens plug in through (`features/device/DeviceContributions.kt`). Its test fixture is `routeHandle()`, a route's SavedStateHandle for a ViewModel test.
 - `core/model` (`:core:model`) and `core/fit` (`:core:fit`) — pure Kotlin on the JDK, with
   the app's package names: `domain/model`, `domain/preferences` and `core/geo` in the first, the
   FIT codec `core/fit` in the second. The unit-system provider that reads the platform's locale
@@ -54,7 +54,7 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   the phone's sources a watch relays, each in its own package: the notification listener and
   its filter (`devices/notifications`, with `WatchNotificationPrefsStore`), the media sessions
   (`devices/media`), the weather broadcasts (`devices/weather`) and the CoMaps guidance feed
-  (`comaps`); the FIT activity file import (`activityimport`) and the app's foreground gate
+  (`comaps`); the BLE discovery scan the add-a-device flows share (`sensors/ble`); the FIT activity file import (`activityimport`) and the app's foreground gate
   (`core/performance/AppForegroundGate`). Its test fixtures are `FakeSharedPreferences`,
   `testSeal()` and `activityimport/FitTestFiles`, which the device modules' tests and the app's
   share.

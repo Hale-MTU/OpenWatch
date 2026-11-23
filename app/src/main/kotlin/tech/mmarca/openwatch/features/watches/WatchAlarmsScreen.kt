@@ -52,6 +52,7 @@ import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.ui.R as UiR
+import tech.mmarca.openwatch.features.device.R as DeviceR
 import tech.mmarca.openwatch.core.presentation.joinParts
 import tech.mmarca.openwatch.core.presentation.localizedList
 import tech.mmarca.openwatch.devices.garmin.GarminAlarm
@@ -392,7 +393,7 @@ private fun SendStatus(state: WatchAlarmsUiState) {
     val (text, isError) = when {
         state.isSending -> alarmsStageText(state.sendingStage) to false
         result != null -> alarmsResultText(result) to (result != GarminSendFileResult.Sent)
-        state.radioBusy -> R.string.settings_watch_point_failed_busy to false
+        state.radioBusy -> DeviceR.string.settings_watch_point_failed_busy to false
         state.unsent -> R.string.settings_watch_alarms_unsent to false
         else -> return
     }

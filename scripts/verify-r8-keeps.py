@@ -127,10 +127,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--mapping", type=Path, required=True)
     parser.add_argument("--manifest", type=Path, required=True)
-    parser.add_argument("--sources", type=Path, required=True)
+    # Every source root whose @Serializable types R8 must keep: the app's and its screen modules'.
+    parser.add_argument("--sources", type=Path, action="append", required=True)
     args = parser.parse_args()
 
-    for path in (args.mapping, args.manifest, args.sources):
+    for path in (args.mapping, args.manifest, *args.sources):
         if not path.exists():
             print(f"verify-r8-keeps: {path} does not exist", file=sys.stderr)
             return 1
@@ -141,7 +142,9 @@ def main() -> int:
         print("verify-r8-keeps: found no manifest components; the scan is broken", file=sys.stderr)
         return 1
 
-    serializable = serializable_types(args.sources)
+    serializable = {}
+    for sources in args.sources:
+        serializable.update(serializable_types(sources))
     # The routes are @Serializable; finding none means the scan broke, not that none exist.
     if not serializable:
         print("verify-r8-keeps: found no @Serializable types; the scan is broken", file=sys.stderr)

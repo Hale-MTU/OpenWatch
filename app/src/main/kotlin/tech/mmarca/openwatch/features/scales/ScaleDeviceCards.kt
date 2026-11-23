@@ -29,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.ui.R as UiR
+import tech.mmarca.openwatch.features.device.R as DeviceR
 import tech.mmarca.openwatch.devices.xiaomi.ScaleListenerStatus
 import tech.mmarca.openwatch.devices.xiaomi.ScaleWriteFailure
 import tech.mmarca.openwatch.ui.components.DeviceAvatar
@@ -171,7 +172,7 @@ internal fun ScaleHealthConnectCard(
     ScaleCard {
         if (state.hasPendingWeighIns) {
             Note(R.string.settings_scales_pending, isError = true)
-            if (state.writeFailure == ScaleWriteFailure.SYNC_PAUSED) Note(R.string.health_connect_sync_paused)
+            if (state.writeFailure == ScaleWriteFailure.SYNC_PAUSED) Note(DeviceR.string.health_connect_sync_paused)
         }
         if (state.missingWritePermissions.isNotEmpty()) {
             Note(R.string.settings_scales_health_connect_missing)

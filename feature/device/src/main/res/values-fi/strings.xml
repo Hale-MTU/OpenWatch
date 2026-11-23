@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="no_data">Ei tietoja</string>
+    <string name="settings_watch_live_now">Nyt: %1$d bpm</string>
+    <string name="settings_watch_auto_sync">Automaattinen synkronointi</string>
+    <string name="settings_watch_auto_sync_body">Synkronoi kellon itsestään, jotta uni ja aktiviteetit saapuvat ilman sovelluksen avaamista. Kellon on oltava kantaman sisällä, ja Android päättää tarkan hetken, joten ajo voi hieman myöhästyä. Pois tarkoittaa, että kello synkronoidaan vain pyynnöstä.</string>
+    <string name="settings_watch_auto_sync_background_access">Health Connectin taustakäyttö on pois. Synkronointi, joka ajetaan OpenWatchin ollessa suljettuna, tallentaa kellon tiedot silti. Kehon energia ja historiakaaviot päivittyvät vasta, kun avaat sovelluksen.</string>
+    <string name="settings_watch_auto_sync_background_access_action">Salli taustakäyttö</string>
+    <string name="settings_watch_auto_sync_off">Pois</string>
+    <string name="settings_watch_auto_sync_30m">30 min</string>
+    <string name="settings_watch_auto_sync_1h">1 h</string>
+    <string name="settings_watch_auto_sync_2h">2 h</string>
+    <string name="watch_permissions_title">Kellosi käyttöoikeudet</string>
+    <string name="watch_permissions_body">Android pyytää nämä erikseen Health Connectista. Ilman niitä kelloa ei löydy, ja taustasynkronoinnit lakkaavat hiljaa.</string>
+    <string name="settings_sensors_scanning">Etsitään lähellä olevia antureita…</string>
+    <string name="settings_sensors_scan_stopped">Haku pysäytetty</string>
+    <string name="settings_sensors_capability_heart_rate">Syke</string>
+    <string name="settings_sensors_capability_cycling_cadence">Pyöräilykadenssi</string>
+    <string name="settings_sensors_capability_cycling_power">Pyöräilyteho</string>
+    <string name="settings_sensors_capability_cycling_speed">Pyöräilynopeus</string>
+    <string name="settings_sensors_capability_running_speed_cadence">Juoksunopeus/-kadenssi</string>
+    <string name="health_connect_sync_paused">Health Connect -synkronointi on tauolla</string>
+    <string name="settings_watches_intro">Kopioi kellosi tallentamat tiedot OpenWatchiin. Mitään ei lähetetä internetiin.</string>
+    <string name="settings_watches_empty_title">Ei pariliitettyä kelloa</string>
+    <string name="settings_watches_empty_body">Kellon pariliitos antaa OpenWatchin kopioida sen tallentamat tiedot — univaiheet, leposykkeen, stressin ja Body Batteryn — lähettämättä mitään internetiin.</string>
+    <string name="settings_watches_add">Pariliitä kello</string>
+    <string name="settings_watches_scan_empty">Kelloja ei vielä löytynyt. Varmista, että kellosi on hereillä ja lähellä puhelinta.</string>
+    <string name="settings_watch_pair_action">Pariliitä</string>
+    <string name="settings_watch_unsupported_notice">Pariliitetty, mutta tämä kello käyttää yhteyttä, jota OpenWatch ei vielä tue, joten se ei voi synkronoida.</string>
+    <string name="settings_watch_no_companion_notice">Pariliitetty, mutta Androidin käyttöoikeutta ei myönnetty. Synkronointi toimii, kun OpenWatch on auki.</string>
+    <string name="settings_watch_connected">Yhdistetty</string>
+    <string name="settings_watch_not_connected">Ei yhdistetty</string>
+    <string name="settings_watch_never_synced">Ei koskaan synkronoitu</string>
+    <string name="settings_watch_last_synced">Viimeksi synkronoitu %1$s</string>
+    <string name="settings_watch_point_failed_busy">Kello on varattu. Yritä hetken kuluttua uudelleen.</string>
+    <string name="settings_watch_section_device">Laite</string>
+    <string name="settings_watch_enabled">Käytössä</string>
+    <string name="settings_watch_rename">Nimeä kello uudelleen</string>
+    <string name="settings_watch_remove">Poista kello</string>
+    <string name="settings_device_remove_confirm_title">Poistetaanko %1$s?</string>
+    <string name="settings_watch_remove_confirm_body">OpenWatch purkaa kellon pariliitoksen ja unohtaa, mitkä tiedostot se on jo kopioinut, joten tuleva pariliitos alkaa alusta. Health Connectiin jo tallennetut tiedot säilyvät.</string>
+    <string name="settings_watch_remove_delete_history">Poista myös stressi-, Body Battery- ja pistehistoria, joka on vain tässä puhelimessa</string>
+    <string name="settings_bike_live_sensor_section">Reaaliaikainen anturi</string>
+    <string name="settings_bike_live_sensor_body">Lähetä sykettä, nopeutta, kadenssia tai tehoa tallentaaksesi ne reaaliajassa aktiviteetin aikana. Ota lähetys ensin käyttöön laitteessa.</string>
+    <string name="settings_bike_detect_sensors">Tunnista lähettävät anturit</string>
+    <string name="settings_bike_detecting">Tunnistetaan…</string>
+    <string name="settings_bike_no_broadcast">Lähettäviä antureita ei löytynyt. Ota lähetys käyttöön laitteessa ja yritä uudelleen.</string>
+    <string name="settings_watch_wearos_fail_partial">Kello lakkasi vastaamasta kesken. Saapunut tallennettiin; jatka synkronoimalla uudelleen.</string>
+    <string name="settings_watch_wearos_fail_generic">Kelloa ei voitu synkronoida. Yritä uudelleen.</string>
+    <string name="sync_failed_health_connect_permission">Health Connect hylkäsi kirjoituksen puuttuvan käyttöoikeuden vuoksi. Salli OpenWatchin kirjoittaa nämä tiedot Health Connectiin ja synkronoi sitten uudelleen.</string>
+    <string name="sync_failed_bluetooth_permission">Salli OpenWatchin etsiä lähellä olevia laitteita ja yhdistää niihin. Synkronoi sitten uudelleen.</string>
+    <string name="sync_failed_unreachable">Laite ei vastannut. Pidä se lähellä, kytke Bluetooth päälle ja yritä uudelleen.</string>
+    <string name="sync_failed_rate_limited">Health Connect pyysi OpenWatchia hidastamaan. Saapunut tallennettiin; seuraava synkronointi jatkaa siitä.</string>
+    <string name="sync_failed_not_saved">Joitakin tietueita ei voitu tallentaa Health Connectiin. Seuraava synkronointi yrittää niitä uudelleen.</string>
+    <plurals name="sync_written_files">
+        <item quantity="one">%1$d tiedosto synkronoitu</item>
+        <item quantity="other">%1$d tiedostoa synkronoitu</item>
+    </plurals>
+    <string name="settings_watch_wearos_synced_none">Kellossa ei ole mitään uutta</string>
+    <string name="settings_watch_garmin_needs_weight">Treenikaloreita ei arvioitu: lisää painosi Kehoprofiiliin tai kirjaa se Health Connectiin.</string>
+    <string name="settings_watch_wearos_needs_weight">Kävelykaloreita ei arvioitu: lisää painosi Kehoprofiiliin tai kirjaa se Health Connectiin.</string>
+    <string name="settings_watch_wearos_needs_weight_read">Kävelykaloreita ei arvioitu: lisää painosi Kehoprofiiliin tai salli OpenWatchin lukea painosi Health Connectista.</string>
+    <string name="settings_watch_wearos_needs_steps_write">Askeleita ei kirjoitettu: salli OpenWatchin kirjoittaa askeleet Health Connectiin ja synkronoi uudelleen.</string>
+    <string name="settings_watch_wearos_needs_calories_write">Kävelykaloreita ei kirjoitettu: salli OpenWatchin kirjoittaa aktiiviset kalorit ja lukea harjoitukset Health Connectissa, niin ne arvioidaan seuraavasta synkronoinnista alkaen.</string>
+    <string name="settings_watch_wearos_needs_hrv_write">Sykevälivaihtelua ei kirjoitettu: salli OpenWatchin kirjoittaa se Health Connectiin ja synkronoi sitten uudelleen.</string>
+    <string name="settings_watch_wearos_needs_respiratory_write">Hengitystiheyttä ei kirjoitettu: salli OpenWatchin kirjoittaa se Health Connectiin ja synkronoi sitten uudelleen.</string>
+    <string name="settings_watch_wearos_needs_spo2_write">Veren happipitoisuutta ei kirjoitettu: salli OpenWatchin kirjoittaa se Health Connectiin ja synkronoi sitten uudelleen.</string>
+    <string name="settings_watch_wearos_needs_skin_write">Ihon lämpötilaa ei kirjoitettu: salli OpenWatchin kirjoittaa se Health Connectiin ja synkronoi sitten uudelleen.</string>
+    <string name="settings_watch_wearos_needs_resting_heart_rate">Leposykettä ei kirjoitettu: salli OpenWatchin lukea ja kirjoittaa leposyke Health Connectissa, niin se arvioidaan seuraavasta synkronoinnista alkaen.</string>
+    <plurals name="settings_watch_wearos_synced_samples">
+        <item quantity="one">%1$d sykenäyte synkronoitu</item>
+        <item quantity="other">%1$d sykenäytettä synkronoitu</item>
+    </plurals>
+    <plurals name="settings_watch_wearos_synced_step_minutes">
+        <item quantity="one">Askeleet %1$d minuutilta</item>
+        <item quantity="other">Askeleet %1$d minuutilta</item>
+    </plurals>
+    <plurals name="settings_watch_wearos_synced_nights">
+        <item quantity="one">Arvioitu %1$d yön uni</item>
+        <item quantity="other">Arvioitu %1$d yön unet</item>
+    </plurals>
+    <string name="settings_watch_wearos_needs_workout_write">Harjoituksia ei kirjoitettu: salli OpenWatchin kirjoittaa harjoitukset, reitit ja matka Health Connectiin ja synkronoi uudelleen.</string>
+    <string name="settings_watch_garmin_withheld">Ei tallennettu Health Connectiin puuttuvan käyttöoikeuden vuoksi: %1$s. Salli ne, niin kellon lähettämät tiedot tallennetaan seuraavasta synkronoinnista alkaen.</string>
+    <string name="settings_watch_wearos_companion_required">Android ei linkittänyt kelloa OpenWatchiin, joten sitä ei lisätty. OpenWatch tarvitsee tämän linkin tallentaakseen harjoitukset, jotka toinen sovellus käynnistää kellossa. Napauta Pariliitä uudelleen ja hyväksy pyyntö.</string>
+</resources>
