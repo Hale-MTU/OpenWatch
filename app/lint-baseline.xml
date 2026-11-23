@@ -13,17 +13,6 @@
     </issue>
 
     <issue
-        id="InlinedApi"
-        message="Field requires API level 29 (current min is 26): `android.content.pm.ServiceInfo#FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE`"
-        errorLine1="                ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE,"
-        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/kotlin/tech/mmarca/openwatch/devices/xiaomi/ScaleListeningService.kt"
-            line="87"
-            column="17"/>
-    </issue>
-
-    <issue
         id="AppBundleLocaleChanges"
         message="Found dynamic locale changes, but did not find corresponding Play Core library calls for downloading languages and splitting by language is not disabled in the `bundle` configuration"
         errorLine1="        val configuration = Configuration(context.resources.configuration).apply { setLocale(locale) }"

@@ -388,8 +388,6 @@
         <item quantity="one">已估算 %1$d 晚的睡眠</item>
         <item quantity="other">已估算 %1$d 晚的睡眠</item>
     </plurals>
-    <string name="scale_notification_channel">体重秤称重</string>
-    <string name="scale_notification_title">正在读取称重</string>
     <string name="settings_scales_empty_title">尚未设置体重秤</string>
     <string name="settings_scales_empty_body">添加体重秤后，每次称重都会保存到 Health Connect。</string>
     <string name="settings_scales_add">添加体重秤</string>

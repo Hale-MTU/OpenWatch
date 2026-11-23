@@ -402,8 +402,6 @@
         <item quantity="many">Odhadnuto %1$d noci spánku</item>
         <item quantity="other">Odhadnuto %1$d nocí spánku</item>
     </plurals>
-    <string name="scale_notification_channel">Vážení z váhy</string>
-    <string name="scale_notification_title">Načítá se vaše vážení</string>
     <string name="settings_scales_empty_title">Žádná váha není nastavena</string>
     <string name="settings_scales_empty_body">Přidejte váhu a každé vážení skončí v Health Connect.</string>
     <string name="settings_scales_add">Přidat váhu</string>

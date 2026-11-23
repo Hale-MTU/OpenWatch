@@ -402,8 +402,6 @@
         <item quantity="many">Oszacowano sen z %1$d nocy</item>
         <item quantity="other">Oszacowano sen z %1$d nocy</item>
     </plurals>
-    <string name="scale_notification_channel">Ważenia z wagi</string>
-    <string name="scale_notification_title">Odczytywanie ważenia</string>
     <string name="settings_scales_empty_title">Brak skonfigurowanej wagi</string>
     <string name="settings_scales_empty_body">Dodaj wagę, a każde ważenie trafi do Health Connect.</string>
     <string name="settings_scales_add">Dodaj wagę</string>

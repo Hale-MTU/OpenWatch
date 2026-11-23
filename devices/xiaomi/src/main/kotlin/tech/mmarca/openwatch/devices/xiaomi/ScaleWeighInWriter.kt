@@ -9,7 +9,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import tech.mmarca.openwatch.core.presentation.isPermissionFailure
 import tech.mmarca.openwatch.data.repository.HealthRecordStore
-import tech.mmarca.openwatch.data.repository.BodyProfileProvider
+import tech.mmarca.openwatch.data.repository.contract.BodyProfileRepository
 import tech.mmarca.openwatch.data.repository.contract.ScaleWeighInRepository
 import tech.mmarca.healthcalculations.insights.BodyCompositionEstimate
 import tech.mmarca.healthcalculations.insights.BodyCompositionInput
@@ -33,7 +33,7 @@ class ScaleWeighInWriter @Inject constructor(
     private val weighIns: ScaleWeighInRepository,
     private val importRepository: HealthRecordStore,
     private val hc: HealthConnectReads,
-    private val bodyProfile: BodyProfileProvider,
+    private val bodyProfile: BodyProfileRepository,
     private val store: XiaomiScaleStore,
 ) {
     // A frame, the worker and the screen can all ask at once. One pass at a time.

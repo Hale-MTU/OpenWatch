@@ -151,8 +151,8 @@ dependencies {
     implementation(project(":devices:core"))
     // The Garmin protocol, pure Kotlin; its platform half (GATT, stores, Health Connect) is here.
     implementation(project(":devices:garmin:protocol"))
-    // The Xiaomi S400 codec, pure Kotlin; the scan, Room and Health Connect side is here.
-    implementation(project(":devices:xiaomi:protocol"))
+    // The Xiaomi S400 scale, which binds itself (XiaomiScaleModule); its codec comes with it.
+    implementation(project(":devices:xiaomi"))
     implementation(project(":wearlink"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -212,6 +212,10 @@ dependencies {
     testImplementation(testFixtures(project(":core:devices-api")))
     // Health Connect's writes in memory, for the write helpers' callers.
     testImplementation(testFixtures(project(":core:health-api")))
+    // SharedPreferences in memory and a SecretSeal on a software key, shared with the device modules.
+    testImplementation(testFixtures(project(":devices:core")))
+    // The weigh-in table in memory, for the Scales screens.
+    testImplementation(testFixtures(project(":devices:xiaomi")))
     testImplementation(libs.junit4)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
@@ -250,6 +254,7 @@ tasks.withType<Test>().configureEach {
         ":core:health-api:testCiUnitTest",
         ":devices:core:testCiUnitTest",
         ":devices:garmin:protocol:test",
+        ":devices:xiaomi:testCiUnitTest",
         ":devices:xiaomi:protocol:test",
     )
     // The architecture tests read sources and documents as plain files: this module's
@@ -265,6 +270,7 @@ tasks.withType<Test>().configureEach {
         "scannedCoreHealthApiMain" to "core/health-api/src/main",
         "scannedDevicesCoreMain" to "devices/core/src/main",
         "scannedGarminProtocolMain" to "devices/garmin/protocol/src/main",
+        "scannedXiaomiMain" to "devices/xiaomi/src/main",
         "scannedXiaomiProtocolMain" to "devices/xiaomi/protocol/src/main",
         "scannedWearMain" to "wear/src/main",
         "scannedWearRecordingCoreMain" to "wear/recording-core/src/main",
@@ -273,6 +279,8 @@ tasks.withType<Test>().configureEach {
         inputs.dir(repository.dir(path)).withPropertyName(name).withPathSensitivity(PathSensitivity.RELATIVE)
     }
     mapOf(
+        // DevicesLayeringTest reads which modules a device module depends on.
+        "scannedXiaomiBuild" to "devices/xiaomi/build.gradle.kts",
         "scannedPrivacyPolicy" to "PRIVACY.md",
         "scannedPermissionsDoc" to "docs/app/permissions.md",
     ).forEach { (name, path) ->

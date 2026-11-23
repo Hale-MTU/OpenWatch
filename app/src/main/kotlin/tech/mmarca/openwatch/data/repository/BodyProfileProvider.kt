@@ -7,6 +7,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
+import tech.mmarca.openwatch.data.repository.contract.BodyProfileRepository
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 
 /**
@@ -19,11 +20,11 @@ import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 class BodyProfileProvider @Inject constructor(
     private val preferences: BodyProfilePreferences,
     private val hc: HealthConnectGateway,
-) {
+) : BodyProfileRepository {
     /** What the user typed, with no Health Connect call. The whole answer in the background. */
-    fun declared(): BodyProfile = preferences.bodyProfile()
+    override fun declared(): BodyProfile = preferences.bodyProfile()
 
-    suspend fun resolve(): BodyProfile {
+    override suspend fun resolve(): BodyProfile {
         val declared = declared()
         val granted = hc.grantedPermissions()
         val measuredWeight = if (READ_WEIGHT in granted) hc.readLatestWeightKg() else null

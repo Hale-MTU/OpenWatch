@@ -1,7 +1,7 @@
 package tech.mmarca.openwatch.devices.xiaomi
 
 import android.util.Log
-import tech.mmarca.openwatch.BuildConfig
+import tech.mmarca.openwatch.devices.core.DeviceLog
 
 /**
  * What the scale pipeline did, step by step, for debug builds only: a
@@ -19,7 +19,7 @@ internal object ScaleLog {
     /** Routes logs to logcat. A no-op in a release build. */
     fun installLogcatSink() {
         // Guarded: the JVM `Log` stub throws.
-        if (BuildConfig.DEBUG) sink = { message -> runCatching { Log.d(TAG, message) } }
+        if (DeviceLog.isEnabled) sink = { message -> runCatching { Log.d(TAG, message) } }
     }
 
     fun log(message: String) {

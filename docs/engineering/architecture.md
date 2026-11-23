@@ -11,11 +11,12 @@ OpenWatch seams noted.
 
 - App namespace: `tech.mmarca.openwatch`
 - Build logic: `build-logic/`, an included build with the convention plugins every module applies (`openwatch.android.application`, `openwatch.android.library`, `openwatch.jvm.library`): SDK levels, Java 17, signing from the environment, the debug, release and nightly build types, lint and dependency locking. A module's own file holds only what is its own (version codes, the `ci` type, the diagnostics flag). A change there must leave the release APKs byte-identical; compare their hashes before and after.
-- Project shape: eleven Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
+- Project shape: twelve Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
   hold the pure code the app depends on (below); `:core:devices-api` the device contracts
   ([`devices/core`](#devicescore)); `:core:health-api` how the devices talk to Health Connect
   ([rule 3](#3-health-connect-is-reached-through-healthconnectgateway-only)); `:devices:core` the
-  platform half every device family shares ([below](#module-devicescore)); `:devices:garmin:protocol` and
+  platform half every device family shares ([below](#module-devicescore)); `:devices:xiaomi` is the
+  scale's platform half, a device module that binds itself ([`devices/xiaomi`](#devicesxiaomi)); `:devices:garmin:protocol` and
   `:devices:xiaomi:protocol` are the Garmin protocol and the S400 codec, pure Kotlin
   ([`devices/garmin`](#devicesgarmin), [`devices/xiaomi`](#devicesxiaomi)); `:wear` is the Wear OS watch app
   with its own CI gate; `:wearlink` is the pure-Kotlin link both apps depend on. Package names
@@ -24,7 +25,9 @@ OpenWatch seams noted.
 - The watch app's pure core is `:wear:recording-core`, plain Kotlin in `wear/recording-core/`
   with the watch app's package names; only `:wear` depends on it (below).
 - Dependency wiring: Hilt in `:app`, rooted at `OpenWatchApp`; modules are `di/AppModule.kt`,
-  `di/RepositoryModule.kt`, `di/DevicesModule.kt` and `di/LinkModule.kt`.
+  `di/RepositoryModule.kt`, `di/DevicesModule.kt` and `di/LinkModule.kt`, and each device
+  module's own (`XiaomiScaleModule`), which the graph installs from the module's classes
+  ([Hilt wiring](#hilt-wiring)).
 - UI stack: Jetpack Compose + Material 3 + Navigation Compose + `ViewModel` + coroutines.
 - Health data backend: the Health Connect AndroidX client, behind
   [`HealthConnectGateway`](../../app/src/main/kotlin/tech/mmarca/openwatch/healthconnect/HealthConnectGateway.kt).
@@ -38,7 +41,7 @@ OpenWatch seams noted.
 
 | Package | Role |
 | --- | --- |
-| `devices/` | The device layer (below). No Compose, no navigation, no Hilt module. |
+| `devices/` | The device layer (below), as far as it is still in the app. No Compose, no navigation, no Hilt module: `di/DevicesModule.kt` binds it. |
 | `features/home` | The device list and the way to the other screens. |
 | `features/device`, `features/watches`, `features/scales` | The device screens, as in OpenVitals. Every paired device opens on one route, `DeviceDetail(deviceId)`; `features/device` picks its screen once from the registry: the scale its own, everything else the device screen. A watch's screen is the part every device has (`WatchDeviceScreen`: the header, the schedule, removal) and its family's panel, `features/watches/garmin` or `features/watches/wearos`, each with its own ViewModel. |
 | `features/healthconnect`, `features/settings` | Health Connect setup, the sync switch, the body profile, notification access. |
@@ -163,6 +166,8 @@ The UUID and the protocol words come from `:wearlink` on both sides. Verified on
 
 The Xiaomi Body Composition Scale S400. The scale takes no connection: it broadcasts each weigh-in as MiBeacon v5 frames in the service data of `0xFE95`, sealed with AES-CCM under a bind key the Xiaomi account issued when the scale was paired. The user pastes that key once; the app never sees the account.
 
+Its platform half is the module `:devices:xiaomi` (`devices/xiaomi`, an Android library, namespace `tech.mmarca.openwatch.devices.xiaomi`), every file of the table below but the codec, in the app's package `devices/xiaomi`. It depends on `:devices:core` and its own codec (`api`), `:wearlink` for `SecretSeal`, WorkManager and Hilt, and on no other family. It binds itself (`XiaomiScaleModule`): its family as `XIAOMI` in the `DeviceFamily` map, `XiaomiScaleListener` as a `CompanionPresenceObserver`, `SystemScaleScanRadio` and `ScaleListeningForeground` to their ports, the one `XiaomiScaleStore`, and its startup actor (`scale listener`). Its manifest declares `ScaleScanReceiver` and `ScaleListeningService`, merged into the app's under the same names; WorkManager's `ScaleListenerWorker` keeps its name. It owns the weigh-in table's contract, `data/repository/contract/ScaleWeighInRepository` (test fixture `FakeScaleWeighInRepository`), which the app's Room implementation keeps implementing (`ScaleWeighInRepositoryImpl`, bound in `di/RepositoryModule`), and takes the registry and the body profile as contracts (`DeviceRegistry`, `BodyProfileRepository`). The notification's two strings are its own, with their translations; the notification icon is `:devices:core`'s. What the Scales screens use stays public: the listener (status, find, set up, rename, release), the store and its config, the writer and `ScaleWriteFailure`, `ScaleWritePermissions`, `ScaleListenerStatus`. Its tests run on the JVM in the phone gate (`:devices:xiaomi:testCiUnitTest`), over the shared fakes.
+
 | Layer | Files |
 |---|---|
 | Decoding, transport-free | `AesCcm` (RFC 3610 on the AES block cipher: Android ships no CCM), `S400Beacon` (header rules, nonce, the weigh-in object, the scan-filter bytes), `XiaomiDevices` (`isXiaomiScale`): the module `:devices:xiaomi:protocol` (`devices/xiaomi/protocol`), plain Kotlin with `explicitApi()`, linted as in the app. The scan filter type, `devices/core/ServiceDataFilter`, is `:core:model`'s, since the companion pairing builds its dialog's filters from it too |
@@ -192,7 +197,9 @@ Notes worth carrying:
 
 ### Hilt wiring
 
-`di/DevicesModule.kt` is the only module for this layer. It binds `BleWatchPairing` to `WatchPairingPort` and `GarminWatchSyncService` to `DeviceSyncPort`, binds `AndroidPhoneMediaSource` to `PhoneMediaSource`, binds `SystemScaleScanRadio` to `ScaleScanRadio` and `ScaleListeningForeground` to `ScaleForeground`, adds `XiaomiScaleListener` to the `CompanionPresenceObserver` set, and provides the GATT probe, the two Garmin `SharedPreferences`-backed stores, the one `GarminFileStore` and the one `XiaomiScaleStore`. Everything else is constructor injection. There are no `@Module` declarations inside `devices/` itself; keep it that way. `DevicesLayeringTest` fails on one.
+A device family that is a Gradle module of its own binds itself (the owner's decision 4, 2026-11, which reversed the rule that only `di/DevicesModule.kt` bound the layer): its Hilt module, `@InstallIn(SingletonComponent::class)` and in the family's package, binds its family into the `DeviceFamily` map under its persisted name (`@StringKey`, which `DeviceFamilies` checks against the family's id), its sync port and presence observer `@IntoSet`, its ports and stores, and its startup actors. Hilt and KSP run in the module, so the app's graph installs the module from its classes; the app names the module in its build file and nowhere else. `:devices:xiaomi`'s is `XiaomiScaleModule`.
+
+`di/DevicesModule.kt` binds what every family shares and the families still in the app: `BleWatchPairing` to `WatchPairingPort`, `AndroidSyncWakeLock`, the composite `DeviceSyncPort` over the set, the classifiers in their order, the schedule's startup actor, and for Garmin and Wear OS their ports, stores and actors. Everything else is constructor injection. Only `:app` and the device modules declare Hilt modules: not the app's `devices/` packages, not `:devices:core`, a contract or a protocol module. A device module depends on no other device module, no feature and not on the app. `DevicesLayeringTest` holds the three (and that each device module binds its family), and `HiltGraphTest` that every family, sync port, presence observer and classifier is in the built graph.
 
 The BLE discovery scan the add-watch flow uses lives in `sensors/ble`, trimmed to discovery: OpenWatch streams no live sensor.
 
@@ -224,7 +231,7 @@ Its tests run in both gates (`verifyCiUnitTest` and `verifyWearCi` depend on `:w
 
 The device layer's shared platform half, in `devices/core/`: an Android library (`openwatch.android.library`, namespace `tech.mmarca.openwatch.devices.core`) in the app's package `devices/core`, so an import does not say which module a class is in. It holds what every family uses and no family owns: the radio lease, `DeviceLog`, `ble/BlePermissions`, `ble/GattLink` and `ble/BleScanner`, the pairing implementations with `OpenWatchCompanionDeviceService` (declared in the module's manifest, merged into the app's), and the sync machinery (`DeviceSyncController`, `WatchAutoSyncScheduler` and `WatchAutoSyncWorker`, `SyncBudget`, `AndroidSyncWakeLock`, `EstimatedSleepRecord`). The worker keeps its class name and package (WorkManager stores the name), and its work keeps its names.
 
-It depends on `:core:devices-api` and `:core:health-api` (`api`: their types are in its signatures), on WorkManager, AndroidX Activity (the companion dialog's result launcher) and Hilt, with KSP: the companion service is an `@AndroidEntryPoint` and the worker's entry point an `@EntryPoint`, which Hilt aggregates into the app's graph from the module's classes. It declares no Hilt module; the app's `di/DevicesModule.kt` binds its pieces. `DeviceLog.isEnabled` is its build config's `DEVICE_DEBUG_LOGS`, set to match the app's `BuildConfig.DEBUG` (a library's own `DEBUG` is true in the debug APK the release pipeline publishes, which is not debuggable). Its tests (`:devices:core:testCiUnitTest`, in `verifyCiUnitTest`: the lease, the controller over `FakeDeviceRegistry`, the link's redial, the grants) and its lint (`lintCi`, in `verifyCiLint`) run in the phone gate; its lockfile is `devices/core/gradle.lockfile`. Its lint sees the module's manifest, not the permissions the app declares, so the calls that need a grant carry `@SuppressLint("MissingPermission")` and check it at run time, as before.
+It depends on `:core:devices-api` and `:core:health-api` (`api`: their types are in its signatures), on WorkManager, AndroidX Activity (the companion dialog's result launcher) and Hilt, with KSP: the companion service is an `@AndroidEntryPoint` and the worker's entry point an `@EntryPoint`, which Hilt aggregates into the app's graph from the module's classes. It declares no Hilt module; the app's `di/DevicesModule.kt` binds its pieces. `DeviceLog.isEnabled` is its build config's `DEVICE_DEBUG_LOGS`, set to match the app's `BuildConfig.DEBUG` (a library's own `DEBUG` is true in the debug APK the release pipeline publishes, which is not debuggable). Its tests (`:devices:core:testCiUnitTest`, in `verifyCiUnitTest`: the lease, the controller over `FakeDeviceRegistry`, the link's redial, the grants) and its lint (`lintCi`, in `verifyCiLint`) run in the phone gate; its lockfile is `devices/core/gradle.lockfile`. Its lint sees the module's manifest, not the permissions the app declares, so the calls that need a grant carry `@SuppressLint("MissingPermission")` and check it at run time, as before. It also holds the notification icon the device services and the OpenLink streaming notice share (`ic_stat_activity_recording`), and its test fixtures are what the device modules' tests and the app's share: `devices/FakeSharedPreferences` and `core/security/testSeal()` (a `SecretSeal` on a software key).
 
 ## Module `:wear:recording-core`
 
@@ -373,7 +380,7 @@ seen, OpenVitals' `HealthConnectRateLimit.kt` is the shape to copy.
 
 ### 4. A missing permission is a type, not a message
 
-`Throwable.isPermissionFailure()` (`core/presentation/ScreenError.kt`) is the single predicate
+`Throwable.isPermissionFailure()` (`core/presentation/PermissionFailure.kt` in `:core:model`, so the device modules share it) is the single predicate
 for "this failed because a permission is missing". It walks the cause chain looking for
 `SecurityException`, because Health Connect throws that for an ungranted read or write and the
 repositories throw the same type when they short-circuit a call whose permission they know is

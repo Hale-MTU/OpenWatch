@@ -390,8 +390,6 @@
         <item quantity="one">%1$d Nacht Schlaf geschätzt</item>
         <item quantity="other">%1$d Nächte Schlaf geschätzt</item>
     </plurals>
-    <string name="scale_notification_channel">Messungen der Waage</string>
-    <string name="scale_notification_title">Messung wird gelesen</string>
     <string name="settings_scales_empty_title">Keine Waage eingerichtet</string>
     <string name="settings_scales_empty_body">Füge eine Waage hinzu, und jede Messung landet in Health Connect.</string>
     <string name="settings_scales_add">Waage hinzufügen</string>

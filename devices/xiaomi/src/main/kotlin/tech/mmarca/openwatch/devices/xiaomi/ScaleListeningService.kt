@@ -15,7 +15,7 @@ import androidx.core.app.ServiceCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
-import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.devices.core.R as CoreR
 
 /**
  * What lets a closed app hear a weigh-in. Android scans for a background app
@@ -99,7 +99,7 @@ class ScaleListeningService : Service() {
     // Silent, and Android holds a new service's notification back for its first ten seconds.
     private fun buildNotification(): Notification =
         NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_stat_activity_recording)
+            .setSmallIcon(CoreR.drawable.ic_stat_activity_recording)
             .setContentTitle(getString(R.string.scale_notification_title))
             .setOngoing(true)
             .setSilent(true)

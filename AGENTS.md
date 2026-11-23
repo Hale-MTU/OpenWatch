@@ -17,18 +17,18 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 ## Map
 
 - `app/src/main/kotlin/tech/mmarca/openwatch/`
-  - `devices/` — the device layer: `garmin` (the GATT client, the links, stores and wellness
-    import around the protocol module), `wearos` (the
-    phone side of the watch app), `xiaomi` (the scale's scan, store and writes around its codec
-    module), `notifications`, `media`, `weather`.
-    No Compose, no navigation, no Hilt module.
+  - `devices/` — the device code not yet in a module of its own: `garmin` (the GATT client,
+    the links, stores and wellness import around the protocol module), `wearos` (the
+    phone side of the watch app), `notifications`, `media`, `weather`.
+    No Compose, no navigation, no Hilt module: `di/DevicesModule` binds it.
   - `features/` — the screens: `home`, `watches`, `scales`, `healthconnect`, `settings`.
   - `healthconnect/` — `HealthConnectGateway`, the one class that touches the client, and
     `ActivityRecordWriter`, the activity write path copied from OpenVitals.
   - `activityimport/` — FIT activity files into activity write requests.
   - `data/` — the Room database (three tables), the repositories and the preference stores.
   - `comaps/`, `sensors/ble/` — the CoMaps guidance feed and the BLE discovery scan.
-  - `di/` — the Hilt modules. `DevicesModule` is the only place a `devices/` class is bound.
+  - `di/` — the Hilt modules. `DevicesModule` binds what every family shares and the families
+    still in the app; a family in a module of its own binds itself there.
 - `core/model` (`:core:model`) and `core/fit` (`:core:fit`) — pure Kotlin on the JDK, with
   the app's package names: `domain/model`, `domain/preferences` and `core/geo` in the first, the
   FIT codec `core/fit` in the second. The unit-system provider that reads the platform's locale
@@ -47,7 +47,14 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   library in `devices/core`'s packages: the radio lease, `DeviceLog`, the GATT link (`GattLink`:
   the dial and its redial, the MTU, discovery, notifications, writes) and the BLE scanner
   (`BleScanner`), companion pairing and its service (`OpenWatchCompanionDeviceService`, in the
-  module's manifest), and the sync controller, its schedule, worker, budget and wake lock.
+  module's manifest), and the sync controller, its schedule, worker, budget and wake lock. Its
+  test fixtures are `FakeSharedPreferences` and `testSeal()`, which the device modules' tests and
+  the app's share.
+- `devices/xiaomi` (`:devices:xiaomi`) — the S400 scale's platform half, a device module: the
+  scan, the receiver and the listening service (in its manifest), the listener and its worker,
+  the store, the pipeline to Room and Health Connect, the strings its notification shows, and
+  `XiaomiScaleModule`, which binds its family, ports and store. The weigh-in table's contract
+  (`ScaleWeighInRepository`) is its own; Room implements it in `:app`.
 - `core/health-api` (`:core:health-api`) — how the devices talk to Health Connect, as
   contracts: the record sink `HealthRecordStore` and its write helpers (`ImportedRecordWrites`),
   the strict reads `HealthConnectReads`, the paused-sync exception and the rate-limit check. An
@@ -91,7 +98,8 @@ Do not break these without an explicit decision.
   `SETTINGS`, `NOTIFICATIONS`. A scan opens no link and takes no lease. A new GATT device opens
   its link through `GattLink`, never its own `connectGatt`.
 - **One companion device service.** `OpenWatchCompanionDeviceService` is the primary one; it
-  fans out to every `CompanionPresenceObserver` bound `@IntoSet` in `DevicesModule`.
+  fans out to every `CompanionPresenceObserver` bound `@IntoSet`, by `DevicesModule` or a
+  family's own Hilt module.
 - **Health Connect is reached through `HealthConnectGateway` only.** A device takes the
   contracts of `:core:health-api`, never the gateway: it reads through `HealthConnectReads` and
   every device write goes through the record sink, `ImportedRecordRepository.insertImportedRecords`, with a deterministic
@@ -116,7 +124,13 @@ Do not break these without an explicit decision.
 - **Room is at version 2.** A change means a `MIGRATION_2_3` in `data/local/OpenWatchMigrations`, a bump
   and its case in `OpenWatchDatabaseMigrationTest`, never `fallbackToDestructiveMigration`. The three
   device tables are named as OpenVitals' are, and also key their rows by the device's id salt.
-- **The ratchets hold.** `DevicesLayeringTest` (no `@Module` under `devices/`),
+- **A device family is a module that binds itself** (decision 4, 2026-11). A family in a Gradle
+  module of its own, `:devices:<vendor>`, declares its own Hilt module, which binds its family
+  into the `DeviceFamily` map (`@StringKey` with its persisted name), its ports, stores and
+  startup actors. Only `:app` and those modules declare Hilt modules (not `:devices:core`, a
+  contract or a protocol module, nor the app's `devices/` packages), and a device module
+  depends on no other family, on no feature and not on the app. `DevicesLayeringTest` holds it.
+- **The ratchets hold.** `DevicesLayeringTest` (who declares Hilt modules, see above),
   `CompanionPairingWiringTest` (an Activity calls `attachToActivity`),
   `GarminSessionConfinementTest`, `FileSizeRatchetTest` (800 lines, with a ceiling list),
   `FunctionLengthRatchetTest` (the count over 150 lines only falls), `NoRunBlockingRatchetTest`,
@@ -135,8 +149,10 @@ Do not break these without an explicit decision.
 ## Rules
 
 - Protocol changes for the Wear OS link go in `:wearlink`, never into a copy.
-- A new device integration implements the `devices/core` ports, takes a radio lease around
-  every BLE link, keeps its protocol code transport-free, and is bound in `di/DevicesModule`.
+- A new device integration is a module `:devices:<vendor>` (its pure protocol in
+  `:devices:<vendor>:protocol`): it implements the `devices/core` ports, opens a BLE link only
+  through `GattLink` under a radio lease, keeps its protocol code transport-free, binds itself
+  in its own Hilt module, and is one `implementation` line in the app's build file.
 - A health calculation goes into health-calculations, not into `:core:model`, `:wear` or a
   feature: one copy, so both apps give the same number. Moving the submodule changes
   OpenVitals' numbers too, so it moves in both apps together.

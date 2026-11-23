@@ -293,18 +293,9 @@
             android:name=".devices.garmin.GarminFindPhoneStopReceiver"
             android:exported="false" />
 
-        <!-- Where the system delivers the bathroom scale's broadcasts, with the app
-             open or not (devices/xiaomi/ScaleScanRadio.kt). Reached only through
-             this app's own explicit PendingIntent. -->
-        <receiver
-            android:name=".devices.xiaomi.ScaleScanReceiver"
-            android:exported="false" />
-
-        <!-- Held for the seconds a weigh-in takes, so the scan runs full time. Runs no logic. -->
-        <service
-            android:name=".devices.xiaomi.ScaleListeningService"
-            android:exported="false"
-            android:foregroundServiceType="connectedDevice" />
+        <!-- The bathroom scale's receiver and listening service, ScaleScanReceiver and
+             ScaleListeningService, are declared by :devices:xiaomi
+             (devices/xiaomi/src/main/AndroidManifest.xml) and merged in. -->
 
         <!-- Weather from a companion app (Breezy Weather et al.) over the
              generic-weather broadcast contract. Exported because an external app

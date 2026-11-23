@@ -394,8 +394,6 @@ Podes desactivalo cando queiras e revogar o acceso ás notificacións desde os a
         <item quantity="one">%1$d noite de sono estimada</item>
         <item quantity="other">%1$d noites de sono estimadas</item>
     </plurals>
-    <string name="scale_notification_channel">Pesaxes da báscula</string>
-    <string name="scale_notification_title">Lendo a túa pesaxe</string>
     <string name="settings_scales_empty_title">Sen báscula configurada</string>
     <string name="settings_scales_empty_body">Engade unha báscula e cada pesaxe chegará a Health Connect.</string>
     <string name="settings_scales_add">Engadir báscula</string>

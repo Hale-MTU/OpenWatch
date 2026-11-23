@@ -526,8 +526,6 @@
         <item quantity="many">تم تقدير النوم لـ %1$d ليلةً</item>
         <item quantity="other">تم تقدير النوم لـ %1$d ليلة</item>
     </plurals>
-    <string name="scale_notification_channel">قياسات الوزن من الميزان</string>
-    <string name="scale_notification_title">جارٍ قراءة قياس وزنك</string>
     <string name="settings_scales_empty_title">لم يتم إعداد ميزان</string>
     <string name="settings_scales_empty_body">أضف ميزانًا، وسيصل كل قياس وزن إلى Health Connect.</string>
     <string name="settings_scales_add">إضافة ميزان</string>

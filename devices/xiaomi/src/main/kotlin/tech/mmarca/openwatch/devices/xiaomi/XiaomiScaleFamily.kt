@@ -4,7 +4,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import tech.mmarca.openwatch.data.repository.contract.DeviceRegistry
 import tech.mmarca.openwatch.devices.core.DeviceFamily
 import tech.mmarca.openwatch.devices.core.DeviceFeature
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
@@ -18,7 +18,7 @@ import tech.mmarca.openwatch.domain.model.DeviceIntegration
 @Singleton
 class XiaomiScaleFamily @Inject constructor(
     private val listener: XiaomiScaleListener,
-    registry: BleDeviceRepository,
+    registry: DeviceRegistry,
 ) : DeviceFamily {
 
     override val id: String = DeviceIntegration.XIAOMI.storageName

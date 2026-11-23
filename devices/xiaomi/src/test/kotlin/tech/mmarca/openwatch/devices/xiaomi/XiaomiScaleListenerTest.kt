@@ -28,8 +28,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import tech.mmarca.openwatch.core.security.testSeal
+import tech.mmarca.openwatch.data.repository.contract.FakeDeviceRegistry
 import tech.mmarca.openwatch.data.repository.contract.FakeScaleWeighInRepository
-import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevice
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevicePairing
@@ -64,7 +64,7 @@ class XiaomiScaleListenerTest {
     private val writer = mockk<ScaleWeighInWriter>(relaxed = true)
     private val companion = mockk<CompanionDevicePairing>(relaxed = true)
     private val weighIns = FakeScaleWeighInRepository()
-    private val registry = testDeviceRepository()
+    private val registry = FakeDeviceRegistry()
 
     /** What the foreground port was asked to do, in order. */
     private val foregroundCalls = mutableListOf<String>()

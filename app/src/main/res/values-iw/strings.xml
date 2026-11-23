@@ -509,8 +509,6 @@
         <item quantity="two">שינה הוערכה עבור %1$d לילות</item>
         <item quantity="other">שינה הוערכה עבור %1$d לילות</item>
     </plurals>
-    <string name="scale_notification_channel">שקילות במשקל</string>
-    <string name="scale_notification_title">קריאת השקילה שלך</string>
     <string name="settings_scales_empty_title">לא הוגדר משקל</string>
     <string name="settings_scales_empty_body">הוסף משקל, וכל שקילה תגיע ל-Health Connect.</string>
     <string name="settings_scales_add">הוספת משקל</string>

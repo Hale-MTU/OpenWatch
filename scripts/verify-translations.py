@@ -11,9 +11,20 @@ import sys
 import xml.etree.ElementTree as ET
 
 
-# The phone app and the watch app each ship their own strings, and each locale file is
-# checked against the English file of its own app.
-RES_DIRS = (pathlib.Path("app/src/main/res"), pathlib.Path("wear/src/main/res"))
+# The phone app and the watch app each ship their own strings, and so does each library
+# module under core/ and devices/ whose code has text of its own (a device family's
+# notifications, its link states). Each locale file is checked against the English file of
+# its own module.
+RES_DIRS = (
+    pathlib.Path("app/src/main/res"),
+    pathlib.Path("wear/src/main/res"),
+    *(
+        res
+        for root in ("core", "devices")
+        for res in sorted(pathlib.Path(root).glob("**/src/main/res"))
+        if (res / "values" / "strings.xml").is_file()
+    ),
+)
 # Flags, width and precision are part of the specifier, and a check that cannot
 # see them cannot see the difference between "%1$.1f" and "%1$.1d" — the second
 # throws IllegalFormatPrecisionException the moment the string is drawn. The

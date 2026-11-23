@@ -37,6 +37,12 @@ android {
     buildFeatures {
         buildConfig = true
     }
+
+    // What the device modules' tests and the app's share: SharedPreferences in memory, and a
+    // SecretSeal over a software key.
+    testFixtures {
+        enable = true
+    }
 }
 
 dependencies {
@@ -52,6 +58,9 @@ dependencies {
     // The companion service and the worker's entry point are Hilt's; the rest is constructor injection.
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+
+    // testSeal() hands out the link's SecretSeal.
+    testFixturesApi(project(":wearlink"))
 
     testImplementation(testFixtures(project(":core:devices-api")))
     testImplementation(libs.junit4)

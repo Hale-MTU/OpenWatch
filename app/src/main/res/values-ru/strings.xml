@@ -402,8 +402,6 @@
         <item quantity="many">Оценён сон за %1$d ночей</item>
         <item quantity="other">Оценён сон за %1$d ночи</item>
     </plurals>
-    <string name="scale_notification_channel">Взвешивания с весов</string>
-    <string name="scale_notification_title">Считывается взвешивание</string>
     <string name="settings_scales_empty_title">Весы не настроены</string>
     <string name="settings_scales_empty_body">Добавьте весы, и каждое взвешивание попадёт в Health Connect.</string>
     <string name="settings_scales_add">Добавить весы</string>

@@ -21,7 +21,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
-import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import tech.mmarca.openwatch.data.repository.contract.DeviceRegistry
 import tech.mmarca.openwatch.data.repository.contract.ScaleWeighInRepository
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevice
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevicePairing
@@ -52,7 +52,7 @@ import tech.mmarca.openwatch.domain.model.DeviceIntegration
 class XiaomiScaleListener(
     private val context: Context,
     private val store: XiaomiScaleStore,
-    private val registry: BleDeviceRepository,
+    private val registry: DeviceRegistry,
     private val radio: ScaleScanRadio,
     private val writer: ScaleWeighInWriter,
     private val companion: CompanionDevicePairing,
@@ -65,7 +65,7 @@ class XiaomiScaleListener(
     constructor(
         @ApplicationContext context: Context,
         store: XiaomiScaleStore,
-        registry: BleDeviceRepository,
+        registry: DeviceRegistry,
         radio: ScaleScanRadio,
         writer: ScaleWeighInWriter,
         companion: CompanionDevicePairing,

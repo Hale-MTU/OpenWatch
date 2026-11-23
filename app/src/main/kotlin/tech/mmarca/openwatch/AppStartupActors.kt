@@ -4,13 +4,10 @@ import android.util.Log
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** One thing the app starts at every process start, named for the log. */
-class StartupActor(val name: String, val start: () -> Unit)
-
 /**
  * What the app starts at every process start that the first screen does not wait for: each
- * module contributes its own [StartupActor] `@IntoSet` (an integration's in `DevicesModule`),
- * so a new one starts without a change here.
+ * module contributes its own [StartupActor] (`:core:devices-api`) `@IntoSet`, a device family's
+ * in its own Hilt module, so a new one starts without a change here.
  *
  * The Application asks for this through `dagger.Lazy` and builds it on a background
  * thread, so the device graph is not pulled into `super.onCreate()` on the main thread.

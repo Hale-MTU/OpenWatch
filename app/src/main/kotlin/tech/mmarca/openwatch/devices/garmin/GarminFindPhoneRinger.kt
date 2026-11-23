@@ -118,7 +118,7 @@ class GarminFindPhoneRinger @Inject constructor(
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_stat_activity_recording)
+            .setSmallIcon(tech.mmarca.openwatch.devices.core.R.drawable.ic_stat_activity_recording)
             .setContentTitle(context.getString(R.string.garmin_find_phone_title))
             .setContentText(context.getString(R.string.garmin_find_phone_body))
             .setCategory(NotificationCompat.CATEGORY_ALARM)

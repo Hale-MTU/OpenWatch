@@ -396,8 +396,6 @@
         <item quantity="many">%1$d noches de sueño estimadas</item>
         <item quantity="other">%1$d noches de sueño estimadas</item>
     </plurals>
-    <string name="scale_notification_channel">Pesajes de la báscula</string>
-    <string name="scale_notification_title">Leyendo tu pesaje</string>
     <string name="settings_scales_empty_title">Sin báscula configurada</string>
     <string name="settings_scales_empty_body">Añade una báscula y cada pesaje llegará a Health Connect.</string>
     <string name="settings_scales_add">Añadir báscula</string>

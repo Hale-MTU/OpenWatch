@@ -390,8 +390,6 @@
         <item quantity="one">Arvioitu %1$d yön uni</item>
         <item quantity="other">Arvioitu %1$d yön unet</item>
     </plurals>
-    <string name="scale_notification_channel">Vaa’an punnitukset</string>
-    <string name="scale_notification_title">Luetaan punnitusta</string>
     <string name="settings_scales_empty_title">Vaakaa ei ole määritetty</string>
     <string name="settings_scales_empty_body">Lisää vaaka, niin jokainen punnitus päätyy Health Connectiin.</string>
     <string name="settings_scales_add">Lisää vaaka</string>

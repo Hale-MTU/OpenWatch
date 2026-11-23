@@ -396,8 +396,6 @@
         <item quantity="many">%1$d nuits de sommeil estimées</item>
         <item quantity="other">%1$d nuits de sommeil estimées</item>
     </plurals>
-    <string name="scale_notification_channel">Pesées de la balance</string>
-    <string name="scale_notification_title">Lecture de votre pesée</string>
     <string name="settings_scales_empty_title">Aucune balance configurée</string>
     <string name="settings_scales_empty_body">Ajoutez une balance et chaque pesée arrive dans Santé Connect.</string>
     <string name="settings_scales_add">Ajouter une balance</string>

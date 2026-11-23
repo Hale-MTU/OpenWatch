@@ -437,8 +437,6 @@
         <item quantity="one">%1$d night of sleep estimated</item>
         <item quantity="other">%1$d nights of sleep estimated</item>
     </plurals>
-    <string name="scale_notification_channel">Scale weigh-ins</string>
-    <string name="scale_notification_title">Reading your weigh-in</string>
     <string name="settings_scales_empty_title">No scale set up</string>
     <string name="settings_scales_empty_body">Add a scale, and every weigh-in lands in Health Connect.</string>
     <string name="settings_scales_add">Add a scale</string>

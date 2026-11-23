@@ -390,8 +390,6 @@
         <item quantity="one">%1$d öö uni hinnatud</item>
         <item quantity="other">%1$d öö uni hinnatud</item>
     </plurals>
-    <string name="scale_notification_channel">Kaalu kaalumised</string>
-    <string name="scale_notification_title">Kaalumise lugemine</string>
     <string name="settings_scales_empty_title">Kaalu pole seadistatud</string>
     <string name="settings_scales_empty_body">Lisa kaal ja iga kaalumine jõuab Health Connecti.</string>
     <string name="settings_scales_add">Lisa kaal</string>

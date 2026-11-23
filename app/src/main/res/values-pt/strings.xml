@@ -392,8 +392,6 @@
         <item quantity="one">%1$d noite de sono estimada</item>
         <item quantity="other">%1$d noites de sono estimadas</item>
     </plurals>
-    <string name="scale_notification_channel">Pesagens da balança</string>
-    <string name="scale_notification_title">A ler a sua pesagem</string>
     <string name="settings_scales_empty_title">Sem balança configurada</string>
     <string name="settings_scales_empty_body">Adicione uma balança e cada pesagem chega ao Health Connect.</string>
     <string name="settings_scales_add">Adicionar balança</string>

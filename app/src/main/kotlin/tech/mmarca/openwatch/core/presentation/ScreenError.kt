@@ -25,13 +25,8 @@ sealed interface ScreenError {
 /** Thrown before a call that needs a Health Connect feature this device lacks. */
 class FeatureUnavailableException(message: String) : UnsupportedOperationException(message)
 
-/**
- * The one rule for "this failed because a permission is missing": a
- * [SecurityException] anywhere in the cause chain.
- */
-fun Throwable.isPermissionFailure(): Boolean =
-    generateSequence(this) { it.cause.takeIf { cause -> cause !== it } }
-        .any { it is SecurityException }
+// The rule for a missing permission, Throwable.isPermissionFailure, is :core:model's
+// (core/presentation/PermissionFailure.kt), so the device modules share it.
 
 /** A [FeatureUnavailableException] anywhere in the cause chain. */
 fun Throwable.isFeatureUnavailable(): Boolean =

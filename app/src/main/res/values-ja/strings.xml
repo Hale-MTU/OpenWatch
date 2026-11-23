@@ -392,8 +392,6 @@
         <item quantity="one">%1$d 晩の睡眠を推定しました</item>
         <item quantity="other">%1$d 晩の睡眠を推定しました</item>
     </plurals>
-    <string name="scale_notification_channel">体重計の測定</string>
-    <string name="scale_notification_title">測定を読み取り中</string>
     <string name="settings_scales_empty_title">体重計が設定されていません</string>
     <string name="settings_scales_empty_body">体重計を追加すると、すべての測定が Health Connect に保存されます。</string>
     <string name="settings_scales_add">体重計を追加</string>

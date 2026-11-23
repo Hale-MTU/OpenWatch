@@ -51,16 +51,13 @@ import tech.mmarca.openwatch.devices.wearos.WearOsFamily
 import tech.mmarca.openwatch.devices.wearos.WearOsNodePort
 import tech.mmarca.openwatch.devices.wearos.WearOsPhoneActivity
 import tech.mmarca.openwatch.devices.wearos.WearOsWatchSyncService
-import tech.mmarca.openwatch.devices.xiaomi.ScaleForeground
-import tech.mmarca.openwatch.devices.xiaomi.ScaleListeningForeground
-import tech.mmarca.openwatch.devices.xiaomi.ScaleScanRadio
-import tech.mmarca.openwatch.devices.xiaomi.SystemScaleScanRadio
-import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleFamily
-import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleListener
-import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleStore
-import tech.mmarca.openwatch.wearlink.SecretSeal
 
-/** Wiring for the `devices/` layer, kept apart so [AppModule] carries no watch knowledge. */
+/**
+ * Wiring for the `devices/` layer, kept apart so [AppModule] carries no watch knowledge: what
+ * every family shares (`:devices:core`'s pieces, the composite sync port) and the families not
+ * yet in a module of their own. A family in a module of its own binds itself there
+ * (`:devices:xiaomi`'s `XiaomiScaleModule`).
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class DevicesModule {
@@ -86,19 +83,7 @@ abstract class DevicesModule {
     @Singleton
     abstract fun bindGarminRadio(impl: GarminGattRadio): GarminRadio
 
-    @Binds
-    @Singleton
-    abstract fun bindScaleScanRadio(impl: SystemScaleScanRadio): ScaleScanRadio
-
-    @Binds
-    @Singleton
-    abstract fun bindScaleForeground(impl: ScaleListeningForeground): ScaleForeground
-
     // What OpenWatchCompanionDeviceService tells when an associated device comes into range.
-    @Binds
-    @IntoSet
-    abstract fun bindScalePresenceObserver(impl: XiaomiScaleListener): CompanionPresenceObserver
-
     @Binds
     @IntoSet
     abstract fun bindWatchPresenceObserver(impl: GarminNotificationBridge): CompanionPresenceObserver
@@ -129,11 +114,6 @@ abstract class DevicesModule {
     @StringKey("WEAROS")
     abstract fun bindWearOsFamily(impl: WearOsFamily): DeviceFamily
 
-    @Binds
-    @IntoMap
-    @StringKey("XIAOMI")
-    abstract fun bindXiaomiScaleFamily(impl: XiaomiScaleFamily): DeviceFamily
-
     companion object {
         // What each integration starts at every process start (AppStartupActors).
         @Provides
@@ -161,12 +141,6 @@ abstract class DevicesModule {
         fun provideWearOsPhoneActivityAtStart(activity: WearOsPhoneActivity) =
             // Tells the watches when the phone is unlocked, so they end a sleep hold they started.
             StartupActor("phone activity", activity::start)
-
-        @Provides
-        @IntoSet
-        fun provideScaleListenerAtStart(listener: XiaomiScaleListener) =
-            // A reboot or Bluetooth going off drops the scan that hears the scale.
-            StartupActor("scale listener", listener::onAppStart)
 
         @Provides
         @IntoSet
@@ -219,13 +193,5 @@ abstract class DevicesModule {
         fun provideGarminCounterWatermarkStore(
             @ApplicationContext context: Context,
         ): GarminCounterWatermarkStore = GarminCounterWatermarkStore(context)
-
-        // One instance: the receiver, the worker and the screen read the same state.
-        @Provides
-        @Singleton
-        fun provideXiaomiScaleStore(
-            @ApplicationContext context: Context,
-            seal: SecretSeal,
-        ): XiaomiScaleStore = XiaomiScaleStore(context, seal)
     }
 }

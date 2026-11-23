@@ -21,15 +21,14 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.mmarca.openwatch.core.security.testSeal
-import tech.mmarca.openwatch.data.repository.ImportedRecordRepository
-import tech.mmarca.openwatch.data.repository.BodyProfileProvider
-import tech.mmarca.openwatch.data.repository.contract.FakeBodyProfilePreferences
+import tech.mmarca.openwatch.data.repository.HealthRecordStore
+import tech.mmarca.openwatch.data.repository.contract.FakeBodyProfileRepository
 import tech.mmarca.openwatch.data.repository.contract.FakeScaleWeighInRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.domain.model.ScaleReading
 import tech.mmarca.healthcalculations.preferences.BiologicalSex
 import tech.mmarca.healthcalculations.preferences.BodyProfile
-import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
+import tech.mmarca.openwatch.healthconnect.HealthConnectReads
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 
 /**
@@ -54,7 +53,7 @@ class ScaleWeighInIngestTest {
 
     private val written = mutableListOf<List<Record>>()
     private var writeFailure: Exception? = null
-    private val importRepository = mockk<ImportedRecordRepository> {
+    private val importRepository = mockk<HealthRecordStore> {
         coEvery { insertImportedRecords(any()) } answers {
             writeFailure?.let { throw it }
             written += firstArg<List<Record>>()
@@ -63,7 +62,7 @@ class ScaleWeighInIngestTest {
     }
     private var granted = ScaleWritePermissions
     // In the background Health Connect shows the app its own records only: the stored profile is used.
-    private val hc = mockk<HealthConnectGateway> {
+    private val hc = mockk<HealthConnectReads> {
         coEvery { grantedPermissions() } answers { granted }
         coEvery { readsOtherAppsDataNow() } returns false
     }
@@ -71,10 +70,7 @@ class ScaleWeighInIngestTest {
         weighIns = weighIns,
         importRepository = importRepository,
         hc = hc,
-        bodyProfile = BodyProfileProvider(
-            FakeBodyProfilePreferences(BodyProfile(birthYear = 1990, heightCm = 175.0, sex = BiologicalSex.MALE)),
-            hc,
-        ),
+        bodyProfile = FakeBodyProfileRepository(BodyProfile(birthYear = 1990, heightCm = 175.0, sex = BiologicalSex.MALE)),
         store = store,
     )
 
