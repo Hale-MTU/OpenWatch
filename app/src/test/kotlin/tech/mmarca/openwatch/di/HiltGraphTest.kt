@@ -18,6 +18,9 @@ import tech.mmarca.openwatch.devices.core.measure.MeasurementSink
 import tech.mmarca.openwatch.devices.core.pairing.CompanionPresenceObserver
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
+import tech.mmarca.openwatch.features.device.DevicePanelContribution
+import tech.mmarca.openwatch.features.device.DeviceScreenContribution
+import tech.mmarca.openwatch.features.device.WatchOnboarding
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 
 /**
@@ -43,6 +46,9 @@ class HiltGraphTest {
     @Inject lateinit var healthConnect: HealthConnectGateway
     @Inject lateinit var startupActors: AppStartupActors
     @Inject lateinit var measurementSink: MeasurementSink
+    @Inject lateinit var screens: Map<String, @JvmSuppressWildcards DeviceScreenContribution>
+    @Inject lateinit var panels: Map<String, @JvmSuppressWildcards DevicePanelContribution>
+    @Inject lateinit var onboardings: Map<String, @JvmSuppressWildcards WatchOnboarding>
 
     @Before
     fun inject() = hilt.inject()
@@ -62,6 +68,13 @@ class HiltGraphTest {
                 "XIAOMI", "XiaomiScaleFamily",
                 "BLE_STANDARD", "StandardDeviceFamily",
             )
+        // Each family's screens, by its persisted name, as its feature module binds them: a family
+        // that binds none gets the generic device screen and panel (the standard devices).
+        assertThat(screens.mapValues { it.value::class.simpleName }).containsExactly("XIAOMI", "XiaomiScaleScreen")
+        assertThat(panels.mapValues { it.value::class.simpleName })
+            .containsExactly("GARMIN", "GarminDevicePanel", "WEAROS", "WearOsDevicePanel")
+        assertThat(onboardings.mapValues { it.value::class.simpleName })
+            .containsExactly("GARMIN", "GarminWatchOnboarding", "WEAROS", "WearOsWatchOnboarding")
         // Order is the rule here: the first classifier that claims a device wins.
         assertThat(deviceClassifiers.map { it::class.simpleName })
             .containsExactly("GarminDeviceClassifier", "WearOsDeviceClassifier").inOrder()

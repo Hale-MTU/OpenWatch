@@ -194,6 +194,10 @@ Do not break these without an explicit decision.
   whose devices need no flow of their own declares a `DevicePairing` and gets the app's add
   flow, Home's "Other devices" list and the generic device panel; one that pushes its data
   hands each measurement to the `MeasurementSink`, which keeps it before Health Connect has it.
+  A family with screens of its own brings them beside its other screens and binds them, under
+  its persisted name, into the generic screens' contributions (`features/device/DeviceContributions.kt`:
+  its own destination, its panel in the device screen, its pairing in the add-a-watch flow); the
+  generic screens never name a family, and the device module holds no screen.
 - A health calculation goes into health-calculations, not into `:core:model`, `:wear` or a
   feature: one copy, so both apps give the same number. Moving the submodule changes
   OpenVitals' numbers too, so it moves in both apps together.

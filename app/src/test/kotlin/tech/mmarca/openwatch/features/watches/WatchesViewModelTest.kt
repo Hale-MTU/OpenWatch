@@ -28,6 +28,8 @@ import tech.mmarca.openwatch.devices.garmin.GarminTransportProbe
 import tech.mmarca.openwatch.devices.garmin.GarminTransportVariant
 import tech.mmarca.openwatch.devices.garmin.OnboardGarminWatchUseCase
 import tech.mmarca.openwatch.devices.wearos.OnboardWearOsWatchUseCase
+import tech.mmarca.openwatch.features.watches.garmin.GarminWatchOnboarding
+import tech.mmarca.openwatch.features.watches.wearos.WearOsWatchOnboarding
 import tech.mmarca.openwatch.domain.model.OsPermissionCatalog
 import tech.mmarca.openwatch.domain.model.OsPermissionId
 import tech.mmarca.openwatch.domain.model.OsPermissionRow
@@ -129,8 +131,11 @@ class WatchesViewModelTest {
         savedStateHandle = savedState,
         deviceRepository = repo,
         sensorCoordinator = coordinator,
-        onboardGarminWatch = OnboardGarminWatchUseCase(pairing, repo, probe),
-        onboardWearOsWatch = OnboardWearOsWatchUseCase(pairing, repo),
+        // The two families' pairings as their feature modules bind them.
+        onboardings = mapOf(
+            "GARMIN" to GarminWatchOnboarding(OnboardGarminWatchUseCase(pairing, repo, probe)),
+            "WEAROS" to WearOsWatchOnboarding(OnboardWearOsWatchUseCase(pairing, repo)),
+        ),
         osPermissionsService = os,
     )
 

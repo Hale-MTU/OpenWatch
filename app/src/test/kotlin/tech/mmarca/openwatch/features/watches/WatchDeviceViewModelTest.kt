@@ -165,6 +165,7 @@ class WatchDeviceViewModelTest {
             every { it.stopScan() } just runs
         },
         healthConnectManager = healthConnectManager,
+        panels = emptyMap(),
         families = DeviceFamilies(
             mapOf(
                 "GARMIN" to GarminFamily(

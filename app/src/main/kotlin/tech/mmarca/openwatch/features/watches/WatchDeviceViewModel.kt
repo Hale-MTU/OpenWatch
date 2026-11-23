@@ -29,6 +29,7 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
 import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import tech.mmarca.openwatch.features.device.DevicePanelContribution
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.navigation.DeviceDetail
 import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
@@ -80,6 +81,8 @@ class WatchDeviceViewModel @Inject constructor(
     private val sensorCoordinator: BleSensorCoordinator,
     private val healthConnectManager: HealthConnectGateway,
     private val families: DeviceFamilies,
+    /** Each family's panel by its persisted name; a family with none gets the generic panel. */
+    private val panels: Map<String, @JvmSuppressWildcards DevicePanelContribution>,
     dispatchers: DispatcherProvider,
     @ApplicationScope appScope: CoroutineScope,
 ) : ViewModel() {
@@ -107,6 +110,9 @@ class WatchDeviceViewModel @Inject constructor(
             autoSync = autoSync,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, WatchDeviceUiState())
+
+    /** [family]'s own panel, or null for the generic one. */
+    fun panelFor(family: DeviceIntegration): DevicePanelContribution? = panels[family.storageName]
 
     /**
      * Picks the auto-sync interval. The scheduler owns the stored choice and the periodic work.

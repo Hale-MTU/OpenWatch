@@ -12,23 +12,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.permissions.OsPermissionsService
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.core.DeviceClassification
-import tech.mmarca.openwatch.devices.garmin.GarminOnboardOutcome
-import tech.mmarca.openwatch.devices.garmin.GarminOnboardStep
-import tech.mmarca.openwatch.devices.garmin.GarminTransportVariant
-import tech.mmarca.openwatch.devices.garmin.OnboardGarminWatchUseCase
-import tech.mmarca.openwatch.devices.core.pairing.WatchBondResult
-import tech.mmarca.openwatch.devices.wearos.OnboardWearOsWatchUseCase
-import tech.mmarca.openwatch.devices.wearos.WearOsOnboardOutcome
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleDiscoveredDevice
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.domain.model.OsPermissionCatalog
 import tech.mmarca.openwatch.domain.model.OsPermissionId
+import tech.mmarca.openwatch.features.device.WatchOnboardResult
+import tech.mmarca.openwatch.features.device.WatchOnboarding
 import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
 import tech.mmarca.openwatch.core.presentation.ScreenError
 
@@ -47,7 +41,8 @@ data class WatchesUiState(
     val selectedClassification: DeviceClassification? = null,
     val addDisplayName: String = "",
     val isOnboarding: Boolean = false,
-    val onboardStep: GarminOnboardStep? = null,
+    /** The step of the family's pairing that runs, by its index in the family's checklist; null outside pairing. */
+    val onboardStep: Int? = null,
     val onboardNotice: WatchOnboardNotice? = null,
     /** Why the last pairing did not finish; translated when shown. */
     val error: ScreenError? = null,
@@ -74,8 +69,8 @@ class WatchesViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val deviceRepository: BleDeviceRepository,
     private val sensorCoordinator: BleSensorCoordinator,
-    private val onboardGarminWatch: OnboardGarminWatchUseCase,
-    private val onboardWearOsWatch: OnboardWearOsWatchUseCase,
+    /** Each watch family's pairing, by its persisted name. */
+    private val onboardings: Map<String, @JvmSuppressWildcards WatchOnboarding>,
     private val osPermissionsService: OsPermissionsService,
 ) : ViewModel() {
 
@@ -232,49 +227,31 @@ class WatchesViewModel @Inject constructor(
         localState.update { it.copy(addDisplayName = value) }
     }
 
-    /** Bonds and registers the selected watch. Success closes the sheet through the state; a failure leaves it open. */
+    /** The pairing of [integration]'s family, which the add sheet runs and whose steps it shows. */
+    fun onboardingFor(integration: DeviceIntegration?): WatchOnboarding? =
+        integration?.let { onboardings[it.storageName] }
+
+    /**
+     * Pairs and registers the selected watch through its family's onboarding. Success closes the
+     * sheet through the state; a failure, or a family that needs the companion association and
+     * was not given it, leaves it open.
+     */
     fun onboardSelectedWatch() {
         val state = localState.value
         val selected = state.selectedDevice
         if (selected == null || state.isOnboarding) return
+        val onboarding = onboardingFor(state.addingIntegration) ?: return
         val displayName = state.addDisplayName.trim()
             .ifBlank { selected.name ?: selected.address }
 
-        // WearOS: no bond, no GFDI probe, only the association, which is required.
-        if (state.addingIntegration == DeviceIntegration.WEAROS) {
-            localState.update {
-                it.copy(isOnboarding = true, error = null, companionRequired = false, onboardNotice = null)
-            }
-            viewModelScope.launch {
-                when (onboardWearOsWatch(selected, displayName = displayName)) {
-                    is WearOsOnboardOutcome.Succeeded -> {
-                        localState.update { it.copy(isOnboarding = false, onboardStep = null) }
-                        closeAddFlow()
-                    }
-                    // The sheet stays open, so the user can try again and allow the request.
-                    WearOsOnboardOutcome.NotAssociated -> {
-                        localState.update {
-                            it.copy(isOnboarding = false, onboardStep = null, companionRequired = true)
-                        }
-                    }
-                }
-            }
-            return
-        }
-
         localState.update {
-            it.copy(
-                isOnboarding = true,
-                onboardStep = GarminOnboardStep.BONDING,
-                error = null,
-                onboardNotice = null,
-            )
+            it.copy(isOnboarding = true, onboardStep = null, error = null, companionRequired = false, onboardNotice = null)
         }
         viewModelScope.launch {
-            val outcome = onboardGarminWatch(
+            val result = onboarding.onboard(
                 selected,
                 displayName = displayName,
-                // Register as the classified kind: watch, or BIKE_COMPUTER for an Edge.
+                // Registered as the classified kind: watch, or BIKE_COMPUTER for an Edge.
                 kind = state.selectedClassification?.kind ?: BleDeviceKind.WATCH,
                 onStep = { step ->
                     localState.update { current ->
@@ -282,39 +259,21 @@ class WatchesViewModel @Inject constructor(
                     }
                 },
             )
-            when (outcome) {
-                is GarminOnboardOutcome.Failed -> {
+            when (result) {
+                is WatchOnboardResult.Paired -> {
                     localState.update {
-                        it.copy(
-                            isOnboarding = false,
-                            onboardStep = null,
-                            error = ScreenError.Text(
-                                when (outcome.reason) {
-                                    WatchBondResult.UNREACHABLE -> R.string.settings_watch_pair_unreachable
-                                    else -> R.string.settings_watch_pair_not_completed
-                                },
-                            ),
-                        )
-                    }
-                }
-
-                is GarminOnboardOutcome.Succeeded -> {
-                    localState.update {
-                        it.copy(
-                            isOnboarding = false,
-                            onboardStep = null,
-                            onboardNotice = when {
-                                // An unsupported transport outranks a missing association.
-                                outcome.transport.variant == GarminTransportVariant.UNKNOWN ||
-                                    outcome.transport.variant == GarminTransportVariant.UNREACHABLE ->
-                                    WatchOnboardNotice.UNSUPPORTED_TRANSPORT
-
-                                !outcome.associated -> WatchOnboardNotice.NO_COMPANION
-                                else -> null
-                            },
-                        )
+                        it.copy(isOnboarding = false, onboardStep = null, onboardNotice = result.notice)
                     }
                     closeAddFlow()
+                }
+
+                is WatchOnboardResult.Failed -> localState.update {
+                    it.copy(isOnboarding = false, onboardStep = null, error = result.reason)
+                }
+
+                // The sheet stays open, so the user can try again and allow the request.
+                WatchOnboardResult.CompanionRequired -> localState.update {
+                    it.copy(isOnboarding = false, onboardStep = null, companionRequired = true)
                 }
             }
         }

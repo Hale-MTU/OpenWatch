@@ -45,11 +45,10 @@ import tech.mmarca.openwatch.core.presentation.formatPercent
 import tech.mmarca.openwatch.devices.core.DeviceFeature
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
-import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
-import tech.mmarca.openwatch.features.watches.garmin.GarminWatchPanelRoute
+import tech.mmarca.openwatch.features.device.DevicePanelActions
+import tech.mmarca.openwatch.features.device.DeviceScreenHost
 import tech.mmarca.openwatch.features.watches.generic.GenericDevicePanelRoute
-import tech.mmarca.openwatch.features.watches.wearos.WearOsWatchPanelRoute
 import tech.mmarca.openwatch.ui.components.ConfirmRemoveDialog
 import tech.mmarca.openwatch.ui.components.DeclareAppBar
 import tech.mmarca.openwatch.ui.components.DeviceAvatar
@@ -70,18 +69,14 @@ import tech.mmarca.openwatch.ui.theme.Spacing
  * One device's destination: the only place that knows its ViewModel. It declares the app bar,
  * re-reads the background grant on resume, owns the Health Connect requests (the background
  * read, and the grants a sync left waiting) and goes back once the device is removed. The
- * device's family brings its own panel, with its own state holder, launchers and dialog; a
+ * device's family brings its own panel ([tech.mmarca.openwatch.features.device.DevicePanelContribution]),
+ * with its own state holder, launchers and dialog, and opens its own screens through [host]; a
  * family with none gets the generic one, which draws what its contracts say (its live heart
  * rate, what it pushed that waits for Health Connect). [WatchDeviceScreen] draws.
  */
 @Composable
 fun WatchDeviceRoute(
-    onOpenData: (String) -> Unit,
-    onOpenNotifications: (String) -> Unit,
-    onOpenWatchSettings: (String, Int) -> Unit,
-    onOpenSendPoint: (String) -> Unit,
-    onOpenAlarms: (String) -> Unit,
-    onRemoved: () -> Unit,
+    host: DeviceScreenHost,
     viewModel: WatchDeviceViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -111,30 +106,22 @@ fun WatchDeviceRoute(
             onEnabledChange = viewModel::setEnabled,
             onRemove = { deleteWatchHistory ->
                 viewModel.removeDevice(deleteWatchHistory)
-                onRemoved()
+                host.onRemoved()
             },
         )
     }
     val device = state.device
+    val panel = state.family?.let(viewModel::panelFor)
     when {
         device == null -> screen(WatchDevicePanel.None)
-        state.family == DeviceIntegration.GARMIN -> GarminWatchPanelRoute(
+        panel != null -> panel.Panel(
             device = device,
             sync = state.sync,
-            onSync = viewModel::syncNow,
-            onAllowSyncGrants = syncGrantLauncher.launch,
-            onOpenData = onOpenData,
-            onOpenNotifications = onOpenNotifications,
-            onOpenWatchSettings = onOpenWatchSettings,
-            onOpenSendPoint = onOpenSendPoint,
-            onOpenAlarms = onOpenAlarms,
-            content = screen,
-        )
-        state.family == DeviceIntegration.WEAROS -> WearOsWatchPanelRoute(
-            device = device,
-            sync = state.sync,
-            onSync = viewModel::syncNow,
-            onAllowSyncGrants = syncGrantLauncher.launch,
+            actions = DevicePanelActions(
+                onSync = viewModel::syncNow,
+                onAllowSyncGrants = syncGrantLauncher.launch,
+                host = host,
+            ),
             content = screen,
         )
         else -> GenericDevicePanelRoute(features = state.features, content = screen)
