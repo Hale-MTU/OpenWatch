@@ -37,4 +37,5 @@
     <string name="settings_watch_notifications_disclosure_body">Um Benachrichtigungen auf deiner Uhr zu zeigen, liest OpenWatch die Benachrichtigungen, die dein Telefon empfängt, einschließlich ihres Textes.\n\nSie werden auf diesem Gerät gelesen und nur über Bluetooth an die gekoppelte Uhr gesendet. Nichts wird in einer Datei oder einer Datenbank gespeichert, und OpenWatch hat keine Internetberechtigung, deshalb können Benachrichtigungen nirgendwo anders hingelangen.\n\nDu kannst das jederzeit ausschalten und den Benachrichtigungszugriff in den Android-Einstellungen widerrufen.</string>
     <string name="home_health_connect">Health Connect</string>
     <string name="home_health_connect_body">Was OpenWatch lesen und schreiben darf</string>
+    <string name="action_delete">Löschen</string>
 </resources>

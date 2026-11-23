@@ -17,7 +17,7 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 ## Map
 
 - `app/src/main/kotlin/tech/mmarca/openwatch/`
-  - `features/` — the screens still in the app: `watches`, `scales`. The others are modules under `feature/` (below).
+  - `features/` — the screens still in the app: `watches`. The others are modules under `feature/` (below).
   - `data/repository` — what joins a device family's own contract to `:core:data`: the Garmin
     and scale tables over their DAOs, the Garmin and Wear OS preferences over
     `OpenWatchPreferences`.
@@ -32,6 +32,7 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 - `feature/home` (`:feature:home`) — Home's frame: a slot for each family's section, which the app's `features/home/HomeRoute` fills, Health Connect's and Settings' rows, and the empty side of the list-detail layout.
 - `feature/device` (`:feature:device`) — the screens every device family shares, which name none: the device route and the device screen with the generic panel, Home's watch list with the add-a-watch flow and its "Other devices" section with the app's own add flow, a sync's summary, and the contributions a family's screens plug in through (`features/device/DeviceContributions.kt`). Its test fixture is `routeHandle()`, a route's SavedStateHandle for a ViewModel test.
 - `feature/watches-wearos` (`:feature:watches-wearos`) — the Wear OS watch's screens: its panel in the device screen and its pairing in the add-a-watch flow, bound under the family's name (`WearOsFeatureModule`). It depends on `:devices:wearos` and `:feature:device`.
+- `feature/scales-xiaomi` (`:feature:scales-xiaomi`) — the S400 scale's screens: Home's scale section with its add flow, and the scale's own destination, bound under the family's name (`XiaomiScaleFeatureModule`). It depends on `:devices:xiaomi` and `:feature:device`.
 - `core/model` (`:core:model`) and `core/fit` (`:core:fit`) — pure Kotlin on the JDK, with
   the app's package names: `domain/model`, `domain/preferences` and `core/geo` in the first, the
   FIT codec `core/fit` in the second. The unit-system provider that reads the platform's locale

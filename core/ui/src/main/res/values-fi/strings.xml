@@ -37,4 +37,5 @@
     <string name="settings_watch_notifications_disclosure_body">Näyttääkseen ilmoitukset kellossasi OpenWatch lukee puhelimesi vastaanottamat ilmoitukset — myös niiden tekstin.\n\nNe luetaan tällä laitteella ja lähetetään vain pariliitettyyn kelloosi Bluetoothin kautta. Mitään ei tallenneta tiedostoon tai tietokantaan, eikä OpenWatchilla ole internet-oikeutta, joten ilmoituksia ei voida lähettää minnekään muualle.\n\nVoit kytkeä tämän pois milloin tahansa ja peruuttaa ilmoitusten käyttöoikeuden Androidin asetuksista.</string>
     <string name="home_health_connect">Health Connect</string>
     <string name="home_health_connect_body">Mitä OpenWatch saa lukea ja kirjoittaa</string>
+    <string name="action_delete">Poista</string>
 </resources>

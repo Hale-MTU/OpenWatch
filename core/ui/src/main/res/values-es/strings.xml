@@ -37,4 +37,5 @@
     <string name="settings_watch_notifications_disclosure_body">Para mostrar notificaciones en tu reloj, OpenWatch lee las notificaciones que recibe tu teléfono, incluido su texto.\n\nSe leen en este dispositivo y se envían por Bluetooth solo al reloj que has emparejado. No se guarda nada en un archivo ni en una base de datos, y OpenWatch no tiene permiso de internet, así que las notificaciones no pueden ir a ningún otro sitio.\n\nPuedes desactivarlo cuando quieras y revocar el acceso a las notificaciones desde los ajustes de Android.</string>
     <string name="home_health_connect">Health Connect</string>
     <string name="home_health_connect_body">Lo que OpenWatch puede leer y escribir</string>
+    <string name="action_delete">Eliminar</string>
 </resources>

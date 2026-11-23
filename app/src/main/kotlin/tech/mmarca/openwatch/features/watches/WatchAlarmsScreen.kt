@@ -337,7 +337,7 @@ private fun AlarmEditorDialog(
                 if (edit.index != null) {
                     TextButton(onClick = onDelete) {
                         Text(
-                            text = stringResource(R.string.action_delete),
+                            text = stringResource(UiR.string.action_delete),
                             color = MaterialTheme.colorScheme.error,
                         )
                     }

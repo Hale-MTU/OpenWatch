@@ -41,4 +41,5 @@
 いつでもオフにでき、Android の設定から通知へのアクセスを取り消せます。</string>
     <string name="home_health_connect">Health Connect</string>
     <string name="home_health_connect_body">OpenWatch が読み書きできるデータ</string>
+    <string name="action_delete">削除</string>
 </resources>

@@ -37,4 +37,5 @@
     <string name="settings_watch_notifications_disclosure_body">Aby pokazywać powiadomienia na zegarku, OpenWatch odczytuje powiadomienia, które otrzymuje telefon — łącznie z ich treścią.\n\nSą odczytywane na tym urządzeniu i wysyłane tylko do sparowanego zegarka przez Bluetooth. Nic nie jest zapisywane w pliku ani bazie danych, a OpenWatch nie ma uprawnienia do internetu, więc powiadomienia nie mogą trafić nigdzie indziej.\n\nMożesz to wyłączyć w dowolnym momencie i cofnąć dostęp do powiadomień w ustawieniach Androida.</string>
     <string name="home_health_connect">Health Connect</string>
     <string name="home_health_connect_body">Co OpenWatch może odczytywać i zapisywać</string>
+    <string name="action_delete">Usuń</string>
 </resources>

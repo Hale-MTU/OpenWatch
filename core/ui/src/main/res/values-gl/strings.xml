@@ -41,4 +41,5 @@ Lense neste dispositivo e envíanse só ao reloxo emparellado, por Bluetooth. No
 Podes desactivalo cando queiras e revogar o acceso ás notificacións desde os axustes de Android.</string>
     <string name="home_health_connect">Health Connect</string>
     <string name="home_health_connect_body">O que OpenWatch pode ler e escribir</string>
+    <string name="action_delete">Eliminar</string>
 </resources>

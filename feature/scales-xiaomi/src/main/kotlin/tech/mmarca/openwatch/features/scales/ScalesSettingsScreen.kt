@@ -26,7 +26,6 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import java.time.Duration
 import java.time.Instant
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.devices.xiaomi.ScaleListenerStatus
 import tech.mmarca.openwatch.domain.model.OsPermissionRow
 import tech.mmarca.openwatch.ui.components.DeviceListRow

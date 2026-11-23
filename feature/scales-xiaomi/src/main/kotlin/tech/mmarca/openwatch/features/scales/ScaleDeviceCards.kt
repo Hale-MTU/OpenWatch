@@ -27,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.features.device.R as DeviceR
 import tech.mmarca.openwatch.devices.xiaomi.ScaleListenerStatus
@@ -96,7 +95,7 @@ internal fun ScaleLastWeighInCard(weighIn: ScaleWeighInDisplay, onDelete: () -> 
             weighIn.bodyFat != null -> Note(R.string.settings_scales_estimate_note)
         }
         OpenWatchTextButton(onClick = { confirmingDelete = true }) {
-            Text(text = stringResource(R.string.action_delete), color = MaterialTheme.colorScheme.error)
+            Text(text = stringResource(UiR.string.action_delete), color = MaterialTheme.colorScheme.error)
         }
     }
 
@@ -104,7 +103,7 @@ internal fun ScaleLastWeighInCard(weighIn: ScaleWeighInDisplay, onDelete: () -> 
         ScaleConfirmDialog(
             title = stringResource(R.string.settings_scales_delete_title),
             body = stringResource(R.string.settings_scales_delete_body),
-            confirm = stringResource(R.string.action_delete),
+            confirm = stringResource(UiR.string.action_delete),
             onConfirm = {
                 confirmingDelete = false
                 onDelete()

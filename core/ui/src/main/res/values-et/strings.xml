@@ -37,4 +37,5 @@
     <string name="settings_watch_notifications_disclosure_body">Et teavitusi sinu kellas näidata, loeb OpenWatch teavitusi, mida su telefon saab, koos nende tekstiga.\n\nNeid loetakse selles seadmes ja saadetakse Bluetoothi kaudu ainult sellesse kella, mille sa sidusid. Midagi ei salvestata faili ega andmebaasi ning OpenWatchil pole internetiluba, seega ei saa teavitused kuhugi mujale minna.\n\nVõid selle igal ajal välja lülitada ja teavituste juurdepääsu Androidi seadetes tühistada.</string>
     <string name="home_health_connect">Health Connect</string>
     <string name="home_health_connect_body">Mida OpenWatch tohib lugeda ja kirjutada</string>
+    <string name="action_delete">Kustuta</string>
 </resources>

@@ -30,7 +30,6 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.ui.R as UiR
 import tech.mmarca.openwatch.devices.core.pairing.CompanionDevice
 import tech.mmarca.openwatch.ui.components.OpenWatchTextButton

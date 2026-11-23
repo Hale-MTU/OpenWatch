@@ -37,4 +37,5 @@
     <string name="home_health_connect_body">מה מותר ל-OpenWatch לקרוא ולכתוב</string>
     <string name="settings_watch_notifications_disclosure_title">\u200FOpenWatch יקרא את ההתראות שלך</string>
     <string name="settings_watch_notifications_disclosure_body">כדי להציג התראות בשעון שלך, OpenWatch קורא את ההתראות שהטלפון מקבל — כולל הטקסט שלהן.\n\nהן נקראות במכשיר הזה ונשלחות רק לשעון שהתאמת, דרך Bluetooth. שום דבר לא נשמר בקובץ או במסד נתונים, ול-OpenWatch אין הרשאת גישה לאינטרנט, כך שאי אפשר לשלוח את ההתראות לשום מקום אחר.\n\nאפשר לכבות את האפשרות הזו בכל שלב, ולבטל את הגישה להתראות בהגדרות Android.</string>
+    <string name="action_delete">מחיקה</string>
 </resources>

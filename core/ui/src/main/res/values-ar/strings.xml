@@ -37,4 +37,5 @@
     <string name="home_health_connect_body">ما يمكن لـ OpenWatch قراءته وكتابته</string>
     <string name="settings_watch_notifications_disclosure_title">سيقرأ OpenWatch إشعاراتك</string>
     <string name="settings_watch_notifications_disclosure_body">لعرض الإشعارات على ساعتك، يقرأ OpenWatch الإشعارات التي يتلقاها هاتفك، بما في ذلك نصها.\n\nتُقرأ على هذا الجهاز وتُرسَل عبر Bluetooth إلى الساعة التي أقرنتها فقط. لا يُحفظ أي شيء في ملف أو قاعدة بيانات، وليس لدى OpenWatch إذن الوصول إلى الإنترنت، لذا لا يمكن إرسال الإشعارات إلى أي مكان آخر.\n\nيمكنك إيقاف هذا في أي وقت، وإلغاء الوصول إلى الإشعارات من إعدادات Android.</string>
+    <string name="action_delete">مسح</string>
 </resources>
