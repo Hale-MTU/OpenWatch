@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -27,7 +28,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openlink.OpenLink
 import tech.mmarca.openlink.OpenLinkTrust
-import tech.mmarca.openwatch.R
 import tech.mmarca.openwatch.core.presentation.localizedList
 import tech.mmarca.openwatch.link.LinkSessionStatus
 import tech.mmarca.openwatch.ui.components.ObscuredTouchGuard
@@ -262,6 +262,9 @@ internal fun capabilityLabel(capability: String): Int = when (capability) {
  * and steer a tap on Allow or on a capability switch. The activity drops the touches: Compose
  * does not apply a view's own `filterTouchesWhenObscured`.
  */
+// HIDE_OVERLAY_WINDOWS is declared by the app's manifest, which this module's lint does not
+// see; a normal permission, granted at install.
+@SuppressLint("MissingPermission")
 @Composable
 private fun HideOverlaysWhileShown() {
     val view = LocalView.current

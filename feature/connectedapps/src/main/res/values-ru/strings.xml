@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connected_apps_in_use">Используется сейчас</string>
+    <string name="connected_apps_last_connected">Последнее подключение: %1$s</string>
+    <string name="connected_apps_profile_received">Последний профиль получен: %1$s</string>
+    <string name="connected_apps_session_heart_rate">Запись: передаётся пульс с %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">Запись: передаются пульс и шаги с %1$s</string>
+    <string name="connected_apps_session_keeping">Запись: %1$s продолжает передачу</string>
+    <string name="connected_apps_session_waiting">Запись: ожидание показаний с %1$s</string>
+    <string name="connected_apps_intro">Эти приложения запросили доступ к OpenWatch. Каждое видит только то, что вы разрешите здесь, и ничто не покидает телефон.</string>
+    <string name="connected_apps_empty">Пока ни одно приложение не запросило доступ. OpenVitals подключится, когда оба приложения будут установлены.</string>
+    <string name="connected_apps_unknown_signer">Это приложение называет себя %1$s, но оно не подписано проектом OpenVitals. Разрешайте его, только если вы сами собрали или установили его и доверяете его источнику.</string>
+    <string name="connected_apps_identity">%1$s\nКлюч подписи %2$s</string>
+    <string name="connected_apps_lookalike">Это приложение называет себя %1$s, но это не %2$s: его пакет не совпадает с пакетом %2$s. Разрешайте его, только если знаете, почему оно использует это имя.</string>
+    <string name="connected_apps_state_pending">Запрашивает подключение</string>
+    <string name="connected_apps_state_trusted">Подключено</string>
+    <string name="connected_apps_state_blocked">Заблокировано</string>
+    <string name="connected_apps_asks_for">Запрашивает:</string>
+    <string name="connected_apps_allow">Разрешить</string>
+    <string name="connected_apps_block">Заблокировать</string>
+    <string name="connected_apps_forget">Забыть</string>
+    <string name="connected_apps_unblock">Разблокировать</string>
+    <string name="connected_apps_capability_devices">Видеть ваши часы и весы, их заряд и последнюю синхронизацию, а также запускать синхронизацию</string>
+    <string name="connected_apps_capability_profile">Обмениваться профилем тела (год рождения, пол, рост, вес) с OpenWatch в обе стороны</string>
+    <string name="connected_apps_capability_recording">Поддерживать передачу с часов, пока оно записывает активность</string>
+    <string name="connected_apps_capability_live">Получать пульс и шаги с часов во время записи</string>
+</resources>

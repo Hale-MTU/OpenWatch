@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connected_apps_in_use">使用中</string>
+    <string name="connected_apps_last_connected">最終接続: %1$s</string>
+    <string name="connected_apps_profile_received">最終プロフィール受信: %1$s</string>
+    <string name="connected_apps_session_heart_rate">記録中: %1$s の心拍数を送信中</string>
+    <string name="connected_apps_session_heart_rate_steps">記録中: %1$s の心拍数と歩数を送信中</string>
+    <string name="connected_apps_session_keeping">記録中: %1$s のストリーミングを維持中</string>
+    <string name="connected_apps_session_waiting">記録中: %1$s からの測定値を待機中</string>
+    <string name="connected_apps_intro">これらのアプリが OpenWatch の利用を求めました。各アプリが見られるのはここで許可したものだけで、データがスマートフォンの外に出ることはありません。</string>
+    <string name="connected_apps_empty">まだどのアプリからも要求がありません。両方のアプリをインストールすると OpenVitals が接続します。</string>
+    <string name="connected_apps_unknown_signer">このアプリは %1$s を名乗っていますが、OpenVitals プロジェクトによる署名がありません。自分でビルドまたはインストールし、入手元を信頼できる場合にのみ許可してください。</string>
+    <string name="connected_apps_identity">%1$s\n署名鍵 %2$s</string>
+    <string name="connected_apps_lookalike">このアプリは %1$s を名乗っていますが、%2$s ではありません。パッケージが %2$s のものと異なります。この名前を使う理由がわかっている場合にのみ許可してください。</string>
+    <string name="connected_apps_state_pending">接続を要求中</string>
+    <string name="connected_apps_state_trusted">接続済み</string>
+    <string name="connected_apps_state_blocked">ブロック中</string>
+    <string name="connected_apps_asks_for">要求している内容:</string>
+    <string name="connected_apps_allow">許可</string>
+    <string name="connected_apps_block">ブロック</string>
+    <string name="connected_apps_forget">削除</string>
+    <string name="connected_apps_unblock">ブロックを解除</string>
+    <string name="connected_apps_capability_devices">ウォッチと体重計、そのバッテリー残量と最終同期を確認し、同期を開始する</string>
+    <string name="connected_apps_capability_profile">体のプロフィール（生年、性別、身長、体重）を OpenWatch と双方向で共有する</string>
+    <string name="connected_apps_capability_recording">アクティビティの記録中、ウォッチのストリーミングを維持する</string>
+    <string name="connected_apps_capability_live">記録中にウォッチの心拍数と歩数を受け取る</string>
+</resources>

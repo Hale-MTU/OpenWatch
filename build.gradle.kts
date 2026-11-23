@@ -67,6 +67,7 @@ tasks.register("verifyCiUnitTest") {
         ":devices:ble-standard:testCiUnitTest",
         ":devices:ble-standard:protocol:test",
         ":feature:healthconnect:testCiUnitTest",
+        ":feature:connectedapps:testCiUnitTest",
         ":link-host:testCiUnitTest",
         ":app:testCiUnitTest",
     )
@@ -113,6 +114,7 @@ tasks.register("verifyCiLint") {
         ":devices:ble-standard:lintCi",
         ":devices:ble-standard:protocol:lint",
         ":feature:healthconnect:lintCi",
+        ":feature:connectedapps:lintCi",
         ":link-host:lintCi",
     )
 }
