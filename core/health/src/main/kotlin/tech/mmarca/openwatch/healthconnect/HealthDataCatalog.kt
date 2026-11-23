@@ -29,7 +29,7 @@ import androidx.health.connect.client.records.TotalCaloriesBurnedRecord
 import androidx.health.connect.client.records.Vo2MaxRecord
 import androidx.health.connect.client.records.WeightRecord
 import kotlin.reflect.KClass
-import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.core.health.R
 
 /** Where a health data type comes from, or that it is read. One heading of the list the user sees. */
 enum class HealthDataSection(@param:StringRes val titleRes: Int) {

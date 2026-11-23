@@ -15,7 +15,7 @@ class ImportedRecordTimeSpanCatalogTest {
 
     @Test
     fun `every type the app writes has a time span, so a refusal of it can be diagnosed`() {
-        val source = File("../core/health-api/src/main/kotlin/tech/mmarca/openwatch/data/repository/ImportedRecordWrites.kt").readText()
+        val source = File("../health-api/src/main/kotlin/tech/mmarca/openwatch/data/repository/ImportedRecordWrites.kt").readText()
         val written = HealthDataCatalog.sections.values.flatten().mapNotNull { it.record?.simpleName }.toSet()
         val missing = written.filterNot { "is $it ->" in source }
         assertTrue("timeSpan() has no case for $missing", missing.isEmpty())

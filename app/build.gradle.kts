@@ -146,6 +146,8 @@ dependencies {
     implementation(project(":core:devices-api"))
     // The devices' Health Connect contracts: the record sink, its write helpers, the strict reads.
     implementation(project(":core:health-api"))
+    // Health Connect as the app reaches it: the gateway, the record sink, the activity writes, the catalog.
+    implementation(project(":core:health"))
     // What every device family shares on Android: the radio lease, the GATT link and the BLE
     // scanner, companion pairing, the sync controller and its schedule.
     implementation(project(":devices:core"))
@@ -254,6 +256,7 @@ tasks.withType<Test>().configureEach {
         ":core:fit:test",
         ":core:devices-api:test",
         ":core:health-api:testCiUnitTest",
+        ":core:health:testCiUnitTest",
         ":devices:core:testCiUnitTest",
         ":devices:garmin:testCiUnitTest",
         ":devices:garmin:protocol:test",
@@ -274,6 +277,7 @@ tasks.withType<Test>().configureEach {
         "scannedCoreFitMain" to "core/fit/src/main",
         "scannedCoreDevicesApiMain" to "core/devices-api/src/main",
         "scannedCoreHealthApiMain" to "core/health-api/src/main",
+        "scannedCoreHealthMain" to "core/health/src/main",
         "scannedDevicesCoreMain" to "devices/core/src/main",
         "scannedGarminMain" to "devices/garmin/src/main",
         "scannedGarminProtocolMain" to "devices/garmin/protocol/src/main",

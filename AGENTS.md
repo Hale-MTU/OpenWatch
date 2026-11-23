@@ -19,8 +19,6 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 - `app/src/main/kotlin/tech/mmarca/openwatch/`
   - `features/` — the screens: `home`, `device` (the device route and the generic add flow), `watches`, `scales`,
     `healthconnect`, `settings`.
-  - `healthconnect/` — `HealthConnectGateway`, the one class that touches the client, and
-    `ActivityRecordWriter`, the activity write path copied from OpenVitals.
   - `data/` — the Room database (three tables), the repositories and the preference stores.
   - `sensors/ble/` — the BLE discovery scan the add-a-device flows share.
   - `di/` — the Hilt modules. `DevicesModule` binds what every family shares and the rules
@@ -69,11 +67,16 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   the store, the pipeline to Room and Health Connect, the strings its notification shows, and
   `XiaomiScaleModule`, which binds its family, ports and store. The weigh-in table's contract
   (`ScaleWeighInRepository`) is its own; Room implements it in `:app`.
+- `core/health` (`:core:health`) — Health Connect as the app reaches it, in `healthconnect/`:
+  `HealthConnectGateway`, the one class that touches the client, `ActivityRecordWriter`, the
+  activity write path copied from OpenVitals, the sync gate, the intents and
+  `HealthDataCatalog`; and in `data/repository` the record sink `ImportedRecordRepository` and
+  `ActivityWriteRepository`. It implements `:core:health-api`.
 - `core/health-api` (`:core:health-api`) — how the devices talk to Health Connect, as
   contracts: the record sink `HealthRecordStore` and its write helpers (`ImportedRecordWrites`),
   the strict reads `HealthConnectReads`, the paused-sync exception and the rate-limit check. An
   Android library, since the records are Health Connect's types. Its test fixture is
-  `FakeHealthRecordStore`. The gateway and `ImportedRecordRepository` implement it in `:app`.
+  `FakeHealthRecordStore`. The gateway and `ImportedRecordRepository` implement it in `:core:health`.
 - `devices/garmin/protocol` (`:devices:garmin:protocol`) — the Garmin protocol, pure Kotlin with
   `explicitApi()` and the app's package names: bytes, COBS, GFDI, protobuf, the multi-link
   transport, the session, file sync, the uploads and the FIT wellness decoder. Its test

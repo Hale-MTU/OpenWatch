@@ -93,8 +93,9 @@ class HealthPermissionsTest {
 
     /** The catalog as the Markdown the two documents carry, in English. */
     private fun catalogTable(): String {
-        val names = tech.mmarca.openwatch.R.string::class.java.fields.associate { it.getInt(null) to it.name }
-        val english = StringResource.findAll(File("src/main/res/values/strings.xml").readText())
+        // The catalog's strings are :core:health's, with the catalog.
+        val names = tech.mmarca.openwatch.core.health.R.string::class.java.fields.associate { it.getInt(null) to it.name }
+        val english = StringResource.findAll(File("../core/health/src/main/res/values/strings.xml").readText())
             .associate { it.groupValues[1] to it.groupValues[2].replace("\\'", "'") }
         fun text(id: Int) = english.getValue(names.getValue(id))
         return buildString {

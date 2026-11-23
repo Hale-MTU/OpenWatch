@@ -49,15 +49,15 @@ class LogCallersRatchetTest {
         val Allowed = setOf(
             "app/AppStartupActors.kt",
             "app/core/presentation/ScreenError.kt",
-            "app/data/repository/ActivityWriteRepository.kt",
             "app/data/repository/BleDeviceRepository.kt",
             "app/data/repository/DeviceStateStore.kt",
-            "app/healthconnect/ActivityRecordWriter.kt",
-            "app/healthconnect/HealthConnectAvailabilityService.kt",
-            "app/healthconnect/HealthConnectGateway.kt",
             "app/link/LinkLiveSessions.kt",
             "app/sensors/ble/BleSensorCoordinator.kt",
             // A library module's files are keyed by its directory, then the package path.
+            "core/health/data/repository/ActivityWriteRepository.kt",
+            "core/health/healthconnect/ActivityRecordWriter.kt",
+            "core/health/healthconnect/HealthConnectAvailabilityService.kt",
+            "core/health/healthconnect/HealthConnectGateway.kt",
             // The scans' refusals, moved out of BleSensorCoordinator and ScaleScanRadio: a code or the grant's exception.
             "devices/core/devices/core/ble/BleScanner.kt",
             "devices/core/devices/core/DeviceLog.kt",

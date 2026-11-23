@@ -11,10 +11,12 @@ OpenWatch seams noted.
 
 - App namespace: `tech.mmarca.openwatch`
 - Build logic: `build-logic/`, an included build with the convention plugins every module applies (`openwatch.android.application`, `openwatch.android.library`, `openwatch.jvm.library`): SDK levels, Java 17, signing from the environment, the debug, release and nightly build types, lint and dependency locking. A module's own file holds only what is its own (version codes, the `ci` type, the diagnostics flag). A change there must leave the release APKs byte-identical; compare their hashes before and after.
-- Project shape: sixteen Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
+- Project shape: seventeen Gradle modules. The phone app is `:app`; `:core:model` and `:core:fit`
   hold the pure code the app depends on (below); `:core:devices-api` the device contracts
   ([`devices/core`](#devicescore)); `:core:health-api` how the devices talk to Health Connect
-  ([rule 3](#3-health-connect-is-reached-through-healthconnectgateway-only)); `:devices:core` the
+  ([rule 3](#3-health-connect-is-reached-through-healthconnectgateway-only)); `:core:health`
+  Health Connect as the app reaches it, which implements those contracts (the gateway, the record
+  sink, the activity writes, the sync gate, the data catalog; [rule 3](#3-health-connect-is-reached-through-healthconnectgateway-only)); `:devices:core` the
   platform half every device family shares ([below](#module-devicescore)); `:devices:garmin`,
   `:devices:wearos`, `:devices:xiaomi` and `:devices:ble-standard` are the families' platform halves, device modules that bind
   themselves ([`devices/garmin`](#devicesgarmin), [`devices/wearos`](#deviceswearos), [`devices/xiaomi`](#devicesxiaomi), [`devices/blestandard`](#devicesblestandard)); `:devices:garmin:protocol`,
@@ -31,7 +33,7 @@ OpenWatch seams noted.
   ([Hilt wiring](#hilt-wiring)).
 - UI stack: Jetpack Compose + Material 3 + Navigation Compose + `ViewModel` + coroutines.
 - Health data backend: the Health Connect AndroidX client, behind
-  [`HealthConnectGateway`](../../app/src/main/kotlin/tech/mmarca/openwatch/healthconnect/HealthConnectGateway.kt).
+  [`HealthConnectGateway`](../../core/health/src/main/kotlin/tech/mmarca/openwatch/healthconnect/HealthConnectGateway.kt).
 - Room is at version 2, with five tables: `devices` (the registry) and `device_state` (what an
   integration keeps per device, gone with its device), and `garmin_wellness_samples`,
   `garmin_sleep_minutes`, `scale_weigh_ins`, each keyed by the device's id salt as well
@@ -48,7 +50,7 @@ OpenWatch seams noted.
 | `features/healthconnect`, `features/settings` | Health Connect setup, the sync switch, the body profile, notification access. |
 | `features/connectedapps` | The apps that use OpenWatch over OpenLink: allow, block, per-capability switches, forget; a warning for a first-party name under an unknown signer; overlays hidden while it shows. |
 | `link/` | The OpenLink host: the exported service, the device list and profile as OpenLink shows them, recording sessions and live readings for another app. |
-| `healthconnect/` | `HealthConnectGateway`, `ActivityRecordWriter`, the sync gate, intents and availability. |
+| `healthconnect/` | `HealthConnectGateway`, `ActivityRecordWriter`, the sync gate, intents and availability, and the data catalog; in `:core:health`, with `data/repository/ImportedRecordRepository` and `ActivityWriteRepository`. |
 | `activityimport/` | FIT activity files into `ActivityWriteRequest`s; in `:devices:core`. |
 | `data/local`, `data/repository` | Room, the repositories and the SharedPreferences stores. `BleDeviceRepository` is the device registry: the `devices` table read once into memory, every read answered from there (the first waits for the load) and every change written behind it in order on the registry's own thread; the JSON in `ble_sensor_devices` it replaced is imported once and left in place. It gives a family's first device the empty id salt and each later one its own. A row of a family this version does not bind (`RegisteredFamilies`), from a newer build, stays in the table unread, never taken for another family's device; a kind is any name a family gave. |
 | `comaps/` | The CoMaps guidance feed a Garmin watch relays; in `:devices:core` ([below](#module-devicescore)). |
@@ -384,8 +386,13 @@ on the Classic radio and takes no lease either.
 
 ### 3. Health Connect is reached through `HealthConnectGateway` only
 
-[`HealthConnectGateway`](../../app/src/main/kotlin/tech/mmarca/openwatch/healthconnect/HealthConnectGateway.kt)
-is the one class that holds the client. A device never takes it: it takes the contracts of
+[`HealthConnectGateway`](../../core/health/src/main/kotlin/tech/mmarca/openwatch/healthconnect/HealthConnectGateway.kt)
+is the one class that holds the client. It is the module `:core:health` (`core/health`), with
+the record sink's implementation (`ImportedRecordRepository`), the activity write path
+(`ActivityRecordWriter`, `ActivityWriteRepository`), the sync switch's gate, the intents into
+Health Connect's own screens and `HealthDataCatalog` with its strings; it depends on
+`:devices:core` for one class, the foreground gate that drops the cached grants. A device never
+takes it: it takes the contracts of
 `:core:health-api` (`core/health-api`, an Android library since Health Connect's records are
 the signatures), bound in `di/RepositoryModule`. It reads through `HealthConnectReads`, which
 the gateway implements, and writes through the record sink `HealthRecordStore`, which
