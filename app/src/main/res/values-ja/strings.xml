@@ -324,11 +324,6 @@
     <string name="settings_scales_remove">体重計を削除</string>
     <string name="settings_scales_remove_body">OpenWatch は受信を停止し、キーを消去します。保存済みの測定は残ります。</string>
     <string name="action_back">戻る</string>
-    <string name="home_section_watches">ウォッチ</string>
-    <string name="home_section_scale">体重計</string>
-    <string name="home_section_app">アプリ</string>
-    <string name="home_settings">設定</string>
-    <string name="home_settings_body">体のプロフィール、通知へのアクセス、このアプリについて</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="settings_title">設定</string>
     <string name="settings_watch_wearos_companion_required">Android がウォッチを OpenWatch にリンクしなかったため、追加されませんでした。別のアプリがウォッチで開始したワークアウトを記録するには、このリンクが必要です。もう一度「ペアリング」をタップして、リクエストを許可してください。</string>

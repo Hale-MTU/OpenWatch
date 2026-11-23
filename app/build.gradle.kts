@@ -130,6 +130,8 @@ dependencies {
     // submodule, a composite build) as its api; the trust store and the binder are built in
     // di/LinkModule.
     implementation(project(":link-host"))
+    // Home's frame; the app's HomeRoute fills its sections.
+    implementation(project(":feature:home"))
     // Settings and the body profile.
     implementation(project(":feature:settings"))
     // The apps that use OpenWatch over OpenLink.
@@ -272,6 +274,7 @@ tasks.withType<Test>().configureEach {
         ":devices:ble-standard:testCiUnitTest",
         ":devices:ble-standard:protocol:test",
         ":link-host:testCiUnitTest",
+        ":feature:home:testCiUnitTest",
         ":feature:settings:testCiUnitTest",
         ":feature:connectedapps:testCiUnitTest",
         ":feature:healthconnect:testCiUnitTest",
@@ -299,6 +302,7 @@ tasks.withType<Test>().configureEach {
         "scannedBleStandardMain" to "devices/ble-standard/src/main",
         "scannedBleStandardProtocolMain" to "devices/ble-standard/protocol/src/main",
         "scannedLinkHostMain" to "link-host/src/main",
+        "scannedFeatureHomeMain" to "feature/home/src/main",
         "scannedFeatureSettingsMain" to "feature/settings/src/main",
         "scannedFeatureConnectedappsMain" to "feature/connectedapps/src/main",
         "scannedFeatureHealthconnectMain" to "feature/healthconnect/src/main",
@@ -318,6 +322,7 @@ tasks.withType<Test>().configureEach {
         "scannedFeatureHealthconnectBuild" to "feature/healthconnect/build.gradle.kts",
         "scannedFeatureConnectedappsBuild" to "feature/connectedapps/build.gradle.kts",
         "scannedFeatureSettingsBuild" to "feature/settings/build.gradle.kts",
+        "scannedFeatureHomeBuild" to "feature/home/build.gradle.kts",
         "scannedPrivacyPolicy" to "PRIVACY.md",
         "scannedPermissionsDoc" to "docs/app/permissions.md",
     ).forEach { (name, path) ->

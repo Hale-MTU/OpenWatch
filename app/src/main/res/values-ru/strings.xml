@@ -338,11 +338,6 @@
     <string name="settings_scales_remove">Удалить весы</string>
     <string name="settings_scales_remove_body">OpenWatch перестанет слушать и забудет ключ. Уже сохранённые взвешивания останутся.</string>
     <string name="action_back">Назад</string>
-    <string name="home_section_watches">Часы</string>
-    <string name="home_section_scale">Весы</string>
-    <string name="home_section_app">Приложение</string>
-    <string name="home_settings">Настройки</string>
-    <string name="home_settings_body">Профиль тела, доступ к уведомлениям, о приложении</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="settings_title">Настройки</string>
     <string name="settings_watch_wearos_companion_required">Android не связал часы с OpenWatch, поэтому они не были добавлены. Эта связь нужна OpenWatch, чтобы записывать тренировки, которые другое приложение запускает на часах. Нажмите «Сопрячь» ещё раз и разрешите запрос.</string>

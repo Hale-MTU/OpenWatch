@@ -332,11 +332,6 @@
     <string name="settings_scales_remove">Retirer la balance</string>
     <string name="settings_scales_remove_body">OpenWatch cesse d’écouter et oublie la clé. Les pesées déjà enregistrées sont conservées.</string>
     <string name="action_back">Retour</string>
-    <string name="home_section_watches">Montres</string>
-    <string name="home_section_scale">Balance</string>
-    <string name="home_section_app">Application</string>
-    <string name="home_settings">Paramètres</string>
-    <string name="home_settings_body">Profil corporel, accès aux notifications, à propos</string>
     <string name="hc_setup_title">Santé Connect</string>
     <string name="settings_title">Paramètres</string>
     <string name="settings_watch_wearos_companion_required">Android n\'a pas associé la montre à OpenWatch, elle n\'a donc pas été ajoutée. OpenWatch a besoin de cette association pour enregistrer les entraînements qu\'une autre application lance sur la montre. Appuyez de nouveau sur Appairer et acceptez la demande.</string>

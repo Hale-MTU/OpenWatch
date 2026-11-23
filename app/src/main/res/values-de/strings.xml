@@ -326,11 +326,6 @@
     <string name="settings_scales_remove">Waage entfernen</string>
     <string name="settings_scales_remove_body">OpenWatch lauscht nicht mehr und vergisst den Schlüssel. Bereits gespeicherte Messungen bleiben.</string>
     <string name="action_back">Zurück</string>
-    <string name="home_section_watches">Uhren</string>
-    <string name="home_section_scale">Waage</string>
-    <string name="home_section_app">App</string>
-    <string name="home_settings">Einstellungen</string>
-    <string name="home_settings_body">Körperprofil, Benachrichtigungszugriff, Über</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="settings_title">Einstellungen</string>
     <string name="settings_watch_wearos_companion_required">Android hat die Uhr nicht mit OpenWatch verknüpft, deshalb wurde sie nicht hinzugefügt. OpenWatch braucht diese Verknüpfung, um Workouts aufzuzeichnen, die eine andere App auf der Uhr startet. Tippe erneut auf Koppeln und erlaube die Anfrage.</string>

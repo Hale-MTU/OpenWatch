@@ -338,11 +338,6 @@
     <string name="settings_scales_remove">Usuń wagę</string>
     <string name="settings_scales_remove_body">OpenWatch przestaje nasłuchiwać i zapomina klucz. Zapisane już ważenia zostają.</string>
     <string name="action_back">Powrót</string>
-    <string name="home_section_watches">Zegarki</string>
-    <string name="home_section_scale">Waga</string>
-    <string name="home_section_app">Aplikacja</string>
-    <string name="home_settings">Ustawienia</string>
-    <string name="home_settings_body">Profil ciała, dostęp do powiadomień, o aplikacji</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="settings_title">Ustawienia</string>
     <string name="settings_watch_wearos_companion_required">Android nie powiązał zegarka z OpenWatch, więc nie został dodany. OpenWatch potrzebuje tego powiązania, aby nagrywać treningi, które inna aplikacja uruchamia na zegarku. Dotknij ponownie Sparuj i zezwól na żądanie.</string>

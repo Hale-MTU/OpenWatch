@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="action_back">חזרה</string>
-    <string name="home_section_watches">שעונים</string>
-    <string name="home_section_scale">משקל</string>
-    <string name="home_section_app">אפליקציה</string>
-    <string name="home_settings">הגדרות</string>
-    <string name="home_settings_body">פרופיל הגוף, גישה להתראות, אודות</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="settings_title">הגדרות</string>
     <string name="app_name">OpenWatch</string>

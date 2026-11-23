@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="action_back">رجوع</string>
-    <string name="home_section_watches">الساعات</string>
-    <string name="home_section_scale">الميزان</string>
-    <string name="home_section_app">التطبيق</string>
-    <string name="home_settings">الإعدادات</string>
-    <string name="home_settings_body">الملف الجسدي، والوصول إلى الإشعارات، وحول التطبيق</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="settings_title">الإعدادات</string>
     <string name="app_name">OpenWatch</string>

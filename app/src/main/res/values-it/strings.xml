@@ -328,11 +328,6 @@
     <string name="settings_scales_remove">Rimuovi bilancia</string>
     <string name="settings_scales_remove_body">OpenWatch smette di ascoltare e dimentica la chiave. Le pesate già salvate restano.</string>
     <string name="action_back">Indietro</string>
-    <string name="home_section_watches">Orologi</string>
-    <string name="home_section_scale">Bilancia</string>
-    <string name="home_section_app">App</string>
-    <string name="home_settings">Impostazioni</string>
-    <string name="home_settings_body">Profilo corporeo, accesso alle notifiche, informazioni</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="settings_title">Impostazioni</string>
     <string name="settings_watch_wearos_companion_required">Android non ha collegato l\'orologio a OpenWatch, quindi non è stato aggiunto. OpenWatch ha bisogno di questo collegamento per registrare gli allenamenti che un\'altra app avvia sull\'orologio. Tocca di nuovo Associa e consenti la richiesta.</string>

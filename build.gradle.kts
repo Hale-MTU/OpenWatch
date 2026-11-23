@@ -69,6 +69,7 @@ tasks.register("verifyCiUnitTest") {
         ":feature:healthconnect:testCiUnitTest",
         ":feature:connectedapps:testCiUnitTest",
         ":feature:settings:testCiUnitTest",
+        ":feature:home:testCiUnitTest",
         ":link-host:testCiUnitTest",
         ":app:testCiUnitTest",
     )
@@ -117,6 +118,7 @@ tasks.register("verifyCiLint") {
         ":feature:healthconnect:lintCi",
         ":feature:connectedapps:lintCi",
         ":feature:settings:lintCi",
+        ":feature:home:lintCi",
         ":link-host:lintCi",
     )
 }

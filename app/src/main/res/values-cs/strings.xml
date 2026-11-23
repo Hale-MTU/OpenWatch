@@ -338,11 +338,6 @@
     <string name="settings_scales_remove">Odebrat váhu</string>
     <string name="settings_scales_remove_body">OpenWatch přestane poslouchat a zapomene klíč. Už uložená vážení zůstanou.</string>
     <string name="action_back">Zpět</string>
-    <string name="home_section_watches">Hodinky</string>
-    <string name="home_section_scale">Váha</string>
-    <string name="home_section_app">Aplikace</string>
-    <string name="home_settings">Nastavení</string>
-    <string name="home_settings_body">Tělesný profil, přístup k oznámením, o aplikaci</string>
     <string name="hc_setup_title">Health Connect</string>
     <string name="settings_title">Nastavení</string>
     <string name="settings_watch_wearos_companion_required">Android hodinky s OpenWatch nepropojil, takže nebyly přidány. OpenWatch toto propojení potřebuje k záznamu tréninků, které na hodinkách spustí jiná aplikace. Klepněte znovu na Spárovat a žádost povolte.</string>
