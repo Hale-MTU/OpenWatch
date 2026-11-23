@@ -31,7 +31,7 @@ data class LiveReading(val kind: LiveReadingKind, val atMillis: Long, val value:
 /**
  * One family of devices, as the rest of the app sees it: which registered devices are its own,
  * what they can do, and how the app lets one go. Each binds itself into [DeviceFamilies] by [id]
- * in `DevicesModule`; a new family is a package and that binding.
+ * in its own Hilt module; a new family is a module and that binding.
  */
 interface DeviceFamily {
 
@@ -47,6 +47,13 @@ interface DeviceFamily {
 
     /** Whether each of the family's devices has its link up now, by device id; absent is not known. */
     val connections: Flow<Map<String, Boolean>> get() = flowOf(emptyMap())
+
+    /**
+     * How the app's add-a-device flow finds and pairs the family's devices; null for a family
+     * with a flow of its own (the watches, the S400 scale). A family that declares one has its
+     * devices listed, and opened, by the app's generic device screens.
+     */
+    val pairing: DevicePairing? get() = null
 
     /** Whether removing [device] can also delete history the family keeps on the phone. */
     fun offersHistoryDeletion(device: BleSensorDevice): Boolean = false
@@ -72,6 +79,10 @@ class DeviceFamilies @Inject constructor(
     fun of(device: BleSensorDevice): DeviceFamily? = byId.values.firstOrNull { it.owns(device) }
 
     fun features(device: BleSensorDevice): Set<DeviceFeature> = of(device)?.features(device).orEmpty()
+
+    /** The families the app's add-a-device flow pairs, each with its [DeviceFamily.pairing]. */
+    val pairing: Map<String, DevicePairing> =
+        byId.mapNotNull { (key, family) -> family.pairing?.let { key to it } }.toMap()
 
     /** Every family's [DeviceFamily.connections], in one map by device id. */
     val connections: Flow<Map<String, Boolean>> =

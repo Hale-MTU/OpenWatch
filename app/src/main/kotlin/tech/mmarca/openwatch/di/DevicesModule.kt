@@ -6,10 +6,20 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
+import dagger.multibindings.Multibinds
+import javax.inject.Provider
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.StartupActor
+import tech.mmarca.openwatch.core.performance.ApplicationScope
+import tech.mmarca.openwatch.data.repository.RegisteredFamilies
 import tech.mmarca.openwatch.devices.core.DeviceClassifier
+import tech.mmarca.openwatch.devices.core.DeviceFamily
 import tech.mmarca.openwatch.devices.core.DeviceScanClassifier
+import tech.mmarca.openwatch.devices.core.measure.DeviceMeasurementSink
+import tech.mmarca.openwatch.devices.core.measure.MeasurementRecords
+import tech.mmarca.openwatch.devices.core.measure.MeasurementSink
 import tech.mmarca.openwatch.devices.core.pairing.BleWatchPairing
 import tech.mmarca.openwatch.devices.core.pairing.WatchPairingPort
 import tech.mmarca.openwatch.devices.core.sync.AndroidSyncWakeLock
@@ -27,10 +37,10 @@ import tech.mmarca.openwatch.devices.wearos.WearOsDeviceClassifier
 
 /**
  * Wiring for the device layer, kept apart so [AppModule] carries no watch knowledge: what every
- * family shares (`:devices:core`'s pieces, the composite sync port) and the rules across
- * families (the classifiers' order, where every watch's sync interval is kept). Each family
- * binds itself in its own module: `:devices:garmin`'s `GarminModule`, `:devices:wearos`'s
- * `WearOsModule`, `:devices:xiaomi`'s `XiaomiScaleModule`.
+ * family shares (`:devices:core`'s pieces, the composite sync port, the measurement sink) and
+ * the rules across families (the classifiers' order, where every watch's sync interval is
+ * kept). Each family binds itself in its own module: `:devices:garmin`'s `GarminModule`,
+ * `:devices:wearos`'s `WearOsModule`, `:devices:xiaomi`'s `XiaomiScaleModule`.
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -51,12 +61,34 @@ abstract class DevicesModule {
     @Binds
     abstract fun bindSyncWakeLock(impl: AndroidSyncWakeLock): SyncWakeLock
 
+    // Where pushed measurements go: kept per device, then written to Health Connect.
+    @Binds
+    abstract fun bindMeasurementSink(impl: DeviceMeasurementSink): MeasurementSink
+
+    /** Each family that pushes measurements binds its mapping by its persisted name; none may. */
+    @Multibinds
+    abstract fun measurementRecords(): Map<String, MeasurementRecords>
+
     companion object {
         @Provides
         @IntoSet
         fun provideSyncSchedulesAtStart(scheduler: WatchAutoSyncScheduler) =
             // Re-plans the sync schedules after what WorkManager does not cover.
             StartupActor("sync schedules", scheduler::restoreAll)
+
+        /**
+         * The families' persisted names, which the registry reads its rows against. Providers: a
+         * family takes the registry, so only the keys are read, never a family built.
+         */
+        @Provides
+        fun provideRegisteredFamilies(families: Map<String, @JvmSuppressWildcards Provider<DeviceFamily>>) =
+            RegisteredFamilies(families.keys)
+
+        @Provides
+        @IntoSet
+        fun providePendingMeasurementsAtStart(sink: MeasurementSink, @ApplicationScope scope: CoroutineScope) =
+            // A measurement that could not be written before the process ended is tried again.
+            StartupActor("pending measurements") { scope.launch { sink.retryPending() } }
 
         /**
          * Each integration's verdict on a scanned device. A list, not a set: the first that

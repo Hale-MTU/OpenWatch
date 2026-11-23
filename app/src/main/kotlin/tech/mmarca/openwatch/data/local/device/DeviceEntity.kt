@@ -6,16 +6,15 @@ import androidx.room.PrimaryKey
 
 /**
  * One paired device: the registry row `BleDeviceRepository` reads into memory. Every field is
- * stored as text or a number the domain model maps, so a row from a newer build, an integration
- * or kind this version does not know, stays in the table unread rather than taken for something
- * else.
+ * stored as text or a number the domain model maps, so a row from a newer build, of a family
+ * this version does not bind, stays in the table unread rather than taken for something else.
  */
 @Entity(tableName = "devices")
 data class DeviceEntity(
     @PrimaryKey @ColumnInfo(name = "id") val id: String,
-    /** A `DeviceIntegration.storageName`, or null for a plain sensor and a legacy Garmin watch. */
+    /** A `DeviceIntegration.storageName`, its family's id, or null for a plain sensor and a legacy Garmin watch. */
     @ColumnInfo(name = "integration") val integration: String?,
-    /** A `BleDeviceKind.storageName`. */
+    /** A `BleDeviceKind.storageName`: a built-in kind, or one a family named. */
     @ColumnInfo(name = "kind") val kind: String,
     @ColumnInfo(name = "display_name") val displayName: String,
     @ColumnInfo(name = "address") val address: String,

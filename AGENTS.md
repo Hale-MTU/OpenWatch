@@ -17,11 +17,12 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 ## Map
 
 - `app/src/main/kotlin/tech/mmarca/openwatch/`
-  - `features/` — the screens: `home`, `watches`, `scales`, `healthconnect`, `settings`.
+  - `features/` — the screens: `home`, `device` (the device route and the generic add flow), `watches`, `scales`,
+    `healthconnect`, `settings`.
   - `healthconnect/` — `HealthConnectGateway`, the one class that touches the client, and
     `ActivityRecordWriter`, the activity write path copied from OpenVitals.
   - `data/` — the Room database (three tables), the repositories and the preference stores.
-  - `sensors/ble/` — the BLE discovery scan.
+  - `sensors/ble/` — the BLE discovery scan the add-a-device flows share.
   - `di/` — the Hilt modules. `DevicesModule` binds what every family shares and the rules
     across families (the classifiers' order); each family binds itself in its own module.
     The device layer itself is the modules under `devices/` (below); the app holds none of it.
@@ -107,8 +108,8 @@ Do not break these without an explicit decision.
   is the one service the app starts without a tap. A watch sync runs with no foreground
   service; its process-priority story is the companion association.
 - **One BLE radio, leased per address.** Everything that opens a BLE link takes a lease from
-  `devices/core/RadioLease.kt` (`:devices:core`) under one of the four owner tags: `SYNC`, `FIND`,
-  `SETTINGS`, `NOTIFICATIONS`. A scan opens no link and takes no lease. A new GATT device opens
+  `devices/core/RadioLease.kt` (`:devices:core`) under one of its owner tags: `SYNC`, `FIND`,
+  `SETTINGS`, `NOTIFICATIONS`, `PROBE`, `LIVE`. A scan opens no link and takes no lease. A new GATT device opens
   its link through `GattLink`, never its own `connectGatt`.
 - **One companion device service.** `OpenWatchCompanionDeviceService` is the primary one; it
   fans out to every `CompanionPresenceObserver` bound `@IntoSet`, by `DevicesModule` or a
@@ -165,7 +166,10 @@ Do not break these without an explicit decision.
 - A new device integration is a module `:devices:<vendor>` (its pure protocol in
   `:devices:<vendor>:protocol`): it implements the `devices/core` ports, opens a BLE link only
   through `GattLink` under a radio lease, keeps its protocol code transport-free, binds itself
-  in its own Hilt module, and is one `implementation` line in the app's build file.
+  in its own Hilt module, and is one `implementation` line in the app's build file. A family
+  whose devices need no flow of their own declares a `DevicePairing` and gets the app's add
+  flow, Home's "Other devices" list and the generic device panel; one that pushes its data
+  hands each measurement to the `MeasurementSink`, which keeps it before Health Connect has it.
 - A health calculation goes into health-calculations, not into `:core:model`, `:wear` or a
   feature: one copy, so both apps give the same number. Moving the submodule changes
   OpenVitals' numbers too, so it moves in both apps together.

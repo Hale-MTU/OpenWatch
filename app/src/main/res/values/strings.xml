@@ -493,4 +493,24 @@
     <string name="settings_watch_garmin_withheld">Not saved to Health Connect, for want of permission: %1$s. Allow them, and the next sync saves what the watch sends from then on.</string>
     <string name="settings_watch_pair_unreachable">Could not reach the watch. Wake it up and keep it close, then try again.</string>
     <string name="settings_watch_pair_not_completed">Pairing was not completed. Confirm the code on the watch to finish.</string>
+    <string name="home_section_devices">Other devices</string>
+    <string name="devices_intro">Sensors and meters that pair with the phone itself. What they measure goes to Health Connect.</string>
+    <string name="devices_add">Add a device</string>
+    <string name="devices_permissions_title">Permissions for your device</string>
+    <string name="devices_permissions_body">Android asks for this separately from Health Connect. Without it a device cannot be found or read.</string>
+    <string name="devices_scan_empty">Nothing found yet. Wake the device up and keep it close to your phone.</string>
+    <string name="devices_scan_again">Scan again</string>
+    <string name="devices_pairing">Pairing…</string>
+    <string name="devices_pair_refused">Pairing was not completed. Accept Android\'s pairing request to finish.</string>
+    <string name="devices_pair_unreachable">Could not reach the device. Wake it up and keep it close, then try again.</string>
+    <string name="devices_pair_not_associated">Allow OpenWatch in Android\'s dialog: it is how the phone hears the device when it has a reading.</string>
+    <string name="devices_last_reading">Last reading %1$s</string>
+    <string name="devices_no_reading">No reading yet</string>
+    <string name="device_live_section">Live</string>
+    <string name="device_live_waiting">Waiting for a reading…</string>
+    <plurals name="device_readings_waiting">
+        <item quantity="one">%1$d reading not yet in Health Connect</item>
+        <item quantity="other">%1$d readings not yet in Health Connect</item>
+    </plurals>
+    <string name="device_readings_waiting_grant">%1$s. Allow OpenWatch to write them in Health Connect, and they are saved.</string>
 </resources>

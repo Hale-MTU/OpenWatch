@@ -22,6 +22,12 @@ object RadioLeaseOwner {
 
     /** The add-a-device flow reading which GATT services a device offers. */
     const val PROBE = "probe"
+
+    /**
+     * A live stream held while someone collects it (a device screen, an app over OpenLink),
+     * such as a heart rate strap's. It ends when its collectors go.
+     */
+    const val LIVE = "live"
 }
 
 /** How long a lease survives without a renewal. */

@@ -45,6 +45,11 @@ class DeviceStateStore @Inject constructor(
         return values[deviceId]?.get(key)
     }
 
+    override fun keys(deviceId: String): Set<String> {
+        loaded.await()
+        return values[deviceId]?.keys?.toSet().orEmpty()
+    }
+
     /** Keeps [value] for [deviceId]'s [key]; null forgets it. */
     override fun put(deviceId: String, key: String, value: String?) {
         loaded.await()

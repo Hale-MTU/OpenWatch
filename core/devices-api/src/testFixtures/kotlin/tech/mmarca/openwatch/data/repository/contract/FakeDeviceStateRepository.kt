@@ -8,6 +8,8 @@ class FakeDeviceStateRepository : DeviceStateRepository {
 
     override fun get(deviceId: String, key: String): String? = values[deviceId]?.get(key)
 
+    override fun keys(deviceId: String): Set<String> = values[deviceId]?.keys?.toSet().orEmpty()
+
     override fun put(deviceId: String, key: String, value: String?) {
         if (value == null) {
             values[deviceId]?.remove(key)

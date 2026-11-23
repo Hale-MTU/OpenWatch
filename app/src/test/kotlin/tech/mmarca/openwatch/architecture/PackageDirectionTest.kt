@@ -56,7 +56,7 @@ class PackageDirectionTest {
         val fromTop = from.firstOrNull() ?: return false
         if (fromTop in Screens) return false
         if (top in Screens) return true
-        val targetIntegration = target.getOrNull(1)?.takeIf { top == "devices" && it in Integrations }
+        val targetIntegration = target.getOrNull(1)?.takeIf { top == "devices" && isIntegration(it) }
         if (fromTop == "devices") {
             val fromSub = from.getOrNull(1)
             if (top in setOf("link", "di")) return true
@@ -71,7 +71,11 @@ class PackageDirectionTest {
         const val Root = "src/main/kotlin/tech/mmarca/openwatch"
         val ImportLine = Regex("""^import tech\.mmarca\.openwatch\.([\w.]+)""", RegexOption.MULTILINE)
         val Screens = setOf("features", "ui", "navigation")
-        val Integrations = setOf("garmin", "wearos", "xiaomi")
+        /** The `devices` subpackages every family shares. Every other one is a family's own, named here or not. */
+        val SharedDevicePackages = setOf("core", "notifications", "media", "weather")
+
+        /** A family's package under `devices`: a new family is held to the direction without a line here. */
+        fun isIntegration(segment: String): Boolean = segment.first().isLowerCase() && segment !in SharedDevicePackages
         val BelowIntegrations = setOf("data", "healthconnect", "core", "comaps", "activityimport", "sensors")
 
         /** Imports against the direction, each with its reason. None left: a new one needs one. */

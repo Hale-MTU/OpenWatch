@@ -28,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.features.device.DevicesSectionRoute
 import tech.mmarca.openwatch.features.scales.ScalesSectionRoute
 import tech.mmarca.openwatch.features.watches.WatchesSectionRoute
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
@@ -38,13 +39,14 @@ import tech.mmarca.openwatch.ui.theme.Spacing
 
 /**
  * The Home destination, and the list side of the list-detail layout on a wide screen. It has no
- * state of its own: it fills [HomeScreen]'s watch and scale slots with their section routes.
- * [selectedDeviceId] is the device shown beside the list, marked in it.
+ * state of its own: it fills [HomeScreen]'s watch, scale and device slots with their section
+ * routes. [selectedDeviceId] is the device shown beside the list, marked in it.
  */
 @Composable
 fun HomeRoute(
     onOpenWatch: (String) -> Unit,
     onOpenScale: (deviceId: String) -> Unit,
+    onOpenDevice: (deviceId: String) -> Unit,
     onOpenHealthConnect: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
@@ -55,6 +57,7 @@ fun HomeRoute(
         onOpenSettings = onOpenSettings,
         watchesSection = { WatchesSectionRoute(onOpenWatch = onOpenWatch, selectedDeviceId = selectedDeviceId) },
         scalesSection = { ScalesSectionRoute(onOpenScale = onOpenScale, selectedDeviceId = selectedDeviceId) },
+        devicesSection = { DevicesSectionRoute(onOpenDevice = onOpenDevice, selectedDeviceId = selectedDeviceId) },
         modifier = modifier,
     )
 }
@@ -86,9 +89,10 @@ fun HomeDetailPlaceholder(modifier: Modifier = Modifier) {
 }
 
 /**
- * The device list: the paired watches with the add flow, the scale with its add flow, then
- * Health Connect and Settings. The watch and scale sections come in as [watchesSection] and
- * [scalesSection].
+ * The device list: the paired watches with the add flow, the scale with its add flow, the
+ * devices every other family pairs through the app's own flow, then Health Connect and
+ * Settings. The sections come in as [watchesSection], [scalesSection] and [devicesSection],
+ * which brings its own header and draws nothing while no family pairs that way.
  */
 @Composable
 fun HomeScreen(
@@ -97,6 +101,7 @@ fun HomeScreen(
     watchesSection: @Composable () -> Unit,
     scalesSection: @Composable () -> Unit,
     modifier: Modifier = Modifier,
+    devicesSection: @Composable () -> Unit = {},
 ) {
     ScreenColumn(
         modifier = modifier,
@@ -107,6 +112,7 @@ fun HomeScreen(
         watchesSection()
         SectionHeader(stringResource(R.string.home_section_scale))
         scalesSection()
+        devicesSection()
         SectionHeader(stringResource(R.string.home_section_app))
         HomeRow(
             icon = Icons.Outlined.FavoriteBorder,
@@ -132,6 +138,7 @@ private fun HomeScreenPreview() {
             onOpenSettings = {},
             watchesSection = { PreviewSlot("Watches section") },
             scalesSection = { PreviewSlot("Scale section") },
+            devicesSection = { PreviewSlot("Other devices section") },
         )
     }
 }

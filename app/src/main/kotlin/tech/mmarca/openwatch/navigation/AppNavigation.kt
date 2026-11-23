@@ -180,6 +180,7 @@ private fun HomeList(
     HomeRoute(
         onOpenWatch = { deviceId -> open(DeviceDetail(deviceId)) },
         onOpenScale = { deviceId -> open(DeviceDetail(deviceId)) },
+        onOpenDevice = { deviceId -> open(DeviceDetail(deviceId)) },
         onOpenHealthConnect = { open(HealthConnectSetup) },
         onOpenSettings = { open(Settings) },
         modifier = modifier,

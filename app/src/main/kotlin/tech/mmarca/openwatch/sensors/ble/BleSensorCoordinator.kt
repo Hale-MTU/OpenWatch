@@ -23,6 +23,7 @@ import android.os.Parcelable
 import android.util.Log
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -49,10 +50,10 @@ import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
 import tech.mmarca.openwatch.core.performance.DispatcherProvider
 
 /**
- * The BLE discovery scan the add-watch flow uses: what is advertising, what is
+ * The BLE discovery scan the add-a-device flows use: what is advertising, what is
  * bonded, and which integration claims each. OpenVitals' coordinator also
  * streams live sensors into a recording; OpenWatch records nothing, so that
- * half stayed behind.
+ * half stayed behind: a family that streams a sensor live does it on its own link.
  */
 @Singleton
 class BleSensorCoordinator @Inject constructor(
@@ -78,8 +79,12 @@ class BleSensorCoordinator @Inject constructor(
     private var sdpReceiver: BroadcastReceiver? = null
     private val scanResults = ConcurrentHashMap<String, BleDiscoveredDevice>()
 
+    /**
+     * Scans for the devices that advertise one of [serviceUuids] (the watches' and the live
+     * sensors' by default), or every device with [showAllDevices], and lists the bonded ones.
+     */
     @SuppressLint("MissingPermission")
-    fun startScan(showAllDevices: Boolean = false) {
+    fun startScan(showAllDevices: Boolean = false, serviceUuids: Collection<UUID> = BleUuids.SCAN_SERVICE_UUIDS) {
         stopScan()
         scanResults.clear()
         publishScanResults()
@@ -89,7 +94,7 @@ class BleSensorCoordinator @Inject constructor(
         val filters = if (showAllDevices) {
             emptyList()
         } else {
-            BleUuids.SCAN_SERVICE_UUIDS.map { serviceUuid ->
+            serviceUuids.map { serviceUuid ->
                 ScanFilter.Builder()
                     .setServiceUuid(ParcelUuid(serviceUuid))
                     .build()
@@ -303,6 +308,9 @@ class BleSensorCoordinator @Inject constructor(
             advertisesSyncService = advertisesSync || (existing?.advertisesSyncService ?: false),
             // Bond evidence comes from the bonded list and SDP, never an advertisement.
             classicServiceUuids = existing?.classicServiceUuids.orEmpty(),
+            // Sticky too: an advertisement may carry some of the services, the next the rest.
+            advertisedServiceUuids = existing?.advertisedServiceUuids.orEmpty() +
+                advertisedUuids.map { it.toString().lowercase() },
         ) }
         publishScanResults()
     }

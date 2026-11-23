@@ -1,7 +1,8 @@
 // The platform half every device family shares, on Android: the radio lease, the GATT link
-// (dial, redial, MTU, discovery, notifications, writes) and the BLE scanner, companion pairing
-// and presence (the app's primary companion service), and the sync controller, its schedule and
-// its worker; and the phone's sources a watch relays (the notification listener, the media
+// (dial, redial, MTU, discovery, notifications and indications, reads, writes) and the BLE
+// scanner, companion pairing and presence (the app's primary companion service), the sync
+// controller, its schedule and its worker, and the sink pushed measurements go through; and the
+// phone's sources a watch relays (the notification listener, the media
 // sessions, the weather broadcasts, the CoMaps guidance feed). In the app's packages
 // (`devices/core`, `devices/notifications`, `devices/media`, `devices/weather`, `comaps`). The contracts are :core:devices-api's; each
 // family's own half is its module, :devices:<vendor>, which depends on this one and on no
@@ -80,6 +81,8 @@ dependencies {
     testFixturesApi(project(":wearlink"))
 
     testImplementation(testFixtures(project(":core:devices-api")))
+    // The measurement sink's tests write through Health Connect's writes in memory.
+    testImplementation(testFixtures(project(":core:health-api")))
     testImplementation(libs.junit4)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)

@@ -10,6 +10,9 @@ interface DeviceStateRepository {
 
     fun get(deviceId: String, key: String): String?
 
+    /** Every key kept for [deviceId]; empty for a device that keeps nothing. */
+    fun keys(deviceId: String): Set<String>
+
     /** Keeps [value] for [deviceId]'s [key]; null forgets it. */
     fun put(deviceId: String, key: String, value: String?)
 

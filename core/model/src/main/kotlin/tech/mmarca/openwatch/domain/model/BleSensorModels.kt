@@ -3,44 +3,69 @@ package tech.mmarca.openwatch.domain.model
 import java.time.Instant
 
 /**
- * What a registered Bluetooth device is. A [SENSOR] streams live GATT values
- * and owns capabilities. A [WATCH] holds FIT files pulled over GFDI. A
- * [BIKE_COMPUTER] does both. A [SCALE] takes no connection: it broadcasts
- * each weigh-in, and its family listens. What a device can do is its
- * family's to say; the live role keys off a non-empty
- * [BleSensorDevice.capabilities].
+ * What a registered Bluetooth device is, by its persisted name. An open set: a device family
+ * names the kinds it pairs (a blood pressure monitor, a glucose meter) in its own module, and
+ * these are the ones the app's own screens know. A [SENSOR] streams live GATT values and owns
+ * capabilities. A [WATCH] holds FIT files pulled over GFDI. A [BIKE_COMPUTER] does both. A
+ * [SCALE] takes no connection: it broadcasts each weigh-in, or hands it over when it connects,
+ * and its family listens. What a device can do is its family's to say; the live role keys off a
+ * non-empty [BleSensorDevice.capabilities].
  */
-enum class BleDeviceKind(
+class BleDeviceKind(
     /** Persisted form, so a rename cannot orphan stored devices. */
     val storageName: String,
 ) {
-    SENSOR("SENSOR"),
-    WATCH("WATCH"),
-    BIKE_COMPUTER("BIKE_COMPUTER"),
-    SCALE("SCALE"),
-    ;
+    init {
+        require(storageName.isNotBlank()) { "a kind has a name" }
+    }
+
+    override fun equals(other: Any?): Boolean = other is BleDeviceKind && other.storageName == storageName
+
+    override fun hashCode(): Int = storageName.hashCode()
+
+    override fun toString(): String = storageName
 
     companion object {
-        fun fromStorage(value: String): BleDeviceKind? =
-            entries.firstOrNull { it.storageName == value }
+        val SENSOR = BleDeviceKind("SENSOR")
+        val WATCH = BleDeviceKind("WATCH")
+        val BIKE_COMPUTER = BleDeviceKind("BIKE_COMPUTER")
+        val SCALE = BleDeviceKind("SCALE")
+
+        /** The kinds there were before a family could name its own: what the JSON registry of before can hold. */
+        val BuiltIn: List<BleDeviceKind> = listOf(SENSOR, WATCH, BIKE_COMPUTER, SCALE)
+
+        /** The kind stored as [value]: any name a family gave, or null for a blank one. */
+        fun fromStorage(value: String): BleDeviceKind? = value.takeIf { it.isNotBlank() }?.let(::BleDeviceKind)
     }
 }
 
 /**
- * Which integration owns a device: its family. Garmin speaks GFDI; WearOS
- * talks to the OpenWatch watch app; Xiaomi listens to the S400 scale's
- * broadcasts. Null for a sensor, and for a Garmin watch stored before this
- * field existed.
+ * Which family owns a device, by its persisted name: the family's id, its key in the
+ * `DeviceFamily` map. An open set, as kinds are: a new family names itself in its own module.
+ * Garmin speaks GFDI; WearOS talks to the OpenWatch watch app; Xiaomi listens to the S400
+ * scale's broadcasts. Null for a sensor, and for a Garmin watch stored before this field existed.
  */
-enum class DeviceIntegration(val storageName: String) {
-    GARMIN("GARMIN"),
-    WEAROS("WEAROS"),
-    XIAOMI("XIAOMI"),
-    ;
+class DeviceIntegration(val storageName: String) {
+    init {
+        require(storageName.isNotBlank()) { "a family has a name" }
+    }
+
+    override fun equals(other: Any?): Boolean = other is DeviceIntegration && other.storageName == storageName
+
+    override fun hashCode(): Int = storageName.hashCode()
+
+    override fun toString(): String = storageName
 
     companion object {
-        fun fromStorage(value: String): DeviceIntegration? =
-            entries.firstOrNull { it.storageName == value }
+        val GARMIN = DeviceIntegration("GARMIN")
+        val WEAROS = DeviceIntegration("WEAROS")
+        val XIAOMI = DeviceIntegration("XIAOMI")
+
+        /** The families there were before a family could name itself: what the JSON registry of before can hold. */
+        val BuiltIn: List<DeviceIntegration> = listOf(GARMIN, WEAROS, XIAOMI)
+
+        /** The family stored as [value]: any family's name, or null for a blank one. */
+        fun fromStorage(value: String): DeviceIntegration? = value.takeIf { it.isNotBlank() }?.let(::DeviceIntegration)
     }
 }
 
@@ -257,4 +282,10 @@ data class BleDiscoveredDevice(
      * lists, lowercase. An app listening on the device shows up here.
      */
     val classicServiceUuids: Set<String> = emptySet(),
+    /**
+     * The 128-bit service UUIDs its advertisements carried, lowercase, gathered over the scan:
+     * what a family that pairs by a standard profile reads. Empty for a bond that did not
+     * advertise.
+     */
+    val advertisedServiceUuids: Set<String> = emptySet(),
 )

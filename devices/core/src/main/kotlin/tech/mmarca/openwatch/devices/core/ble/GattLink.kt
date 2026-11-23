@@ -29,8 +29,8 @@ class GattLinkException(message: String) : Exception(message)
 
 /**
  * One GATT connection to one peripheral, as coroutines: the dial and its redial policy, the
- * MTU, service discovery, notifications switched on through the CCCD, and writes, one at a
- * time, with the characteristic's own write type. The only file in the device layer that
+ * MTU, service discovery, notifications or indications switched on through the CCCD, reads, and
+ * writes, one at a time, with the characteristic's own write type. The only file in the device layer that
  * dials a GATT link (`connectGatt`), so the policy is written once.
  *
  * It takes no radio lease: its owner holds one ([tech.mmarca.openwatch.devices.core.withRadioLease])
@@ -65,6 +65,7 @@ class GattLink(
         val mtu: Duration = 5.seconds,
         val subscribe: Duration = 5.seconds,
         val write: Duration = 5.seconds,
+        val read: Duration = 5.seconds,
     )
 
     private var gatt: BluetoothGatt? = null
@@ -96,6 +97,9 @@ class GattLink(
     @Volatile
     private var writeCompleted: CompletableDeferred<Unit>? = null
 
+    @Volatile
+    private var readCompleted: CompletableDeferred<ByteArray>? = null
+
     /** Android GATT is one-operation-at-a-time; writes are serialised here. */
     private val writeMutex = Mutex()
 
@@ -112,6 +116,7 @@ class GattLink(
                 servicesSignal.completeExceptionally(failed)
                 descriptorWritten?.completeExceptionally(failed)
                 writeCompleted?.completeExceptionally(failed)
+                readCompleted?.completeExceptionally(failed)
                 if (linkUp && !closed) disconnected.tryEmit("GATT status $status")
                 return
             }
@@ -131,6 +136,7 @@ class GattLink(
                     servicesSignal.completeExceptionally(gone)
                     descriptorWritten?.completeExceptionally(gone)
                     writeCompleted?.completeExceptionally(gone)
+                    readCompleted?.completeExceptionally(gone)
                 }
             }
         }
@@ -167,6 +173,24 @@ class GattLink(
             } else {
                 waiter.completeExceptionally(failure("Characteristic write failed (status $status)"))
             }
+        }
+
+        override fun onCharacteristicRead(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            value: ByteArray,
+            status: Int,
+        ) {
+            completeRead(value, status)
+        }
+
+        @Deprecated("Deprecated in API 33")
+        override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
+            completeRead(
+                @Suppress("DEPRECATION")
+                characteristic.value ?: byteArrayOf(),
+                status,
+            )
         }
 
         override fun onCharacteristicChanged(
@@ -259,26 +283,32 @@ class GattLink(
         return services
     }
 
-    /** Switches [characteristic]'s notifications on, CCCD included, and waits for the peripheral to confirm. */
+    /**
+     * Switches [characteristic]'s notifications on, or its indications with [indicate] (each
+     * value confirmed by the stack, as the standard health profiles send their measurements),
+     * CCCD included, and waits for the peripheral to confirm.
+     */
     @SuppressLint("MissingPermission")
-    suspend fun subscribe(characteristic: BluetoothGattCharacteristic) {
+    suspend fun subscribe(characteristic: BluetoothGattCharacteristic, indicate: Boolean = false) {
         val currentGatt = gatt ?: throw failure("Not connected")
         if (!currentGatt.setCharacteristicNotification(characteristic, true)) {
             throw failure("setCharacteristicNotification refused")
         }
         val descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG)
             ?: throw failure("No CCCD on the receive characteristic")
+        val enable = if (indicate) {
+            BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+        } else {
+            BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+        }
         val waiter = CompletableDeferred<Unit>()
         descriptorWritten = waiter
         val started = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            currentGatt.writeDescriptor(
-                descriptor,
-                BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE,
-            ) == BluetoothStatusCodes.SUCCESS
+            currentGatt.writeDescriptor(descriptor, enable) == BluetoothStatusCodes.SUCCESS
         } else {
             @Suppress("DEPRECATION")
             run {
-                descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                descriptor.value = enable
                 currentGatt.writeDescriptor(descriptor)
             }
         }
@@ -286,6 +316,26 @@ class GattLink(
         val outcome = withTimeoutOrNull(timeouts.subscribe) { waiter.await() }
         descriptorWritten = null
         if (outcome == null) throw failure("Descriptor write timed out")
+    }
+
+    /**
+     * Reads [characteristic]'s value, in turn with the writes: GATT runs one operation at a
+     * time. A refusal or no answer in time fails.
+     */
+    @SuppressLint("MissingPermission")
+    suspend fun read(characteristic: BluetoothGattCharacteristic): ByteArray {
+        val currentGatt = gatt ?: throw failure("Not connected")
+        return writeMutex.withLock {
+            val completion = CompletableDeferred<ByteArray>()
+            readCompleted = completion
+            if (!currentGatt.readCharacteristic(characteristic)) {
+                readCompleted = null
+                throw failure("Characteristic read refused")
+            }
+            val outcome = withTimeoutOrNull(timeouts.read) { runSuspendCatching { completion.await() } }
+            readCompleted = null
+            outcome?.getOrThrow() ?: throw failure("Characteristic read timed out")
+        }
     }
 
     /**
@@ -324,6 +374,15 @@ class GattLink(
             }
             writeCompleted = null
             outcome?.getOrThrow()
+        }
+    }
+
+    private fun completeRead(value: ByteArray, status: Int) {
+        val waiter = readCompleted ?: return
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            waiter.complete(value)
+        } else {
+            waiter.completeExceptionally(failure("Characteristic read failed (status $status)"))
         }
     }
 

@@ -36,22 +36,30 @@ import tech.mmarca.openwatch.data.repository.contract.DeviceRegistry
  *
  * The JSON list in `ble_sensor_devices` that held the registry until 2026-11 is imported once,
  * at the first load, and left in place: an entry this version could not read stays there.
+ *
+ * Families and kinds are open sets, each named by its family's module. A row whose family is
+ * none of [knownFamilies], from a newer build, stays in the table unread, never taken for
+ * another family's device.
  */
 @Singleton
 class BleDeviceRepository(
     private val dao: DeviceDao,
     private val legacy: SharedPreferences?,
     private val writer: Executor,
+    /** The persisted names of the families this version binds. */
+    private val knownFamilies: Set<String> = DeviceIntegration.BuiltIn.mapTo(mutableSetOf()) { it.storageName },
 ) : DeviceRegistry {
     @Inject
     constructor(
         dao: DeviceDao,
         @ApplicationContext context: Context,
         @DeviceStorageExecutor writer: Executor,
+        families: RegisteredFamilies,
     ) : this(
         dao = dao,
         legacy = context.getSharedPreferences(LEGACY_PREFS_FILE, Context.MODE_PRIVATE),
         writer = writer,
+        knownFamilies = families.names,
     )
 
     private val lock = Any()
@@ -222,7 +230,7 @@ class BleDeviceRepository(
         try {
             importLegacyOnce()
             // A row this version cannot read, from a newer build, stays in the table unread.
-            _devices.value = dao.all().mapNotNull { it.toModelOrNull() }
+            _devices.value = dao.all().mapNotNull { it.toModelOrNull(knownFamilies) }
         } catch (error: Exception) {
             runCatching { Log.w(TAG, "registry load failed: ${error::class.simpleName}") }
             _devices.value = emptyList()
@@ -260,6 +268,13 @@ class BleDeviceRepository(
 }
 
 /**
+ * The persisted names of the device families this version binds, which the registry reads its
+ * rows against. Built in `di/DevicesModule` from the families' map, so the data layer names no
+ * family.
+ */
+class RegisteredFamilies(val names: Set<String>)
+
+/**
  * The family a device's records belong to, for its salt: its integration, and Garmin for a watch
  * or bike computer stored before the integration was (it always was a Garmin). Null for a
  * plain sensor, which writes no records of its own.
@@ -287,9 +302,9 @@ internal fun BleSensorDevice.toEntity() = DeviceEntity(
     idSalt = idSalt,
 )
 
-/** The model of [this] row, or null for an integration or kind this version does not know. */
-internal fun DeviceEntity.toModelOrNull(): BleSensorDevice? {
-    val knownIntegration = integration?.let { DeviceIntegration.fromStorage(it) ?: return null }
+/** The model of [this] row, or null for a family that is none of [knownFamilies], or no kind at all. */
+internal fun DeviceEntity.toModelOrNull(knownFamilies: Set<String>): BleSensorDevice? {
+    val knownIntegration = integration?.let { name -> DeviceIntegration.fromStorage(name)?.takeIf { name in knownFamilies } ?: return null }
     return BleSensorDevice(
         id = id,
         displayName = displayName,
@@ -399,14 +414,14 @@ internal object BleDeviceRegistryJson {
                 .takeIf { it != null && it != JSONObject.NULL }
                 ?.let { Instant.ofEpochMilli((it as Number).toLong()) },
             addedAt = Instant.ofEpochMilli(item.getLong("addedAt")),
-            // Absent before watches existed; unknown values degrade the same way.
-            kind = item.optString("kind")
-                .let { BleDeviceKind.fromStorage(it) }
+            // Absent before watches existed; unknown values degrade the same way. The file was
+            // written before a family could name a kind of its own, so only the built-in ones count.
+            kind = BleDeviceKind.BuiltIn.firstOrNull { it.storageName == item.optString("kind") }
                 ?: BleDeviceKind.SENSOR,
             // Absent (null) reads back as Garmin (`devices/garmin/isGarmin`). A name this version does not
             // know is a device from a newer build: the entry is kept unread, never taken for a Garmin.
             integration = item.optString("integration").takeIf { it.isNotBlank() }?.let { name ->
-                requireNotNull(DeviceIntegration.fromStorage(name)) { "unknown integration" }
+                requireNotNull(DeviceIntegration.BuiltIn.firstOrNull { it.storageName == name }) { "unknown integration" }
             },
             lastSyncedAt = item.opt("lastSyncedAt")
                 .takeIf { it != null && it != JSONObject.NULL }

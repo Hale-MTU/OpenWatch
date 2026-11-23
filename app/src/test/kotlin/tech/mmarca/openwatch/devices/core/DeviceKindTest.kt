@@ -25,11 +25,27 @@ class DeviceKindTest {
     }
 
     @Test
-    fun `fromStorage resolves known names and rejects unknown ones`() {
+    fun `fromStorage resolves the built-in names, keeps a name a family gave, and rejects a blank one`() {
         assertEquals(BleDeviceKind.WATCH, BleDeviceKind.fromStorage("WATCH"))
-        assertNull(BleDeviceKind.fromStorage("HOLOGRAPH"))
+        // Open sets: a family names its own kinds and itself in its own module.
+        assertEquals("GLUCOSE_METER", BleDeviceKind.fromStorage("GLUCOSE_METER")?.storageName)
+        assertEquals(BleDeviceKind("GLUCOSE_METER"), BleDeviceKind.fromStorage("GLUCOSE_METER"))
+        assertNull(BleDeviceKind.fromStorage(" "))
         assertEquals(DeviceIntegration.WEAROS, DeviceIntegration.fromStorage("WEAROS"))
+        assertEquals(DeviceIntegration("SOMEVENDOR"), DeviceIntegration.fromStorage("SOMEVENDOR"))
         assertNull(DeviceIntegration.fromStorage(""))
+    }
+
+    @Test
+    fun `a family's own kind is no watch, no bike computer and no Garmin`() {
+        val meter = device(kind = BleDeviceKind("GLUCOSE_METER"), integration = DeviceIntegration("SOMEVENDOR"))
+        assertFalse(meter.isWatch)
+        assertFalse(meter.isBikeComputer)
+        assertFalse(meter.isGarmin)
+        assertFalse(meter.isWearOs)
+        assertFalse(meter.isLiveSensorCapable)
+        // A watch of a family this version does not know is never taken for a Garmin.
+        assertFalse(device(kind = BleDeviceKind.WATCH, integration = DeviceIntegration("SOMEVENDOR")).isGarmin)
     }
 
     @Test

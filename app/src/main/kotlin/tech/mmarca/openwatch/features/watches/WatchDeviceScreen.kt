@@ -46,7 +46,9 @@ import tech.mmarca.openwatch.devices.core.DeviceFeature
 import tech.mmarca.openwatch.devices.core.sync.AutoSyncInterval
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.features.watches.garmin.GarminWatchPanelRoute
+import tech.mmarca.openwatch.features.watches.generic.GenericDevicePanelRoute
 import tech.mmarca.openwatch.features.watches.wearos.WearOsWatchPanelRoute
 import tech.mmarca.openwatch.ui.components.ConfirmRemoveDialog
 import tech.mmarca.openwatch.ui.components.DeclareAppBar
@@ -68,8 +70,9 @@ import tech.mmarca.openwatch.ui.theme.Spacing
  * One device's destination: the only place that knows its ViewModel. It declares the app bar,
  * re-reads the background grant on resume, owns the Health Connect requests (the background
  * read, and the grants a sync left waiting) and goes back once the device is removed. The
- * device's family brings its own panel, with its own state holder, launchers and dialog;
- * [WatchDeviceScreen] draws.
+ * device's family brings its own panel, with its own state holder, launchers and dialog; a
+ * family with none gets the generic one, which draws what its contracts say (its live heart
+ * rate, what it pushed that waits for Health Connect). [WatchDeviceScreen] draws.
  */
 @Composable
 fun WatchDeviceRoute(
@@ -134,7 +137,7 @@ fun WatchDeviceRoute(
             onAllowSyncGrants = syncGrantLauncher.launch,
             content = screen,
         )
-        else -> screen(WatchDevicePanel.None)
+        else -> GenericDevicePanelRoute(features = state.features, content = screen)
     }
 }
 
@@ -248,8 +251,9 @@ private fun WatchDeviceContent(
         panel.afterHeader()
 
         // A bike computer can broadcast BLE sensors. Opt-in here, since broadcast
-        // mode must be detected while the device is live.
-        if (device.isLiveSensorCapable) {
+        // mode must be detected while the device is live. A sensor is one already: its
+        // family streams it.
+        if (device.isLiveSensorCapable && device.kind != BleDeviceKind.SENSOR) {
             SectionHeader(stringResource(R.string.settings_bike_live_sensor_section))
             LiveSensorSection(
                 device = device,

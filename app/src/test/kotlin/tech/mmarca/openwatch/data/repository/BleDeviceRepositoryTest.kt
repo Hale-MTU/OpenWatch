@@ -469,6 +469,22 @@ class BleDeviceRepositoryTest {
     }
 
     @Test
+    fun `a family the app binds is read with the kind it named, and keeps its own salt`() {
+        val known = DeviceIntegration.BuiltIn.mapTo(mutableSetOf()) { it.storageName } + "SOMEVENDOR"
+        val repo = BleDeviceRepository(dao, null, java.util.concurrent.Executor(Runnable::run), known)
+        val meter = BleDeviceKind("GLUCOSE_METER")
+        val first = repo.addDevice("Meter", "AA:BB:CC:DD:EE:01", null, emptySet(), kind = meter, integration = DeviceIntegration("SOMEVENDOR"))
+        val second = repo.addDevice("Meter 2", "AA:BB:CC:DD:EE:02", null, emptySet(), kind = meter, integration = DeviceIntegration("SOMEVENDOR"))
+
+        val reloaded = BleDeviceRepository(dao, null, java.util.concurrent.Executor(Runnable::run), known).devices
+
+        assertEquals(listOf(meter, meter), reloaded.map { it.kind })
+        assertEquals(DeviceIntegration("SOMEVENDOR"), reloaded.first().integration)
+        assertEquals("", first.idSalt)
+        assertTrue(second.idSalt.isNotEmpty())
+    }
+
+    @Test
     fun concurrentChangesAreAllKept() {
         val repo = newRepository()
         val ids = (0 until 8).map { n ->
