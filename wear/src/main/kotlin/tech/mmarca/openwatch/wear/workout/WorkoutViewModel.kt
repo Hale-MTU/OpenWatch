@@ -9,12 +9,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wear.WatchPreferences
+import tech.mmarca.openwatch.wear.WatchSensors
 import tech.mmarca.openwatch.wear.WearAppService
 import tech.mmarca.openwatch.wear.WearPermissions
 import tech.mmarca.openwatch.wear.wearGraph
@@ -46,6 +48,8 @@ internal class WorkoutViewModel(
     /** The watch's settings as they change (`WearGraph.settings`). */
     settings: Flow<WatchPreferences>,
     scope: CoroutineScope,
+    /** What the watch has to measure with (`WearGraph.sensors`), read once. */
+    sensors: Flow<WatchSensors> = emptyFlow(),
 ) : ViewModel(scope) {
 
     val state: StateFlow<WorkoutUiState> = workout.state
@@ -58,11 +62,26 @@ internal class WorkoutViewModel(
     val zoneBasis: StateFlow<HeartRateZones.Basis?> =
         settings.map { it.zoneBasis() }.stateIn(scope, SharingStarted.Eagerly, null)
 
-    /** True when [sport] records a route and the grant is not in: the screen asks for it, then calls [start]. */
-    fun needsLocation(sport: WorkoutSport): Boolean = sport.gps && !control.hasLocation()
+    /**
+     * What the watch has to measure with: the fields a workout shows follow
+     * it. Null until read, and the screen then shows every field the sport has.
+     */
+    val sensors: StateFlow<WatchSensors?> = sensors.stateIn(scope, SharingStarted.Eagerly, null)
 
-    /** Starts [sport]; [gps] is false when the wearer declined location, and the workout then has no route. */
-    fun start(sport: WorkoutSport, gps: Boolean = sport.gps) = control.start(sport, gps && sport.gps)
+    /**
+     * True when [sport] records a route on a watch with a GPS receiver and the
+     * grant is not in: the screen asks for it, then calls [start].
+     */
+    fun needsLocation(sport: WorkoutSport): Boolean = recordsRoute(sport) && !control.hasLocation()
+
+    /**
+     * Starts [sport]; [gps] is false when the wearer declined location, and
+     * the workout then has no route, as on a watch without a GPS receiver.
+     */
+    fun start(sport: WorkoutSport, gps: Boolean = sport.gps) = control.start(sport, gps && recordsRoute(sport))
+
+    /** A watch whose sensors are not read yet is taken to have a GPS receiver: the recorder finds out. */
+    private fun recordsRoute(sport: WorkoutSport): Boolean = sport.gps && sensors.value?.gps != false
 
     /** Pauses a running workout, or resumes a paused one. */
     fun togglePause() {
@@ -88,6 +107,8 @@ internal class WorkoutViewModel(
                 // The first read of the settings loads their file: off the main thread.
                 flow { emitAll(app.wearGraph.settings) }.flowOn(Dispatchers.IO),
                 CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+                // So does the sensor list.
+                flow { emit(app.wearGraph.sensors) }.flowOn(Dispatchers.IO),
             )
         }
     }

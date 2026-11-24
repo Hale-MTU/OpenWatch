@@ -7,10 +7,12 @@ import tech.mmarca.openwatch.wearlink.WearLinkEntry
 /** Everything the screens render. A null value means "no reading yet". */
 data class WearUiState(
     /**
-     * The metrics this watch has a sensor for. Only these are offered as
-     * tiles.
+     * The metrics this watch can give ([MetricOffer.available]). Only these
+     * are offered as tiles. Every metric until the sensors are read.
      */
     val availableMetrics: Set<MetricTile> = MetricTile.entries.toSet(),
+    /** What the watch has to measure with; null until it is read. */
+    val sensors: WatchSensors? = null,
     /** A metric without an entry renders as "no reading yet". */
     val metrics: Map<MetricTile, MetricUiState> = emptyMap(),
     val preferences: DisplayPreferences = DisplayPreferences(),

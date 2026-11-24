@@ -26,6 +26,17 @@ class WearGraphTest {
         assertSame(graph.store, app.wearGraph.store)
         assertSame(graph.trust, app.wearGraph.trust)
         assertSame(graph.heartRate, app.wearGraph.heartRate)
+        assertSame(graph.liveHeartRate, app.wearGraph.liveHeartRate)
+        assertSame(graph.entries, app.wearGraph.entries)
+    }
+
+    @Test
+    fun `the sensors are read once, from what the recorders go by`() {
+        val graph = app.wearGraph
+
+        // The unit tests' watch has no sensor and no GPS receiver.
+        assertEquals(WatchSensors.NONE, graph.sensors)
+        assertSame(graph.sensors, app.wearGraph.sensors)
     }
 
     @Test

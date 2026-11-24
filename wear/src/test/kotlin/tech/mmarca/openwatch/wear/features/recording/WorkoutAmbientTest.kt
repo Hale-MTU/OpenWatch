@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.UnitSystem
+import tech.mmarca.openwatch.wear.WatchSensors
 import tech.mmarca.openwatch.wear.workout.WorkoutSnapshot
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
@@ -63,7 +64,7 @@ class WorkoutAmbientTest {
     fun `a workout opens with the controls left of the overview and only the pages it fills`() {
         assertEquals(
             listOf(WorkoutPage.CONTROLS, WorkoutPage.OVERVIEW, WorkoutPage.HEART, WorkoutPage.PACE),
-            workoutPagesOf(workoutFieldsOf(WorkoutSport.RUNNING, gps = true)),
+            workoutPagesOf(workoutFieldsOf(WorkoutSport.RUNNING, gps = true, WatchSensors.ALL)),
         )
         assertEquals(listOf(WorkoutPage.CONTROLS, WorkoutPage.OVERVIEW, WorkoutPage.HEART), workoutPagesOf(setOf(WorkoutField.HEART_RATE)))
         assertEquals(listOf(WorkoutPage.CONTROLS, WorkoutPage.OVERVIEW), workoutPagesOf(emptySet()))

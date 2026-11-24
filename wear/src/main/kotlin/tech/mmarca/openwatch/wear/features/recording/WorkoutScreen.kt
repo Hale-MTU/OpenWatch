@@ -42,8 +42,9 @@ import tech.mmarca.openwatch.wearlink.WorkoutSport
  * steps, pause, resume and stop, then the summary of a saved one. The
  * recording itself runs in `WearAppService` ([WorkoutRecorder]); this screen
  * shows [WorkoutState] through its [WorkoutViewModel] and sends it actions. A
- * sport with a route asks for location first and records without a route when
- * it is refused. While a workout runs the screen stays on in ambient mode
+ * sport with a route asks for location first, on a watch with a GPS receiver,
+ * and records without a route when it is refused. The values shown are the
+ * ones the watch's sensors give ([workoutFieldsOf]). While a workout runs the screen stays on in ambient mode
  * with a dim layout of its own ([RunningWorkout]). Distances and speeds are
  * shown in [unitSystem], the one the phone chose.
  */
@@ -53,6 +54,7 @@ internal fun WorkoutScreen(unitSystem: UnitSystem, onClose: () -> Unit) {
     val viewModel = viewModel { WorkoutViewModel.create(context) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val zoneBasis by viewModel.zoneBasis.collectAsStateWithLifecycle()
+    val sensors by viewModel.sensors.collectAsStateWithLifecycle()
     var pending by rememberSaveable { mutableStateOf<String?>(null) }
     val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         val sport = WorkoutSport.fromId(pending) ?: return@rememberLauncherForActivityResult
@@ -64,7 +66,7 @@ internal fun WorkoutScreen(unitSystem: UnitSystem, onClose: () -> Unit) {
     val sport = state.sport
     when {
         state.running && sport != null && snapshot != null -> {
-            val fields = workoutFieldsOf(sport, state.gps)
+            val fields = workoutFieldsOf(sport, state.gps, sensors)
             // Remembered here, above the ambient layout: the page and an open "End workout?" outlive it.
             val screenState = rememberRecordingScreenState(fields)
             RunningWorkout(sport, snapshot, unitSystem) {
@@ -81,7 +83,7 @@ internal fun WorkoutScreen(unitSystem: UnitSystem, onClose: () -> Unit) {
         }
         state.finished && sport != null && snapshot != null -> WorkoutSummaryScreen(
             state = snapshot.toRecordingState(sport, sportName(sport)),
-            fields = workoutFieldsOf(sport, state.gps),
+            fields = workoutFieldsOf(sport, state.gps, sensors),
             unitSystem = unitSystem,
             onDone = {
                 viewModel.closeSummary()

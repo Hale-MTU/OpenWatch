@@ -6,6 +6,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flowOf
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -14,6 +15,7 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wear.WatchPreferences
+import tech.mmarca.openwatch.wear.WatchSensors
 import tech.mmarca.openwatch.wear.WearSettings
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
 import tech.mmarca.openwatch.wearlink.WorkoutSport
@@ -62,6 +64,17 @@ class WorkoutViewModelTest {
         assertFalse(viewModel.needsLocation(indoor))
         control.location = true
         assertFalse(viewModel.needsLocation(gps))
+    }
+
+    @Test
+    fun `a watch without a GPS receiver never asks for location and records no route`() {
+        val gps = WorkoutSport.entries.first { it.gps }
+        val bare = WorkoutViewModel(workout, control, settings, scope, flowOf(WatchSensors.ALL.copy(gps = false)))
+
+        assertFalse(bare.needsLocation(gps))
+        bare.start(gps)
+
+        assertEquals(listOf("start ${gps.id} false"), control.calls)
     }
 
     @Test

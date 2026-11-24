@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.wear.features.recording
 
+import tech.mmarca.openwatch.wear.WatchSensors
 import tech.mmarca.openwatch.wear.workout.WorkoutSnapshot
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
@@ -24,19 +25,23 @@ internal fun WorkoutSnapshot.toRecordingState(sport: WorkoutSport, title: Int): 
 )
 
 /**
- * The fields the recorder fills for [sport]. [gps] is whether this workout
- * records a route (`WorkoutUiState.gps`), not whether location is granted
- * now: a grant given during a workout recorded without one adds nothing.
+ * The fields the recorder fills for [sport] on a watch with [sensors]: the
+ * heart rate with its sensor, the height climbed with the barometer, the
+ * steps with the step counter, each only for a sport that has it. [gps] is
+ * whether this workout records a route (`WorkoutUiState.gps`, which a watch
+ * without a GPS receiver never does), not whether location is granted now:
+ * a grant given during a workout recorded without one adds nothing. Until
+ * the sensors are read ([sensors] null) every field the sport has is shown.
  * A workout's calories have no source without Health Services.
  */
-internal fun workoutFieldsOf(sport: WorkoutSport, gps: Boolean): Set<WorkoutField> = buildSet {
-    add(WorkoutField.HEART_RATE)
+internal fun workoutFieldsOf(sport: WorkoutSport, gps: Boolean, sensors: WatchSensors?): Set<WorkoutField> = buildSet {
+    if (sensors?.heartRate != false) add(WorkoutField.HEART_RATE)
     if (sport.gps && gps) {
         add(WorkoutField.DISTANCE)
         add(if (sport.pace) WorkoutField.PACE else WorkoutField.SPEED)
     }
-    if (sport.elevation) add(WorkoutField.ELEVATION)
-    if (sport.steps) add(WorkoutField.STEPS)
+    if (sport.elevation && sensors?.barometer != false) add(WorkoutField.ELEVATION)
+    if (sport.steps && sensors?.stepCounter != false) add(WorkoutField.STEPS)
 }
 
 internal fun activityTypeOf(sport: WorkoutSport): ActivityType = when (sport) {

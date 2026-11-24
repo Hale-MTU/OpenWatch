@@ -3,6 +3,9 @@ package tech.mmarca.openwatch.wear
 import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothManager
+import android.content.pm.PackageManager
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -159,6 +162,26 @@ internal class WearGraph(private val app: Application) {
 
     val ppgLogger: PpgRawLogger by lazy { PpgRawLogger(app) }
 
+    /** The heart rate as it happens: the phone's `HR_LIVE` windows. */
+    val liveHeartRate: LiveHeartRate by lazy { LiveHeartRate(app, isRecording = { heartRate.isRunning }) }
+
+    /**
+     * What the watch has to measure with, read once: the facts the recorders
+     * and the link already go by (the heart rate, the step counter, the
+     * barometer), the heart-beat sensor and the GPS receiver. The screens
+     * offer a metric, a workout's field or a spot measurement by it. Reads the
+     * sensor list and the package manager: not on the main thread.
+     */
+    val sensors: WatchSensors by lazy {
+        WatchSensors(
+            heartRate = liveHeartRate.hasSensor,
+            heartBeat = app.getSystemService(SensorManager::class.java)?.getDefaultSensor(Sensor.TYPE_HEART_BEAT) != null,
+            stepCounter = StepRecorder.hasStepCounter(app),
+            barometer = AscentRecorder.hasBarometer(app),
+            gps = app.packageManager.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS),
+        )
+    }
+
     /** When a phone last pulled, and the reminder to sync before unpulled rows are pruned. */
     val pulls: PhonePulls by lazy { PhonePulls(app) }
     val syncReminder: SyncReminder by lazy {
@@ -170,7 +193,7 @@ internal class WearGraph(private val app: Application) {
             adapter = { app.getSystemService(BluetoothManager::class.java)?.adapter },
             trust = trust,
             store = store,
-            live = LiveHeartRate(app, isRecording = { heartRate.isRunning }),
+            live = liveHeartRate,
             hrvAvailable = { nightHrv.hasSensor },
             skinAvailable = { skinTemperature.isAvailable },
             onPhoneActive = { at -> sleepMinutes.notePhoneActive(at) },
