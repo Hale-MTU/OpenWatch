@@ -124,6 +124,10 @@ private fun SkippedSeries.sentence(): Int? = when (reason) {
         HealthSeries.WORKOUT_ENERGY -> R.string.settings_watch_garmin_needs_weight
         else -> null
     }
+    SkipReason.NO_BASELINE -> when (series) {
+        HealthSeries.SKIN_TEMPERATURE -> R.string.settings_watch_wearos_skin_baseline_forming
+        else -> null
+    }
 }
 
 private val SyncTally.plural: Int

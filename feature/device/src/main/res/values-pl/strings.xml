@@ -68,6 +68,7 @@
     <string name="settings_watch_wearos_needs_respiratory_write">Nie zapisano częstości oddechu: zezwól OpenWatch na zapisywanie jej w Health Connect, a potem zsynchronizuj ponownie.</string>
     <string name="settings_watch_wearos_needs_spo2_write">Nie zapisano natlenienia krwi: zezwól OpenWatch na zapisywanie go w Health Connect, a potem zsynchronizuj ponownie.</string>
     <string name="settings_watch_wearos_needs_skin_write">Nie zapisano temperatury skóry: zezwól OpenWatch na zapisywanie jej w Health Connect, a potem zsynchronizuj ponownie.</string>
+    <string name="settings_watch_wearos_skin_baseline_forming">Temperatura skóry nie została jeszcze zapisana: pierwsze trzy noce tworzą Twój własny punkt odniesienia, kolejne noce są zapisywane względem niego.</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">Nie zapisano tętna spoczynkowego: zezwól OpenWatch na odczyt i zapisywanie tętna spoczynkowego w Health Connect, aby było szacowane od następnej synchronizacji.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">Zsynchronizowano %1$d próbkę tętna</item>

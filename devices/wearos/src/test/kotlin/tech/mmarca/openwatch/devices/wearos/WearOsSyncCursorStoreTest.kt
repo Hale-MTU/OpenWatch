@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.devices.wearos
 
 import java.time.Instant
+import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -28,7 +29,11 @@ class WearOsSyncCursorStoreTest {
 
         assertEquals(Instant.ofEpochMilli(1_000L), store.heartRateCursor("w1"))
         assertEquals(Instant.ofEpochMilli(2_000L), store.hrvCursor("w1"))
-        assertEquals(listOf(33.1, 33.4), store.skinNightMedians("w1"))
+        // Medians from before nights had dates read with no night.
+        assertEquals(
+            listOf(WearOsSkinTemperatureImport.NightMedian(null, 33.1), WearOsSkinTemperatureImport.NightMedian(null, 33.4)),
+            store.skinNightMedians("w1"),
+        )
         // A watch removed before the move has nothing to keep.
         assertEquals(Instant.EPOCH, store.heartRateCursor("gone"))
         assertTrue(state.values.keys.none { it == "gone" })
@@ -40,9 +45,20 @@ class WearOsSyncCursorStoreTest {
     }
 
     @Test
+    fun `skin night medians keep their nights`() {
+        val medians = listOf(
+            WearOsSkinTemperatureImport.NightMedian(null, 33.1),
+            WearOsSkinTemperatureImport.NightMedian(LocalDate.parse("2026-11-07"), 34.25),
+        )
+        store.setSkinNightMedians("w1", medians)
+
+        assertEquals(medians, store.skinNightMedians("w1"))
+    }
+
+    @Test
     fun `clearing a watch forgets every cursor it had`() {
         store.setStepsCursor("w1", Instant.ofEpochMilli(1_000L))
-        store.setSkinNightMedians("w1", listOf(33.0))
+        store.setSkinNightMedians("w1", listOf(WearOsSkinTemperatureImport.NightMedian(null, 33.0)))
         store.setSeriesCursor("w1", "hv", "0123456789abcdef.12")
 
         store.clear("w1")
