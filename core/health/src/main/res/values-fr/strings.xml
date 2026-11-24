@@ -23,5 +23,4 @@
     <string name="health_data_watch_heart_rate">Le capteur de fréquence cardiaque de la montre : fréquence cardiaque, variabilité de la fréquence cardiaque de la nuit et estimation du sommeil.</string>
     <string name="health_data_watch_background">Pour continuer à enregistrer lorsque l\'écran de la montre est éteint.</string>
     <string name="health_data_watch_skin">Uniquement sur une montre Samsung, et seulement si vous activez la température cutanée la nuit.</string>
-    <string name="health_data_watch_spo2">Uniquement sur une montre Samsung, et seulement si vous activez la SpO2 la nuit.</string>
 </resources>

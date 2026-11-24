@@ -59,8 +59,9 @@ import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
  * The destination of one spot measurement. [supported] is null while the
  * watch's sensors are read; false shows why the measurement cannot run here
  * instead of a start button. The measurement runs through [events]
- * (`WearGraph.spot`); a heart rate or an HRV first asks for the heart rate
- * grant where it is missing. The wrist buzzes when a run ends ([endCue]).
+ * (`WearGraph.spot`); it first asks for the grant it reads under where it is
+ * missing ([Measurement.grant]: the heart rate's for a heart rate or an HRV,
+ * the blood oxygen's for a blood oxygen). The wrist buzzes when a run ends ([endCue]).
  */
 @Composable
 internal fun MeasurementRoute(
@@ -92,7 +93,7 @@ internal fun MeasurementRoute(
                 )
             }
             val state by viewModel.state.collectAsStateWithLifecycle()
-            val askHeartRate = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            val askGrant = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
                 if (granted) viewModel.start() else viewModel.fail(SpotFailure.PERMISSION_DENIED)
             }
             MeasurementScreen(
@@ -100,11 +101,12 @@ internal fun MeasurementRoute(
                 state = state,
                 unitSystem = unitSystem,
                 onStart = {
-                    if (measurement.needsHeartRatePermission && !WearPermissions.hasHeartRate(context)) {
-                        askHeartRate.launch(WearPermissions.heartRate)
-                    } else {
-                        viewModel.start()
+                    val missing = when (measurement.grant) {
+                        MeasureGrant.NONE -> null
+                        MeasureGrant.HEART_RATE -> WearPermissions.heartRate.takeUnless { WearPermissions.hasHeartRate(context) }
+                        MeasureGrant.OXYGEN_SATURATION -> WearPermissions.oxygenSaturation.takeUnless { WearPermissions.hasOxygenSaturation(context) }
                     }
+                    if (missing != null) askGrant.launch(missing) else viewModel.start()
                 },
                 onOpenSettings = {
                     context.startActivity(
@@ -231,7 +233,7 @@ private fun MeasurementBody(
                         modifier = Modifier.size(28.dp),
                     )
                     Title(stringResource(measurement.label))
-                    Body(stringResource(state.failure.message))
+                    Body(stringResource(measurement.messageOf(state.failure)))
                     if (state.failure == SpotFailure.PERMISSION_DENIED) {
                         Button(
                             onClick = onOpenSettings,

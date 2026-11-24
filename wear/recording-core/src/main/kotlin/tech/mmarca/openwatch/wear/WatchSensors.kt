@@ -19,6 +19,11 @@ data class WatchSensors(
     val barometer: Boolean,
     /** A GPS receiver (`FEATURE_LOCATION_GPS`): a workout's route, distance and pace. */
     val gps: Boolean,
+    /**
+     * The Samsung Health Platform's SpO2 tracker, the only source of a blood oxygen reading: the
+     * red and infrared light are closed to ordinary apps.
+     */
+    val spo2: Boolean = false,
 ) {
     /** The spot measurements a wearer can start on this watch. */
     val spotKinds: Set<SpotKind>
@@ -26,11 +31,12 @@ data class WatchSensors(
             if (heartRate) add(SpotKind.HEART_RATE)
             if (heartBeat || rawPpg) add(SpotKind.HRV)
             if (barometer) add(SpotKind.AIR_PRESSURE)
+            if (spo2) add(SpotKind.SPO2)
         }
 
     companion object {
         /** A watch with every sensor, for a test or a preview. */
-        val ALL = WatchSensors(heartRate = true, heartBeat = true, rawPpg = true, stepCounter = true, barometer = true, gps = true)
+        val ALL = WatchSensors(heartRate = true, heartBeat = true, rawPpg = true, stepCounter = true, barometer = true, gps = true, spo2 = true)
 
         /** A watch with none. */
         val NONE = WatchSensors(heartRate = false, heartBeat = false, rawPpg = false, stepCounter = false, barometer = false, gps = false)
@@ -58,4 +64,11 @@ enum class SpotKind(
 
     /** The barometer, with the altitude it stands for at standard pressure. */
     AIR_PRESSURE(10),
+
+    /**
+     * Blood oxygen from the Samsung platform's on-demand tracker, as at night: red and infrared
+     * light and a still arm, a reading after about 13 seconds on a Galaxy Watch7; a moving arm
+     * spoils it.
+     */
+    SPO2(45),
 }

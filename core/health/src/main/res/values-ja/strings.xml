@@ -23,5 +23,4 @@
     <string name="health_data_watch_heart_rate">ウォッチの心拍センサー。心拍数、夜間の心拍変動、睡眠推定に使います。</string>
     <string name="health_data_watch_background">ウォッチの画面がオフでも記録を続けるため。</string>
     <string name="health_data_watch_skin">Samsung ウォッチのみ。夜間の皮膚温度をオンにした場合に限ります。</string>
-    <string name="health_data_watch_spo2">Samsung ウォッチのみ。夜間の SpO2 をオンにした場合に限ります。</string>
 </resources>

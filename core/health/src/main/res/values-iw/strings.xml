@@ -23,5 +23,4 @@
     <string name="health_data_watch_heart_rate">חיישן הדופק של השעון: דופק, שונות קצב הלב בלילה והערכת השינה.</string>
     <string name="health_data_watch_background">כדי להמשיך להקליט כשמסך השעון כבוי.</string>
     <string name="health_data_watch_skin">רק בשעון Samsung, ורק כשמפעילים טמפרטורת עור בלילה.</string>
-    <string name="health_data_watch_spo2">רק בשעון Samsung, ורק כשמפעילים SpO2 בלילה.</string>
 </resources>

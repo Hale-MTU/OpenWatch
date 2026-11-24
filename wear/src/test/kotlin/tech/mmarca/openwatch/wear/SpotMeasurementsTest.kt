@@ -44,12 +44,29 @@ class SpotMeasurementsTest {
     }
 
     private val claim = SensorClaim()
+    private val spo2Claim = SensorClaim()
+
+    /** The platform's SpO2 tracker: hands [batches] once started, on its handler, and counts its starts. */
+    private class FakeSpo2(private val batches: List<List<Spo2Reading>>) : SpotSource<Spo2Reading> {
+        var started = 0
+
+        override val isAvailable: Boolean = true
+
+        override fun start(handler: android.os.Handler, sink: SpotSource.Sink<Spo2Reading>): Boolean {
+            started++
+            batches.forEach(sink::onReadings)
+            return true
+        }
+
+        override fun stop() = Unit
+    }
 
     private fun spot(
         heartRate: SpotSensor<LiveHeartRate.Reading>? = null,
         heartBeats: SpotSensor<Double>? = null,
         motion: SpotSensor<Motion>? = null,
         pressure: SpotSensor<Float>? = null,
+        spo2: SpotSource<Spo2Reading>? = null,
     ) = SpotMeasurements(
         app,
         heartRate = { heartRate },
@@ -57,6 +74,9 @@ class SpotMeasurementsTest {
         motion = { motion },
         hrvClaim = claim,
         pressure = { pressure },
+        spo2 = { spo2 },
+        spo2Claim = spo2Claim,
+        spo2Granted = { granted },
         heartRateGranted = { granted },
         entries = entries,
         debug = DebugProtocol.off(),
@@ -174,6 +194,46 @@ class SpotMeasurementsTest {
         assertEquals(SpotRules.PRESSURE_READINGS, events.count { it is SpotEvent.Live })
         assertEquals(1002.0, result.value, 1e-9)
         assertEquals(AscentMinuteCounter.altitudeMetres(1002.0), result.secondary!!, 1e-9)
+        assertTrue(stored().isEmpty())
+    }
+
+    @Test
+    fun `a blood oxygen is the tracker's first completed reading since the start, kept as a measured entry`() {
+        val now = System.currentTimeMillis()
+        val tracker = FakeSpo2(
+            listOf(
+                // The platform's last reading, from before the start: not this one.
+                listOf(Spo2Reading(now - 60_000, percent = 91, bpm = 70, moving = false)),
+                listOf(Spo2Reading(now, percent = null, bpm = 70, moving = false)),
+                listOf(Spo2Reading(now + 13_000, percent = 97, bpm = 68, moving = false)),
+            ),
+        )
+
+        val events = events(spot(spo2 = tracker), SpotKind.SPO2)
+
+        assertEquals(SpotEvent.Result(97.0), events.last())
+        assertEquals(1, tracker.started)
+        val entry = stored().single()
+        assertEquals(WearLinkEntry.Type.BLOOD_OXYGEN, entry.type)
+        assertEquals(97.0, entry.value, 0.0)
+        assertTrue(entry.measured)
+        assertEquals(null, spo2Claim.holder)
+    }
+
+    @Test
+    fun `a blood oxygen from a moving arm, without the grant or while the night's runs, is none`() {
+        val moving = FakeSpo2(listOf(listOf(Spo2Reading(System.currentTimeMillis(), percent = null, bpm = 0, moving = true))))
+        assertEquals(SpotEvent.Failed(SpotFailure.MOVED), events(spot(spo2 = moving), SpotKind.SPO2).last())
+
+        assertTrue(spo2Claim.take("night"))
+        val waiting = FakeSpo2(emptyList())
+        assertEquals(listOf(SpotEvent.Failed(SpotFailure.BUSY)), events(spot(spo2 = waiting), SpotKind.SPO2))
+        assertEquals(0, waiting.started)
+        spo2Claim.release("night")
+
+        granted = false
+        assertEquals(listOf(SpotEvent.Failed(SpotFailure.PERMISSION_DENIED)), events(spot(spo2 = waiting), SpotKind.SPO2))
+        assertEquals(listOf(SpotEvent.Failed(SpotFailure.NOT_SUPPORTED)), events(spot(), SpotKind.SPO2))
         assertTrue(stored().isEmpty())
     }
 

@@ -10,11 +10,10 @@ import tech.mmarca.openwatch.wear.WearRoutes
  * access screen opens. What only the activity can do, the grant requests and
  * the Bluetooth settings, comes in [actions].
  */
-internal fun NavGraphBuilder.statusDestination(actions: ActivityActions, onOpenWorkout: () -> Unit) {
+internal fun NavGraphBuilder.statusDestination(actions: ActivityActions) {
     composable(WearRoutes.STATUS) {
         StatusScreen(
             onGrant = actions.requestGrants,
-            onOpenWorkout = onOpenWorkout,
             onOpenBluetoothSettings = actions.openBluetoothSettings,
         )
     }

@@ -53,7 +53,6 @@
     <string name="tile_heart_rate_label">Pouls</string>
     <string name="tile_heart_rate_description">Votre dernier pouls et sa courbe d\'aujourd\'hui, tels que l\'app de la montre les a enregistrés</string>
     <string name="tile_heart_rate_caption_now">bpm · à l\'instant</string>
-    <string name="workout_open">Entraînement</string>
     <string name="workout_pick">Démarrer un entraînement</string>
     <string name="workout_back">Retour</string>
     <string name="workout_waiting_for_gps">En attente du GPS…</string>

@@ -23,5 +23,4 @@
     <string name="health_data_watch_heart_rate">Датчик пульса часов: пульс, ночная вариабельность сердечного ритма и оценка сна.</string>
     <string name="health_data_watch_background">Чтобы продолжать запись при выключенном экране часов.</string>
     <string name="health_data_watch_skin">Только на часах Samsung и только если вы включите измерение температуры кожи ночью.</string>
-    <string name="health_data_watch_spo2">Только на часах Samsung и только если вы включите измерение SpO2 ночью.</string>
 </resources>

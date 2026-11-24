@@ -24,7 +24,7 @@ enum class SpotFailure {
     /** The watch has no sensor for it. */
     NOT_SUPPORTED,
 
-    /** The heart rate grant is not in. */
+    /** The grant the measurement reads under is not in: the heart rate's, or the blood oxygen's. */
     PERMISSION_DENIED,
 
     /** The sensor said the watch is not on a wrist. */
@@ -33,10 +33,10 @@ enum class SpotFailure {
     /** The time ran out before the readings gave a value. */
     NO_SIGNAL,
 
-    /** The arm moved too much for an HRV ([Stillness]). */
+    /** The arm moved too much: for an HRV ([Stillness]), or the blood oxygen's tracker said so. */
     MOVED,
 
-    /** The night's HRV window holds the sensor now; a spot HRV waits for it to end. */
+    /** The night's measurement holds the sensor now (an HRV window, a blood oxygen); the spot waits for it to end. */
     BUSY,
 
     /** The sensor could not be started. */

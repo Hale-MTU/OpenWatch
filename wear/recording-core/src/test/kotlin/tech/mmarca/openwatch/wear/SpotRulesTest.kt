@@ -61,5 +61,6 @@ class SpotRulesTest {
         assertEquals(30, SpotKind.HEART_RATE.seconds)
         assertEquals(180, SpotKind.HRV.seconds)
         assertEquals(10, SpotKind.AIR_PRESSURE.seconds)
+        assertEquals(45, SpotKind.SPO2.seconds)
     }
 }

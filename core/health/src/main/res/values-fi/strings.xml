@@ -23,5 +23,4 @@
     <string name="health_data_watch_heart_rate">Kellon sykeanturi: syke, yön sykevälivaihtelu ja uniarvio.</string>
     <string name="health_data_watch_background">Jotta tallennus jatkuu kellon näytön ollessa pois päältä.</string>
     <string name="health_data_watch_skin">Vain Samsung-kellossa ja vain, kun kytket päälle ihon lämpötilan mittauksen yöllä.</string>
-    <string name="health_data_watch_spo2">Vain Samsung-kellossa ja vain, kun kytket päälle SpO2-mittauksen yöllä.</string>
 </resources>

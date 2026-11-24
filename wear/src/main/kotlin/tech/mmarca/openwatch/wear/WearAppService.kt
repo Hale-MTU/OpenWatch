@@ -255,6 +255,12 @@ class WearAppService : Service(), WearGraph.Host {
             .setContentTitle(getString(sportName(key.sport)))
             .setOngoing(true)
             .setCategory(NotificationCompat.CATEGORY_WORKOUT)
+        // The time also as the notification's own chronometer, for a surface that shows it rather than the ongoing status.
+        if (key.paused) {
+            builder.setContentText(getString(R.string.recording_paused))
+        } else {
+            builder.setUsesChronometer(true).setShowWhen(true).setWhen(System.currentTimeMillis() - activeSeconds * MILLIS_PER_SECOND)
+        }
         applyWorkoutPill(builder, key, activeSeconds)
         return builder.build()
     }
@@ -405,6 +411,7 @@ class WearAppService : Service(), WearGraph.Host {
         private const val NOTIFICATION_ID = 1
         // 2 is WearPhoneRequests.NOTIFICATION_ID.
         private const val WORKOUT_NOTIFICATION_ID = 3
+        private const val MILLIS_PER_SECOND = 1_000L
         private const val ACTION_TOGGLE_PPG_LOG = "tech.mmarca.openwatch.wear.TOGGLE_PPG_LOG"
         const val ACTION_HEART_RATE_ALARM = "tech.mmarca.openwatch.wear.HEART_RATE_ALARM"
         private const val ACTION_SETTINGS_CHANGED = "tech.mmarca.openwatch.wear.SETTINGS_CHANGED"

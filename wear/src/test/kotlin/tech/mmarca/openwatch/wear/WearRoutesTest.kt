@@ -33,7 +33,7 @@ class WearRoutesTest {
         for (kind in SpotKind.entries) {
             assertEquals(kind, WearRoutes.spotKindOf(WearRoutes.measurement(kind).substringAfter("measure/")))
         }
-        assertNull(WearRoutes.spotKindOf("SPO2"))
+        assertNull(WearRoutes.spotKindOf("ECG"))
         assertNull(WearRoutes.spotKindOf(null))
     }
 

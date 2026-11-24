@@ -101,6 +101,9 @@ internal class WearGraph(private val app: Application) {
 
     /** The night's HRV windows and a spot HRV take turns with the sensor: one window at a time. */
     private val hrvClaim = SensorClaim()
+
+    /** The night's SpO2 and a spot one take turns with the platform's tracker, which it starts for the first reader only. */
+    private val spo2Claim = SensorClaim()
     private val samsungWindows: HrvWindowSource by lazy { SamsungIbiSource(samsungFeed, debug) }
     private val spo2Source: SpotSource<Spo2Reading> by lazy { SamsungSpotSource.spo2(samsungFeed) }
     private val skinSource: SpotSource<SkinReading> by lazy { SamsungSpotSource.skinTemperature(samsungFeed) }
@@ -153,7 +156,7 @@ internal class WearGraph(private val app: Application) {
     val skinTemperature: SkinTemperatureRecorder by lazy { SkinTemperatureRecorder(store, skinSource, debug) }
 
     val spo2: Spo2Recorder by lazy {
-        Spo2Recorder(app, store, spo2Source, debug, isHolding = { linkState.state.value.sleepHoldActive })
+        Spo2Recorder(app, store, spo2Source, debug, isHolding = { linkState.state.value.sleepHoldActive }, claim = spo2Claim)
     }
 
     /**
@@ -195,8 +198,12 @@ internal class WearGraph(private val app: Application) {
             stepCounter = StepRecorder.hasStepCounter(app),
             barometer = AscentRecorder.hasBarometer(app),
             gps = app.packageManager.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS),
+            spo2 = spotSpo2Source.isAvailable,
         )
     }
+
+    /** A spot SpO2's own source of the platform's tracker, over the same feed: the night's keeps its own sink. */
+    private val spotSpo2Source: SpotSource<Spo2Reading> by lazy { SamsungSpotSource.spo2(samsungFeed) }
 
     private val heartBeats: HeartBeatSensor by lazy { HeartBeatSensor(app) }
     private val spotPressure: PressureSensor by lazy { PressureSensor(app) }
@@ -244,6 +251,9 @@ internal class WearGraph(private val app: Application) {
             motion = { spotMotion },
             hrvClaim = hrvClaim,
             pressure = { spotPressure.takeIf { sensors.barometer } },
+            spo2 = { spotSpo2Source.takeIf { sensors.spo2 } },
+            spo2Claim = spo2Claim,
+            spo2Granted = { WearPermissions.hasOxygenSaturation(app) },
             heartRateGranted = { WearPermissions.hasHeartRate(app) },
             entries = entries,
             debug = debug,

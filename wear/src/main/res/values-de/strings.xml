@@ -67,7 +67,6 @@
     <string name="tile_floors_no_sensor">kein Barometer</string>
     <string name="tile_read_failed">Daten der Uhr nicht lesbar</string>
     <string name="tile_not_granted">in der Uhr-App erlauben</string>
-    <string name="workout_open">Training</string>
     <string name="workout_pick">Training starten</string>
     <string name="workout_back">Zurück</string>
     <string name="workout_waiting_for_gps">Warte auf GPS …</string>
@@ -265,6 +264,10 @@
     <string name="measure_instruction_still_minutes">Hinsetzen, den Arm ablegen und drei Minuten still bleiben.</string>
     <string name="measure_error_moved">Zu viel Bewegung. Arm ablegen und erneut versuchen.</string>
     <string name="measure_error_busy">Die Uhr misst gerade die HRV der Nacht. Versuche es in ein paar Minuten erneut.</string>
+    <string name="measure_spo2">Blutsauerstoff</string>
+    <string name="measure_spo2_description">Etwa 15 Sekunden, Arm ruhig</string>
+    <string name="measure_error_permission_spo2">OpenWatch braucht Zugriff auf den Blutsauerstoff.</string>
+    <string name="measure_error_busy_spo2">Die Uhr misst gerade den Blutsauerstoff der Nacht. Versuche es in einer Minute erneut.</string>
     <string name="detail_recent_entries">Letzte Einträge</string>
     <string name="metric_body_fat">Körperfett</string>
     <string name="metric_body_temperature">Körpertemperatur</string>

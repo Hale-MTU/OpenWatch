@@ -12,8 +12,8 @@ import tech.mmarca.openwatch.wear.WearUiState
 
 /**
  * A metric's detail, `metric/{metric}`, which a dashboard tile opens. The
- * heart rate and the HRV offer their spot measurement where the watch can
- * take it.
+ * heart rate, the HRV and the blood oxygen offer their spot measurement where
+ * the watch can take it.
  */
 internal fun NavGraphBuilder.metricDestination(navController: NavHostController, state: () -> WearUiState) {
     composable(WearRoutes.METRIC) { entry ->
@@ -42,5 +42,6 @@ private val MetricTile.spotKind: SpotKind?
     get() = when (this) {
         MetricTile.HEART_RATE -> SpotKind.HEART_RATE
         MetricTile.HRV -> SpotKind.HRV
+        MetricTile.BLOOD_OXYGEN -> SpotKind.SPO2
         else -> null
     }

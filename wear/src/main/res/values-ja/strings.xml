@@ -53,7 +53,6 @@
     <string name="tile_heart_rate_label">心拍数</string>
     <string name="tile_heart_rate_description">ウォッチアプリが記録した、最新の心拍数と今日の推移</string>
     <string name="tile_heart_rate_caption_now">bpm · たった今</string>
-    <string name="workout_open">ワークアウト</string>
     <string name="workout_pick">ワークアウトを開始</string>
     <string name="workout_back">戻る</string>
     <string name="workout_waiting_for_gps">GPS を待機中…</string>

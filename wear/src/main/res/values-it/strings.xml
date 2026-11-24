@@ -53,7 +53,6 @@
     <string name="tile_heart_rate_label">Battito</string>
     <string name="tile_heart_rate_description">Il tuo ultimo battito e la sua curva di oggi, come li ha registrati l\'app dell\'orologio</string>
     <string name="tile_heart_rate_caption_now">bpm · proprio ora</string>
-    <string name="workout_open">Allenamento</string>
     <string name="workout_pick">Avvia un allenamento</string>
     <string name="workout_back">Indietro</string>
     <string name="workout_waiting_for_gps">In attesa del GPS…</string>

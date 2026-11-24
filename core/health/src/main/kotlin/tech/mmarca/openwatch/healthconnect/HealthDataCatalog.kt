@@ -107,7 +107,7 @@ object HealthDataCatalog {
             HealthDataEntry(HealthPermission.PERMISSION_WRITE_EXERCISE_ROUTE),
             write(DistanceRecord::class),
             write(RespiratoryRateRecord::class, R.string.health_data_note_wearos_breathing_logged),
-            write(OxygenSaturationRecord::class, R.string.health_data_note_wearos_spo2_logged),
+            write(OxygenSaturationRecord::class, R.string.health_data_note_wearos_spo2_measured),
             write(SkinTemperatureRecord::class, R.string.health_data_note_wearos_skin),
             write(HydrationRecord::class, R.string.health_data_note_wearos_entry),
             write(WeightRecord::class, R.string.health_data_note_wearos_entry),
@@ -117,6 +117,7 @@ object HealthDataCatalog {
             write(BodyTemperatureRecord::class, R.string.health_data_note_wearos_entry),
             write(BloodGlucoseRecord::class, R.string.health_data_note_wearos_entry),
             write(HeightRecord::class, R.string.health_data_note_wearos_entry),
+            write(Vo2MaxRecord::class, R.string.health_data_note_wearos_vo2),
         ),
         HealthDataSection.SCALE to listOf(
             write(WeightRecord::class),
@@ -156,7 +157,7 @@ object HealthDataCatalog {
                 noteRes = R.string.health_data_watch_background,
             ),
             read(SkinTemperatureRecord::class, R.string.health_data_watch_skin),
-            read(OxygenSaturationRecord::class, R.string.health_data_watch_spo2),
+            read(OxygenSaturationRecord::class, R.string.health_data_watch_spo2_spot),
         ),
     )
 

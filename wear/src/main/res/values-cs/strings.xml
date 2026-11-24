@@ -53,7 +53,6 @@
     <string name="tile_heart_rate_label">Tep</string>
     <string name="tile_heart_rate_description">Váš poslední tep a jeho dnešní průběh, jak je zaznamenala aplikace v hodinkách</string>
     <string name="tile_heart_rate_caption_now">tep/min · právě teď</string>
-    <string name="workout_open">Trénink</string>
     <string name="workout_pick">Zahájit trénink</string>
     <string name="workout_back">Zpět</string>
     <string name="workout_waiting_for_gps">Čeká se na GPS…</string>

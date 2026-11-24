@@ -53,7 +53,6 @@
     <string name="tile_heart_rate_label">Pulsação</string>
     <string name="tile_heart_rate_description">A sua última pulsação e a curva de hoje, tal como a app do relógio as registou</string>
     <string name="tile_heart_rate_caption_now">bpm · agora mesmo</string>
-    <string name="workout_open">Treino</string>
     <string name="workout_pick">Iniciar um treino</string>
     <string name="workout_back">Voltar</string>
     <string name="workout_waiting_for_gps">A aguardar o GPS…</string>

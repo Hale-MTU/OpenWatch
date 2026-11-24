@@ -53,7 +53,6 @@
     <string name="tile_heart_rate_label">Пульс</string>
     <string name="tile_heart_rate_description">Ваш последний пульс и его график за сегодня, записанные приложением на часах</string>
     <string name="tile_heart_rate_caption_now">уд/мин · только что</string>
-    <string name="workout_open">Тренировка</string>
     <string name="workout_pick">Начать тренировку</string>
     <string name="workout_back">Назад</string>
     <string name="workout_waiting_for_gps">Ожидание GPS…</string>

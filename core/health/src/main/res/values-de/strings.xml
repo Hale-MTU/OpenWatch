@@ -26,7 +26,8 @@
     <string name="health_data_watch_heart_rate">Der Herzfrequenzsensor der Uhr: Herzfrequenz, die nächtliche Herzfrequenzvariabilität und die Schlafschätzung.</string>
     <string name="health_data_watch_background">Damit die Uhr bei ausgeschaltetem Bildschirm weiter aufzeichnet.</string>
     <string name="health_data_watch_skin">Nur auf einer Samsung-Uhr und nur, wenn du die Hauttemperatur in der Nacht einschaltest.</string>
-    <string name="health_data_watch_spo2">Nur auf einer Samsung-Uhr und nur, wenn du SpO2 in der Nacht einschaltest.</string>
     <string name="health_data_note_wearos_breathing_logged">In der Nacht nur, wenn „Atemfrequenz von der Uhr“ in den Einstellungen eingeschaltet ist; und eine Atemfrequenz, die du auf der Uhr einträgst.</string>
-    <string name="health_data_note_wearos_spo2_logged">In der Nacht nur von einer Samsung-Uhr, wenn „SpO2 stündlich in der Nacht“ für diese Uhr eingeschaltet ist; und ein Blutsauerstoff, den du auf der Uhr einträgst.</string>
+    <string name="health_data_note_wearos_spo2_measured">In der Nacht nur von einer Samsung-Uhr, wenn „SpO2 stündlich in der Nacht“ für diese Uhr eingeschaltet ist; und ein Blutsauerstoff, den du auf der Uhr einträgst oder misst.</string>
+    <string name="health_data_note_wearos_vo2">Eine Schätzung aus einem Gang oder Lauf, den du mit Route auf der Uhr aufzeichnest, wenn dein Körperprofil eine Ruheherzfrequenz enthält.</string>
+    <string name="health_data_watch_spo2_spot">Nur auf einer Samsung-Uhr: wenn du SpO2 in der Nacht einschaltest und wenn du deinen Blutsauerstoff auf der Uhr misst.</string>
 </resources>

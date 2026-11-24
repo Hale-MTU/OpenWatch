@@ -118,11 +118,12 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
   calculations OpenWatch and OpenVitals share (the Wear OS night and resting heart rate, body
   composition, workout and walking energy, the watch's HRV and respiratory rate from the raw
   PPG, the floors credit) and the models they read, as plain Kotlin under
-  `tech.mmarca.healthcalculations`. `:core:model` (and through it `:app`), `:wear` and
-  `:wear:recording-core` depend on it; its own `AGENTS.md` holds its rules.
+  `tech.mmarca.healthcalculations`. `:core:model` (and through it `:app`), `:wearlink` (its
+  `WorkoutMetrics`, the workout figures both apps show), `:wear` and `:wear:recording-core`
+  depend on it; its own `AGENTS.md` holds its rules.
 - `wear/` — the watch app, no DI. `wear/recording-core/` — its pure core (`:wear:recording-core`):
   what the recorders decide and compute, with the watch app's packages, pure JVM. `wearlink/` —
-  the protocol, pure JVM.
+  the protocol and a workout's figures (`WorkoutMetrics`, over health-calculations), pure JVM.
 - `build-logic/` — the convention plugins (SDK levels, signing, build types, lint, locking) the
   modules apply by id; an included build.
 

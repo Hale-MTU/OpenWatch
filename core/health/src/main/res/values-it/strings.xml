@@ -23,5 +23,4 @@
     <string name="health_data_watch_heart_rate">Il sensore di frequenza cardiaca dell\'orologio: frequenza cardiaca, variabilità della frequenza cardiaca notturna e stima del sonno.</string>
     <string name="health_data_watch_background">Per continuare a registrare con lo schermo dell\'orologio spento.</string>
     <string name="health_data_watch_skin">Solo su un orologio Samsung, e solo se attivi la temperatura cutanea di notte.</string>
-    <string name="health_data_watch_spo2">Solo su un orologio Samsung, e solo se attivi la SpO2 di notte.</string>
 </resources>

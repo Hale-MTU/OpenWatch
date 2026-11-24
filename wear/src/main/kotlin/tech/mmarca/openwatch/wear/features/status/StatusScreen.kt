@@ -47,7 +47,6 @@ import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 /** What the status screen's buttons do outside its settings. */
 internal class StatusActions(
     val onGrant: () -> Unit,
-    val onOpenWorkout: () -> Unit,
     val onAllow: (PendingPhone) -> Unit,
     val onBlock: (PendingPhone) -> Unit,
     val onOpenBluetoothSettings: () -> Unit,
@@ -64,7 +63,6 @@ internal class StatusActions(
 @Composable
 internal fun StatusScreen(
     onGrant: () -> Unit,
-    onOpenWorkout: () -> Unit,
     onOpenBluetoothSettings: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -76,7 +74,6 @@ internal fun StatusScreen(
     }
     val actions = StatusActions(
         onGrant = onGrant,
-        onOpenWorkout = onOpenWorkout,
         onAllow = viewModel::allow,
         onBlock = viewModel::block,
         onOpenBluetoothSettings = onOpenBluetoothSettings,
@@ -101,7 +98,7 @@ internal fun StatusContent(state: StatusUiState, actions: StatusActions, setting
             readings?.samsungDiagnostics?.let { on ->
                 item { StatusLine(stringResource(if (on) R.string.status_samsung_diagnostics_on else R.string.status_samsung_diagnostics_off)) }
             }
-            statusButton(spec, R.string.workout_open, onClick = actions.onOpenWorkout)
+
             state.settings?.let { settings -> settingsItems(settings, samsung = readings?.samsungPlatform == true, spec, settingsActions) }
             phoneItems(state.link, spec, actions.onAllow, actions.onBlock, actions.onOpenBluetoothSettings)
             if (state.link.ppgLogging) item { StatusLine(stringResource(R.string.status_ppg_logging)) }
@@ -247,7 +244,7 @@ private fun StatusContentPreview() {
                     ),
                     link = WearLinkUiState(listening = true),
                 ),
-                actions = StatusActions({}, {}, {}, {}, {}, {}),
+                actions = StatusActions({}, {}, {}, {}, {}),
                 settingsActions = StatusSettingsActions({}, {}, {}, {}, {}, {}),
             )
         }

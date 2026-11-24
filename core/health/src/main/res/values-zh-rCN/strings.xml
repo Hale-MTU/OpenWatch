@@ -23,5 +23,4 @@
     <string name="health_data_watch_heart_rate">手表的心率传感器：心率、夜间心率变异性和睡眠估算。</string>
     <string name="health_data_watch_background">在手表屏幕关闭时继续记录。</string>
     <string name="health_data_watch_skin">仅限 Samsung 手表，并且仅在你开启夜间皮肤温度时。</string>
-    <string name="health_data_watch_spo2">仅限 Samsung 手表，并且仅在你开启夜间 SpO2 时。</string>
 </resources>

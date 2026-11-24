@@ -306,8 +306,8 @@ internal object WearReadings {
      * water drunk into the water tile, with its goal, as a daily total by the
      * hour; the weights into the weight tile, the newest as the value now
      * however old, today's as its chart and each day's last as the week. A
-     * heart rate or an HRV measured on the spot today is the value now only
-     * where the watch's own recording has none.
+     * heart rate, an HRV or a blood oxygen measured on the spot or logged today
+     * is the value now only where the watch's own recording has none.
      */
     private fun MutableMap<MetricTile, MetricUiState>.putEntries(
         days: List<DayReadings>,
@@ -392,6 +392,7 @@ internal object WearReadings {
     private val SPOT_ENTRIES = listOf(
         MetricTile.HEART_RATE to WearLinkEntry.Type.HEART_RATE,
         MetricTile.HRV to WearLinkEntry.Type.HRV,
+        MetricTile.BLOOD_OXYGEN to WearLinkEntry.Type.BLOOD_OXYGEN,
     )
 
     /** The day's lowest, mean and highest heart rate sample, the range the heart rate tile shows; null on a day without one. */

@@ -2,6 +2,7 @@ package tech.mmarca.openwatch.wear.features.measure
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Bloodtype
 import androidx.compose.material.icons.outlined.Compress
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Insights
@@ -31,8 +32,8 @@ enum class Measurement(
     @param:StringRes val instruction: Int,
     val icon: ImageVector,
     val accentColor: Color,
-    /** Needs the heart rate grant before it can start. */
-    val needsHeartRatePermission: Boolean,
+    /** The grant it reads under, asked for before it starts where it is missing. */
+    val grant: MeasureGrant,
     /** The unit of the value shown while it runs. */
     @param:StringRes val liveUnit: Int,
     /** The unit of the result. */
@@ -45,7 +46,7 @@ enum class Measurement(
         R.string.measure_instruction_still,
         Icons.Outlined.Favorite,
         HeartColor,
-        needsHeartRatePermission = true,
+        grant = MeasureGrant.HEART_RATE,
         liveUnit = R.string.unit_bpm,
         unit = R.string.unit_bpm,
     ),
@@ -58,7 +59,7 @@ enum class Measurement(
         R.string.measure_instruction_still_minutes,
         Icons.Outlined.Insights,
         VitalsColor,
-        needsHeartRatePermission = true,
+        grant = MeasureGrant.HEART_RATE,
         liveUnit = R.string.unit_bpm,
         unit = R.string.unit_ms,
     ),
@@ -70,16 +71,40 @@ enum class Measurement(
         R.string.measure_instruction_none,
         Icons.Outlined.Compress,
         ElevationColor,
-        needsHeartRatePermission = false,
+        grant = MeasureGrant.NONE,
         liveUnit = R.string.unit_hpa,
         unit = R.string.unit_hpa,
     ),
+
+    /** The Samsung platform's tracker, as at night: no live value, the reading after about 15 seconds. */
+    SPO2(
+        SpotKind.SPO2,
+        R.string.measure_spo2,
+        R.string.measure_spo2_description,
+        R.string.measure_instruction_still,
+        Icons.Outlined.Bloodtype,
+        VitalsColor,
+        grant = MeasureGrant.OXYGEN_SATURATION,
+        liveUnit = R.string.unit_percent,
+        unit = R.string.unit_percent,
+    ),
     ;
+
+    /** What the wearer is told when this measurement gave no reading: [SpotFailure.message], in this measurement's words. */
+    @StringRes
+    fun messageOf(failure: SpotFailure): Int = when {
+        this == SPO2 && failure == SpotFailure.PERMISSION_DENIED -> R.string.measure_error_permission_spo2
+        this == SPO2 && failure == SpotFailure.BUSY -> R.string.measure_error_busy_spo2
+        else -> failure.message
+    }
 
     companion object {
         fun of(kind: SpotKind): Measurement = entries.first { it.kind == kind }
     }
 }
+
+/** The grant a measurement reads under: the heart rate's, the blood oxygen's (the Samsung platform checks it), or none. */
+enum class MeasureGrant { NONE, HEART_RATE, OXYGEN_SATURATION }
 
 /** What the wearer is told when a measurement gave no reading. */
 @get:StringRes

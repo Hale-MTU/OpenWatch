@@ -23,5 +23,4 @@
     <string name="health_data_watch_heart_rate">مستشعر معدل نبض القلب في الساعة: معدل نبض القلب، وتقلّب معدل ضربات القلب ليلًا، وتقدير النوم.</string>
     <string name="health_data_watch_background">لمواصلة التسجيل وشاشة الساعة مطفأة.</string>
     <string name="health_data_watch_skin">فقط على ساعة Samsung، وفقط عند تفعيل درجة حرارة الجلد ليلًا.</string>
-    <string name="health_data_watch_spo2">فقط على ساعة Samsung، وفقط عند تفعيل قياس SpO2 ليلًا.</string>
 </resources>

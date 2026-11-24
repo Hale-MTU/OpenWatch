@@ -34,7 +34,7 @@ internal class WearOsZoneSync(
         val basis = try {
             val now = clock()
             val observed = healthConnect.readMaxHeartRate(now.minus(Duration.ofDays(observedMaxHeartRateLookbackDays)), now)?.toInt()
-            HeartRateZoneBasis.of(profile(), now.atZone(zone()).toLocalDate(), observed, latestResting(now))
+            HeartRateZoneBasis.of(profile(), now.atZone(zone()).toLocalDate(), observed, healthConnect.latestNightRestingBpm(now))
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
@@ -46,17 +46,18 @@ internal class WearOsZoneSync(
         }
         WearOsLog.log("zones: sent")
     }
-
-    /** The latest night's resting heart rate of the last week, from any app. */
-    private suspend fun latestResting(now: Instant): Int? {
-        var latest: RestingHeartRateRecord? = null
-        healthConnect.forEachSyncRecordPage(RestingHeartRateRecord::class, now.minus(RESTING_LOOKBACK), now) { page ->
-            for (record in page.filterIsInstance<RestingHeartRateRecord>()) if (latest == null || record.time > latest!!.time) latest = record
-        }
-        return latest?.beatsPerMinute?.toInt()
-    }
-
-    private companion object {
-        val RESTING_LOOKBACK: Duration = Duration.ofDays(7)
-    }
 }
+
+/**
+ * The latest night's resting heart rate of the week before [before], from any app: what
+ * [HeartRateZoneBasis] judges an observed maximum by, for the zones and a workout's figures.
+ */
+internal suspend fun HealthConnectReads.latestNightRestingBpm(before: Instant): Int? {
+    var latest: RestingHeartRateRecord? = null
+    forEachSyncRecordPage(RestingHeartRateRecord::class, before.minus(RESTING_LOOKBACK), before) { page ->
+        for (record in page.filterIsInstance<RestingHeartRateRecord>()) if (latest == null || record.time > latest!!.time) latest = record
+    }
+    return latest?.beatsPerMinute?.toInt()
+}
+
+private val RESTING_LOOKBACK: Duration = Duration.ofDays(7)

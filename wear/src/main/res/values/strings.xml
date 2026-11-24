@@ -63,7 +63,6 @@
     <string name="tile_heart_rate_label">Heart rate</string>
     <string name="tile_heart_rate_description">Your latest heart rate and its curve today, as the watch app recorded them</string>
     <string name="tile_heart_rate_caption_now">bpm · just now</string>
-    <string name="workout_open">Workout</string>
     <string name="workout_pick">Start a workout</string>
     <string name="workout_back">Back</string>
     <string name="workout_waiting_for_gps">Waiting for GPS…</string>
@@ -290,6 +289,10 @@
     <string name="measure_instruction_still_minutes">Sit down, rest your arm and stay still for three minutes.</string>
     <string name="measure_error_moved">You moved too much. Rest your arm and try again.</string>
     <string name="measure_error_busy">The watch is measuring your night\'s HRV right now. Try again in a few minutes.</string>
+    <string name="measure_spo2">Blood oxygen</string>
+    <string name="measure_spo2_description">About 15 seconds, arm still</string>
+    <string name="measure_error_permission_spo2">OpenWatch needs access to blood oxygen data.</string>
+    <string name="measure_error_busy_spo2">The watch is measuring your night\'s blood oxygen right now. Try again in a minute.</string>
     <string name="detail_recent_entries">Latest entries</string>
     <string name="metric_body_fat">Body fat</string>
     <string name="metric_body_temperature">Body temperature</string>

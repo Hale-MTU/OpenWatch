@@ -53,7 +53,6 @@
     <string name="tile_heart_rate_label">Tętno</string>
     <string name="tile_heart_rate_description">Twoje ostatnie tętno i jego dzisiejszy przebieg zapisane przez aplikację na zegarku</string>
     <string name="tile_heart_rate_caption_now">bpm · przed chwilą</string>
-    <string name="workout_open">Trening</string>
     <string name="workout_pick">Rozpocznij trening</string>
     <string name="workout_back">Powrót</string>
     <string name="workout_waiting_for_gps">Oczekiwanie na GPS…</string>

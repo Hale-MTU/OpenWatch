@@ -89,7 +89,7 @@ fun OpenWatchWearApp(
                 measureDestinations(navController, { currentState }) { kind -> currentSpot(kind) }
                 quickLogDestinations(navController, { currentState }, quickLog) { type, value, second -> currentLog(type, value, second) }
                 settingsDestinations(navController, actions)
-                statusDestination(actions, onOpenWorkout = openWorkout)
+                statusDestination(actions)
                 workoutDestination(navController) { currentState }
             }
             LaunchedEffect(workoutActive, workoutRequests) {

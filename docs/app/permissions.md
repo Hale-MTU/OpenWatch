@@ -29,9 +29,13 @@ What the entries made on a Wear OS watch write, each when the phone pulls it: `W
 `WRITE_RESPIRATORY_RATE`, `WRITE_BODY_TEMPERATURE`, `WRITE_BLOOD_GLUCOSE` and `WRITE_HEIGHT` (a value logged in
 the watch's quick log: a hand-logged blood oxygen or breathing rate is written whatever the night
 switches say), `WRITE_MINDFULNESS` (a breathing session, only where Health Connect
-stores mindfulness sessions), and `WRITE_HEART_RATE` and `WRITE_HEART_RATE_VARIABILITY` (a spot
-measurement). An entry whose write is not granted waits on the watch, and the watch's card asks
-for the grant; the entries whose write is granted go on.
+stores mindfulness sessions), and `WRITE_HEART_RATE`, `WRITE_HEART_RATE_VARIABILITY` and, on a
+Samsung watch, `WRITE_OXYGEN_SATURATION` (a spot measurement). An entry whose write is not granted
+waits on the watch, and the watch's card asks for the grant; the entries whose write is granted go on.
+
+A workout recorded on a Wear OS watch also writes `WRITE_VO2_MAX`: an estimate for a walk or run
+with a route, from the heart rate the watch recorded and the body profile's resting heart rate,
+left out without the grant while the session is written.
 
 What a scale weigh-in writes: `WRITE_WEIGHT`, `WRITE_BODY_FAT`, `WRITE_LEAN_BODY_MASS`,
 `WRITE_BODY_WATER_MASS`.
@@ -113,7 +117,7 @@ it fails `HealthPermissionsTest`.
 | `WRITE_EXERCISE_ROUTE` |  |
 | `WRITE_DISTANCE` |  |
 | `WRITE_RESPIRATORY_RATE` | At night only with “Breathing rate from the watch” switched on in Settings; and a breathing rate you log on the watch. |
-| `WRITE_OXYGEN_SATURATION` | At night only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch; and a blood oxygen you log on the watch. |
+| `WRITE_OXYGEN_SATURATION` | At night only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch; and a blood oxygen you log or measure on the watch. |
 | `WRITE_SKIN_TEMPERATURE` | Only from a Samsung watch, with “Skin temperature at night” switched on for that watch. One record per night: the difference from your own usual night. |
 | `WRITE_HYDRATION` | What you log on the watch, by hand. |
 | `WRITE_WEIGHT` | What you log on the watch, by hand. |
@@ -123,6 +127,7 @@ it fails `HealthPermissionsTest`.
 | `WRITE_BODY_TEMPERATURE` | What you log on the watch, by hand. |
 | `WRITE_BLOOD_GLUCOSE` | What you log on the watch, by hand. |
 | `WRITE_HEIGHT` | What you log on the watch, by hand. |
+| `WRITE_VO2_MAX` | An estimate from a walk or run you record on the watch with its route, when your body profile holds a resting heart rate. |
 
 **Written from the scale**
 
@@ -165,7 +170,7 @@ it fails `HealthPermissionsTest`.
 | `READ_HEART_RATE` | The watch's heart rate sensor: heart rate, the night's heart rate variability and the sleep estimate. |
 | `READ_HEALTH_DATA_IN_BACKGROUND` | To keep recording with the watch's screen off. |
 | `READ_SKIN_TEMPERATURE` | Only on a Samsung watch, and only when you switch on skin temperature at night. |
-| `READ_OXYGEN_SATURATION` | Only on a Samsung watch, and only when you switch on SpO2 at night. |
+| `READ_OXYGEN_SATURATION` | Only on a Samsung watch: when you switch on SpO2 at night, and when you measure your blood oxygen on the watch. |
 
 <!-- health-data:end -->
 
@@ -180,7 +185,8 @@ asked on the wrist:
 - `ACTIVITY_RECOGNITION`: the step counter.
 - `android.permission.health.READ_SKIN_TEMPERATURE` and `READ_OXYGEN_SATURATION`: asked only
   when the user switches on "Skin temperature at night" or "SpO2 hourly at night" on a watch that has the
-  Samsung Health Platform, which checks them per tracker.
+  Samsung Health Platform, which checks them per tracker, and `READ_OXYGEN_SATURATION` when the
+  user starts a blood oxygen spot measurement there.
 - `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION` and `FOREGROUND_SERVICE_LOCATION`: a
   workout recorded with GPS on the watch, and only while it runs.
 - `BLUETOOTH_CONNECT`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_CONNECTED_DEVICE`,

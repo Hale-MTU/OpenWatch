@@ -23,5 +23,4 @@
     <string name="health_data_watch_heart_rate">Czujnik tętna zegarka: tętno, nocna zmienność rytmu serca i szacunek snu.</string>
     <string name="health_data_watch_background">Aby nagrywanie trwało przy wyłączonym ekranie zegarka.</string>
     <string name="health_data_watch_skin">Tylko na zegarku Samsung i tylko wtedy, gdy włączysz temperaturę skóry w nocy.</string>
-    <string name="health_data_watch_spo2">Tylko na zegarku Samsung i tylko wtedy, gdy włączysz SpO2 w nocy.</string>
 </resources>

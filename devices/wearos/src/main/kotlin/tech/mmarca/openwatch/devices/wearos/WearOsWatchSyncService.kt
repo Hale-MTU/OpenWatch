@@ -156,6 +156,8 @@ class WearOsWatchSyncService(
         cursors = cursors,
         granted = { healthConnect.grantedPermissions() },
         zone = zone,
+        // The figures rest on the zones the watch draws: the declared profile, as the zones' sync reads it.
+        summarize = WearOsWorkoutFigures(healthConnect, zoneProfile, zone)::summarize,
     )
 
     private val workoutEnergy = WearOsWorkoutEnergy(

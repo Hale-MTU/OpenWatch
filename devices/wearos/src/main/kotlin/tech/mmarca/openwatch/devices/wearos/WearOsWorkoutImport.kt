@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.devices.wearos
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.DistanceRecord
+import androidx.health.connect.client.records.ExerciseLap
 import androidx.health.connect.client.records.ExerciseRoute
 import androidx.health.connect.client.records.ExerciseSegment
 import androidx.health.connect.client.records.ExerciseSessionRecord
@@ -24,7 +25,8 @@ import tech.mmarca.openwatch.devices.core.saltedRecordId
  * Maps a workout the watch recorded to Health Connect: an
  * `ExerciseSessionRecord` with its route and its pauses as pause segments,
  * and, for a workout that measured one, a `DistanceRecord` over the same
- * time. As in OpenVitals, steps, climbed height and heart rate are not
+ * time; with its figures ([WearOsWorkoutMetrics]) its kilometres as laps and
+ * a line of notes. As in OpenVitals, steps, climbed height and heart rate are not
  * written again: the watch's all-day series already carry them minute by
  * minute, and a second copy over the same minutes would count twice.
  *
@@ -54,7 +56,13 @@ object WearOsWorkoutImport {
         if (distance(workout) != null) add(distancePermission)
     }
 
-    fun records(workout: WearOsWorkout, zone: ZoneId, salt: String = ""): List<Record> {
+    fun records(
+        workout: WearOsWorkout,
+        zone: ZoneId,
+        salt: String = "",
+        laps: List<ExerciseLap> = emptyList(),
+        notes: String? = null,
+    ): List<Record> {
         val startOffset = zone.rules.getOffset(workout.start)
         val endOffset = zone.rules.getOffset(workout.end)
         val route = route(workout)
@@ -69,6 +77,8 @@ object WearOsWorkoutImport {
                 .filter { it.start >= workout.start && it.endInclusive <= workout.end && it.start < it.endInclusive }
                 .map { ExerciseSegment(it.start, it.endInclusive, ExerciseSegment.EXERCISE_SEGMENT_TYPE_PAUSE) },
             exerciseRoute = route.takeIf { it.isNotEmpty() }?.let(::ExerciseRoute),
+            laps = laps,
+            notes = notes,
         )
         val distance = distance(workout)?.let {
             DistanceRecord(

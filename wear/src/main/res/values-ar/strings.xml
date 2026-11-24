@@ -53,7 +53,6 @@
     <string name="tile_heart_rate_label">معدل نبض القلب</string>
     <string name="tile_heart_rate_description">آخر معدل لنبض قلبك ومنحناه اليوم، كما سجّلهما تطبيق الساعة</string>
     <string name="tile_heart_rate_caption_now">نبضة/دقيقة · الآن</string>
-    <string name="workout_open">تمرين</string>
     <string name="workout_pick">بدء تمرين</string>
     <string name="workout_back">رجوع</string>
     <string name="workout_waiting_for_gps">في انتظار GPS…</string>

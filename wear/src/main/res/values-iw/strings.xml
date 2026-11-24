@@ -53,7 +53,6 @@
     <string name="tile_heart_rate_label">דופק</string>
     <string name="tile_heart_rate_description">הדופק האחרון שלך והעקומה שלו היום, כפי שאפליקציית השעון הקליטה אותם</string>
     <string name="tile_heart_rate_caption_now">פעימות לדקה · ממש עכשיו</string>
-    <string name="workout_open">אימון</string>
     <string name="workout_pick">התחלת אימון</string>
     <string name="workout_back">חזרה</string>
     <string name="workout_waiting_for_gps">ממתין ל-GPS…</string>

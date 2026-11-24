@@ -53,7 +53,6 @@
     <string name="tile_heart_rate_label">Syke</string>
     <string name="tile_heart_rate_description">Viimeisin sykkeesi ja sen tämänpäiväinen käyrä kellosovelluksen tallentamina</string>
     <string name="tile_heart_rate_caption_now">bpm · juuri nyt</string>
-    <string name="workout_open">Treeni</string>
     <string name="workout_pick">Aloita treeni</string>
     <string name="workout_back">Takaisin</string>
     <string name="workout_waiting_for_gps">Odotetaan GPS:ää…</string>

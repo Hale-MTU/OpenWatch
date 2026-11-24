@@ -23,5 +23,4 @@
     <string name="health_data_watch_heart_rate">Kella pulsiandur: pulss, öine südame löögisageduse varieeruvus ja une hinnang.</string>
     <string name="health_data_watch_background">Et salvestamine jätkuks, kui kella ekraan on väljas.</string>
     <string name="health_data_watch_skin">Ainult Samsungi kellas ja ainult siis, kui lülitad sisse naha temperatuuri öösel.</string>
-    <string name="health_data_watch_spo2">Ainult Samsungi kellas ja ainult siis, kui lülitad sisse SpO2 öösel.</string>
 </resources>

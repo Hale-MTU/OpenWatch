@@ -20,7 +20,9 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
  * [MIN_GAP_MILLIS]; after a measurement the arm spoiled, the next try comes
  * after [RETRY_GAP_MILLIS]. It holds a wake lock for at most
  * [MEASUREMENT_TIMEOUT_MILLIS]. There is no other source: the red and
- * infrared channels are closed to ordinary apps.
+ * infrared channels are closed to ordinary apps. A spot measurement the
+ * wearer started holds the tracker through [claim]; the night's then waits
+ * for its next tick.
  */
 internal class Spo2Recorder(
     context: Context,
@@ -29,6 +31,8 @@ internal class Spo2Recorder(
     private val debug: DebugProtocol,
     /** Whether sleep is held now; read on the recorder's thread. */
     private val isHolding: () -> Boolean,
+    /** Shared with a spot SpO2: the platform starts its tracker for the first reader only. */
+    private val claim: SensorClaim = SensorClaim(),
 ) : Recorder, SpotSource.Sink<Spo2Reading> {
 
     private val wakeLock = (context.getSystemService(Context.POWER_SERVICE) as PowerManager)
@@ -92,7 +96,12 @@ internal class Spo2Recorder(
 
     private fun beginMeasurement(now: Long) {
         val workerHandler = handler ?: return
+        if (!claim.take(CLAIM)) {
+            debug.event("Spo2", "busy")
+            return
+        }
         if (!source.start(workerHandler, this)) {
+            claim.release(CLAIM)
             nextAllowedAt = now + RETRY_GAP_MILLIS
             debug.event("Spo2", "refused")
             return
@@ -122,6 +131,7 @@ internal class Spo2Recorder(
         measuringSince = 0L
         handler?.removeCallbacks(timeout)
         source.stop()
+        claim.release(CLAIM)
         if (wakeLock.isHeld) wakeLock.release()
         val now = System.currentTimeMillis()
         debug.event(
@@ -142,6 +152,9 @@ internal class Spo2Recorder(
 
     private companion object {
         const val TAG = "Spo2Recorder"
+
+        /** The night's name on [SensorClaim]. */
+        const val CLAIM = "night"
         const val WAKE_LOCK_TAG = "OpenWatch:spo2"
         const val TICK_MILLIS = 60_000L
 

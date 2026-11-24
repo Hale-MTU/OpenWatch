@@ -23,5 +23,4 @@
     <string name="health_data_watch_heart_rate">Snímač tepu v hodinkách: tep, noční variabilita srdeční frekvence a odhad spánku.</string>
     <string name="health_data_watch_background">Aby záznam pokračoval i s vypnutou obrazovkou hodinek.</string>
     <string name="health_data_watch_skin">Jen na hodinkách Samsung a jen když zapnete teplotu kůže v noci.</string>
-    <string name="health_data_watch_spo2">Jen na hodinkách Samsung a jen když zapnete SpO2 v noci.</string>
 </resources>

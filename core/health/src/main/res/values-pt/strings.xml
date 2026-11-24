@@ -23,5 +23,4 @@
     <string name="health_data_watch_heart_rate">O sensor de frequência cardíaca do relógio: a frequência cardíaca, a variabilidade da frequência cardíaca da noite e a estimativa do sono.</string>
     <string name="health_data_watch_background">Para continuar a gravar com o ecrã do relógio desligado.</string>
     <string name="health_data_watch_skin">Só num relógio Samsung, e só quando ativa a temperatura da pele à noite.</string>
-    <string name="health_data_watch_spo2">Só num relógio Samsung, e só quando ativa o SpO2 à noite.</string>
 </resources>

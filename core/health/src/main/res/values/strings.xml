@@ -31,7 +31,8 @@
     <string name="health_data_watch_heart_rate">The watch\'s heart rate sensor: heart rate, the night\'s heart rate variability and the sleep estimate.</string>
     <string name="health_data_watch_background">To keep recording with the watch\'s screen off.</string>
     <string name="health_data_watch_skin">Only on a Samsung watch, and only when you switch on skin temperature at night.</string>
-    <string name="health_data_watch_spo2">Only on a Samsung watch, and only when you switch on SpO2 at night.</string>
     <string name="health_data_note_wearos_breathing_logged">At night only with “Breathing rate from the watch” switched on in Settings; and a breathing rate you log on the watch.</string>
-    <string name="health_data_note_wearos_spo2_logged">At night only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch; and a blood oxygen you log on the watch.</string>
+    <string name="health_data_note_wearos_spo2_measured">At night only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch; and a blood oxygen you log or measure on the watch.</string>
+    <string name="health_data_note_wearos_vo2">An estimate from a walk or run you record on the watch with its route, when your body profile holds a resting heart rate.</string>
+    <string name="health_data_watch_spo2_spot">Only on a Samsung watch: when you switch on SpO2 at night, and when you measure your blood oxygen on the watch.</string>
 </resources>
