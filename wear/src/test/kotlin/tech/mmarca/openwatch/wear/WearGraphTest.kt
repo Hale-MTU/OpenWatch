@@ -28,6 +28,7 @@ class WearGraphTest {
         assertSame(graph.heartRate, app.wearGraph.heartRate)
         assertSame(graph.liveHeartRate, app.wearGraph.liveHeartRate)
         assertSame(graph.entries, app.wearGraph.entries)
+        assertSame(graph.tiles, app.wearGraph.tiles)
     }
 
     @Test

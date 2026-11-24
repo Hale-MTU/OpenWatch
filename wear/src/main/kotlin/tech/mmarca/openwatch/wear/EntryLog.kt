@@ -16,11 +16,14 @@ import tech.mmarca.openwatch.wearlink.WearLinkEntry
  * the same millisecond would be lost. So an entry goes to the first free
  * millisecond from its own, under a lock, since the check and the write must
  * not interleave with another entry's. Entries older than the series'
- * retention are pruned at each write.
+ * retention are pruned at each write. Each entry written is told to
+ * [onLogged], outside the lock: the graph asks the quick log tile to show a
+ * glass of water logged in the app.
  */
 internal class EntryLog(
     private val store: MetricStore,
     private val now: () -> Long = System::currentTimeMillis,
+    private val onLogged: (WearLinkEntry.Type) -> Unit = {},
 ) {
     private val lock = Any()
 
@@ -40,13 +43,15 @@ internal class EntryLog(
         val entry = WearLinkEntry.of(atMillis, type, value, second, measured)
         // Never a row the phone could not read: what is written is what the line parses back to.
         if (WearLinkEntries.parse(WearLinkEntries.format(entry)) != entry) return false
-        return synchronized(lock) {
+        val written = synchronized(lock) {
             val taken = store.timesTaken(WearMetrics.ENTRIES, atMillis, atMillis + MAX_SHIFT_MILLIS)
             val free = (atMillis until atMillis + MAX_SHIFT_MILLIS).firstOrNull { it !in taken } ?: return@synchronized false
             store.put(WearMetrics.ENTRIES, entry.copy(epochMillis = free)).also { written ->
                 if (written) store.prune(WearMetrics.ENTRIES, now())
             }
         }
+        if (written) onLogged(type)
+        return written
     }
 
     private companion object {

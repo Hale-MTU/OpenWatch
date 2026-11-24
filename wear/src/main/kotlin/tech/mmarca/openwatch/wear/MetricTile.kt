@@ -71,6 +71,8 @@ enum class MetricPeriod {
  * Which of these a given watch offers depends on its sensors and arrives as
  * `WearUiState.availableMetrics`. Adding a metric here is all the UI needs:
  * the tile, the tile editor and the detail screen are driven by this enum.
+ * The names are stored, as the wearer's choice of tiles
+ * ([WearTilePreferences]): a metric is never renamed.
  *
  * Readings are stored in the base unit noted per entry; the unit system
  * only changes how they are displayed.

@@ -176,17 +176,6 @@ class WearReadingsSourceTest {
     }
 
     @Test
-    fun `the Today tile reads today only`() {
-        store.putAll(WearMetrics.STEPS, listOf(StepMinute(utc("2026-11-01T12:00:00Z"), 150), StepMinute(at("08:00:00"), 60)))
-        store.putAll(
-            WearMetrics.HEART_RATE,
-            listOf(HeartRateSample(utc("2026-11-01T23:59:50Z"), 50), HeartRateSample(at("09:00:00"), 72)),
-        )
-
-        assertEquals(TodayTotals(steps = 60, heartRate = 72), WearReadings.totals(source.today()))
-    }
-
-    @Test
     fun `a day is from midnight to midnight, each end's minute on its own day`() {
         store.putAll(
             WearMetrics.STEPS,

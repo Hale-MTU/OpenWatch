@@ -2,13 +2,15 @@ package tech.mmarca.openwatch.wear
 
 import android.content.Context
 import androidx.annotation.StringRes
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
 /*
- * What the heart rate and steps tiles and complications read from the
- * [MetricStore], one function each, so a tile and a complication of one
- * metric always show the same number. Each blocks on the store: call it off
- * the main thread. Each says why when it has nothing: a permission that is
- * off, or a sensor the watch lacks.
+ * What the tiles and complications read from the [MetricStore], one function
+ * each, so the tiles and the complication of one metric always show the same
+ * number: the heart rate and the steps on their own tiles, their
+ * complications and the Today tile, the water on the quick log tile. Each
+ * blocks on the store: call it off the main thread. Each says why when it
+ * has nothing: a permission that is off, or a sensor the watch lacks.
  */
 
 /** The newest heart rate and how old it is, or why there is none. */
@@ -36,3 +38,15 @@ internal fun readStepsToday(context: Context, store: MetricStore, day: TileDay):
     val minutes = store.since(WearMetrics.STEPS, day.startMillis - 1, TileDay.MAX_MINUTES_PER_DAY)
     return StepsToday.Counted(day.cumulative(TileDay.stepAmounts(minutes)))
 }
+
+/**
+ * The water logged on the watch today, millilitres: every glass from local
+ * midnight to the next, as the dashboard's water tile adds them up.
+ */
+internal fun readWaterToday(store: MetricStore, day: TileDay): Double =
+    store.since(WearMetrics.ENTRIES, day.startMillis - 1, MAX_ENTRIES_PER_DAY, day.endMillis)
+        .filter { it.type == WearLinkEntry.Type.WATER }
+        .sumOf { it.value }
+
+/** Far above what a wearer logs by hand in a day. */
+private const val MAX_ENTRIES_PER_DAY = 10_000

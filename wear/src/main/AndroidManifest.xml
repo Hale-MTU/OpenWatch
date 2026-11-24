@@ -106,7 +106,7 @@
             android:name=".HeartRateAlarmReceiver"
             android:exported="false" />
 
-        <!-- The metric tiles: each reads what the recorders stored and starts no sensor. -->
+        <!-- The tiles: each reads what the recorders stored and starts no sensor. -->
         <service
             android:name=".HeartRateTileService"
             android:description="@string/tile_heart_rate_description"
@@ -149,6 +149,37 @@
                 android:name="androidx.wear.tiles.PREVIEW"
                 android:resource="@drawable/tile_preview_floors" />
         </service>
+        <!-- Today's steps and heart rate side by side; reads as the two tiles above do. -->
+        <service
+            android:name=".MainVitalsTileService"
+            android:description="@string/tile_main_vitals_description"
+            android:exported="true"
+            android:icon="@drawable/open_watch_launcher_monochrome"
+            android:label="@string/tile_main_vitals_label"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter>
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.wear.tiles.PREVIEW"
+                android:resource="@drawable/tile_preview_main_vitals" />
+        </service>
+        <!-- Today's water with a glass to add on the tile, and the ways into the quick log and a heart rate measurement.
+             The one tile that writes: a glass, through the entry log. -->
+        <service
+            android:name=".QuickLogTileService"
+            android:description="@string/tile_quick_log_description"
+            android:exported="true"
+            android:icon="@drawable/ic_metric_hydration"
+            android:label="@string/tile_quick_log_label"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter>
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.wear.tiles.PREVIEW"
+                android:resource="@drawable/tile_preview_quick_log" />
+        </service>
 
         <!-- The heart rate and steps complications: each reads what its tile reads and starts no sensor.
              The system asks again about every five minutes. -->
@@ -185,9 +216,12 @@
                 android:value="300" />
         </service>
 
+        <!-- One instance: a tile, the watch face pill or a notification that opens the app reaches the one
+             already open (onNewIntent), with the screen a tile asked for. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:taskAffinity="">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

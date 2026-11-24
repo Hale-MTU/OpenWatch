@@ -6,11 +6,15 @@ import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.concurrent.futures.SuspendToFutureAdapter
 import androidx.wear.protolayout.ActionBuilders.launchAction
+import androidx.wear.protolayout.ActionBuilders.stringExtra
 import androidx.wear.protolayout.DeviceParametersBuilders.DeviceParameters
+import androidx.wear.protolayout.LayoutElementBuilders.LayoutElement
+import androidx.wear.protolayout.ModifiersBuilders.Clickable
 import androidx.wear.protolayout.ResourceBuilders.ImageResource
 import androidx.wear.protolayout.ResourceBuilders.InlineImageResource
 import androidx.wear.protolayout.ResourceBuilders.Resources
 import androidx.wear.protolayout.TimelineBuilders.Timeline
+import androidx.wear.protolayout.material3.MaterialScope
 import androidx.wear.protolayout.material3.materialScope
 import androidx.wear.protolayout.modifiers.clickable
 import androidx.wear.tiles.RequestBuilders.ResourcesRequest
@@ -30,22 +34,107 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
 
 /**
- * One metric's tile: today's value and its curve, read from the
- * [MetricStore] off the main thread. A tile only reads: the recorders in
- * [WearAppService] write whether a tile is shown or not, and nothing here
- * starts a sensor. A tap opens [MainActivity].
+ * A tile of the watch app. What it shows is read from the process's one
+ * [MetricStore] ([WearGraph.store]) on the IO dispatcher, never on the main
+ * thread and never from a store of its own: the recorders write to that one
+ * in the same process, so a tile never closes it, and it starts no sensor.
+ * When the store cannot be read (a locked or corrupt file) the tile says so
+ * ([unreadable]) rather than leaving the system's error tile. A tile is
+ * current for [FRESHNESS_MILLIS]; Wear OS asks for it again once that has
+ * passed, or sooner when the app asks ([TileService.getUpdater]).
  *
- * The curve is a PNG served by [onTileResourcesRequest] under the resources
- * version the tile names, the hash and size of its bytes. The last few PNGs
- * are kept in the cache directory under their versions, so a resources
- * request gets exactly the image its tile was built with, even after a newer
- * tile or a restart of the service. A read uses the process's one
- * [MetricStore] ([OpenWatchWearApplication]) and never closes it: the
- * recorders write to it in the same process.
+ * Two choices are deliberate, both from a Wear OS 4 watch: a plain
+ * [TileService] that serves its own resources ([images]) rather than
+ * `Material3TileService`, whose images inside the tile never reached that
+ * renderer, and the figures in a plain font ([tileValueStyle]) rather than
+ * the Material 3 display and numeral styles, whose variable font made the
+ * renderer drop the text. The rest of the layout is Material 3, built in
+ * [materialScope].
  */
-abstract class MetricTileService : TileService() {
+abstract class OpenWatchTileService : TileService() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
+    /** What the tile shows, read from [store] on the IO dispatcher. [request] carries the tap that asked for it, if one did. */
+    internal abstract fun read(request: TileRequest, store: MetricStore): TileFrame
+
+    /** What the tile shows when the store cannot be read. */
+    internal abstract fun unreadable(): TileFrame
+
+    /** The images of resources [version], by the ids the layout names. On the IO dispatcher. */
+    internal abstract fun images(version: String): Map<String, ImageResource>
+
+    override fun onTileRequest(requestParams: TileRequest): ListenableFuture<Tile> =
+        SuspendToFutureAdapter.launchFuture(scope.coroutineContext) {
+            val device = requestParams.deviceConfiguration
+            val frame = withContext(Dispatchers.IO) {
+                try {
+                    read(requestParams, wearGraph.store)
+                } catch (e: SQLiteException) {
+                    Log.e(TAG, "Metric store unreadable", e)
+                    unreadable()
+                }
+            }
+            val layout = materialScope(this@OpenWatchTileService, device) { frame.layout(this, device) }
+            Tile.Builder()
+                .setResourcesVersion(frame.resourcesVersion)
+                .setFreshnessIntervalMillis(FRESHNESS_MILLIS)
+                .setTileTimeline(Timeline.fromLayoutElement(layout))
+                .build()
+        }
+
+    override fun onTileResourcesRequest(requestParams: ResourcesRequest): ListenableFuture<Resources> =
+        SuspendToFutureAdapter.launchFuture(scope.coroutineContext) {
+            val version = requestParams.version
+            val images = withContext(Dispatchers.IO) { images(version) }
+            Resources.Builder()
+                .setVersion(version)
+                .apply { images.forEach { (id, image) -> addIdToImageMapping(id, image) } }
+                .build()
+        }
+
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
+    }
+
+    /**
+     * A tap that opens the watch app: its dashboard, or [route], a screen a
+     * tile may open ([WearRoutes.isDeepLinkable]), which [MainActivity] reads
+     * from [MainActivity.EXTRA_ROUTE].
+     */
+    internal fun openApp(route: String? = null): Clickable {
+        val activity = ComponentName(this, MainActivity::class.java)
+        if (route == null) return clickable(launchAction(activity), id = OPEN_ID)
+        return clickable(launchAction(activity, mapOf(MainActivity.EXTRA_ROUTE to stringExtra(route))), id = "$OPEN_ID:$route")
+    }
+
+    internal companion object {
+        private const val TAG = "OpenWatchTileService"
+        private const val OPEN_ID = "open"
+
+        /** How long a shown tile stays current; Wear OS asks again once it has passed. */
+        const val FRESHNESS_MILLIS: Long = 5L * 60 * 1000
+    }
+}
+
+/** What one tile shows: its layout, and the resources version it names, which [OpenWatchTileService.images] serves. */
+internal class TileFrame(
+    val resourcesVersion: String,
+    val layout: MaterialScope.(DeviceParameters) -> LayoutElement,
+)
+
+/**
+ * One metric's tile: today's value and its curve, read from the store. A tap
+ * opens [MainActivity].
+ *
+ * The curve is a PNG served by [images] under the resources version the tile
+ * names, the hash and size of its bytes. The last few PNGs are kept in the
+ * cache directory under their versions, so a resources request gets exactly
+ * the image its tile was built with, even after a newer tile or a restart of
+ * the service.
+ */
+abstract class MetricTileService : OpenWatchTileService() {
 
     /** The metric's accent, the colour the phone app draws it in (`ui/theme/Color.kt`). */
     internal abstract val accent: Int
@@ -56,38 +145,34 @@ abstract class MetricTileService : TileService() {
     /** Today's tile from [store], read on the IO dispatcher. */
     internal abstract fun read(day: TileDay, chart: TileChart, store: MetricStore): MetricTileContent
 
-    override fun onTileRequest(requestParams: TileRequest): ListenableFuture<Tile> =
-        SuspendToFutureAdapter.launchFuture(scope.coroutineContext) {
-            val device = requestParams.deviceConfiguration
-            val tile = withContext(Dispatchers.IO) {
-                val today = readToday(device)
-                if (today.chart == null || keep(today.chart)) today else today.withoutChart()
-            }
-            val version = tile.chart?.let(::versionOf) ?: NO_CHART_VERSION
-            val open = clickable(launchAction(ComponentName(this@MetricTileService, MainActivity::class.java)))
-            val layout = materialScope(this@MetricTileService, device) {
-                metricTileLayout(tile, open, device.screenDensity)
-            }
-            Tile.Builder()
-                .setResourcesVersion(version)
-                .setFreshnessIntervalMillis(FRESHNESS_MILLIS)
-                .setTileTimeline(Timeline.fromLayoutElement(layout))
-                .build()
-        }
+    override fun read(request: TileRequest, store: MetricStore): TileFrame {
+        val device = request.deviceConfiguration
+        val density = device.screenDensity
+        val chartHeightDp = (device.screenHeightDp * CHART_HEIGHT_SHARE).coerceIn(MIN_CHART_HEIGHT_DP, MAX_CHART_HEIGHT_DP)
+        val chart = TileChart(
+            widthPx = (device.screenWidthDp * CHART_WIDTH_SHARE * density).roundToInt(),
+            heightPx = (chartHeightDp * density).roundToInt(),
+            density = density,
+            accent = accent,
+        )
+        val today = read(TileDay.of(System.currentTimeMillis(), ZoneId.systemDefault()), chart, store)
+        return frameOf(if (today.chart == null || keep(today.chart)) today else today.withoutChart())
+    }
 
-    override fun onTileResourcesRequest(requestParams: ResourcesRequest): ListenableFuture<Resources> =
-        SuspendToFutureAdapter.launchFuture(scope.coroutineContext) {
-            val version = requestParams.version
-            val png = if (version == NO_CHART_VERSION) null else withContext(Dispatchers.IO) { pngFor(requestParams) }
-            Resources.Builder()
-                .setVersion(version)
-                .apply { png?.let { addIdToImageMapping(CHART_RESOURCE_ID, imageOf(it)) } }
-                .build()
-        }
+    /** A dash, rather than the system's error tile. */
+    override fun unreadable(): TileFrame = frameOf(unavailable(getString(R.string.tile_read_failed)))
 
-    override fun onDestroy() {
-        scope.cancel()
-        super.onDestroy()
+    private fun frameOf(tile: MetricTileContent): TileFrame {
+        val open = openApp()
+        return TileFrame(tile.chart?.let(::versionOf) ?: NO_CHART_VERSION) { device ->
+            metricTileLayout(tile, open, device.screenDensity)
+        }
+    }
+
+    override fun images(version: String): Map<String, ImageResource> {
+        if (version == NO_CHART_VERSION) return emptyMap()
+        val png = pngFor(version) ?: return emptyMap()
+        return mapOf(CHART_RESOURCE_ID to imageOf(png))
     }
 
     internal fun formatCount(count: Long): String = NumberFormat.getIntegerInstance().format(count)
@@ -98,31 +183,13 @@ abstract class MetricTileService : TileService() {
         return MetricTileContent(title, TILE_NO_VALUE, reason, accent, "$title: $reason", chart = null)
     }
 
-    /** Today's tile, or a dash when the store cannot be read, rather than the system's error tile. */
-    private fun readToday(device: DeviceParameters): MetricTileContent {
-        val density = device.screenDensity
-        val chartHeightDp = (device.screenHeightDp * CHART_HEIGHT_SHARE).coerceIn(MIN_CHART_HEIGHT_DP, MAX_CHART_HEIGHT_DP)
-        val chart = TileChart(
-            widthPx = (device.screenWidthDp * CHART_WIDTH_SHARE * density).roundToInt(),
-            heightPx = (chartHeightDp * density).roundToInt(),
-            density = density,
-            accent = accent,
-        )
-        return try {
-            read(TileDay.of(System.currentTimeMillis(), ZoneId.systemDefault()), chart, wearGraph.store)
-        } catch (e: SQLiteException) {
-            Log.e(TAG, "Metric store unreadable", e)
-            unavailable(getString(R.string.tile_read_failed))
-        }
-    }
-
     /**
-     * The PNG kept under the requested version. If it is gone (the cache was
-     * cleared), the tile is asked for again rather than drawn anew: a new
-     * drawing ends at a later now, so it would not be that version's image.
+     * The PNG kept under [version]. If it is gone (the cache was cleared),
+     * the tile is asked for again rather than drawn anew: a new drawing ends
+     * at a later now, so it would not be that version's image.
      */
-    private fun pngFor(requestParams: ResourcesRequest): ByteArray? =
-        kept(requestParams.version) ?: run {
+    private fun pngFor(version: String): ByteArray? =
+        kept(version) ?: run {
             getUpdater(this).requestUpdate(javaClass)
             null
         }
@@ -209,9 +276,6 @@ abstract class MetricTileService : TileService() {
         /** Enough for a tile request that is overtaken by the next before its resources are asked for. */
         private const val KEPT_VERSIONS = 4
         private const val RADIX = 36
-
-        /** How long a shown tile stays current; Wear OS asks again once it has passed. */
-        private const val FRESHNESS_MILLIS: Long = 5L * 60 * 1000
 
         /** About the width the main slot leaves on a round screen. */
         private const val CHART_WIDTH_SHARE = 0.72f

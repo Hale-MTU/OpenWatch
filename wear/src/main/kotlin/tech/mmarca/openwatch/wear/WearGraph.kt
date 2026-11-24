@@ -7,8 +7,10 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import androidx.wear.tiles.TileService
 import kotlinx.coroutines.flow.StateFlow
 import tech.mmarca.openwatch.wearlink.Page
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 import tech.mmarca.openwatch.wearlink.WearLinkWorkout
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateSource
@@ -65,8 +67,15 @@ internal class WearGraph(private val app: Application) {
     val phoneRequests: WearPhoneRequests by lazy { WearPhoneRequests(app) }
     val store: MetricStore by lazy { MetricStore(app) }
 
-    /** The entries made on the watch, by hand or by a spot measurement: their one writer. */
-    val entries: EntryLog by lazy { EntryLog(store) }
+    /**
+     * The entries made on the watch, by hand, on the quick log tile or by a
+     * spot measurement: their one writer. A glass of water, wherever it was
+     * logged, asks the quick log tile to show the day's new total.
+     */
+    val entries: EntryLog by lazy { EntryLog(store, onLogged = ::entryLogged) }
+
+    /** The dashboard's tiles the wearer chose, in their order. The first read loads their file: off the main thread. */
+    val tiles: WearTilePreferences by lazy { WearTilePreferences(app) }
 
     /** The settings as they change, on the watch or from the phone. The first read loads their file: off the main thread. */
     val settings: StateFlow<WatchPreferences> by lazy { WearSettingsState(app).state }
@@ -248,6 +257,11 @@ internal class WearGraph(private val app: Application) {
         WearSettings.write(app, next)
         tellHost { onSettingsChanged() }
         return true
+    }
+
+    /** An entry was written: the quick log tile's ring follows the water. Any thread. */
+    private fun entryLogged(type: WearLinkEntry.Type) {
+        if (type == WearLinkEntry.Type.WATER) TileService.getUpdater(app).requestUpdate(QuickLogTileService::class.java)
     }
 
     /** The steps stored for the minute that starts at [minuteStartMillis]. Any thread. */

@@ -3,10 +3,14 @@ package tech.mmarca.openwatch.wear
 /**
  * Navigation routes. Each feature package declares its own destinations, a
  * `NavGraphBuilder` extension in its `…Navigation.kt` that `OpenWatchWearApp`
- * calls; the routes stay here, so one feature can open another's.
+ * calls; the routes stay here, so one feature can open another's, and a tile
+ * can open some of them ([isDeepLinkable]).
  */
 object WearRoutes {
     const val DASHBOARD = "dashboard"
+
+    /** Which of the dashboard's tiles show, and in which order. */
+    const val TILE_EDITOR = "tile_editor"
     const val METRIC_ARG = "metric"
     const val METRIC = "metric/{$METRIC_ARG}"
     fun metric(metric: MetricTile) = "metric/${metric.name}"
@@ -36,4 +40,16 @@ object WearRoutes {
 
     /** The measurement a [MEASUREMENT_ARG] names; null for a name this build has none for, and for none. */
     fun spotKindOf(argument: String?): SpotKind? = SpotKind.entries.firstOrNull { it.name == argument }
+
+    /** The screens a caller outside the app, a tile, may open: the logging and the measuring ones. */
+    private val DEEP_LINKABLE = setOf(QUICK_LOG, LOG_WEIGHT, LOG_BLOOD_PRESSURE, BREATHE, MEASURE)
+
+    /**
+     * Whether a caller outside the app, a tile, may open [route]
+     * (`MainActivity.EXTRA_ROUTE`): a logging or a measuring screen, a
+     * measurement only by a kind this build has. Anything else is ignored, and
+     * the app opens where it would have.
+     */
+    fun isDeepLinkable(route: String?): Boolean =
+        route in DEEP_LINKABLE || SpotKind.entries.any { route == measurement(it) }
 }

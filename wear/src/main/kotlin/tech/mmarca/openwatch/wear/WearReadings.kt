@@ -5,7 +5,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
-import kotlin.math.roundToInt
 import tech.mmarca.healthcalculations.insights.AscentCredit
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.healthcalculations.model.HeartRateSample as ZoneSample
@@ -68,9 +67,6 @@ internal data class DayReadings(
     /** The time in each heart rate zone, zone 1 first; empty for a day read without a basis for the zones. */
     val heartZoneTime: List<Duration> = emptyList(),
 )
-
-/** The Today tile's figures. */
-internal data class TodayTotals(val steps: Int?, val heartRate: Int?)
 
 /** Turns the watch's own rows into the values the dashboard and the detail screens read. */
 internal object WearReadings {
@@ -349,12 +345,6 @@ internal object WearReadings {
     private val SPOT_ENTRIES = listOf(
         MetricTile.HEART_RATE to WearLinkEntry.Type.HEART_RATE,
         MetricTile.HRV to WearLinkEntry.Type.HRV,
-    )
-
-    /** What the Today tile shows: the day's steps and the latest heart rate, each null when there is none. */
-    fun totals(day: DayReadings): TodayTotals = TodayTotals(
-        steps = day.stepsByHour.sum().roundToInt().takeIf { day.hasSteps },
-        heartRate = day.latestHeartRate?.bpm,
     )
 
     /** The day's lowest, mean and highest heart rate sample, the range the heart rate tile shows; null on a day without one. */

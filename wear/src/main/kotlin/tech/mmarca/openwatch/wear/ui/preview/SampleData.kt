@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.wear.ui.preview
 import java.time.Duration
 import java.time.LocalDate
 import tech.mmarca.openwatch.wear.LinePoint
+import tech.mmarca.openwatch.wear.MetricOffer
 import tech.mmarca.openwatch.wear.MetricUiState
 import tech.mmarca.openwatch.wear.SampleStats
 import tech.mmarca.openwatch.wear.features.recording.RecordingUiState
@@ -126,6 +127,7 @@ object SampleData {
     val sensors = WatchSensors.ALL.copy(heartBeat = false)
 
     val uiState = WearUiState(
+        availableMetrics = MetricOffer.available(sensors, withReadings = metrics.keys),
         sensors = sensors,
         metrics = metrics,
         sleepStages = sleepStages,

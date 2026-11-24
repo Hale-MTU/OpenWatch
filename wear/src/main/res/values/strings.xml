@@ -253,4 +253,21 @@
     <string name="unit_celsius">°C</string>
     <string name="unit_fahrenheit">°F</string>
     <string name="unit_breaths_per_minute">br/min</string>
+    <!-- The Today and quick log tiles. -->
+    <string name="tile_open">Open</string>
+    <string name="tile_main_vitals_label">OpenWatch Today</string>
+    <string name="tile_main_vitals_description">Quick view of today\'s vitals and metrics.</string>
+    <string name="tile_quick_log_label">OpenWatch Quick log</string>
+    <string name="tile_quick_log_description">Log a glass of water with one tap, measure your heart rate or open the quick log.</string>
+    <!-- The tile editor: which of the dashboard's tiles show, and in which order. -->
+    <string name="tiles_edit">Edit tiles</string>
+    <string name="tiles_title">Tiles</string>
+    <string name="tiles_sensor_hint">Only metrics this watch can measure are listed.</string>
+    <string name="tiles_active_header">Active Tiles</string>
+    <string name="tiles_available_header">Add Tiles</string>
+    <string name="tiles_reset_default">Reset default</string>
+    <string name="tiles_move_hint">Move a tile with its arrows. Tap it to remove it.</string>
+    <!-- A screen reader's words for the arrows beside a tile: "Move Steps up". -->
+    <string name="choice_move_up">Move %1$s up</string>
+    <string name="choice_move_down">Move %1$s down</string>
 </resources>

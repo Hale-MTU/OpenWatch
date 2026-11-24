@@ -41,6 +41,7 @@ import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
 import java.util.Date
+import tech.mmarca.openwatch.wear.DisplayPreferences
 import tech.mmarca.openwatch.wear.MetricTile
 import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.UnitSystem
@@ -56,8 +57,8 @@ import tech.mmarca.openwatch.wear.ui.theme.VitalsColor
 import tech.mmarca.openwatch.wear.ui.theme.WeightColor
 import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
-/** Millilitres one tap on "water" adds: a glass. */
-const val WaterServingMl = 250.0
+/** Millilitres one tap on "water" adds: a glass, as on the quick log tile. */
+const val WaterServingMl = DisplayPreferences.WATER_SERVING_ML
 
 private const val RecentEntries = 6
 

@@ -21,7 +21,8 @@ import tech.mmarca.openwatch.wearlink.WearLinkEntry
  * resting rate the phone sends shows without the app being opened again,
  * and the entries made on the watch, which count toward the day's figures
  * the moment they are logged. Only the metrics the watch can give are
- * offered ([MetricOffer]).
+ * offered ([MetricOffer]), and the dashboard shows those of the tiles the
+ * wearer chose ([WearTilePreferences]), which the tile editor changes here.
  */
 class WearAppViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -40,13 +41,16 @@ class WearAppViewModel(application: Application) : AndroidViewModel(application)
             readings.metrics(zoneBasis = flow { emitAll(graph.settings) }.map { it.zoneBasis() }),
             readings.entries(),
             sensors,
-        ) { metrics, entries, sensors ->
+            // The first read of the chosen tiles loads their file too.
+            flow { emitAll(graph.tiles.chosen) }.flowOn(Dispatchers.IO),
+        ) { metrics, entries, sensors, tiles ->
             WearUiState(
                 availableMetrics = MetricOffer.available(sensors, withReadings = metrics.keys),
                 sensors = sensors,
                 metrics = metrics,
                 preferences = preferences,
                 entries = entries,
+                tiles = tiles,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(StopTimeoutMillis), WearUiState(preferences = preferences))
 
@@ -54,6 +58,16 @@ class WearAppViewModel(application: Application) : AndroidViewModel(application)
     fun log(type: WearLinkEntry.Type, value: Double, second: Double? = null) {
         val at = System.currentTimeMillis()
         viewModelScope.launch(Dispatchers.IO) { graph.entries.log(type, value, second, atMillis = at) }
+    }
+
+    /** Changes the dashboard's chosen tiles: [change] gets them as they are when it runs. The write is off the main thread. */
+    fun editTiles(change: (List<MetricTile>) -> List<MetricTile>) {
+        viewModelScope.launch(Dispatchers.IO) { graph.tiles.edit(change) }
+    }
+
+    /** The dashboard's default tiles again. */
+    fun resetTiles() {
+        viewModelScope.launch(Dispatchers.IO) { graph.tiles.reset() }
     }
 
     private companion object {

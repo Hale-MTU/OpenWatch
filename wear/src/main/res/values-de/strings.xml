@@ -232,4 +232,18 @@
     <string name="unit_celsius">°C</string>
     <string name="unit_fahrenheit">°F</string>
     <string name="unit_breaths_per_minute">Atemzüge/min</string>
+    <string name="tile_open">Öffnen</string>
+    <string name="tile_main_vitals_label">OpenWatch Heute</string>
+    <string name="tile_main_vitals_description">Die Werte von heute auf einen Blick.</string>
+    <string name="tile_quick_log_label">OpenWatch Schnelleintrag</string>
+    <string name="tile_quick_log_description">Mit einem Tippen ein Glas Wasser eintragen, den Puls messen oder den Schnelleintrag öffnen.</string>
+    <string name="tiles_edit">Kacheln bearbeiten</string>
+    <string name="tiles_title">Kacheln</string>
+    <string name="tiles_sensor_hint">Nur Werte, die diese Uhr messen kann, stehen zur Auswahl.</string>
+    <string name="tiles_active_header">Aktive Kacheln</string>
+    <string name="tiles_available_header">Kacheln hinzufügen</string>
+    <string name="tiles_reset_default">Standard wiederherstellen</string>
+    <string name="tiles_move_hint">Mit den Pfeilen verschiebst du eine Kachel. Antippen entfernt sie.</string>
+    <string name="choice_move_up">%1$s nach oben verschieben</string>
+    <string name="choice_move_down">%1$s nach unten verschieben</string>
 </resources>

@@ -13,9 +13,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowSensor
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
-/** What the heart rate and steps tiles and complications read: one read each, so both show the same number. */
+/** What the tiles and complications read: one read each, so a metric shows the same number on every one. */
 @RunWith(AndroidJUnit4::class)
 class MetricReadsTest {
 
@@ -63,6 +64,17 @@ class MetricReadsTest {
 
         store.put(WearMetrics.HEART_RATE, WearLinkProtocol.HeartRateSample(now - 3 * TileDay.MINUTE_MILLIS, 71))
         assertEquals(TileHeartRate.Recent(71, minutesAgo = 3), readHeartRateNow(app, store, now))
+    }
+
+    @Test
+    fun `today's water is every glass since midnight, and nothing else logged`() {
+        val log = EntryLog(store, now = { day.nowMillis })
+        log.log(WearLinkEntry.Type.WATER, 500.0, atMillis = day.startMillis - TileDay.MINUTE_MILLIS)
+        log.log(WearLinkEntry.Type.WATER, 250.0, atMillis = day.startMillis)
+        log.log(WearLinkEntry.Type.WATER, 250.0, atMillis = day.nowMillis - TileDay.MINUTE_MILLIS)
+        log.log(WearLinkEntry.Type.WEIGHT, 72.0, atMillis = day.nowMillis - TileDay.MINUTE_MILLIS)
+
+        assertEquals(500.0, readWaterToday(store, day), 0.0)
     }
 
     private fun addStepCounter() {

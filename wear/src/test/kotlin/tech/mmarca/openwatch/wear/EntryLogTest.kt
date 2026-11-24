@@ -75,4 +75,16 @@ class EntryLogTest {
 
         assertEquals(2L, updates.value)
     }
+
+    @Test
+    fun `each entry written is told, so the quick log tile can show it, and a refused one is not`() {
+        val told = mutableListOf<Type>()
+        val telling = EntryLog(store, now = { now }, onLogged = told::add)
+
+        telling.log(Type.WATER, 250.0)
+        telling.log(Type.WATER, 0.0)
+        telling.log(Type.WEIGHT, 72.0)
+
+        assertEquals(listOf(Type.WATER, Type.WEIGHT), told)
+    }
 }

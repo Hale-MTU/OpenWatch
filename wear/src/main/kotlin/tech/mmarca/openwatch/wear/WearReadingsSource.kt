@@ -78,9 +78,6 @@ internal class WearReadingsSource(
     /** Every entry the store keeps: the series' retention bounds them. */
     private fun readEntries(): List<WearLinkEntry> = store.since(WearMetrics.ENTRIES, -1L, ENTRY_LIMIT)
 
-    /** Today only, read now: what the Today tile shows. */
-    fun today(): DayReadings = read(LocalDate.now(clock), clock.zone)
-
     private fun read(date: LocalDate, zone: ZoneId, zoneBasis: HeartRateZones.Basis? = null): DayReadings {
         // A row's time is its minute or sample start; a day is [midnight, next midnight).
         val from = date.atStartOfDay(zone).toInstant().toEpochMilli() - 1

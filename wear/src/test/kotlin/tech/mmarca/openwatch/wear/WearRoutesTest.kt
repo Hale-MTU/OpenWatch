@@ -1,7 +1,9 @@
 package tech.mmarca.openwatch.wear
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WearRoutesTest {
@@ -32,5 +34,25 @@ class WearRoutesTest {
         }
         assertNull(WearRoutes.spotKindOf("SPO2"))
         assertNull(WearRoutes.spotKindOf(null))
+    }
+
+    @Test
+    fun aTileMayOpenTheLoggingAndMeasuringScreensAndNothingElse() {
+        for (route in listOf(WearRoutes.QUICK_LOG, WearRoutes.LOG_WEIGHT, WearRoutes.LOG_BLOOD_PRESSURE, WearRoutes.BREATHE, WearRoutes.MEASURE)) {
+            assertTrue(route, WearRoutes.isDeepLinkable(route))
+        }
+        for (kind in SpotKind.entries) assertTrue(WearRoutes.isDeepLinkable(WearRoutes.measurement(kind)))
+
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.STATUS))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.TILE_EDITOR))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.WORKOUT))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.DASHBOARD))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.metric(MetricTile.STEPS)))
+        // The pattern itself, a kind this build has not, another case, nothing.
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.MEASUREMENT))
+        assertFalse(WearRoutes.isDeepLinkable("measure/ECG"))
+        assertFalse(WearRoutes.isDeepLinkable("QUICK_LOG"))
+        assertFalse(WearRoutes.isDeepLinkable(""))
+        assertFalse(WearRoutes.isDeepLinkable(null))
     }
 }
