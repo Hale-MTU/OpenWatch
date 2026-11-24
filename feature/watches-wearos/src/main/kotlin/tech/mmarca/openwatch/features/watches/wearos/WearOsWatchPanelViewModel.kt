@@ -33,12 +33,15 @@ import tech.mmarca.openwatch.devices.wearos.WearOsCompanionManager
 import tech.mmarca.openwatch.devices.wearos.WearOsCompanionStatus
 import tech.mmarca.openwatch.devices.wearos.WearOsLinkSnapshot
 import tech.mmarca.openwatch.devices.wearos.WearOsLinkStore
+import tech.mmarca.openwatch.devices.wearos.WearOsSkinTemperatureImport
+import tech.mmarca.openwatch.devices.wearos.WearOsSyncCursorStore
 import tech.mmarca.openwatch.devices.wearos.isWearOs
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.features.watches.WatchPermissionRequest
 import tech.mmarca.openwatch.navigation.DeviceDetail
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Preferences
 
-/** What the Wear OS panel of the device view shows: the link's status and the watch's own settings. */
+/** What the Wear OS panel of the device view shows: the link's status, the watch's own settings and what its sync still waits for. */
 @Immutable
 data class WearOsWatchPanelUiState(
     /** Wear OS connection and app responsiveness state. */
@@ -62,9 +65,26 @@ data class WearOsWatchPanelUiState(
     val watchSettingsError: ScreenError? = null,
     /** A grant for the screen to ask for, once; held until [WearOsWatchPanelViewModel.onPermissionRequestHandled]. */
     val permissionRequest: WatchPermissionRequest.Runtime? = null,
-)
+    /**
+     * The nights the skin temperature baseline still lacks, as the last sync left it: until it
+     * exists a night is not written. Null before the first night was remembered, when the phone
+     * may never see one, and once the baseline exists.
+     */
+    val skinNightsToBaseline: Int? = null,
+) {
+    /**
+     * [skinNightsToBaseline] for the sync card's line, unless the watch says the measurement is
+     * switched off: then no night is coming and the line would count down to nothing. While the
+     * watch's settings are unread, the nights remembered so far speak for themselves.
+     */
+    val skinNightsToGo: Int?
+        get() = skinNightsToBaseline.takeIf { watchSettings?.let { it[Preferences.SKIN_TEMPERATURE] == Preferences.ON } ?: true }
+}
 
-/** One Wear OS watch's panel: the link check, the association, the watch's settings and its live heart rate. */
+/**
+ * One Wear OS watch's panel: the link check, the association, the watch's settings, its live
+ * heart rate, and how far the skin temperature baseline has formed.
+ */
 @HiltViewModel
 class WearOsWatchPanelViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
@@ -72,6 +92,7 @@ class WearOsWatchPanelViewModel @Inject constructor(
     private val companionManager: WearOsCompanionManager,
     private val linkStore: WearOsLinkStore,
     private val onboardWearOsWatch: OnboardWearOsWatchUseCase,
+    private val cursors: WearOsSyncCursorStore,
 ) : ViewModel() {
 
     val deviceId: String = savedStateHandle.toRoute<DeviceDetail>().deviceId
@@ -200,6 +221,17 @@ class WearOsWatchPanelViewModel @Inject constructor(
     fun onRuntimePermissionResult(granted: Boolean) {
         if (savedStateHandle.remove<Boolean>(PENDING_BLUETOOTH_REQUEST_KEY) != true) return
         if (granted) checkWearOsStatus()
+    }
+
+    /**
+     * Reads again what the sync keeps of the skin temperature baseline, from memory: the nights
+     * remembered are the phone's own, so the count holds between syncs and with the watch out of
+     * reach. The screen asks when it opens and when a sync of this watch starts or ends.
+     */
+    fun refreshSkinBaseline() {
+        val nights = cursors.skinNightMedians(deviceId)
+        val toGo = WearOsSkinTemperatureImport.nightsToBaseline(nights).takeIf { nights.isNotEmpty() && it > 0 }
+        localState.update { it.copy(skinNightsToBaseline = toGo) }
     }
 
     /** Reads the watch's own settings over the link. */

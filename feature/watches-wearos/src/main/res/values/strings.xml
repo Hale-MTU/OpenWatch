@@ -13,6 +13,10 @@
     <string name="settings_watch_wearos_sync_body">The OpenWatch app on the watch records your heart rate and what a sleep estimate needs, and keeps a week of it. Sync copies the new heart rate into Health Connect and writes one estimated sleep session per night.</string>
     <string name="settings_watch_wearos_sync_now">Sync watch</string>
     <string name="settings_watch_wearos_syncing">Syncing watch…</string>
+    <plurals name="settings_watch_wearos_skin_baseline_nights_to_go">
+        <item quantity="one">Skin temperature baseline: %1$d more night needed.</item>
+        <item quantity="other">Skin temperature baseline: %1$d more nights needed.</item>
+    </plurals>
     <string name="watch_settings_section">Watch settings</string>
     <string name="watch_settings_not_read">The watch keeps these settings itself. Read them to change them here.</string>
     <string name="watch_settings_unreachable">The watch did not answer. Is it near and its OpenWatch app running?</string>

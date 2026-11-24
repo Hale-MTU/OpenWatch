@@ -11,6 +11,10 @@
     <string name="settings_watch_wearos_sync_body">Die OpenWatch-App auf der Uhr zeichnet die Herzfrequenz und die Daten für eine Schlafschätzung auf und behält eine Woche davon. Die Synchronisierung kopiert die neue Herzfrequenz nach Health Connect und schreibt pro Nacht eine geschätzte Schlafsitzung.</string>
     <string name="settings_watch_wearos_sync_now">Uhr synchronisieren</string>
     <string name="settings_watch_wearos_syncing">Uhr wird synchronisiert…</string>
+    <plurals name="settings_watch_wearos_skin_baseline_nights_to_go">
+        <item quantity="one">Ausgangswert der Hauttemperatur: noch %1$d Nacht nötig.</item>
+        <item quantity="other">Ausgangswert der Hauttemperatur: noch %1$d Nächte nötig.</item>
+    </plurals>
     <string name="watch_settings_section">Uhr-Einstellungen</string>
     <string name="watch_settings_not_read">Die Uhr speichert diese Einstellungen selbst. Lies sie aus, um sie hier zu ändern.</string>
     <string name="watch_settings_unreachable">Die Uhr hat nicht geantwortet. Ist sie in der Nähe und läuft ihre OpenWatch-App?</string>

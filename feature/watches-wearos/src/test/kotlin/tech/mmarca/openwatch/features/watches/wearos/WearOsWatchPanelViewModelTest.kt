@@ -7,6 +7,7 @@ import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import java.time.LocalDate
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
@@ -14,6 +15,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,13 +29,16 @@ import tech.mmarca.openwatch.devices.wearos.WearOsAppStatus
 import tech.mmarca.openwatch.devices.wearos.WearOsCompanionManager
 import tech.mmarca.openwatch.devices.wearos.WearOsCompanionStatus
 import tech.mmarca.openwatch.devices.wearos.WearOsLinkStore
+import tech.mmarca.openwatch.devices.wearos.WearOsSkinTemperatureImport.NightMedian
+import tech.mmarca.openwatch.devices.wearos.WearOsSyncCursorStore
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.navigation.DeviceDetail
 import tech.mmarca.openwatch.navigation.routeHandle
 import tech.mmarca.openwatch.util.MainDispatcherRule
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Preferences
 
-/** The Wear OS panel's status check on the way in, and the live heart rate after it. */
+/** The Wear OS panel's status check on the way in, the live heart rate after it, and the skin temperature baseline's line. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [34], application = Application::class)
 class WearOsWatchPanelViewModelTest {
@@ -61,6 +66,7 @@ class WearOsWatchPanelViewModelTest {
             companionManager = manager,
             linkStore = WearOsLinkStore(FakeSharedPreferences(), testSeal()),
             onboardWearOsWatch = mockk(relaxed = true),
+            cursors = mockk(relaxed = true),
         )
         backgroundScope.launch { vm.uiState.collect { } }
         runCurrent()
@@ -94,6 +100,7 @@ class WearOsWatchPanelViewModelTest {
             companionManager = manager,
             linkStore = WearOsLinkStore(FakeSharedPreferences(), testSeal()),
             onboardWearOsWatch = mockk(relaxed = true),
+            cursors = mockk(relaxed = true),
         )
         backgroundScope.launch { vm.liveHeartRateBpm.collect { } }
         runCurrent()
@@ -109,5 +116,59 @@ class WearOsWatchPanelViewModelTest {
             manager.liveHeartRate("7F:12:34:56:78:9A", "Galaxy Watch8 (3A3B) LE")
         }
         assertEquals(72, vm.liveHeartRateBpm.value)
+    }
+
+    @Test
+    fun `the nights the skin temperature baseline still needs are read from what the sync keeps, each time the screen asks`() = runTest {
+        val watch = repo.addDevice(
+            displayName = "Galaxy Watch8",
+            address = "7F:12:34:56:78:9A",
+            bluetoothName = "Galaxy Watch8 (3A3B) LE",
+            capabilities = emptySet(),
+            kind = BleDeviceKind.WATCH,
+            integration = DeviceIntegration.WEAROS,
+        )
+        // The watch is out of reach: its settings stay unread, and the count needs neither it nor a sync.
+        val manager = mockk<WearOsCompanionManager>()
+        coEvery { manager.checkWearOsWatchStatus(any(), any()) } returns WearOsCompanionStatus()
+        coEvery { manager.watchSettings(any(), any()) } returns null
+        val cursors = mockk<WearOsSyncCursorStore>()
+        val nights = List(3) { NightMedian(LocalDate.parse("2026-11-07").plusDays(it.toLong()), 34.0, minutes = 400) }
+        every { cursors.skinNightMedians(watch.id) } returnsMany listOf(emptyList(), nights.take(1), nights.take(2), nights)
+        val vm = WearOsWatchPanelViewModel(
+            savedStateHandle = routeHandle(DeviceDetail(watch.id)),
+            deviceRepository = repo,
+            companionManager = manager,
+            linkStore = WearOsLinkStore(FakeSharedPreferences(), testSeal()),
+            onboardWearOsWatch = mockk(relaxed = true),
+            cursors = cursors,
+        )
+        runCurrent()
+
+        // No night was ever remembered: nothing to say, this phone or watch may not measure it at all.
+        vm.refreshSkinBaseline()
+        assertNull(vm.uiState.value.skinNightsToGo)
+
+        // After the first night's sync, two more before a night is written; after the second, one.
+        vm.refreshSkinBaseline()
+        assertEquals(2, vm.uiState.value.skinNightsToGo)
+        vm.refreshSkinBaseline()
+        assertEquals(1, vm.uiState.value.skinNightsToGo)
+
+        // The baseline exists: the line goes.
+        vm.refreshSkinBaseline()
+        assertNull(vm.uiState.value.skinNightsToGo)
+    }
+
+    @Test
+    fun `the skin temperature line is kept back when the watch says the measurement is off`() {
+        val forming = WearOsWatchPanelUiState(skinNightsToBaseline = 2)
+
+        // The settings were not read: the watch may be out of reach, the nights so far still count.
+        assertEquals(2, forming.skinNightsToGo)
+        assertEquals(2, forming.copy(watchSettings = mapOf(Preferences.SKIN_TEMPERATURE to Preferences.ON)).skinNightsToGo)
+        assertNull(forming.copy(watchSettings = mapOf(Preferences.SKIN_TEMPERATURE to Preferences.OFF)).skinNightsToGo)
+        // A watch that answers without the setting does not measure it.
+        assertNull(forming.copy(watchSettings = emptyMap()).skinNightsToGo)
     }
 }

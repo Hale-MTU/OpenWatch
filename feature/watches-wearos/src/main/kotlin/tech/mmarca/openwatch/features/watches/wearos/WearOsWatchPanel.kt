@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -92,6 +93,11 @@ fun WearOsWatchPanelRoute(
         runtimePermissions.request(listOf(request.permission))
         viewModel.onPermissionRequestHandled()
     }
+    // A sync may have handled a night: what it keeps of the skin temperature baseline is read
+    // again when one starts or ends, here or, by its time, while the screen was away.
+    LaunchedEffect(sync.isSyncingDevice(device.id), device.lastSyncedAt) {
+        viewModel.refreshSkinBaseline()
+    }
 
     content(
         wearOsWatchPanel(
@@ -147,7 +153,7 @@ internal fun wearOsWatchPanel(
             onAssociate = actions.onAssociate.takeIf { state.wearOsCompanionMissing },
         )
         SectionHeader(stringResource(R.string.settings_watch_wearos_sync_section))
-        WearOsSyncCard(device, sync, onSync = actions.onSync, onAllowGrants = actions.onAllowSyncGrants)
+        WearOsSyncCard(device, sync, state.skinNightsToGo, onSync = actions.onSync, onAllowGrants = actions.onAllowSyncGrants)
     },
     afterLiveSensors = {
         SectionHeader(stringResource(R.string.watch_settings_section))
@@ -311,14 +317,16 @@ private fun WearOsStatusCard(
 
 /**
  * The sync for a Wear OS watch: what it does, when it last ran, what the
- * last run brought (heart rate samples and estimated nights), and the
- * button. The sync itself is the shared [DeviceSyncController] flow; this
- * card only words it.
+ * last run brought (heart rate samples and estimated nights), what it still
+ * waits for, and the button. The sync itself is the shared
+ * [DeviceSyncController] flow; this card only words it.
  */
 @Composable
 private fun WearOsSyncCard(
     device: BleSensorDevice,
     sync: DeviceSyncUiState,
+    /** The nights the skin temperature baseline still needs; null when the card has nothing to say of it. */
+    skinNightsToGo: Int?,
     onSync: () -> Unit,
     onAllowGrants: (Set<String>) -> Unit,
 ) {
@@ -345,6 +353,7 @@ private fun WearOsSyncCard(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             sync.lastFor(device.id)?.let { SyncOutcomeSummary(it, onAllowGrants) }
+            skinNightsToGo?.let { SkinBaselineLine(it) }
             sync.failureFor(device.id)?.toScreenError().resolve()?.let { message ->
                 Text(
                     text = message,
@@ -377,6 +386,21 @@ private fun WearOsSyncCard(
             }
         }
     }
+}
+
+/**
+ * How many more nights the skin temperature baseline needs before a night is written against
+ * it. The count only: after a sync that handled such a night, the run's summary above says in
+ * a sentence why nothing was written, and this line is its short companion; between syncs it
+ * stands alone, since the summary is this session's and the nights remembered are not.
+ */
+@Composable
+private fun SkinBaselineLine(nightsToGo: Int) {
+    Text(
+        text = pluralStringResource(R.plurals.settings_watch_wearos_skin_baseline_nights_to_go, nightsToGo, nightsToGo),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
 }
 
 /** The inset these rows keep inside the card. */
@@ -513,7 +537,9 @@ private fun WearOsWatchPreview() {
                     watchSettings = mapOf(
                         Preferences.HEART_RATE_DAY to "10",
                         Preferences.SLEEP_HOLD to Preferences.SYNCED,
+                        Preferences.SKIN_TEMPERATURE to Preferences.ON,
                     ),
+                    skinNightsToBaseline = 2,
                 ),
                 liveHeartRateBpm = 71,
                 sync = DeviceSyncUiState(),

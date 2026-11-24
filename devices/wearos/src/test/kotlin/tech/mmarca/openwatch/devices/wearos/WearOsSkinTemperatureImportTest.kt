@@ -116,6 +116,14 @@ class WearOsSkinTemperatureImportTest {
     }
 
     @Test
+    fun `the nights the baseline still lacks fall to zero at three, and a night without a date counts`() {
+        val nights = listOf(NightMedian(null, 33.0), night("2026-11-06", 33.5), night("2026-11-07", 34.0), night("2026-11-08", 34.0))
+        assertEquals(listOf(3, 2, 1, 0, 0), (0..4).map { WearOsSkinTemperatureImport.nightsToBaseline(nights.take(it)) })
+        // What the count promises: with none to go, the next night has a baseline.
+        assertEquals(33.5, WearOsSkinTemperatureImport.baseline(LocalDate.parse("2026-11-08"), nights.take(3))!!, 1e-9)
+    }
+
+    @Test
     fun `the record holds one delta per minute against the baseline, at the wrist`() {
         val run = WearOsSkinTemperatureImport.runs(minutes(0, 60) { 34.0 + it / 100.0 }).single()
         val record = WearOsSkinTemperatureImport.record(run, 34.0, ZoneOffset.ofHours(1), version = 5)!!

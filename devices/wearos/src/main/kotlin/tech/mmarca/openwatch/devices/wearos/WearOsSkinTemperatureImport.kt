@@ -101,6 +101,12 @@ object WearOsSkinTemperatureImport {
     }
 
     /**
+     * The nights the baseline still lacks before a night is written against it; zero once it
+     * exists. A night without a date counts, as it does in [baseline].
+     */
+    fun nightsToBaseline(medians: List<NightMedian>): Int = (MIN_BASELINE_NIGHTS - medians.size).coerceAtLeast(0)
+
+    /**
      * [medians] with [runs] of [night] counted in, and only the newest [MAX_BASELINE_NIGHTS] kept.
      * A new night joins once, with the median of all the runs' minutes. A night already
      * remembered, whose earlier runs came with an earlier sync, takes these in by their length:
