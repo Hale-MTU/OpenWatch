@@ -118,7 +118,11 @@ a heart rate as not dense and the step counter wakes the watch itself), and the 
 windows. The platform checks a permission per tracker (`PermissionUtil`): from Android 16 the Health Connect one, `READ_HEART_RATE` for the heart rate, `READ_OXYGEN_SATURATION` for SpO2, `READ_SKIN_TEMPERATURE` for skin temperature, and `READ_ADDITIONAL_HEALTH_DATA` (Samsung's) for raw PPG, ECG and BIA; before Android 16 `BODY_SENSORS` for all. Without it the tracker is refused with an error callback; that is why skin temperature delivered nothing in the bench test. The watch asks for the permission when its switch is turned on. The same binding carries the platform's other trackers, one per type (the platform keeps one client per package with one tracker per type): skin temperature at night and SpO2 spot measurements, each switched on by itself on a watch with the platform. The night-time HRV windows take their beats from an `HrvWindowSource`:
 `PpgWindowSource` (Samsung's raw PPG, beats found by `PpgBeats`) by default, or
 `SamsungIbiSource` (the platform's own intervals, through `SamsungHealthPlatform`, the
-clean-room client in `wear/.../samsung/`) once chosen on the status screen. The choice
+clean-room client in `wear/.../samsung/`) or `SamsungPpgSource` (the platform's green PPG,
+tracker type `PPG_CONTINUOUS`, set up with transaction 8, `setPpgType(appId, type, colours)`, before
+its listener; each point carries the green value and its status at ints 0 and 1, and only status 0
+is kept; it waits for a batch stamped after the window, like the interval source, and a window
+without a measured point counts as failed) once chosen on the status screen. The choice
 (`WearSettings.hrvSource`) is shown only where `com.samsung.android.service.health` answers the bind
 intent from the system image, so a watch from another maker never sees it, and a store app that takes
 the package name there is never bound. A callback that claims more than 100 000 points or 8 192 values
