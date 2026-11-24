@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">Abbrechen</string>
+    <string name="action_save">Speichern</string>
+    <string name="action_grant">Erteilen</string>
+    <string name="action_grant_permission">Berechtigung erteilen</string>
+    <string name="action_not_now">Jetzt nicht</string>
+    <string name="screen_error_not_found">Der angeforderte Eintrag wurde nicht gefunden.</string>
+    <string name="screen_error_missing_argument">Erforderliche Informationen fehlen.</string>
+    <string name="screen_error_permission_denied">Zum Laden dieser Daten ist eine Berechtigung erforderlich.</string>
+    <string name="screen_error_health_connect_unavailable">Health Connect ist auf diesem Gerät nicht verfügbar.</string>
+    <string name="screen_error_feature_unavailable">Auf diesem Gerät nicht verfügbar.</string>
+    <string name="message_missing_permissions_title">Einige Berechtigungen fehlen</string>
+    <string name="watch_permissions_continue">Trotzdem fortfahren</string>
+    <string name="onboarding_os_bluetooth">Bluetooth</string>
+    <string name="onboarding_os_bluetooth_desc">Uhren, Herzfrequenzgurte und andere Sensoren finden und verbinden.</string>
+    <string name="onboarding_os_notifications">Benachrichtigungen</string>
+    <string name="onboarding_os_notifications_desc">Synchronisierungsfortschritt, Erinnerungen und Trainingshinweise.</string>
+    <string name="onboarding_os_location">Standort</string>
+    <string name="onboarding_os_location_desc">Auf älteren Android-Versionen nötig, um nach Bluetooth-Geräten zu suchen.</string>
+    <string name="onboarding_os_battery">Uneingeschränkte Akkunutzung</string>
+    <string name="onboarding_os_battery_desc">Lässt Synchronisierungen im Hintergrund zu Ende laufen, statt sie durch Energiesparen zu pausieren. Öffnet die Android-Einstellungen.</string>
+    <string name="onboarding_os_notification_forwarding">Benachrichtigungen weiterleiten</string>
+    <string name="onboarding_os_notification_forwarding_desc">Telefonbenachrichtigungen an eine verbundene Uhr senden. Öffnet die Android-Einstellungen.</string>
+    <string name="onboarding_action_grant_all">Alle erteilen</string>
+    <string name="settings_watch_name_label">Name</string>
+    <string name="action_remove">Entfernen</string>
+    <string name="option_not_specified">Nicht angegeben</string>
+    <string name="screen_error_generic">Die Anfrage konnte nicht abgeschlossen werden.</string>
+    <string name="settings_watch_notifications_disclosure_accept">Weiter</string>
+    <string name="settings_watch_notifications_disclosure_decline">Jetzt nicht</string>
+    <string name="time_just_now">gerade eben</string>
+    <string name="hc_setup_sync_title">In Health Connect schreiben</string>
+    <string name="hc_setup_sync_body">Aus pausiert jedes Schreiben. Die Geräte behalten ihre Aufzeichnungen, bis es wieder an ist.</string>
+    <string name="health_data_title">Was OpenWatch liest und schreibt</string>
+    <string name="settings_watch_notifications_disclosure_title">OpenWatch liest deine Benachrichtigungen</string>
+    <string name="settings_watch_notifications_disclosure_body">Um Benachrichtigungen auf deiner Uhr zu zeigen, liest OpenWatch die Benachrichtigungen, die dein Telefon empfängt, einschließlich ihres Textes.\n\nSie werden auf diesem Gerät gelesen und nur über Bluetooth an die gekoppelte Uhr gesendet. Nichts wird in einer Datei oder einer Datenbank gespeichert, und OpenWatch hat keine Internetberechtigung, deshalb können Benachrichtigungen nirgendwo anders hingelangen.\n\nDu kannst das jederzeit ausschalten und den Benachrichtigungszugriff in den Android-Einstellungen widerrufen.</string>
+    <string name="home_health_connect">Health Connect</string>
+    <string name="home_health_connect_body">Was OpenWatch lesen und schreiben darf</string>
+    <string name="action_delete">Löschen</string>
+</resources>

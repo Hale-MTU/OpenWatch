@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hc_setup_intro">את מה שהשעון והמשקל שלך מתעדים, OpenWatch מעתיק אל Health Connect, ומשם OpenVitals ואפליקציות אחרות קוראים אותו. שום דבר לא יוצא מהטלפון: לאפליקציה אין הרשאת גישה לאינטרנט.</string>
+    <string name="hc_setup_permissions_title">הרשאות</string>
+    <string name="hc_setup_status_all_granted">כל %1$d ההרשאות ניתנו</string>
+    <string name="hc_setup_status_partial">ניתנו %1$d מתוך %2$d הרשאות. רשומה שלא ניתנה הרשאה לכתוב אותה נשארת במכשיר.</string>
+    <string name="hc_setup_status_update">צריך לעדכן את Health Connect לפני ש-OpenWatch יוכל להשתמש בו.</string>
+    <string name="hc_setup_status_play_store">בטלפון הזה Health Connect מותקן בלי Google Play, ולכן אי אפשר להשתמש בו.</string>
+    <string name="hc_setup_status_unavailable">השירות Health Connect לא זמין בטלפון הזה.</string>
+    <string name="hc_setup_grant">מתן הרשאות</string>
+    <string name="hc_setup_open_settings">פתיחת ההגדרות של Health Connect</string>
+    <string name="hc_setup_continue">המשך</string>
+    <string name="hc_setup_missing_title">עדיין לא ניתנו:</string>
+    <string name="hc_setup_missing_extra">גישה ברקע וגישה להיסטוריה נמצאות בדף נפרד: פתחו את הגדרות Health Connect, אחר כך OpenWatch, ואז גישה נוספת.</string>
+</resources>

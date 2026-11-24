@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_section_watches">Zegarki</string>
+    <string name="home_section_scale">Waga</string>
+    <string name="home_section_app">Aplikacja</string>
+    <string name="home_settings">Ustawienia</string>
+    <string name="home_settings_body">Profil ciała, dostęp do powiadomień, o aplikacji</string>
+</resources>

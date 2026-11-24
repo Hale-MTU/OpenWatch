@@ -3,7 +3,7 @@
 > **Status:** Current implemented behavior. Experimental.
 > **Audience:** Users and contributors.
 > **Implementation:** `devices/core`, `devices/garmin`, `devices/wearos`, `devices/notifications`, `features/watches`.
-> **Navigation:** `Screen.Home`, `Screen.WatchDevice`, `Screen.WatchData`, `Screen.WatchNotifications`, `Screen.WatchSettings`, `Screen.WatchAlarms`, `Screen.WatchSendPoint`.
+> **Navigation:** the typed routes `Home`, `DeviceDetail`, `WatchData`, `WatchNotifications`, `WatchSettings`, `WatchAlarms` and `WatchSendPoint` in `navigation/Routes.kt`.
 > **Related:** [Permissions](../app/permissions.md), [Install the watch app on a Wear OS watch](../how-to/wear-os-sideload.md).
 
 OpenWatch writes what a watch records to Health Connect and shows no history of its own; OpenVitals, or any other Health Connect app, is where the records are read.
@@ -25,6 +25,8 @@ The watch app runs `WearAppService`, a `connectedDevice` foreground service with
 
 The watch app also offers three tiles, added from the watch's tile list: **Heart rate**, **Steps** and **Floors**. Each shows today's value in the metric's colour from the phone app and the day's curve from midnight to midnight, drawn up to now, over the hours 0, 6, 12, 18 and 24: the heart rate as quarter-hour means, broken where the watch stored none (off the wrist or charging), the steps and floors as a running total. The steps are the ones the watch counted itself, so they can fall short of the day's total in Health Connect, which adds the phone's own steps and other apps'. The heart rate is the newest sample with its age; one older than an hour shows as a dash. Under its curve is the day's lowest and highest sample. The floors are counted as the phone counts them before writing them to Health Connect: only the height that enough steps carry (`AscentCredit`), three metres a floor, both rounded down; under the curve are the metres that counted. A value whose permission is off, or whose sensor the watch lacks, shows as a dash with the reason. The tiles only read the watch's metric store and start no sensor; a tile counts as stale five minutes after it was drawn, so Wear OS asks for a new one. Tapping a tile opens the watch app. Verified on a TicWatch Pro 5 with Wear OS 4.
 
+Two complications put the same numbers on the watch face, chosen in the watch face's editor: **Heart rate** (the newest sample, a dash once it is older than an hour) and **Steps** (today's, as the Steps tile counts them). Each is a short text with the metric's icon and unit; it reads what its tile reads, starts no sensor, and is asked for again about every five minutes. Tapping one opens the watch app. Not yet tried on a watch.
+
 When opening a paired Wear OS watch on its device screen from the home screen:
 - **Paired**: OpenWatch looks for the watch among the phone's bonded devices. The address stored at onboarding comes from the BLE scan, and Wear OS watches advertise with a private address, so the match falls back to the name (a trailing ` LE` ignored). There is no guess beyond that: another bonded watch is never reported as this one.
 - **Found when adding**: the Watches scan offers a bonded device as a Wear OS watch when its name is a known smartwatch family or its service list names the OpenWatch Wear OS app. A wrist-watch Bluetooth class alone is not enough, since Garmin, Fitbit and Huawei watches report it too. The service list Android caches at pairing predates the app, so the scan re-queries it (SDP) for bonded dual-mode devices that nothing has claimed yet and that are not audio, peripheral or imaging devices. A watch with an unknown name is therefore found once the OpenWatch Wear OS app runs on it.
@@ -37,7 +39,7 @@ The UUID and the protocol words come from the shared `:wearlink` module on both 
 
 ### Watch Sync
 
-The watch app records heart rate on its own, from the moment it is granted heart rate access, with the screen off and the app closed: the same foreground service that answers the phone keeps the sensor on, batched so the watch wakes once every few minutes rather than once per beat. It keeps one sample every ten seconds and a week of history, pruning older samples itself.
+The watch app records heart rate on its own, from the moment it is granted heart rate access, with the screen off and the app closed: the same foreground service that answers the phone keeps the sensor on, batched so the watch wakes once every few minutes rather than once per beat. It keeps one sample every ten seconds and a week of history, pruning older samples itself. Every series on the watch is kept a week, whether or not a phone collected it, so the watch's status screen shows when a phone last synced; from the fifth day without a sync it says how many days are left, and the watch posts a reminder (the Sync reminders channel), again once readings the phone never got are being dropped. The next sync takes it away.
 
 It counts steps the same way, from the watch's own step counter, once it is granted physical activity access: one count per clock minute, a week of history. Steps taken while the watch app was not running, for example after a restart of the watch, are spread evenly over the minutes in between. The watch's screen shows whether step counting is on and offers the grant if it is not. A watch without a step counter simply records none.
 
@@ -55,7 +57,7 @@ A Wear OS watch does not hand its sleep to anyone: the vendor's watch app keeps 
 
 On the watch, one row per clock minute: the accelerometer's movement count (readings whose acceleration jumped, scaled onto the scale the estimator was fitted on; a still wrist counts nothing, a turn in bed a short burst), the per-axis mean and spread of the acceleration, the arm's angle and how much it changed, the minute's mean heart rate and its spread, and flags for the charger, the off-body sensor, a lost pulse and a screen wake-up. The accelerometer needs no permission. A week of minutes is kept.
 
-**Turn on bedtime mode at night.** A sleeping Galaxy Watch8 wakes its processor only every few minutes while the arm is still, and its accelerometer keeps just the last 48 seconds, so on a night without bedtime mode most minutes arrive with no movement in them and the phone may find no night at all. While bedtime mode is on, the watch is on the wrist and off the charger, the watch app keeps the processor awake so every minute is recorded whole; the rest of the day it lets the watch sleep. The watch app's screen says which: recording every minute, paused off the wrist, paused while charging, or a reminder to turn bedtime mode on. The fields are specified in [sleep-minute-features.md](../engineering/sleep-minute-features.md).
+**Turn on bedtime mode at night.** A sleeping Galaxy Watch8 wakes its processor only every few minutes while the arm is still, and its accelerometer keeps just the last 48 seconds, so on a night without bedtime mode most minutes arrive with no movement in them and the phone may find no night at all. While bedtime mode is on, the watch is on the wrist and off the charger, the watch app keeps every minute whole; the rest of the day it lets the watch sleep. On a watch without Samsung's bedtime mode, Do Not Disturb (or theater mode) stands in for it between 21:00 and 09:00 only, so one left on by day costs nothing. The watch app's screen says which: recording every minute, paused off the wrist, paused while charging, or a reminder to turn bedtime mode on. The fields are specified in [sleep-minute-features.md](../engineering/sleep-minute-features.md).
 
 On the phone, the same sync pulls the minutes after the heart rate, from the start of the night the last pull reached, so a night is always estimated whole, and runs them through four steps:
 
@@ -74,7 +76,7 @@ Naps are written too, each as its own sleep session: a still, worn stretch of at
 
 The watch also keeps every minute whole without bedtime mode once it sees sleep starting: ten still minutes on the wrist with a falling pulse (twenty by day, so reading or a film does not start it). It stops after five waking minutes in a row, off the wrist, on the charger, after ten hours, or at once when you unlock your phone: the phone tells the watch, at most every five minutes. A glance at the watch does not stop it. Holding the processor awake costs battery; see Night measurements below.
 
-While the watch's device screen is open and the watch is worn, its status card shows the heart rate as it happens ("Now: 72 bpm"). The watch measures it for the phone only while someone looks, and nothing live is stored: the same readings arrive with the next sync. Not yet tried on a watch.
+While the watch's device screen is open and the watch is worn, its status card shows the heart rate as it happens ("Now: 72 bpm"). The watch measures it for the phone only while someone looks, and nothing live is stored: the same readings arrive with the next sync. While a sync runs it pauses, and it comes back once the sync is over. Not yet tried on a watch.
 
 Not yet: series beyond heart rate, steps and sleep. Recorded data from the vendor app, if it is installed, still reaches Health Connect, and the apps that read it, as before.
 
@@ -87,22 +89,32 @@ While sleep is held, the watch can measure more than the minutes:
 - **Heart rate variability (HRV)**: a five-minute window once the arm was still for ten minutes, at most every half hour, written as RMSSD to Health Connect. The beats come from the raw pulse signal by default, or from the Samsung platform's own beat intervals.
 - **Breathing rate**: from the same windows, written only when you switch on *Breathing rate from the watch (experimental)* in the phone's settings; it is not yet checked against a reference.
 - **SpO2** (Samsung watches): a spot measurement once an hour while the arm is still, written as oxygen saturation.
-- **Skin temperature** (Samsung watches): one value a minute, written per night as the difference from your own usual night.
+- **Skin temperature** (Samsung watches): one value a minute, written per night as the difference from your own usual night. The first three nights form that usual night and are not written: the Watch Sync card says so after a sync that brought such a night, and for as long as the usual night is forming it says how many more nights are needed, also between syncs and with the watch out of reach. The count goes while skin temperature is switched off on the watch. A night the tracker dropped out of, or one synced in several parts, counts once, with all of it.
 
 None of these is checked against a reference device yet. Each needs its Health Connect grant on the phone; without it the values wait on the watch for a week and the sync card asks.
 
 ### Workouts
 
-The watch app's screen has a **Workout** button: pick a sport (walking, running, hiking, cycling and twelve indoor ones), then the watch shows the time, heart rate, distance, steps and climb, with pause, resume and stop. Sports with a route ask for location once and use the watch's GPS directly (no Google Play services); refused, they record without a route. The heart rate runs every second-or-so during the workout, and the watch keeps a workout for a month. A workout shorter than half a minute is dropped; one the watch app lost to a crash is saved at the next start.
+The watch app's screen has a **Workout** button: pick a sport (walking, running, hiking, cycling and twelve indoor ones), then the watch shows the time, heart rate, distance, steps and climb, with pause, resume and stop. Sports with a route ask for location once and use the watch's GPS directly (no Google Play services); refused, they record without a route. The heart rate runs every second-or-so during the workout, and the watch keeps a workout for a month. A workout shorter than half a minute is dropped; one the watch app lost to a crash is saved at the next start. A route longer than the 9000 points the link carries (more than about 12 hours at one point every five seconds) is thinned to every second point, as often as it takes, so it still covers the whole workout.
 
-The phone writes each workout as an exercise session with its route and pauses, and a distance for one with GPS. Steps, climbed height and heart rate are not written again: the watch's all-day series already carry them minute by minute. This needs the Health Connect grants for exercise, exercise routes and distance; without them the workouts wait on the watch. Each workout also gets its active calories, as an estimate, once your weight is known from Health Connect or the body profile: from the watch's heart rate during the workout (Keytel and colleagues, J Sports Sci 2005, which needs sex and birth year and holds at 57 to 90 % of the maximum heart rate), else for a walk or run from its distance at the pace ACSM's metabolic equations cover, else from the sport's value in the 2024 Adult Compendium of Physical Activities. The resting share, from the basal metabolic rate, is taken off. Without a weight, or without the grant to write active calories, the workout is written without them and the card says what is missing. Not yet tried on a watch; the ambient screen and the watch face indicator OpenVitals has are not ported.
+The phone writes each workout as an exercise session with its route and pauses, and a distance for one with GPS. Steps, climbed height and heart rate are not written again: the watch's all-day series already carry them minute by minute. This needs the Health Connect grants for exercise, exercise routes and distance; without them the workouts wait on the watch. Each workout also gets its active calories, as an estimate, once your weight is known from Health Connect or the body profile: from the watch's heart rate during the workout (Keytel and colleagues, J Sports Sci 2005, which needs sex and birth year and holds at 57 to 90 % of the maximum heart rate), else for a walk or run from its distance at the pace ACSM's metabolic equations cover, else from the sport's value in the 2024 Adult Compendium of Physical Activities. The resting share, from the basal metabolic rate, is taken off. Without a weight, or without the grant to write active calories, the workout is written without them and the card says what is missing. While a workout runs, the watch face shows its pill (sport and time; a tap opens the workout), and the workout screen stays on in ambient mode with a dim layout of its own: the time in whole minutes and dashes where the heart rate and distance would be, since the screen changes only once a minute there. The ambient layout needs the ambient service of the Wear SDK, a system library of recent Wear OS releases; without it the system dims the screen as for any app. Not yet tried on a watch.
+
+### Quick log
+
+The watch app's dashboard has a **Log** button, below the activity rings:
+
+- **Water**: one tap adds a glass, 250 ml, toward a goal of two litres a day; the button shows the day's total against the goal.
+- **Weight** and **Blood pressure**: a value picked with the + and − buttons or the crown, starting from the last one logged; blood pressure asks for the systolic, then the diastolic. Blood pressure stays within what Health Connect can store (a systolic of up to 200 mmHg).
+- **Breathe**: a guided minute, six breaths of four seconds in and six out, a circle that grows and shrinks with a buzz at each turn. The screen stays on for that minute only. A finished minute is logged as a mindful minute; one swiped away is not.
+
+The newest six entries are listed below, with their time. The entries count at once toward the dashboard's Water and Weight tiles and their detail screens (the newest weight is the value shown, however old). They are kept on the watch for a month, and the phone does not write them to Health Connect yet.
 
 ### Settings on the watch and from the phone
 
 The watch app's screen and the phone's *Watch settings* card (on the watch's device screen) show the same settings, kept on the watch:
 
 - **Heart rate outside bedtime mode**: every 10 seconds (the default) or power save, about every 10 minutes. Bedtime mode and a sleep hold always measure every 10 seconds.
-- **Sleep: wake lock or synced wake-ups**: how a sleep hold keeps every minute. Synced wake-ups let the processor sleep between the heart rate sensor's wake-ups and empty every sensor then; they work only with the heart rate from the sensor.
+- **Sleep: wake lock or synced wake-ups**: how a sleep hold keeps every minute. Synced wake-ups let the processor sleep between the heart rate sensor's wake-ups and empty every sensor then; they work only with the heart rate from the sensor. They are the default on a watch whose heart rate sensor can wake it, the wake lock on one whose sensor cannot; a choice made here or on the phone stays.
 - **Samsung sources** (only on a watch with the Samsung Health Platform): heart rate and HRV from the platform, skin temperature and SpO2 at night. They need the platform's Developer Mode; without it the platform asks Samsung about this app. A Samsung source that fails falls back to the sensor until a setting changes. Skin temperature and SpO2 also need a permission that only the watch can grant: switch them on once on the watch.
 
 On a Galaxy Watch7 a night with the Samsung heart rate and a wake lock cost about 4.7% battery an hour, one with the sensor's heart rate and a wake lock about 8%; the debug build's measurement protocol is there to compare the settings.
@@ -295,11 +307,15 @@ Phone notifications can be forwarded to a paired Garmin watch that supports it. 
 3. It then opens Android's notification access screen. Access can only be granted there; OpenWatch cannot request it from inside the app.
 4. Coming back to OpenWatch, the switch turns itself on once access has been granted.
 
-### The App Blocklist
+### Which Apps Send
 
-"Apps to silence" lists the apps installed on the phone. Everything sends to the watch until an app is switched off, so the list is a blocklist rather than an allow-list.
+The list shows the apps installed on the phone. By default every app sends until it is switched off, so the list is a blocklist. "Only apps I choose" turns it into an allow-list: then only the apps switched on send. Each mode keeps its own list, so switching back finds the blocklist as it was.
 
-Some notifications never reach the watch regardless: ongoing and foreground-service notifications, group summaries, notifications an app marks as local to the phone, notifications with neither a title nor a body, minimum-importance channels, anything at all while the phone's own Do Not Disturb is on, and OpenWatch's own notifications.
+"Hide sensitive content", on by default, holds back the content of a channel set in Android's notification settings to hide sensitive content on the lock screen (see below).
+
+Some notifications never reach the watch regardless: ongoing and foreground-service notifications, group summaries, notifications an app marks as local to the phone or as secret, notifications from a channel set not to show on the lock screen, notifications with neither a title nor a body, minimum-importance channels, anything at all while the phone's own Do Not Disturb is on, and OpenWatch's own notifications.
+
+A channel set in Android's notification settings to hide sensitive content on the lock screen sends only its title, or the app's public version where it gives one, and none of its actions: an action's label can carry what was held back. Every other notification arrives whole, locked phone or not; Android's own default for a notification is to show it in full. Android gives apps no mark for a one-time code, so the channel's lock-screen setting is the signal; Android 12 and newer let an app read it, and before that only an app's own secret mark is honoured.
 
 ### Calls
 
@@ -329,7 +345,7 @@ Off by default, because an open stream spends the watch's battery.
 
 ## Weather On The Watch
 
-The watch's weather glance asks the phone for weather, and OpenWatch answers from a weather app on the phone, not from the internet. Any app that broadcasts the Gadgetbridge generic-weather format works; [Breezy Weather](https://github.com/breezy-weather/breezy-weather) is the tested one (enable its Gadgetbridge broadcast and add OpenWatch to its recipients). The snapshot is considered fresh for six hours. Any app on the phone can send this broadcast, so the receiver caps what it reads: 512 KB after unzipping, 16 levels of nesting, 72 hours and 16 days of forecast. A payload past a cap is dropped.
+The watch's weather glance asks the phone for weather, and OpenWatch answers from a weather app on the phone, not from the internet. Any app that broadcasts the Gadgetbridge generic-weather format works; [Breezy Weather](https://github.com/breezy-weather/breezy-weather) is the tested one (enable its Gadgetbridge broadcast and add OpenWatch to its recipients). The snapshot is considered fresh for six hours. Any app on the phone can send this broadcast, so the receiver caps what it reads: 512 KB after unzipping, 16 levels of nesting, 72 hours and 16 days of forecast. A payload past a cap is dropped, and one that comes within a minute of the last kept is too. The sender is not checked: Android names a broadcast's sender only when the sender opts in, and weather apps do not.
 
 The location the watch shows is the weather app's location. OpenWatch also answers the watch's own position asks from the phone's last known location, which is what arms the glance in the first place.
 

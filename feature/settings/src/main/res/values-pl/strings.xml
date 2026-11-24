@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="privacy_policy_title">Polityka prywatności</string>
+    <string name="body_profile_synced">Synchronizowane z %1$s</string>
+    <string name="body_profile_synced_updated">Synchronizowane z %1$s · zaktualizowano %2$s</string>
+    <string name="connected_apps_title">Połączone aplikacje</string>
+    <string name="connected_apps_settings_body">Aplikacje, które przez OpenWatch korzystają z zegarków, wagi i profilu ciała, oraz co każda może robić</string>
+    <string name="settings_notification_access_title">Dostęp do powiadomień</string>
+    <string name="settings_notification_access_body">Pozwala sparowanemu zegarkowi Garmin pokazywać powiadomienia z telefonu. Wyłączone.</string>
+    <string name="settings_notification_access_granted">Udzielono. Dotknij, aby zmienić to w ustawieniach Androida.</string>
+    <string name="settings_about_version">OpenWatch %1$s</string>
+    <string name="settings_privacy_policy_body">Co OpenWatch odczytuje, zapisuje i przechowuje. Otwiera się w przeglądarce.</string>
+    <string name="settings_privacy_policy_no_browser">Żadna aplikacja na tym telefonie nie może otworzyć linku. Polityka znajduje się pod adresem %1$s</string>
+    <string name="settings_about_body">Otwarte oprogramowanie na licencji AGPL-3.0-or-later. Kod zegarka, wagi i synchronizacji pochodzi z OpenVitals.</string>
+    <string name="body_profile_title">Profil ciała</string>
+    <string name="body_profile_settings_body">Rok urodzenia, płeć, wzrost i masa ciała do szacunków</string>
+    <string name="body_profile_intro">Skład ciała z wagi wymaga płci i wzrostu; szacunek energii chodu wymaga masy ciała. Masa ciała lub wzrost zapisane w Health Connect są używane zamiast wartości wpisanych tutaj.</string>
+    <string name="body_profile_birth_year">Rok urodzenia</string>
+    <string name="body_profile_sex">Płeć</string>
+    <string name="body_profile_sex_female">Kobieta</string>
+    <string name="body_profile_sex_male">Mężczyzna</string>
+    <string name="body_profile_height_cm">Wzrost (cm)</string>
+    <string name="body_profile_height_in">Wzrost (in)</string>
+    <string name="body_profile_weight_kg">Masa ciała (kg)</string>
+    <string name="body_profile_weight_lb">Masa ciała (lb)</string>
+    <string name="body_profile_measured">Health Connect: %1$s</string>
+    <string name="settings_respiratory_rate_title">Częstość oddechu z zegarka (eksperymentalne)</string>
+    <string name="settings_respiratory_rate_body">Zapisuje w Health Connect częstość oddechu z nocnych okien HRV zegarka. Jeszcze nie porównano jej z urządzeniem referencyjnym.</string>
+    <string name="health_data_open_body">Każdy typ danych o zdrowiu, urządzenie, z którego pochodzi, i dlaczego.</string>
+</resources>

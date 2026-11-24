@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hc_setup_intro">ينسخ OpenWatch ما تسجّله ساعتك وميزانك إلى Health Connect، حيث يقرؤه OpenVitals وتطبيقات أخرى. لا يغادر أي شيء الهاتف: ليس لدى التطبيق إذن الوصول إلى الإنترنت.</string>
+    <string name="hc_setup_permissions_title">الأذونات</string>
+    <string name="hc_setup_status_all_granted">مُنحت جميع الأذونات (%1$d)</string>
+    <string name="hc_setup_status_partial">الأذونات الممنوحة: %1$d من %2$d. يبقى السجلّ الذي لم يُمنح إذن كتابته على الجهاز.</string>
+    <string name="hc_setup_status_update">يحتاج Health Connect إلى تحديث قبل أن يتمكن OpenWatch من استخدامه.</string>
+    <string name="hc_setup_status_play_store">تم تثبيت Health Connect بدون Google Play، لذا لا يمكن استخدامه على هذا الهاتف.</string>
+    <string name="hc_setup_status_unavailable">لا يتوفر Health Connect على هذا الهاتف.</string>
+    <string name="hc_setup_grant">منح الأذونات</string>
+    <string name="hc_setup_open_settings">فتح إعدادات Health Connect</string>
+    <string name="hc_setup_continue">متابعة</string>
+    <string name="hc_setup_missing_title">لم تُمنح بعد:</string>
+    <string name="hc_setup_missing_extra">الوصول في الخلفية وإلى السجل في صفحة مستقلة: افتح إعدادات Health Connect، ثم OpenWatch، ثم الوصول الإضافي.</string>
+</resources>

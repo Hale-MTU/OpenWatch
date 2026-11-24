@@ -1,5 +1,91 @@
 # Changelog
 
+## 0.4.1 - 2026-11-22
+
+### English
+
+- **What OpenWatch reads and writes.** A screen lists every Health Connect data type the app writes, under the device it comes from, every type it reads and why, and what the watch app asks for. It opens from Settings, the Health Connect setup and Health Connect's own permission page.
+- **Notifications on the watch.** "Only apps I choose" sends only the apps you switch on. "Hide sensitive content", on by default, sends only the title where Android hides an app's content on the lock screen; a secret notification never reaches the watch.
+- **Connected apps names the app.** Each card shows the package name and signing key, and warns when an app takes another app's name.
+- **A running workout on the watch face**, with its sport and a stopwatch, or Paused.
+- **Two permissions fewer.** No more reading steps or writing wheelchair pushes, which nothing used.
+- **A sync that fails says why**, in your language, and a missing permission or a paused sync waits for you instead of being retried. Several devices sync at once, and a scheduled sync continues in follow-up runs instead of being stopped partway.
+- **Secrets stay on this phone.** The scale's key and the watch link tokens are kept encrypted under an Android Keystore key, and stay behind when the app moves to a new phone, as does the list of apps you allowed.
+- **A second watch of the same kind** writes records of its own instead of overwriting the first's. Garmin wellness records now say a Garmin watch recorded them, and the scale reaches connected apps under a random id instead of its Bluetooth address.
+- **Breathing rate on more nights**, from one clear reading when the second method finds none.
+- **Languages.** The new screens and messages are translated into all thirteen languages.
+- **Fixes:** a Garmin watch no longer stops syncing for one missing permission; a large first sync no longer fails in Health Connect; a Garmin workout waits on the phone while sync is paused instead of being written or lost; one damaged device entry no longer forgets every device; Garmin replies over 375 bytes go in parts, so a vivoactive 5 takes them; a deleted weigh-in no longer comes back; pairing failures and a failed find are shown in your language.
+
+### Espanol
+
+- **Que lee y escribe OpenWatch.** Una pantalla enumera cada tipo de dato de Health Connect que la app escribe, bajo el dispositivo del que viene, cada tipo que lee y para que, y lo que pide la app del reloj. Se abre desde Ajustes, la configuracion de Health Connect y la propia pagina de permisos de Health Connect.
+- **Notificaciones en el reloj.** "Solo las apps que elija" envia solo las apps que actives. "Ocultar contenido sensible", activado por defecto, envia solo el titulo cuando Android oculta el contenido de una app en la pantalla de bloqueo; una notificacion secreta nunca llega al reloj.
+- **Apps conectadas identifica la app.** Cada tarjeta muestra el nombre del paquete y la clave de firma, y avisa cuando una app usa el nombre de otra.
+- **Un entrenamiento en curso en la esfera del reloj**, con su deporte y un cronometro, o En pausa.
+- **Dos permisos menos.** Ya no se leen pasos ni se escriben impulsos de silla de ruedas, que nada usaba.
+- **Una sincronizacion fallida dice por que**, en tu idioma, y un permiso que falta o una sincronizacion en pausa esperan por ti en lugar de reintentarse. Varios dispositivos se sincronizan a la vez, y una sincronizacion programada continua en ejecuciones siguientes en lugar de quedarse a medias.
+- **Los secretos se quedan en este telefono.** La clave de la bascula y los tokens de enlace de los relojes se guardan cifrados con una clave del Android Keystore, y no pasan a un telefono nuevo, igual que la lista de apps que permitiste.
+- **Un segundo reloj del mismo tipo** escribe sus propios registros en lugar de sobrescribir los del primero. Los registros de bienestar de Garmin dicen ahora que los registro un reloj Garmin, y la bascula llega a las apps conectadas con un id aleatorio en lugar de su direccion Bluetooth.
+- **Frecuencia respiratoria en mas noches**, con una lectura clara cuando el segundo metodo no encuentra ninguna.
+- **Idiomas.** Las nuevas pantallas y mensajes estan traducidos a los trece idiomas.
+- **Correcciones:** un reloj Garmin ya no deja de sincronizar por un permiso que falta; una primera sincronizacion grande ya no falla en Health Connect; un entrenamiento de Garmin espera en el telefono mientras la sincronizacion esta en pausa en lugar de escribirse o perderse; una entrada de dispositivo danada ya no hace olvidar todos los dispositivos; las respuestas a Garmin de mas de 375 bytes van por partes, asi que un vivoactive 5 las acepta; una pesada borrada ya no vuelve; los fallos de emparejamiento y una busqueda fallida se muestran en tu idioma.
+
+### Deutsch
+
+- **Was OpenWatch liest und schreibt.** Ein Bildschirm listet jeden Health-Connect-Datentyp, den die App schreibt, unter dem Geraet, von dem er kommt, jeden Typ, den sie liest, und wofuer, und was die Uhr-App anfragt. Er oeffnet sich aus den Einstellungen, der Health-Connect-Einrichtung und der Berechtigungsseite von Health Connect selbst.
+- **Benachrichtigungen auf der Uhr.** "Nur ausgewaehlte Apps" sendet nur die Apps, die du einschaltest. "Sensible Inhalte ausblenden", standardmaessig an, sendet nur den Titel, wo Android die Inhalte einer App auf dem Sperrbildschirm ausblendet; eine geheime Benachrichtigung erreicht die Uhr nie.
+- **Verbundene Apps nennt die App.** Jede Karte zeigt den Paketnamen und den Signaturschluessel und warnt, wenn eine App den Namen einer anderen App annimmt.
+- **Ein laufendes Training auf dem Zifferblatt**, mit Sportart und Stoppuhr oder Pausiert.
+- **Zwei Berechtigungen weniger.** Kein Lesen von Schritten und kein Schreiben von Rollstuhlschueben mehr, die nichts nutzte.
+- **Ein fehlgeschlagener Sync sagt, warum**, in deiner Sprache, und eine fehlende Berechtigung oder ein pausierter Sync wartet auf dich, statt wiederholt zu werden. Mehrere Geraete synchronisieren gleichzeitig, und ein geplanter Sync laeuft in Folgelaeufen weiter, statt mittendrin gestoppt zu werden.
+- **Geheimnisse bleiben auf diesem Telefon.** Der Schluessel der Waage und die Verbindungstoken der Uhren werden verschluesselt unter einem Schluessel des Android Keystore gespeichert und bleiben zurueck, wenn die App auf ein neues Telefon umzieht, ebenso die Liste der erlaubten Apps.
+- **Eine zweite Uhr derselben Art** schreibt eigene Eintraege, statt die der ersten zu ueberschreiben. Garmin-Wellness-Eintraege sagen jetzt, dass eine Garmin-Uhr sie aufgezeichnet hat, und die Waage erscheint in verbundenen Apps unter einer zufaelligen ID statt ihrer Bluetooth-Adresse.
+- **Atemfrequenz in mehr Naechten**, aus einer klaren Messung, wenn die zweite Methode keine findet.
+- **Sprachen.** Die neuen Bildschirme und Meldungen sind in alle dreizehn Sprachen uebersetzt.
+- **Korrekturen:** Eine Garmin-Uhr hoert wegen einer fehlenden Berechtigung nicht mehr auf zu synchronisieren; ein grosser erster Sync scheitert nicht mehr in Health Connect; ein Garmin-Training wartet bei pausiertem Sync auf dem Telefon, statt geschrieben zu werden oder verloren zu gehen; ein beschaedigter Geraeteeintrag laesst nicht mehr alle Geraete vergessen; Antworten an Garmin ueber 375 Bytes gehen in Teilen, sodass eine vivoactive 5 sie annimmt; eine geloeschte Wiegung kommt nicht mehr zurueck; Kopplungsfehler und eine fehlgeschlagene Suche werden in deiner Sprache angezeigt.
+
+### Italiano
+
+- **Cosa legge e scrive OpenWatch.** Una schermata elenca ogni tipo di dato di Health Connect che l'app scrive, sotto il dispositivo da cui proviene, ogni tipo che legge e a cosa serve, e cosa chiede l'app dell'orologio. Si apre dalle Impostazioni, dalla configurazione di Health Connect e dalla pagina dei permessi di Health Connect stessa.
+- **Notifiche sull'orologio.** "Solo le app che scelgo" invia solo le app che attivi. "Nascondi contenuti sensibili", attivo per impostazione predefinita, invia solo il titolo dove Android nasconde il contenuto di un'app sulla schermata di blocco; una notifica segreta non arriva mai all'orologio.
+- **App collegate identifica l'app.** Ogni scheda mostra il nome del pacchetto e la chiave di firma, e avvisa quando un'app usa il nome di un'altra.
+- **Un allenamento in corso sul quadrante**, con lo sport e un cronometro, o In pausa.
+- **Due permessi in meno.** Non si leggono piu i passi e non si scrivono piu le spinte in sedia a rotelle, che nulla usava.
+- **Una sincronizzazione fallita dice perche**, nella tua lingua, e un permesso mancante o una sincronizzazione in pausa aspettano te invece di essere ritentati. Piu dispositivi si sincronizzano insieme, e una sincronizzazione pianificata continua in esecuzioni successive invece di fermarsi a meta.
+- **I segreti restano su questo telefono.** La chiave della bilancia e i token di collegamento degli orologi sono conservati cifrati con una chiave dell'Android Keystore e restano indietro quando l'app passa a un nuovo telefono, come l'elenco delle app consentite.
+- **Un secondo orologio dello stesso tipo** scrive record propri invece di sovrascrivere quelli del primo. I record di benessere Garmin ora dicono che li ha registrati un orologio Garmin, e la bilancia arriva alle app collegate con un id casuale invece del suo indirizzo Bluetooth.
+- **Frequenza respiratoria in piu notti**, da una lettura chiara quando il secondo metodo non ne trova.
+- **Lingue.** Le nuove schermate e i nuovi messaggi sono tradotti in tutte le tredici lingue.
+- **Correzioni:** un orologio Garmin non smette piu di sincronizzarsi per un permesso mancante; una prima sincronizzazione grande non fallisce piu in Health Connect; un allenamento Garmin aspetta sul telefono mentre la sincronizzazione e in pausa invece di essere scritto o perso; una voce di dispositivo danneggiata non fa piu dimenticare tutti i dispositivi; le risposte a Garmin oltre i 375 byte vanno in parti, cosi un vivoactive 5 le accetta; una pesata eliminata non torna piu; gli errori di abbinamento e una ricerca fallita vengono mostrati nella tua lingua.
+
+### Eesti
+
+- **Mida OpenWatch loeb ja kirjutab.** Ekraan loetleb iga Health Connecti andmetuubi, mille rakendus kirjutab, selle seadme all, kust see tuleb, iga tuubi, mida see loeb, ja milleks, ning mida kellarakendus kusib. See avaneb Seadetest, Health Connecti seadistusest ja Health Connecti enda loade lehelt.
+- **Teavitused kellas.** "Ainult minu valitud rakendused" saadab ainult sisse lulitatud rakendused. "Peida tundlik sisu", vaikimisi sees, saadab ainult pealkirja, kui Android peidab rakenduse sisu lukustuskuval; salajane teavitus ei joua kunagi kella.
+- **Uhendatud rakendused nimetab rakenduse.** Iga kaart naitab paketi nime ja allkirjavotit ning hoiatab, kui rakendus votab teise rakenduse nime.
+- **Kaimasolev treening kella sihverplaadil**, spordiala ja stopperiga voi Peatatud.
+- **Kaks luba vahem.** Enam ei loeta samme ega kirjutata ratastooli tougeid, mida miski ei kasutanud.
+- **Ebaonnestunud sunkroonimine utleb, miks**, sinu keeles, ning puuduv luba voi peatatud sunkroonimine ootab sind, selle asemel et uuesti proovida. Mitu seadet sunkroonivad korraga ja ajastatud sunkroonimine jatkub jargmistes kaivitustes, selle asemel et poole peal peatuda.
+- **Saladused jaavad sellesse telefoni.** Kaalu votit ja kellade uhendusmarke hoitakse krupteeritult Android Keystore'i votmega ning need jaavad maha, kui rakendus kolib uude telefoni, nagu ka lubatud rakenduste loend.
+- **Teine sama tuupi kell** kirjutab oma kirjed, selle asemel et esimese omad ule kirjutada. Garmini heaolukirjed utlevad nuud, et need salvestas Garmini kell, ja kaal jouab uhendatud rakendusteni juhusliku ID-ga, mitte oma Bluetoothi aadressiga.
+- **Hingamissagedus rohkematel oodel**, uhest selgest lugemist, kui teine meetod ei leia uhtegi.
+- **Keeled.** Uued ekraanid ja teated on tolgitud koigisse kolmeteistkumnesse keelde.
+- **Parandused:** Garmini kell ei lopeta enam sunkroonimist uhe puuduva loa parast; suur esimene sunkroonimine ei ebaonnestu enam Health Connectis; Garmini treening ootab telefonis, kui sunkroonimine on peatatud, selle asemel et kirjutada voi kaduma minna; uks kahjustatud seadmekirje ei lase enam koiki seadmeid unustada; Garmini vastused ule 375 baidi lahevad osadena, nii et vivoactive 5 votab need vastu; kustutatud kaalumine ei tule enam tagasi; sidumisvead ja ebaonnestunud otsing naidatakse sinu keeles.
+
+### Portugues
+
+- **O que o OpenWatch le e escreve.** Um ecra lista cada tipo de dado do Health Connect que a app escreve, sob o dispositivo de onde vem, cada tipo que le e para que, e o que a app do relogio pede. Abre-se a partir das Definicoes, da configuracao do Health Connect e da propria pagina de permissoes do Health Connect.
+- **Notificacoes no relogio.** "Apenas as apps que escolho" envia apenas as apps que ativar. "Ocultar conteudo sensivel", ativo por predefinicao, envia apenas o titulo quando o Android oculta o conteudo de uma app no ecra de bloqueio; uma notificacao secreta nunca chega ao relogio.
+- **Apps ligadas identifica a app.** Cada cartao mostra o nome do pacote e a chave de assinatura, e avisa quando uma app usa o nome de outra.
+- **Um treino em curso no mostrador do relogio**, com o desporto e um cronometro, ou Em pausa.
+- **Duas permissoes a menos.** Ja nao se leem passos nem se escrevem impulsos de cadeira de rodas, que nada usava.
+- **Uma sincronizacao falhada diz porque**, no seu idioma, e uma permissao em falta ou uma sincronizacao em pausa esperam por si em vez de serem repetidas. Varios dispositivos sincronizam ao mesmo tempo, e uma sincronizacao agendada continua em execucoes seguintes em vez de parar a meio.
+- **Os segredos ficam neste telefone.** A chave da balanca e os tokens de ligacao dos relogios sao guardados cifrados com uma chave do Android Keystore e ficam para tras quando a app passa para um telefone novo, tal como a lista de apps que permitiu.
+- **Um segundo relogio do mesmo tipo** escreve registos proprios em vez de substituir os do primeiro. Os registos de bem-estar da Garmin dizem agora que foram registados por um relogio Garmin, e a balanca chega as apps ligadas com um id aleatorio em vez do seu endereco Bluetooth.
+- **Frequencia respiratoria em mais noites**, a partir de uma leitura clara quando o segundo metodo nao encontra nenhuma.
+- **Idiomas.** Os novos ecras e mensagens estao traduzidos nos treze idiomas.
+- **Correcoes:** um relogio Garmin ja nao deixa de sincronizar por uma permissao em falta; uma primeira sincronizacao grande ja nao falha no Health Connect; um treino Garmin espera no telefone enquanto a sincronizacao esta em pausa em vez de ser escrito ou perdido; uma entrada de dispositivo danificada ja nao faz esquecer todos os dispositivos; as respostas a Garmin acima de 375 bytes vao por partes, pelo que um vivoactive 5 as aceita; uma pesagem eliminada ja nao volta; as falhas de emparelhamento e uma procura falhada sao mostradas no seu idioma.
+
 ## 0.4.0 - 2026-11-15
 
 ### English

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="privacy_policy_title">Zásady ochrany soukromí</string>
+    <string name="body_profile_synced">Synchronizováno s %1$s</string>
+    <string name="body_profile_synced_updated">Synchronizováno s %1$s · aktualizováno %2$s</string>
+    <string name="connected_apps_title">Připojené aplikace</string>
+    <string name="connected_apps_settings_body">Aplikace, které přes OpenWatch používají vaše hodinky, váhu a tělesný profil, a co která smí</string>
+    <string name="settings_notification_access_title">Přístup k oznámením</string>
+    <string name="settings_notification_access_body">Umožní spárovaným hodinkám Garmin zobrazovat oznámení z telefonu. Vypnuto.</string>
+    <string name="settings_notification_access_granted">Uděleno. Klepnutím to změníte v nastavení Androidu.</string>
+    <string name="settings_about_version">OpenWatch %1$s</string>
+    <string name="settings_privacy_policy_body">Co OpenWatch čte, zapisuje a uchovává. Otevře se v prohlížeči.</string>
+    <string name="settings_privacy_policy_no_browser">Žádná aplikace v tomto telefonu nedokáže odkaz otevřít. Zásady najdete na %1$s</string>
+    <string name="settings_about_body">Otevřený software pod licencí AGPL-3.0-or-later. Kód pro hodinky, váhu a synchronizaci pochází z OpenVitals.</string>
+    <string name="body_profile_title">Tělesný profil</string>
+    <string name="body_profile_settings_body">Rok narození, pohlaví, výška a váha pro odhady</string>
+    <string name="body_profile_intro">Složení těla z váhy potřebuje vaše pohlaví a výšku; odhad energie při chůzi potřebuje vaši váhu. Váha nebo výška uložená v Health Connect se použije místo té, kterou zadáte zde.</string>
+    <string name="body_profile_birth_year">Rok narození</string>
+    <string name="body_profile_sex">Pohlaví</string>
+    <string name="body_profile_sex_female">Žena</string>
+    <string name="body_profile_sex_male">Muž</string>
+    <string name="body_profile_height_cm">Výška (cm)</string>
+    <string name="body_profile_height_in">Výška (in)</string>
+    <string name="body_profile_weight_kg">Váha (kg)</string>
+    <string name="body_profile_weight_lb">Váha (lb)</string>
+    <string name="body_profile_measured">Health Connect: %1$s</string>
+    <string name="settings_respiratory_rate_title">Dechová frekvence z hodinek (experimentální)</string>
+    <string name="settings_respiratory_rate_body">Zapisuje do Health Connect dechovou frekvenci z nočních oken HRV hodinek. Zatím nebyla ověřena proti referenčnímu zařízení.</string>
+    <string name="health_data_open_body">Každý typ zdravotních dat, zařízení, ze kterého pochází, a proč.</string>
+</resources>

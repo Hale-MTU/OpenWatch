@@ -1,20 +1,26 @@
 package tech.mmarca.openwatch.wear.ui.preview
 
+import java.time.Duration
+import java.time.LocalDate
+import tech.mmarca.openwatch.wear.LinePoint
 import tech.mmarca.openwatch.wear.MetricUiState
-import tech.mmarca.openwatch.wear.RecordingUiState
+import tech.mmarca.openwatch.wear.SampleStats
+import tech.mmarca.openwatch.wear.features.recording.RecordingUiState
 import tech.mmarca.openwatch.wear.SleepStage
 import tech.mmarca.openwatch.wear.MetricTile
 import tech.mmarca.openwatch.wear.WearUiState
-import tech.mmarca.openwatch.wear.features.quicklog.EntryType
-import tech.mmarca.openwatch.wear.features.quicklog.LoggedEntry
 import tech.mmarca.openwatch.wear.features.recording.ActivityType
 import tech.mmarca.openwatch.wear.features.recording.WorkoutField
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
 /**
  * Made-up values for previews and for debug builds, where nothing feeds the
  * screens yet. Never shown in a release build.
  */
 object SampleData {
+    /** The day the sample week ends on, a Sunday. */
+    private val today = LocalDate.of(2026, 11, 1)
+
     val metrics = mapOf(
         MetricTile.STEPS to MetricUiState(
             current = 6_482.0,
@@ -25,7 +31,10 @@ object SampleData {
         MetricTile.HEART_RATE to MetricUiState(
             current = 72.0,
             today = doubles(64, 66, 63, 70, 78, 91, 104, 98, 86, 79, 74, 71, 69, 72, 75, 72),
+            line = evenLine(64, 66, 63, 70, 78, 91, 104, 98, 86, 79, 74, 71, 69, 72, 75, 72),
             week = doubles(68, 71, 66, 70, 74, 69, 73),
+            todayStats = SampleStats(low = 56.0, average = 76.0, high = 118.0),
+            zoneTime = listOf(214L, 61L, 22L, 6L, 0L).map(Duration::ofMinutes),
         ),
         MetricTile.DISTANCE to MetricUiState(
             current = 4_730.0,
@@ -52,6 +61,7 @@ object SampleData {
         MetricTile.BLOOD_OXYGEN to MetricUiState(
             current = 97.0,
             today = doubles(97, 96, 98, 97, 95, 96, 97, 98, 97, 97),
+            line = evenLine(97, 96, 98, 97, 95, 96, 97, 98, 97, 97),
             week = doubles(97, 96, 97, 98, 96, 97, 97),
         ),
         MetricTile.VO2_MAX to MetricUiState(
@@ -81,7 +91,7 @@ object SampleData {
             current = 72.4,
             week = listOf(73.1, 72.9, 72.8, 72.6, 72.7, 72.5, 72.4),
         ),
-    )
+    ).mapValues { (_, state) -> state.copy(weekEnd = today) }
 
     /** Minutes per stage for a 7:22 night. */
     val sleepStages = mapOf(
@@ -95,29 +105,20 @@ object SampleData {
     val workoutFields: Map<ActivityType, Set<WorkoutField>> = ActivityType.entries.associateWith { activity ->
         buildSet {
             add(WorkoutField.HEART_RATE)
-            add(WorkoutField.CALORIES)
             if (activity != ActivityType.WORKOUT) {
                 add(WorkoutField.DISTANCE)
                 add(WorkoutField.ELEVATION)
                 add(if (activity == ActivityType.CYCLE) WorkoutField.SPEED else WorkoutField.PACE)
             }
+            if (activity != ActivityType.CYCLE && activity != ActivityType.WORKOUT) add(WorkoutField.STEPS)
         }
     }
 
+    /** A morning's entries: a weigh-in, a measured pulse and a blood pressure. */
     val entries = listOf(
-        LoggedEntry(EntryType.WEIGHT, System.currentTimeMillis() - 3_600_000, 72.4),
-        LoggedEntry(EntryType.HEART_RATE, System.currentTimeMillis() - 1_800_000, 64.0),
-        LoggedEntry(EntryType.BLOOD_PRESSURE, System.currentTimeMillis() - 600_000, 121.0, 79.0),
-    )
-
-    val recording = RecordingUiState(
-        elapsedSeconds = 23 * 60 + 41,
-        heartRateBpm = 138,
-        distanceMeters = 3_240,
-        caloriesKcal = 214,
-        elevationGainMeters = 38,
-        speedMetersPerSecond = 2.28,
-        averageHeartRateBpm = 131,
+        WearLinkEntry.of(System.currentTimeMillis() - 3_600_000, WearLinkEntry.Type.WEIGHT, 72.4),
+        WearLinkEntry.of(System.currentTimeMillis() - 1_800_000, WearLinkEntry.Type.HEART_RATE, 64.0, measured = true),
+        WearLinkEntry.of(System.currentTimeMillis() - 600_000, WearLinkEntry.Type.BLOOD_PRESSURE, 121.0, 79.0),
     )
 
     val uiState = WearUiState(
@@ -126,5 +127,20 @@ object SampleData {
         entries = entries,
     )
 
+    val recording = RecordingUiState(
+        elapsedSeconds = 23 * 60 + 41,
+        heartRateBpm = 138,
+        distanceMeters = 3_240,
+        steps = 3_610,
+        elevationGainMeters = 38,
+        speedMetersPerSecond = 2.28,
+        averageSpeedMetersPerSecond = 2.21,
+        averageHeartRateBpm = 131,
+    )
+
     private fun doubles(vararg values: Int): List<Double> = values.map(Int::toDouble)
+
+    /** One run of [values] at even steps in time. */
+    private fun evenLine(vararg values: Int): List<List<LinePoint>> =
+        listOf(values.mapIndexed { index, value -> LinePoint(index.toFloat() / (values.size - 1), value.toDouble()) })
 }

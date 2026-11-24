@@ -3,11 +3,7 @@
 // streams. Pure Kotlin on the JDK only, so a loopback test runs both ends in
 // one JVM and neither app build depends on the other.
 plugins {
-    alias(libs.plugins.kotlin.jvm)
-}
-
-kotlin {
-    jvmToolchain(17)
+    id("openwatch.jvm.library")
 }
 
 dependencies {

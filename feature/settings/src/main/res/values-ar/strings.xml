@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_notification_access_title">الوصول إلى الإشعارات</string>
+    <string name="settings_notification_access_body">يتيح لساعة Garmin مقترنة عرض إشعارات الهاتف. غير مفعّل.</string>
+    <string name="settings_notification_access_granted">ممنوح. انقر لتغييره في إعدادات Android.</string>
+    <string name="settings_about_version">OpenWatch %1$s</string>
+    <string name="settings_privacy_policy_body">ما يقرؤه OpenWatch ويكتبه ويحتفظ به. يُفتح في المتصفح.</string>
+    <string name="settings_privacy_policy_no_browser">لا يوجد تطبيق على هذا الهاتف يمكنه فتح الرابط. السياسة متاحة على %1$s</string>
+    <string name="settings_about_body">مفتوح المصدر بموجب ترخيص AGPL-3.0-or-later. الرمز البرمجي للساعة والميزان والمزامنة مأخوذ من OpenVitals.</string>
+    <string name="body_profile_title">الملف الجسدي</string>
+    <string name="body_profile_settings_body">سنة الميلاد والجنس والطول والوزن للتقديرات</string>
+    <string name="body_profile_intro">يحتاج تقدير الطاقة المستهلكة أثناء المشي إلى وزنك. يُستخدم الوزن أو الطول المحفوظ في Health Connect بدلاً من القيمة المُدخلة هنا.</string>
+    <string name="body_profile_birth_year">سنة الميلاد</string>
+    <string name="body_profile_sex">الجنس</string>
+    <string name="body_profile_sex_female">أنثى</string>
+    <string name="body_profile_sex_male">ذكر</string>
+    <string name="body_profile_height_cm">الطول (سم)</string>
+    <string name="body_profile_height_in">الطول (بوصة)</string>
+    <string name="body_profile_weight_kg">الوزن (كغ)</string>
+    <string name="body_profile_weight_lb">الوزن (رطل)</string>
+    <string name="body_profile_measured">من Health Connect: %1$s</string>
+    <string name="privacy_policy_title">سياسة الخصوصية</string>
+    <string name="body_profile_synced">متزامن مع %1$s</string>
+    <string name="body_profile_synced_updated">متزامن مع %1$s · حُدّث %2$s</string>
+    <string name="settings_respiratory_rate_title">معدل التنفس من الساعة (تجريبي)</string>
+    <string name="settings_respiratory_rate_body">يكتب في Health Connect معدل التنفس المقيس خلال نوافذ قياس HRV الليلية على الساعة. لم تتم مقارنته بعد بجهاز مرجعي.</string>
+    <string name="health_data_open_body">كل نوع من البيانات الصحية، والجهاز الذي يأتي منه، والسبب.</string>
+    <string name="connected_apps_title">التطبيقات المتصلة</string>
+    <string name="connected_apps_settings_body">التطبيقات التي تستخدم ساعاتك وميزانك وملفك الجسدي عبر OpenWatch، وما يُسمح لكل منها بفعله</string>
+</resources>

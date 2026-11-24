@@ -16,6 +16,8 @@ travels over Bluetooth between the device and the phone. Open source under AGPL-
   and weather on the watch, CoMaps guidance on the wrist, a GPS ephemeris upload, saved
   locations. The watch-only measurements Health Connect cannot hold (stress, Body Battery,
   sleep score and the like) stay in OpenWatch's own database and its Watch Data screen.
+  Notifications go to the watch from every app or only the ones you choose, and what Android
+  hides on the lock screen stays hidden.
 - **Wear OS watches**, through the OpenWatch watch app in `wear/`: heart rate, steps and
   floors recorded on the watch, synced to Health Connect on a tap or a schedule, with an
   estimated sleep session per night, naps as their own sessions and the night's resting heart
@@ -23,7 +25,8 @@ travels over Bluetooth between the device and the phone. Open source under AGPL-
   the breathing rate; on a Samsung watch, SpO2 and skin temperature too. Workouts recorded on
   the watch, with GPS, heart rate, distance and climb, reach Health Connect with their route
   and an estimate of their active calories. The watch app opens on today's dashboard and
-  offers three tiles, and its settings can be changed from the phone.
+  offers three tiles and two watch face complications, and its settings can be changed from
+  the phone.
 - **Xiaomi Body Composition Scale S400 and S400 Pro**: every weigh-in saved to Health Connect
   as it happens, with the app open or closed, decoded from the scale's own broadcast with the
   key from your Xiaomi account. Weight and heart rate as measured; body fat, lean mass and
@@ -35,6 +38,10 @@ travels over Bluetooth between the device and the phone. Open source under AGPL-
   without a prompt; any other app waits for your answer on the Connected apps screen, where
   each thing an app may do has its own switch.
 
+Several watches can be paired, a second one of the same kind keeping records of its own, and
+the app lists every Health Connect data type it reads and writes, the device it comes from and
+why.
+
 The device code, its screens and its tests came from OpenVitals 2.16.0 unchanged where the
 seams allowed; [docs/features/watches.md](docs/features/watches.md) describes the behaviour.
 
@@ -43,7 +50,8 @@ seams allowed; [docs/features/watches.md](docs/features/watches.md) describes th
 | Module | What |
 | --- | --- |
 | `app/` | The phone app: `devices/` (the Garmin stack, the Wear OS phone side, the scale listener), `features/` (the screens), `healthconnect/` (the one gateway to Health Connect), `activityimport/` (FIT activity files), `data/` (Room and the preference stores) |
-| `domain/` | The pure code the app depends on: FIT decoding, the device models |
+| `core/` | What the app is built on: `core/model` (the device models, the unit preferences), `core/fit` (FIT decoding), `core/devices-api` (the device contracts: families, the sync port, pairing), `core/health-api` (the record sink and the reads the devices use) |
+| `devices/` | The device protocols, pure Kotlin: `devices/garmin/protocol` (GFDI, the session, file sync, the FIT wellness decoder), `devices/xiaomi/protocol` (the S400 scale's codec) |
 | `health-calculations/` | The calculations shared with OpenVitals, from [Hale-MTU/health-calculations](https://github.com/Hale-MTU/health-calculations), a submodule taken as a composite build: the sleep estimate, energy, heart rate, the night HRV and breathing rate, the body profile |
 | `wear/` | The Wear OS watch app |
 | `wearlink/` | The line protocol between the two, pure Kotlin, compiled into both apps |
@@ -101,6 +109,8 @@ does not know, on its Connected apps screen.
 ## Privacy
 
 Nothing leaves the phone. Notifications forwarded to a watch are held in memory and sent to
-the watch only. The scale's key is stored in the app's private preferences. The app has no
+the watch only; a secret one is never sent. The scale's key and the watches' link tokens are
+kept encrypted under a key the Android Keystore holds, and stay behind when Android moves the
+app to a new phone. The app has no
 `INTERNET` permission, which the manifest enforces by removing the permission from every
 dependency too.

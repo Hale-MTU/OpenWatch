@@ -40,7 +40,8 @@ import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
  * Today's [tiles], in order. The first three of them with a daily goal also
- * show as activity rings at the top.
+ * show as activity rings at the top, and the quick log is one tap below
+ * them ([onQuickLog]).
  */
 @Composable
 fun DashboardScreen(
