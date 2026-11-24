@@ -70,6 +70,7 @@
     <string name="settings_watch_wearos_needs_respiratory_write">קצב הנשימה לא נכתב: אשר ל-OpenWatch לכתוב אותו ב-Health Connect, ואז סנכרן שוב.</string>
     <string name="settings_watch_wearos_needs_spo2_write">רמת החמצן בדם לא נכתבה: אשר ל-OpenWatch לכתוב אותה ב-Health Connect, ואז סנכרן שוב.</string>
     <string name="settings_watch_wearos_needs_skin_write">טמפרטורת העור לא נכתבה: אשר ל-OpenWatch לכתוב אותה ב-Health Connect, ואז סנכרן שוב.</string>
+    <string name="settings_watch_wearos_skin_baseline_forming">טמפרטורת העור עדיין לא נכתבה: שלושת הלילות הראשונים יוצרים את קו הבסיס שלך, והלילות שאחריהם נכתבים ביחס אליו.</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">הדופק במנוחה לא נכתב: אשר ל-OpenWatch לקרוא ולכתוב דופק במנוחה ב-Health Connect כדי להעריך אותו החל מהסנכרון הבא.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">%1$d דגימת דופק סונכרנה</item>

@@ -73,6 +73,7 @@
     <string name="settings_watch_wearos_needs_respiratory_write">لم يُكتب معدل التنفس: اسمح لـ OpenWatch بكتابته في Health Connect، ثم زامن مرة أخرى.</string>
     <string name="settings_watch_wearos_needs_spo2_write">لم يُكتب مستوى الأكسجين في الدم: اسمح لـ OpenWatch بكتابته في Health Connect، ثم زامن مرة أخرى.</string>
     <string name="settings_watch_wearos_needs_skin_write">لم تُكتب درجة حرارة الجلد: اسمح لـ OpenWatch بكتابتها في Health Connect، ثم زامن مرة أخرى.</string>
+    <string name="settings_watch_wearos_skin_baseline_forming">لم تُكتب درجة حرارة الجلد بعد: تُكوِّن الليالي الثلاث الأولى خط الأساس الخاص بك، وتُكتب الليالي التالية مقارنةً به.</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">لم يُكتب معدل نبض القلب أثناء الراحة: اسمح لـ OpenWatch بقراءة معدل نبض القلب أثناء الراحة وكتابته في Health Connect لتقديره بدءًا من المزامنة التالية.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="zero">تمت مزامنة %1$d عينة من معدل نبض القلب</item>

@@ -64,6 +64,7 @@
     <string name="settings_watch_wearos_needs_respiratory_write">Hingamissagedust ei kirjutatud: luba OpenWatchil see Health Connectis kirjutada ja sünkrooni siis uuesti.</string>
     <string name="settings_watch_wearos_needs_spo2_write">Vere hapnikusisaldust ei kirjutatud: luba OpenWatchil see Health Connectis kirjutada ja sünkrooni siis uuesti.</string>
     <string name="settings_watch_wearos_needs_skin_write">Naha temperatuuri ei kirjutatud: luba OpenWatchil see Health Connectis kirjutada ja sünkrooni siis uuesti.</string>
+    <string name="settings_watch_wearos_skin_baseline_forming">Naha temperatuuri pole veel kirjutatud: kolm esimest ööd moodustavad sinu oma lähtetaseme, järgmised ööd kirjutatakse selle suhtes.</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">Puhkeoleku pulssi ei kirjutatud: luba OpenWatchil Health Connectis puhkeoleku pulssi lugeda ja kirjutada, et seda järgmisest sünkroonimisest alates hinnata.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">%1$d pulsinäit sünkroonitud</item>

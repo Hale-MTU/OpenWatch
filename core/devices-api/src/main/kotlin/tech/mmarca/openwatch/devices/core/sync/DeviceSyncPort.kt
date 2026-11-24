@@ -50,6 +50,9 @@ enum class SkipReason {
 
     /** An estimate needs the body weight and none is known; a read grant may be what is missing. */
     NO_BODY_WEIGHT,
+
+    /** A series measured against the wearer's own baseline, which the first nights are still forming. */
+    NO_BASELINE,
 }
 
 /** A series a run left out, why, and the grants that would let the next run write it. */
