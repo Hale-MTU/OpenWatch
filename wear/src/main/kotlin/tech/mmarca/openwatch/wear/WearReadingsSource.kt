@@ -3,11 +3,15 @@ package tech.mmarca.openwatch.wear
 import java.time.Clock
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.SkinMinute
 
@@ -27,13 +31,23 @@ internal class WearReadingsSource(
 
     /**
      * The tiles' values now, read again every [REFRESH_MILLIS] while someone
-     * collects. Today's time in the heart rate zones is counted on
-     * [zoneBasis], here with the read, off the main thread; null counts none.
+     * collects. Today's time in the heart rate zones is counted on the basis
+     * [zoneBasis] gives, here with the read, off the main thread; null counts
+     * none. A basis that changes (the phone sent a maximum or a resting rate)
+     * is read on at once, not at the next refresh. [zoneBasis] is collected on
+     * the IO dispatcher too, so it may load a file when it starts.
      */
-    fun metrics(zoneBasis: HeartRateZones.Basis? = null): Flow<Map<MetricTile, MetricUiState>> = flow {
-        while (true) {
-            emit(load(zoneBasis))
-            delay(REFRESH_MILLIS)
+    fun metrics(zoneBasis: Flow<HeartRateZones.Basis?>): Flow<Map<MetricTile, MetricUiState>> = channelFlow {
+        var reading: Job? = null
+        zoneBasis.distinctUntilChanged().collect { basis ->
+            // One reader at a time: the days that are kept are not a shared map.
+            reading?.cancelAndJoin()
+            reading = launch {
+                while (true) {
+                    send(load(basis))
+                    delay(REFRESH_MILLIS)
+                }
+            }
         }
     }.flowOn(Dispatchers.IO)
 

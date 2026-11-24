@@ -7,7 +7,6 @@ import android.hardware.SensorManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
 
 /**
@@ -42,7 +41,6 @@ internal object WearSettings {
     private const val KEY_SKIN_TEMPERATURE = "skin_temperature"
     private const val KEY_SPO2 = "spo2_at_night"
     private const val KEY_MAX_HEART_RATE = "max_heart_rate"
-    private const val DEFAULT_MAX_HEART_RATE = 190
     private const val KEY_RESTING_HEART_RATE = "resting_heart_rate"
 
     fun heartRateDay(context: Context): HeartRateInterval =
@@ -126,10 +124,6 @@ internal object WearSettings {
 
     /** The resting heart rate the phone sent for the zones; null for none. */
     fun restingHeartRate(context: Context): Int? = prefs(context).getInt(KEY_RESTING_HEART_RATE, 0).takeIf { it > 0 }
-
-    /** What the heart rate zones rest on: the phone's figures, else a common middle-aged guess of 190 bpm. */
-    fun zoneBasis(context: Context): HeartRateZones.Basis =
-        HeartRateZones.Basis(maxHeartRate(context) ?: DEFAULT_MAX_HEART_RATE, restingHeartRate(context))
 
     /** Every setting in one value, for the phone's `GET_PREF`. */
     fun read(context: Context): WatchPreferences = WatchPreferences(

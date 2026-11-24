@@ -1,7 +1,6 @@
 package tech.mmarca.openwatch.wear.ui.preview
 
 import java.time.Duration
-import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wear.MetricUiState
 import tech.mmarca.openwatch.wear.SampleStats
 import tech.mmarca.openwatch.wear.features.recording.RecordingUiState
@@ -118,13 +117,9 @@ object SampleData {
         averageHeartRateBpm = 131,
     )
 
-    /** A maximum and resting rate as the phone would send them. */
-    val zoneBasis = HeartRateZones.Basis(maxBpm = 185, restingBpm = 58)
-
     val uiState = WearUiState(
         metrics = metrics,
         sleepStages = sleepStages,
-        zoneBasis = zoneBasis,
     )
 
     private fun doubles(vararg values: Int): List<Double> = values.map(Int::toDouble)

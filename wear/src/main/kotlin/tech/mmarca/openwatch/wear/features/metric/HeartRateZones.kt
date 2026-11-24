@@ -7,7 +7,7 @@ import tech.mmarca.openwatch.wear.R
 /**
  * How the screens draw the heart rate zones. The zones themselves are
  * health-calculations' [HeartRateZones], on the basis the phone sent
- * (`WearSettings.zoneBasis`), so a heart rate lands in the same zone on the
+ * (`WatchPreferences.zoneBasis`), so a heart rate lands in the same zone on the
  * watch and on the phone.
  */
 object HeartZoneDisplay {

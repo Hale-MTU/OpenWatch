@@ -4,12 +4,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emptyFlow
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
 import org.junit.Test
 import tech.mmarca.healthcalculations.insights.HeartRateZones
+import tech.mmarca.openwatch.wear.WatchPreferences
+import tech.mmarca.openwatch.wear.WearSettings
+import tech.mmarca.openwatch.wearlink.HeartRateInterval
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
 /** The workout screen's ViewModel: what it sends the recorder, and when it sends nothing. */
@@ -18,10 +24,34 @@ class WorkoutViewModelTest {
     private val scope = CoroutineScope(Job() + Dispatchers.Unconfined)
     private val workout = WorkoutState()
     private val control = FakeControl()
-    private val viewModel = WorkoutViewModel(workout, control, HeartRateZones.Basis(maxBpm = 190), scope)
+    private val settings = MutableStateFlow(
+        WatchPreferences(
+            heartRateDay = HeartRateInterval.EVERY_10_SECONDS,
+            heartRateSource = WearSettings.Source.RAW_SENSOR,
+            hrvSource = WearSettings.Source.RAW_SENSOR,
+            syncedSleepHold = true,
+            skinTemperature = false,
+            spo2AtNight = false,
+        ),
+    )
+    private val viewModel = WorkoutViewModel(workout, control, settings, scope)
 
     @After
     fun tearDown() = scope.cancel()
+
+    @Test
+    fun `the zones rest on the settings, and follow a maximum and a resting rate the phone sends`() {
+        assertEquals(HeartRateZones.Basis(maxBpm = 190), viewModel.zoneBasis.value)
+
+        settings.value = settings.value.copy(maxHeartRate = 176, restingHeartRate = 52)
+
+        assertEquals(HeartRateZones.Basis(maxBpm = 176, restingBpm = 52), viewModel.zoneBasis.value)
+    }
+
+    @Test
+    fun `until the settings are read there is no basis to draw a zone on`() {
+        assertNull(WorkoutViewModel(workout, control, emptyFlow(), scope).zoneBasis.value)
+    }
 
     @Test
     fun `a sport with a route asks for location only while the grant is missing`() {

@@ -5,11 +5,18 @@ import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import tech.mmarca.healthcalculations.insights.HeartRateZones
+import tech.mmarca.openwatch.wear.WatchPreferences
 import tech.mmarca.openwatch.wear.WearAppService
 import tech.mmarca.openwatch.wear.WearPermissions
-import tech.mmarca.openwatch.wear.WearSettings
 import tech.mmarca.openwatch.wear.wearGraph
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
@@ -36,12 +43,20 @@ internal interface WorkoutControl {
 internal class WorkoutViewModel(
     private val workout: WorkoutState,
     private val control: WorkoutControl,
-    /** What the heart rate zones rest on: the maximum and resting rate the phone sent. */
-    val zoneBasis: HeartRateZones.Basis,
+    /** The watch's settings as they change (`WearGraph.settings`). */
+    settings: Flow<WatchPreferences>,
     scope: CoroutineScope,
 ) : ViewModel(scope) {
 
     val state: StateFlow<WorkoutUiState> = workout.state
+
+    /**
+     * What the heart rate zones rest on: the maximum and resting rate in the
+     * settings, followed as the phone changes them, during a workout too.
+     * Null until the settings are read, and the screen then draws no zone.
+     */
+    val zoneBasis: StateFlow<HeartRateZones.Basis?> =
+        settings.map { it.zoneBasis() }.stateIn(scope, SharingStarted.Eagerly, null)
 
     /** True when [sport] records a route and the grant is not in: the screen asks for it, then calls [start]. */
     fun needsLocation(sport: WorkoutSport): Boolean = sport.gps && !control.hasLocation()
@@ -70,7 +85,8 @@ internal class WorkoutViewModel(
             return WorkoutViewModel(
                 app.wearGraph.workoutState,
                 ServiceWorkoutControl(app),
-                WearSettings.zoneBasis(app),
+                // The first read of the settings loads their file: off the main thread.
+                flow { emitAll(app.wearGraph.settings) }.flowOn(Dispatchers.IO),
                 CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
             )
         }

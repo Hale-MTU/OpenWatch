@@ -118,7 +118,8 @@ fun rememberRecordingScreenState(fields: Set<WorkoutField>): RecordingScreenStat
  * the middle, controls one swipe to the left, heart rate zones and pace to
  * the right. Only pages and values the workout reports in [fields] are shown.
  * The zones are those of [zoneBasis], the maximum and resting rate the phone
- * sent. The screen is not held on: in ambient mode `RunningWorkout` draws its
+ * sent; without one (the settings are still being read) no zone is drawn. The
+ * screen is not held on: in ambient mode `RunningWorkout` draws its
  * own dim layout instead of this one, and [screenState] is what this one
  * finds again afterwards.
  */
@@ -127,7 +128,7 @@ fun RecordingScreen(
     state: RecordingUiState,
     fields: Set<WorkoutField>,
     unitSystem: UnitSystem,
-    zoneBasis: HeartRateZones.Basis,
+    zoneBasis: HeartRateZones.Basis?,
     onTogglePause: () -> Unit,
     onStop: () -> Unit,
     screenState: RecordingScreenState = rememberRecordingScreenState(fields),
@@ -167,9 +168,9 @@ private fun OverviewPage(
     state: RecordingUiState,
     fields: Set<WorkoutField>,
     unitSystem: UnitSystem,
-    zoneBasis: HeartRateZones.Basis,
+    zoneBasis: HeartRateZones.Basis?,
 ) {
-    val zone = state.heartRateBpm?.let { HeartZoneDisplay.zoneOf(it, zoneBasis) }
+    val zone = zoneBasis?.let { basis -> state.heartRateBpm?.let { HeartZoneDisplay.zoneOf(it, basis) } }
     PageColumn {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(state.activityType.icon, null, tint = WorkoutColor, modifier = Modifier.size(16.dp))
@@ -220,13 +221,14 @@ private fun OverviewPage(
 }
 
 @Composable
-private fun HeartPage(state: RecordingUiState, zoneBasis: HeartRateZones.Basis) {
-    val bpm = state.heartRateBpm
-    val zone = bpm?.let { HeartZoneDisplay.zoneOf(it, zoneBasis) }
+private fun HeartPage(state: RecordingUiState, zoneBasis: HeartRateZones.Basis?) {
+    // Without a basis there is no reading to place: the arc stays dim and no zone is named.
+    val bpm = state.heartRateBpm?.takeIf { zoneBasis != null }
+    val zone = zoneBasis?.let { basis -> bpm?.let { HeartZoneDisplay.zoneOf(it, basis) } }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         HeartZoneArc(
             zone = zone,
-            progress = bpm?.let { HeartZoneDisplay.arcProgress(it, zoneBasis) } ?: 0f,
+            progress = zoneBasis?.let { basis -> bpm?.let { HeartZoneDisplay.arcProgress(it, basis) } } ?: 0f,
             modifier = Modifier.fillMaxSize(),
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {

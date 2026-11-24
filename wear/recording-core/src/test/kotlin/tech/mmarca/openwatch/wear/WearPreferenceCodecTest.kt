@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.wear
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
 
 class WearPreferenceCodecTest {
@@ -57,5 +58,15 @@ class WearPreferenceCodecTest {
         assertEquals(52, WearPreferenceCodec.apply(defaults, pixel, "hr_rest", "52")!!.restingHeartRate)
         assertNull(WearPreferenceCodec.apply(defaults, pixel, "hr_max", "40"))
         assertNull(WearPreferenceCodec.apply(defaults, pixel, "hr_rest", "x"))
+    }
+
+    @Test
+    fun `the zones rest on the phone's heart rates, and on 190 bpm without a maximum`() {
+        assertEquals(HeartRateZones.Basis(maxBpm = 190), defaults.zoneBasis())
+        assertEquals(HeartRateZones.Basis(maxBpm = 190, restingBpm = 52), defaults.copy(restingHeartRate = 52).zoneBasis())
+        assertEquals(
+            HeartRateZones.Basis(maxBpm = 176, restingBpm = 52),
+            defaults.copy(maxHeartRate = 176, restingHeartRate = 52).zoneBasis(),
+        )
     }
 }

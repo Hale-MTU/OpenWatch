@@ -52,6 +52,7 @@ internal fun WorkoutScreen(unitSystem: UnitSystem, onClose: () -> Unit) {
     val context = LocalContext.current
     val viewModel = viewModel { WorkoutViewModel.create(context) }
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val zoneBasis by viewModel.zoneBasis.collectAsStateWithLifecycle()
     var pending by rememberSaveable { mutableStateOf<String?>(null) }
     val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         val sport = WorkoutSport.fromId(pending) ?: return@rememberLauncherForActivityResult
@@ -71,7 +72,7 @@ internal fun WorkoutScreen(unitSystem: UnitSystem, onClose: () -> Unit) {
                     state = snapshot.toRecordingState(sport, sportName(sport)),
                     fields = fields,
                     unitSystem = unitSystem,
-                    zoneBasis = viewModel.zoneBasis,
+                    zoneBasis = zoneBasis,
                     onTogglePause = viewModel::togglePause,
                     onStop = viewModel::stop,
                     screenState = screenState,
