@@ -16,6 +16,8 @@ object WearOsDeviceNames {
         Regex("pixel\\s*watch", RegexOption.IGNORE_CASE),
         Regex("ticwatch", RegexOption.IGNORE_CASE),
         Regex("amazfit", RegexOption.IGNORE_CASE),
+        // The OnePlus Watch 2R reports no OpenWatch service in its SDP answer (issue #76).
+        Regex("oneplus\\s*watch", RegexOption.IGNORE_CASE),
     )
 
     /** True when [name] is a known smartwatch family. */
