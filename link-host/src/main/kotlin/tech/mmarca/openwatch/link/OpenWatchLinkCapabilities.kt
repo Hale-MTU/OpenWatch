@@ -5,6 +5,7 @@ import javax.inject.Singleton
 import tech.mmarca.openlink.OpenLinkDevice
 import tech.mmarca.openlink.OpenLinkLiveSubscription
 import tech.mmarca.openlink.OpenLinkProfile
+import tech.mmarca.openlink.OpenLinkRecordingMode
 import tech.mmarca.openlink.OpenLinkRecordingRequest
 import tech.mmarca.openlink.OpenLinkSettings
 import tech.mmarca.openlink.host.OpenLinkCaller
@@ -20,6 +21,7 @@ class OpenWatchLinkCapabilities @Inject constructor(
     private val sessions: LinkLiveSessions,
     private val settings: LinkSettingsStore,
     private val units: LinkSharedUnits,
+    private val recorded: LinkRecordedWorkouts,
 ) : OpenLinkHostCapabilities {
 
     override fun profile(): OpenLinkProfile = profileSync.current()
@@ -50,9 +52,15 @@ class OpenWatchLinkCapabilities @Inject constructor(
     }
 
     override fun startRecording(caller: OpenLinkCaller, request: OpenLinkRecordingRequest) =
-        sessions.startRecording(request, caller.packageName)
+        if (request.mode == OpenLinkRecordingMode.RECORD) recorded.start(request, caller.packageName) else sessions.startRecording(request)
 
-    override fun stopRecording(caller: OpenLinkCaller, sessionId: String) = sessions.stopRecording(sessionId)
+    override fun stopRecording(caller: OpenLinkCaller, sessionId: String) =
+        if (recorded.holds(sessionId)) recorded.stop(sessionId) else sessions.stopRecording(sessionId)
+
+    /** The library hands on only the owner's, not repeated, not older than the last change. */
+    override fun pauseRecording(caller: OpenLinkCaller, sessionId: String, atMillis: Long) = recorded.pause(sessionId)
+
+    override fun resumeRecording(caller: OpenLinkCaller, sessionId: String, atMillis: Long) = recorded.resume(sessionId)
 
     override fun subscribeLive(caller: OpenLinkCaller, subscription: OpenLinkLiveSubscription) =
         sessions.subscribe(subscription)
