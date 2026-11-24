@@ -17,7 +17,7 @@ internal class TileChoice(
  * The dashboard, the start destination: the tiles the wearer chose, each
  * opening its metric, the spot measurements where the watch can take one,
  * the quick log, the workout ([onStartActivity]), the tile editor and the
- * status. And the tile editor, `tile_editor`, whose changes go to [tiles].
+ * settings. And the tile editor, `tile_editor`, whose changes go to [tiles].
  * [state] is read at each composition, so the screens show the newest.
  */
 internal fun NavGraphBuilder.dashboardDestinations(
@@ -39,7 +39,7 @@ internal fun NavGraphBuilder.dashboardDestinations(
             onQuickLog = { navController.navigate(WearRoutes.QUICK_LOG) { launchSingleTop = true } },
             onEditTiles = { navController.navigate(WearRoutes.TILE_EDITOR) { launchSingleTop = true } },
             onStartActivity = onStartActivity,
-            onOpenStatus = { navController.navigate(WearRoutes.STATUS) },
+            onOpenSettings = { navController.navigate(WearRoutes.SETTINGS) { launchSingleTop = true } },
         )
     }
     composable(WearRoutes.TILE_EDITOR) {

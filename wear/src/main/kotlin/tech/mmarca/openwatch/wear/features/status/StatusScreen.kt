@@ -95,7 +95,7 @@ internal fun StatusContent(state: StatusUiState, actions: StatusActions, setting
         TransformingLazyColumn(state = listState, contentPadding = contentPadding) {
             item { Header(ppgLogAvailable = readings?.ppgLogAvailable == true, onTogglePpgLog = actions.onTogglePpgLog) }
             if (readings != null) recordingItems(readings, state.link)
-            item { StatusLine(stringResource(linkLine(readings, state.link))) }
+            item { StatusLine(stringResource(linkLine(readings?.bluetoothGranted, state.link))) }
             if (readings != null) syncItems(readings)
             if (state.needsGrant) statusButton(spec, R.string.action_grant, onClick = actions.onGrant)
             readings?.samsungDiagnostics?.let { on ->
@@ -189,9 +189,10 @@ private fun TransformingLazyColumnScope.syncItems(readings: StatusReadings) {
     }
 }
 
+/** What the phone link is doing, here and on the settings' phone screen; [bluetoothGranted] is null until read. */
 @StringRes
-private fun linkLine(readings: StatusReadings?, link: WearLinkUiState): Int = when {
-    readings?.bluetoothGranted == false -> R.string.status_link_not_granted
+internal fun linkLine(bluetoothGranted: Boolean?, link: WearLinkUiState): Int = when {
+    bluetoothGranted == false -> R.string.status_link_not_granted
     !link.bluetoothOn -> R.string.status_link_bluetooth_off
     link.listening -> R.string.status_link_listening
     else -> R.string.status_link_starting

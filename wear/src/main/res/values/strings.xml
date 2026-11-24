@@ -270,4 +270,22 @@
     <!-- A screen reader's words for the arrows beside a tile: "Move Steps up". -->
     <string name="choice_move_up">Move %1$s up</string>
     <string name="choice_move_down">Move %1$s down</string>
+    <!-- The watch's settings, and the phone and sensor access screens they open. -->
+    <string name="settings_phone">Phone</string>
+    <string name="settings_phone_connected">Connected</string>
+    <string name="settings_phone_not_connected">Not connected</string>
+    <string name="settings_sensor_access">Sensor access</string>
+    <string name="settings_sensor_access_granted">Granted</string>
+    <string name="settings_sensor_access_missing">Not granted</string>
+    <string name="settings_units">Units</string>
+    <string name="settings_units_metric">Metric</string>
+    <string name="settings_units_imperial">Imperial</string>
+    <string name="phone_link">Link</string>
+    <string name="phone_none_hint">On your phone, open OpenWatch and add this watch.</string>
+    <string name="sensors_heart_rate">Heart rate</string>
+    <string name="sensors_heart_rate_background">Heart rate in the background</string>
+    <string name="sensors_steps">Steps</string>
+    <string name="sensors_no_step_counter">No step counter</string>
+    <string name="sensors_nearby_devices">Nearby devices</string>
+    <string name="sensors_recording_details">Recording details</string>
 </resources>

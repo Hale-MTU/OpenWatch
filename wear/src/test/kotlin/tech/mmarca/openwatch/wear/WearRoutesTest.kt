@@ -44,6 +44,9 @@ class WearRoutesTest {
         for (kind in SpotKind.entries) assertTrue(WearRoutes.isDeepLinkable(WearRoutes.measurement(kind)))
 
         assertFalse(WearRoutes.isDeepLinkable(WearRoutes.STATUS))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.SETTINGS))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.PHONE))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.SENSORS))
         assertFalse(WearRoutes.isDeepLinkable(WearRoutes.TILE_EDITOR))
         assertFalse(WearRoutes.isDeepLinkable(WearRoutes.WORKOUT))
         assertFalse(WearRoutes.isDeepLinkable(WearRoutes.DASHBOARD))

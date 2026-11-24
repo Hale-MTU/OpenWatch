@@ -4,6 +4,7 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.os.Looper
+import androidx.core.content.edit
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
@@ -49,6 +50,22 @@ class WearSettingsTest {
         assertEquals("lock", prefs.getString("sleep_hold_choice", null))
         assertFalse(WearSettings.syncedSleepHold(context))
         assertFalse("an older build reads the same hold", prefs.getBoolean("synced_sleep_hold", true))
+    }
+
+    @Test
+    fun `the unit system is metric until chosen, kept by name, and outlives a write of the other settings`() {
+        assertEquals(UnitSystem.METRIC, WearSettings.read(context).unitSystem)
+
+        WearSettings.write(context, WearSettings.read(context).copy(maxHeartRate = 182))
+        assertNull("a write of another setting chooses no unit system", prefs.getString("unit_system", null))
+
+        WearSettings.setUnitSystem(context, UnitSystem.IMPERIAL)
+        assertEquals("IMPERIAL", prefs.getString("unit_system", null))
+        WearSettings.write(context, WearSettings.read(context).copy(restingHeartRate = 52))
+        assertEquals(UnitSystem.IMPERIAL, WearSettings.read(context).unitSystem)
+
+        prefs.edit(commit = true) { putString("unit_system", "NAUTICAL") }
+        assertEquals(UnitSystem.METRIC, WearSettings.unitSystem(context))
     }
 
     @Test

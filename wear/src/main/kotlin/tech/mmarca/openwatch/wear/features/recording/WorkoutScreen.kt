@@ -46,7 +46,7 @@ import tech.mmarca.openwatch.wearlink.WorkoutSport
  * and records without a route when it is refused. The values shown are the
  * ones the watch's sensors give ([workoutFieldsOf]). While a workout runs the screen stays on in ambient mode
  * with a dim layout of its own ([RunningWorkout]). Distances and speeds are
- * shown in [unitSystem], the one the phone chose.
+ * shown in [unitSystem], the one chosen in the watch's settings.
  */
 @Composable
 internal fun WorkoutScreen(unitSystem: UnitSystem, onClose: () -> Unit) {

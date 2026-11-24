@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -23,27 +24,29 @@ import tech.mmarca.openwatch.wearlink.WearLinkEntry
  * the moment they are logged. Only the metrics the watch can give are
  * offered ([MetricOffer]), and the dashboard shows those of the tiles the
  * wearer chose ([WearTilePreferences]), which the tile editor changes here.
+ * Every screen shows its readings in the unit system the settings hold now.
  */
 class WearAppViewModel(application: Application) : AndroidViewModel(application) {
 
     private val graph = application.wearGraph
 
-    private val preferences = DisplayPreferences()
+    private val readings = WearReadingsSource(graph.store, waterGoalMl = DisplayPreferences.DEFAULT_WATER_GOAL_ML.toDouble())
 
-    private val readings = WearReadingsSource(graph.store, waterGoalMl = preferences.waterGoalMl.toDouble())
+    /** The settings as they change. The first read loads their file: collected off the main thread. */
+    private val settings = flow { emitAll(graph.settings) }.flowOn(Dispatchers.IO)
 
     /** Read once, off the main thread: the sensor list and the package manager. */
     private val sensors = flow { emit(graph.sensors) }.flowOn(Dispatchers.IO)
 
     val uiState: StateFlow<WearUiState> =
         combine(
-            // The first read of the settings loads their file: the source collects them where it reads, off the main thread.
-            readings.metrics(zoneBasis = flow { emitAll(graph.settings) }.map { it.zoneBasis() }),
+            readings.metrics(zoneBasis = settings.map { it.zoneBasis() }),
             readings.entries(),
             sensors,
             // The first read of the chosen tiles loads their file too.
             flow { emitAll(graph.tiles.chosen) }.flowOn(Dispatchers.IO),
-        ) { metrics, entries, sensors, tiles ->
+            settings.map { DisplayPreferences(unitSystem = it.unitSystem) }.distinctUntilChanged(),
+        ) { metrics, entries, sensors, tiles, preferences ->
             WearUiState(
                 availableMetrics = MetricOffer.available(sensors, withReadings = metrics.keys),
                 sensors = sensors,
@@ -52,7 +55,7 @@ class WearAppViewModel(application: Application) : AndroidViewModel(application)
                 entries = entries,
                 tiles = tiles,
             )
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(StopTimeoutMillis), WearUiState(preferences = preferences))
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(StopTimeoutMillis), WearUiState())
 
     /** Logs [value] (and [second]) of [type], entered by hand now. The write is off the main thread. */
     fun log(type: WearLinkEntry.Type, value: Double, second: Double? = null) {

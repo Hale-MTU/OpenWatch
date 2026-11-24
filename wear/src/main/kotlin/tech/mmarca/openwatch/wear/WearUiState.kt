@@ -93,11 +93,11 @@ data class LinePoint(val at: Float, val value: Double)
 data class SampleStats(val low: Double, val average: Double?, val high: Double)
 
 /**
- * Display settings the watch does not own: the phone app is where they are
- * chosen, and a later sync writes them here. Readings stay metric; only
- * their display changes.
+ * How the screens show a reading. Readings stay metric; only their display
+ * changes.
  */
 data class DisplayPreferences(
+    /** The wearer's choice in the watch's settings ([WatchPreferences.unitSystem]). */
     val unitSystem: UnitSystem = UnitSystem.METRIC,
     /** The day's water goal, millilitres. */
     val waterGoalMl: Int = DEFAULT_WATER_GOAL_ML,

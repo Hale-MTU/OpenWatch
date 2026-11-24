@@ -16,6 +16,7 @@ import tech.mmarca.openwatch.wear.features.measure.measureDestinations
 import tech.mmarca.openwatch.wear.features.metric.metricDestination
 import tech.mmarca.openwatch.wear.features.quicklog.quickLogDestinations
 import tech.mmarca.openwatch.wear.features.recording.workoutDestination
+import tech.mmarca.openwatch.wear.features.settings.settingsDestinations
 import tech.mmarca.openwatch.wear.features.status.statusDestination
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 import tech.mmarca.openwatch.wearlink.WearLinkEntry
@@ -26,8 +27,10 @@ import tech.mmarca.openwatch.wearlink.WearLinkEntry
  * [onEditTiles], and runs a spot measurement through [spot]; nothing here
  * reads a sensor. Each feature declares its destinations in its own package;
  * the dashboard opens a metric, the spot measurements, the quick log, the
- * workout, the tile editor and the link and recorder status
- * ([statusScreen]).
+ * workout, the tile editor and the settings, which lead on to the phone, the
+ * sensor access and the link and recorder status. What only the activity
+ * can do, ask for a grant or open the Bluetooth settings, comes in
+ * [actions].
  *
  * A running workout, or a saved one whose summary is still open, brings the
  * workout forward when the app opens ([workoutActive]) and when the wearer
@@ -53,8 +56,7 @@ fun OpenWatchWearApp(
     onResetTiles: () -> Unit = {},
     /** Runs one spot measurement (`WearGraph.spot`), which keeps its reading. */
     spot: (SpotKind) -> Flow<SpotEvent> = { emptyFlow() },
-    /** Link and recorder status, permissions and paired phones; it can open the workout. */
-    statusScreen: @Composable (onOpenWorkout: () -> Unit) -> Unit = {},
+    actions: ActivityActions = ActivityActions.NONE,
 ) {
     // The nav graph is built once, so every destination reads the latest
     // state through this holder instead of a value captured at build time.
@@ -78,7 +80,8 @@ fun OpenWatchWearApp(
                 metricDestination(navController) { currentState }
                 measureDestinations(navController, { currentState }) { kind -> currentSpot(kind) }
                 quickLogDestinations(navController, { currentState }) { type, value, second -> currentLog(type, value, second) }
-                statusDestination { statusScreen(openWorkout) }
+                settingsDestinations(navController, actions)
+                statusDestination(actions, onOpenWorkout = openWorkout)
                 workoutDestination(navController) { currentState }
             }
             LaunchedEffect(workoutActive, workoutRequests) {

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.hardware.Sensor
 import android.hardware.SensorManager
+import androidx.core.content.edit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +22,8 @@ import tech.mmarca.openwatch.wearlink.HeartRateInterval
  *   only by choice, because outside the platform's Developer Mode the
  *   platform asks Samsung about this app before it answers, and the app
  *   cannot tell which mode is on.
+ * - [unitSystem]: how the screens and tiles show a reading, chosen in the
+ *   watch's settings; metric until the wearer chooses.
  */
 internal object WearSettings {
 
@@ -42,6 +45,9 @@ internal object WearSettings {
     private const val KEY_SPO2 = "spo2_at_night"
     private const val KEY_MAX_HEART_RATE = "max_heart_rate"
     private const val KEY_RESTING_HEART_RATE = "resting_heart_rate"
+
+    /** A [UnitSystem] name; written only when the wearer chooses. */
+    private const val KEY_UNIT_SYSTEM = "unit_system"
 
     fun heartRateDay(context: Context): HeartRateInterval =
         prefs(context).getString(KEY_HEART_RATE_DAY, null)?.let(HeartRateInterval::fromWire)
@@ -125,7 +131,17 @@ internal object WearSettings {
     /** The resting heart rate the phone sent for the zones; null for none. */
     fun restingHeartRate(context: Context): Int? = prefs(context).getInt(KEY_RESTING_HEART_RATE, 0).takeIf { it > 0 }
 
-    /** Every setting in one value, for the phone's `GET_PREF`. */
+    /** The wearer's unit system; metric until one is chosen, or for a name this build does not know. */
+    fun unitSystem(context: Context): UnitSystem {
+        val stored = prefs(context).getString(KEY_UNIT_SYSTEM, null)
+        return UnitSystem.entries.firstOrNull { it.name == stored } ?: UnitSystem.METRIC
+    }
+
+    fun setUnitSystem(context: Context, unitSystem: UnitSystem) {
+        prefs(context).edit { putString(KEY_UNIT_SYSTEM, unitSystem.name) }
+    }
+
+    /** Every setting in one value, for the phone's `GET_PREF` and the screens. */
     fun read(context: Context): WatchPreferences = WatchPreferences(
         heartRateDay = heartRateDay(context),
         heartRateSource = heartRateSource(context),
@@ -135,6 +151,7 @@ internal object WearSettings {
         spo2AtNight = spo2AtNight(context),
         maxHeartRate = maxHeartRate(context),
         restingHeartRate = restingHeartRate(context),
+        unitSystem = unitSystem(context),
     )
 
     /**
@@ -153,6 +170,8 @@ internal object WearSettings {
             .putInt(KEY_MAX_HEART_RATE, preferences.maxHeartRate ?: 0)
             .putInt(KEY_RESTING_HEART_RATE, preferences.restingHeartRate ?: 0)
             .apply()
+        // Like the sleep hold, kept only once chosen: a write of the other settings leaves it unset.
+        if (preferences.unitSystem != unitSystem(context)) setUnitSystem(context, preferences.unitSystem)
     }
 
     private fun source(context: Context, key: String): Source {

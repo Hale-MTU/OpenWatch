@@ -13,14 +13,13 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import tech.mmarca.openwatch.wear.features.status.StatusScreen
 
 /**
  * The watch app: today's dashboard, with the quick log, the workout recorder
- * and the link and recorder status one step down. Asks for the permissions
- * the link and the recorders need; each part starts on its own once
- * granted. The recording itself lives in [WearAppService], so closing the
- * app changes nothing.
+ * and the settings one step down, the link and recorder status below them.
+ * Asks for the permissions the link and the recorders need; each part
+ * starts on its own once granted. The recording itself lives in
+ * [WearAppService], so closing the app changes nothing.
  *
  * One instance (`singleTask`): a tile, the watch face pill or a notification
  * reaches the one already open. A tile may name the screen to open
@@ -37,6 +36,12 @@ class MainActivity : ComponentActivity() {
 
     /** The screen a tile asked for, until the navigation has opened it. */
     private var deepLink by mutableStateOf<String?>(null)
+
+    /** What the screens ask of the activity. */
+    private val actions = ActivityActions(
+        requestGrants = ::requestMissingPermissions,
+        openBluetoothSettings = ::openBluetoothSettings,
+    )
 
     private val requestPermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
@@ -65,13 +70,7 @@ class MainActivity : ComponentActivity() {
                 onEditTiles = viewModel::editTiles,
                 onResetTiles = viewModel::resetTiles,
                 spot = graph.spot::run,
-                statusScreen = { onOpenWorkout ->
-                    StatusScreen(
-                        onGrant = ::requestMissingPermissions,
-                        onOpenWorkout = onOpenWorkout,
-                        onOpenBluetoothSettings = ::openBluetoothSettings,
-                    )
-                },
+                actions = actions,
             )
         }
     }
@@ -85,7 +84,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Also catches a grant made in the system settings; the status screen reads the grants again by itself.
+        // Also catches a grant made in the system settings; the status and settings screens read the grants again by themselves.
         WearAppService.startIfPermitted(this)
     }
 

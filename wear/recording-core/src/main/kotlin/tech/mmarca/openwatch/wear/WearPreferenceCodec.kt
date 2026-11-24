@@ -15,6 +15,8 @@ data class WatchPreferences(
     /** The zones' maximum and resting heart rate from the phone; null for none. */
     val maxHeartRate: Int? = null,
     val restingHeartRate: Int? = null,
+    /** How the screens and tiles show a reading, chosen on the watch. Not a link token: the phone neither reads nor sets it. */
+    val unitSystem: UnitSystem = UnitSystem.METRIC,
 ) {
     /**
      * What the heart rate zones rest on: the phone's maximum and resting rate,

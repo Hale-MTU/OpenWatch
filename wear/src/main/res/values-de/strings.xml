@@ -246,4 +246,21 @@
     <string name="tiles_move_hint">Mit den Pfeilen verschiebst du eine Kachel. Antippen entfernt sie.</string>
     <string name="choice_move_up">%1$s nach oben verschieben</string>
     <string name="choice_move_down">%1$s nach unten verschieben</string>
+    <string name="settings_phone">Telefon</string>
+    <string name="settings_phone_connected">Verbunden</string>
+    <string name="settings_phone_not_connected">Nicht verbunden</string>
+    <string name="settings_sensor_access">Sensorzugriff</string>
+    <string name="settings_sensor_access_granted">Erlaubt</string>
+    <string name="settings_sensor_access_missing">Nicht erlaubt</string>
+    <string name="settings_units">Einheiten</string>
+    <string name="settings_units_metric">Metrisch</string>
+    <string name="settings_units_imperial">Imperial</string>
+    <string name="phone_link">Verbindung</string>
+    <string name="phone_none_hint">Öffne OpenWatch auf dem Telefon und füge diese Uhr hinzu.</string>
+    <string name="sensors_heart_rate">Herzfrequenz</string>
+    <string name="sensors_heart_rate_background">Herzfrequenz im Hintergrund</string>
+    <string name="sensors_steps">Schritte</string>
+    <string name="sensors_no_step_counter">Kein Schrittzähler</string>
+    <string name="sensors_nearby_devices">Geräte in der Nähe</string>
+    <string name="sensors_recording_details">Aufzeichnungsdetails</string>
 </resources>

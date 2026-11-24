@@ -129,7 +129,13 @@ A heart rate or HRV asks for heart rate access first where it is missing. The me
 
 ### Settings on the watch and from the phone
 
-The watch app's screen and the phone's *Watch settings* card (on the watch's device screen) show the same settings, kept on the watch:
+The dashboard's **Settings** button opens the watch's settings, each with how it stands:
+
+- **Phone**: connected while a phone is allowed, still paired and the link is up. Its screen shows the link, a phone asking to be allowed (Allow or Block), the allowed phones and whether each is still paired, with the way to the Bluetooth settings for one that is not, and how to add a phone when there is none.
+- **Sensor access**: granted once heart rate, heart rate in the background, steps (on a watch with a step counter) and nearby devices all are. Its screen lists each, asks for the missing ones, and leads to **Recording details**, the status screen with what the watch has stored and the settings below.
+- **Units**: metric or imperial, a tap switches. The watch's screens and the quick log tile show their values in it; the phone's own setting is apart. Metric until you choose.
+
+The recording details' screen and the phone's *Watch settings* card (on the watch's device screen) show the same settings, kept on the watch:
 
 - **Heart rate outside bedtime mode**: every 10 seconds (the default) or power save, about every 10 minutes. Bedtime mode and a sleep hold always measure every 10 seconds.
 - **Sleep: wake lock or synced wake-ups**: how a sleep hold keeps every minute. Synced wake-ups let the processor sleep between the heart rate sensor's wake-ups and empty every sensor then; they work only with the heart rate from the sensor. They are the default on a watch whose heart rate sensor can wake it, the wake lock on one whose sensor cannot; a choice made here or on the phone stays.

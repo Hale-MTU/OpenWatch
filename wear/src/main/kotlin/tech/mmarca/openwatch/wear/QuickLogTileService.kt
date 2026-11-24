@@ -49,13 +49,17 @@ class QuickLogTileService : OpenWatchTileService() {
             graph.entries.log(WearLinkEntry.Type.WATER, DisplayPreferences.WATER_SERVING_ML)
         }
         val water = readWaterToday(store, TileDay.of(System.currentTimeMillis(), ZoneId.systemDefault()))
-        val total = getString(R.string.quicklog_water_today, millilitres(water), millilitres(GOAL_ML), getString(R.string.unit_ml))
-        return frameOf(water / GOAL_ML, total, canMeasure = graph.sensors.heartRate, addWaterId = taps.id)
+        val units = graph.settings.value.unitSystem
+        val total = getString(R.string.quicklog_water_today, water(water, units), water(GOAL_ML, units), waterUnit(units))
+        return frameOf(water / GOAL_ML, total, units, canMeasure = graph.sensors.heartRate, addWaterId = taps.id)
     }
 
     /** No ring, and why, rather than the system's error tile; the buttons still work. */
-    override fun unreadable(): TileFrame =
-        frameOf(0.0, getString(R.string.tile_read_failed), canMeasure = wearGraph.sensors.heartRate, addWaterId = WaterTaps(this).id)
+    override fun unreadable(): TileFrame {
+        val graph = wearGraph
+        val failed = getString(R.string.tile_read_failed)
+        return frameOf(0.0, failed, graph.settings.value.unitSystem, canMeasure = graph.sensors.heartRate, addWaterId = WaterTaps(this).id)
+    }
 
     override fun images(version: String): Map<String, ImageResource> = mapOf(
         ICON_WATER to drawable(R.drawable.ic_metric_hydration),
@@ -63,10 +67,10 @@ class QuickLogTileService : OpenWatchTileService() {
         ICON_ADD to drawable(R.drawable.ic_tile_add),
     )
 
-    private fun frameOf(progress: Double, total: String, canMeasure: Boolean, addWaterId: String): TileFrame {
+    private fun frameOf(progress: Double, total: String, units: UnitSystem, canMeasure: Boolean, addWaterId: String): TileFrame {
         val title = getString(R.string.metric_hydration)
         val addWater = clickable(loadAction(), id = addWaterId)
-        val addWaterLabel = getString(R.string.quicklog_add_water, millilitres(DisplayPreferences.WATER_SERVING_ML), getString(R.string.unit_ml))
+        val addWaterLabel = getString(R.string.quicklog_add_water, water(DisplayPreferences.WATER_SERVING_ML, units), waterUnit(units))
         val measure = openApp(WearRoutes.measurement(SpotKind.HEART_RATE)).takeIf { canMeasure }
         val measureLabel = getString(R.string.measure_heart_rate)
         val quickLog = openApp(WearRoutes.QUICK_LOG)
@@ -103,7 +107,16 @@ class QuickLogTileService : OpenWatchTileService() {
             colors = ButtonColors(background.argb, ON_BUTTON.argb, ON_BUTTON.argb, ON_BUTTON.argb),
         )
 
-    private fun millilitres(value: Double): String = NumberFormat.getIntegerInstance().format(value.roundToInt())
+    /** [millilitres] in the wearer's unit, as the quick log screen prints it. */
+    private fun water(millilitres: Double, units: UnitSystem): String =
+        NumberFormat.getIntegerInstance().format(units.water(millilitres).roundToInt())
+
+    private fun waterUnit(units: UnitSystem): String = getString(
+        when (units) {
+            UnitSystem.METRIC -> R.string.unit_ml
+            UnitSystem.IMPERIAL -> R.string.unit_fl_oz
+        },
+    )
 
     private fun drawable(@DrawableRes id: Int): ImageResource =
         ImageResource.Builder()

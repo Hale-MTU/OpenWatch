@@ -17,6 +17,13 @@ object WearRoutes {
 
     /** The metric a [METRIC_ARG] names; null for a name this build has no metric for, and for none. */
     fun metricOf(argument: String?): MetricTile? = MetricTile.entries.firstOrNull { it.name == argument }
+
+    /** The watch's settings, and the phone and sensor access screens they open. */
+    const val SETTINGS = "settings"
+    const val PHONE = "phone"
+    const val SENSORS = "sensors"
+
+    /** The link and recorder status: the recording details, which the sensor access screen opens. */
     const val STATUS = "status"
 
     /** The workout: the sport picker, the running workout, and the summary of a saved one. */
