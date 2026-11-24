@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_notification_access_title">גישה להתראות</string>
+    <string name="settings_notification_access_body">מאפשרת לשעון Garmin מותאם להציג את ההתראות של הטלפון. כבויה.</string>
+    <string name="settings_notification_access_granted">ניתנה. אפשר להקיש כדי לשנות אותה בהגדרות של Android.</string>
+    <string name="settings_about_version">OpenWatch %1$s</string>
+    <string name="settings_privacy_policy_body">מה OpenWatch קורא, כותב ושומר. נפתח בדפדפן.</string>
+    <string name="settings_privacy_policy_no_browser">אין בטלפון הזה אפליקציה שיכולה לפתוח את הקישור. המדיניות נמצאת בכתובת %1$s</string>
+    <string name="settings_about_body">קוד פתוח תחת הרישיון AGPL-3.0-or-later. הקוד של השעון, המשקל והסנכרון מגיע מ-OpenVitals.</string>
+    <string name="body_profile_title">פרופיל הגוף</string>
+    <string name="body_profile_settings_body">שנת לידה, מין, גובה ומשקל לצורך ההערכות</string>
+    <string name="body_profile_intro">הערכת האנרגיה שנשרפת בהליכה צריכה את המשקל שלך. אם יש ב-Health Connect משקל או גובה, הם ישמשו במקום הערכים שהוקלדו כאן.</string>
+    <string name="body_profile_birth_year">שנת לידה</string>
+    <string name="body_profile_sex">מין</string>
+    <string name="body_profile_sex_female">נקבה</string>
+    <string name="body_profile_sex_male">זכר</string>
+    <string name="body_profile_height_cm">גובה (ס״מ)</string>
+    <string name="body_profile_height_in">גובה (אינץ׳)</string>
+    <string name="body_profile_weight_kg">משקל (ק״ג)</string>
+    <string name="body_profile_weight_lb">משקל (ליברות)</string>
+    <string name="body_profile_measured">ב-Health Connect: %1$s</string>
+    <string name="privacy_policy_title">מדיניות פרטיות</string>
+    <string name="body_profile_synced">מסונכרן עם %1$s</string>
+    <string name="body_profile_synced_updated">מסונכרן עם %1$s · עודכן %2$s</string>
+    <string name="settings_respiratory_rate_title">קצב נשימה מהשעון (ניסיוני)</string>
+    <string name="settings_respiratory_rate_body">קצב הנשימה מחלונות ה-HRV הליליים של השעון נכתב ל-Health Connect. עדיין לא נבדק מול מכשיר ייחוס.</string>
+    <string name="health_data_open_body">כל סוג של נתוני בריאות, המכשיר שממנו הוא מגיע והסיבה.</string>
+    <string name="connected_apps_title">אפליקציות מחוברות</string>
+    <string name="connected_apps_settings_body">אפליקציות שמשתמשות בשעונים, במשקל ובפרופיל הגוף שלך דרך OpenWatch, ומה כל אחת מהן רשאית לעשות</string>
+</resources>

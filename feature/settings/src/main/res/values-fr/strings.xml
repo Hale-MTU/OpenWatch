@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="privacy_policy_title">Politique de confidentialité</string>
+    <string name="body_profile_synced">Synchronisé avec %1$s</string>
+    <string name="body_profile_synced_updated">Synchronisé avec %1$s · mis à jour %2$s</string>
+    <string name="connected_apps_title">Applications connectées</string>
+    <string name="connected_apps_settings_body">Les applications qui utilisent vos montres, votre balance et votre profil corporel via OpenWatch, et ce que chacune peut faire</string>
+    <string name="settings_notification_access_title">Accès aux notifications</string>
+    <string name="settings_notification_access_body">Permet à une montre Garmin associée d\'afficher les notifications du téléphone. Désactivé.</string>
+    <string name="settings_notification_access_granted">Accordé. Appuyez pour le modifier dans les paramètres Android.</string>
+    <string name="settings_about_version">OpenWatch %1$s</string>
+    <string name="settings_privacy_policy_body">Ce qu\'OpenWatch lit, écrit et conserve. S\'ouvre dans le navigateur.</string>
+    <string name="settings_privacy_policy_no_browser">Aucune application sur ce téléphone ne peut ouvrir le lien. La politique est disponible sur %1$s</string>
+    <string name="settings_about_body">Logiciel libre sous licence AGPL-3.0-or-later. Le code de la montre, de la balance et de la synchronisation vient d\'OpenVitals.</string>
+    <string name="body_profile_title">Profil corporel</string>
+    <string name="body_profile_settings_body">Année de naissance, sexe, taille et poids pour les estimations</string>
+    <string name="body_profile_intro">La composition corporelle de la balance a besoin de votre sexe et de votre taille ; l\'estimation de l\'énergie de marche a besoin de votre poids. Un poids ou une taille présents dans Santé Connect remplacent ceux saisis ici.</string>
+    <string name="body_profile_birth_year">Année de naissance</string>
+    <string name="body_profile_sex">Sexe</string>
+    <string name="body_profile_sex_female">Féminin</string>
+    <string name="body_profile_sex_male">Masculin</string>
+    <string name="body_profile_height_cm">Taille (cm)</string>
+    <string name="body_profile_height_in">Taille (in)</string>
+    <string name="body_profile_weight_kg">Poids (kg)</string>
+    <string name="body_profile_weight_lb">Poids (lb)</string>
+    <string name="body_profile_measured">Santé Connect : %1$s</string>
+    <string name="settings_respiratory_rate_title">Fréquence respiratoire de la montre (expérimental)</string>
+    <string name="settings_respiratory_rate_body">Écrit dans Santé Connect la fréquence respiratoire des fenêtres VFC nocturnes de la montre. Pas encore vérifiée par rapport à un appareil de référence.</string>
+    <string name="health_data_open_body">Chaque type de données de santé, l\'appareil d\'où il provient et pourquoi.</string>
+</resources>

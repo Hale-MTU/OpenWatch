@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_watch_wearos_bt_not_paired">ペアリング済みの Wear OS ウォッチが見つかりません</string>
+    <string name="settings_watch_wearos_app_running">ウォッチで OpenWatch Wear OS アプリが動作中です</string>
+    <string name="settings_watch_wearos_app_no_answer">応答なし：ウォッチの電源が切れているか、範囲外か、ウォッチの OpenWatch アプリがインストールされていないか実行されていません。</string>
+    <string name="settings_watch_wearos_status_pending">ウォッチでこのスマートフォンを許可するのを待っています。ウォッチで OpenWatch を開き、「許可」をタップしてください。</string>
+    <string name="settings_watch_wearos_status_unauthorized_mismatch">ウォッチがこのスマートフォンを拒否しました。キーが一致しません。ウォッチで OpenWatch を開き、このスマートフォンを削除してから、もう一度確認してください。</string>
+    <string name="settings_watch_wearos_status_unauthorized_blocked">このスマートフォンはウォッチでブロックされています。ウォッチで OpenWatch を開き、ブロックを解除してください。</string>
+    <string name="settings_watch_wearos_status_update_watch">ウォッチの OpenWatch アプリがこのアプリより古いです。ウォッチのアプリを更新してください。</string>
+    <string name="settings_watch_wearos_status_update_phone">ウォッチの OpenWatch アプリがこのアプリより新しいです。スマートフォンの OpenWatch を更新してください。</string>
+    <string name="settings_watch_wearos_status_protocol">ウォッチの応答を OpenWatch が読み取れませんでした。両方のアプリを更新して、もう一度お試しください。</string>
+</resources>

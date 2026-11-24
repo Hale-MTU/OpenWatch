@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.4.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.4.1)" variant="all" version="9.4.1">
+
+    <issue
+        id="Typos"
+        message="&quot;leem&quot; is a common misspelling; did you mean &quot;lêem&quot;?"
+        errorLine1="    &lt;string name=&quot;hc_setup_intro&quot;>O OpenWatch copia o que o relógio e a balança registam para o Health Connect, onde o OpenVitals e outras apps o leem. Nada sai do telemóvel: a app não tem permissão de internet.&lt;/string>"
+        errorLine2="                                                                                                                                                  ~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="5"
+            column="147"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;permissions&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_partial&quot;>%1$d of %2$d permissions granted. A record whose write is not granted stays on the device.&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="6"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;permissions&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_all_granted&quot;>All %1$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="5"
+            column="5"/>
+    </issue>
+
+</issues>

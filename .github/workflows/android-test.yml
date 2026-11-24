@@ -1,0 +1,174 @@
+# The instrumented tests, on emulators: the phone app's (verifyAndroidTest, app/src/androidTest)
+# on an Android 16 phone image, and the watch app's (:wear:connectedAndroidTest,
+# wear/src/androidTest and the store tests in wear/src/sharedTest) on a Wear OS 5 image. One
+# job each, side by side; each boots its emulator, builds, installs and runs. A quarter of an
+# hour or so, most of it the system image download, the boot and the build.
+#
+# Two ways in:
+#   verify.yml calls it on a push to main, for the sides the push changed, so its result is
+#     part of the run the release workflow reads: a failure here stops the nightly and a tag
+#     cut from that commit, like a failed unit test. Pull requests do not wait for it.
+#   A manual run (workflow_dispatch) tries any branch before it merges. It gates nothing.
+#
+# The emulators run on KVM, which the runner has but leaves to root until a udev rule opens
+# it. The emulator action switches the animation scales off before the tests start, and
+# scripts/ci-android-test.sh checks they are, runs the task, and fails unless tests ran.
+# A test that needs real hardware carries @RequiresDevice (androidx.test.filters): the
+# runner skips it on an emulator (docs/engineering/development.md lists them).
+#
+# Each job restores a Gradle home the verify jobs saved and writes none of its own: the cache
+# space goes to the jobs every pull request waits on. Actions are pinned as in the other
+# workflows, by commit with the version beside it, and the runner is ubuntu-26.04 as
+# everywhere (verify.yml says why).
+name: android-test
+
+on:
+  workflow_call:
+    inputs:
+      phone:
+        description: "run the phone app's instrumented tests"
+        type: boolean
+        default: true
+      wear:
+        description: "run the watch app's instrumented tests"
+        type: boolean
+        default: true
+  workflow_dispatch:
+    inputs:
+      phone:
+        description: "run the phone app's instrumented tests"
+        type: boolean
+        default: true
+      wear:
+        description: "run the watch app's instrumented tests"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # API 36, the app's targetSdk, with Google APIs: the platform's Health Connect is there,
+  # which ClientRecordVersionTest writes to.
+  phone:
+    name: phone (API 36 emulator)
+    if: inputs.phone
+    runs-on: ubuntu-26.04
+    # A boot that hangs would otherwise hold the verify run, and the release waiting on it,
+    # for the six hours GitHub allows.
+    timeout-minutes: 60
+    steps:
+      - name: Open KVM to the runner user
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          sudo udevadm settle
+          if ! test -r /dev/kvm || ! test -w /dev/kvm; then
+            echo "::error::/dev/kvm is missing or closed; the emulator needs KVM."
+            exit 1
+          fi
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          # The OpenLink and health-calculations libraries are submodules the apps build from.
+          submodules: true
+      - run: echo "GRADLE_USER_HOME=$RUNNER_TEMP/gradle-user-home" >> "$GITHUB_ENV"
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+        with:
+          cache-read-only: true
+      - name: Run the phone app's instrumented tests
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        env:
+          ANDROID_SERIAL: emulator-5554
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          cores: 2
+          # With the build JVM's 6 GB and the Kotlin daemon's 4 GB (scripts/ci-gradle.sh),
+          # inside the runner's 16 GB.
+          ram-size: 2048M
+          # KVM or nothing: an emulator without it takes longer than the timeout to boot.
+          disable-linux-hw-accel: false
+          emulator-port: 5554
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          disable-animations: true
+          # One line: the action runs each line of a script in a shell of its own.
+          script: scripts/ci-android-test.sh verifyAndroidTest
+      - name: Keep the reports and the logcat
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          # One per attempt: a rerun of the job would otherwise collide with the first.
+          name: android-test-phone-${{ github.run_attempt }}
+          path: |
+            **/build/reports/androidTests/connected/
+            **/build/outputs/androidTest-results/connected/
+            build/android-test/
+          if-no-files-found: warn
+          retention-days: 14
+
+  # Wear OS 5 (API 34): the newest Wear image in the stable channel that is not a signed
+  # release build. The Wear OS 6 images are published signed only (android-wear-signed),
+  # whose adbd accepts a host key only when it is set up before boot.
+  wear:
+    name: watch (Wear OS 5 emulator)
+    if: inputs.wear
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    steps:
+      - name: Open KVM to the runner user
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          sudo udevadm settle
+          if ! test -r /dev/kvm || ! test -w /dev/kvm; then
+            echo "::error::/dev/kvm is missing or closed; the emulator needs KVM."
+            exit 1
+          fi
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          # The OpenLink and health-calculations libraries are submodules the apps build from.
+          submodules: true
+      - run: echo "GRADLE_USER_HOME=$RUNNER_TEMP/gradle-user-home" >> "$GITHUB_ENV"
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+        with:
+          cache-read-only: true
+      - name: Run the watch app's instrumented tests
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        env:
+          ANDROID_SERIAL: emulator-5554
+        with:
+          api-level: 34
+          target: android-wear
+          arch: x86_64
+          profile: wearos_large_round
+          cores: 2
+          ram-size: 2048M
+          disable-linux-hw-accel: false
+          emulator-port: 5554
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          disable-animations: true
+          # The module's anchor task, which follows its test build type. Not a root task like
+          # verifyAndroidTest: on a watch someone wears, a connected task uninstalls the app
+          # afterwards, and its data with it (docs/engineering/development.md).
+          script: scripts/ci-android-test.sh :wear:connectedAndroidTest
+      - name: Keep the reports and the logcat
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: android-test-wear-${{ github.run_attempt }}
+          path: |
+            **/build/reports/androidTests/connected/
+            **/build/outputs/androidTest-results/connected/
+            build/android-test/
+          if-no-files-found: warn
+          retention-days: 14

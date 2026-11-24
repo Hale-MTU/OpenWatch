@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_streaming_channel">供其他应用使用的实时读数</string>
+    <string name="link_streaming_heart_rate">正在向 %1$s 传送心率</string>
+    <string name="link_streaming_heart_rate_steps">正在向 %1$s 传送心率和步数</string>
+    <string name="link_streaming_keeping">正在为 %1$s 保持手表持续传输</string>
+    <string name="link_streaming_waiting">正在为 %1$s 等待手表</string>
+    <string name="link_streaming_from">来自 %1$s</string>
+    <string name="link_streaming_waiting_for">正在等待 %1$s 的读数</string>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.4.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.4.1)" variant="all" version="9.4.1">
+
+    <issue
+        id="InlinedApi"
+        message="Field requires API level 29 (current min is 26): `android.content.pm.ServiceInfo#FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE`"
+        errorLine1="                ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE,"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/devices/xiaomi/ScaleListeningService.kt"
+            line="87"
+            column="17"/>
+    </issue>
+
+</issues>

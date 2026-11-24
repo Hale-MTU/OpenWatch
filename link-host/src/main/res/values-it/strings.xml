@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_streaming_channel">Letture in diretta per altre app</string>
+    <string name="link_streaming_heart_rate">Invio della frequenza cardiaca a %1$s</string>
+    <string name="link_streaming_heart_rate_steps">Invio di frequenza cardiaca e passi a %1$s</string>
+    <string name="link_streaming_keeping">L\'orologio resta in trasmissione per %1$s</string>
+    <string name="link_streaming_waiting">In attesa dell\'orologio, per %1$s</string>
+    <string name="link_streaming_from">Da %1$s</string>
+    <string name="link_streaming_waiting_for">In attesa di una lettura da %1$s</string>
+</resources>

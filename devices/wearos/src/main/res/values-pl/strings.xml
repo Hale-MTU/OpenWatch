@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_watch_wearos_bt_not_paired">Nie znaleziono sparowanego zegarka z Wear OS</string>
+    <string name="settings_watch_wearos_app_running">Aplikacja OpenWatch na Wear OS działa na zegarku</string>
+    <string name="settings_watch_wearos_app_no_answer">Brak odpowiedzi: zegarek jest wyłączony, poza zasięgiem, albo aplikacja OpenWatch na zegarku nie jest zainstalowana lub nie działa.</string>
+    <string name="settings_watch_wearos_status_pending">Oczekiwanie, aż zezwolisz temu telefonowi na zegarku. Otwórz OpenWatch na zegarku i dotknij Zezwól.</string>
+    <string name="settings_watch_wearos_status_unauthorized_mismatch">Zegarek odrzucił ten telefon: jego klucz się nie zgadza. Na zegarku otwórz OpenWatch, zapomnij ten telefon i sprawdź ponownie.</string>
+    <string name="settings_watch_wearos_status_unauthorized_blocked">Ten telefon jest zablokowany na zegarku. Na zegarku otwórz OpenWatch i go odblokuj.</string>
+    <string name="settings_watch_wearos_status_update_watch">Aplikacja OpenWatch na zegarku jest starsza niż ta. Zaktualizuj aplikację na zegarku.</string>
+    <string name="settings_watch_wearos_status_update_phone">Aplikacja OpenWatch na zegarku jest nowsza niż ta. Zaktualizuj OpenWatch w telefonie.</string>
+    <string name="settings_watch_wearos_status_protocol">Zegarek odpowiedział czymś, czego OpenWatch nie potrafi odczytać. Zaktualizuj obie aplikacje i spróbuj ponownie.</string>
+</resources>

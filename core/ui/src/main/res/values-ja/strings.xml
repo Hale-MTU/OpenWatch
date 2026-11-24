@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">キャンセル</string>
+    <string name="action_save">保存</string>
+    <string name="action_grant">許可</string>
+    <string name="action_grant_permission">権限を許可</string>
+    <string name="action_not_now">今は結構です</string>
+    <string name="screen_error_not_found">要求された項目は見つかりませんでした。</string>
+    <string name="screen_error_missing_argument">必須の情報が不足しています。</string>
+    <string name="screen_error_permission_denied">このデータを読み込むためには権限が必要です。</string>
+    <string name="screen_error_health_connect_unavailable">このデバイスではヘルスコネクトを利用できません。</string>
+    <string name="screen_error_feature_unavailable">このデバイスでは利用できません。</string>
+    <string name="message_missing_permissions_title">一部の権限がありません</string>
+    <string name="watch_permissions_continue">このまま続行</string>
+    <string name="onboarding_os_bluetooth">Bluetooth</string>
+    <string name="onboarding_os_bluetooth_desc">ウォッチ、心拍ストラップ、その他のセンサーを検出して接続します。</string>
+    <string name="onboarding_os_notifications">通知</string>
+    <string name="onboarding_os_notifications_desc">同期の進行状況、リマインダー、ワークアウトのアラート。</string>
+    <string name="onboarding_os_location">位置情報</string>
+    <string name="onboarding_os_location_desc">古い Android バージョンで Bluetooth デバイスをスキャンするために必要です。</string>
+    <string name="onboarding_os_battery">バッテリー使用を制限しない</string>
+    <string name="onboarding_os_battery_desc">バックグラウンド同期が省電力で一時停止されずに完了できるようにします。Android の設定を開きます。</string>
+    <string name="onboarding_os_notification_forwarding">通知の転送</string>
+    <string name="onboarding_os_notification_forwarding_desc">スマートフォンの通知を接続したウォッチに送ります。Android の設定を開きます。</string>
+    <string name="onboarding_action_grant_all">すべて許可</string>
+    <string name="option_not_specified">未指定</string>
+    <string name="settings_watch_name_label">名前</string>
+    <string name="action_remove">削除</string>
+    <string name="screen_error_generic">リクエストを完了できません。</string>
+    <string name="settings_watch_notifications_disclosure_accept">続行</string>
+    <string name="settings_watch_notifications_disclosure_decline">今はしない</string>
+    <string name="time_just_now">たった今</string>
+    <string name="hc_setup_sync_title">Health Connect に書き込む</string>
+    <string name="hc_setup_sync_body">オフにするとすべての書き込みが一時停止します。再びオンにするまで、デバイスが記録を保持します。</string>
+    <string name="health_data_title">OpenWatch が読み書きするデータ</string>
+    <string name="settings_watch_notifications_disclosure_title">OpenWatch が通知を読み取ります</string>
+    <string name="settings_watch_notifications_disclosure_body">ウォッチに通知を表示するため、OpenWatch はスマートフォンが受け取る通知をその本文も含めて読み取ります。
+
+通知はこのデバイスで読み取られ、ペアリングしたウォッチにのみ Bluetooth で送られます。ファイルやデータベースには保存されず、OpenWatch にはインターネット権限がないため、通知が他の場所に送られることはありません。
+
+いつでもオフにでき、Android の設定から通知へのアクセスを取り消せます。</string>
+    <string name="home_health_connect">Health Connect</string>
+    <string name="home_health_connect_body">OpenWatch が読み書きできるデータ</string>
+    <string name="action_delete">削除</string>
+</resources>

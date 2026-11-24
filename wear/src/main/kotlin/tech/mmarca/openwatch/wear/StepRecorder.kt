@@ -11,6 +11,7 @@ import android.os.HandlerThread
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Log
+import java.util.TreeMap
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
 /**
@@ -27,16 +28,24 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
  * ([setHeartRateRunning]) the counter's waking variant is used, where the
  * watch has one.
  *
+ * While the watch app is on screen the plan asks for the steps live
+ * ([RecorderPlan.Plan.stepsLive]): the counter registers again without
+ * batching, so each step reaches the store within a second or two, and the
+ * screens, which follow the store's writes, count it as it happens.
+ *
  * A batch is written once, a second after its last event, in one
  * transaction with the last reading. So a restart neither loses nor
  * double-counts steps: what was not written is in the next difference.
  */
-class StepRecorder(
+internal class StepRecorder(
     context: Context,
     private val store: MetricStore,
+    private val debug: DebugProtocol,
     /** Empties the counter's buffer at each heart rate wake-up; see [SensorWakeSync]. */
     private val wakeSync: SensorWakeSync? = null,
-) : SensorEventListener2 {
+    /** Whether the heart rate's wake-ups bring the readings ([HeartRateRecorder.isDense]); read at each plan. */
+    private val heartRateDense: () -> Boolean = { true },
+) : Recorder, SensorEventListener2 {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val boot: Int = Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT, -1)
@@ -48,7 +57,7 @@ class StepRecorder(
     private var counter: StepMinuteCounter? = null
     private var lastPrunedAt = 0L
 
-    val isRunning: Boolean
+    override val isRunning: Boolean
         get() = thread != null
 
     /** False on a watch without a step counter: then nothing will ever start. */
@@ -57,16 +66,24 @@ class StepRecorder(
     /** True while the heart rate's wake-ups bring the readings; false asks for the waking counter. */
     private var heartRateRunning = true
 
-    /** True when the watch UI is active; flushes steps in real time without batching latency. */
-    @Volatile
-    private var isInteractive = false
+    /** True while the plan asks for the steps live: the counter unbatched. */
+    private var live = false
 
-    fun setInteractive(interactive: Boolean) {
-        if (interactive == isInteractive) return
-        isInteractive = interactive
+    /** The heart rate recorder applies its plan first ([WearGraph.recorders]), so its density is the new one. */
+    override fun apply(plan: RecorderPlan.Plan) {
+        // Without the heart rate's wake-ups the step counter must wake the watch itself.
+        setHeartRateRunning(heartRateDense())
+        setLive(plan.stepsLive)
+        if (plan.steps) start() else stop()
+    }
+
+    /** Switches between the batched counter and the live one. A running recorder registers again. */
+    private fun setLive(on: Boolean) {
+        if (on == live) return
+        live = on
         val workerHandler = handler ?: return
         sensorManager.unregisterListener(this)
-        if (!register(workerHandler)) Log.w(TAG, "Step listener re-registration failed")
+        if (!register(workerHandler)) Log.w(TAG, "Step listener not registered again")
     }
 
     /** Switches between the two variants of the counter. A running recorder registers again. */
@@ -85,14 +102,13 @@ class StepRecorder(
 
     private fun register(workerHandler: Handler): Boolean {
         val sensor = sensor() ?: return false
-        val latencyMicros = if (isInteractive) 0 else MAX_REPORT_LATENCY_MICROS
-        val delayMode = if (isInteractive) SensorManager.SENSOR_DELAY_UI else SensorManager.SENSOR_DELAY_NORMAL
+        val latency = if (live) 0 else MAX_REPORT_LATENCY_MICROS
         val registered = try {
             sensorManager.registerListener(
                 this,
                 sensor,
-                delayMode,
-                latencyMicros,
+                SensorManager.SENSOR_DELAY_NORMAL,
+                latency,
                 workerHandler,
             )
         } catch (e: SecurityException) {
@@ -100,7 +116,10 @@ class StepRecorder(
             Log.e(TAG, "Step counter refused", e)
             false
         }
-        if (registered) Log.i(TAG, "Recording steps from ${sensor.name}${if (sensor.isWakeUpSensor) " (waking)" else ""} (interactive=$isInteractive)")
+        if (registered) {
+            debug.registered("steps", sensor, SensorManager.SENSOR_DELAY_NORMAL, latency)
+            debug.log(TAG) { "Recording steps from ${sensor.name}${if (sensor.isWakeUpSensor) " (waking)" else ""}${if (live) " live" else ""}" }
+        }
         return registered
     }
 
@@ -130,7 +149,7 @@ class StepRecorder(
         return true
     }
 
-    fun stop() {
+    override fun stop() {
         val worker = thread ?: return
         wakeSync?.leave(this)
         sensorManager.unregisterListener(this)
@@ -144,25 +163,33 @@ class StepRecorder(
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_STEP_COUNTER) return
-        DebugProtocol.arrival("steps")
+        debug.arrival("steps")
         val counter = counter ?: return
         val total = event.values.firstOrNull()?.toLong() ?: return
         counter.onTotal(SensorTime.epochMillisOf(event.timestamp), total)
-        if (isInteractive) {
-            flush()
-        } else if (!flushPending) {
+        if (!flushPending) {
             flushPending = true
             handler?.postDelayed(::flush, FLUSH_DELAY_MILLIS)
         }
     }
+
+    /** Minutes a failed write left unsaved, by their start; the next flush writes them with its own. Worker thread. */
+    private val unsaved = TreeMap<Long, WearLinkProtocol.StepMinute>()
 
     /** Writes the changed minutes and the last reading in one transaction. */
     private fun flush() {
         flushPending = false
         val counter = counter ?: return
         val last = counter.last ?: return
-        val rows = counter.drain()
-        store.putAll(WearMetrics.STEPS, rows, STATE_KEY, "$boot,${last.total},${last.epochMillis}")
+        // A minute's row is its whole count so far: a newer row for a minute replaces an unsaved one.
+        for (row in counter.drain()) unsaved[row.epochMillis] = row
+        val rows = unsaved.values.toList()
+        if (!store.putAll(WearMetrics.STEPS, rows, STATE_KEY, "$boot,${last.total},${last.epochMillis}")) {
+            // Kept for the next flush, a day of minutes at most.
+            while (unsaved.size > MAX_UNSAVED_MINUTES) unsaved.remove(unsaved.firstKey())
+            return
+        }
+        unsaved.clear()
         rows.forEach(::logFinishedMinute)
         if (last.epochMillis - lastPrunedAt > PRUNE_EVERY_MILLIS) {
             lastPrunedAt = last.epochMillis
@@ -185,11 +212,11 @@ class StepRecorder(
         }
         val (storedBoot, total, at) = fields
         if (storedBoot == boot.toLong()) {
-            Log.i(TAG, "Continuing from total $total")
+            debug.log(TAG) { "Continuing from total $total" }
             return StepMinuteCounter.Reading(at, total)
         }
         val bootedAt = System.currentTimeMillis() - SystemClock.elapsedRealtime()
-        Log.i(TAG, "New boot: counting from 0 at ${java.time.Instant.ofEpochMilli(bootedAt)}")
+        debug.log(TAG) { "New boot: counting from 0 at ${java.time.Instant.ofEpochMilli(bootedAt)}" }
         return StepMinuteCounter.Reading(bootedAt, 0L)
     }
 
@@ -203,14 +230,14 @@ class StepRecorder(
 
     /**
      * Logs one line per minute once the next minute starts. The watch has no
-     * steps screen yet; testers read `adb logcat -s StepRecorder`. A late
+     * steps screen yet; testers read `adb logcat -s StepRecorder` on a debuggable build. A late
      * batch may still add to a logged minute.
      */
     private fun logFinishedMinute(row: WearLinkProtocol.StepMinute) {
         val previous = lastRow
         lastRow = row
         if (previous == null || previous.epochMillis == row.epochMillis) return
-        Log.i(TAG, "${java.time.Instant.ofEpochMilli(previous.epochMillis)}: ${previous.steps} steps")
+        debug.log(TAG) { "${java.time.Instant.ofEpochMilli(previous.epochMillis)}: ${previous.steps} steps" }
     }
 
     companion object {
@@ -227,5 +254,7 @@ class StepRecorder(
         private const val MAX_REPORT_LATENCY_MICROS = 40 * 1_000_000
 
         private const val PRUNE_EVERY_MILLIS = 6L * 60 * 60 * 1000
+
+        private const val MAX_UNSAVED_MINUTES = 24 * 60
     }
 }

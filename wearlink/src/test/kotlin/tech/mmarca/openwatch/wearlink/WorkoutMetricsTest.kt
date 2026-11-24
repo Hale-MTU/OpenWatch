@@ -1,109 +1,184 @@
 package tech.mmarca.openwatch.wearlink
 
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneOffset
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.mmarca.healthcalculations.insights.HeartRateRecoveryQuality
 import tech.mmarca.healthcalculations.insights.HeartRateZones
-import tech.mmarca.healthcalculations.insights.estimateWorkoutEnergy
-import tech.mmarca.healthcalculations.model.ExerciseSessionRecord
+import tech.mmarca.healthcalculations.insights.WorkoutEnergyResult
+import tech.mmarca.healthcalculations.preferences.BiologicalSex
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.wearlink.WorkoutMetrics.Beat
 
 /**
- * What [WorkoutMetrics] decides itself: the active time, the whole kilometres, what it
- * hands health-calculations. The formulas are tested in health-calculations.
+ * What [WorkoutMetrics] hands health-calculations and takes back: the figures themselves are the
+ * library's and tested there; here, that the workout's pauses, route and basis reach it.
  */
 class WorkoutMetricsTest {
 
     private val start = 1_794_000_000_000L
-    private val day = LocalDate.of(2026, 11, 15)
+    private val day: LocalDate = Instant.ofEpochMilli(start).atZone(ZoneOffset.UTC).toLocalDate()
+    private val basis = HeartRateZones.Basis(maxBpm = 190, restingBpm = 50)
+
+    /** Born 30 years before the workout's day, 70 kg, 175 cm. */
+    private val man = BodyProfile(birthYear = day.year - 30, weightKg = 70.0, heightCm = 175.0, sex = BiologicalSex.MALE)
+
     private fun minutes(n: Int) = n * 60_000L
-    private fun steady(bpm: Int, count: Int, from: Long = start) = List(count) { Beat(from + it * 1000L, bpm) }
+
+    /** [count] readings at [bpm], one a second from [from]. */
+    private fun steady(bpm: Int, count: Int, from: Long = start) = List(count) { Beat(from + it * 1_000L, bpm) }
+
     private fun workout(
         minutes: Int,
         route: List<WearLinkWorkout.RoutePoint> = emptyList(),
         pauses: List<WearLinkWorkout.Pause> = emptyList(),
-        exerciseType: Int = ExerciseSessionRecord.EXERCISE_TYPE_WALKING,
-    ) = WearLinkWorkout(start, start + minutes(minutes), exerciseType, null, null, null, pauses, route)
-
-    /** One fix every 30 s, due north, [stepE7] latitude units apart. */
-    private fun northwards(fixes: Int, stepE7: Int, everyMillis: Long = 30_000L) =
-        List(fixes) { WearLinkWorkout.RoutePoint(start + it * everyMillis, it * stepE7, 0, null, null) }
+        exerciseType: Int = WorkoutSport.WALKING.exerciseType,
+        distanceMetres: Int? = null,
+    ) = WearLinkWorkout(start, start + minutes(minutes), exerciseType, null, distanceMetres, null, pauses, route)
 
     @Test
-    fun `the active time is the session less its pauses`() {
-        val pause = WearLinkWorkout.Pause(start + minutes(2), start + minutes(4))
-        val windows = WorkoutMetrics.activeWindows(workout(10, pauses = listOf(pause)))
-        assertEquals(listOf(0L to 2L, 4L to 10L), windows.map { (it.start.toEpochMilli() - start) / 60_000 to (it.end.toEpochMilli() - start) / 60_000 })
-    }
-
-    @Test
-    fun `a pause counts for nothing in the mean, the maximum or the zones`() {
-        // 100 bpm, paused at 160 bpm, then 120 bpm; the one second from 29 to 30 s counts at 130.
+    fun `the summary counts the active readings only, the mean over their time`() {
         val pause = WearLinkWorkout.Pause(start + 30_000, start + 60_000)
         val beats = steady(100, 30) + steady(160, 30, start + 30_000) + steady(120, 30, start + 60_000)
-        val summary = WorkoutMetrics.summarize(
-            workout(2, pauses = listOf(pause)).copy(endMillis = start + 90_000), beats, HeartRateZones.Basis(200), BodyProfile(), day,
-        )
+
+        val summary = WorkoutMetrics.summarize(workout(2, pauses = listOf(pause)).copy(endMillis = start + 90_000), beats, basis, BodyProfile(), day)
+
+        // 29 s at 100, the second across the pause at their mean of 110, 29 s at 120.
         assertEquals(110, summary.averageBpm)
-        assertEquals(120, summary.maxBpm)
-        assertEquals(59L, summary.zoneSeconds.sum())
-        assertNull(summary.totalKcal)
+        assertEquals("the pause's 160 counts for nothing", 120, summary.maxBpm)
+        // Zones from 50, 92, 106, 134 and 176 bpm: 100 is zone 2, 120 zone 3; the pause and the last reading count no time.
+        assertEquals(listOf(0L, 30L, 29L, 0L, 0L), summary.zoneSeconds)
+        assertNull("no weight, no energy", summary.totalKcal)
     }
 
     @Test
-    fun `the energy is health-calculations' estimate over the active minutes`() {
-        val pause = WearLinkWorkout.Pause(start + minutes(2), start + minutes(4))
-        val profile = BodyProfile(weightKg = 70.0)
+    fun `without a basis there are no zones, no TRIMP and no VO2max`() {
+        val summary = WorkoutMetrics.summarize(workout(10), steady(150, 601), zones = null, man, day)
+
+        assertEquals(List(HeartRateZones.COUNT) { 0L }, summary.zoneSeconds)
+        assertNull(summary.trimp)
+        assertNull(summary.vo2Max)
+        assertNotNull("the energy needs no basis", summary.activeKcal)
+    }
+
+    @Test
+    fun `trimp of ten minutes at half the reserve, a man`() {
+        val summary = WorkoutMetrics.summarize(workout(10), steady(120, 601), basis, man, day)
+
+        // 10 min x 0.5 x 0.64 x e^(1.92 x 0.5) = 8.36 (Banister, through health-calculations' workoutTrimp).
+        assertEquals(8.36, summary.trimp!!, 0.01)
+    }
+
+    @Test
+    fun `the energy is health-calculations' estimate over the active time`() {
+        val workout = workout(10, exerciseType = WorkoutSport.RUNNING.exerciseType)
+
+        val estimate = WorkoutMetrics.energy(workout, steady(150, 601), man, day) as WorkoutEnergyResult.Estimate
+        val summary = WorkoutMetrics.summarize(workout, steady(150, 601), basis, man, day)
+
+        // Keytel at 150 bpm: 14.22 kcal a minute; Mifflin-St Jeor's rest: 1.145 kcal a minute.
+        assertEquals(142.22, estimate.totalKcal, 0.01)
+        assertEquals(130.77, estimate.activeKcal, 0.01)
+        assertEquals(estimate.activeKcal, summary.activeKcal!!, 0.0)
+        assertTrue(WorkoutMetrics.energy(workout, steady(150, 601), BodyProfile(), day) is WorkoutEnergyResult.MissingInputs)
+    }
+
+    @Test
+    fun `a straight kilometre is one split, its time without the pause in it`() {
+        // 0.0009 degrees of latitude every 30 s: about 100.1 m a step, 1000.8 m in ten.
+        val route = List(11) { WearLinkWorkout.RoutePoint(start + it * 30_000L, it * 9_000, 0, null, null) }
+        val pause = WearLinkWorkout.Pause(start + 60_000, start + 90_000)
+
+        val splits = WorkoutMetrics.splits(workout(6, route))
+        val paused = WorkoutMetrics.splits(workout(6, route, listOf(pause)))
+
+        assertEquals(1, splits.size)
+        assertEquals(0, splits[0].index)
+        assertEquals(start, splits[0].startMillis)
+        assertEquals(299L, splits[0].activeSeconds)
+        assertEquals(269L, paused.single().activeSeconds)
+    }
+
+    @Test
+    fun `the pace is the active time over the distance`() {
+        val pause = WearLinkWorkout.Pause(start + minutes(5), start + minutes(10))
+
+        val summary = WorkoutMetrics.summarize(workout(30, pauses = listOf(pause), distanceMetres = 5_000), emptyList(), null, BodyProfile(), day)
+
+        assertEquals(300.0, summary.paceSecondsPerKm!!, 1e-9)
+        assertNull(WorkoutMetrics.summarize(workout(30), emptyList(), null, BodyProfile(), day).paceSecondsPerKm)
+    }
+
+    @Test
+    fun `vo2max from a steady run, and none from a sport its equations do not hold for`() {
+        // 200 m a minute for ten minutes at 150 bpm, resting 50 and maximum 190: a reserve of 0.714,
+        // so 0.2 x 200 / 0.714 + 3.5 = 59.5 ml/kg/min.
+        val step = (200.0 / 111_195.0 * 1e7).toInt()
+        val route = List(11) { WearLinkWorkout.RoutePoint(start + minutes(it), it * step, 0, null, null) }
+        val beats = steady(150, 601)
+
+        val run = WorkoutMetrics.summarize(workout(10, route, exerciseType = WorkoutSport.RUNNING.exerciseType), beats, basis, man, day)
+        val volleyball = WorkoutMetrics.summarize(workout(10, route, exerciseType = WorkoutSport.VOLLEYBALL.exerciseType), beats, basis, man, day)
+
+        assertEquals(59.5, run.vo2Max!!, 0.5)
+        assertNull(volleyball.vo2Max)
+    }
+
+    @Test
+    fun `the session less its pauses is the active time`() {
+        val pauses = listOf(WearLinkWorkout.Pause(start + minutes(2), start + minutes(3)), WearLinkWorkout.Pause(start + minutes(5), start + minutes(6)))
+
+        val windows = WorkoutMetrics.activeWindows(workout(10, pauses = pauses))
+
         assertEquals(
-            estimateWorkoutEnergy(ExerciseSessionRecord.EXERCISE_TYPE_WALKING, 8.0, null, profile, day),
-            WorkoutMetrics.energy(workout(10, pauses = listOf(pause)), emptyList(), profile, day),
+            listOf(0L to 2L, 3L to 5L, 6L to 10L),
+            windows.map { (it.start.toEpochMilli() - start) / minutes(1) to (it.end.toEpochMilli() - start) / minutes(1) },
         )
     }
 
     @Test
-    fun `a straight kilometre is one split, its time without the pause`() {
-        // 0.0009 degrees of latitude is about 100.08 m: ten steps, one whole kilometre.
-        val route = northwards(11, 9_000)
-        val split = WorkoutMetrics.splits(workout(6, route)).single()
-        assertEquals(0, split.index)
-        assertEquals(299L, split.activeSeconds)
-        val pause = WearLinkWorkout.Pause(start + 160_000, start + 170_000)
-        assertEquals(289L, WorkoutMetrics.splits(workout(6, route, listOf(pause))).single().activeSeconds)
-    }
-
-    @Test
-    fun `vo2max of a steady run, and none for another sport`() {
-        // 200 m/min at 150 bpm, rest 50, max 190: 0.2 x 200 / (100 / 140) + 3.5.
-        val step = (200.0 / 111_195.0 * 1e7).toInt()
-        val route = northwards(11, step, everyMillis = 60_000L)
-        val beats = steady(150, 600)
-        val run = workout(10, route, exerciseType = ExerciseSessionRecord.EXERCISE_TYPE_RUNNING)
-        assertEquals(59.5, WorkoutMetrics.summarize(run, beats, HeartRateZones.Basis(190, 50), BodyProfile(), day).vo2Max!!, 0.5)
-        val volleyball = run.copy(exerciseType = ExerciseSessionRecord.EXERCISE_TYPE_VOLLEYBALL)
-        assertNull(WorkoutMetrics.summarize(volleyball, beats, HeartRateZones.Basis(190, 50), BodyProfile(), day).vo2Max)
-    }
-
-    @Test
-    fun `recovery is the fall from the peak, judged on the effort`() {
+    fun `the recovery is the fall from the peak before the stop after one and two minutes`() {
         val stop = start + minutes(10)
-        val beats = steady(160, 60, stop - 59_000) + steady(130, 11, stop + 55_000) + steady(110, 11, stop + 115_000)
-        // Age 30: about 187 bpm predicted, so 160 is well below near-maximal.
-        val recovery = WorkoutMetrics.recovery(beats, stop, BodyProfile(birthYear = 1996), restingBpm = 55, day = day)
-        assertEquals(30, recovery.oneMinuteBpm)
-        assertEquals(50, recovery.twoMinutesBpm)
-        assertEquals(160, recovery.peakBpm)
-        assertEquals(HeartRateRecoveryQuality.NOT_COMPARABLE, recovery.quality)
+        val beats = steady(160, 10, stop - 9_000) + steady(130, 11, stop + 55_000) + steady(110, 11, stop + 115_000)
+
+        // 30 years old: about 187 bpm at most (Tanaka), so a peak of 160 is a real fall, not comparable with a maximal one.
+        assertEquals(
+            WorkoutMetrics.Recovery(oneMinuteBpm = 30, twoMinutesBpm = 50, peakBpm = 160, quality = HeartRateRecoveryQuality.NOT_COMPARABLE),
+            WorkoutMetrics.recovery(beats, stop, man, 50, day),
+        )
     }
 
     @Test
-    fun `a heart rate that did not fall gives no recovery`() {
+    fun `a recovery from a near-maximal effort is clean`() {
         val stop = start + minutes(10)
-        val beats = steady(160, 60, stop - 59_000) + steady(165, 11, stop + 55_000)
-        val recovery = WorkoutMetrics.recovery(beats, stop, BodyProfile(birthYear = 1996), restingBpm = 55, day = day)
-        assertEquals(HeartRateRecoveryQuality.INVALID, recovery.quality)
-        assertNull(recovery.oneMinuteBpm)
+        val beats = steady(178, 10, stop - 9_000) + steady(148, 11, stop + 55_000) + steady(128, 11, stop + 115_000)
+
+        assertEquals(HeartRateRecoveryQuality.CLEAN, WorkoutMetrics.recovery(beats, stop, man, 50, day).quality)
+    }
+
+    @Test
+    fun `a heart rate that did not fall after the stop is no recovery`() {
+        val stop = start + minutes(10)
+        val beats = steady(160, 10, stop - 9_000) + steady(165, 11, stop + 55_000) + steady(150, 11, stop + 115_000)
+
+        assertEquals(
+            WorkoutMetrics.Recovery(null, null, peakBpm = 160, quality = HeartRateRecoveryQuality.INVALID),
+            WorkoutMetrics.recovery(beats, stop, man, 50, day),
+        )
+    }
+
+    @Test
+    fun `the falls and the peak need no profile, only the verdict does`() {
+        val stop = start + minutes(10)
+        val beats = steady(160, 10, stop - 9_000) + steady(130, 11, stop + 55_000) + steady(110, 11, stop + 115_000)
+
+        val recovery = WorkoutMetrics.recovery(beats, stop)
+        assertEquals(WorkoutMetrics.Recovery(oneMinuteBpm = 30, twoMinutesBpm = 50, peakBpm = 160), recovery.copy(quality = HeartRateRecoveryQuality.NO_DATA))
+        assertEquals("no maximum to judge the effort by", HeartRateRecoveryQuality.APPROXIMATE, recovery.quality)
     }
 }

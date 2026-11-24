@@ -11,8 +11,20 @@ import sys
 import xml.etree.ElementTree as ET
 
 
-RES_DIR = pathlib.Path("app/src/main/res")
-BASE_FILE = RES_DIR / "values" / "strings.xml"
+# The phone app and the watch app each ship their own strings, and so does each library
+# module under core/, devices/ and feature/, and the OpenLink host, whose code has text of its
+# own (a device family's notifications, its link states, a screen's words). Each locale file is checked against the English file of
+# its own module.
+RES_DIRS = (
+    pathlib.Path("app/src/main/res"),
+    pathlib.Path("wear/src/main/res"),
+    *(
+        res
+        for root in ("core", "devices", "feature", "link-host")
+        for res in sorted(pathlib.Path(root).glob("**/src/main/res"))
+        if (res / "values" / "strings.xml").is_file()
+    ),
+)
 # Flags, width and precision are part of the specifier, and a check that cannot
 # see them cannot see the difference between "%1$.1f" and "%1$.1d" — the second
 # throws IllegalFormatPrecisionException the moment the string is drawn. The
@@ -33,6 +45,7 @@ CLDR_PLURAL_QUANTITIES = {"zero", "one", "two", "few", "many", "other"}
 # "other", and Weblate drops the "one" branch English carries. A language not
 # listed here is held to every quantity the base file has.
 CLDR_LANGUAGE_QUANTITIES = {
+    "ar": {"zero", "one", "two", "few", "many", "other"},
     "cs": {"one", "few", "many", "other"},
     "de": {"one", "other"},
     "es": {"one", "many", "other"},
@@ -196,18 +209,17 @@ def validate_locale(path: pathlib.Path, base_entries: dict[str, ResourceEntry]) 
     locale_names = set(locale_entries)
 
     translated_base_names = locale_names & translatable_base_names
-    # The floor decides whether a language is OFFERED, not whether its file may
-    # exist. generate-translation-coverage.py keeps a language out of the picker
-    # until it clears the same threshold, so a half-finished translation is
-    # already invisible to users. Failing the build for one as well would mean a
-    # language cannot be worked on incrementally at all — a translator's first
-    # commit would break CI. What still has to hold for every file, offered or
-    # not, is placeholder and plural safety, which is checked above.
+    # The floor is a note, not a failure. OpenWatch has no language picker: it
+    # follows the phone's language and ships every values-* file, so a file under
+    # the floor shows its missing strings in English. Failing the build for one
+    # would mean a language cannot be worked on incrementally at all, since a
+    # translator's first commit would break CI. What has to hold for every file
+    # is placeholder and plural safety, which is checked above.
     coverage = len(translated_base_names) / len(translatable_base_names)
     if coverage <= MIN_TRANSLATION_COVERAGE:
         print(
-            f"note: {path} is at {coverage:.1%} coverage and is not offered in the "
-            f"language picker until it passes {MIN_TRANSLATION_COVERAGE:.0%}."
+            f"note: {path} is at {coverage:.1%} coverage, under {MIN_TRANSLATION_COVERAGE:.0%}: "
+            f"a phone in that language sees most of the app in English."
         )
 
     for name in sorted(locale_names - base_names):
@@ -231,16 +243,19 @@ def validate_locale(path: pathlib.Path, base_entries: dict[str, ResourceEntry]) 
 
 
 def main() -> int:
-    base_entries, errors = parse_resource_file(BASE_FILE)
-    if errors:
-        for error in errors:
-            print(error, file=sys.stderr)
-        return 1
-
-    locale_files = sorted(RES_DIR.glob("values-*/strings.xml"))
+    locale_count = 0
     all_errors: list[str] = []
-    for path in locale_files:
-        all_errors.extend(validate_locale(path, base_entries))
+    for res_dir in RES_DIRS:
+        base_entries, errors = parse_resource_file(res_dir / "values" / "strings.xml")
+        if errors:
+            for error in errors:
+                print(error, file=sys.stderr)
+            return 1
+
+        locale_files = sorted(res_dir.glob("values-*/strings.xml"))
+        locale_count += len(locale_files)
+        for path in locale_files:
+            all_errors.extend(validate_locale(path, base_entries))
 
     if all_errors:
         print("Translation validation failed:", file=sys.stderr)
@@ -249,7 +264,7 @@ def main() -> int:
         return 1
 
     print(
-        f"Translation validation passed for {len(locale_files)} locale files "
+        f"Translation validation passed for {locale_count} locale files "
         f"with coverage greater than {MIN_TRANSLATION_COVERAGE:.0%}."
     )
     return 0

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="garmin_find_phone_channel">Etsi puhelimeni</string>
+    <string name="garmin_find_phone_title">Kellosi etsii tätä puhelinta</string>
+    <string name="garmin_find_phone_body">Napauta lopettaaksesi soiton.</string>
+    <string name="garmin_find_phone_stop">Lopeta</string>
+</resources>

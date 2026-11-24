@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_streaming_channel">Odczyty na żywo dla innych aplikacji</string>
+    <string name="link_streaming_heart_rate">Przesyłanie tętna do %1$s</string>
+    <string name="link_streaming_heart_rate_steps">Przesyłanie tętna i kroków do %1$s</string>
+    <string name="link_streaming_keeping">Zegarek nadal nadaje dla %1$s</string>
+    <string name="link_streaming_waiting">Oczekiwanie na zegarek, dla %1$s</string>
+    <string name="link_streaming_from">Z %1$s</string>
+    <string name="link_streaming_waiting_for">Oczekiwanie na odczyt z %1$s</string>
+</resources>
