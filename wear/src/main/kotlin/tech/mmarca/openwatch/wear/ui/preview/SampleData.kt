@@ -1,7 +1,11 @@
 package tech.mmarca.openwatch.wear.ui.preview
 
+import java.time.Duration
+import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wear.MetricUiState
+import tech.mmarca.openwatch.wear.SampleStats
 import tech.mmarca.openwatch.wear.features.recording.RecordingUiState
+import tech.mmarca.openwatch.wear.SleepStage
 import tech.mmarca.openwatch.wear.MetricTile
 import tech.mmarca.openwatch.wear.WearUiState
 import tech.mmarca.openwatch.wear.features.recording.ActivityType
@@ -23,6 +27,8 @@ object SampleData {
             current = 72.0,
             today = doubles(64, 66, 63, 70, 78, 91, 104, 98, 86, 79, 74, 71, 69, 72, 75, 72),
             week = doubles(68, 71, 66, 70, 74, 69, 73),
+            todayStats = SampleStats(low = 56.0, average = 76.0, high = 118.0),
+            zoneTime = listOf(214L, 61L, 22L, 6L, 0L).map(Duration::ofMinutes),
         ),
         MetricTile.DISTANCE to MetricUiState(
             current = 4_730.0,
@@ -80,6 +86,13 @@ object SampleData {
         ),
     )
 
+    /** Minutes per stage for a 7:22 night. */
+    val sleepStages = mapOf(
+        SleepStage.AWAKE to 21.0,
+        SleepStage.REM to 94.0,
+        SleepStage.LIGHT to 243.0,
+        SleepStage.DEEP to 84.0,
+    )
 
     /** The fields each workout shows on a watch with a heart rate sensor, GPS and a barometer. */
     val workoutFields: Map<ActivityType, Set<WorkoutField>> = ActivityType.entries.associateWith { activity ->
@@ -105,8 +118,13 @@ object SampleData {
         averageHeartRateBpm = 131,
     )
 
+    /** A maximum and resting rate as the phone would send them. */
+    val zoneBasis = HeartRateZones.Basis(maxBpm = 185, restingBpm = 58)
+
     val uiState = WearUiState(
         metrics = metrics,
+        sleepStages = sleepStages,
+        zoneBasis = zoneBasis,
     )
 
     private fun doubles(vararg values: Int): List<Double> = values.map(Int::toDouble)

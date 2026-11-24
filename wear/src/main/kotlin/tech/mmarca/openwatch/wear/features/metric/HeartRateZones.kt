@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.wear.features.metric
 
+import java.time.Duration
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wear.R
 
@@ -34,5 +35,15 @@ object HeartZoneDisplay {
         val upper = bounds.getOrElse(zone + 1) { basis.maxBpm }
         val within = if (upper > lower) ((bpm - lower).toFloat() / (upper - lower)).coerceIn(0f, 1f) else 1f
         return (zone + within) / HeartRateZones.COUNT
+    }
+
+    /**
+     * Each zone's share of [zoneTime], the time spent in a zone, zone 1 first:
+     * the five add up to one, and time below zone 1 is in neither a share nor
+     * the total. Empty when no time was spent in any zone.
+     */
+    fun timeShares(zoneTime: List<Duration>): List<Float> {
+        val total = zoneTime.sumOf { it.toMillis() }
+        return if (total <= 0L) emptyList() else zoneTime.map { it.toMillis().toFloat() / total }
     }
 }

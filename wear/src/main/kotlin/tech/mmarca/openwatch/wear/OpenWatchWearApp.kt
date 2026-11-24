@@ -9,6 +9,7 @@ import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import tech.mmarca.openwatch.wear.features.dashboard.DashboardScreen
+import tech.mmarca.openwatch.wear.features.metric.MetricDetailScreen
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
@@ -51,9 +52,25 @@ fun OpenWatchWearApp(
                         tiles = MetricTile.DefaultTiles.filter { it in currentState.availableMetrics },
                         metrics = currentState.metrics,
                         unitSystem = currentState.preferences.unitSystem,
+                        onOpenMetric = { navController.navigate(WearRoutes.metric(it)) },
                         onStartActivity = openWorkout,
                         onOpenStatus = { navController.navigate(WearRoutes.STATUS) },
                     )
+                }
+                composable(WearRoutes.METRIC) { entry ->
+                    val metric = WearRoutes.metricOf(entry.arguments?.getString(WearRoutes.METRIC_ARG))
+                    if (metric == null) {
+                        // A name this build has no metric for: back to the dashboard, the start destination.
+                        LaunchedEffect(Unit) { navController.popBackStack(WearRoutes.DASHBOARD, inclusive = false) }
+                    } else {
+                        MetricDetailScreen(
+                            metric = metric,
+                            state = currentState.metrics[metric] ?: MetricUiState(),
+                            unitSystem = currentState.preferences.unitSystem,
+                            restingHeartRate = currentState.metrics[MetricTile.RESTING_HEART_RATE]?.current,
+                            sleepStages = currentState.sleepStages,
+                        )
+                    }
                 }
                 composable(WearRoutes.STATUS) { statusScreen(openWorkout) }
                 composable(WearRoutes.WORKOUT) { workoutScreen { navController.popBackStack() } }

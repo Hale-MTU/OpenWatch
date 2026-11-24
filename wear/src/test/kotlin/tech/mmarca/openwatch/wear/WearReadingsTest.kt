@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.wear
 
+import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -8,6 +9,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.AscentMinute
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HeartRateSample
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.StepMinute
@@ -18,15 +20,24 @@ class WearReadingsTest {
     private val today = LocalDate.of(2026, 11, 2)
     private val now = Instant.parse("2026-11-02T10:30:00Z")
 
-    private fun at(date: LocalDate, hour: Int, minute: Int = 0): Long =
-        date.atTime(hour, minute).toInstant(ZoneOffset.UTC).toEpochMilli()
+    /** Zones from 60, 102, 116, 144 and 186 bpm: the reserve between a resting 60 and a maximum of 200. */
+    private val zoneBasis = HeartRateZones.Basis(maxBpm = 200, restingBpm = 60)
+
+    private fun at(date: LocalDate, hour: Int, minute: Int = 0, second: Int = 0): Long =
+        date.atTime(hour, minute, second).toInstant(ZoneOffset.UTC).toEpochMilli()
 
     private fun day(
         date: LocalDate,
         heartRate: List<HeartRateSample> = emptyList(),
         steps: List<StepMinute> = emptyList(),
         ascent: List<AscentMinute> = emptyList(),
-    ) = WearReadings.day(date, zone, heartRate, steps, ascent)
+        zoneBasis: HeartRateZones.Basis? = null,
+    ) = WearReadings.day(date, zone, heartRate, steps, ascent, zoneBasis = zoneBasis)
+
+    private fun heartRateOf(samples: List<HeartRateSample>, zoneBasis: HeartRateZones.Basis? = null): MetricUiState =
+        WearReadings.metrics(week(day(today, heartRate = samples, zoneBasis = zoneBasis)), now, zone).getValue(MetricTile.HEART_RATE)
+
+    private fun seconds(vararg perZone: Long): List<Duration> = perZone.map(Duration::ofSeconds)
 
     /** Seven days, today last; [today] carries the rows, the earlier ones are empty unless given. */
     private fun week(todayReadings: DayReadings, earlier: Map<Int, DayReadings> = emptyMap()): List<DayReadings> =
@@ -114,6 +125,99 @@ class WearReadingsTest {
     }
 
     @Test
+    fun heartRateLowAndHighAreTheSamplesNotTheFiveMinuteMeans() {
+        // The line's points are 88 and the mean of 60, 62 and 95; the day's lowest reading is 60 and its highest 95.
+        val samples = listOf(
+            HeartRateSample(at(today, 9, 0), 88),
+            HeartRateSample(at(today, 9, 1), 88),
+            HeartRateSample(at(today, 9, 5), 60),
+            HeartRateSample(at(today, 9, 6), 62),
+            HeartRateSample(at(today, 9, 7), 95),
+        )
+
+        val heartRate = heartRateOf(samples)
+
+        assertEquals(listOf(88.0, (60 + 62 + 95) / 3.0), heartRate.today)
+        assertEquals(SampleStats(low = 60.0, average = (88 + 88 + 60 + 62 + 95) / 5.0, high = 95.0), heartRate.todayStats)
+        assertEquals(95.0, heartRate.current!!, 0.0)
+    }
+
+    @Test
+    fun heartRateHasNoStatsOnADayWithoutASample() {
+        val readings = week(
+            day(today, zoneBasis = zoneBasis),
+            earlier = mapOf(1 to day(today.minusDays(1), heartRate = listOf(HeartRateSample(at(today.minusDays(1), 23, 50), 58)))),
+        )
+
+        val heartRate = WearReadings.metrics(readings, now, zone).getValue(MetricTile.HEART_RATE)
+
+        assertNull(heartRate.todayStats)
+        assertEquals(seconds(0, 0, 0, 0, 0), heartRate.zoneTime)
+    }
+
+    @Test
+    fun timeInTheZonesCountsEachReadingUntilTheNext() {
+        val samples = listOf(
+            HeartRateSample(at(today, 9, 0, 0), 100), // zone 1 for 60 s
+            HeartRateSample(at(today, 9, 1, 0), 150), // zone 4 for 10 s
+            HeartRateSample(at(today, 9, 1, 10), 190), // zone 5 for 20 s
+            HeartRateSample(at(today, 9, 1, 30), 120), // the last reading counts for no time
+        )
+
+        assertEquals(seconds(60, 0, 0, 10, 20), heartRateOf(samples, zoneBasis).zoneTime)
+    }
+
+    @Test
+    fun aReadingBelowZoneOneCountsForNoZone() {
+        // Under the resting rate the zones start at: an hour asleep at 50 bpm, then two minutes in zone 2.
+        val asleep = (0..360).map { HeartRateSample(at(today, 3, 0) + it * 10_000L, 50) }
+        val awake = listOf(HeartRateSample(at(today, 4, 0, 10), 110), HeartRateSample(at(today, 4, 2, 10), 110))
+
+        val zoneTime = heartRateOf(asleep + awake, zoneBasis).zoneTime
+
+        assertEquals(seconds(0, 120, 0, 0, 0), zoneTime)
+    }
+
+    @Test
+    fun aGapLongerThanFiveMinutesCountsForNoTime() {
+        val samples = listOf(
+            HeartRateSample(at(today, 9, 0), 150), // zone 4 for 5 min: the longest spacing that counts
+            HeartRateSample(at(today, 9, 5), 150), // the watch was off for 15 min: no time
+            HeartRateSample(at(today, 9, 20), 190), // zone 5 for 30 s
+            HeartRateSample(at(today, 9, 20, 30), 190),
+        )
+
+        assertEquals(seconds(0, 0, 0, 300, 30), heartRateOf(samples, zoneBasis).zoneTime)
+    }
+
+    @Test
+    fun withoutAZoneBasisNoZoneTimeIsCounted() {
+        val samples = listOf(HeartRateSample(at(today, 9, 0), 150), HeartRateSample(at(today, 9, 1), 150))
+
+        val heartRate = heartRateOf(samples, zoneBasis = null)
+
+        assertTrue(heartRate.zoneTime.isEmpty())
+        assertEquals(SampleStats(low = 150.0, average = 150.0, high = 150.0), heartRate.todayStats)
+    }
+
+    @Test
+    fun theZonesAreTodaysOnly() {
+        val yesterday = today.minusDays(1)
+        val readings = week(
+            day(today, heartRate = listOf(HeartRateSample(at(today, 8, 0), 110), HeartRateSample(at(today, 8, 1), 110)), zoneBasis = zoneBasis),
+            earlier = mapOf(
+                1 to day(
+                    yesterday,
+                    heartRate = listOf(HeartRateSample(at(yesterday, 8, 0), 190), HeartRateSample(at(yesterday, 8, 4), 190)),
+                    zoneBasis = zoneBasis,
+                ),
+            ),
+        )
+
+        assertEquals(seconds(0, 60, 0, 0, 0), WearReadings.metrics(readings, now, zone).getValue(MetricTile.HEART_RATE).zoneTime)
+    }
+
+    @Test
     fun heartRateWeekRunsFromTheFirstDayWithSamplesAndKeepsGapsAsZero() {
         val readings = week(
             day(today, heartRate = listOf(HeartRateSample(at(today, 8), 80))),
@@ -144,5 +248,38 @@ class WearReadingsTest {
         assertTrue(WearReadings.metrics(emptyList(), now, zone).isEmpty())
         assertNull(WearReadings.metrics(week(day(today)), now, zone)[MetricTile.HEART_RATE])
         assertFalse(WearReadings.metrics(week(day(today)), now, zone).containsKey(MetricTile.STEPS))
+    }
+
+    @Test
+    fun nightValuesShowTheLatestTodayAndADailyMean() {
+        val yesterday = today.minusDays(1)
+        val readings = week(
+            WearReadings.day(today, zone, emptyList(), emptyList(), emptyList(), night = mapOf(MetricTile.HRV to listOf(40.0, 60.0))),
+            earlier = mapOf(1 to WearReadings.day(yesterday, zone, emptyList(), emptyList(), emptyList(), night = mapOf(MetricTile.HRV to listOf(30.0)))),
+        )
+        val hrv = WearReadings.metrics(readings, now, zone).getValue(MetricTile.HRV)
+        assertEquals(60.0, hrv.current!!, 0.0)
+        assertEquals(listOf(40.0, 60.0), hrv.today)
+        assertEquals(listOf(30.0, 50.0), hrv.week)
+    }
+
+    @Test
+    fun aNightMetricWithoutAReadingIsLeftOut() {
+        val metrics = WearReadings.metrics(week(day(today)), now, zone)
+        assertFalse(MetricTile.SKIN_TEMPERATURE in metrics)
+        assertFalse(MetricTile.BLOOD_OXYGEN in metrics)
+    }
+
+    @Test
+    fun theLastNightStaysCurrentOnADayWithoutOne() {
+        val yesterday = today.minusDays(1)
+        val readings = week(
+            day(today),
+            earlier = mapOf(1 to WearReadings.day(yesterday, zone, emptyList(), emptyList(), emptyList(), night = mapOf(MetricTile.BLOOD_OXYGEN to listOf(97.0)))),
+        )
+        val spo2 = WearReadings.metrics(readings, now, zone).getValue(MetricTile.BLOOD_OXYGEN)
+        assertEquals(97.0, spo2.current!!, 0.0)
+        assertTrue(spo2.today.isEmpty())
+        assertEquals(listOf(97.0, 0.0), spo2.week)
     }
 }
