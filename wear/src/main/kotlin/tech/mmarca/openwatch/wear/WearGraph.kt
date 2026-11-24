@@ -77,6 +77,9 @@ internal class WearGraph(private val app: Application) {
     /** The dashboard's tiles the wearer chose, in their order. The first read loads their file: off the main thread. */
     val tiles: WearTilePreferences by lazy { WearTilePreferences(app) }
 
+    /** The quick log's entries the wearer chose, in their order. The first read loads their file: off the main thread. */
+    val quickLog: WearQuickLogPreferences by lazy { WearQuickLogPreferences(app) }
+
     /** The settings as they change, on the watch or from the phone. The first read loads their file: off the main thread. */
     val settings: StateFlow<WatchPreferences> by lazy { WearSettingsState(app).state }
 
@@ -204,11 +207,24 @@ internal class WearGraph(private val app: Application) {
         PpgWindowSource(app, debug, minCleanBeats = SpotRules.HRV_MIN_CLEAN_BEATS, windowEvent = "spot_ppg_window")
     }
 
+    /** A spot HRV's own source of the Samsung platform's intervals, over the same feed, waiting briefly for its last batch. */
+    private val spotSamsungWindows: HrvWindowSource by lazy {
+        SamsungIbiSource(
+            samsungFeed,
+            debug,
+            batchWaitMillis = SPOT_BATCH_WAIT_MILLIS,
+            minCleanBeats = SpotRules.HRV_MIN_CLEAN_BEATS,
+            windowEvent = "spot_samsung_window",
+        )
+    }
+
     /**
-     * The window a spot HRV takes its beats from, chosen when it starts: the single beats where
-     * the watch reports them, else the raw pulse signal; null with neither.
+     * The window a spot HRV takes its beats from, chosen when it starts: the Samsung platform's
+     * intervals where the wearer chose them as the HRV source and the watch has the platform, else
+     * the single beats where the watch reports them, else the raw pulse signal; null with none.
      */
     private fun spotHrvWindow(): HrvWindowSource? = when {
+        WearSettings.hrvSource(app) == WearSettings.Source.SAMSUNG_PLATFORM && samsungFeed.isAvailable -> spotSamsungWindows
         sensors.heartBeat -> HeartBeatWindowSource(heartBeats)
         sensors.rawPpg -> spotPpgWindows
         else -> null
@@ -303,5 +319,10 @@ internal class WearGraph(private val app: Application) {
         if (!WearPermissions.hasBluetooth(app)) return Build.MODEL
         return runCatching { app.getSystemService(BluetoothManager::class.java)?.adapter?.name }.getOrNull()
             ?.takeIf { it.isNotBlank() } ?: Build.MODEL
+    }
+
+    private companion object {
+        /** With the screen on the platform hands its points over soon; past this a spot HRV uses those in hand. */
+        const val SPOT_BATCH_WAIT_MILLIS = 20_000L
     }
 }

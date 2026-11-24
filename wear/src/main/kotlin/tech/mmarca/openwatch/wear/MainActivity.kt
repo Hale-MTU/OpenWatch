@@ -69,6 +69,8 @@ class MainActivity : ComponentActivity() {
                 onLog = viewModel::log,
                 onEditTiles = viewModel::editTiles,
                 onResetTiles = viewModel::resetTiles,
+                onEditQuickLog = viewModel::editQuickLog,
+                onResetQuickLog = viewModel::resetQuickLog,
                 spot = graph.spot::run,
                 actions = actions,
             )

@@ -116,6 +116,7 @@ object HealthDataCatalog {
             write(BodyFatRecord::class, R.string.health_data_note_wearos_entry),
             write(BodyTemperatureRecord::class, R.string.health_data_note_wearos_entry),
             write(BloodGlucoseRecord::class, R.string.health_data_note_wearos_entry),
+            write(HeightRecord::class, R.string.health_data_note_wearos_entry),
         ),
         HealthDataSection.SCALE to listOf(
             write(WeightRecord::class),

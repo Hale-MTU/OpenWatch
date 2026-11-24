@@ -33,6 +33,9 @@ object WearRoutes {
 
     /** The quick log: water at a tap, and the ways to the other entries. */
     const val QUICK_LOG = "quick_log"
+
+    /** Which of the quick log's entries show, and in which order. */
+    const val QUICK_LOG_EDITOR = "quick_log_editor"
     const val LOG_WEIGHT = "log_weight"
     const val LOG_BLOOD_PRESSURE = "log_blood_pressure"
     const val LOG_VALUE_ARG = "type"

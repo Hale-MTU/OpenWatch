@@ -110,7 +110,21 @@ internal val LogValueSpecs: Map<Type, LogValueSpec> = linkedMapOf(
         // mg/dL is read in whole numbers.
         imperialDecimals = 0,
     ),
+    // Inches, not feet and inches: the stepper holds one number, and a whole inch
+    // (2.5 cm) is finer than a height is read to. Stored in whole centimetres.
+    Type.HEIGHT to LogValueSpec(
+        label = R.string.metric_height,
+        metricUnit = R.string.unit_cm,
+        imperialUnit = R.string.unit_inch,
+        metricRange = 50.0..250.0,
+        metricDefault = 170.0,
+        decimals = 0,
+        imperialScale = 1.0 / CM_PER_INCH,
+    ),
 )
+
+/** One inch is 2.54 cm. */
+private const val CM_PER_INCH = 2.54
 
 /** Glucose: one mmol/L is 18.0182 mg/dL. */
 private const val MG_DL_PER_MMOL_L = 18.0182

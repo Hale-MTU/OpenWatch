@@ -23,11 +23,17 @@ private const val DefaultDiastolic = 80
 /**
  * The quick log, `quick_log`, and the entries it opens: the weight and the
  * blood pressure steppers, `log_weight` and `log_blood_pressure`, the stepper
- * of a value with one number, `log_value/{type}` ([LogValueSpecs]), and the
- * breathing minute, `breathe`. Every entry goes to [log]; the steppers start
- * from the last value logged.
+ * of a value with one number, `log_value/{type}` ([LogValueSpecs]), the
+ * breathing minute, `breathe`, and the editor of the entries it shows,
+ * `quick_log_editor`, whose changes go to [choice]. Every entry goes to
+ * [log]; the steppers start from the last value logged.
  */
-internal fun NavGraphBuilder.quickLogDestinations(navController: NavHostController, state: () -> WearUiState, log: LogEntry) {
+internal fun NavGraphBuilder.quickLogDestinations(
+    navController: NavHostController,
+    state: () -> WearUiState,
+    choice: QuickLogChoice,
+    log: LogEntry,
+) {
     composable(WearRoutes.QUICK_LOG) {
         QuickLogScreen(
             state = state(),
@@ -36,7 +42,11 @@ internal fun NavGraphBuilder.quickLogDestinations(navController: NavHostControll
             onLogBloodPressure = { navController.navigate(WearRoutes.LOG_BLOOD_PRESSURE) { launchSingleTop = true } },
             onLogValue = { type -> navController.navigate(WearRoutes.logValue(type)) { launchSingleTop = true } },
             onBreathe = { navController.navigate(WearRoutes.BREATHE) { launchSingleTop = true } },
+            onEditItems = { navController.navigate(WearRoutes.QUICK_LOG_EDITOR) { launchSingleTop = true } },
         )
+    }
+    composable(WearRoutes.QUICK_LOG_EDITOR) {
+        QuickLogEditorScreen(items = state().quickLogItems, onEdit = choice.edit, onReset = choice.reset)
     }
     composable(WearRoutes.LOG_WEIGHT) {
         val current = state()

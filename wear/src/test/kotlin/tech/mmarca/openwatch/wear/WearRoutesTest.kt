@@ -5,6 +5,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
 class WearRoutesTest {
 
@@ -44,6 +45,9 @@ class WearRoutesTest {
         for (kind in SpotKind.entries) assertTrue(WearRoutes.isDeepLinkable(WearRoutes.measurement(kind)))
 
         assertFalse(WearRoutes.isDeepLinkable(WearRoutes.STATUS))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.QUICK_LOG_EDITOR))
+        assertEquals(WearLinkEntry.Type.HEIGHT, WearRoutes.entryTypeOf(WearRoutes.logValue(WearLinkEntry.Type.HEIGHT).substringAfter('/')))
+        assertNull(WearRoutes.entryTypeOf("COFFEE"))
         assertFalse(WearRoutes.isDeepLinkable(WearRoutes.SETTINGS))
         assertFalse(WearRoutes.isDeepLinkable(WearRoutes.PHONE))
         assertFalse(WearRoutes.isDeepLinkable(WearRoutes.SENSORS))

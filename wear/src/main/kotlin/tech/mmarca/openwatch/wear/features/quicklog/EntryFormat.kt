@@ -9,6 +9,7 @@ import androidx.compose.material.icons.outlined.MonitorWeight
 import androidx.compose.material.icons.outlined.Opacity
 import androidx.compose.material.icons.outlined.SelfImprovement
 import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.runtime.Composable
@@ -45,6 +46,7 @@ val Type.icon: ImageVector
         Type.RESPIRATORY_RATE -> Icons.Outlined.Air
         Type.BODY_TEMPERATURE -> Icons.Outlined.Thermostat
         Type.BLOOD_GLUCOSE -> Icons.Outlined.Opacity
+        Type.HEIGHT -> Icons.Outlined.Straighten
     }
 
 val Type.color: Color
@@ -60,6 +62,7 @@ val Type.color: Color
         Type.RESPIRATORY_RATE -> VitalsColor
         Type.BODY_TEMPERATURE -> ActiveCaloriesColor
         Type.BLOOD_GLUCOSE -> ActiveCaloriesColor
+        Type.HEIGHT -> WeightColor
     }
 
 /** The entry's value with its unit, such as "72.4 kg" or "121/79 mmHg", in [unitSystem]. */
@@ -75,7 +78,7 @@ fun formatEntry(entry: WearLinkEntry, unitSystem: UnitSystem): String = when (en
         formatCount(entry.value.roundToInt()),
         formatCount(entry.second?.roundToInt() ?: 0),
     )
-    Type.BODY_FAT, Type.BLOOD_OXYGEN, Type.RESPIRATORY_RATE, Type.BODY_TEMPERATURE, Type.BLOOD_GLUCOSE ->
+    Type.BODY_FAT, Type.BLOOD_OXYGEN, Type.RESPIRATORY_RATE, Type.BODY_TEMPERATURE, Type.BLOOD_GLUCOSE, Type.HEIGHT ->
         LogValueSpecs.getValue(entry.type).let { spec ->
             "${spec.format(spec.toDisplay(entry.value, unitSystem), unitSystem)} ${stringResource(spec.unit(unitSystem))}"
         }

@@ -271,4 +271,13 @@
     <string name="metric_blood_glucose">Blutzucker</string>
     <string name="unit_mmol_l">mmol/L</string>
     <string name="unit_mg_dl">mg/dL</string>
+    <string name="quicklog_edit">Einträge bearbeiten</string>
+    <string name="quicklog_none_chosen">Keine Einträge ausgewählt</string>
+    <string name="quicklog_editor_title">Einträge</string>
+    <string name="quicklog_editor_active_header">Angezeigte Einträge</string>
+    <string name="quicklog_editor_available_header">Einträge hinzufügen</string>
+    <string name="quicklog_editor_move_hint">Mit den Pfeilen verschiebst du einen Eintrag. Antippen entfernt ihn.</string>
+    <string name="metric_height">Größe</string>
+    <string name="unit_cm">cm</string>
+    <string name="unit_inch">in</string>
 </resources>

@@ -37,7 +37,7 @@ class WearLinkEntriesTest {
 
     @Test fun `every type keeps its token, which is what the line carries`() {
         assertEquals(
-            listOf("water", "weight", "bp", "mindful", "hr", "hrv", "bodyfat", "spo2", "breath", "temp", "glucose"),
+            listOf("water", "weight", "bp", "mindful", "hr", "hrv", "bodyfat", "spo2", "breath", "temp", "glucose", "height"),
             Type.entries.map { it.token },
         )
         for (type in Type.entries) {

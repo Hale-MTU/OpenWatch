@@ -25,6 +25,8 @@ data class WearUiState(
      * ([WearTilePreferences]), whether the watch offers them now or not.
      */
     val tiles: List<MetricTile> = MetricTile.DefaultTiles,
+    /** The quick log's entries the wearer chose, in their order ([WearQuickLogPreferences]). */
+    val quickLogItems: List<QuickLogItem> = QuickLogItem.Defaults,
 ) {
     /** The chosen tiles the dashboard shows: those of [tiles] the watch offers now, so one appears once it is on offer. */
     val shownTiles: List<MetricTile>

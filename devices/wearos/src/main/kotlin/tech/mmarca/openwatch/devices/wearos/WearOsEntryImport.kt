@@ -7,6 +7,7 @@ import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.BodyTemperatureRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
+import androidx.health.connect.client.records.HeightRecord
 import androidx.health.connect.client.records.HydrationRecord
 import androidx.health.connect.client.records.MindfulnessSessionRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
@@ -16,6 +17,7 @@ import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.units.BloodGlucose
+import androidx.health.connect.client.units.Length
 import androidx.health.connect.client.units.Mass
 import androidx.health.connect.client.units.Percentage
 import androidx.health.connect.client.units.Pressure
@@ -33,7 +35,8 @@ import tech.mmarca.openwatch.wearlink.WearLinkEntry.Type
  * Maps the entries made on the watch ([WearLinkEntry], `SINCE lg`) to Health
  * Connect: a glass of water, a weight, a blood pressure, a body fat, a blood
  * oxygen, a breathing rate, a body temperature (Celsius), a blood glucose
- * (mmol/L) and a breathing session the wearer logged, and a heart rate or HRV
+ * (mmol/L), a height (whole centimetres on the watch, metres in Health
+ * Connect) and a breathing session the wearer logged, and a heart rate or HRV
  * a spot measurement took,
  * each keyed `wearos_entry_<type>_<millis>` with the watch's id salt, so a
  * re-pull is the same record and is skipped as present. A value entered by
@@ -59,6 +62,7 @@ internal object WearOsEntryImport {
         Type.RESPIRATORY_RATE -> RespiratoryRateRecord::class
         Type.BODY_TEMPERATURE -> BodyTemperatureRecord::class
         Type.BLOOD_GLUCOSE -> BloodGlucoseRecord::class
+        Type.HEIGHT -> HeightRecord::class
     }
 
     /** The write grant an entry of [type] needs. */
@@ -117,6 +121,7 @@ internal object WearOsEntryImport {
             Type.BLOOD_GLUCOSE -> BloodGlucoseRecord(
                 time = at, zoneOffset = offset, level = BloodGlucose.millimolesPerLiter(entry.value), metadata = metadata,
             )
+            Type.HEIGHT -> HeightRecord(time = at, zoneOffset = offset, height = Length.meters(entry.value / CM_PER_METRE), metadata = metadata)
         }
     } catch (_: IllegalArgumentException) {
         null
@@ -132,4 +137,5 @@ internal object WearOsEntryImport {
     }
 
     private const val SECONDS_PER_MINUTE = 60
+    private const val CM_PER_METRE = 100.0
 }

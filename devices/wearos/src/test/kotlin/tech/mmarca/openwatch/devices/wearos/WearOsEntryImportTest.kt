@@ -6,6 +6,7 @@ import androidx.health.connect.client.records.BodyFatRecord
 import androidx.health.connect.client.records.BodyTemperatureRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
+import androidx.health.connect.client.records.HeightRecord
 import androidx.health.connect.client.records.HydrationRecord
 import androidx.health.connect.client.records.MindfulnessSessionRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
@@ -71,6 +72,13 @@ class WearOsEntryImportTest {
         assertEquals(5.4, glucose.level.inMillimolesPerLiter, 0.001)
         assertEquals("wearos_entry_glucose_$at", glucose.metadata.clientRecordId)
         assertEquals(Metadata.RECORDING_METHOD_MANUAL_ENTRY, glucose.metadata.recordingMethod)
+    }
+
+    @Test
+    fun `a height in centimetres becomes metres`() {
+        val height = WearOsEntryImport.record(WearLinkEntry.of(at, Type.HEIGHT, 178.0), zone) as HeightRecord
+        assertEquals(1.78, height.height.inMeters, 1e-9)
+        assertEquals("wearos_entry_height_$at", height.metadata.clientRecordId)
     }
 
     @Test

@@ -23,7 +23,8 @@ import tech.mmarca.openwatch.wearlink.WearLinkEntry
  * and the entries made on the watch, which count toward the day's figures
  * the moment they are logged. Only the metrics the watch can give are
  * offered ([MetricOffer]), and the dashboard shows those of the tiles the
- * wearer chose ([WearTilePreferences]), which the tile editor changes here.
+ * wearer chose ([WearTilePreferences]), which the tile editor changes here,
+ * as the quick log's editor changes its entries ([WearQuickLogPreferences]).
  * Every screen shows its readings in the unit system the settings hold now,
  * and the phone's figures for the last days ([PhoneDays]) fill the sleep,
  * resting heart rate, active calories and distance tiles as they arrive.
@@ -48,10 +49,10 @@ class WearAppViewModel(application: Application) : AndroidViewModel(application)
             readings.metrics(zoneBasis = settings.map { it.zoneBasis() }, phoneDays = phoneDays),
             readings.entries(),
             sensors,
-            // The first read of the chosen tiles loads their file too.
-            flow { emitAll(graph.tiles.chosen) }.flowOn(Dispatchers.IO),
+            // The first read of the chosen tiles and quick log entries loads their files too.
+            flow { emitAll(combine(graph.tiles.chosen, graph.quickLog.chosen) { tiles, items -> tiles to items }) }.flowOn(Dispatchers.IO),
             settings.map { DisplayPreferences(unitSystem = it.unitSystem) }.distinctUntilChanged(),
-        ) { readings, entries, sensors, tiles, preferences ->
+        ) { readings, entries, sensors, (tiles, quickLogItems), preferences ->
             WearUiState(
                 availableMetrics = MetricOffer.available(sensors, withReadings = readings.metrics.keys),
                 sensors = sensors,
@@ -60,6 +61,7 @@ class WearAppViewModel(application: Application) : AndroidViewModel(application)
                 sleepStages = readings.sleepStages,
                 entries = entries,
                 tiles = tiles,
+                quickLogItems = quickLogItems,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(StopTimeoutMillis), WearUiState())
 
@@ -77,6 +79,16 @@ class WearAppViewModel(application: Application) : AndroidViewModel(application)
     /** The dashboard's default tiles again. */
     fun resetTiles() {
         viewModelScope.launch(Dispatchers.IO) { graph.tiles.reset() }
+    }
+
+    /** Changes the quick log's chosen entries: [change] gets them as they are when it runs. The write is off the main thread. */
+    fun editQuickLog(change: (List<QuickLogItem>) -> List<QuickLogItem>) {
+        viewModelScope.launch(Dispatchers.IO) { graph.quickLog.edit(change) }
+    }
+
+    /** Every quick log entry again, in the default order. */
+    fun resetQuickLog() {
+        viewModelScope.launch(Dispatchers.IO) { graph.quickLog.reset() }
     }
 
     private companion object {

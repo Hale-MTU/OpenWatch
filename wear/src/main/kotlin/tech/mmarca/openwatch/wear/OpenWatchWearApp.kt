@@ -14,6 +14,7 @@ import tech.mmarca.openwatch.wear.features.dashboard.TileChoice
 import tech.mmarca.openwatch.wear.features.dashboard.dashboardDestinations
 import tech.mmarca.openwatch.wear.features.measure.measureDestinations
 import tech.mmarca.openwatch.wear.features.metric.metricDestination
+import tech.mmarca.openwatch.wear.features.quicklog.QuickLogChoice
 import tech.mmarca.openwatch.wear.features.quicklog.quickLogDestinations
 import tech.mmarca.openwatch.wear.features.recording.workoutDestination
 import tech.mmarca.openwatch.wear.features.settings.settingsDestinations
@@ -24,7 +25,8 @@ import tech.mmarca.openwatch.wearlink.WearLinkEntry
 /**
  * The whole watch UI: theme, scaffold and navigation. It renders [state],
  * hands what the wearer logs to [onLog], the tiles the wearer chooses to
- * [onEditTiles], and runs a spot measurement through [spot]; nothing here
+ * [onEditTiles] and the quick log's entries to [onEditQuickLog], and runs a
+ * spot measurement through [spot]; nothing here
  * reads a sensor. Each feature declares its destinations in its own package;
  * the dashboard opens a metric, the spot measurements, the quick log, the
  * workout, the tile editor and the settings, which lead on to the phone, the
@@ -54,6 +56,9 @@ fun OpenWatchWearApp(
     /** Changes the dashboard's chosen tiles; the change gets them as they are when it runs. */
     onEditTiles: ((List<MetricTile>) -> List<MetricTile>) -> Unit = {},
     onResetTiles: () -> Unit = {},
+    /** Changes the quick log's chosen entries; the change gets them as they are when it runs. */
+    onEditQuickLog: ((List<QuickLogItem>) -> List<QuickLogItem>) -> Unit = {},
+    onResetQuickLog: () -> Unit = {},
     /** Runs one spot measurement (`WearGraph.spot`), which keeps its reading. */
     spot: (SpotKind) -> Flow<SpotEvent> = { emptyFlow() },
     actions: ActivityActions = ActivityActions.NONE,
@@ -66,6 +71,9 @@ fun OpenWatchWearApp(
     val currentEditTiles by rememberUpdatedState(onEditTiles)
     val currentResetTiles by rememberUpdatedState(onResetTiles)
     val tiles = remember { TileChoice(edit = { change -> currentEditTiles(change) }, reset = { currentResetTiles() }) }
+    val currentEditQuickLog by rememberUpdatedState(onEditQuickLog)
+    val currentResetQuickLog by rememberUpdatedState(onResetQuickLog)
+    val quickLog = remember { QuickLogChoice(edit = { change -> currentEditQuickLog(change) }, reset = { currentResetQuickLog() }) }
 
     OpenWatchWearTheme {
         // AppScaffold draws the time once, above every screen.
@@ -79,7 +87,7 @@ fun OpenWatchWearApp(
                 dashboardDestinations(navController, { currentState }, tiles, onStartActivity = openWorkout)
                 metricDestination(navController) { currentState }
                 measureDestinations(navController, { currentState }) { kind -> currentSpot(kind) }
-                quickLogDestinations(navController, { currentState }) { type, value, second -> currentLog(type, value, second) }
+                quickLogDestinations(navController, { currentState }, quickLog) { type, value, second -> currentLog(type, value, second) }
                 settingsDestinations(navController, actions)
                 statusDestination(actions, onOpenWorkout = openWorkout)
                 workoutDestination(navController) { currentState }
