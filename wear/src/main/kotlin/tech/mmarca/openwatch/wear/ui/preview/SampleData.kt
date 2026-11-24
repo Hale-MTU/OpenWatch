@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.wear.ui.preview
 
 import java.time.Duration
+import tech.mmarca.openwatch.wear.LinePoint
 import tech.mmarca.openwatch.wear.MetricUiState
 import tech.mmarca.openwatch.wear.SampleStats
 import tech.mmarca.openwatch.wear.features.recording.RecordingUiState
@@ -25,6 +26,7 @@ object SampleData {
         MetricTile.HEART_RATE to MetricUiState(
             current = 72.0,
             today = doubles(64, 66, 63, 70, 78, 91, 104, 98, 86, 79, 74, 71, 69, 72, 75, 72),
+            line = evenLine(64, 66, 63, 70, 78, 91, 104, 98, 86, 79, 74, 71, 69, 72, 75, 72),
             week = doubles(68, 71, 66, 70, 74, 69, 73),
             todayStats = SampleStats(low = 56.0, average = 76.0, high = 118.0),
             zoneTime = listOf(214L, 61L, 22L, 6L, 0L).map(Duration::ofMinutes),
@@ -54,6 +56,7 @@ object SampleData {
         MetricTile.BLOOD_OXYGEN to MetricUiState(
             current = 97.0,
             today = doubles(97, 96, 98, 97, 95, 96, 97, 98, 97, 97),
+            line = evenLine(97, 96, 98, 97, 95, 96, 97, 98, 97, 97),
             week = doubles(97, 96, 97, 98, 96, 97, 97),
         ),
         MetricTile.VO2_MAX to MetricUiState(
@@ -123,4 +126,8 @@ object SampleData {
     )
 
     private fun doubles(vararg values: Int): List<Double> = values.map(Int::toDouble)
+
+    /** One run of [values] at even steps in time. */
+    private fun evenLine(vararg values: Int): List<List<LinePoint>> =
+        listOf(values.mapIndexed { index, value -> LinePoint(index.toFloat() / (values.size - 1), value.toDouble()) })
 }

@@ -122,33 +122,61 @@ class WearReadingsTest {
     }
 
     @Test
-    fun heartRateShowsTheLatestSampleAndAFiveMinuteLine() {
+    fun heartRateShowsTheLatestSampleAndALineOfQuarterHourMeans() {
         val samples = listOf(
             HeartRateSample(at(today, 9, 0), 60),
             HeartRateSample(at(today, 9, 2), 70),
-            HeartRateSample(at(today, 9, 7), 90),
+            HeartRateSample(at(today, 9, 20), 90),
         )
 
         val heartRate = WearReadings.metrics(week(day(today, heartRate = samples)), now, zone).getValue(MetricTile.HEART_RATE)
 
         assertEquals(90.0, heartRate.current!!, 0.0)
         assertEquals(listOf(65.0, 90.0), heartRate.today)
+        assertEquals(listOf(listOf(LinePoint(0f, 65.0), LinePoint(1f, 90.0))), heartRate.line)
     }
 
     @Test
-    fun heartRateLowAndHighAreTheSamplesNotTheFiveMinuteMeans() {
-        // The line's points are 88 and the mean of 60, 62 and 95; the day's lowest reading is 60 and its highest 95.
+    fun theHeartRatesLineRunsOverTimeAndBreaksWhereTheWatchStoredNothing() {
+        // Worn from 8:00 to 8:45, on the charger, worn again from 10:00: the line must not join 8:30 to 10:00.
+        val samples = listOf(
+            HeartRateSample(at(today, 8, 0), 60),
+            HeartRateSample(at(today, 8, 15), 62),
+            HeartRateSample(at(today, 8, 30), 64),
+            HeartRateSample(at(today, 10, 0), 90),
+            HeartRateSample(at(today, 10, 15), 92),
+        )
+
+        val line = heartRateOf(samples).line
+
+        assertEquals(2, line.size)
+        assertEquals(listOf(60.0, 62.0, 64.0), line[0].map { it.value })
+        assertEquals(listOf(90.0, 92.0), line[1].map { it.value })
+        // 8:00 to 10:15 is 135 minutes: the points sit where their quarter hours fall in it, not at even steps.
+        val expected = listOf(0f, 15 / 135f, 30 / 135f, 120 / 135f, 1f)
+        line.flatten().map { it.at }.zip(expected).forEach { (at, wanted) -> assertEquals(wanted, at, 1e-6f) }
+    }
+
+    @Test
+    fun aSingleReadingIsOnePointInTheMiddle() {
+        assertEquals(listOf(listOf(LinePoint(0.5f, 70.0))), WearReadings.line(listOf(at(today, 9) to 70.0), breakAfterMillis = 1))
+        assertTrue(WearReadings.line(emptyList(), breakAfterMillis = 1).isEmpty())
+    }
+
+    @Test
+    fun heartRateLowAndHighAreTheSamplesNotTheLinesMeans() {
+        // The line's points are 88 and the mean of 60, 62 and 95, a whole 72; the day's lowest reading is 60 and its highest 95.
         val samples = listOf(
             HeartRateSample(at(today, 9, 0), 88),
             HeartRateSample(at(today, 9, 1), 88),
-            HeartRateSample(at(today, 9, 5), 60),
-            HeartRateSample(at(today, 9, 6), 62),
-            HeartRateSample(at(today, 9, 7), 95),
+            HeartRateSample(at(today, 9, 15), 60),
+            HeartRateSample(at(today, 9, 16), 62),
+            HeartRateSample(at(today, 9, 17), 95),
         )
 
         val heartRate = heartRateOf(samples)
 
-        assertEquals(listOf(88.0, (60 + 62 + 95) / 3.0), heartRate.today)
+        assertEquals(listOf(88.0, 72.0), heartRate.today)
         assertEquals(SampleStats(low = 60.0, average = (88 + 88 + 60 + 62 + 95) / 5.0, high = 95.0), heartRate.todayStats)
         assertEquals(95.0, heartRate.current!!, 0.0)
     }
@@ -341,6 +369,46 @@ class WearReadingsTest {
         assertEquals(35.1, skin.today[1], 1e-9)
         // The quarter hours' means run from 34.8 to 35.1; the minutes from 34.0 to 36.0.
         assertEquals(SampleStats(low = 34.0, average = null, high = 36.0), skin.todayStats)
+    }
+
+    @Test
+    fun aNightsLineJoinsItsReadingsOverTimeAndBreaksOnlyAfterTwoHours() {
+        val yesterday = today.minusDays(1)
+        val rows = NightRows(
+            hrv = listOf(
+                // Windows 40 and 70 minutes apart are one stretch of sleep; three hours awake is a break.
+                HrvWindow(at(yesterday, 23, 0), 400, 80),
+                HrvWindow(at(yesterday, 23, 40), 420, 80),
+                HrvWindow(at(today, 0, 50), 440, 80),
+                HrvWindow(at(today, 4, 0), 500, 80),
+                HrvWindow(at(today, 5, 0), 520, 80),
+            ),
+        )
+
+        val line = WearReadings.metrics(week(day(today, night = rows)), now, zone).getValue(MetricTile.HRV).line
+
+        assertEquals(listOf(listOf(40.0, 42.0, 44.0), listOf(50.0, 52.0)), line.map { run -> run.map { it.value } })
+        // 23:00 to 5:00 is 360 minutes.
+        assertEquals(40 / 360f, line[0][1].at, 1e-6f)
+        assertEquals(300 / 360f, line[1][0].at, 1e-6f)
+    }
+
+    @Test
+    fun theSkinTemperaturesLineBreaksAtAQuarterHourWithoutAMinute() {
+        val rows = NightRows(
+            skin = listOf(
+                SkinMinute(at(today, 2, 0), 3500, 2500),
+                SkinMinute(at(today, 2, 15), 3510, 2500),
+                // 2:30 to 2:45 has no minute: the sensor was not held.
+                SkinMinute(at(today, 2, 45), 3530, 2500),
+                SkinMinute(at(today, 3, 0), 3540, 2500),
+            ),
+        )
+
+        val line = WearReadings.metrics(week(day(today, night = rows)), now, zone).getValue(MetricTile.SKIN_TEMPERATURE).line
+
+        assertEquals(listOf(2, 2), line.map { it.size })
+        assertEquals(listOf(0f, 0.25f, 0.75f, 1f), line.flatten().map { it.at })
     }
 
     @Test

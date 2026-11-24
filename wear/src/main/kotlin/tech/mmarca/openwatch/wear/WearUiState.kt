@@ -26,7 +26,11 @@ data class MetricUiState(
     val current: Double? = null,
     /** A daily goal. Only meaningful for a cumulative metric. */
     val goal: Double? = null,
-    /** Today, oldest first: hourly totals for a cumulative metric, samples otherwise; last night's for a night's vital. */
+    /**
+     * Today, oldest first: hourly totals for a cumulative metric; for a
+     * sampled one its samples, or the values of [line] where the watch read
+     * it, and last night's for a night's vital.
+     */
     val today: List<Double> = emptyList(),
     /**
      * The last days, oldest first, today last: daily totals, daily averages,
@@ -47,7 +51,17 @@ data class MetricUiState(
      * counts it. Empty for any other metric and without a basis for the zones.
      */
     val zoneTime: List<Duration> = emptyList(),
+    /**
+     * Today's line of a sampled metric, over time: runs of points, with a
+     * break between two runs where the watch has no reading (off the wrist,
+     * on the charger). Empty for a cumulative metric, which draws [today] as
+     * bars.
+     */
+    val line: List<List<LinePoint>> = emptyList(),
 )
+
+/** One point of a metric's line: [at] is its time, from 0 at the line's first point to 1 at its last. */
+data class LinePoint(val at: Float, val value: Double)
 
 /**
  * A day's samples in three figures, in the metric's base unit. [average] is

@@ -37,9 +37,9 @@ internal data class NightRows(
 
 /**
  * One vital of one night, in its tile's base unit: the night's [value], the
- * points its chart draws, oldest first, and the lowest and highest reading.
+ * [line] its chart draws over the night, and the lowest and highest reading.
  */
-internal data class NightValue(val value: Double, val chart: List<Double>, val low: Double, val high: Double)
+internal data class NightValue(val value: Double, val line: List<List<LinePoint>>, val low: Double, val high: Double)
 
 /**
  * One local day of what the watch recorded, cut down to what the screens
@@ -53,8 +53,8 @@ internal data class DayReadings(
     val stepsByHour: List<Double>,
     /** Metres of height that count, per hour, 24 values. See [AscentCredit]. */
     val ascentByHour: List<Double>,
-    /** Mean heart rate per five minutes with a sample, oldest first. */
-    val heartRate: List<Double>,
+    /** The day's heart rate as its chart draws it: the mean of each quarter hour, broken where the watch stored none. */
+    val heartRateLine: List<List<LinePoint>>,
     /** The mean of the day's samples; null without one. */
     val heartRateMean: Double?,
     /** The day's lowest and highest sample; null without one. */
@@ -80,8 +80,50 @@ internal object WearReadings {
     val NIGHT_METRICS = listOf(MetricTile.HRV, MetricTile.BLOOD_OXYGEN, MetricTile.SKIN_TEMPERATURE, MetricTile.RESPIRATORY_RATE)
     private const val DECIMETRES_PER_METRE = 10.0
     private const val MINUTE_MILLIS = 60_000L
-    private const val HEART_RATE_BUCKET_MILLIS = 5 * MINUTE_MILLIS
     private const val QUARTER_HOUR_MILLIS = 15 * MINUTE_MILLIS
+
+    /**
+     * How far apart two of a night's readings may be and still be joined. An
+     * HRV window comes at most every half hour and only while the arm is
+     * still, so an hour between two is an ordinary night; two hours is time
+     * awake or off the wrist.
+     */
+    private const val NIGHT_READING_BREAK_MILLIS = 120 * MINUTE_MILLIS
+
+    /**
+     * [points], each a time and a value, as a line over time: every point at
+     * its share of the way from the first to the last, in runs. A new run
+     * starts where two neighbours are more than [breakAfterMillis] apart, so
+     * the chart shows a gap there instead of a line the watch never measured.
+     */
+    fun line(points: List<Pair<Long, Double>>, breakAfterMillis: Long): List<List<LinePoint>> {
+        val ordered = points.sortedBy { it.first }
+        val first = ordered.firstOrNull()?.first ?: return emptyList()
+        val span = (ordered.last().first - first).toDouble()
+        val runs = mutableListOf<MutableList<LinePoint>>()
+        var previous = first
+        for ((time, value) in ordered) {
+            if (runs.isEmpty() || time - previous > breakAfterMillis) runs += mutableListOf<LinePoint>()
+            // A single moment has no span: its one point sits in the middle.
+            runs.last() += LinePoint(at = if (span > 0.0) ((time - first) / span).toFloat() else 0.5f, value = value)
+            previous = time
+        }
+        return runs
+    }
+
+    /**
+     * The day's heart rate over time: the mean of each quarter hour, the
+     * buckets the heart rate tile draws ([TileDay.meanPerBucket]), broken at
+     * a quarter hour without a sample.
+     */
+    private fun heartRateLine(samples: List<HeartRateSample>, zone: ZoneId): List<List<LinePoint>> {
+        val latest = samples.maxOfOrNull { it.epochMillis } ?: return emptyList()
+        val day = TileDay.of(latest, zone)
+        val means = day.meanPerBucket(samples).mapIndexedNotNull { bucket, mean ->
+            mean?.let { day.startMillis + bucket * TileDay.BUCKET_MILLIS to it.toDouble() }
+        }
+        return line(means, breakAfterMillis = TileDay.BUCKET_MILLIS)
+    }
 
     /**
      * The night that ends on [date]: from noon the day before to noon of
@@ -104,33 +146,42 @@ internal object WearReadings {
      *   takes a night's for its baseline. The chart draws quarter-hour means;
      *   the lowest and highest are those of the minutes.
      * - Blood oxygen and breathing rate: the mean of the night's readings.
+     *
+     * Each one's line runs over the night's time ([line]): the readings where
+     * they were taken, joined unless [NIGHT_READING_BREAK_MILLIS] apart; the
+     * skin temperature's quarter hours, broken at a missing one.
      */
     fun night(rows: NightRows): Map<MetricTile, NightValue> = buildMap {
         val hrv = rows.hrv.filter { it.rmssdMillis > 0.0 }
         hrv.timeBucketedAverageOrNull(time = { Instant.ofEpochMilli(it.epochMillis) }, value = { it.rmssdMillis })?.let { mean ->
-            put(MetricTile.HRV, nightValue(mean, hrv.map { it.rmssdMillis }))
+            put(MetricTile.HRV, nightValue(mean, hrv.map { it.epochMillis to it.rmssdMillis }))
         }
         if (rows.spo2.isNotEmpty()) {
-            val percents = rows.spo2.map { it.percent.toDouble() }
-            put(MetricTile.BLOOD_OXYGEN, nightValue(percents.average(), percents))
+            val percents = rows.spo2.map { it.epochMillis to it.percent.toDouble() }
+            put(MetricTile.BLOOD_OXYGEN, nightValue(percents.map { it.second }.average(), percents))
         }
         val skin = rows.skin.map { it.skinCelsius }
         skin.medianOrNull()?.let { median ->
             val byQuarterHour = rows.skin.groupBy { it.epochMillis / QUARTER_HOUR_MILLIS }
-                .toSortedMap()
-                .values
-                .map { quarter -> quarter.map { it.skinCelsius }.average() }
-            put(MetricTile.SKIN_TEMPERATURE, NightValue(median, byQuarterHour, low = skin.min(), high = skin.max()))
+                .map { (quarter, minutes) -> quarter * QUARTER_HOUR_MILLIS to minutes.map { it.skinCelsius }.average() }
+            put(
+                MetricTile.SKIN_TEMPERATURE,
+                NightValue(median, line(byQuarterHour, breakAfterMillis = QUARTER_HOUR_MILLIS), low = skin.min(), high = skin.max()),
+            )
         }
         if (rows.respiratory.isNotEmpty()) {
-            val breaths = rows.respiratory.map { it.breathsPerMinute }
-            put(MetricTile.RESPIRATORY_RATE, nightValue(breaths.average(), breaths))
+            val breaths = rows.respiratory.map { it.epochMillis to it.breathsPerMinute }
+            put(MetricTile.RESPIRATORY_RATE, nightValue(breaths.map { it.second }.average(), breaths))
         }
     }
 
-    /** A night whose chart draws its [readings] themselves. */
-    private fun nightValue(value: Double, readings: List<Double>): NightValue =
-        NightValue(value, chart = readings, low = readings.min(), high = readings.max())
+    /** A night whose chart draws its [readings], each a time and a value, themselves. */
+    private fun nightValue(value: Double, readings: List<Pair<Long, Double>>): NightValue = NightValue(
+        value = value,
+        line = line(readings, breakAfterMillis = NIGHT_READING_BREAK_MILLIS),
+        low = readings.minOf { it.second },
+        high = readings.maxOf { it.second },
+    )
 
     /**
      * The rows of [date] only, and of the night that ended on it ([night],
@@ -161,10 +212,7 @@ internal object WearReadings {
             date = date,
             stepsByHour = stepsByHour.toList(),
             ascentByHour = ascentByHour.toList(),
-            heartRate = heartRate.groupBy { it.epochMillis / HEART_RATE_BUCKET_MILLIS }
-                .toSortedMap()
-                .values
-                .map { bucket -> bucket.map { it.bpm }.average() },
+            heartRateLine = heartRateLine(heartRate, zone),
             heartRateMean = heartRate.takeIf { it.isNotEmpty() }?.map { it.bpm }?.average(),
             heartRateRange = heartRate.takeIf { it.isNotEmpty() }?.let { samples -> samples.minOf { it.bpm }..samples.maxOf { it.bpm } },
             latestHeartRate = heartRate.maxByOrNull { it.epochMillis },
@@ -215,7 +263,8 @@ internal object WearReadings {
                     metric,
                     MetricUiState(
                         current = lastNight?.value,
-                        today = lastNight?.chart.orEmpty(),
+                        today = lastNight?.line.orEmpty().flatten().map { it.value },
+                        line = lastNight?.line.orEmpty(),
                         week = days.dropWhile { it.night[metric] == null }.map { day -> day.night[metric]?.value },
                         // The headline is the night's value already: the lowest and highest reading frame it.
                         todayStats = lastNight?.let { SampleStats(low = it.low, average = null, high = it.high) },
@@ -228,7 +277,8 @@ internal object WearReadings {
                     MetricTile.HEART_RATE,
                     MetricUiState(
                         current = latest.bpm.toDouble(),
-                        today = today.heartRate,
+                        today = today.heartRateLine.flatten().map { it.value },
+                        line = today.heartRateLine,
                         // The chart labels its bars as the last days, today last: a day without a sample keeps its place.
                         week = days.dropWhile { it.heartRateMean == null }.map { it.heartRateMean },
                         todayStats = sampleStats(today),

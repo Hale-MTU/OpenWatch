@@ -115,7 +115,12 @@ fun MetricDetailScreen(
                     )
                 }
             }
-            if (state.today.size >= 2) {
+            // A chart of one bar or one point shows nothing the headline does not.
+            val todayPoints = when (metric.kind) {
+                MetricKind.CUMULATIVE -> state.today.size
+                MetricKind.SAMPLED -> state.line.sumOf { it.size }
+            }
+            if (todayPoints >= 2) {
                 item { ListSubHeader { Text(stringResource(R.string.detail_today)) } }
                 item {
                     val chartModifier = Modifier
@@ -124,7 +129,7 @@ fun MetricDetailScreen(
                         .height(ChartHeight)
                     when (metric.kind) {
                         MetricKind.CUMULATIVE -> BarChart(state.today, metric.accentColor, chartModifier)
-                        MetricKind.SAMPLED -> Sparkline(state.today, metric.accentColor, chartModifier)
+                        MetricKind.SAMPLED -> Sparkline(state.line, metric.accentColor, chartModifier)
                     }
                 }
             }
@@ -160,9 +165,11 @@ fun MetricDetailScreen(
                             .padding(horizontal = SectionPadding),
                     ) {
                         BarChart(
-                            values = state.week.map { it ?: 0.0 },
+                            values = state.week,
                             color = metric.accentColor,
                             highlightLast = true,
+                            // A total is drawn from zero; a level from a floor near its range, or its days all look alike.
+                            fromZero = metric.kind == MetricKind.CUMULATIVE,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(ChartHeight),
