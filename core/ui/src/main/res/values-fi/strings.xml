@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">Peruuta</string>
+    <string name="action_save">Tallenna</string>
+    <string name="action_grant">Myönnä</string>
+    <string name="action_grant_permission">Myönnä käyttöoikeus</string>
+    <string name="action_not_now">Ei nyt</string>
+    <string name="screen_error_not_found">Pyydettyä kohdetta ei löytynyt.</string>
+    <string name="screen_error_missing_argument">Tarvittava tieto puuttuu.</string>
+    <string name="screen_error_permission_denied">Näiden tietojen lataaminen vaatii käyttöoikeuden.</string>
+    <string name="screen_error_health_connect_unavailable">Health Connect ei ole käytettävissä tällä laitteella.</string>
+    <string name="screen_error_feature_unavailable">Ei saatavilla tällä laitteella.</string>
+    <string name="screen_error_generic">Pyyntöä ei voitu suorittaa.</string>
+    <string name="message_missing_permissions_title">Joitakin käyttöoikeuksia puuttuu</string>
+    <string name="watch_permissions_continue">Jatka silti</string>
+    <string name="onboarding_os_bluetooth">Bluetooth</string>
+    <string name="onboarding_os_bluetooth_desc">Etsi ja yhdistä kelloja, sykevöitä ja muita antureita.</string>
+    <string name="onboarding_os_notifications">Ilmoitukset</string>
+    <string name="onboarding_os_notifications_desc">Synkronoinnin edistyminen, muistutukset ja treenihälytykset.</string>
+    <string name="onboarding_os_location">Sijainti</string>
+    <string name="onboarding_os_location_desc">Vaaditaan Bluetooth-laitteiden etsimiseen vanhemmissa Android-versioissa.</string>
+    <string name="onboarding_os_battery">Rajoittamaton akun käyttö</string>
+    <string name="onboarding_os_battery_desc">Antaa taustasynkronointien valmistua sen sijaan, että virransäästö keskeyttäisi ne. Avaa Androidin asetukset.</string>
+    <string name="onboarding_os_notification_forwarding">Ilmoitusten välitys</string>
+    <string name="onboarding_os_notification_forwarding_desc">Lähetä puhelimen ilmoitukset yhdistettyyn kelloon. Avaa Androidin asetukset.</string>
+    <string name="onboarding_action_grant_all">Myönnä kaikki</string>
+    <string name="option_not_specified">Ei määritetty</string>
+    <string name="settings_watch_name_label">Nimi</string>
+    <string name="action_remove">Poista</string>
+    <string name="settings_watch_notifications_disclosure_accept">Jatka</string>
+    <string name="settings_watch_notifications_disclosure_decline">Ei nyt</string>
+    <string name="time_just_now">juuri nyt</string>
+    <string name="hc_setup_sync_title">Kirjoita Health Connectiin</string>
+    <string name="hc_setup_sync_body">Pois päältä -tila keskeyttää kaiken kirjoittamisen. Laitteet säilyttävät tallentamansa, kunnes asetus on taas päällä.</string>
+    <string name="health_data_title">Mitä OpenWatch lukee ja kirjoittaa</string>
+    <string name="settings_watch_notifications_disclosure_title">OpenWatch lukee ilmoituksesi</string>
+    <string name="settings_watch_notifications_disclosure_body">Näyttääkseen ilmoitukset kellossasi OpenWatch lukee puhelimesi vastaanottamat ilmoitukset — myös niiden tekstin.\n\nNe luetaan tällä laitteella ja lähetetään vain pariliitettyyn kelloosi Bluetoothin kautta. Mitään ei tallenneta tiedostoon tai tietokantaan, eikä OpenWatchilla ole internet-oikeutta, joten ilmoituksia ei voida lähettää minnekään muualle.\n\nVoit kytkeä tämän pois milloin tahansa ja peruuttaa ilmoitusten käyttöoikeuden Androidin asetuksista.</string>
+    <string name="home_health_connect">Health Connect</string>
+    <string name="home_health_connect_body">Mitä OpenWatch saa lukea ja kirjoittaa</string>
+    <string name="action_delete">Poista</string>
+</resources>

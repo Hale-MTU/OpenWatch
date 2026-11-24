@@ -30,13 +30,18 @@ import tech.mmarca.openwatch.wearlink.WearLinkWorkoutLines
  * services. Every sensor callback runs on the recorder's own thread.
  *
  * A partial wake lock is held while a workout runs, so the GPS and the
- * sensors keep delivering with the screen off. A checkpoint every
+ * sensors keep delivering with the screen off. It is taken for
+ * [WAKE_LOCK_MILLIS] and renewed by the recorder's once-a-second tick, so a
+ * recorder thread that stopped ticking lets it lapse within ten minutes
+ * instead of holding the processor until the process ends. A checkpoint every
  * [CHECKPOINT_MILLIS] lets [recoverInterrupted] save a workout whose app was
  * killed. Not yet verified on a watch.
  */
 class WorkoutRecorder(
     private val context: Context,
     metricStore: MetricStore,
+    private val state: WorkoutState,
+    private val debug: DebugProtocol,
     /** Called on the main thread when a workout starts or ends, so the service can adjust itself. */
     private val onActiveChange: () -> Unit,
 ) : SensorEventListener, LocationListener {
@@ -50,6 +55,7 @@ class WorkoutRecorder(
     private var handler: Handler? = null
     private var tracker: WorkoutTracker? = null
     private var wakeLock: PowerManager.WakeLock? = null
+    private var wakeLockRenewedAt = 0L
     private var ascent: AscentMinuteCounter? = null
     private var lastCheckpointAt = 0L
 
@@ -63,7 +69,6 @@ class WorkoutRecorder(
         private set
 
     /** Starts [sport]. [useGps] is false when the wearer did not allow location. False if one is already running. */
-    @SuppressLint("WakelockTimeout")
     fun start(sport: WorkoutSport, useGps: Boolean): Boolean {
         if (isActive) return false
         isActive = true
@@ -77,23 +82,27 @@ class WorkoutRecorder(
         tracker = t
         ascent = AscentMinuteCounter(null)
         wakeLock = context.getSystemService(PowerManager::class.java)
-            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "OpenVitals:workout").apply { acquire() }
-        DebugProtocol.event("Workout", "start", "sport" to sport.id, "gps" to usesGps)
+            .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
+            // Not counted: each renewal moves the one timeout on, and one release ends it.
+            .apply { setReferenceCounted(false) }
+            .apply { acquire(WAKE_LOCK_MILLIS) }
+        wakeLockRenewedAt = now
+        debug.event("Workout", "start", "sport" to sport.id, "gps" to usesGps)
         h.post { registerSensors(sport, now) }
         h.post(tick)
-        WorkoutState.update { WorkoutUiState(sport = sport, running = true, snapshot = t.snapshot(now)) }
+        state.update { WorkoutUiState(sport = sport, running = true, snapshot = t.snapshot(now), gps = usesGps) }
         onActiveChange()
         return true
     }
 
     fun pause() = post {
-        DebugProtocol.event("Workout", "pause")
+        debug.event("Workout", "pause")
         it.pause(System.currentTimeMillis())
         publish(it)
     }
 
     fun resume() = post {
-        DebugProtocol.event("Workout", "resume")
+        debug.event("Workout", "resume")
         it.resume(System.currentTimeMillis())
         publish(it)
     }
@@ -129,12 +138,13 @@ class WorkoutRecorder(
         if (sport.steps) {
             sensors.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)?.let {
                 runCatching { sensors.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL, 0, h) }
+                    .onSuccess { registered -> if (registered) debug.registered("workoutSteps", it, SensorManager.SENSOR_DELAY_NORMAL, 0) }
                     .onFailure { e -> Log.w(TAG, "Step counter refused", e) }
             }
         }
         if (sport.elevation) {
             sensors.getDefaultSensor(Sensor.TYPE_PRESSURE)?.let {
-                sensors.registerListener(this, it, 1_000_000, 0, h)
+                if (sensors.registerListener(this, it, 1_000_000, 0, h)) debug.registered("workoutBarometer", it, 1_000_000, 0)
             }
         }
         if (usesGps) {
@@ -162,6 +172,10 @@ class WorkoutRecorder(
                 return
             }
             publish(t, now)
+            if (now - wakeLockRenewedAt >= WAKE_LOCK_RENEW_MILLIS) {
+                wakeLockRenewedAt = now
+                wakeLock?.acquire(WAKE_LOCK_MILLIS)
+            }
             if (now - lastCheckpointAt >= CHECKPOINT_MILLIS) {
                 lastCheckpointAt = now
                 store.saveCheckpoint(t.checkpoint(now))
@@ -172,7 +186,7 @@ class WorkoutRecorder(
 
     private fun publish(t: WorkoutTracker, now: Long = System.currentTimeMillis()) {
         val snapshot = t.snapshot(now)
-        WorkoutState.update { it.copy(snapshot = snapshot) }
+        state.update { it.copy(snapshot = snapshot, gps = usesGps) }
     }
 
     override fun onSensorChanged(event: SensorEvent) {
@@ -209,13 +223,14 @@ class WorkoutRecorder(
         val workout = t.finish(end)
         val kept = store.finish(workout, end)
         val last = t.snapshot(end)
-        DebugProtocol.event(
+        debug.event(
             "Workout", "stop",
             "sport" to t.sport.id, "durationMs" to workout.endMillis - workout.startMillis, "steps" to workout.steps, "saved" to kept,
         )
+        val gps = usesGps
         teardown(keepState = false)
-        WorkoutState.update { WorkoutUiState(sport = t.sport, running = false, snapshot = last, finished = kept) }
-        if (!kept) WorkoutState.clearFinished()
+        state.update { WorkoutUiState(sport = t.sport, running = false, snapshot = last, finished = kept, gps = gps) }
+        if (!kept) state.clearFinished()
         Haptics.play(context, hapticCueForWorkoutEnd(kept))
     }
 
@@ -232,7 +247,7 @@ class WorkoutRecorder(
         thread?.quitSafely()
         thread = null
         handler = null
-        if (keepState) WorkoutState.update { WorkoutUiState() }
+        if (keepState) state.update { WorkoutUiState() }
         mainHandler.post(onActiveChange)
     }
 
@@ -240,5 +255,14 @@ class WorkoutRecorder(
         const val TAG = "WorkoutRecorder"
         const val GPS_INTERVAL_MILLIS = 1_000L
         const val CHECKPOINT_MILLIS = 10_000L
+
+        /** The app's name, so the system's wake lock list says whose it is. */
+        const val WAKE_LOCK_TAG = "OpenWatch:workout"
+
+        /** How long one hold lasts if the tick stops renewing it. */
+        const val WAKE_LOCK_MILLIS = 10L * 60 * 1000
+
+        /** The tick renews the hold once a minute. */
+        const val WAKE_LOCK_RENEW_MILLIS = 60_000L
     }
 }

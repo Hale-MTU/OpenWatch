@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_section_watches">الساعات</string>
+    <string name="home_section_scale">الميزان</string>
+    <string name="home_section_app">التطبيق</string>
+    <string name="home_settings">الإعدادات</string>
+    <string name="home_settings_body">الملف الجسدي، والوصول إلى الإشعارات، وحول التطبيق</string>
+</resources>

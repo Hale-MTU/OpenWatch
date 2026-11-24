@@ -5,7 +5,7 @@ Your data stays on your phone. There is no account, no cloud sync, no ads and no
 What it does
 
 * Garmin watches, over Garmin's own Bluetooth protocol: activities with their route, steps, distance, floors, calories, heart rate, HRV, blood oxygen, breathing rate, VO2 max and sleep, written to Health Connect. Forward notifications, send alarms and the watch's settings, find your watch, control music, see your calendar and the weather on the wrist, and follow CoMaps navigation there. Measurements Health Connect cannot hold, such as stress, Body Battery and the sleep score, stay in the app's Watch Data screen.
-* Wear OS watches, with the OpenWatch watch app: heart rate, steps and floors recorded on the watch, synced to Health Connect on a tap or on a schedule, plus an estimated sleep session and the night's resting heart rate. The watch app offers tiles for heart rate, steps and floors.
+* Wear OS watches, with the OpenWatch watch app: heart rate, steps, floors and workouts with their route recorded on the watch, synced to Health Connect on a tap or on a schedule, plus an estimated sleep session and the night's resting heart rate, heart rate variability and breathing rate. On a Samsung watch, if you switch them on, blood oxygen and skin temperature at night. The watch app offers tiles for heart rate, steps and floors.
 * Xiaomi Body Composition Scale S400 and S400 Pro: every weigh-in saved to Health Connect as it happens, with the app open or closed, decoded from the scale's own broadcast with the key from your Xiaomi account. Weight and heart rate as measured; body fat, lean mass and body water estimated on the phone.
 
 Why OpenWatch

@@ -1,0 +1,157 @@
+package tech.mmarca.openwatch.features.watches
+
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import androidx.navigation.toRoute
+import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.Locale
+import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import tech.mmarca.openwatch.core.geo.GeoCoordinateParseResult
+import tech.mmarca.openwatch.core.geo.GeoCoordinateParser
+import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncController
+import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
+import tech.mmarca.openwatch.devices.garmin.GarminSendFileResult
+import tech.mmarca.openwatch.devices.garmin.GarminSendStage
+import tech.mmarca.openwatch.devices.garmin.GarminWaypoint
+import tech.mmarca.openwatch.devices.garmin.canStorePoints
+import tech.mmarca.openwatch.devices.garmin.isGarmin
+import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.navigation.WatchSendPoint
+
+data class WatchSendPointUiState(
+    /** The paired watches that can store a point. */
+    val watches: List<BleSensorDevice> = emptyList(),
+    val selectedDeviceId: String? = null,
+    val name: String = "",
+    val coordinates: String = "",
+    /** What [coordinates] reads as. Null while the field is empty. */
+    val parsed: GeoCoordinateParseResult? = null,
+    /** Another app shared something that held no position. */
+    val sharedUnreadable: Boolean = false,
+    val sendingStage: GarminSendStage? = null,
+    val isSending: Boolean = false,
+    val result: GarminSendFileResult? = null,
+    /** A sync or a find holds the radio. */
+    val radioBusy: Boolean = false,
+) {
+    val position: GeoCoordinateParseResult.Parsed? get() = parsed as? GeoCoordinateParseResult.Parsed
+
+    val canSend: Boolean
+        get() = selectedDeviceId != null && position != null && !isSending && !radioBusy
+}
+
+/** The send-a-point form. The send itself runs in the controller, so it outlives this screen. */
+@HiltViewModel
+class WatchSendPointViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
+    deviceRepository: BleDeviceRepository,
+    private val stateStore: GarminDeviceStateStore,
+    private val actionsController: GarminWatchActionsController,
+    syncController: DeviceSyncController,
+) : ViewModel() {
+
+    private data class Form(
+        val selectedDeviceId: String?,
+        val name: String,
+        val coordinates: String,
+        val sharedUnreadable: Boolean,
+    )
+
+    private val route = savedStateHandle.toRoute<WatchSendPoint>()
+
+    private val form = MutableStateFlow(
+        Form(
+            // What the user typed wins over what the route brought, after a reclaimed process.
+            selectedDeviceId = savedStateHandle.get<String>(KEY_FORM_DEVICE) ?: route.deviceId,
+            name = savedStateHandle.get<String>(KEY_FORM_NAME) ?: route.name.orEmpty(),
+            coordinates = savedStateHandle.get<String>(KEY_FORM_COORDINATES)
+                ?: sharedCoordinates(route.latitude, route.longitude),
+            sharedUnreadable = route.unreadable,
+        ),
+    )
+
+    init {
+        viewModelScope.launch {
+            form.collect { form ->
+                savedStateHandle[KEY_FORM_DEVICE] = form.selectedDeviceId
+                savedStateHandle[KEY_FORM_NAME] = form.name
+                savedStateHandle[KEY_FORM_COORDINATES] = form.coordinates
+            }
+        }
+    }
+
+    init {
+        // A result from an earlier visit says nothing about this point.
+        actionsController.clearPointResult()
+    }
+
+    val uiState: StateFlow<WatchSendPointUiState> = combine(
+        deviceRepository.devicesFlow,
+        form,
+        actionsController.pointState,
+        actionsController.state,
+        syncController.state,
+    ) { devices, form, send, find, sync ->
+        val watches = devices.filter { it.canStorePoints() }
+        // The asked-for watch, else the only one. Several and none asked for: the user picks.
+        val selected = form.selectedDeviceId?.takeIf { id -> watches.any { it.id == id } }
+            ?: watches.singleOrNull()?.id
+        WatchSendPointUiState(
+            watches = watches,
+            selectedDeviceId = selected,
+            name = form.name,
+            coordinates = form.coordinates,
+            parsed = form.coordinates.takeIf { it.isNotBlank() }?.let(GeoCoordinateParser::parse),
+            sharedUnreadable = form.sharedUnreadable,
+            sendingStage = send.stage,
+            isSending = send.isSending,
+            result = send.result,
+            radioBusy = sync.isSyncing || find.findingDeviceId != null,
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), WatchSendPointUiState())
+
+    fun selectWatch(deviceId: String) {
+        form.update { it.copy(selectedDeviceId = deviceId) }
+    }
+
+    fun updateName(name: String) {
+        form.update { it.copy(name = name) }
+    }
+
+    fun updateCoordinates(coordinates: String) {
+        form.update { it.copy(coordinates = coordinates, sharedUnreadable = false) }
+        actionsController.clearPointResult()
+    }
+
+    fun send() {
+        val state = uiState.value
+        val deviceId = state.selectedDeviceId ?: return
+        val position = state.position ?: return
+        if (!state.canSend) return
+        val name = state.name.trim().ifEmpty { coordinatesText(position.latitude, position.longitude) }
+        actionsController.sendPoint(deviceId, GarminWaypoint(name, position.latitude, position.longitude))
+    }
+
+    private fun BleSensorDevice.canStorePoints(): Boolean =
+        enabled && isGarmin && stateStore.capabilities(id).canStorePoints()
+
+    private fun sharedCoordinates(latitude: Double?, longitude: Double?): String =
+        if (latitude == null || longitude == null) "" else coordinatesText(latitude, longitude)
+}
+
+/** Five decimals is about a metre. A point, never a comma: the parser reads it back. */
+internal fun coordinatesText(latitude: Double, longitude: Double): String =
+    String.format(Locale.US, "%.5f, %.5f", latitude, longitude)
+
+private const val KEY_FORM_DEVICE = "send_point_device"
+private const val KEY_FORM_NAME = "send_point_name"
+private const val KEY_FORM_COORDINATES = "send_point_coordinates"

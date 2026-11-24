@@ -42,10 +42,10 @@ data class WearLinkUiState(
 
 /**
  * The link's state, written by the service and its helpers, read by the
- * status screen. One process-wide holder: the service and the activity
- * are in the same process and the screen only ever reads.
+ * status screen. One per process, held by [WearGraph]: the service and the
+ * activity are in the same process and the screen only ever reads.
  */
-object WearLinkState {
+class WearLinkState {
 
     private val flow = MutableStateFlow(WearLinkUiState())
 
@@ -62,6 +62,8 @@ object WearLinkState {
         flow.update { s -> if (s.pending != null && pendingIfFresh(nowMillis) == null) s.copy(pending = null) else s }
     }
 
-    /** How long a request stays open for the wearer to answer. */
-    const val PENDING_TTL_MILLIS: Long = 5 * 60 * 1000
+    companion object {
+        /** How long a request stays open for the wearer to answer. */
+        const val PENDING_TTL_MILLIS: Long = 5 * 60 * 1000
+    }
 }

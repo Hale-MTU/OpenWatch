@@ -38,14 +38,15 @@ internal object LegacyStoreImport {
             val samples = db.query("samples", arrayOf("time_ms", "bpm"), null, null, null, null, null).use { c ->
                 buildList(c.count) { while (c.moveToNext()) add(WearLinkProtocol.HeartRateSample(c.getLong(0), c.getInt(1))) }
             }
-            store.putAll(WearMetrics.HEART_RATE, samples)
+            // A failed write keeps the old file for the next start, as a failed read does.
+            check(store.putAll(WearMetrics.HEART_RATE, samples)) { "store write failed" }
             samples.size
         }
         importFile(context, sleepMinutesDb) { db ->
             val minutes = db.query("minutes", SLEEP_COLUMNS, null, null, null, null, null).use { c ->
                 buildList(c.count) { while (c.moveToNext()) sleepMinuteOf(c)?.let(::add) }
             }
-            store.putAll(WearMetrics.SLEEP_MINUTES, minutes)
+            check(store.putAll(WearMetrics.SLEEP_MINUTES, minutes)) { "store write failed" }
             minutes.size
         }
     }

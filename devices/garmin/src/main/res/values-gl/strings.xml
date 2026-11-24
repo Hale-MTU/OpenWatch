@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="garmin_find_phone_channel">Atopar o meu teléfono</string>
+    <string name="garmin_find_phone_title">O teu reloxo está buscando este teléfono</string>
+    <string name="garmin_find_phone_body">Toca para deixar de soar.</string>
+    <string name="garmin_find_phone_stop">Deter</string>
+</resources>

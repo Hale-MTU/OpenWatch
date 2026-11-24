@@ -3,22 +3,23 @@ package tech.mmarca.openwatch.wear.features.quicklog
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Air
 import androidx.compose.material.icons.outlined.Bloodtype
-import androidx.compose.material.icons.outlined.Opacity
-import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.MonitorWeight
+import androidx.compose.material.icons.outlined.Opacity
 import androidx.compose.material.icons.outlined.SelfImprovement
 import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import kotlin.math.roundToInt
+import tech.mmarca.openwatch.wear.MetricTile
 import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.UnitSystem
-import tech.mmarca.openwatch.wear.MetricTile
 import tech.mmarca.openwatch.wear.ui.components.formatCount
 import tech.mmarca.openwatch.wear.ui.components.formatMetricValue
 import tech.mmarca.openwatch.wear.ui.components.metricUnitLabel
@@ -28,59 +29,56 @@ import tech.mmarca.openwatch.wear.ui.theme.HydrationColor
 import tech.mmarca.openwatch.wear.ui.theme.MindfulnessColor
 import tech.mmarca.openwatch.wear.ui.theme.VitalsColor
 import tech.mmarca.openwatch.wear.ui.theme.WeightColor
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
+import tech.mmarca.openwatch.wearlink.WearLinkEntry.Type
 
-val EntryType.icon: ImageVector
+val Type.icon: ImageVector
     get() = when (this) {
-        EntryType.WATER -> Icons.Outlined.WaterDrop
-        EntryType.WEIGHT -> Icons.Outlined.MonitorWeight
-        EntryType.BLOOD_PRESSURE -> Icons.Outlined.Speed
-        EntryType.MINDFULNESS -> Icons.Outlined.SelfImprovement
-        EntryType.HEART_RATE -> Icons.Outlined.Favorite
-        EntryType.HRV -> Icons.Outlined.Insights
-        EntryType.BODY_FAT -> Icons.Outlined.MonitorWeight
-        EntryType.BLOOD_OXYGEN -> Icons.Outlined.Bloodtype
-        EntryType.RESPIRATORY_RATE -> Icons.Outlined.Air
-        EntryType.BODY_TEMPERATURE -> Icons.Outlined.Thermostat
-        EntryType.BLOOD_GLUCOSE -> Icons.Outlined.Opacity
+        Type.WATER -> Icons.Outlined.WaterDrop
+        Type.WEIGHT -> Icons.Outlined.MonitorWeight
+        Type.BLOOD_PRESSURE -> Icons.Outlined.Speed
+        Type.MINDFULNESS -> Icons.Outlined.SelfImprovement
+        Type.HEART_RATE -> Icons.Outlined.Favorite
+        Type.HRV -> Icons.Outlined.Insights
+        Type.BODY_FAT -> Icons.Outlined.MonitorWeight
+        Type.BLOOD_OXYGEN -> Icons.Outlined.Bloodtype
+        Type.RESPIRATORY_RATE -> Icons.Outlined.Air
+        Type.BODY_TEMPERATURE -> Icons.Outlined.Thermostat
+        Type.BLOOD_GLUCOSE -> Icons.Outlined.Opacity
     }
 
-val EntryType.color: Color
+val Type.color: Color
     get() = when (this) {
-        EntryType.WATER -> HydrationColor
-        EntryType.WEIGHT -> WeightColor
-        EntryType.BLOOD_PRESSURE -> VitalsColor
-        EntryType.MINDFULNESS -> MindfulnessColor
-        EntryType.HEART_RATE -> HeartColor
-        EntryType.HRV -> VitalsColor
-        EntryType.BODY_FAT -> WeightColor
-        EntryType.BLOOD_OXYGEN -> VitalsColor
-        EntryType.RESPIRATORY_RATE -> VitalsColor
-        EntryType.BODY_TEMPERATURE -> ActiveCaloriesColor
-        EntryType.BLOOD_GLUCOSE -> ActiveCaloriesColor
+        Type.WATER -> HydrationColor
+        Type.WEIGHT -> WeightColor
+        Type.BLOOD_PRESSURE -> VitalsColor
+        Type.MINDFULNESS -> MindfulnessColor
+        Type.HEART_RATE -> HeartColor
+        Type.HRV -> VitalsColor
+        Type.BODY_FAT -> WeightColor
+        Type.BLOOD_OXYGEN -> VitalsColor
+        Type.RESPIRATORY_RATE -> VitalsColor
+        Type.BODY_TEMPERATURE -> ActiveCaloriesColor
+        Type.BLOOD_GLUCOSE -> ActiveCaloriesColor
     }
 
-/** The entry's value with its unit, e.g. "72.4 kg" or "121/79 mmHg". */
+/** The entry's value with its unit, such as "72.4 kg" or "121/79 mmHg", in [unitSystem]. */
 @Composable
-fun formatEntry(entry: LoggedEntry, unitSystem: UnitSystem): String = when (entry.type) {
-    EntryType.WATER -> metricValue(MetricTile.HYDRATION, entry.value, unitSystem)
-    EntryType.WEIGHT -> metricValue(MetricTile.WEIGHT, entry.value, unitSystem)
-    EntryType.HEART_RATE -> metricValue(MetricTile.HEART_RATE, entry.value, unitSystem)
-    EntryType.HRV -> metricValue(MetricTile.HRV, entry.value, unitSystem)
-    EntryType.MINDFULNESS -> stringResource(R.string.quicklog_minutes, entry.value.roundToInt())
-    EntryType.BLOOD_PRESSURE -> stringResource(
+fun formatEntry(entry: WearLinkEntry, unitSystem: UnitSystem): String = when (entry.type) {
+    Type.WATER -> metricValue(MetricTile.HYDRATION, entry.value, unitSystem)
+    Type.WEIGHT -> metricValue(MetricTile.WEIGHT, entry.value, unitSystem)
+    Type.HEART_RATE -> metricValue(MetricTile.HEART_RATE, entry.value, unitSystem)
+    Type.HRV -> metricValue(MetricTile.HRV, entry.value, unitSystem)
+    Type.MINDFULNESS -> entry.value.roundToInt().let { pluralStringResource(R.plurals.quicklog_minutes, it, it) }
+    Type.BLOOD_PRESSURE -> stringResource(
         R.string.quicklog_blood_pressure_value,
         formatCount(entry.value.roundToInt()),
-        formatCount(entry.value2?.roundToInt() ?: 0),
+        formatCount(entry.second?.roundToInt() ?: 0),
     )
-    EntryType.BODY_FAT,
-    EntryType.BLOOD_OXYGEN,
-    EntryType.RESPIRATORY_RATE,
-    EntryType.BODY_TEMPERATURE,
-    EntryType.BLOOD_GLUCOSE,
-    -> LogValueSpecs.getValue(entry.type).let { spec ->
-        val display = spec.toDisplay(entry.value, imperial = unitSystem == UnitSystem.IMPERIAL)
-        "${spec.format(display)} ${stringResource(spec.unit(unitSystem))}"
-    }
+    Type.BODY_FAT, Type.BLOOD_OXYGEN, Type.RESPIRATORY_RATE, Type.BODY_TEMPERATURE, Type.BLOOD_GLUCOSE ->
+        LogValueSpecs.getValue(entry.type).let { spec ->
+            "${spec.format(spec.toDisplay(entry.value, unitSystem), unitSystem)} ${stringResource(spec.unit(unitSystem))}"
+        }
 }
 
 @Composable

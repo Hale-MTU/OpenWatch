@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connected_apps_in_use">قيد الاستخدام الآن</string>
+    <string name="connected_apps_last_connected">آخر اتصال %1$s</string>
+    <string name="connected_apps_profile_received">آخر ملف شخصي مستلم %1$s</string>
+    <string name="connected_apps_session_heart_rate">تسجيل: يُرسل معدل نبض القلب من %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">تسجيل: يُرسل معدل نبض القلب والخطوات من %1$s</string>
+    <string name="connected_apps_session_keeping">تسجيل: يبقى %1$s في البث</string>
+    <string name="connected_apps_session_waiting">تسجيل: في انتظار قراءة من %1$s</string>
+    <string name="connected_apps_intro">طلبت هذه التطبيقات استخدام OpenWatch. لا يرى كل منها إلا ما تسمح به هنا، ولا يغادر أي شيء الهاتف.</string>
+    <string name="connected_apps_empty">لم يطلب أي تطبيق ذلك بعد. يتصل OpenVitals بمجرد تثبيت التطبيقين.</string>
+    <string name="connected_apps_unknown_signer">يسمّي هذا التطبيق نفسه %1$s، لكنه لم يُوقَّع من مشروع OpenVitals. لا تسمح به إلا إذا بنيته أو ثبّته بنفسك وتثق بمصدره.</string>
+    <string name="connected_apps_identity">%1$s\nمفتاح التوقيع %2$s</string>
+    <string name="connected_apps_lookalike">يسمّي هذا التطبيق نفسه %1$s، لكنه ليس %2$s: حزمته ليست الحزمة التي يندرج تحتها %2$s. لا تسمح به إلا إذا كنت تعرف سبب استخدامه هذا الاسم.</string>
+    <string name="connected_apps_state_pending">يطلب الاتصال</string>
+    <string name="connected_apps_state_trusted">متصل</string>
+    <string name="connected_apps_state_blocked">محظور</string>
+    <string name="connected_apps_asks_for">يطلب ما يلي:</string>
+    <string name="connected_apps_allow">السماح</string>
+    <string name="connected_apps_block">حظر</string>
+    <string name="connected_apps_forget">نسيان</string>
+    <string name="connected_apps_unblock">إلغاء الحظر</string>
+    <string name="connected_apps_capability_devices">رؤية ساعاتك وميزانك وبطاريتها وآخر مزامنة لها، وبدء مزامنة</string>
+    <string name="connected_apps_capability_profile">مشاركة ملفك الجسدي (سنة الميلاد والجنس والطول والوزن) مع OpenWatch في الاتجاهين</string>
+    <string name="connected_apps_capability_recording">إبقاء ساعتك في البث أثناء تسجيلها نشاطًا</string>
+    <string name="connected_apps_capability_live">تلقي معدل نبض القلب والخطوات من ساعتك أثناء التسجيل</string>
+</resources>

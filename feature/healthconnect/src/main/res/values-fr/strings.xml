@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hc_setup_missing_title">Pas encore accordées :</string>
+    <string name="hc_setup_missing_extra">L\'accès en arrière-plan et à l\'historique est sur une page à part : ouvrez les paramètres de Santé Connect, puis OpenWatch, puis Accès supplémentaire.</string>
+    <string name="hc_setup_intro">OpenWatch copie ce que votre montre et votre balance enregistrent dans Santé Connect, où OpenVitals et d\'autres applications le lisent. Rien ne quitte le téléphone : l\'application n\'a pas d\'autorisation Internet.</string>
+    <string name="hc_setup_permissions_title">Autorisations</string>
+    <string name="hc_setup_status_all_granted">Les %1$d autorisations sont accordées</string>
+    <string name="hc_setup_status_partial">%1$d autorisations sur %2$d accordées. Un enregistrement dont l\'écriture n\'est pas autorisée reste sur l\'appareil.</string>
+    <string name="hc_setup_status_update">Santé Connect doit être mis à jour avant qu\'OpenWatch puisse l\'utiliser.</string>
+    <string name="hc_setup_status_play_store">Santé Connect est installé sans Google Play et ne peut donc pas être utilisé sur ce téléphone.</string>
+    <string name="hc_setup_status_unavailable">Santé Connect n\'est pas disponible sur ce téléphone.</string>
+    <string name="hc_setup_grant">Accorder les autorisations</string>
+    <string name="hc_setup_open_settings">Ouvrir les paramètres de Santé Connect</string>
+    <string name="hc_setup_continue">Continuer</string>
+</resources>

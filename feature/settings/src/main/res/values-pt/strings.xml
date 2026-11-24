@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="privacy_policy_title">Política de privacidade</string>
+    <string name="body_profile_synced">Mantido em sincronia com %1$s</string>
+    <string name="body_profile_synced_updated">Mantido em sincronia com %1$s · atualizado %2$s</string>
+    <string name="connected_apps_title">Apps ligadas</string>
+    <string name="connected_apps_settings_body">Apps que usam os relógios, a balança e o perfil corporal através do OpenWatch, e o que cada uma pode fazer</string>
+    <string name="settings_notification_access_title">Acesso a notificações</string>
+    <string name="settings_notification_access_body">Permite que um relógio Garmin emparelhado mostre as notificações do telemóvel. Desligado.</string>
+    <string name="settings_notification_access_granted">Concedido. Toque para o alterar nas definições do Android.</string>
+    <string name="settings_about_version">OpenWatch %1$s</string>
+    <string name="settings_privacy_policy_body">O que o OpenWatch lê, escreve e guarda. Abre no navegador.</string>
+    <string name="settings_privacy_policy_no_browser">Nenhuma app neste telemóvel consegue abrir a ligação. A política está em %1$s</string>
+    <string name="settings_about_body">Código aberto sob a licença AGPL-3.0-or-later. O código do relógio, da balança e da sincronização vem do OpenVitals.</string>
+    <string name="body_profile_title">Perfil corporal</string>
+    <string name="body_profile_settings_body">Ano de nascimento, sexo, altura e peso para as estimativas</string>
+    <string name="body_profile_intro">A composição corporal da balança precisa do seu sexo e altura; a estimativa de energia da caminhada precisa do seu peso. Um peso ou uma altura que o Health Connect tenha é usado em vez do escrito aqui.</string>
+    <string name="body_profile_birth_year">Ano de nascimento</string>
+    <string name="body_profile_sex">Sexo</string>
+    <string name="body_profile_sex_female">Feminino</string>
+    <string name="body_profile_sex_male">Masculino</string>
+    <string name="body_profile_height_cm">Altura (cm)</string>
+    <string name="body_profile_height_in">Altura (in)</string>
+    <string name="body_profile_weight_kg">Peso (kg)</string>
+    <string name="body_profile_weight_lb">Peso (lb)</string>
+    <string name="body_profile_measured">Health Connect: %1$s</string>
+    <string name="settings_respiratory_rate_title">Frequência respiratória do relógio (experimental)</string>
+    <string name="settings_respiratory_rate_body">Grava no Health Connect a frequência respiratória das janelas noturnas de VFC do relógio. Ainda não foi comparada com um dispositivo de referência.</string>
+    <string name="health_data_open_body">Cada tipo de dados de saúde, o dispositivo de onde vem e porquê.</string>
+</resources>

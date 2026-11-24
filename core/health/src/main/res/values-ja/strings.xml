@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="health_data_section_garmin">Garmin ウォッチから書き込み</string>
+    <string name="health_data_section_wearos">Wear OS ウォッチから書き込み</string>
+    <string name="health_data_section_scale">体重計から書き込み</string>
+    <string name="health_data_section_reads">Health Connect から読み取り</string>
+    <string name="health_data_section_watch_app">ウォッチアプリがウォッチ上で要求</string>
+    <string name="health_data_note_garmin_weight">Garmin の体重計がウォッチ経由で中継する体重。</string>
+    <string name="health_data_note_wearos_calories">歩数と体重から推定した歩行の消費カロリーと、ワークアウトのカロリー。</string>
+    <string name="health_data_note_wearos_sleep">一晩ごと、仮眠ごとに 1 件の推定セッション。</string>
+    <string name="health_data_note_wearos_hrv">夜間、測定に対応したウォッチで。</string>
+    <string name="health_data_note_wearos_workout">ウォッチで記録したワークアウトと、そのルートと距離。</string>
+    <string name="health_data_note_wearos_skin">Samsung ウォッチで、そのウォッチの「夜間の皮膚温度」をオンにしている場合のみ。一晩に 1 件、普段の夜との差を記録します。</string>
+    <string name="health_data_note_scale_estimate">体重計の測定値と体のプロフィールから、スマートフォン上で推定。</string>
+    <string name="health_data_read_weight">歩行カロリーと体重計の体組成のため。</string>
+    <string name="health_data_read_height">体重計の体組成のため。</string>
+    <string name="health_data_read_exercise">ワークアウト中の時間にカロリーを二重に推定しないため。</string>
+    <string name="health_data_read_sleep">すでに睡眠セッションがある夜に手を加えないため。</string>
+    <string name="health_data_read_resting_heart_rate">すでに安静時心拍数がある日に手を加えないため。また、ウォッチに表示する心拍ゾーンのため。</string>
+    <string name="health_data_read_heart_rate">最大心拍数を求めるため。上記のゾーンとワークアウトのエネルギーに使います。</string>
+    <string name="health_data_read_history">最新の体重や身長は、この権限がないと Health Connect が表示する過去 30 日間より前のものであることがよくあります。</string>
+    <string name="health_data_read_background">アプリを閉じた状態でスケジュールどおりに実行される同期は、この権限がないと他のアプリの体重やワークアウトを参照できません。</string>
+    <string name="health_data_watch_heart_rate">ウォッチの心拍センサー。心拍数、夜間の心拍変動、睡眠推定に使います。</string>
+    <string name="health_data_watch_background">ウォッチの画面がオフでも記録を続けるため。</string>
+    <string name="health_data_watch_skin">Samsung ウォッチのみ。夜間の皮膚温度をオンにした場合に限ります。</string>
+    <string name="health_data_watch_spo2">Samsung ウォッチのみ。夜間の SpO2 をオンにした場合に限ります。</string>
+</resources>
