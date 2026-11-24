@@ -28,8 +28,13 @@ data class MetricUiState(
     val goal: Double? = null,
     /** Today, oldest first: hourly totals for a cumulative metric, samples otherwise; last night's for a night's vital. */
     val today: List<Double> = emptyList(),
-    /** The last days, oldest first, today last: daily totals, daily averages, or each night's value on the day it ended. */
-    val week: List<Double> = emptyList(),
+    /**
+     * The last days, oldest first, today last: daily totals, daily averages,
+     * or each night's value on the day it ended. It starts at the first day
+     * the watch has data of, so it may be shorter than a week, and a later
+     * day without data is null: no day reads as a zero it did not record.
+     */
+    val week: List<Double?> = emptyList(),
     /**
      * Today's lowest, mean and highest sample, where [today] is not the samples
      * themselves: the heart rate's line is five-minute means and the skin

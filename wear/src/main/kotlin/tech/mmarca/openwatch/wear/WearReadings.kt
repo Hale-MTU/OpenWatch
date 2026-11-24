@@ -198,13 +198,13 @@ internal object WearReadings {
         val thisHour = hourOf(now.toEpochMilli(), zone)
         return buildMap {
             if (days.any { it.hasSteps }) {
-                put(MetricTile.STEPS, cumulative(days, thisHour) { it.stepsByHour })
+                put(MetricTile.STEPS, cumulative(days, thisHour, { it.hasSteps }) { it.stepsByHour })
             }
             if (days.any { it.hasAscent }) {
-                put(MetricTile.ELEVATION, cumulative(days, thisHour) { it.ascentByHour })
+                put(MetricTile.ELEVATION, cumulative(days, thisHour, { it.hasAscent }) { it.ascentByHour })
                 put(
                     MetricTile.FLOORS,
-                    cumulative(days, thisHour) { day -> day.ascentByHour.map { it / AscentCredit.METRES_PER_FLOOR } },
+                    cumulative(days, thisHour, { it.hasAscent }) { day -> day.ascentByHour.map { it / AscentCredit.METRES_PER_FLOOR } },
                 )
             }
             for (metric in NIGHT_METRICS) {
@@ -216,8 +216,7 @@ internal object WearReadings {
                     MetricUiState(
                         current = lastNight?.value,
                         today = lastNight?.chart.orEmpty(),
-                        // A day without a night stays a zero bar, as for the heart rate.
-                        week = days.dropWhile { it.night[metric] == null }.map { day -> day.night[metric]?.value ?: 0.0 },
+                        week = days.dropWhile { it.night[metric] == null }.map { day -> day.night[metric]?.value },
                         // The headline is the night's value already: the lowest and highest reading frame it.
                         todayStats = lastNight?.let { SampleStats(low = it.low, average = null, high = it.high) },
                     ),
@@ -230,8 +229,8 @@ internal object WearReadings {
                     MetricUiState(
                         current = latest.bpm.toDouble(),
                         today = today.heartRate,
-                        // The chart labels its bars as the last days, today last: a gap stays a zero bar.
-                        week = days.dropWhile { it.heartRateMean == null }.map { it.heartRateMean ?: 0.0 },
+                        // The chart labels its bars as the last days, today last: a day without a sample keeps its place.
+                        week = days.dropWhile { it.heartRateMean == null }.map { it.heartRateMean },
                         todayStats = sampleStats(today),
                         zoneTime = today.heartZoneTime,
                     ),
@@ -253,16 +252,18 @@ internal object WearReadings {
         return SampleStats(low = range.first.toDouble(), average = mean, high = range.last.toDouble())
     }
 
+    /** [recorded] says whether a day has a row of the metric at all: a day without one is no data, not a total of zero. */
     private fun cumulative(
         days: List<DayReadings>,
         thisHour: Int,
+        recorded: (DayReadings) -> Boolean,
         hours: (DayReadings) -> List<Double>,
     ): MetricUiState {
         val today = hours(days.last())
         return MetricUiState(
             current = today.sum(),
             today = today.take(thisHour + 1),
-            week = days.map { hours(it).sum() },
+            week = days.dropWhile { !recorded(it) }.map { day -> hours(day).sum().takeIf { recorded(day) } },
         )
     }
 

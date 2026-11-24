@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -150,7 +151,8 @@ fun MetricDetailScreen(
                 )
             }
             if (state.week.isNotEmpty()) {
-                item { ListSubHeader { Text(stringResource(R.string.detail_week)) } }
+                // The header counts the days the chart draws: fewer than seven on a watch that is new to the metric.
+                item { ListSubHeader { Text(pluralStringResource(R.plurals.detail_last_days, state.week.size, state.week.size)) } }
                 item {
                     Column(
                         modifier = Modifier
@@ -158,7 +160,7 @@ fun MetricDetailScreen(
                             .padding(horizontal = SectionPadding),
                     ) {
                         BarChart(
-                            values = state.week,
+                            values = state.week.map { it ?: 0.0 },
                             color = metric.accentColor,
                             highlightLast = true,
                             modifier = Modifier
@@ -300,6 +302,9 @@ internal data class MetricStat(@param:StringRes val label: Int, val value: Doubl
  * The stats that make sense for the metric's kind, from the data that is
  * there. A sampled metric's low, average and high are those of its samples
  * ([MetricUiState.todayStats]) where the chart's points are not the samples.
+ * A cumulative metric's daily average is over the days that are over and
+ * have data: today is still filling up, and 300 steps by breakfast would
+ * halve the average of a 9 000 step yesterday. The best day may be today.
  */
 internal fun metricStats(metric: MetricTile, state: MetricUiState, restingHeartRate: Double?): List<MetricStat> =
     buildList {
@@ -321,10 +326,10 @@ internal fun metricStats(metric: MetricTile, state: MetricUiState, restingHeartR
                 if (goal != null) {
                     add(MetricStat(R.string.stat_remaining, (goal - (state.current ?: 0.0)).coerceAtLeast(0.0)))
                 }
-                if (state.week.isNotEmpty()) {
-                    add(MetricStat(R.string.stat_daily_average, state.week.average()))
-                    add(MetricStat(R.string.stat_best_day, state.week.max()))
-                }
+                // The week's last entry is today.
+                val finished = state.week.dropLast(1).filterNotNull()
+                if (finished.isNotEmpty()) add(MetricStat(R.string.stat_daily_average, finished.average()))
+                state.week.filterNotNull().maxOrNull()?.let { add(MetricStat(R.string.stat_best_day, it)) }
             }
         }
     }

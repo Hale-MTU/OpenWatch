@@ -61,7 +61,8 @@ class WearReadingsTest {
         assertEquals(125.0, steps.current!!, 0.0)
         assertEquals(40.0 + 60.0, steps.today[8], 0.0)
         assertEquals(25.0, steps.today[10], 0.0)
-        assertEquals(listOf(0.0, 0.0, 0.0, 0.0, 0.0, 500.0, 125.0), steps.week)
+        // The week starts at the first day with steps: the five days before it are not zeros.
+        assertEquals(listOf(500.0, 125.0), steps.week)
     }
 
     @Test
@@ -87,7 +88,11 @@ class WearReadingsTest {
             earlier = mapOf(2 to day(today.minusDays(2), steps = listOf(StepMinute(at(today.minusDays(2), 9), 300)))),
         )
 
-        assertEquals(0.0, WearReadings.metrics(readings, now, zone).getValue(MetricTile.STEPS).current!!, 0.0)
+        val steps = WearReadings.metrics(readings, now, zone).getValue(MetricTile.STEPS)
+
+        assertEquals(0.0, steps.current!!, 0.0)
+        // Yesterday and today recorded nothing: no data, which is not a day of zero steps.
+        assertEquals(listOf(300.0, null, null), steps.week)
     }
 
     @Test
@@ -224,7 +229,7 @@ class WearReadingsTest {
     }
 
     @Test
-    fun heartRateWeekRunsFromTheFirstDayWithSamplesAndKeepsGapsAsZero() {
+    fun heartRateWeekRunsFromTheFirstDayWithSamplesAndKeepsADayWithoutOneAsNoData() {
         val readings = week(
             day(today, heartRate = listOf(HeartRateSample(at(today, 8), 80))),
             earlier = mapOf(3 to day(today.minusDays(3), heartRate = listOf(HeartRateSample(at(today.minusDays(3), 8), 60), HeartRateSample(at(today.minusDays(3), 9), 70)))),
@@ -232,8 +237,8 @@ class WearReadingsTest {
 
         val heartRate = WearReadings.metrics(readings, now, zone).getValue(MetricTile.HEART_RATE)
 
-        // Four bars: three days ago, two empty days, today. The chart labels the last four days.
-        assertEquals(listOf(65.0, 0.0, 0.0, 80.0), heartRate.week)
+        // Four days: three days ago, two without a sample, today. The chart labels the last four days.
+        assertEquals(listOf(65.0, null, null, 80.0), heartRate.week)
     }
 
     @Test
@@ -372,6 +377,6 @@ class WearReadingsTest {
         assertNull(spo2.current)
         assertTrue(spo2.today.isEmpty())
         assertNull(spo2.todayStats)
-        assertEquals(listOf(97.0, 0.0), spo2.week)
+        assertEquals(listOf(97.0, null), spo2.week)
     }
 }

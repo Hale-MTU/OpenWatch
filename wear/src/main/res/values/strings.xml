@@ -162,7 +162,10 @@
     <string name="unit_pace_mi">/mi</string>
     <string name="percent_value">%1$d%%</string>
     <string name="detail_today">Today</string>
-    <string name="detail_week">Last 7 days</string>
+    <plurals name="detail_last_days">
+        <item quantity="one">Last %1$d day</item>
+        <item quantity="other">Last %1$d days</item>
+    </plurals>
     <string name="detail_no_data">No data yet</string>
     <string name="stat_low">Low</string>
     <string name="stat_average">Average</string>

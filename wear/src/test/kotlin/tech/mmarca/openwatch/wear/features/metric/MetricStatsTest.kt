@@ -48,6 +48,50 @@ class MetricStatsTest {
     }
 
     @Test
+    fun `the daily average is over the days that are over, without today's part of a day`() {
+        // 9 000 steps yesterday and 300 so far today is an average of 9 000, not of 4 650, nor 1 329 over a week of zeros.
+        val state = MetricUiState(current = 300.0, week = listOf(9_000.0, 300.0))
+
+        val stats = metricStats(MetricTile.STEPS, state, restingHeartRate = null)
+
+        assertEquals(listOf(MetricStat(R.string.stat_daily_average, 9_000.0), MetricStat(R.string.stat_best_day, 9_000.0)), stats)
+    }
+
+    @Test
+    fun `a day without data counts in neither the daily average nor the best day`() {
+        val state = MetricUiState(current = 2_000.0, week = listOf(6_000.0, null, 8_000.0, null, 2_000.0))
+
+        val stats = metricStats(MetricTile.STEPS, state, restingHeartRate = null)
+
+        assertEquals(listOf(MetricStat(R.string.stat_daily_average, 7_000.0), MetricStat(R.string.stat_best_day, 8_000.0)), stats)
+    }
+
+    @Test
+    fun `on the first day there is a best day and no daily average yet`() {
+        val state = MetricUiState(current = 4_200.0, week = listOf(4_200.0))
+
+        val stats = metricStats(MetricTile.STEPS, state, restingHeartRate = null)
+
+        assertEquals(listOf(MetricStat(R.string.stat_best_day, 4_200.0)), stats)
+    }
+
+    @Test
+    fun `today can be the best day`() {
+        val state = MetricUiState(current = 12_000.0, goal = 10_000.0, week = listOf(9_000.0, 12_000.0))
+
+        val stats = metricStats(MetricTile.STEPS, state, restingHeartRate = null)
+
+        assertEquals(
+            listOf(
+                MetricStat(R.string.stat_remaining, 0.0),
+                MetricStat(R.string.stat_daily_average, 9_000.0),
+                MetricStat(R.string.stat_best_day, 12_000.0),
+            ),
+            stats,
+        )
+    }
+
+    @Test
     fun `a sampled metric without a sample today has no low or high`() {
         assertEquals(emptyList<MetricStat>(), metricStats(MetricTile.HEART_RATE, MetricUiState(current = 58.0), restingHeartRate = null))
     }
