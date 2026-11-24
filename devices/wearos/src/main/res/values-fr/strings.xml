@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_watch_wearos_bt_not_paired">Aucune montre Wear OS associée trouvée</string>
+    <string name="settings_watch_wearos_app_running">L\'appli OpenWatch pour Wear OS fonctionne sur la montre</string>
+    <string name="settings_watch_wearos_app_no_answer">Pas de réponse : la montre est éteinte, hors de portée, ou l’app OpenWatch n’y est pas installée ou ne s’exécute pas.</string>
+    <string name="settings_watch_wearos_status_pending">En attente que vous autorisiez ce téléphone sur la montre. Ouvrez OpenWatch sur la montre et touchez Autoriser.</string>
+    <string name="settings_watch_wearos_status_unauthorized_mismatch">La montre a refusé ce téléphone : sa clé ne correspond pas. Sur la montre, ouvrez OpenWatch, oubliez ce téléphone, puis validez à nouveau.</string>
+    <string name="settings_watch_wearos_status_unauthorized_blocked">Ce téléphone est bloqué sur la montre. Sur la montre, ouvrez OpenWatch et débloquez-le.</string>
+    <string name="settings_watch_wearos_status_update_watch">L’app OpenWatch de la montre est plus ancienne que celle-ci. Mettez à jour l’app de la montre.</string>
+    <string name="settings_watch_wearos_status_update_phone">L’app OpenWatch de la montre est plus récente que celle-ci. Mettez à jour OpenWatch sur le téléphone.</string>
+    <string name="settings_watch_wearos_status_protocol">La montre a répondu quelque chose qu’OpenWatch n’a pas pu lire. Mettez à jour les deux apps et réessayez.</string>
+</resources>

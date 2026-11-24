@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_watch_wearos_bt_not_paired">Сопряжённые часы с Wear OS не найдены</string>
+    <string name="settings_watch_wearos_app_running">Приложение OpenWatch для Wear OS работает на часах</string>
+    <string name="settings_watch_wearos_app_no_answer">Нет ответа: часы выключены, вне зоны действия, либо приложение OpenWatch на часах не установлено или не запущено.</string>
+    <string name="settings_watch_wearos_status_pending">Ожидание, пока вы разрешите этот телефон на часах. Откройте OpenWatch на часах и нажмите «Разрешить».</string>
+    <string name="settings_watch_wearos_status_unauthorized_mismatch">Часы отклонили этот телефон: его ключ не совпадает. На часах откройте OpenWatch, забудьте этот телефон и проверьте снова.</string>
+    <string name="settings_watch_wearos_status_unauthorized_blocked">Этот телефон заблокирован на часах. На часах откройте OpenWatch и разблокируйте его.</string>
+    <string name="settings_watch_wearos_status_update_watch">Приложение OpenWatch на часах старше этого. Обновите приложение на часах.</string>
+    <string name="settings_watch_wearos_status_update_phone">Приложение OpenWatch на часах новее этого. Обновите OpenWatch на телефоне.</string>
+    <string name="settings_watch_wearos_status_protocol">Часы ответили то, что OpenWatch не смог прочитать. Обновите оба приложения и попробуйте снова.</string>
+</resources>

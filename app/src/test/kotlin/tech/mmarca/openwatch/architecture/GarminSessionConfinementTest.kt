@@ -13,7 +13,7 @@ import org.junit.Test
 class GarminSessionConfinementTest {
 
     private val link = File(
-        "src/main/kotlin/tech/mmarca/openwatch/devices/garmin/GarminRadioLink.kt",
+        "../devices/garmin/src/main/kotlin/tech/mmarca/openwatch/devices/garmin/GarminRadioLink.kt",
     ).readText()
 
     @Test
@@ -27,6 +27,6 @@ class GarminSessionConfinementTest {
                 "parallel on the default dispatcher and share the transport's plain maps.",
         ).that(hosts).isEqualTo(sessions)
         assertWithMessage("onSessionThread must stay sequential")
-            .that(link).contains("Dispatchers.Default.limitedParallelism(1)")
+            .that(link).contains("dispatchers.default.limitedParallelism(1)")
     }
 }

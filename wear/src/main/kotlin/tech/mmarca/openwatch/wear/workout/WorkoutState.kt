@@ -13,13 +13,16 @@ data class WorkoutUiState(
     val snapshot: WorkoutSnapshot? = null,
     /** True after a stop that kept the workout, until the summary is closed. */
     val finished: Boolean = false,
+    /** True when the workout records a route: decided at the start, false again if location is refused on the way. */
+    val gps: Boolean = false,
 )
 
 /**
  * The workout's state, written by [WorkoutRecorder] in the service and read
- * by the screens: one holder for the process, like `WearLinkState`.
+ * by the screens: one holder for the process, held by `WearGraph` like
+ * `WearLinkState`.
  */
-object WorkoutState {
+class WorkoutState {
     private val flow = MutableStateFlow(WorkoutUiState())
     val state: StateFlow<WorkoutUiState> = flow
 

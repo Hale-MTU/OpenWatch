@@ -4,18 +4,21 @@ import java.util.UUID
 
 /**
  * The line protocol between OpenWatch on the phone and the OpenWatch Wear OS
- * app, over one RFCOMM socket per request. Every line is UTF-8, space-separated
- * fields, `\n`-terminated. The phone sends one request line; the watch answers
- * with zero or more data lines and one terminating line, then both sides close.
+ * app, over an RFCOMM socket. Every line is UTF-8, space-separated fields,
+ * `\n`-terminated. The phone sends a request line; the watch answers with zero
+ * or more data lines and one terminating line, and waits for the next request.
  *
  * One source for both apps: `:wearlink` is compiled into `:app` and `:wear`.
  *
  * Every connection opens with one hello from the phone and one reply from the
  * watch; requests follow only after `OK`:
- * - `HELLO <version> <caps> <token> <name...>` — the phone's protocol version,
- *   its capabilities (`hr,sm` or `-`), the secret it holds for this watch
+ * - `HELLO <version> <caps> <token> <name...>` — the highest version the phone speaks,
+ *   its capabilities (`tm` or `-`), the secret it holds for this watch
  *   (`WearLinkToken`) and its Bluetooth name, the rest of the line.
  * - `OK <version> <caps> <name...>` — the watch knows that token for this phone.
+ *   To a phone that announced `tm` it is `OK <version> <caps,tm> <epochMillis>
+ *   <name...>`: the watch's clock as it answered, so the phone can see skew.
+ *   Only such a phone gets the field, so no other ever reads it as the name.
  * - `PENDING` — the watch does not hold this token for this phone and is asking
  *   the wearer; the phone tries again later. That is a new phone, or a known
  *   one presenting another token (a reinstalled or reset app, or an impostor:
@@ -23,24 +26,18 @@ import java.util.UUID
  * - `UNAUTHORIZED <mismatch|blocked>` — the phone is blocked. `mismatch` is
  *   what an older watch app answers to another token; the phone still reads it.
  * - `VERSION <min> <max>` — the phone's version is outside what the watch speaks.
+ *   A phone that speaks one in that range too says hello once more with the
+ *   highest both speak; a watch answers `OK` with the phone's version, the
+ *   highest both speak. With none in common the range names who is behind.
  * - `ERROR <bad_hello|bad_request|busy|internal>` — the watch could not serve.
  *
  * Requests:
  * - `PING` → `PONG`. Liveness only.
- * - `HR_SINCE <epochMillis> <limit>` → up to `limit` `HR` lines, oldest first,
- *   each newer than `epochMillis` (exclusive), then `END <count> <more>`.
- * - `SM_SINCE <epochMillis> <limit>` → up to `limit` `SM` lines, oldest first,
- *   each newer than `epochMillis` (exclusive), then `END <count> <more>`.
- * - `HV_SINCE <epochMillis> <limit>` → up to `limit` `HV` lines, oldest first,
- *   each newer than `epochMillis` (exclusive), then `END <count> <more>`. The
- *   heart rate variability the watch measured at night; only a watch
- *   announcing `hv` serves it.
- * - `RR_SINCE <epochMillis> <limit>` → `RR` lines, as `HV_SINCE`; only a watch
- *   announcing `rr` serves it.
- * - `SK_SINCE <epochMillis> <limit>` → `SK` lines, as `HV_SINCE`; only a watch
- *   announcing `sk` serves it.
- * - `O2_SINCE <epochMillis> <limit>` → `O2` lines, as `HV_SINCE`; only a watch
- *   announcing `o2` serves it.
+ * - `SINCE <key> <cursor> <limit>` → the series' lines by the watch's sequence
+ *   numbers, then `END <count> <more> <cursor>` ([WearLinkSince]). For every
+ *   series below with one line per value; only a series the watch announces by
+ *   its key (`hr`, `sm`, `st`, `as`, `hv`, `rr`, `sk`, `o2`, `lg`) is served. Version 5
+ *   replaced the eight per-series requests of version 4 (`HR_SINCE` and the rest).
  * - `GET_PREF` → one `PREF <key> <value>` line per setting the watch holds,
  *   then `END <count> 0`. Only a watch announcing `pref` serves it.
  * - `SET_PREF <key> <value>` → `PREF_OK`, or `ERROR bad_request` for a key or
@@ -59,6 +56,8 @@ import java.util.UUID
  *
  * Reply lines:
  * - `HR <epochMillis> <bpm>` — one heart rate sample.
+ * - `ST <minuteMillis> <steps>` — the steps of one clock minute.
+ * - `AS <minuteMillis> <decimetres>` — the height the barometer climbed in one clock minute.
  * - `HV <epochMillis> <rmssd10> <beats>` — one night-time window: its start,
  *   the RMSSD in tenths of a millisecond and the clean beats it rests on.
  * - `RR <epochMillis> <breaths10> <routes>` — the breathing rate of one
@@ -68,6 +67,10 @@ import java.util.UUID
  *   Samsung platform: its time, the saturation in percent, the heart rate.
  * - `SK <minuteMillis> <skin100> <ambient100>` — one minute of the Samsung
  *   platform's skin temperature, in hundredths of a degree Celsius.
+ * - `LG <epochMillis> <type> <value1000> <second1000|-> <m|h>` — one entry made
+ *   on the watch, logged by hand (`h`) or spot-measured (`m`), its values in
+ *   thousandths of its type's unit ([WearLinkEntries]). Added without a
+ *   version bump: a phone that does not know `lg` never asks for it.
  * - `SM <epochMillis> <kind> <offsetSeconds> <flags> <n> <mv10> <bpm|-> <hsd10|->
  *   <hn> <mx> <my> <mz> <sx> <sy> <sz> <zmin|-> <zmax|-> <zd10|->` — one sleep
  *   minute, the sleep pipeline's input on the phone, every field an integer
@@ -79,19 +82,22 @@ import java.util.UUID
  *   standard deviation in milli-g; `zmin`, `zmax` the five-second z-angle
  *   extremes in degrees and `zd10` its mean change times ten.
  * - `END <count> <more>` — `count` data lines were sent; `more` is `1` when the
- *   limit cut the reply short and another request from the last line's time
- *   would return more.
+ *   limit cut the reply short and another request would return more. The `END`
+ *   of a `SINCE` reply carries the cursor to ask with next as a fourth field.
  *
- * A line the receiver cannot parse is skipped, never fatal: an older peer may
- * send something newer.
+ * A line the receiver cannot parse is skipped, never fatal. A data line may grow
+ * at its end: a reader takes the fields it knows and ignores any after them.
  */
 object WearLinkProtocol {
 
-    /** Bumped when a change is not backward compatible; the hello negotiates it. */
-    const val VERSION: Int = 4
+    /**
+     * Bumped when a change is not backward compatible; the hello negotiates it. 5: the
+     * per-series requests gave way to `SINCE`, so a peer of version 4 is told to update.
+     */
+    const val VERSION: Int = 5
 
     /** The oldest version this side still speaks. */
-    const val MIN_VERSION: Int = 4
+    const val MIN_VERSION: Int = 5
 
     /**
      * The RFCOMM service record the watch listens on and the phone connects to.
@@ -108,20 +114,12 @@ object WearLinkProtocol {
     const val ERROR: String = "ERROR"
     const val PING: String = "PING"
     const val PONG: String = "PONG"
-    const val HEART_RATE_SINCE: String = "HR_SINCE"
     const val HEART_RATE: String = "HR"
-    const val SLEEP_MINUTES_SINCE: String = "SM_SINCE"
     const val SLEEP_MINUTE: String = "SM"
-    const val STEPS_SINCE: String = "ST_SINCE"
     const val STEP_MINUTE: String = "ST"
-    const val ASCENT_SINCE: String = "AS_SINCE"
     const val ASCENT_MINUTE: String = "AS"
-    const val HRV_SINCE: String = "HV_SINCE"
     const val HRV_WINDOW: String = "HV"
-    const val RESPIRATORY_SINCE: String = "RR_SINCE"
     const val RESPIRATORY_WINDOW: String = "RR"
-    const val SKIN_SINCE: String = "SK_SINCE"
-    const val SPO2_SINCE: String = "O2_SINCE"
     const val SPO2_MEASUREMENT: String = "O2"
     const val SKIN_MINUTE: String = "SK"
     const val HEART_RATE_LIVE: String = "HR_LIVE"
@@ -145,16 +143,16 @@ object WearLinkProtocol {
     const val CAP_ASCENT: String = "as"
     const val CAP_LIVE_HEART_RATE: String = "hl"
 
-    /** The watch measures heart rate variability at night and serves `HV_SINCE`. */
+    /** The watch measures heart rate variability at night: `SINCE hv`. */
     const val CAP_HRV: String = "hv"
 
-    /** The watch measures the breathing rate in its night windows and serves `RR_SINCE`. */
+    /** The watch measures the breathing rate in its night windows: `SINCE rr`. */
     const val CAP_RESPIRATORY_RATE: String = "rr"
 
-    /** The watch records skin temperature from the Samsung platform and serves `SK_SINCE`. */
+    /** The watch records skin temperature from the Samsung platform: `SINCE sk`. */
     const val CAP_SKIN_TEMPERATURE: String = "sk"
 
-    /** The watch measures SpO2 at night with the Samsung platform and serves `O2_SINCE`. */
+    /** The watch measures SpO2 at night with the Samsung platform: `SINCE o2`. */
     const val CAP_SPO2: String = "o2"
 
     /** The watch takes `PHONE_ACTIVE`: the phone says when the wearer used it. */
@@ -165,6 +163,12 @@ object WearLinkProtocol {
 
     /** The watch takes `GET_PREF` and `SET_PREF`: the phone can show and change its settings. */
     const val CAP_PREFERENCES: String = "pref"
+
+    /** The phone reads the watch's clock in `OK`; a watch announces it back only with the time there. */
+    const val CAP_CLOCK: String = "tm"
+
+    /** The watch keeps the entries made on it, logged by hand or spot-measured: `SINCE lg` ([WearLinkEntries]). */
+    const val CAP_ENTRIES: String = "lg"
 
     /**
      * The settings the phone may read with `GET_PREF` and change with
@@ -240,7 +244,8 @@ object WearLinkProtocol {
 
     /** The watch's answer to a hello. */
     sealed class HelloReply {
-        data class Ok(val version: Int, val capabilities: Set<String>, val name: String) : HelloReply()
+        /** [clockMillis] is the watch's time as it answered, for a phone that announced [CAP_CLOCK]; [capabilities] never hold it. */
+        data class Ok(val version: Int, val capabilities: Set<String>, val name: String, val clockMillis: Long? = null) : HelloReply()
         data object Pending : HelloReply()
         data class Unauthorized(val reason: UnauthorizedReason) : HelloReply()
         data class VersionMismatch(val min: Int, val max: Int) : HelloReply()
@@ -250,19 +255,12 @@ object WearLinkProtocol {
     /** A request after the hello. */
     sealed class Request {
         data object Ping : Request()
-        data class HeartRateSince(val sinceEpochMillis: Long, val limit: Int) : Request()
-        data class SleepMinutesSince(val sinceEpochMillis: Long, val limit: Int) : Request()
-        data class StepsSince(val sinceEpochMillis: Long, val limit: Int) : Request()
-        data class AscentSince(val sinceEpochMillis: Long, val limit: Int) : Request()
-        data class HrvSince(val sinceEpochMillis: Long, val limit: Int) : Request()
         data class PhoneActive(val epochMillis: Long) : Request()
         data class WorkoutsSince(val sinceEpochMillis: Long, val limit: Int) : Request()
         data class SetPreference(val key: String, val value: String) : Request()
         data object GetPreferences : Request()
-        data class RespiratorySince(val sinceEpochMillis: Long, val limit: Int) : Request()
-        data class SkinSince(val sinceEpochMillis: Long, val limit: Int) : Request()
-        data class Spo2Since(val sinceEpochMillis: Long, val limit: Int) : Request()
         data class LiveHeartRate(val seconds: Int) : Request()
+        data class SeriesSince(val key: String, val cursor: String, val limit: Int) : Request()
     }
 
     fun formatHello(hello: Hello): String =
@@ -280,7 +278,9 @@ object WearLinkProtocol {
     }
 
     fun formatHelloReply(reply: HelloReply): String = when (reply) {
-        is HelloReply.Ok -> "$OK ${reply.version} ${formatCapabilities(reply.capabilities)} ${cleanName(reply.name)}"
+        is HelloReply.Ok -> reply.clockMillis?.let { clock ->
+            "$OK ${reply.version} ${formatCapabilities(reply.capabilities + CAP_CLOCK)} $clock ${cleanName(reply.name)}"
+        } ?: "$OK ${reply.version} ${formatCapabilities(reply.capabilities - CAP_CLOCK)} ${cleanName(reply.name)}"
         HelloReply.Pending -> PENDING
         is HelloReply.Unauthorized -> "$UNAUTHORIZED ${reply.reason.word}"
         is HelloReply.VersionMismatch -> "$VERSION_WORD ${reply.min} ${reply.max}"
@@ -296,7 +296,9 @@ object WearLinkProtocol {
                 if (fields.size < 3) return null
                 val version = fields[1].toIntOrNull() ?: return null
                 val capabilities = parseCapabilities(fields[2]) ?: return null
-                HelloReply.Ok(version, capabilities, cleanName(fields.drop(3).joinToString(" ")))
+                if (CAP_CLOCK !in capabilities) return HelloReply.Ok(version, capabilities, cleanName(fields.drop(3).joinToString(" ")))
+                val clock = fields.getOrNull(3)?.toLongOrNull() ?: return null
+                HelloReply.Ok(version, capabilities - CAP_CLOCK, cleanName(fields.drop(4).joinToString(" ")), clock)
             }
             PENDING -> if (fields.size == 1) HelloReply.Pending else null
             UNAUTHORIZED -> if (fields.size == 2) UnauthorizedReason.fromWord(fields[1])?.let(HelloReply::Unauthorized) else null
@@ -315,42 +317,22 @@ object WearLinkProtocol {
 
     fun formatRequest(request: Request): String = when (request) {
         Request.Ping -> PING
-        is Request.HeartRateSince -> formatHeartRateRequest(request.sinceEpochMillis, request.limit)
-        is Request.SleepMinutesSince -> formatSleepMinutesRequest(request.sinceEpochMillis, request.limit)
-        is Request.StepsSince -> formatStepsRequest(request.sinceEpochMillis, request.limit)
-        is Request.AscentSince -> formatAscentRequest(request.sinceEpochMillis, request.limit)
-        is Request.HrvSince -> formatHrvRequest(request.sinceEpochMillis, request.limit)
         is Request.PhoneActive -> "$PHONE_ACTIVE ${request.epochMillis}"
         is Request.WorkoutsSince -> "$WORKOUTS_SINCE ${request.sinceEpochMillis} ${request.limit.coerceIn(1, MAX_WORKOUTS_PER_REQUEST)}"
         is Request.SetPreference -> "$SET_PREFERENCE ${request.key} ${request.value}"
         Request.GetPreferences -> GET_PREFERENCES
-        is Request.RespiratorySince -> "$RESPIRATORY_SINCE ${request.sinceEpochMillis} ${request.limit.coerceIn(1, MAX_WINDOWS_PER_REQUEST)}"
-        is Request.Spo2Since -> "$SPO2_SINCE ${request.sinceEpochMillis} ${request.limit.coerceIn(1, MAX_WINDOWS_PER_REQUEST)}"
-        is Request.SkinSince -> "$SKIN_SINCE ${request.sinceEpochMillis} ${request.limit.coerceIn(1, MAX_SKIN_MINUTES_PER_REQUEST)}"
         is Request.LiveHeartRate -> "$HEART_RATE_LIVE ${request.seconds.coerceIn(1, MAX_LIVE_SECONDS)}"
+        is Request.SeriesSince -> WearLinkSince.formatRequest(request)
     }
 
     /** Null unless [line] is a well-formed request. */
     fun parseRequest(line: String): Request? {
         if (isPing(line)) return Request.Ping
-        parseHeartRateRequest(line)?.let { return Request.HeartRateSince(it.sinceEpochMillis, it.limit) }
-        parseSleepMinutesRequest(line)?.let { return Request.SleepMinutesSince(it.sinceEpochMillis, it.limit) }
-        parseSinceRequest(line, STEPS_SINCE, MAX_STEP_MINUTES_PER_REQUEST)?.let { (since, limit) ->
-            return Request.StepsSince(since, limit)
-        }
-        parseSinceRequest(line, ASCENT_SINCE, MAX_ASCENT_MINUTES_PER_REQUEST)?.let { (since, limit) ->
-            return Request.AscentSince(since, limit)
-        }
-        parseSinceRequest(line, HRV_SINCE, MAX_HRV_WINDOWS_PER_REQUEST)?.let { (since, limit) ->
-            return Request.HrvSince(since, limit)
-        }
+        WearLinkSince.parseRequest(line)?.let { return it }
         parsePhoneActive(line)?.let { return it }
         parseSinceRequest(line, WORKOUTS_SINCE, MAX_WORKOUTS_PER_REQUEST)?.let { (since, limit) -> return Request.WorkoutsSince(since, limit) }
         if (fields(line) == listOf(GET_PREFERENCES)) return Request.GetPreferences
         parsePreferenceRequest(line)?.let { return it }
-        parseSinceRequest(line, RESPIRATORY_SINCE, MAX_WINDOWS_PER_REQUEST)?.let { (since, limit) -> return Request.RespiratorySince(since, limit) }
-        parseSinceRequest(line, SPO2_SINCE, MAX_WINDOWS_PER_REQUEST)?.let { (since, limit) -> return Request.Spo2Since(since, limit) }
-        parseSinceRequest(line, SKIN_SINCE, MAX_SKIN_MINUTES_PER_REQUEST)?.let { (since, limit) -> return Request.SkinSince(since, limit) }
         parseLiveRequest(line)?.let { return Request.LiveHeartRate(it) }
         return null
     }
@@ -381,32 +363,11 @@ object WearLinkProtocol {
             .joinToString(" ")
             .take(MAX_NAME_LENGTH)
 
-    /** The most samples one `HR_SINCE` reply carries. The phone pages past it. */
-    const val MAX_SAMPLES_PER_REQUEST: Int = 2000
-
-    /** The most minutes one `SM_SINCE` reply carries: a day and a half. The phone pages past it. */
-    const val MAX_MINUTES_PER_REQUEST: Int = 2000
-
-    /** The most step minutes one `ST_SINCE` reply carries. The phone pages past it. */
-    const val MAX_STEP_MINUTES_PER_REQUEST: Int = 2000
-
     /** The longest one `HR_LIVE` runs: below the watch's 15-second idle timeout. The phone asks again. */
     const val MAX_LIVE_SECONDS: Int = 10
 
-    /** The most ascent minutes one `AS_SINCE` reply carries. The phone pages past it. */
-    const val MAX_ASCENT_MINUTES_PER_REQUEST: Int = 2000
-
-    /** The most HRV windows one `HV_SINCE` reply carries: a week at 2 a night is far below it. */
-    const val MAX_HRV_WINDOWS_PER_REQUEST: Int = 500
-
     /** The most workouts one `WO_SINCE` reply carries; each brings its own route, so the phone pages by workout. */
     const val MAX_WORKOUTS_PER_REQUEST: Int = 5
-
-    /** The most breathing windows one `RR_SINCE` reply carries, as for HRV. */
-    const val MAX_WINDOWS_PER_REQUEST: Int = 500
-
-    /** The most skin temperature minutes one `SK_SINCE` reply carries. The phone pages past it. */
-    const val MAX_SKIN_MINUTES_PER_REQUEST: Int = 2000
 
     /**
      * One night-time heart rate variability window, keyed on its start: the
@@ -430,11 +391,7 @@ object WearLinkProtocol {
         val skinCelsius: Double get() = skin100 / 100.0
     }
 
-    data class HeartRateRequest(val sinceEpochMillis: Long, val limit: Int)
-
     data class HeartRateSample(val epochMillis: Long, val bpm: Int)
-
-    data class SleepMinutesRequest(val sinceEpochMillis: Long, val limit: Int)
 
     /**
      * The steps the watch counted in one clock minute, keyed on the minute's
@@ -506,33 +463,12 @@ object WearLinkProtocol {
 
     data class End(val count: Int, val more: Boolean)
 
-    fun formatHeartRateRequest(sinceEpochMillis: Long, limit: Int): String =
-        "$HEART_RATE_SINCE $sinceEpochMillis ${limit.coerceIn(1, MAX_SAMPLES_PER_REQUEST)}"
-
-    /** Null unless [line] is a well-formed `HR_SINCE` request. The limit is clamped. */
-    fun parseHeartRateRequest(line: String): HeartRateRequest? =
-        parseSinceRequest(line, HEART_RATE_SINCE, MAX_SAMPLES_PER_REQUEST)?.let { (since, limit) ->
-            HeartRateRequest(since, limit)
-        }
-
-    fun formatSleepMinutesRequest(sinceEpochMillis: Long, limit: Int): String =
-        "$SLEEP_MINUTES_SINCE $sinceEpochMillis ${limit.coerceIn(1, MAX_MINUTES_PER_REQUEST)}"
-
-    /** Null unless [line] is a well-formed `SM_SINCE` request. The limit is clamped. */
-    fun parseSleepMinutesRequest(line: String): SleepMinutesRequest? =
-        parseSinceRequest(line, SLEEP_MINUTES_SINCE, MAX_MINUTES_PER_REQUEST)?.let { (since, limit) ->
-            SleepMinutesRequest(since, limit)
-        }
-
-    fun formatStepsRequest(sinceEpochMillis: Long, limit: Int): String =
-        "$STEPS_SINCE $sinceEpochMillis ${limit.coerceIn(1, MAX_STEP_MINUTES_PER_REQUEST)}"
-
     fun formatStepMinute(minute: StepMinute): String = "$STEP_MINUTE ${minute.epochMillis} ${minute.steps}"
 
     /** Null unless [line] is a well-formed `ST` line: a minute start and a plausible count. */
     fun parseStepMinute(line: String): StepMinute? {
         val fields = fields(line)
-        if (fields.size != 3 || fields[0] != STEP_MINUTE) return null
+        if (fields.size < 3 || fields[0] != STEP_MINUTE) return null
         val at = fields[1].toLongOrNull() ?: return null
         val steps = fields[2].toIntOrNull() ?: return null
         if (at <= 0 || at % MINUTE_MILLIS != 0L || steps !in 1..MAX_STEPS_PER_MINUTE) return null
@@ -574,7 +510,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `RR` line: a time, a breathing rate of 6 to 30 a minute, one or two routes. */
     fun parseRespiratoryWindow(line: String): RespiratoryWindow? {
         val fields = fields(line)
-        if (fields.size != 4 || fields[0] != RESPIRATORY_WINDOW) return null
+        if (fields.size < 4 || fields[0] != RESPIRATORY_WINDOW) return null
         val at = fields[1].toLongOrNull() ?: return null
         val breaths10 = fields[2].toIntOrNull() ?: return null
         val routes = fields[3].toIntOrNull() ?: return null
@@ -588,7 +524,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `O2` line: a time, 70 to 100 percent, and a plausible heart rate or none. */
     fun parseSpo2(line: String): Spo2Measurement? {
         val fields = fields(line)
-        if (fields.size != 4 || fields[0] != SPO2_MEASUREMENT) return null
+        if (fields.size < 4 || fields[0] != SPO2_MEASUREMENT) return null
         val at = fields[1].toLongOrNull() ?: return null
         val percent = fields[2].toIntOrNull() ?: return null
         val bpm = if (fields[3] == NO_VALUE) null else fields[3].toIntOrNull() ?: return null
@@ -601,7 +537,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `SK` line: a minute start and temperatures a wrist can have. */
     fun parseSkinMinute(line: String): SkinMinute? {
         val fields = fields(line)
-        if (fields.size != 4 || fields[0] != SKIN_MINUTE) return null
+        if (fields.size < 4 || fields[0] != SKIN_MINUTE) return null
         val at = fields[1].toLongOrNull() ?: return null
         val skin = fields[2].toIntOrNull() ?: return null
         val ambient = fields[3].toIntOrNull() ?: return null
@@ -609,15 +545,12 @@ object WearLinkProtocol {
         return SkinMinute(at, skin, ambient)
     }
 
-    fun formatHrvRequest(sinceEpochMillis: Long, limit: Int): String =
-        "$HRV_SINCE $sinceEpochMillis ${limit.coerceIn(1, MAX_HRV_WINDOWS_PER_REQUEST)}"
-
     fun formatHrvWindow(window: HrvWindow): String = "$HRV_WINDOW ${window.epochMillis} ${window.rmssd10} ${window.beats}"
 
     /** Null unless [line] is a well-formed `HV` line: a time, a plausible RMSSD and a plausible beat count. */
     fun parseHrvWindow(line: String): HrvWindow? {
         val fields = fields(line)
-        if (fields.size != 4 || fields[0] != HRV_WINDOW) return null
+        if (fields.size < 4 || fields[0] != HRV_WINDOW) return null
         val at = fields[1].toLongOrNull() ?: return null
         val rmssd10 = fields[2].toIntOrNull() ?: return null
         val beats = fields[3].toIntOrNull() ?: return null
@@ -625,15 +558,12 @@ object WearLinkProtocol {
         return HrvWindow(at, rmssd10, beats)
     }
 
-    fun formatAscentRequest(sinceEpochMillis: Long, limit: Int): String =
-        "$ASCENT_SINCE $sinceEpochMillis ${limit.coerceIn(1, MAX_ASCENT_MINUTES_PER_REQUEST)}"
-
     fun formatAscentMinute(minute: AscentMinute): String = "$ASCENT_MINUTE ${minute.epochMillis} ${minute.decimetres}"
 
     /** Null unless [line] is a well-formed `AS` line: a minute start and a plausible ascent. */
     fun parseAscentMinute(line: String): AscentMinute? {
         val fields = fields(line)
-        if (fields.size != 3 || fields[0] != ASCENT_MINUTE) return null
+        if (fields.size < 3 || fields[0] != ASCENT_MINUTE) return null
         val at = fields[1].toLongOrNull() ?: return null
         val decimetres = fields[2].toIntOrNull() ?: return null
         if (at <= 0 || at % MINUTE_MILLIS != 0L || decimetres !in 1..MAX_ASCENT_DECIMETRES_PER_MINUTE) return null
@@ -645,7 +575,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `HR` line with a plausible rate. */
     fun parseSample(line: String): HeartRateSample? {
         val fields = fields(line)
-        if (fields.size != 3 || fields[0] != HEART_RATE) return null
+        if (fields.size < 3 || fields[0] != HEART_RATE) return null
         val at = fields[1].toLongOrNull() ?: return null
         val bpm = fields[2].toIntOrNull() ?: return null
         if (at <= 0 || bpm !in MIN_BPM..MAX_BPM) return null
@@ -666,7 +596,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `SM` line. A rate outside the plausible range reads as none. */
     fun parseSleepMinute(line: String): SleepMinute? {
         val f = fields(line)
-        if (f.size != SLEEP_MINUTE_FIELDS || f[0] != SLEEP_MINUTE) return null
+        if (f.size < SLEEP_MINUTE_FIELDS || f[0] != SLEEP_MINUTE) return null
         val at = f[1].toLongOrNull() ?: return null
         val kind = MinuteKind.fromCode(f[2]) ?: return null
         val offset = f[3].toIntOrNull() ?: return null
@@ -717,7 +647,7 @@ object WearLinkProtocol {
     /** Null unless [line] is a well-formed `END` line. */
     fun parseEnd(line: String): End? {
         val fields = fields(line)
-        if (fields.size != 3 || fields[0] != END) return null
+        if (fields.size < 3 || fields[0] != END) return null
         val count = fields[1].toIntOrNull() ?: return null
         val more = when (fields[2]) {
             "0" -> false

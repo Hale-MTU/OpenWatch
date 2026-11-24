@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.features.watches
 
-import tech.mmarca.openwatch.devices.core.pairing.CompanionFilter
+import androidx.lifecycle.SavedStateHandle
+import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import android.content.Context
 import io.mockk.every
 import io.mockk.just
@@ -22,12 +23,13 @@ import tech.mmarca.openwatch.data.repository.BleDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.devices.core.DeviceClassification
 import tech.mmarca.openwatch.devices.core.pairing.WatchBondResult
-import tech.mmarca.openwatch.devices.core.pairing.WatchPairingPort
 import tech.mmarca.openwatch.devices.garmin.GarminGattReport
 import tech.mmarca.openwatch.devices.garmin.GarminTransportProbe
 import tech.mmarca.openwatch.devices.garmin.GarminTransportVariant
 import tech.mmarca.openwatch.devices.garmin.OnboardGarminWatchUseCase
 import tech.mmarca.openwatch.devices.wearos.OnboardWearOsWatchUseCase
+import tech.mmarca.openwatch.features.watches.garmin.GarminWatchOnboarding
+import tech.mmarca.openwatch.features.watches.wearos.WearOsWatchOnboarding
 import tech.mmarca.openwatch.domain.model.OsPermissionCatalog
 import tech.mmarca.openwatch.domain.model.OsPermissionId
 import tech.mmarca.openwatch.domain.model.OsPermissionRow
@@ -36,6 +38,9 @@ import tech.mmarca.openwatch.domain.model.BleDiscoveredDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.sensors.ble.BleSensorCoordinator
 import tech.mmarca.openwatch.util.MainDispatcherRule
+import tech.mmarca.openwatch.devices.garmin.isGarmin
+import tech.mmarca.openwatch.devices.wearos.isWearOs
+import tech.mmarca.openwatch.devices.core.pairing.FakeWatchPairing
 
 /**
  * The sheet-level flow: no capability probe for a GFDI device, what a refused pairing leaves
@@ -45,37 +50,6 @@ class WatchesViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
-
-    /** Records what onboarding asked the platform to do; answers as set up. */
-    private class FakePairing : WatchPairingPort {
-        var bondResult = WatchBondResult.BONDED
-        var associateResult = true
-        val calls = mutableListOf<String>()
-
-        override suspend fun bond(address: String): WatchBondResult {
-            calls.add("bond:$address")
-            return bondResult
-        }
-
-        override suspend fun removeBond(address: String) {
-            calls.add("removeBond:$address")
-        }
-
-        override suspend fun associateCompanion(
-            address: String,
-            displayName: String?,
-            filter: CompanionFilter,
-        ): Boolean {
-            calls.add("associate:$address")
-            return associateResult
-        }
-
-        override suspend fun disassociateCompanion(address: String) {
-            calls.add("disassociate:$address")
-        }
-
-        override fun isCompanionAssociated(address: String): Boolean = false
-    }
 
     /** Canned GATT verdict; never opens a connection. */
     private class FakeProbe : GarminTransportProbe {
@@ -89,7 +63,7 @@ class WatchesViewModelTest {
     }
 
     private lateinit var repo: BleDeviceRepository
-    private lateinit var pairing: FakePairing
+    private lateinit var pairing: FakeWatchPairing
     private lateinit var probe: FakeProbe
     private lateinit var coordinator: BleSensorCoordinator
 
@@ -123,8 +97,8 @@ class WatchesViewModelTest {
     fun setUp() {
         val context = mockk<Context>()
         every { context.getSharedPreferences(any(), any()) } returns FakeSharedPreferences()
-        repo = BleDeviceRepository(context)
-        pairing = FakePairing()
+        repo = testDeviceRepository()
+        pairing = FakeWatchPairing()
         probe = FakeProbe()
         coordinator = mockk<BleSensorCoordinator>().also { fake ->
             every { fake.discoveredDevices } returns MutableStateFlow(emptyList())
@@ -149,13 +123,19 @@ class WatchesViewModelTest {
         every { service.watchSetupCatalog() } returns catalog
     }
 
+    private val savedState = SavedStateHandle()
+
     private fun viewModel(
         os: OsPermissionsService = osPermissions(),
     ) = WatchesViewModel(
+        savedStateHandle = savedState,
         deviceRepository = repo,
         sensorCoordinator = coordinator,
-        onboardGarminWatch = OnboardGarminWatchUseCase(pairing, repo, probe),
-        onboardWearOsWatch = OnboardWearOsWatchUseCase(pairing, repo),
+        // The two families' pairings as their feature modules bind them.
+        onboardings = mapOf(
+            "GARMIN" to GarminWatchOnboarding(OnboardGarminWatchUseCase(pairing, repo, probe)),
+            "WEAROS" to WearOsWatchOnboarding(OnboardWearOsWatchUseCase(pairing, repo)),
+        ),
         osPermissionsService = os,
     )
 
@@ -239,10 +219,13 @@ class WatchesViewModelTest {
         verify(exactly = 1) { service.openSettingsFor(OsPermissionId.BATTERY_OPTIMIZATION) }
         verify(exactly = 0) { service.openSettingsFor(OsPermissionId.NOTIFICATION_FORWARDING) }
 
+        // Android reclaims the process while its settings screen shows; the walk is not lost.
+        val back = viewModel(os = service)
+
         // Coming back from that screen hands over the next one.
-        vm.openNextSpecialPermission()
+        back.openNextSpecialPermission()
         verify(exactly = 1) { service.openSettingsFor(OsPermissionId.NOTIFICATION_FORWARDING) }
-        assertTrue(vm.uiState.value.pendingSpecialPermissions.isEmpty())
+        assertTrue(back.uiState.value.pendingSpecialPermissions.isEmpty())
     }
 
     @Test
@@ -321,10 +304,9 @@ class WatchesViewModelTest {
         vm.openAddFlow()
         vm.selectDiscoveredDevice(watch)
 
-        var closed: Boolean? = null
-        vm.onboardSelectedWatch { closed = it }
+        vm.onboardSelectedWatch()
 
-        assertEquals(true, closed)
+        assertFalse(vm.uiState.value.showAddFlow)
         assertEquals(1, repo.devices.size)
         assertEquals(BleDeviceKind.WATCH, repo.devices.single().kind)
         assertFalse(vm.uiState.value.isOnboarding)
@@ -347,7 +329,7 @@ class WatchesViewModelTest {
         val registered = repo.devices.single()
         assertEquals(BleDeviceKind.BIKE_COMPUTER, registered.kind)
         assertTrue(registered.isBikeComputer)
-        assertTrue(registered.isGarminGfdi)
+        assertTrue(registered.isGarmin)
         assertTrue(registered.capabilities.isEmpty())
     }
 
@@ -358,16 +340,15 @@ class WatchesViewModelTest {
         vm.openAddFlow()
         vm.selectDiscoveredDevice(watch)
 
-        var closed: Boolean? = null
-        vm.onboardSelectedWatch { closed = it }
+        vm.onboardSelectedWatch()
 
-        assertEquals(false, closed)
+        assertTrue(vm.uiState.value.showAddFlow)
         assertTrue(repo.devices.isEmpty())
         // The sheet must survive: re-scanning to retry a mistyped code is a pointless round trip.
         assertNotNull(vm.uiState.value.selectedDevice)
         assertTrue(vm.uiState.value.showAddFlow)
         assertFalse(vm.uiState.value.isOnboarding)
-        assertNotNull(vm.uiState.value.errorMessage)
+        assertNotNull(vm.uiState.value.error)
     }
 
     private val wearOsWatch = BleDiscoveredDevice(
@@ -385,10 +366,9 @@ class WatchesViewModelTest {
         vm.openAddFlow()
         vm.selectDiscoveredDevice(wearOsWatch)
 
-        var closed: Boolean? = null
-        vm.onboardSelectedWatch { closed = it }
+        vm.onboardSelectedWatch()
 
-        assertEquals(false, closed)
+        assertTrue(vm.uiState.value.showAddFlow)
         assertTrue(repo.devices.isEmpty())
         assertTrue(vm.uiState.value.showAddFlow)
         assertTrue(vm.uiState.value.companionRequired)
@@ -402,11 +382,10 @@ class WatchesViewModelTest {
         vm.openAddFlow()
         vm.selectDiscoveredDevice(wearOsWatch)
 
-        var closed: Boolean? = null
-        vm.onboardSelectedWatch { closed = it }
+        vm.onboardSelectedWatch()
 
-        assertEquals(true, closed)
-        assertTrue(repo.devices.single().isWearosWatch)
+        assertFalse(vm.uiState.value.showAddFlow)
+        assertTrue(repo.devices.single().isWearOs)
         assertFalse(vm.uiState.value.companionRequired)
         assertEquals(null, vm.uiState.value.onboardNotice)
     }
@@ -418,10 +397,9 @@ class WatchesViewModelTest {
         vm.openAddFlow()
         vm.selectDiscoveredDevice(watch)
 
-        var closed: Boolean? = null
-        vm.onboardSelectedWatch { closed = it }
+        vm.onboardSelectedWatch()
 
-        assertEquals(true, closed)
+        assertFalse(vm.uiState.value.showAddFlow)
         assertEquals(1, repo.devices.size)
         assertEquals(WatchOnboardNotice.NO_COMPANION, vm.uiState.value.onboardNotice)
     }

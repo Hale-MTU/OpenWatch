@@ -1,10 +1,13 @@
 # The gate. A pull request and a push to main run it; the release workflow
 # (release.yml) looks its result up instead of running it again.
 #
-# Three jobs. app-test on every pull request and push; lint on pushes to main
-# only (lint alone is half of the gate's task time, and a finding is rarely
-# what a review turns on; main catches it before a nightly ships); wear-test
-# when the watch app or the build plumbing it shares with the phone changed.
+# submodule-pointers on every pull request and push, and three jobs that
+# build. app-test and lint when the phone side changed, lint in a job of its
+# own since it is half of the gate's task time; a new lint warning fails it
+# (each module's lint-baseline.xml holds the old ones); wear-test when the
+# watch app or the build plumbing it shares with the phone changed. On a push
+# to main, android-test (android-test.yml) also runs the instrumented tests on
+# emulators, for the same sides.
 # Locally the whole gate is one invocation, verifyCi.
 #
 # Every workflow pins ubuntu-26.04, the image ubuntu-latest moves to between
@@ -34,7 +37,7 @@ defaults:
 jobs:
   # Which parts of the tree the change touched. The watch gate runs for the
   # watch app and the build plumbing it shares with the phone; the phone gate
-  # for anything outside wear/. A change to this file runs both.
+  # for anything outside wear/. A change to this file or android-test.yml runs both.
   context:
     runs-on: ubuntu-26.04
     outputs:
@@ -42,7 +45,7 @@ jobs:
       run_lint: ${{ steps.plan.outputs.run_lint }}
       run_wear: ${{ steps.plan.outputs.run_wear }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           # The OpenLink and health-calculations libraries are submodules the apps build from.
           submodules: true
@@ -51,6 +54,10 @@ jobs:
       # file that does not exist would be a 404 there, so it fails here.
       - name: Check the docs' links
         run: python3 scripts/sync-wiki.py --repo "$GITHUB_REPOSITORY" --check
+      # The submodules are composite builds with catalogs of their own; a shared version that
+      # drifted would surface as a plugin conflict or a silent upgrade.
+      - name: Check the versions shared with the submodules
+        run: python3 scripts/ci-catalog-alignment.py
       - id: changes
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -62,7 +69,7 @@ jobs:
             while IFS= read -r f; do
               case "$f" in
                 wear/*) wear=true ;;
-                wearlink/*|build.gradle.kts|settings.gradle.kts|settings-gradle.lockfile|gradle/*|gradlew|scripts/ci-*|.github/workflows/verify.yml) wear=true; phone=true ;;
+                wearlink/*|build-logic/*|health-calculations|.gitmodules|build.gradle.kts|settings.gradle.kts|settings-gradle.lockfile|gradle.properties|gradle/*|gradlew|scripts/ci-*|.github/workflows/verify.yml|.github/workflows/android-test.yml) wear=true; phone=true ;;
                 *) phone=true ;;
               esac
             done < changed.txt
@@ -74,16 +81,23 @@ jobs:
           echo "wear=$wear" >> "$GITHUB_OUTPUT"
       - id: plan
         env:
-          EVENT: ${{ github.event_name }}
           PHONE: ${{ steps.changes.outputs.phone }}
           WEAR: ${{ steps.changes.outputs.wear }}
         run: |
-          run_lint=false
-          if [ "$EVENT" = "push" ]; then run_lint=$PHONE; fi
           {
-            echo "run_tests=$PHONE"; echo "run_lint=$run_lint"; echo "run_wear=$WEAR"
+            echo "run_tests=$PHONE"; echo "run_lint=$PHONE"; echo "run_wear=$WEAR"
           } >> "$GITHUB_OUTPUT"
-          echo "plan: tests=$PHONE lint=$run_lint wear=$WEAR"
+          echo "plan: tests=$PHONE lint=$PHONE wear=$WEAR"
+
+  # A submodule pointer that names a commit only a pull request branch holds
+  # builds until that branch is deleted, and then no fresh clone can check it
+  # out. So each pointer must be on its library's default branch: the library's
+  # pull request merges first. Until it has, this job is red on purpose.
+  submodule-pointers:
+    runs-on: ubuntu-26.04
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - run: scripts/ci-submodule-pointers.sh
 
   # The stock runner ships JDK 17 and the Android SDK; scripts/ci-android-setup.sh
   # installs the platform and build-tools when the image lacks them. Each job
@@ -91,7 +105,7 @@ jobs:
   # off when the runner already has one with caches in it. A step, since a
   # job-level env cannot read the runner context.
 
-  # verifyCiUnitTest (:wearlink:test, :domain:testCiUnitTest, :app:testCiUnitTest)
+  # verifyCiUnitTest (:wearlink:test, each library module's tests, :app:testCiUnitTest)
   # and verifyCiPreflight (verifyTranslations, :app:checkCiDuplicateClasses,
   # :app:compileCiAndroidTestKotlin). No lint here, so every core gets a test
   # fork (app/build.gradle.kts reads openwatch.testForks).
@@ -100,32 +114,33 @@ jobs:
     if: needs.context.outputs.run_tests == 'true'
     runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           # The OpenLink and health-calculations libraries are submodules the apps build from.
           submodules: true
       - run: echo "GRADLE_USER_HOME=$RUNNER_TEMP/gradle-user-home" >> "$GITHUB_ENV"
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       - run: scripts/ci-android-gradle.sh -Popenwatch.testForks=4 verifyCiUnitTest verifyCiPreflight
       - run: git diff --check
 
-  # verifyCiLint (:app:lintCi, :domain:lintCi).
+  # verifyCiLint (:app:lintCi, :core:health-api:lintCi and each pure-Kotlin library module's lint).
   lint:
     needs: context
     if: needs.context.outputs.run_lint == 'true'
     runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           # The OpenLink and health-calculations libraries are submodules the apps build from.
           submodules: true
       - run: echo "GRADLE_USER_HOME=$RUNNER_TEMP/gradle-user-home" >> "$GITHUB_ENV"
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       - run: scripts/ci-android-gradle.sh verifyCiLint
       - run: git diff --check
 
-  # verifyWearCi (:wearlink:test, :wear:testDebugUnitTest, :wear:lintDebug,
-  # :wear:assembleDebug, :wear:compileDebugAndroidTestKotlin). One invocation:
+  # verifyWearCi (:wearlink:test, :wear:recording-core:test, :wear:recording-core:lint,
+  # :wear:testCiUnitTest, :wear:lintCi, :wear:assembleDebug,
+  # :wear:compileDebugAndroidTestKotlin, :app:architectureTest). One invocation:
   # the watch module is small enough that splitting it would cost more in setup
   # than it saves.
   wear-test:
@@ -133,11 +148,23 @@ jobs:
     if: needs.context.outputs.run_wear == 'true'
     runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           # The OpenLink and health-calculations libraries are submodules the apps build from.
           submodules: true
       - run: echo "GRADLE_USER_HOME=$RUNNER_TEMP/gradle-user-home" >> "$GITHUB_ENV"
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       - run: scripts/ci-android-gradle.sh verifyWearCi
       - run: git diff --check
+
+  # The instrumented tests on emulators, on a push to main only: a quarter of an
+  # hour, too long for every pull request. The push run is the one the release
+  # reads, so a failure here holds the nightly and any tag on that commit.
+  # android-test.yml also runs by hand on any branch.
+  android-test:
+    needs: context
+    if: github.event_name == 'push' && (needs.context.outputs.run_tests == 'true' || needs.context.outputs.run_wear == 'true')
+    uses: ./.github/workflows/android-test.yml
+    with:
+      phone: ${{ needs.context.outputs.run_tests == 'true' }}
+      wear: ${{ needs.context.outputs.run_wear == 'true' }}

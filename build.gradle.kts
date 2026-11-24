@@ -8,21 +8,20 @@ plugins {
     alias(libs.plugins.kotlin.jvm) apply false
     alias(libs.plugins.hilt.android) apply false
     alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
 }
 
-val openWatchGroup = providers.gradleProperty("openWatchGroup")
-    .orElse("tech.mmarca.openwatch")
-val openWatchArtifactVersion = providers.gradleProperty("openWatchArtifactVersion")
-    .orElse(providers.environmentVariable("OPENWATCH_ARTIFACT_VERSION"))
-    .orElse(providers.gradleProperty("openwatch.versionName").map { "$it-SNAPSHOT" })
-
-allprojects {
-    group = openWatchGroup.get()
-    version = openWatchArtifactVersion.get()
-
-    dependencyLocking {
-        lockAllConfigurations()
+// The plugins' own classpath (AGP, Kotlin, Hilt, KSP and what they pull in) is locked too, in
+// buildscript-gradle.lockfile: a plugin's transitive dependency cannot move on its own.
+buildscript {
+    configurations.classpath {
+        resolutionStrategy.activateDependencyLocking()
     }
+}
+
+// Each module's coordinates and lockfile come from its convention plugin (build-logic/).
+dependencyLocking {
+    lockAllConfigurations()
 }
 
 tasks.named<UpdateDaemonJvm>("updateDaemonJvm") {
@@ -31,13 +30,17 @@ tasks.named<UpdateDaemonJvm>("updateDaemonJvm") {
     languageVersion = JavaLanguageVersion.of(17)
 }
 
+// The device is named, never guessed: with ANDROID_SERIAL unset this does nothing, so it cannot
+// land on whatever phone or watch adb happens to see. CI sets it to the emulator it boots
+// (.github/workflows/android-test.yml).
 val hasAndroidSerial = providers.environmentVariable("ANDROID_SERIAL").isPresent
-val isCiEnvironment = providers.environmentVariable("CI").isPresent
 
+// The phone side's instrumented tests; a module that gains some adds its connected task here,
+// and CI's emulator job runs them with it.
 tasks.register("verifyAndroidTest") {
     group = "verification"
-    description = "Runs connectedCiAndroidTest for local connected-device checks."
-    enabled = hasAndroidSerial && !isCiEnvironment
+    description = "Runs the phone app's instrumented tests on the device ANDROID_SERIAL names."
+    enabled = hasAndroidSerial
     if (enabled) {
         dependsOn(":app:connectedCiAndroidTest")
     }
@@ -45,8 +48,35 @@ tasks.register("verifyAndroidTest") {
 
 tasks.register("verifyCiUnitTest") {
     group = "verification"
-    description = "Runs the phone app unit tests against the CI build type, and the domain and link modules'."
-    dependsOn(":wearlink:test", ":domain:testCiUnitTest", ":app:testCiUnitTest")
+    description = "Runs the phone app unit tests against the CI build type, and the library modules' and the link's."
+    dependsOn(
+        ":wearlink:test",
+        ":core:model:test",
+        ":core:fit:test",
+        ":core:devices-api:test",
+        ":core:health-api:testCiUnitTest",
+        ":core:health:testCiUnitTest",
+        ":core:ui:testCiUnitTest",
+        ":core:data:testCiUnitTest",
+        ":devices:core:testCiUnitTest",
+        ":devices:garmin:testCiUnitTest",
+        ":devices:garmin:protocol:test",
+        ":devices:wearos:testCiUnitTest",
+        ":devices:xiaomi:testCiUnitTest",
+        ":devices:xiaomi:protocol:test",
+        ":devices:ble-standard:testCiUnitTest",
+        ":devices:ble-standard:protocol:test",
+        ":feature:healthconnect:testCiUnitTest",
+        ":feature:connectedapps:testCiUnitTest",
+        ":feature:settings:testCiUnitTest",
+        ":feature:home:testCiUnitTest",
+        ":feature:device:testCiUnitTest",
+        ":feature:watches-wearos:testCiUnitTest",
+        ":feature:scales-xiaomi:testCiUnitTest",
+        ":feature:watches-garmin:testCiUnitTest",
+        ":link-host:testCiUnitTest",
+        ":app:testCiUnitTest",
+    )
 }
 
 tasks.register<Exec>("verifyTranslations") {
@@ -67,13 +97,38 @@ tasks.register("verifyCiPreflight") {
     )
 }
 
-// Lint is half of the gate's task time. CI runs it on pushes to main and in
-// the release build, not on pull requests (.github/workflows/verify.yml), so it
-// is not part of verifyCiPreflight.
+// Lint is half of the gate's task time, so CI gives it a job of its own beside the tests
+// (.github/workflows/verify.yml) rather than a place in verifyCiPreflight.
 tasks.register("verifyCiLint") {
     group = "verification"
-    description = "Runs phone app and domain module lint for CI."
-    dependsOn(":app:lintCi", ":domain:lintCi")
+    description = "Runs phone app and its library modules' lint for CI."
+    dependsOn(
+        ":app:lintCi",
+        ":core:model:lint",
+        ":core:fit:lint",
+        ":core:devices-api:lint",
+        ":core:health-api:lintCi",
+        ":core:health:lintCi",
+        ":core:ui:lintCi",
+        ":core:data:lintCi",
+        ":devices:core:lintCi",
+        ":devices:garmin:lintCi",
+        ":devices:garmin:protocol:lint",
+        ":devices:wearos:lintCi",
+        ":devices:xiaomi:lintCi",
+        ":devices:xiaomi:protocol:lint",
+        ":devices:ble-standard:lintCi",
+        ":devices:ble-standard:protocol:lint",
+        ":feature:healthconnect:lintCi",
+        ":feature:connectedapps:lintCi",
+        ":feature:settings:lintCi",
+        ":feature:home:lintCi",
+        ":feature:device:lintCi",
+        ":feature:watches-wearos:lintCi",
+        ":feature:scales-xiaomi:lintCi",
+        ":feature:watches-garmin:lintCi",
+        ":link-host:lintCi",
+    )
 }
 
 // Phone app only. The wear module has its own gate (verifyWearCi), its own job
@@ -96,10 +151,17 @@ tasks.register("verifyWearCi") {
     description = "Runs Wear OS module unit tests, lint, build, and android-test compile checks for CI."
     dependsOn(
         ":wearlink:test",
-        ":wear:testDebugUnitTest",
-        ":wear:lintDebug",
+        // The watch app's pure core: its tests and Android lint, as when it was part of :wear.
+        ":wear:recording-core:test",
+        ":wear:recording-core:lint",
+        // Unit tests and lint on the ci build type, as the phone's gate; the build and the
+        // instrumented tests' compile stay on debug, which a watch's device run installs.
+        ":wear:testCiUnitTest",
+        ":wear:lintCi",
         ":wear:assembleDebug",
         ":wear:compileDebugAndroidTestKotlin",
+        // The ratchets over the watch's sources live in :app.
+        ":app:architectureTest",
     )
 }
 

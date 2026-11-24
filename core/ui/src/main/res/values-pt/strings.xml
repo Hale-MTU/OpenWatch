@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_grant">Conceder</string>
+    <string name="action_grant_permission">Conceder permissão</string>
+    <string name="action_not_now">Agora não</string>
+    <string name="screen_error_not_found">O item pedido não foi encontrado.</string>
+    <string name="screen_error_missing_argument">Faltam informações necessárias.</string>
+    <string name="screen_error_permission_denied">É necessária permissão para carregar estes dados.</string>
+    <string name="screen_error_health_connect_unavailable">O Health Connect não está disponível neste dispositivo.</string>
+    <string name="screen_error_feature_unavailable">Não disponível neste dispositivo.</string>
+    <string name="message_missing_permissions_title">Faltam algumas permissões</string>
+    <string name="watch_permissions_continue">Continuar mesmo assim</string>
+    <string name="onboarding_os_bluetooth">Bluetooth</string>
+    <string name="onboarding_os_bluetooth_desc">Encontrar e ligar relógios, bandas de frequência cardíaca e outros sensores.</string>
+    <string name="onboarding_os_notifications">Notificações</string>
+    <string name="onboarding_os_notifications_desc">Progresso da sincronização, lembretes e alertas de treino.</string>
+    <string name="onboarding_os_location">Localização</string>
+    <string name="onboarding_os_location_desc">Necessária para procurar dispositivos Bluetooth em versões mais antigas do Android.</string>
+    <string name="onboarding_os_battery">Utilização de bateria sem restrições</string>
+    <string name="onboarding_os_battery_desc">Deixa as sincronizações em segundo plano terminarem em vez de serem suspensas pela poupança de bateria. Abre as definições do Android.</string>
+    <string name="onboarding_os_notification_forwarding">Reencaminhamento de notificações</string>
+    <string name="onboarding_os_notification_forwarding_desc">Enviar as notificações do telemóvel para um relógio ligado. Abre as definições do Android.</string>
+    <string name="onboarding_action_grant_all">Conceder tudo</string>
+    <string name="settings_watch_name_label">Nome</string>
+    <string name="action_remove">Remover</string>
+    <string name="option_not_specified">Não especificado</string>
+    <string name="screen_error_generic">Não foi possível concluir o pedido.</string>
+    <string name="settings_watch_notifications_disclosure_accept">Continuar</string>
+    <string name="settings_watch_notifications_disclosure_decline">Agora não</string>
+    <string name="time_just_now">agora mesmo</string>
+    <string name="hc_setup_sync_title">Escrever no Health Connect</string>
+    <string name="hc_setup_sync_body">Desligado suspende todas as escritas. Os dispositivos guardam o que registaram até voltar a ser ligado.</string>
+    <string name="health_data_title">O que o OpenWatch lê e escreve</string>
+    <string name="settings_watch_notifications_disclosure_title">O OpenWatch vai ler as suas notificações</string>
+    <string name="settings_watch_notifications_disclosure_body">Para mostrar notificações no seu relógio, o OpenWatch lê as notificações que o telemóvel recebe, incluindo o respetivo texto.\n\nSão lidas neste dispositivo e enviadas por Bluetooth apenas para o relógio que emparelhou. Nada é guardado num ficheiro ou numa base de dados, e o OpenWatch não tem permissão de internet, por isso as notificações não podem ir para mais lado nenhum.\n\nPode desativar isto a qualquer momento e revogar o acesso às notificações nas definições do Android.</string>
+    <string name="home_health_connect">Health Connect</string>
+    <string name="home_health_connect_body">O que o OpenWatch pode ler e escrever</string>
+    <string name="action_delete">Eliminar</string>
+</resources>

@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -38,10 +39,10 @@ import kotlin.math.roundToInt
 import tech.mmarca.openwatch.wear.MetricKind
 import tech.mmarca.openwatch.wear.MetricUiState
 import tech.mmarca.openwatch.wear.R
+import tech.mmarca.openwatch.wear.SampleStats
 import tech.mmarca.openwatch.wear.SleepStage
 import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.MetricTile
-import tech.mmarca.openwatch.wear.DisplayPreferences
 import tech.mmarca.openwatch.wear.ui.components.BarChart
 import tech.mmarca.openwatch.wear.ui.components.BarSegment
 import tech.mmarca.openwatch.wear.ui.components.LegendRow
@@ -56,6 +57,7 @@ import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
 import tech.mmarca.openwatch.wear.ui.theme.Emphasis
 import tech.mmarca.openwatch.wear.ui.theme.HeartZoneColors
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
+import tech.mmarca.openwatch.wear.ui.theme.color
 
 private val ChartHeight = 44.dp
 private val SectionPadding = 12.dp
@@ -71,7 +73,6 @@ fun MetricDetailScreen(
     metric: MetricTile,
     state: MetricUiState,
     unitSystem: UnitSystem,
-    maxHeartRate: Int = DisplayPreferences().maxHeartRate,
     restingHeartRate: Double? = null,
     sleepStages: Map<SleepStage, Double> = emptyMap(),
     /** Starts a spot measurement of this metric; null when the watch cannot measure it. */
@@ -80,9 +81,8 @@ fun MetricDetailScreen(
     val listState = rememberTransformingLazyColumnState()
     val unit = stringResource(metricUnitLabel(metric, unitSystem))
     val stats = remember(metric, state, restingHeartRate) { metricStats(metric, state, restingHeartRate) }
-    val zoneShares = remember(metric, state.today, maxHeartRate) {
-        if (metric == MetricTile.HEART_RATE) heartRateZoneShares(state.today, maxHeartRate) else emptyList()
-    }
+    // The bar and the legend read the same shares, so they split the same total.
+    val zoneShares = remember(state.zoneTime) { HeartZoneDisplay.timeShares(state.zoneTime) }
 
     ScreenScaffold(scrollState = listState) { contentPadding ->
         TransformingLazyColumn(state = listState, contentPadding = contentPadding) {
@@ -115,7 +115,12 @@ fun MetricDetailScreen(
                     )
                 }
             }
-            if (state.today.size >= 2) {
+            // A chart of one bar or one point shows nothing the headline does not.
+            val todayPoints = when (metric.kind) {
+                MetricKind.CUMULATIVE -> state.today.size
+                MetricKind.SAMPLED -> state.line.sumOf { it.size }
+            }
+            if (todayPoints >= 2) {
                 item { ListSubHeader { Text(stringResource(R.string.detail_today)) } }
                 item {
                     val chartModifier = Modifier
@@ -124,18 +129,18 @@ fun MetricDetailScreen(
                         .height(ChartHeight)
                     when (metric.kind) {
                         MetricKind.CUMULATIVE -> BarChart(state.today, metric.accentColor, chartModifier)
-                        MetricKind.SAMPLED -> Sparkline(state.today, metric.accentColor, chartModifier)
+                        MetricKind.SAMPLED -> Sparkline(state.line, metric.accentColor, chartModifier)
                     }
                 }
             }
-            if (zoneShares.any { it > 0f }) {
+            if (zoneShares.isNotEmpty()) {
                 item { ListSubHeader { Text(stringResource(R.string.detail_heart_zones)) } }
                 item {
                     BreakdownSection(
                         rows = zoneShares.mapIndexed { zone, share ->
                             BreakdownRow(
                                 color = HeartZoneColors[zone],
-                                label = stringResource(HeartZoneLabels[zone]),
+                                label = stringResource(HeartZoneDisplay.labels[zone]),
                                 value = stringResource(R.string.percent_value, (share * 100).roundToInt()),
                                 share = share,
                             )
@@ -151,7 +156,8 @@ fun MetricDetailScreen(
                 )
             }
             if (state.week.isNotEmpty()) {
-                item { ListSubHeader { Text(stringResource(R.string.detail_week)) } }
+                // The header counts the days the chart draws: fewer than seven on a watch that is new to the metric.
+                item { ListSubHeader { Text(pluralStringResource(R.plurals.detail_last_days, state.week.size, state.week.size)) } }
                 item {
                     Column(
                         modifier = Modifier
@@ -162,11 +168,13 @@ fun MetricDetailScreen(
                             values = state.week,
                             color = metric.accentColor,
                             highlightLast = true,
+                            // A total is drawn from zero; a level from a floor near its range, or its days all look alike.
+                            fromZero = metric.kind == MetricKind.CUMULATIVE,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(ChartHeight),
                         )
-                        DayLabels(count = state.week.size)
+                        state.weekEnd?.let { DayLabels(count = state.week.size, lastDay = it) }
                     }
                 }
             }
@@ -271,17 +279,14 @@ private fun StatRow(label: String, value: String, unit: String) {
     }
 }
 
-/** Narrow weekday names for the last [count] days, today last. */
+/**
+ * Narrow weekday names for the [count] days that end on [lastDay], the day
+ * the bars above were read on: the labels move on with the bars, not with a
+ * clock read when the screen was opened.
+ */
 @Composable
-private fun DayLabels(count: Int) {
-    val labels = remember(count) {
-        val today = LocalDate.now()
-        List(count) { index ->
-            today.minusDays((count - 1 - index).toLong())
-                .dayOfWeek
-                .getDisplayName(TextStyle.NARROW, Locale.getDefault())
-        }
-    }
+private fun DayLabels(count: Int, lastDay: LocalDate) {
+    val labels = remember(count, lastDay) { weekdayLabels(lastDay, count, Locale.getDefault()) }
     Row(modifier = Modifier.fillMaxWidth()) {
         labels.forEach { label ->
             Text(
@@ -295,29 +300,44 @@ private fun DayLabels(count: Int) {
     }
 }
 
-private data class MetricStat(@param:StringRes val label: Int, val value: Double)
+/** The narrow weekday names of the [count] days that end on [lastDay], oldest first. */
+internal fun weekdayLabels(lastDay: LocalDate, count: Int, locale: Locale): List<String> =
+    List(count) { index -> lastDay.minusDays((count - 1 - index).toLong()).dayOfWeek.getDisplayName(TextStyle.NARROW, locale) }
 
-/** The stats that make sense for the metric's kind, from the data that is there. */
-private fun metricStats(metric: MetricTile, state: MetricUiState, restingHeartRate: Double?): List<MetricStat> =
+internal data class MetricStat(@param:StringRes val label: Int, val value: Double)
+
+/**
+ * The stats that make sense for the metric's kind, from the data that is
+ * there. A sampled metric's low, average and high are those of its samples
+ * ([MetricUiState.todayStats]) where the chart's points are not the samples.
+ * A cumulative metric's daily average is over the days that are over and
+ * have data: today is still filling up, and 300 steps by breakfast would
+ * halve the average of a 9 000 step yesterday. The best day may be today.
+ */
+internal fun metricStats(metric: MetricTile, state: MetricUiState, restingHeartRate: Double?): List<MetricStat> =
     buildList {
         if (metric == MetricTile.HEART_RATE && restingHeartRate != null) {
             add(MetricStat(R.string.stat_resting, restingHeartRate))
         }
         when (metric.kind) {
-            MetricKind.SAMPLED -> if (state.today.isNotEmpty()) {
-                add(MetricStat(R.string.stat_low, state.today.min()))
-                add(MetricStat(R.string.stat_average, state.today.average()))
-                add(MetricStat(R.string.stat_high, state.today.max()))
+            MetricKind.SAMPLED -> {
+                val stats = state.todayStats
+                    ?: state.today.takeIf { it.isNotEmpty() }?.let { SampleStats(it.min(), it.average(), it.max()) }
+                if (stats != null) {
+                    add(MetricStat(R.string.stat_low, stats.low))
+                    stats.average?.let { add(MetricStat(R.string.stat_average, it)) }
+                    add(MetricStat(R.string.stat_high, stats.high))
+                }
             }
             MetricKind.CUMULATIVE -> {
                 val goal = state.goal
                 if (goal != null) {
                     add(MetricStat(R.string.stat_remaining, (goal - (state.current ?: 0.0)).coerceAtLeast(0.0)))
                 }
-                if (state.week.isNotEmpty()) {
-                    add(MetricStat(R.string.stat_daily_average, state.week.average()))
-                    add(MetricStat(R.string.stat_best_day, state.week.max()))
-                }
+                // The week's last entry is today.
+                val finished = state.week.dropLast(1).filterNotNull()
+                if (finished.isNotEmpty()) add(MetricStat(R.string.stat_daily_average, finished.average()))
+                state.week.filterNotNull().maxOrNull()?.let { add(MetricStat(R.string.stat_best_day, it)) }
             }
         }
     }

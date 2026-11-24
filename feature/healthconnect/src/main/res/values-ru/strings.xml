@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hc_setup_missing_title">Ещё не выдано:</string>
+    <string name="hc_setup_missing_extra">Доступ в фоне и к истории находится на отдельной странице: откройте настройки Health Connect, затем OpenWatch, затем «Дополнительный доступ».</string>
+    <string name="hc_setup_intro">OpenWatch копирует то, что записывают часы и весы, в Health Connect, откуда это читают OpenVitals и другие приложения. Ничто не покидает телефон: у приложения нет разрешения на доступ в интернет.</string>
+    <string name="hc_setup_permissions_title">Разрешения</string>
+    <string name="hc_setup_status_all_granted">Все разрешения предоставлены (%1$d)</string>
+    <string name="hc_setup_status_partial">Предоставлено разрешений: %1$d из %2$d. Запись, на сохранение которой нет разрешения, остаётся на устройстве.</string>
+    <string name="hc_setup_status_update">Health Connect нужно обновить, прежде чем OpenWatch сможет его использовать.</string>
+    <string name="hc_setup_status_play_store">Health Connect установлен без Google Play, поэтому его нельзя использовать на этом телефоне.</string>
+    <string name="hc_setup_status_unavailable">Health Connect недоступен на этом телефоне.</string>
+    <string name="hc_setup_grant">Предоставить разрешения</string>
+    <string name="hc_setup_open_settings">Открыть настройки Health Connect</string>
+    <string name="hc_setup_continue">Продолжить</string>
+</resources>

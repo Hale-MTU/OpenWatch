@@ -19,7 +19,7 @@ import tech.mmarca.openwatch.wear.DebugProtocol
  * that subscriber's own handler. [subscribe], [unsubscribe] and [flush] may
  * be called from any thread.
  */
-internal class SamsungHeartRateFeed(private val context: Context) {
+internal class SamsungHeartRateFeed(private val context: Context, private val debug: DebugProtocol) {
 
     interface Subscriber {
         fun onPoints(points: List<IbiPoint>)
@@ -94,7 +94,7 @@ internal class SamsungHeartRateFeed(private val context: Context) {
         workerHandler.post {
             val asked = client.flush(SamsungHealthPlatform.TRACKER_HEART_RATE)
             flushAskedAt = if (asked) SystemClock.elapsedRealtime() else 0L
-            DebugProtocol.event("SamsungFeed", "flush_asked", "ok" to asked)
+            debug.event("SamsungFeed", "flush_asked", "ok" to asked)
             if (!asked) forEach { it.onFlushed() }
         }
         true
@@ -109,7 +109,7 @@ internal class SamsungHeartRateFeed(private val context: Context) {
         val client = SamsungHealthPlatform(context, workerHandler) { failed(null) }
         if (!client.start()) {
             worker.quitSafely()
-            DebugProtocol.event("SamsungFeed", "bind_refused")
+            debug.event("SamsungFeed", "bind_refused")
             return false
         }
         thread = worker
@@ -135,13 +135,13 @@ internal class SamsungHeartRateFeed(private val context: Context) {
             )
         }
         handler?.post { client.track(type, tracker) }
-        DebugProtocol.event("SamsungFeed", "started", "type" to type, "subscriber" to by)
+        debug.event("SamsungFeed", "started", "type" to type, "subscriber" to by)
     }
 
     private fun untrack(type: String) {
         val client = platform ?: return
         val workerHandler = handler ?: return
-        DebugProtocol.event("SamsungFeed", "stopped", "type" to type, "ranMs" to SystemClock.elapsedRealtime() - (startedAt[type] ?: 0L))
+        debug.event("SamsungFeed", "stopped", "type" to type, "ranMs" to SystemClock.elapsedRealtime() - (startedAt[type] ?: 0L))
         val last = subscribers.isEmpty() && rawSubscribers.isEmpty()
         val worker = thread
         workerHandler.post {
@@ -160,7 +160,7 @@ internal class SamsungHeartRateFeed(private val context: Context) {
 
     private fun firstDelivery(type: String, points: Int, intervals: Int) {
         if (!delivered.add(type)) return
-        DebugProtocol.event(
+        debug.event(
             "SamsungFeed", "first_delivery",
             "type" to type,
             "afterMs" to SystemClock.elapsedRealtime() - (startedAt[type] ?: 0L),
@@ -173,30 +173,30 @@ internal class SamsungHeartRateFeed(private val context: Context) {
         if (points.isEmpty()) return
         val now = System.currentTimeMillis()
         firstDelivery(SamsungHealthPlatform.TRACKER_HEART_RATE, points.size, points.sumOf { it.intervalsMillis.size })
-        DebugProtocol.count("samsung.deliveries")
-        DebugProtocol.count("samsung.points", points.size.toLong())
-        DebugProtocol.count("samsung.intervals", points.sumOf { it.intervalsMillis.size }.toLong())
-        points.minOfOrNull { it.epochMillis }?.let { DebugProtocol.max("samsung.lagMs.max", now - it) }
+        debug.count("samsung.deliveries")
+        debug.count("samsung.points", points.size.toLong())
+        debug.count("samsung.intervals", points.sumOf { it.intervalsMillis.size }.toLong())
+        points.minOfOrNull { it.epochMillis }?.let { debug.max("samsung.lagMs.max", now - it) }
         forEach { it.onPoints(points) }
     }
 
     private fun deliverRaw(type: String, points: List<RawPoint>) {
         if (points.isEmpty()) return
         firstDelivery(type, points.size, 0)
-        DebugProtocol.count("samsung.points.$type", points.size.toLong())
+        debug.count("samsung.points.$type", points.size.toLong())
         val targets = synchronized(lock) { rawSubscribers[type]?.toList().orEmpty() }
         for ((subscriber, target) in targets) target.post { subscriber.onRawPoints(points) }
     }
 
     private fun flushed() {
         val asked = flushAskedAt
-        DebugProtocol.event("SamsungFeed", "flush_done", "afterMs" to if (asked == 0L) null else SystemClock.elapsedRealtime() - asked)
+        debug.event("SamsungFeed", "flush_done", "afterMs" to if (asked == 0L) null else SystemClock.elapsedRealtime() - asked)
         forEach { it.onFlushed() }
     }
 
     /** A tracker's failure ([type]), or the binding's (null), which hits every tracker. */
     private fun failed(type: String?) {
-        DebugProtocol.event("SamsungFeed", "error", "type" to type)
+        debug.event("SamsungFeed", "error", "type" to type)
         if (type == null || type == SamsungHealthPlatform.TRACKER_HEART_RATE) forEach { it.onError() }
         if (type != SamsungHealthPlatform.TRACKER_HEART_RATE) {
             val readers = synchronized(lock) {

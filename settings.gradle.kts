@@ -1,4 +1,6 @@
 pluginManagement {
+    // The convention plugins the modules apply (openwatch.android.application and the rest).
+    includeBuild("build-logic")
     repositories {
         google {
             content {
@@ -23,11 +25,46 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "OpenWatch"
+// A clone without its submodules would otherwise fail deep in the composite build, naming a
+// project or a plugin that is missing rather than the step that was.
+listOf("openlink", "health-calculations")
+    .filterNot { file("$it/settings.gradle.kts").isFile }
+    .takeIf { it.isNotEmpty() }
+    ?.let { missing ->
+        throw GradleException(
+            "The submodules ${missing.joinToString()} are not checked out. " +
+                "Run: git submodule update --init --recursive",
+        )
+    }
 // The OpenLink control channel (git submodule at openlink/): OpenWatch hosts it.
 includeBuild("openlink")
 // The health formulas OpenWatch and OpenVitals share (git submodule at health-calculations/).
 includeBuild("health-calculations")
 include(":app")
-include(":domain")
+include(":core:model")
+include(":core:fit")
+include(":core:devices-api")
+include(":core:health-api")
+include(":core:health")
+include(":core:ui")
+include(":core:data")
+include(":devices:core")
+include(":devices:ble-standard")
+include(":devices:ble-standard:protocol")
+include(":devices:garmin")
+include(":devices:garmin:protocol")
+include(":devices:wearos")
+include(":devices:xiaomi")
+include(":devices:xiaomi:protocol")
+include(":feature:healthconnect")
+include(":feature:connectedapps")
+include(":feature:settings")
+include(":feature:home")
+include(":feature:device")
+include(":feature:watches-wearos")
+include(":feature:scales-xiaomi")
+include(":feature:watches-garmin")
+include(":link-host")
 include(":wear")
+include(":wear:recording-core")
 include(":wearlink")

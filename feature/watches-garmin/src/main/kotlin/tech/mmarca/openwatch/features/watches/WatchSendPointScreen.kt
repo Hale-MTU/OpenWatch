@@ -1,0 +1,368 @@
+package tech.mmarca.openwatch.features.watches
+
+import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.time.Instant
+import tech.mmarca.openwatch.features.device.R as DeviceR
+import tech.mmarca.openwatch.features.watches.garmin.R
+import tech.mmarca.openwatch.core.geo.GeoCoordinateError
+import tech.mmarca.openwatch.core.geo.GeoCoordinateParseResult
+import tech.mmarca.openwatch.devices.garmin.GarminSendFileResult
+import tech.mmarca.openwatch.devices.garmin.GarminSendStage
+import tech.mmarca.openwatch.devices.garmin.GarminUploadRefusal
+import tech.mmarca.openwatch.domain.model.BleDeviceKind
+import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.ui.components.OpenWatchButton
+import tech.mmarca.openwatch.ui.components.OpenWatchCard
+import tech.mmarca.openwatch.ui.components.OpenWatchTextButton
+import tech.mmarca.openwatch.ui.components.ScreenColumn
+import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
+import tech.mmarca.openwatch.ui.theme.Spacing
+
+/** The send-a-point destination: the only place that knows the ViewModel; [WatchSendPointScreen] draws. */
+@Composable
+fun WatchSendPointRoute(
+    onOpenWatches: () -> Unit,
+    viewModel: WatchSendPointViewModel = hiltViewModel(),
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+    WatchSendPointScreen(
+        state = state,
+        onOpenWatches = onOpenWatches,
+        onSelectWatch = viewModel::selectWatch,
+        onNameChange = viewModel::updateName,
+        onCoordinatesChange = viewModel::updateCoordinates,
+        onSend = viewModel::send,
+    )
+}
+
+/**
+ * Types or receives a position and sends it to the watch's saved locations.
+ * Nothing is sent until the user taps Send, also when another app shared the
+ * position.
+ */
+@Composable
+fun WatchSendPointScreen(
+    state: WatchSendPointUiState,
+    onOpenWatches: () -> Unit,
+    onSelectWatch: (deviceId: String) -> Unit,
+    onNameChange: (String) -> Unit,
+    onCoordinatesChange: (String) -> Unit,
+    onSend: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    ScreenColumn(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        verticalPadding = Spacing.lg,
+    ) {
+        if (state.watches.isEmpty()) {
+            NoWatchCard(onOpenWatches)
+        } else {
+            SendPointForm(
+                state = state,
+                onSelectWatch = onSelectWatch,
+                onNameChange = onNameChange,
+                onCoordinatesChange = onCoordinatesChange,
+                onSend = onSend,
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WatchSendPointScreenReadyPreview() {
+    OpenWatchTheme {
+        WatchSendPointScreen(
+            state = previewSendPointState(),
+            onOpenWatches = {},
+            onSelectWatch = {},
+            onNameChange = {},
+            onCoordinatesChange = {},
+            onSend = {},
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun WatchSendPointScreenSendingPreview() {
+    OpenWatchTheme {
+        WatchSendPointScreen(
+            state = previewSendPointState().copy(sendingStage = GarminSendStage.SENDING, isSending = true),
+            onOpenWatches = {},
+            onSelectWatch = {},
+            onNameChange = {},
+            onCoordinatesChange = {},
+            onSend = {},
+        )
+    }
+}
+
+/** One watch, a name and a position that reads. */
+private fun previewSendPointState(): WatchSendPointUiState {
+    val watch = BleSensorDevice(
+        id = "watch",
+        displayName = "Forerunner 265",
+        address = "00:11:22:33:44:55",
+        bluetoothName = null,
+        capabilities = emptySet(),
+        enabled = true,
+        wheelCircumferenceMm = null,
+        addedAt = Instant.parse("2026-11-01T09:00:00Z"),
+        kind = BleDeviceKind.WATCH,
+    )
+    return WatchSendPointUiState(
+        watches = listOf(watch),
+        selectedDeviceId = watch.id,
+        name = "Trailhead",
+        coordinates = "48.8584, 2.2945",
+        parsed = GeoCoordinateParseResult.Parsed(latitude = 48.8584, longitude = 2.2945),
+    )
+}
+
+@Composable
+private fun SendPointForm(
+    state: WatchSendPointUiState,
+    onSelectWatch: (String) -> Unit,
+    onNameChange: (String) -> Unit,
+    onCoordinatesChange: (String) -> Unit,
+    onSend: () -> Unit,
+) {
+    OpenWatchCard {
+        Column(
+            modifier = Modifier.padding(Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md),
+        ) {
+            WatchChoice(state, onSelect = onSelectWatch)
+
+            if (state.sharedUnreadable) {
+                Text(
+                    text = stringResource(R.string.settings_watch_point_shared_unreadable),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+
+            OutlinedTextField(
+                value = state.name,
+                onValueChange = onNameChange,
+                enabled = !state.isSending,
+                singleLine = true,
+                label = { Text(stringResource(R.string.settings_watch_point_name_label)) },
+                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            // Text, not Decimal: the field takes letters, a minus and a degree sign.
+            OutlinedTextField(
+                value = state.coordinates,
+                onValueChange = onCoordinatesChange,
+                enabled = !state.isSending,
+                singleLine = true,
+                isError = state.parsed is GeoCoordinateParseResult.Invalid,
+                label = { Text(stringResource(R.string.settings_watch_point_coordinates_label)) },
+                supportingText = { CoordinatesSupportingText(state.parsed) },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    autoCorrectEnabled = false,
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            OpenWatchButton(
+                onClick = onSend,
+                enabled = state.canSend,
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                if (state.isSending) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(SendIconSize),
+                        strokeWidth = SendProgressStroke,
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.Place,
+                        contentDescription = null,
+                        modifier = Modifier.size(SendIconSize),
+                    )
+                }
+                Spacer(modifier = Modifier.width(Spacing.sm))
+                Text(stringResource(R.string.settings_watch_point_send))
+            }
+
+            SendStatus(state)
+        }
+    }
+}
+
+@Composable
+private fun NoWatchCard(onOpenWatches: () -> Unit) {
+    OpenWatchCard {
+        Column(
+            modifier = Modifier.padding(Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+        ) {
+            Text(
+                text = stringResource(R.string.settings_watch_point_no_watch),
+                style = MaterialTheme.typography.bodyMedium,
+            )
+            OpenWatchTextButton(onClick = onOpenWatches) {
+                Text(stringResource(R.string.settings_watch_point_open_watches))
+            }
+        }
+    }
+}
+
+/** One watch is named. Several are a choice. */
+@Composable
+private fun WatchChoice(state: WatchSendPointUiState, onSelect: (String) -> Unit) {
+    Text(
+        text = stringResource(R.string.settings_watch_point_watch_label),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    if (state.watches.size == 1) {
+        Text(text = state.watches.single().displayName, style = MaterialTheme.typography.bodyLarge)
+        return
+    }
+    state.watches.forEach { watch -> WatchOption(watch, state, onSelect) }
+}
+
+@Composable
+private fun WatchOption(watch: BleSensorDevice, state: WatchSendPointUiState, onSelect: (String) -> Unit) {
+    val selected = watch.id == state.selectedDeviceId
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectable(
+                selected = selected,
+                enabled = !state.isSending,
+                role = Role.RadioButton,
+                onClick = { onSelect(watch.id) },
+            ),
+    ) {
+        // The row is the target; a second one on the button would announce twice.
+        RadioButton(selected = selected, onClick = null, enabled = !state.isSending)
+        Spacer(modifier = Modifier.width(Spacing.sm))
+        Text(text = watch.displayName, style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
+@Composable
+private fun CoordinatesSupportingText(parsed: GeoCoordinateParseResult?) {
+    val text = when (parsed) {
+        null -> stringResource(R.string.settings_watch_point_coordinates_hint)
+        is GeoCoordinateParseResult.Parsed -> stringResource(
+            R.string.settings_watch_point_preview,
+            coordinateText(parsed.latitude),
+            coordinateText(parsed.longitude),
+        )
+        is GeoCoordinateParseResult.Invalid -> stringResource(coordinateErrorText(parsed.reason))
+    }
+    Text(text)
+}
+
+/** Progress while sending, then how it ended, inline beside what was sent. */
+@Composable
+private fun SendStatus(state: WatchSendPointUiState) {
+    val stage = state.sendingStage
+    val result = state.result
+    val (text, isError) = when {
+        state.isSending -> sendStageText(stage) to false
+        result != null -> sendResultText(result) to (result != GarminSendFileResult.Sent)
+        state.radioBusy -> DeviceR.string.settings_watch_point_failed_busy to false
+        else -> return
+    }
+    Text(
+        text = stringResource(text),
+        style = MaterialTheme.typography.bodySmall,
+        color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+    )
+}
+
+private fun coordinateText(degrees: Double): String =
+    String.format(java.util.Locale.getDefault(), "%.5f", degrees)
+
+@StringRes
+private fun sendStageText(stage: GarminSendStage?): Int = when (stage) {
+    GarminSendStage.SENDING -> R.string.settings_watch_point_stage_sending
+    GarminSendStage.CONNECTING, null -> R.string.settings_watch_point_stage_connecting
+}
+
+@StringRes
+internal fun coordinateErrorText(reason: GeoCoordinateError): Int = when (reason) {
+    GeoCoordinateError.EMPTY,
+    GeoCoordinateError.UNREADABLE -> R.string.settings_watch_point_error_unreadable
+    GeoCoordinateError.LATITUDE_RANGE -> R.string.settings_watch_point_error_latitude
+    GeoCoordinateError.LONGITUDE_RANGE -> R.string.settings_watch_point_error_longitude
+    GeoCoordinateError.MINUTES_RANGE -> R.string.settings_watch_point_error_minutes
+    GeoCoordinateError.HEMISPHERE_CONFLICT -> R.string.settings_watch_point_error_hemisphere
+}
+
+@StringRes
+internal fun sendResultText(result: GarminSendFileResult): Int = when (result) {
+    GarminSendFileResult.Sent -> R.string.settings_watch_point_sent
+    is GarminSendFileResult.Refused -> refusalText(result.reason)
+    GarminSendFileResult.NoAnswer,
+    GarminSendFileResult.HandshakeTimeout -> R.string.settings_watch_point_failed_no_answer
+    is GarminSendFileResult.Busy -> DeviceR.string.settings_watch_point_failed_busy
+    GarminSendFileResult.SyncRunning -> R.string.settings_watch_point_failed_sync_running
+    GarminSendFileResult.RecordingActive -> R.string.settings_watch_point_failed_recording
+    GarminSendFileResult.Unreachable -> R.string.settings_watch_point_failed_unreachable
+    GarminSendFileResult.LinkLost -> R.string.settings_watch_point_failed_link_lost
+}
+
+@StringRes
+private fun refusalText(reason: GarminUploadRefusal): Int = when (reason) {
+    GarminUploadRefusal.DUPLICATE -> R.string.settings_watch_point_failed_duplicate
+    GarminUploadRefusal.NO_SPACE,
+    GarminUploadRefusal.NO_SLOTS -> R.string.settings_watch_point_failed_no_space
+    GarminUploadRefusal.UNSUPPORTED -> R.string.settings_watch_point_failed_unsupported
+    GarminUploadRefusal.NOT_READY,
+    GarminUploadRefusal.SYNC_PAUSED -> R.string.settings_watch_point_failed_not_ready
+    GarminUploadRefusal.NOT_WRITEABLE,
+    GarminUploadRefusal.TRANSFER_ABORTED,
+    GarminUploadRefusal.CRC_MISMATCH,
+    GarminUploadRefusal.OFFSET_MISMATCH,
+    GarminUploadRefusal.RESEND_LIMIT,
+    GarminUploadRefusal.INVALID_REPLY -> R.string.settings_watch_point_failed_rejected
+}
+
+/** The button's leading icon and its spinner share a size. */
+private val SendIconSize = 18.dp
+
+/** The spinner's stroke, as on the watch screen. */
+private val SendProgressStroke = 2.dp

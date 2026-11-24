@@ -22,6 +22,17 @@
     <string name="action_grant">Allow</string>
     <string name="status_link_bluetooth_off">Bluetooth is off</string>
     <string name="status_link_starting">Phone link starting…</string>
+    <!-- %1$s is the platform's relative time, such as "3 hours ago". -->
+    <string name="status_last_synced">Last sync with the phone: %1$s</string>
+    <string name="status_never_synced">No phone has synced yet</string>
+    <plurals name="status_sync_soon">
+        <item quantity="one">Sync with the phone within %1$d day: the watch keeps a week, then drops the oldest readings</item>
+        <item quantity="other">Sync with the phone within %1$d days: the watch keeps a week, then drops the oldest readings</item>
+    </plurals>
+    <string name="status_sync_pruning">Not synced for a week: the watch is dropping readings the phone never got. Open OpenWatch on the phone to sync.</string>
+    <string name="sync_reminder_channel_name">Sync reminders</string>
+    <string name="sync_reminder_title">Sync with your phone</string>
+    <string name="sync_reminder_soon_text">The watch keeps a week of readings. Sync with OpenWatch on your phone before the oldest are dropped.</string>
     <string name="status_phone_trusted">Linked to %1$s</string>
     <string name="status_phone_pending">Allow OpenWatch on %1$s?</string>
     <string name="phone_request_body">Open OpenWatch on the watch to answer</string>
@@ -56,6 +67,18 @@
     <string name="workout_pick">Start a workout</string>
     <string name="workout_back">Back</string>
     <string name="workout_waiting_for_gps">Waiting for GPS…</string>
+    <string name="workout_pause">Pause</string>
+    <string name="workout_resume">Resume</string>
+    <string name="workout_stop">Stop</string>
+    <string name="workout_saved">Workout saved</string>
+    <string name="workout_done">Done</string>
+    <string name="workout_steps">%1$d steps</string>
+    <string name="workout_ascent">%1$d m up</string>
+    <string name="workout_ascent_ft">%1$d ft up</string>
+    <!-- In ambient mode, where the screen changes once a minute and a live value would be stale. -->
+    <string name="workout_heart_rate_placeholder">-- bpm</string>
+    <string name="workout_distance_placeholder">-- km</string>
+    <string name="workout_distance_placeholder_mi">-- mi</string>
     <string name="workout_sport_walking">Walking</string>
     <string name="workout_sport_running">Running</string>
     <string name="workout_sport_hiking">Hiking</string>
@@ -131,17 +154,18 @@
     <string name="unit_percent">%</string>
     <string name="unit_steps">steps</string>
     <string name="unit_vo2_max">ml/kg/min</string>
+    <string name="phone_request_address">Address ending %1$s</string>
 
-    <string name="unit_mmhg">mmHg</string>
     <string name="unit_kmh">km/h</string>
     <string name="unit_mph">mph</string>
     <string name="unit_pace_km">/km</string>
     <string name="unit_pace_mi">/mi</string>
-    <string name="percent_value">%1$d %%</string>
-    <string name="action_done">Done</string>
-    <string name="action_save">Save</string>
+    <string name="percent_value">%1$d%%</string>
     <string name="detail_today">Today</string>
-    <string name="detail_week">Last 7 days</string>
+    <plurals name="detail_last_days">
+        <item quantity="one">Last %1$d day</item>
+        <item quantity="other">Last %1$d days</item>
+    </plurals>
     <string name="detail_no_data">No data yet</string>
     <string name="stat_low">Low</string>
     <string name="stat_average">Average</string>
@@ -164,42 +188,33 @@
     <string name="sleep_light">Light</string>
     <string name="sleep_deep">Deep</string>
     <string name="measure_now">Measure now</string>
-    <string name="measure_heart_rate">Heart rate</string>
-    <string name="measure_heart_rate_description">About 15 seconds</string>
-    <string name="measure_hrv">Heart rate variability</string>
-    <string name="measure_hrv_description">1 minute, sitting still</string>
-    <string name="measure_air_pressure">Air pressure</string>
-    <string name="measure_air_pressure_description">Barometer and altitude</string>
-    <string name="measure_instruction_still">Keep the watch snug on your wrist and hold still.</string>
-    <string name="measure_instruction_still_minute">Sit down, rest your arm and stay still for a minute.</string>
-    <string name="measure_instruction_none">Takes a few seconds.</string>
-    <string name="measure_error_not_supported">This watch cannot take this measurement.</string>
-    <string name="measure_error_permission">OpenWatch needs access to heart rate data.</string>
-    <string name="measure_error_off_body">The watch is not on your wrist.</string>
-    <string name="measure_error_no_signal">No reliable reading. Tighten the band and try again.</string>
-    <string name="measure_error_failed">The measurement could not be started.</string>
+    <!-- The quick log: entries made by hand on the watch -->
     <string name="quicklog_title">Log</string>
+    <!-- %1$s is the glass's amount, %2$s its unit: "Water +250 ml". -->
     <string name="quicklog_add_water">Water +%1$s %2$s</string>
+    <!-- Today's water against the goal: "750 / 2,000 ml". -->
     <string name="quicklog_water_today">%1$s / %2$s %3$s</string>
     <string name="quicklog_blood_pressure">Blood pressure</string>
     <string name="quicklog_blood_pressure_value">%1$s/%2$s mmHg</string>
     <string name="quicklog_systolic">Systolic</string>
     <string name="quicklog_diastolic">Diastolic</string>
-    <string name="quicklog_minutes">%1$d min</string>
+    <plurals name="quicklog_minutes">
+        <item quantity="one">%1$d min</item>
+        <item quantity="other">%1$d min</item>
+    </plurals>
     <string name="quicklog_not_logged">Not logged yet</string>
     <string name="quicklog_recent">Recent</string>
     <string name="breathe_title">Breathe</string>
     <string name="breathe_description">1 minute guided breathing</string>
     <string name="breathe_in">Breathe in</string>
     <string name="breathe_out">Breathe out</string>
+    <string name="unit_mmhg">mmHg</string>
+    <string name="action_save">Save</string>
     <string name="activity_walk">Walk</string>
     <string name="activity_run">Run</string>
     <string name="activity_cycle">Cycling</string>
     <string name="activity_hike">Hike</string>
     <string name="activity_workout">Workout</string>
-    <string name="recording_pause">Pause</string>
-    <string name="recording_resume">Resume</string>
-    <string name="recording_stop">Stop</string>
     <string name="recording_stop_confirm">End workout?</string>
     <string name="recording_pace">Pace</string>
     <string name="recording_speed">Speed</string>

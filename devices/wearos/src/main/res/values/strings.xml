@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_watch_wearos_bt_not_paired">No paired Wear OS watch found</string>
+    <string name="settings_watch_wearos_app_running">OpenWatch Wear OS app is running on watch</string>
+    <string name="settings_watch_wearos_app_no_answer">No answer: the watch is off, out of range, or the OpenWatch app on it is not installed or not running.</string>
+    <string name="settings_watch_wearos_status_pending">Waiting for you to allow this phone on the watch. Open OpenWatch on the watch and tap Allow.</string>
+    <string name="settings_watch_wearos_status_unauthorized_mismatch">The watch refused this phone: its key does not match. On the watch, open OpenWatch, forget this phone, then validate again.</string>
+    <string name="settings_watch_wearos_status_unauthorized_blocked">This phone is blocked on the watch. On the watch, open OpenWatch and unblock it.</string>
+    <string name="settings_watch_wearos_status_update_watch">The OpenWatch app on the watch is older than this one. Update the watch app.</string>
+    <string name="settings_watch_wearos_status_update_phone">The OpenWatch app on the watch is newer than this one. Update OpenWatch on the phone.</string>
+    <string name="settings_watch_wearos_status_protocol">The watch answered something OpenWatch could not read. Update both apps and try again.</string>
+</resources>

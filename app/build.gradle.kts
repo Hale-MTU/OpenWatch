@@ -3,45 +3,15 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.process.CommandLineArgumentProvider
 
 plugins {
-    alias(libs.plugins.android.application)
+    id("openwatch.android.application")
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.ksp)
+    // @Serializable navigation routes.
+    alias(libs.plugins.kotlin.serialization)
 }
 
-// Room writes the schema of each database version here. The files are committed: a migration
-// can only be tested against a version whose schema was kept.
-ksp {
-    arg("room.schemaLocation", "$projectDir/schemas")
-}
-
-val releaseStoreFilePath = System.getenv("OPENWATCH_RELEASE_STORE_FILE")
-val releaseStorePassword = System.getenv("OPENWATCH_RELEASE_STORE_PASSWORD")
-val releaseKeyAlias = System.getenv("OPENWATCH_RELEASE_KEY_ALIAS")
-val releaseKeyPassword = System.getenv("OPENWATCH_RELEASE_KEY_PASSWORD")
-val isPkcs12ReleaseStore = releaseStoreFilePath
-    ?.lowercase()
-    ?.let { it.endsWith(".p12") || it.endsWith(".pfx") || it.endsWith(".pkcs12") }
-    ?: false
-val effectiveReleaseKeyPassword = if (isPkcs12ReleaseStore) {
-    releaseStorePassword
-} else {
-    releaseKeyPassword
-}
-
-val hasReleaseSigning = listOf(
-    releaseStoreFilePath,
-    releaseStorePassword,
-    releaseKeyAlias,
-    effectiveReleaseKeyPassword,
-).all { !it.isNullOrBlank() }
-
-val signDebugWithReleaseKey = System.getenv("OPENWATCH_SIGN_DEBUG_WITH_RELEASE_KEY") == "true"
-// The release pipeline publishes a debug APK: not debuggable, since it is
-// public, but not run through R8 either. It was until 2026-10, to match the
-// release build's size and shape; that second R8 pass was six minutes of
-// every nightly build, and nothing needed the shape.
-val publishedDebugApk = System.getenv("OPENWATCH_PUBLISHED_DEBUG_APK") == "true"
+// Signing, R8 and the shared build types: openwatch.android.application (build-logic/).
 val apkAbiFilters = System.getenv("OPENWATCH_APK_ABI_FILTERS")
     ?.split(',')
     ?.map { it.trim() }
@@ -66,14 +36,14 @@ require(phoneVersionCode in 1..99_999_999) {
 }
 android {
     namespace = "tech.mmarca.openwatch"
-    compileSdk = 37
-    buildToolsVersion = "37.0.0"
     testBuildType = "ci"
 
     defaultConfig {
         applicationId = "tech.mmarca.openwatch"
         minSdk = 26
         targetSdk = 36
+        // The instrumented tests are JUnit 4; without this runner none of them would run.
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         versionCode = phoneVersionCode
         versionName = versionNameOverride.orElse(baseVersionName).get()
         buildConfigField("boolean", "OPENWATCH_DIAGNOSTICS", "false")
@@ -84,28 +54,9 @@ android {
         }
     }
 
-    signingConfigs {
-        if (hasReleaseSigning) {
-            create("release") {
-                storeFile = file(checkNotNull(releaseStoreFilePath))
-                storePassword = checkNotNull(releaseStorePassword)
-                keyAlias = checkNotNull(releaseKeyAlias)
-                keyPassword = checkNotNull(effectiveReleaseKeyPassword)
-            }
-        }
-    }
-
     buildTypes {
         debug {
-            applicationIdSuffix = ".debug"
-            versionNameSuffix = "-debug"
             buildConfigField("boolean", "OPENWATCH_DIAGNOSTICS", "true")
-            if (signDebugWithReleaseKey && hasReleaseSigning) {
-                signingConfig = signingConfigs.getByName("release")
-            }
-            if (publishedDebugApk) {
-                isDebuggable = false
-            }
         }
 
         create("ci") {
@@ -114,29 +65,10 @@ android {
             versionNameSuffix = "-ci"
         }
 
-        release {
-            if (hasReleaseSigning) {
-                signingConfig = signingConfigs.getByName("release")
-            }
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
-        }
-
-        create("nightly") {
-            initWith(getByName("release"))
+        getByName("nightly") {
             versionNameSuffix = nightlyVersionNameSuffix.get()
             buildConfigField("boolean", "OPENWATCH_DIAGNOSTICS", "true")
-            matchingFallbacks += listOf("release")
         }
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 
     buildFeatures {
@@ -144,20 +76,13 @@ android {
         compose = true
     }
 
-    dependenciesInfo {
-        includeInApk = false
-        includeInBundle = false
-    }
+    // Robolectric reads the merged manifest and resources for the Hilt graph test.
+    testOptions.unitTests.isIncludeAndroidResources = true
 
     lint {
         // Tests do not ship. Analysing them cost as much as the app itself.
         ignoreTestSources = true
-        // No lint vital on release-type builds: the pipeline's lint job already
-        // ran the full lint on the commit, and the two analyses it added to a
-        // nightly build ran beside R8 (five minutes, 2026-10).
-        checkReleaseBuilds = false
         disable += setOf(
-            "LogNotTimber",
             // Partial Weblate languages are allowed once scripts/verify-translations.py
             // confirms at least 70% coverage and placeholder safety.
             "MissingTranslation",
@@ -166,7 +91,8 @@ android {
 }
 
 // Nothing runs the minified build before it ships, so every R8 task is followed by a check
-// that it kept what is reached by name: the manifest components. A failure here fails the build.
+// that it kept what is reached by name: the manifest components, and the members through which
+// kotlinx-serialization finds a navigation route's serializer. A failure here fails the build.
 androidComponents {
     onVariants { variant ->
         val variantName = variant.name.replaceFirstChar { it.uppercase() }
@@ -174,13 +100,16 @@ androidComponents {
         val mapping = variant.artifacts.get(SingleArtifact.OBFUSCATION_MAPPING_FILE)
         val manifest = variant.artifacts.get(SingleArtifact.MERGED_MANIFEST)
         val script = rootProject.file("scripts/verify-r8-keeps.py")
-        val sources = file("src/main/kotlin")
+        // The app's sources and its screen modules', which declare the routes they read back.
+        val sources = listOf(file("src/main/kotlin")) +
+            rootProject.file("feature").listFiles().orEmpty().map { it.resolve("src/main/kotlin") }.filter { it.isDirectory }.sorted()
         val verifyR8Keeps = tasks.register<Exec>("verify${variantName}R8Keeps") {
             group = "verification"
             description = "Checks that R8 kept what the ${variant.name} build reaches by name."
             workingDir(rootProject.projectDir)
             inputs.file(mapping)
             inputs.file(manifest)
+            inputs.files(sources).withPropertyName("routeSources").withPathSensitivity(PathSensitivity.RELATIVE)
             executable("python3")
             argumentProviders.add(
                 CommandLineArgumentProvider {
@@ -188,8 +117,7 @@ androidComponents {
                         script.path,
                         "--mapping", mapping.get().asFile.path,
                         "--manifest", manifest.get().asFile.path,
-                        "--sources", sources.path,
-                    )
+                    ) + sources.flatMap { listOf("--sources", it.path) }
                 },
             )
         }
@@ -200,9 +128,51 @@ androidComponents {
 }
 
 dependencies {
-    // The OpenLink host, from the openlink/ submodule (a composite build).
-    implementation("tech.mmarca.openlink:host")
-    implementation(project(":domain"))
+    // The OpenLink host: what OpenWatch offers through it, with the library (the openlink/
+    // submodule, a composite build) as its api; the trust store and the binder are built in
+    // di/LinkModule.
+    implementation(project(":link-host"))
+    // The Garmin watches' screens, bound into the device screen's contributions.
+    implementation(project(":feature:watches-garmin"))
+    // The S400 scale's screens, bound into the device screen's contributions.
+    implementation(project(":feature:scales-xiaomi"))
+    // The Wear OS watch's screens, bound into the device screen's contributions.
+    implementation(project(":feature:watches-wearos"))
+    // The screens every device family shares, and the contributions a family's screens plug in through.
+    implementation(project(":feature:device"))
+    // Home's frame; the app's HomeRoute fills its sections.
+    implementation(project(":feature:home"))
+    // Settings and the body profile.
+    implementation(project(":feature:settings"))
+    // The apps that use OpenWatch over OpenLink.
+    implementation(project(":feature:connectedapps"))
+    // The Health Connect setup screen and the health data list.
+    implementation(project(":feature:healthconnect"))
+    // The pure models, which also bring health-calculations, and the FIT codec.
+    implementation(project(":core:model"))
+    implementation(project(":core:fit"))
+    // The device contracts: families, features, the sync port, pairing, presence.
+    implementation(project(":core:devices-api"))
+    // The devices' Health Connect contracts: the record sink, its write helpers, the strict reads.
+    implementation(project(":core:health-api"))
+    // Health Connect as the app reaches it: the gateway, the record sink, the activity writes, the catalog.
+    implementation(project(":core:health"))
+    // The theme, the shared components, the formatters and ScreenError, the OS permission checks.
+    implementation(project(":core:ui"))
+    // Room, the registry, the per-device state and the preferences. The database is built here
+    // (di/AppModule); a family's own table contract is implemented here over its DAO.
+    implementation(project(":core:data"))
+    // What every device family shares on Android: the radio lease, the GATT link and the BLE
+    // scanner, companion pairing, the sync controller and its schedule.
+    implementation(project(":devices:core"))
+    // The Garmin watches, which bind themselves (GarminModule); the protocol comes with them.
+    implementation(project(":devices:garmin"))
+    // The Wear OS watch's phone side, which binds itself (WearOsModule).
+    implementation(project(":devices:wearos"))
+    // The Xiaomi S400 scale, which binds itself (XiaomiScaleModule); its codec comes with it.
+    implementation(project(":devices:xiaomi"))
+    // The devices of the Bluetooth standard health profiles, which bind themselves (BleStandardModule).
+    implementation(project(":devices:ble-standard"))
     implementation(project(":wearlink"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -241,10 +211,9 @@ dependencies {
     // Background work
     implementation(libs.androidx.work.runtime.ktx)
 
-    // Local metric storage
+    // The database is built here; its entities, DAOs and migrations are :core:data's.
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    ksp(libs.androidx.room.compiler)
 
     // Health Connect
     implementation(libs.health.connect.client)
@@ -254,16 +223,32 @@ dependencies {
     ksp(libs.hilt.android.compiler)
 
     // Testing
-    // The Wear OS sleep-minute fixtures live with the domain module.
-    // The Wear OS sleep-minute fixtures, for the sync tests.
-    testImplementation(testFixtures("tech.mmarca.healthcalculations:health-calculations"))
+    // The app's own tests: the architecture tests, the Hilt graph, the routes, the add-a-watch
+    // flow over both watch families' pairings, the tables a family's contract is joined to.
+    // Every screen's and module's other tests live with their code.
+    // The shared fakes of the device contracts: a sync port, a pairing, a family.
+    testImplementation(testFixtures(project(":core:devices-api")))
+    // The FIT test bytes the FIT codec's tests build their files with.
+    testImplementation(testFixtures(project(":devices:garmin:protocol")))
+    // SharedPreferences in memory and a SecretSeal on a software key, shared with the device modules.
+    testImplementation(testFixtures(project(":devices:core")))
+    // The main dispatcher swapped for the tests' (MainDispatcherRule).
+    testImplementation(testFixtures(project(":core:model")))
+    // routeHandle(): the SavedStateHandle Navigation gives a route.
+    testImplementation(testFixtures(project(":feature:device")))
+    // The registry and the body profile in memory.
+    testImplementation(testFixtures(project(":core:data")))
     testImplementation(libs.junit4)
     testImplementation(libs.mockk)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.health.connect.testing)
     testImplementation(libs.truth)
     // Real org.json for local tests (the android.jar copy is a throwing stub).
     testImplementation(libs.org.json)
+    // The Hilt graph test builds the real graph on the JVM.
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.hilt.android.testing)
+    kspTest(libs.hilt.android.compiler)
     androidTestImplementation(composeBom)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.test.core)
@@ -280,7 +265,100 @@ tasks.withType<Test>().configureEach {
     maxParallelForks = providers.gradleProperty("openwatch.testForks").orNull?.toInt()
         ?: (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
     maxHeapSize = "1g"
-    // The memory budget above assumes one test task at a time. The domain
-    // module's tests take seconds; they go first rather than beside these.
-    mustRunAfter(":domain:testCiUnitTest")
+    // The memory budget above assumes one test task at a time. The pure modules'
+    // tests take seconds; they go first rather than beside these.
+    mustRunAfter(
+        ":core:model:test",
+        ":core:fit:test",
+        ":core:devices-api:test",
+        ":core:health-api:testCiUnitTest",
+        ":core:health:testCiUnitTest",
+        ":core:ui:testCiUnitTest",
+        ":core:data:testCiUnitTest",
+        ":devices:core:testCiUnitTest",
+        ":devices:garmin:testCiUnitTest",
+        ":devices:garmin:protocol:test",
+        ":devices:wearos:testCiUnitTest",
+        ":devices:xiaomi:testCiUnitTest",
+        ":devices:xiaomi:protocol:test",
+        ":devices:ble-standard:testCiUnitTest",
+        ":devices:ble-standard:protocol:test",
+        ":link-host:testCiUnitTest",
+        ":feature:watches-garmin:testCiUnitTest",
+        ":feature:scales-xiaomi:testCiUnitTest",
+        ":feature:watches-wearos:testCiUnitTest",
+        ":feature:device:testCiUnitTest",
+        ":feature:home:testCiUnitTest",
+        ":feature:settings:testCiUnitTest",
+        ":feature:connectedapps:testCiUnitTest",
+        ":feature:healthconnect:testCiUnitTest",
+    )
+    // The architecture tests read sources and documents as plain files: this module's
+    // and the others' code, both manifests, the strings, the privacy documents. None
+    // of that is on the test classpath, so it is declared here; otherwise a change to
+    // one of them alone is answered with a cached pass.
+    val repository = rootProject.layout.projectDirectory
+    mapOf(
+        "scannedAppMain" to "app/src/main",
+        "scannedCoreModelMain" to "core/model/src/main",
+        "scannedCoreFitMain" to "core/fit/src/main",
+        "scannedCoreDevicesApiMain" to "core/devices-api/src/main",
+        "scannedCoreHealthApiMain" to "core/health-api/src/main",
+        "scannedCoreHealthMain" to "core/health/src/main",
+        "scannedCoreUiMain" to "core/ui/src/main",
+        "scannedCoreDataMain" to "core/data/src/main",
+        "scannedDevicesCoreMain" to "devices/core/src/main",
+        "scannedGarminMain" to "devices/garmin/src/main",
+        "scannedGarminProtocolMain" to "devices/garmin/protocol/src/main",
+        "scannedWearOsMain" to "devices/wearos/src/main",
+        "scannedXiaomiMain" to "devices/xiaomi/src/main",
+        "scannedXiaomiProtocolMain" to "devices/xiaomi/protocol/src/main",
+        "scannedBleStandardMain" to "devices/ble-standard/src/main",
+        "scannedBleStandardProtocolMain" to "devices/ble-standard/protocol/src/main",
+        "scannedLinkHostMain" to "link-host/src/main",
+        "scannedFeatureWatchesGarminMain" to "feature/watches-garmin/src/main",
+        "scannedFeatureScalesXiaomiMain" to "feature/scales-xiaomi/src/main",
+        "scannedFeatureWatchesWearosMain" to "feature/watches-wearos/src/main",
+        "scannedFeatureDeviceMain" to "feature/device/src/main",
+        "scannedFeatureHomeMain" to "feature/home/src/main",
+        "scannedFeatureSettingsMain" to "feature/settings/src/main",
+        "scannedFeatureConnectedappsMain" to "feature/connectedapps/src/main",
+        "scannedFeatureHealthconnectMain" to "feature/healthconnect/src/main",
+        "scannedWearMain" to "wear/src/main",
+        "scannedWearRecordingCoreMain" to "wear/recording-core/src/main",
+        "scannedWearlinkMain" to "wearlink/src/main",
+    ).forEach { (name, path) ->
+        inputs.dir(repository.dir(path)).withPropertyName(name).withPathSensitivity(PathSensitivity.RELATIVE)
+    }
+    mapOf(
+        // DevicesLayeringTest reads which modules a device module depends on.
+        "scannedGarminBuild" to "devices/garmin/build.gradle.kts",
+        "scannedWearOsBuild" to "devices/wearos/build.gradle.kts",
+        "scannedXiaomiBuild" to "devices/xiaomi/build.gradle.kts",
+        "scannedBleStandardBuild" to "devices/ble-standard/build.gradle.kts",
+        // ...and which device modules a screen module depends on.
+        "scannedFeatureHealthconnectBuild" to "feature/healthconnect/build.gradle.kts",
+        "scannedFeatureConnectedappsBuild" to "feature/connectedapps/build.gradle.kts",
+        "scannedFeatureSettingsBuild" to "feature/settings/build.gradle.kts",
+        "scannedFeatureHomeBuild" to "feature/home/build.gradle.kts",
+        "scannedFeatureDeviceBuild" to "feature/device/build.gradle.kts",
+        "scannedFeatureWatchesWearosBuild" to "feature/watches-wearos/build.gradle.kts",
+        "scannedFeatureScalesXiaomiBuild" to "feature/scales-xiaomi/build.gradle.kts",
+        "scannedFeatureWatchesGarminBuild" to "feature/watches-garmin/build.gradle.kts",
+        "scannedPrivacyPolicy" to "PRIVACY.md",
+        "scannedPermissionsDoc" to "docs/app/permissions.md",
+    ).forEach { (name, path) ->
+        inputs.file(repository.file(path)).withPropertyName(name).withPathSensitivity(PathSensitivity.RELATIVE)
+    }
+}
+
+// The architecture tests alone. They read the watch app's and the link's sources too, and a
+// change to those alone runs only the watch gate, so that gate runs this.
+tasks.register<Test>("architectureTest") {
+    description = "The architecture and ratchet tests of :app, on the ci variant."
+    group = "verification"
+    val unitTests = tasks.named<Test>("testCiUnitTest").get()
+    testClassesDirs = unitTests.testClassesDirs
+    classpath = unitTests.classpath
+    filter.includeTestsMatching("tech.mmarca.openwatch.architecture.*")
 }
