@@ -26,7 +26,8 @@ A Garmin watch's oxygen saturation and respiratory rate come with its files.
 
 What the entries made on a Wear OS watch write, each when the phone pulls it: `WRITE_HYDRATION`,
 `WRITE_WEIGHT`, `WRITE_BLOOD_PRESSURE`, `WRITE_BODY_FAT`, `WRITE_OXYGEN_SATURATION`,
-`WRITE_RESPIRATORY_RATE`, `WRITE_BODY_TEMPERATURE`, `WRITE_BLOOD_GLUCOSE` and `WRITE_HEIGHT` (a value logged in
+`WRITE_RESPIRATORY_RATE`, `WRITE_BODY_TEMPERATURE`, `WRITE_BLOOD_GLUCOSE`, `WRITE_HEIGHT`,
+`WRITE_LEAN_BODY_MASS` and `WRITE_BODY_WATER_MASS` (a value logged in
 the watch's quick log: a hand-logged blood oxygen or breathing rate is written whatever the night
 switches say), `WRITE_MINDFULNESS` (a breathing session, only where Health Connect
 stores mindfulness sessions), and `WRITE_HEART_RATE`, `WRITE_HEART_RATE_VARIABILITY` and, on a
@@ -125,6 +126,8 @@ it fails `HealthPermissionsTest`.
 | `WRITE_BLOOD_PRESSURE` | What you log on the watch, by hand. |
 | `WRITE_MINDFULNESS` | A breathing session you do on the watch, where Health Connect keeps them. |
 | `WRITE_BODY_FAT` | What you log on the watch, by hand. |
+| `WRITE_LEAN_BODY_MASS` | What you log on the watch, by hand. |
+| `WRITE_BODY_WATER_MASS` | What you log on the watch, by hand. |
 | `WRITE_BODY_TEMPERATURE` | What you log on the watch, by hand. |
 | `WRITE_BLOOD_GLUCOSE` | What you log on the watch, by hand. |
 | `WRITE_HEIGHT` | What you log on the watch, by hand. |

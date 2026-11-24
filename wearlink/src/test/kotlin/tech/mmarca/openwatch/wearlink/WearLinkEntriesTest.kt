@@ -37,7 +37,7 @@ class WearLinkEntriesTest {
 
     @Test fun `every type keeps its token, which is what the line carries`() {
         assertEquals(
-            listOf("water", "weight", "bp", "mindful", "hr", "hrv", "bodyfat", "spo2", "breath", "temp", "glucose", "height"),
+            listOf("water", "weight", "bp", "mindful", "hr", "hrv", "bodyfat", "spo2", "breath", "temp", "glucose", "height", "lean", "bodywater"),
             Type.entries.map { it.token },
         )
         for (type in Type.entries) {
@@ -71,7 +71,7 @@ class WearLinkEntriesTest {
     }
 
     @Test fun `the longest entry fits the line limit`() {
-        val entry = WearLinkEntry(Long.MAX_VALUE, Type.MINDFULNESS, WearLinkEntries.MAX_VALUE1000, WearLinkEntries.MAX_VALUE1000, true)
+        val entry = WearLinkEntry(Long.MAX_VALUE, Type.BODY_WATER, WearLinkEntries.MAX_VALUE1000, WearLinkEntries.MAX_VALUE1000, true)
         assertTrue(WearLinkEntries.format(entry).length < WearLinkProtocol.MAX_LINE_LENGTH)
     }
 }

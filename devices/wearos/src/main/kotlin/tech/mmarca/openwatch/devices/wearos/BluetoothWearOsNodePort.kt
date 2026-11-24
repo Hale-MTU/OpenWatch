@@ -223,7 +223,7 @@ class BluetoothWearOsNodePort internal constructor(
         try {
             val hello = WearLinkProtocol.Hello(
                 version = WearLinkProtocol.VERSION,
-                capabilities = setOf(WearLinkProtocol.CAP_CLOCK),
+                capabilities = setOf(WearLinkProtocol.CAP_CLOCK, WearLinkProtocol.CAP_BODY_COMPOSITION),
                 token = linkStore.tokenFor(registeredAddress, match.address),
                 name = radio.localName(),
             )
