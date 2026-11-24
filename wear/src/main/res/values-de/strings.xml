@@ -23,6 +23,16 @@
     <string name="action_grant">Erlauben</string>
     <string name="status_link_bluetooth_off">Bluetooth ist aus</string>
     <string name="status_link_starting">Telefonverbindung startet …</string>
+    <string name="status_last_synced">Letzte Synchronisierung mit dem Telefon: %1$s</string>
+    <string name="status_never_synced">Noch kein Telefon hat synchronisiert</string>
+    <plurals name="status_sync_soon">
+        <item quantity="one">Synchronisiere innerhalb von %1$d Tag mit dem Telefon: Die Uhr behält eine Woche und löscht dann die ältesten Messwerte</item>
+        <item quantity="other">Synchronisiere innerhalb von %1$d Tagen mit dem Telefon: Die Uhr behält eine Woche und löscht dann die ältesten Messwerte</item>
+    </plurals>
+    <string name="status_sync_pruning">Seit einer Woche nicht synchronisiert: Die Uhr löscht Messwerte, die das Telefon nie bekommen hat. Öffne OpenWatch auf dem Telefon, um zu synchronisieren.</string>
+    <string name="sync_reminder_channel_name">Erinnerungen zur Synchronisierung</string>
+    <string name="sync_reminder_title">Mit deinem Telefon synchronisieren</string>
+    <string name="sync_reminder_soon_text">Die Uhr behält eine Woche an Messwerten. Synchronisiere mit OpenWatch auf deinem Telefon, bevor die ältesten gelöscht werden.</string>
     <string name="status_phone_trusted">Verbunden mit %1$s</string>
     <string name="status_phone_pending">OpenWatch auf %1$s erlauben?</string>
     <string name="phone_request_body">Öffne OpenWatch auf der Uhr, um zu antworten</string>
@@ -77,6 +87,10 @@
     <string name="workout_done">Fertig</string>
     <string name="workout_steps">%1$d Schritte</string>
     <string name="workout_ascent">%1$d m hoch</string>
+    <string name="workout_ascent_ft">%1$d ft hoch</string>
+    <string name="workout_heart_rate_placeholder">-- bpm</string>
+    <string name="workout_distance_placeholder">-- km</string>
+    <string name="workout_distance_placeholder_mi">-- mi</string>
     <string name="workout_sport_walking">Gehen</string>
     <string name="workout_sport_running">Laufen</string>
     <string name="workout_sport_hiking">Wandern</string>

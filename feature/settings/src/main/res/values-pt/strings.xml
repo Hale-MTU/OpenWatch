@@ -27,4 +27,6 @@
     <string name="settings_respiratory_rate_title">Frequência respiratória do relógio (experimental)</string>
     <string name="settings_respiratory_rate_body">Grava no Health Connect a frequência respiratória das janelas noturnas de VFC do relógio. Ainda não foi comparada com um dispositivo de referência.</string>
     <string name="health_data_open_body">Cada tipo de dados de saúde, o dispositivo de onde vem e porquê.</string>
+    <string name="settings_sleep_beside_others_title">Gravar o sono do relógio ao lado do de outras apps</string>
+    <string name="settings_sleep_beside_others_body">Grava a noite mesmo que o Samsung Health ou outra app já tenha gravado uma. A prioridade das fontes de dados do Health Connect decide então que noite as apps mostram. Desativado: prevalece a noite da outra app.</string>
 </resources>

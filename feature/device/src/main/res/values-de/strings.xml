@@ -83,5 +83,25 @@
     <string name="settings_watch_wearos_needs_workout_write">Trainings nicht geschrieben: Erlaube OpenWatch, Trainings, Routen und Distanz in Health Connect zu schreiben, und synchronisiere dann erneut.</string>
     <string name="settings_watch_garmin_withheld">Mangels Berechtigung nicht in Health Connect gespeichert: %1$s. Erlaube sie, dann speichert die nächste Synchronisierung ab da, was die Uhr sendet.</string>
     <string name="settings_watch_wearos_companion_required">Android hat die Uhr nicht mit OpenWatch verknüpft, deshalb wurde sie nicht hinzugefügt. OpenWatch braucht diese Verknüpfung, um Workouts aufzuzeichnen, die eine andere App auf der Uhr startet. Tippe erneut auf Koppeln und erlaube die Anfrage.</string>
+    <string name="home_section_devices">Weitere Geräte</string>
+    <string name="devices_intro">Sensoren und Messgeräte, die direkt mit dem Telefon gekoppelt werden. Was sie messen, geht an Health Connect.</string>
+    <string name="devices_add">Gerät hinzufügen</string>
+    <string name="devices_permissions_title">Berechtigungen für dein Gerät</string>
+    <string name="devices_permissions_body">Android fragt diese Berechtigung getrennt von Health Connect ab. Ohne sie kann ein Gerät weder gefunden noch gelesen werden.</string>
+    <string name="devices_scan_empty">Noch nichts gefunden. Wecke das Gerät auf und halte es nah an dein Telefon.</string>
+    <string name="devices_scan_again">Erneut suchen</string>
+    <string name="devices_pairing">Kopplung läuft…</string>
+    <string name="devices_pair_refused">Die Kopplung wurde nicht abgeschlossen. Nimm die Kopplungsanfrage von Android an, um sie abzuschließen.</string>
+    <string name="devices_pair_unreachable">Das Gerät war nicht erreichbar. Wecke es auf, halte es in der Nähe und versuche es erneut.</string>
+    <string name="devices_pair_not_associated">Erlaube OpenWatch im Android-Dialog: So hört das Telefon das Gerät, wenn es einen Messwert hat.</string>
+    <string name="devices_last_reading">Letzter Messwert %1$s</string>
+    <string name="devices_no_reading">Noch kein Messwert</string>
+    <string name="device_live_section">Live</string>
+    <string name="device_live_waiting">Warte auf einen Messwert…</string>
+    <plurals name="device_readings_waiting">
+        <item quantity="one">%1$d Messwert noch nicht in Health Connect</item>
+        <item quantity="other">%1$d Messwerte noch nicht in Health Connect</item>
+    </plurals>
+    <string name="device_readings_waiting_grant">%1$s. Erlaube OpenWatch, sie in Health Connect zu schreiben, dann werden sie gespeichert.</string>
     <string name="settings_sensors_open_bluetooth">Bluetooth-Einstellungen öffnen</string>
 </resources>

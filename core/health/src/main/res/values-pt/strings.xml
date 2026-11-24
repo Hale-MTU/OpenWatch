@@ -3,6 +3,11 @@
     <string name="health_data_section_garmin">Escrito a partir de um relógio Garmin</string>
     <string name="health_data_section_wearos">Escrito a partir de um relógio Wear OS</string>
     <string name="health_data_section_scale">Escrito a partir da balança</string>
+    <string name="health_data_section_standard">Escrito a partir de um dispositivo com um perfil Bluetooth padrão</string>
+    <string name="health_data_note_standard_heart_rate">De uma cinta de frequência cardíaca, enquanto o respetivo ecrã está aberto ou uma app que autorizou grava com ela: um registo por minuto.</string>
+    <string name="health_data_note_standard_blood_pressure">De um medidor de tensão arterial, cada leitura que entrega quando acorda, com a pulsação que mediu gravada como frequência cardíaca.</string>
+    <string name="health_data_note_standard_blood_glucose">De um glucómetro, as leituras que guardou, entregues quando acorda. Um teste com solução de controlo não é gravado.</string>
+    <string name="health_data_note_standard_weight">De uma balança com o perfil padrão Weight Scale, cada pesagem que entrega quando acorda.</string>
     <string name="health_data_section_reads">Lido do Health Connect</string>
     <string name="health_data_section_watch_app">Pedido pela app do relógio, no próprio relógio</string>
     <string name="health_data_note_garmin_weight">Um peso que uma balança Garmin transmite através do relógio.</string>
@@ -10,6 +15,8 @@
     <string name="health_data_note_wearos_sleep">Uma sessão estimada por noite e por sesta.</string>
     <string name="health_data_note_wearos_hrv">À noite, num relógio que a consiga medir.</string>
     <string name="health_data_note_wearos_workout">Um treino que regista no relógio, com a sua rota e distância.</string>
+    <string name="health_data_note_wearos_entry">O que regista à mão no relógio.</string>
+    <string name="health_data_note_wearos_mindfulness">Uma sessão de respiração que faz no relógio, que é onde o Health Connect as guarda.</string>
     <string name="health_data_note_wearos_skin">Só a partir de um relógio Samsung, com «Temperatura da pele à noite» ativada para esse relógio. Um registo por noite: a diferença em relação à sua noite habitual.</string>
     <string name="health_data_note_scale_estimate">Estimado no telemóvel a partir da medição da balança e do seu perfil corporal.</string>
     <string name="health_data_read_weight">Para as calorias da caminhada e a composição corporal da balança.</string>
@@ -18,9 +25,14 @@
     <string name="health_data_read_sleep">Para que uma noite que já tem uma sessão de sono fique como está.</string>
     <string name="health_data_read_resting_heart_rate">Para que um dia que já tem uma frequência cardíaca em repouso fique como está, e para as zonas de frequência cardíaca que o relógio mostra.</string>
     <string name="health_data_read_heart_rate">A sua frequência cardíaca máxima, para essas zonas, e a energia de um treino.</string>
+    <string name="health_data_read_day_totals">O total do dia de todas as apps, que o relógio Wear OS mostra.</string>
     <string name="health_data_read_history">O seu peso e a sua altura mais recentes são muitas vezes anteriores aos 30 dias que o Health Connect mostra sem este acesso.</string>
     <string name="health_data_read_background">Uma sincronização agendada, com a app fechada, só consegue ver os pesos e os treinos de outra app com este acesso.</string>
     <string name="health_data_watch_heart_rate">O sensor de frequência cardíaca do relógio: a frequência cardíaca, a variabilidade da frequência cardíaca da noite e a estimativa do sono.</string>
     <string name="health_data_watch_background">Para continuar a gravar com o ecrã do relógio desligado.</string>
     <string name="health_data_watch_skin">Só num relógio Samsung, e só quando ativa a temperatura da pele à noite.</string>
+    <string name="health_data_note_wearos_breathing_logged">À noite, só com «Frequência respiratória do relógio» ativada nas Definições; e uma frequência respiratória que regista no relógio.</string>
+    <string name="health_data_note_wearos_spo2_measured">À noite, só a partir de um relógio Samsung, com «SpO2 de hora em hora à noite» ativada para esse relógio; e um valor de oxigénio no sangue que regista ou mede no relógio.</string>
+    <string name="health_data_note_wearos_vo2">Uma estimativa a partir de uma caminhada ou corrida que regista no relógio com a sua rota, quando o seu perfil corporal tem uma frequência cardíaca em repouso.</string>
+    <string name="health_data_watch_spo2_spot">Só num relógio Samsung: quando ativa a SpO2 à noite e quando mede o seu oxigénio no sangue no relógio.</string>
 </resources>

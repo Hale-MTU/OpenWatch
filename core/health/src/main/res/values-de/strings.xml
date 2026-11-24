@@ -3,6 +3,11 @@
     <string name="health_data_section_garmin">Von einer Garmin-Uhr geschrieben</string>
     <string name="health_data_section_wearos">Von einer Wear-OS-Uhr geschrieben</string>
     <string name="health_data_section_scale">Von der Waage geschrieben</string>
+    <string name="health_data_section_standard">Von einem Gerät mit Standard-Bluetooth-Profil geschrieben</string>
+    <string name="health_data_note_standard_heart_rate">Von einem Herzfrequenzgurt, solange seine Ansicht geöffnet ist oder eine App, die du erlaubt hast, damit aufzeichnet: ein Eintrag pro Minute.</string>
+    <string name="health_data_note_standard_blood_pressure">Von einem Blutdruckmessgerät, jede Messung, die es beim Aufwachen übergibt, mit dem gemessenen Puls als Herzfrequenz geschrieben.</string>
+    <string name="health_data_note_standard_blood_glucose">Von einem Blutzuckermessgerät, die gespeicherten Messungen, die es beim Aufwachen übergibt. Eine Messung mit Kontrolllösung wird nicht geschrieben.</string>
+    <string name="health_data_note_standard_weight">Von einer Waage mit dem Standardprofil Weight Scale, jedes Wiegen, das sie beim Aufwachen übergibt.</string>
     <string name="health_data_section_reads">Aus Health Connect gelesen</string>
     <string name="health_data_section_watch_app">Von der Uhr-App angefordert, auf der Uhr</string>
     <string name="health_data_note_garmin_weight">Ein Gewicht, das eine Garmin-Waage über die Uhr weitergibt.</string>
