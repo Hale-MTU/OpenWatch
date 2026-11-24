@@ -1,5 +1,97 @@
 # Changelog
 
+## 0.5.0 - 2026-11-24
+
+### English
+
+- **The watch app, new from the dashboard down.** Tap a figure for its own screen: today's chart, low, average and high, the last days, the time in each heart rate zone, and last night's HRV, blood oxygen, skin temperature, breathing rate and sleep stages.
+- **The quick log on the watch:** water, weight, blood pressure, body fat, blood oxygen, breathing rate, body temperature, blood glucose, height and a one-minute breathing exercise, in the order you choose. Each sync writes them to Health Connect.
+- **Spot measurements:** heart rate, a three-minute HRV, air pressure, and blood oxygen on a Samsung watch, with progress along the screen's edge and a buzz at the end.
+- **Tiles and complications.** "OpenWatch Today" and "OpenWatch Quick log" tiles, a tile editor for the dashboard, and complications for heart rate, steps and floors.
+- **Workouts:** pages for controls, overview, zones and pace; heart rate every second; auto-pause with GPS; a summary with zones, training load, energy, splits and VO2 max; a two-minute recovery measurement; and an offer to record a walk or run the watch noticed. Health Connect gets the laps, the figures and a VO2 max reading.
+- **The phone's figures on the watch:** sleep and its stages, resting heart rate, active calories and distance, the zones and the body profile.
+- **Settings on the watch,** with metric or imperial units and a line that says what each recording setting does.
+- **Standard Bluetooth devices on the phone:** heart rate straps, weight scales, blood pressure monitors and glucose meters. New and not yet tried with many devices.
+- **Update phone and watch together:** they speak a new version of their link, and an older one asks to be updated. The phone asks for new Health Connect permissions for what the watch logs and the new devices measure.
+- **Skin temperature** waits for three nights of your own baseline instead of writing them as "no change". Breathing rate is written by default, and the watch's night is written beside another app's.
+- **Languages.** The phone app is complete in Arabic and Hebrew, and the watch app speaks every language of the phone app.
+- **Fixes:** the live heart rate no longer blocks the watch's status; a long workout route keeps its end; the watch warns before data the phone has not fetched is pruned; a failed read shows as a failure; the add flows survive Android reclaiming the app.
+
+### Espanol
+
+- **La app del reloj, nueva de arriba abajo.** Toca una cifra para abrir su propia pantalla: el grafico de hoy, minimo, media y maximo, los ultimos dias, el tiempo en cada zona de frecuencia cardiaca, y la VFC, el oxigeno en sangre, la temperatura de la piel, la frecuencia respiratoria y las fases del sueno de la ultima noche.
+- **El registro rapido en el reloj:** agua, peso, presion arterial, grasa corporal, oxigeno en sangre, frecuencia respiratoria, temperatura corporal, glucosa en sangre, altura y un ejercicio de respiracion de un minuto, en el orden que elijas. Cada sincronizacion los escribe en Health Connect.
+- **Mediciones puntuales:** pulso, una VFC de tres minutos, presion atmosferica y, en un reloj Samsung, oxigeno en sangre, con el progreso a lo largo del borde de la pantalla y una vibracion al final.
+- **Tarjetas y complicaciones.** Las tarjetas "OpenWatch Hoy" y "OpenWatch Registro rapido", un editor de tarjetas para el panel y complicaciones de pulso, pasos y pisos.
+- **Entrenamientos:** paginas para los controles, la vista general, las zonas y el ritmo; el pulso cada segundo; pausa automatica con GPS; un resumen con zonas, carga de entrenamiento, energia, parciales y VO2 max; una medicion de recuperacion de dos minutos; y la propuesta de registrar una caminata o carrera que el reloj ha detectado. Health Connect recibe las vueltas, las cifras y una lectura de VO2 max.
+- **Las cifras del telefono en el reloj:** el sueno y sus fases, la frecuencia cardiaca en reposo, las calorias activas y la distancia, las zonas y el perfil corporal.
+- **Ajustes en el reloj,** con unidades metricas o imperiales y una linea que dice que hace cada ajuste de registro.
+- **Dispositivos Bluetooth estandar en el telefono:** bandas de frecuencia cardiaca, basculas, tensiometros y glucometros. Es nuevo y aun no se ha probado con muchos dispositivos.
+- **Actualiza el telefono y el reloj a la vez:** usan una nueva version de su conexion, y uno mas antiguo pide que lo actualices. El telefono pide nuevos permisos de Health Connect para lo que registra el reloj y lo que miden los nuevos dispositivos.
+- **La temperatura de la piel** espera tres noches para formar tu propia referencia en lugar de escribirlas como "sin cambios". La frecuencia respiratoria se escribe por defecto, y la noche del reloj se escribe junto a la de otra app.
+- **Idiomas.** La app del telefono esta completa en arabe y hebreo, y la app del reloj habla todos los idiomas de la app del telefono.
+- **Correcciones:** el pulso en directo ya no bloquea el estado del reloj; una ruta de entrenamiento larga conserva su final; el reloj avisa antes de descartar datos que el telefono aun no ha recogido; una lectura fallida se muestra como un fallo; los pasos para anadir un dispositivo ya no se pierden cuando Android cierra la app.
+
+### Deutsch
+
+- **Die Uhr-App, neu vom Dashboard an.** Tippe auf einen Wert fuer seinen eigenen Bildschirm: das Diagramm von heute, Tief, Durchschnitt und Hoch, die letzten Tage, die Zeit in jeder Herzfrequenzzone sowie HRV, Blutsauerstoff, Hauttemperatur, Atemfrequenz und Schlafphasen der letzten Nacht.
+- **Der Schnelleintrag auf der Uhr:** Wasser, Gewicht, Blutdruck, Koerperfett, Blutsauerstoff, Atemfrequenz, Koerpertemperatur, Blutzucker, Groesse und eine einminuetige Atemuebung, in der Reihenfolge, die du waehlst. Jeder Sync schreibt sie in Health Connect.
+- **Einzelmessungen:** Puls, eine dreiminuetige HRV, Luftdruck und auf einer Samsung-Uhr Blutsauerstoff, mit dem Fortschritt am Bildschirmrand und einem Vibrieren am Ende.
+- **Kacheln und Komplikationen.** Die Kacheln "OpenWatch Heute" und "OpenWatch Schnelleintrag", ein Kachel-Editor fuer das Dashboard und Komplikationen fuer Puls, Schritte und Etagen.
+- **Trainings:** Seiten fuer Steuerung, Uebersicht, Zonen und Tempo; der Puls jede Sekunde; Auto-Pause mit GPS; eine Zusammenfassung mit Zonen, Trainingslast, Energie, Kilometerzeiten und VO2max; eine zweiminuetige Erholungsmessung; und das Angebot, einen Gang oder Lauf aufzuzeichnen, den die Uhr bemerkt hat. Health Connect erhaelt die Runden, die Werte und einen VO2max-Wert.
+- **Die Werte des Telefons auf der Uhr:** Schlaf und seine Phasen, Ruheherzfrequenz, Aktivkalorien und Strecke, die Zonen und das Koerperprofil.
+- **Einstellungen auf der Uhr,** mit metrischen oder imperialen Einheiten und einer Zeile, die sagt, was jede Aufzeichnungseinstellung tut.
+- **Standard-Bluetooth-Geraete am Telefon:** Herzfrequenzgurte, Waagen, Blutdruckmessgeraete und Blutzuckermessgeraete. Neu und noch mit wenigen Geraeten erprobt.
+- **Telefon und Uhr gemeinsam aktualisieren:** Sie sprechen eine neue Version ihrer Verbindung, und eine aeltere bittet um ein Update. Das Telefon fragt nach neuen Health-Connect-Berechtigungen fuer das, was die Uhr eintraegt und die neuen Geraete messen.
+- **Hauttemperatur** wartet drei Naechte auf deinen eigenen Ausgangswert, statt sie als "keine Aenderung" zu schreiben. Die Atemfrequenz wird standardmaessig geschrieben, und die Nacht der Uhr wird neben der einer anderen App geschrieben.
+- **Sprachen.** Die Telefon-App ist vollstaendig auf Arabisch und Hebraeisch, und die Uhr-App spricht jede Sprache der Telefon-App.
+- **Korrekturen:** Der Live-Puls blockiert den Status der Uhr nicht mehr; eine lange Trainingsroute behaelt ihr Ende; die Uhr warnt, bevor Daten geloescht werden, die das Telefon noch nicht abgeholt hat; ein fehlgeschlagenes Lesen zeigt sich als Fehler; das Hinzufuegen geht nicht mehr verloren, wenn Android die App beendet.
+
+### Italiano
+
+- **L'app dell'orologio, nuova dalla dashboard in giu.** Tocca un valore per aprire la sua schermata: il grafico di oggi, minimo, media e massimo, gli ultimi giorni, il tempo in ogni zona di frequenza cardiaca, e HRV, ossigeno nel sangue, temperatura cutanea, frequenza respiratoria e fasi del sonno dell'ultima notte.
+- **Il registro rapido sull'orologio:** acqua, peso, pressione sanguigna, grasso corporeo, ossigeno nel sangue, frequenza respiratoria, temperatura corporea, glucosio nel sangue, altezza e un esercizio di respirazione di un minuto, nell'ordine che scegli. Ogni sincronizzazione li scrive in Health Connect.
+- **Misurazioni puntuali:** frequenza cardiaca, un'HRV di tre minuti, pressione atmosferica e, su un orologio Samsung, ossigeno nel sangue, con l'avanzamento lungo il bordo dello schermo e una vibrazione alla fine.
+- **Riquadri e complicazioni.** I riquadri "OpenWatch Oggi" e "OpenWatch Registro rapido", un editor dei riquadri della dashboard e complicazioni per frequenza cardiaca, passi e piani.
+- **Allenamenti:** pagine per comandi, panoramica, zone e passo; frequenza cardiaca ogni secondo; pausa automatica con il GPS; un riepilogo con zone, carico di allenamento, energia, parziali e VO2 max; una misurazione del recupero di due minuti; e la proposta di registrare una camminata o una corsa che l'orologio ha notato. Health Connect riceve i giri, i valori e una lettura di VO2 max.
+- **I valori del telefono sull'orologio:** il sonno e le sue fasi, la frequenza cardiaca a riposo, le calorie attive e la distanza, le zone e il profilo corporeo.
+- **Impostazioni sull'orologio,** con unita metriche o imperiali e una riga che dice cosa fa ogni impostazione di registrazione.
+- **Dispositivi Bluetooth standard sul telefono:** fasce cardio, bilance, misuratori di pressione e glucometri. Sono nuovi e non ancora provati con molti dispositivi.
+- **Aggiorna telefono e orologio insieme:** parlano una nuova versione del loro collegamento, e uno piu vecchio chiede di essere aggiornato. Il telefono chiede nuovi permessi di Health Connect per cio che l'orologio registra e per cio che misurano i nuovi dispositivi.
+- **La temperatura cutanea** aspetta tre notti per il tuo riferimento personale invece di scriverle come "nessuna variazione". La frequenza respiratoria viene scritta per impostazione predefinita, e la notte dell'orologio viene scritta accanto a quella di un'altra app.
+- **Lingue.** L'app del telefono e completa in arabo ed ebraico, e l'app dell'orologio parla tutte le lingue dell'app del telefono.
+- **Correzioni:** la frequenza cardiaca in tempo reale non blocca piu lo stato dell'orologio; il percorso di un allenamento lungo mantiene la sua fine; l'orologio avvisa prima che vengano eliminati dati che il telefono non ha ancora prelevato; una lettura fallita appare come un errore; le procedure di aggiunta sopravvivono quando Android chiude l'app per liberare memoria.
+
+### Eesti
+
+- **Kellarakendus, uus avaekraanist peale.** Puuduta naitajat, et avada selle oma ekraan: tanane graafik, madalaim, keskmine ja korgeim, viimased paevad, aeg igas pulsitsoonis ning eelmise oo HRV, vere hapnikusisaldus, naha temperatuur, hingamissagedus ja unefaasid.
+- **Kiirlogi kellas:** vesi, kaal, vererohk, keharasv, vere hapnikusisaldus, hingamissagedus, kehatemperatuur, veresuhkur, pikkus ja uheminutiline hingamisharjutus, sinu valitud jarjekorras. Iga sunkroonimine kirjutab need Health Connecti.
+- **Uhekordsed mootmised:** pulss, kolmeminutiline HRV, ohurohk ning Samsungi kellas vere hapnikusisaldus, edenemisega ekraani serval ja varinaga lopus.
+- **Paanid ja tusistused.** Paanid "OpenWatch tana" ja "OpenWatch kiirlogi", avaekraani paanide redaktor ning tusistused pulsi, sammude ja korruste jaoks.
+- **Treeningud:** lehed juhtnuppude, ulevaate, tsoonide ja tempo jaoks; pulss iga sekund; automaatne paus GPS-iga; kokkuvote tsoonide, treeningukoormuse, energia, kilomeetriaegade ja VO2 maxiga; kaheminutiline taastumise mootmine; ning pakkumine salvestada kond voi jooks, mille kell markas. Health Connect saab ringid, naitajad ja VO2 maxi naidu.
+- **Telefoni naitajad kellas:** uni ja selle faasid, puhkeoleku pulss, aktiivsed kalorid ja vahemaa, tsoonid ja kehaprofiil.
+- **Seaded kellas**, meetriliste voi inglise uhikutega ning reaga, mis utleb, mida iga salvestamise seade teeb.
+- **Standardsed Bluetoothi seadmed telefonis:** pulsivood, kaalud, vererohumootjad ja glukomeetrid. Uued ja paljude seadmetega veel proovimata.
+- **Uuenda telefon ja kell korraga:** need raagivad oma uhenduse uut versiooni ja vanem palub end uuendada. Telefon kusib uusi Health Connecti lube selle jaoks, mida kell logib ja uued seadmed moodavad.
+- **Naha temperatuur** ootab kolm ood sinu oma lahtetaseme jaoks, selle asemel et kirjutada need kui "muutust pole". Hingamissagedus kirjutatakse vaikimisi ja kella oo kirjutatakse teise rakenduse oo korvale.
+- **Keeled.** Telefonirakendus on taielikult araabia ja heebrea keeles ning kellarakendus raagib koiki telefonirakenduse keeli.
+- **Parandused:** reaalajas pulss ei blokeeri enam kella olekut; pika treeningu marsruut sailitab oma lopu; kell hoiatab, enne kui kustutatakse andmed, mida telefon pole katte saanud; ebaonnestunud lugemine naidatakse ebaonnestumisena; lisamise sammud peavad vastu, kui Android rakenduse malust eemaldab.
+
+### Portugues
+
+- **A app do relogio, nova de cima a baixo.** Toque num valor para abrir o seu proprio ecra: o grafico de hoje, minimo, media e maximo, os ultimos dias, o tempo em cada zona de frequencia cardiaca, e a VFC, o oxigenio no sangue, a temperatura da pele, a frequencia respiratoria e as fases do sono da ultima noite.
+- **O registo rapido no relogio:** agua, peso, tensao arterial, gordura corporal, oxigenio no sangue, frequencia respiratoria, temperatura corporal, glicose no sangue, altura e um exercicio de respiracao de um minuto, pela ordem que escolher. Cada sincronizacao grava-os no Health Connect.
+- **Medicoes pontuais:** pulsacao, uma VFC de tres minutos, pressao atmosferica e, num relogio Samsung, oxigenio no sangue, com o progresso ao longo da margem do ecra e uma vibracao no fim.
+- **Mosaicos e complicacoes.** Os mosaicos "OpenWatch Hoje" e "OpenWatch Registo rapido", um editor de mosaicos para o painel e complicacoes de pulsacao, passos e andares.
+- **Treinos:** paginas para os controlos, a vista geral, as zonas e o ritmo; a pulsacao a cada segundo; pausa automatica com GPS; um resumo com zonas, carga de treino, energia, parciais e VO2 max; uma medicao de recuperacao de dois minutos; e a proposta de registar uma caminhada ou corrida que o relogio detetou. O Health Connect recebe as voltas, os valores e uma leitura de VO2 max.
+- **Os valores do telemovel no relogio:** o sono e as suas fases, a frequencia cardiaca em repouso, as calorias ativas e a distancia, as zonas e o perfil corporal.
+- **Definicoes no relogio,** com unidades metricas ou imperiais e uma linha que diz o que faz cada definicao de registo.
+- **Dispositivos Bluetooth padrao no telemovel:** cintas de frequencia cardiaca, balancas, medidores de tensao arterial e glucometros. Novo e ainda pouco testado com dispositivos reais.
+- **Atualize o telemovel e o relogio em conjunto:** usam uma nova versao da sua ligacao, e um mais antigo pede para ser atualizado. O telemovel pede novas permissoes do Health Connect para o que o relogio regista e o que os novos dispositivos medem.
+- **A temperatura da pele** espera tres noites para formar a sua propria referencia, em vez de as gravar como "sem alteracao". A frequencia respiratoria passa a ser gravada por predefinicao, e a noite do relogio fica gravada ao lado da de outra app.
+- **Idiomas.** A app do telemovel esta completa em arabe e hebraico, e a app do relogio fala todos os idiomas da app do telemovel.
+- **Correcoes:** a pulsacao em direto ja nao bloqueia o estado do relogio; uma rota de treino longa mantem o seu fim; o relogio avisa antes de eliminar dados que o telemovel ainda nao foi buscar; uma leitura falhada aparece como falha; os passos para adicionar um dispositivo ja nao se perdem quando o Android fecha a app.
+
 ## 0.4.1 - 2026-11-22
 
 ### English

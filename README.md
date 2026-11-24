@@ -24,13 +24,20 @@ travels over Bluetooth between the device and the phone. Open source under AGPL-
   rate. At night the watch also measures heart rate variability and, when you switch it on,
   the breathing rate; on a Samsung watch, SpO2 and skin temperature too. Workouts recorded on
   the watch, with GPS, heart rate, distance and climb, reach Health Connect with their route
-  and an estimate of their active calories. The watch app opens on today's dashboard and
-  offers five tiles and three watch face complications, and its settings can be changed from
-  the phone.
+  and an estimate of their active calories. The watch app opens on today's dashboard, where
+  each figure opens its own day, week and last night; a quick log for water, weight, blood
+  pressure and other values entered on the wrist; spot measurements of heart rate, HRV, air
+  pressure and, on a Samsung watch, blood oxygen; and workouts with heart rate zones,
+  auto-pause, a recovery measurement and a summary that matches what the phone writes. It
+  offers five tiles and three watch face complications, shows the sleep, energy and distance
+  the phone knows, and its settings can be changed from the phone.
 - **Xiaomi Body Composition Scale S400 and S400 Pro**: every weigh-in saved to Health Connect
   as it happens, with the app open or closed, decoded from the scale's own broadcast with the
   key from your Xiaomi account. Weight and heart rate as measured; body fat, lean mass and
   body water estimated on the phone.
+- **Standard Bluetooth devices**: a heart rate strap (live heart rate, one record a minute
+  while it is collected), and a weight scale, a blood pressure monitor and a glucose meter on
+  the Bluetooth standard profiles, whose readings reach Health Connect when the device wakes.
 - **OpenVitals and other apps on the phone**, over
   [OpenLink](https://github.com/Hale-MTU/OpenLink): the body profile kept the same in both
   apps, the paired watches and the scale with battery and last sync, a sync on request, and a
