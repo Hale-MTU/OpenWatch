@@ -25,6 +25,8 @@ import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.security.testSeal
 import tech.mmarca.openwatch.data.repository.testDeviceRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
+import tech.mmarca.openwatch.devices.core.DailyGoal
+import tech.mmarca.openwatch.devices.core.SharedGoals
 import tech.mmarca.openwatch.devices.wearos.WearOsAppStatus
 import tech.mmarca.openwatch.devices.wearos.WearOsCompanionManager
 import tech.mmarca.openwatch.devices.wearos.WearOsCompanionStatus
@@ -67,6 +69,7 @@ class WearOsWatchPanelViewModelTest {
             linkStore = WearOsLinkStore(FakeSharedPreferences(), testSeal()),
             onboardWearOsWatch = mockk(relaxed = true),
             cursors = mockk(relaxed = true),
+            sharedGoals = mockk(relaxed = true),
         )
         backgroundScope.launch { vm.uiState.collect { } }
         runCurrent()
@@ -101,6 +104,7 @@ class WearOsWatchPanelViewModelTest {
             linkStore = WearOsLinkStore(FakeSharedPreferences(), testSeal()),
             onboardWearOsWatch = mockk(relaxed = true),
             cursors = mockk(relaxed = true),
+            sharedGoals = mockk(relaxed = true),
         )
         backgroundScope.launch { vm.liveHeartRateBpm.collect { } }
         runCurrent()
@@ -142,6 +146,7 @@ class WearOsWatchPanelViewModelTest {
             linkStore = WearOsLinkStore(FakeSharedPreferences(), testSeal()),
             onboardWearOsWatch = mockk(relaxed = true),
             cursors = cursors,
+            sharedGoals = mockk(relaxed = true),
         )
         runCurrent()
 
@@ -170,5 +175,43 @@ class WearOsWatchPanelViewModelTest {
         assertNull(forming.copy(watchSettings = mapOf(Preferences.SKIN_TEMPERATURE to Preferences.OFF)).skinNightsToGo)
         // A watch that answers without the setting does not measure it.
         assertNull(forming.copy(watchSettings = emptyMap()).skinNightsToGo)
+    }
+
+    @Test
+    fun `a goal the watch took is shared with the connected apps, one it refused is not`() = runTest {
+        val watch = repo.addDevice(
+            displayName = "Galaxy Watch8",
+            address = "7F:12:34:56:78:9A",
+            bluetoothName = "Galaxy Watch8 (3A3B) LE",
+            capabilities = emptySet(),
+            kind = BleDeviceKind.WATCH,
+            integration = DeviceIntegration.WEAROS,
+        )
+        val manager = mockk<WearOsCompanionManager>(relaxed = true)
+        coEvery { manager.setWatchSetting(any(), any(), any(), any()) } returns true
+        coEvery { manager.watchSettings(any(), any()) } returnsMany listOf(
+            mapOf(Preferences.GOAL_STEPS to "12000"),
+            mapOf(Preferences.GOAL_STEPS to "12000"),
+        )
+        val goals = mockk<SharedGoals>(relaxed = true)
+        val vm = WearOsWatchPanelViewModel(
+            savedStateHandle = routeHandle(DeviceDetail(watch.id)),
+            deviceRepository = repo,
+            companionManager = manager,
+            linkStore = WearOsLinkStore(FakeSharedPreferences(), testSeal()),
+            onboardWearOsWatch = mockk(relaxed = true),
+            cursors = mockk(relaxed = true),
+            sharedGoals = goals,
+        )
+        runCurrent()
+
+        vm.setWatchSetting(Preferences.GOAL_STEPS, "12000")
+        runCurrent()
+        // The watch still holds 12000: a 9000 it refused is not shared.
+        vm.setWatchSetting(Preferences.GOAL_STEPS, "9000")
+        runCurrent()
+
+        verify(exactly = 1) { goals.set(DailyGoal.STEPS, 12_000) }
+        verify(exactly = 0) { goals.set(DailyGoal.STEPS, 9_000) }
     }
 }

@@ -28,6 +28,7 @@ class WearPreferenceCodecTest {
                 "hr_day" to "10", "hr_source" to "sensor", "hrv_source" to "sensor", "sleep_hold" to "lock",
                 "skin" to "0", "spo2" to "0", "hr_max" to "0", "hr_rest" to "0",
                 "body_hg" to "0", "body_cm" to "0", "birth_year" to "0", "sex" to "0",
+                "goal_steps" to "8000", "goal_kcal" to "400", "goal_water" to "2000",
                 "samsung" to "1", "skin_granted" to "1", "spo2_granted" to "0",
             ),
             WearPreferenceCodec.encode(defaults, samsung),
@@ -92,5 +93,20 @@ class WearPreferenceCodecTest {
             HeartRateZones.Basis(maxBpm = 176, restingBpm = 52),
             defaults.copy(maxHeartRate = 176, restingHeartRate = 52).zoneBasis(),
         )
+    }
+
+    @Test
+    fun `the daily goals take whole numbers in OpenLink's range, and 0 switches a step or energy goal off`() {
+        val steps = WearPreferenceCodec.apply(defaults, pixel, "goal_steps", "12000")!!
+        assertEquals(12_000, steps.stepGoal)
+        assertEquals("12000", WearPreferenceCodec.encode(steps, pixel)["goal_steps"])
+        val off = WearPreferenceCodec.apply(steps, pixel, "goal_steps", "0")!!
+        assertNull(off.stepGoal)
+        assertEquals("0", WearPreferenceCodec.encode(off, pixel)["goal_steps"])
+        assertEquals(500, WearPreferenceCodec.apply(defaults, pixel, "goal_kcal", "500")!!.activeKcalGoal)
+        assertEquals(2_500, WearPreferenceCodec.apply(defaults, pixel, "goal_water", "2500")!!.waterGoalMl)
+        assertNull(WearPreferenceCodec.apply(defaults, pixel, "goal_steps", "50"))
+        assertNull(WearPreferenceCodec.apply(defaults, pixel, "goal_kcal", "x"))
+        assertNull("a water goal is always there", WearPreferenceCodec.apply(defaults, pixel, "goal_water", "0"))
     }
 }

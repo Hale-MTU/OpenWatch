@@ -112,6 +112,7 @@ class ConnectedAppsViewModel @Inject constructor(
             OpenLink.CAPABILITY_PROFILE,
             OpenLink.CAPABILITY_RECORDING,
             OpenLink.CAPABILITY_LIVE,
+            OpenLink.CAPABILITY_SETTINGS,
         )
     }
 }

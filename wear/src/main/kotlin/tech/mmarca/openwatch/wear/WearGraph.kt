@@ -3,15 +3,18 @@ package tech.mmarca.openwatch.wear
 import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothManager
+import android.content.ComponentName
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import androidx.wear.tiles.TileService
+import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
+import java.time.Year
 import kotlinx.coroutines.flow.StateFlow
-import tech.mmarca.openwatch.wearlink.Page
-import tech.mmarca.openwatch.wearlink.WearLinkEntry
-import tech.mmarca.openwatch.wearlink.WearLinkWorkout
+import tech.mmarca.healthcalculations.preferences.BiologicalSex
+import tech.mmarca.healthcalculations.preferences.BodyProfile
+import tech.mmarca.openwatch.wear.samsung.SamsungHealthPlatform
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateSource
 import tech.mmarca.openwatch.wear.samsung.SamsungIbiSource
@@ -21,6 +24,9 @@ import tech.mmarca.openwatch.wear.workout.MetricStoreWorkoutRows
 import tech.mmarca.openwatch.wear.workout.WorkoutRecorder
 import tech.mmarca.openwatch.wear.workout.WorkoutState
 import tech.mmarca.openwatch.wear.workout.WorkoutStore
+import tech.mmarca.openwatch.wearlink.Page
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
+import tech.mmarca.openwatch.wearlink.WearLinkWorkout
 
 /**
  * Everything the watch app runs on, built by hand once per process
@@ -331,8 +337,15 @@ internal class WearGraph(private val app: Application) {
 
     /** A setting the phone changed: stored, and the running service follows. Link thread. */
     private fun applyPhonePreference(key: String, value: String): Boolean {
-        val next = WearPreferenceCodec.apply(WearSettings.read(app), abilities(), key, value) ?: return false
+        val held = WearSettings.read(app)
+        val next = WearPreferenceCodec.apply(held, abilities(), key, value) ?: return false
+        // The phone sends its shared settings, the goals, with every sync: one that changes nothing resets nothing.
+        if (next == held) return true
         WearSettings.write(app, next)
+        if (next.stepGoal != held.stepGoal) {
+            ComplicationDataSourceUpdateRequester.create(app, ComponentName(app, StepsComplicationService::class.java)).requestUpdateAll()
+        }
+        if (next.waterGoalMl != held.waterGoalMl) TileService.getUpdater(app).requestUpdate(QuickLogTileService::class.java)
         tellHost { onSettingsChanged() }
         return true
     }

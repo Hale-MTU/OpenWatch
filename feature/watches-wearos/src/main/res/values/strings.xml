@@ -35,4 +35,9 @@
     <string name="watch_settings_hrv_source_explained">Off: HRV from the raw pulse signal, every interval. On: the platform\'s beat intervals; today about 60 % of them get lost, so fewer nights have a value.</string>
     <string name="watch_settings_skin_explained">Skin temperature at the wrist while you sleep, a reading a minute. Little power; nothing else changes.</string>
     <string name="watch_settings_spo2_explained">Blood oxygen at most once an hour while you sleep, about 15 s of red light. A few mAh a night; skipped when the arm moves.</string>
+    <string name="watch_settings_goals_explained">Daily goals the watch draws its rings against. Apps connected to OpenWatch with the settings capability share them, both ways; a goal left empty shows no ring.</string>
+    <string name="watch_settings_goal_steps">Step goal</string>
+    <string name="watch_settings_goal_active_kcal">Active energy goal (kcal)</string>
+    <string name="watch_settings_goal_water_ml">Water goal (ml)</string>
+    <string name="watch_settings_goal_none">No goal</string>
 </resources>

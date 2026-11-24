@@ -17,9 +17,11 @@ import tech.mmarca.openlink.host.OpenLinkTrustStore
 import tech.mmarca.openlink.host.SharedPreferencesTrustStorage
 import tech.mmarca.openwatch.MainActivity
 import tech.mmarca.openwatch.StartupActor
+import tech.mmarca.openwatch.devices.core.SharedGoals
 import tech.mmarca.openwatch.link.AppLabelResolver
 import tech.mmarca.openwatch.link.ConnectedAppsIntent
 import tech.mmarca.openwatch.link.FirstPartyApps
+import tech.mmarca.openwatch.link.LinkSettingsStore
 import tech.mmarca.openwatch.link.OpenWatchLinkCapabilities
 import tech.mmarca.openwatch.link.OpenWatchLinkPublisher
 import tech.mmarca.openwatch.link.SystemAppLabelResolver
@@ -33,6 +35,10 @@ object LinkModule {
     @IntoSet
     fun provideLinkPublisherAtStart(publisher: OpenWatchLinkPublisher) = StartupActor("openlink publisher", publisher::start)
 
+
+    /** The daily goals the connected apps share, as a watch's sync and card read and set them. */
+    @Provides
+    fun provideSharedGoals(store: LinkSettingsStore): SharedGoals = store
 
     @Provides
     @Singleton

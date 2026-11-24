@@ -41,6 +41,19 @@ object WearLinkPreferences {
     /** The profile's sex, which the energy and the training load read. [FEMALE] / [MALE], or [OFF] for none. */
     const val SEX: String = "sex"
 
+    /**
+     * The daily goals the watch draws its rings against: steps, active energy in kcal, water in ml,
+     * each a whole number. [OFF] (`0`) is no step or energy goal; a water goal is always there.
+     */
+    const val GOAL_STEPS: String = "goal_steps"
+    const val GOAL_ACTIVE_KCAL: String = "goal_kcal"
+    const val GOAL_WATER_ML: String = "goal_water"
+
+    /** As wide as OpenLink's goal keys (`goal.steps`, `goal.active_calories_kcal`, `goal.water_ml`), so a goal another app shares always fits. */
+    val STEP_GOAL_RANGE: IntRange = 100..100_000
+    val ACTIVE_KCAL_GOAL_RANGE: IntRange = 10..5_000
+    val WATER_GOAL_RANGE: IntRange = 100..10_000
+
     /** Read only: whether the watch has the Samsung Health Platform. [OFF] / [ON]. */
     const val SAMSUNG_AVAILABLE: String = "samsung"
 

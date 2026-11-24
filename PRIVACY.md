@@ -208,8 +208,10 @@ works only inside the phone. OpenVitals is the first. Nothing travels over a net
   forget an app, or switch off any one thing it may do, at any time.
 - What a connected app can be allowed: your body profile (birth year, sex, height,
   weight), shared both ways so you enter it once; the list of your watches and scale with
-  their battery and last sync, and a request to sync one; keeping your watch streaming while
-  the app records an activity; and the watch's heart rate and steps while it does.
+  their battery and last sync, and a request to sync one; your daily goals (steps, active
+  energy, water), shared both ways and sent to your Wear OS watch for its rings; keeping your
+  watch streaming while the app records an activity; and the watch's heart rate and steps
+  while it does.
 - Live readings go only to the app that asked for them, while its recording runs, and are
   not stored by OpenWatch. While they flow, OpenWatch shows a notification naming the app. Notifications, calendar events, music, locations and the scale's
   key are never shared.
