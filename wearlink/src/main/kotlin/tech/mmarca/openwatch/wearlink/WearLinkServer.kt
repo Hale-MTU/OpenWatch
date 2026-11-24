@@ -161,6 +161,10 @@ class WearLinkServer(
                 for (workout in page.items) for (line in WearLinkWorkoutLines.lines(workout)) writer.line(line)
                 writer.line(WearLinkProtocol.formatEnd(page.items.size, page.more))
             }
+            is WearLinkProtocol.Request.PutDay -> {
+                val kept = handler.putDay(request.day)
+                writer.line(if (kept) WearLinkDaily.DAY_OK else WearLinkProtocol.formatError(WearLinkProtocol.ErrorCode.BAD_REQUEST))
+            }
             is WearLinkProtocol.Request.PhoneActive -> {
                 handler.phoneActive(request.epochMillis)
                 writer.line(WearLinkProtocol.formatEnd(0, false))

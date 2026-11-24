@@ -46,6 +46,10 @@ import java.util.UUID
  *   started after `epochMillis` (exclusive): its `WO` header, then its `WP`
  *   pauses and `WR` route points (see [WearLinkWorkout]), then one `END
  *   <count> <more>` that counts workouts. Only a watch announcing `wo` serves it.
+ * - `PUT_DAY <epochDay> <sleep> <awake> <rem> <light> <deep> <restingBpm> <activeKcal>
+ *   <distanceMetres>` → `DAY_OK`: the phone's figures for one day, which the
+ *   watch shows ([WearLinkDaily]). Only a watch announcing `dy` serves it;
+ *   added without a version bump.
  * - `PHONE_ACTIVE <epochMillis>` → `END 0 0`. The wearer unlocked the phone at
  *   that time: they are awake, so the watch ends a sleep hold it started by
  *   itself. Only a watch announcing `pa` serves it.
@@ -170,6 +174,9 @@ object WearLinkProtocol {
     /** The watch keeps the entries made on it, logged by hand or spot-measured: `SINCE lg` ([WearLinkEntries]). */
     const val CAP_ENTRIES: String = "lg"
 
+    /** The watch takes `PUT_DAY`: it shows the phone's figures for a day ([WearLinkDaily]). */
+    const val CAP_DAY_SUMMARY: String = "dy"
+
     /**
      * The settings the phone may read with `GET_PREF` and change with
      * `SET_PREF`: the watch's own ([WearSettings] on the watch). Opaque
@@ -261,6 +268,7 @@ object WearLinkProtocol {
         data object GetPreferences : Request()
         data class LiveHeartRate(val seconds: Int) : Request()
         data class SeriesSince(val key: String, val cursor: String, val limit: Int) : Request()
+        data class PutDay(val day: DaySummary) : Request()
     }
 
     fun formatHello(hello: Hello): String =
@@ -323,6 +331,7 @@ object WearLinkProtocol {
         Request.GetPreferences -> GET_PREFERENCES
         is Request.LiveHeartRate -> "$HEART_RATE_LIVE ${request.seconds.coerceIn(1, MAX_LIVE_SECONDS)}"
         is Request.SeriesSince -> WearLinkSince.formatRequest(request)
+        is Request.PutDay -> WearLinkDaily.format(request.day)
     }
 
     /** Null unless [line] is a well-formed request. */
@@ -334,6 +343,7 @@ object WearLinkProtocol {
         if (fields(line) == listOf(GET_PREFERENCES)) return Request.GetPreferences
         parsePreferenceRequest(line)?.let { return it }
         parseLiveRequest(line)?.let { return Request.LiveHeartRate(it) }
+        WearLinkDaily.parse(line)?.let { return Request.PutDay(it) }
         return null
     }
 

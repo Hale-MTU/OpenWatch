@@ -2,7 +2,11 @@ package tech.mmarca.openwatch.healthconnect
 
 import androidx.health.connect.client.records.Record
 import java.time.Instant
+import java.time.LocalDate
 import kotlin.reflect.KClass
+
+/** One local day's totals as Health Connect aggregates them, from every app; null where the read grant is missing or nothing was recorded. */
+data class DayTotals(val activeKcal: Double? = null, val distanceMetres: Double? = null)
 
 /**
  * What the devices read of Health Connect: the granted set, whether other apps' data is
@@ -26,6 +30,16 @@ interface HealthConnectReads {
 
     /** True when this Health Connect stores skin temperature (a feature of newer versions). */
     fun isSkinTemperatureAvailable(): Boolean
+
+    /** True when this Health Connect stores mindfulness sessions (a feature of newer versions). */
+    fun isMindfulnessAvailable(): Boolean
+
+    /**
+     * The active energy and the distance of each local day from [first] to [last], from any app,
+     * as Health Connect aggregates them. A metric whose read grant is missing is not asked for and
+     * stays null; a day with neither is absent.
+     */
+    suspend fun readDayTotals(first: LocalDate, last: LocalDate): Map<LocalDate, DayTotals>
 
     /** The highest heart rate Health Connect holds in `[start, end)`, from any app; null without the read grant or a sample. */
     suspend fun readMaxHeartRate(start: Instant, end: Instant): Long?

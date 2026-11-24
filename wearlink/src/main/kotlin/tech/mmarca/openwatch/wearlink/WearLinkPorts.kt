@@ -75,6 +75,13 @@ interface WearLinkRequestHandler {
     fun setPreference(key: String, value: String): Boolean
 
     /**
+     * Keeps the phone's figures for one day ([WearLinkDaily]). False when the watch cannot keep
+     * them, which the phone sees as `ERROR bad_request`. Only called when the watch advertised
+     * [WearLinkProtocol.CAP_DAY_SUMMARY].
+     */
+    fun putDay(day: DaySummary): Boolean
+
+    /**
      * Blocks for up to [seconds], handing each heart rate reading to [emit]
      * on the caller's thread as it arrives; returns how many. Returns 0 at
      * once when the watch is off the wrist or cannot measure.

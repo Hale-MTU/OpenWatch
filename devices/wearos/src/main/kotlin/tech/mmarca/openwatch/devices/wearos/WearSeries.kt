@@ -5,6 +5,8 @@ import java.time.Instant
 import java.time.ZoneId
 import tech.mmarca.healthcalculations.model.WearSleepMinute
 import tech.mmarca.openwatch.devices.core.sync.HealthSeries
+import tech.mmarca.openwatch.wearlink.WearLinkEntries
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
 /**
@@ -86,5 +88,16 @@ object WearOsSeries {
         writes = WearSeries.Writes("spo2", HealthSeries.OXYGEN_SATURATION, WearOsSpo2Import.writePermission, WearOsSpo2Import::record),
     )
 
-    val ALL: List<WearSeries<*>> = listOf(HEART_RATE, SLEEP_MINUTES, STEPS, ASCENT, SKIN_TEMPERATURE, HRV, RESPIRATORY_RATE, SPO2)
+    /**
+     * The entries made on the watch, by hand or by a spot measurement ([WearLinkEntries]): several
+     * record types under several grants, so a pass of their own ([WearOsEntrySync]). A type this
+     * build does not know does not parse, and is skipped.
+     */
+    val ENTRIES = WearSeries<WearLinkEntry>(
+        key = WearLinkProtocol.CAP_ENTRIES,
+        parse = WearLinkEntries::parse,
+        timeOf = { Instant.ofEpochMilli(it.epochMillis) },
+    )
+
+    val ALL: List<WearSeries<*>> = listOf(HEART_RATE, SLEEP_MINUTES, STEPS, ASCENT, SKIN_TEMPERATURE, HRV, RESPIRATORY_RATE, SPO2, ENTRIES)
 }

@@ -86,6 +86,12 @@ class WearLinkSession internal constructor(
     }
 
 
+    /** Hands the watch the phone's figures for one day. Only call when the peer advertised [WearLinkProtocol.CAP_DAY_SUMMARY]. */
+    fun putDay(day: DaySummary): WearLinkOutcome<Unit> =
+        exchange(WearLinkProtocol.Request.PutDay(day)) { line ->
+            if (line.trim() == WearLinkDaily.DAY_OK) Reply.Done(Unit) else Reply.Unexpected
+        }
+
     /** Tells the watch the wearer used the phone at [epochMillis]. */
     fun notifyPhoneActive(epochMillis: Long): WearLinkOutcome<Unit> =
         exchange(WearLinkProtocol.Request.PhoneActive(epochMillis)) { line ->

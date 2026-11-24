@@ -17,6 +17,8 @@
     <string name="health_data_note_wearos_workout">A workout you record on the watch, with its route and distance.</string>
     <string name="health_data_note_wearos_breathing">Only with “Breathing rate from the watch” switched on in Settings.</string>
     <string name="health_data_note_wearos_spo2">Only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch.</string>
+    <string name="health_data_note_wearos_entry">What you log on the watch, by hand.</string>
+    <string name="health_data_note_wearos_mindfulness">A breathing session you do on the watch, where Health Connect keeps them.</string>
     <string name="health_data_note_wearos_skin">Only from a Samsung watch, with “Skin temperature at night” switched on for that watch. One record per night: the difference from your own usual night.</string>
     <string name="health_data_note_scale_estimate">Estimated on the phone from the scale\'s measurement and your body profile.</string>
     <string name="health_data_read_weight">For the walking calories and the scale\'s body composition.</string>
@@ -25,6 +27,7 @@
     <string name="health_data_read_sleep">So a night that already holds a sleep session is left alone.</string>
     <string name="health_data_read_resting_heart_rate">So a day that already holds a resting heart rate is left alone, and for the heart rate zones the watch shows.</string>
     <string name="health_data_read_heart_rate">Your highest heart rate, for those zones, and a workout\'s energy.</string>
+    <string name="health_data_read_day_totals">The day\'s total from every app, which the Wear OS watch shows.</string>
     <string name="health_data_read_history">Your latest weight and height are often older than the 30 days Health Connect shows without it.</string>
     <string name="health_data_read_background">A sync that runs on a schedule, with the app closed, can only see another app\'s weights and workouts with it.</string>
     <string name="health_data_watch_heart_rate">The watch\'s heart rate sensor: heart rate, the night\'s heart rate variability and the sleep estimate.</string>

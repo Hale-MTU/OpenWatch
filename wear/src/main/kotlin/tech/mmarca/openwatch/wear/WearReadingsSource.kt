@@ -11,10 +11,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import tech.mmarca.healthcalculations.insights.HeartRateZones
+import tech.mmarca.openwatch.wearlink.DaySummary
 import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
 /**
@@ -23,7 +25,9 @@ import tech.mmarca.openwatch.wearlink.WearLinkEntry
  * with the night that ended on it, and the entries made on the watch.
  *
  * A day that is over is read from the store once and kept. Only today is
- * read again, so a refresh costs one day of rows, not the week's. A
+ * read again, so a refresh costs one day of rows, not the week's. The
+ * phone's figures for the days ([PhoneDays]) fill the tiles the watch
+ * cannot, and the night that ended today gives the sleep's stages. A
  * heart-rate day is the largest, up to some 8 600 rows. The entries are few,
  * the month the store keeps of what a wearer logs by hand, and are read whole
  * each time, so the newest weight counts however old it is.
@@ -36,30 +40,41 @@ internal class WearReadingsSource(
 ) {
     private val pastDays = HashMap<LocalDate, DayReadings>()
 
+    /** The tiles' values, and the stages of the night that ended today as the phone sent them. */
+    data class Readings(
+        val metrics: Map<MetricTile, MetricUiState> = emptyMap(),
+        val sleepStages: Map<SleepStage, Double> = emptyMap(),
+    )
+
     /**
      * The tiles' values now, read again every [REFRESH_MILLIS] while someone
      * collects. Today's time in the heart rate zones is counted on the basis
      * [zoneBasis] gives, here with the read, off the main thread; null counts
      * none. A basis that changes (the phone sent a maximum or a resting rate)
      * is read on at once, not at the next refresh, and so is an entry made on
-     * the watch ([MetricStore.updates]). [zoneBasis] is collected on the IO
-     * dispatcher too, so it may load a file when it starts.
+     * the watch ([MetricStore.updates]) and a day the phone put
+     * ([phoneDays]). [zoneBasis] and [phoneDays] are collected on the IO
+     * dispatcher too, so they may load a file when they start.
      */
-    fun metrics(zoneBasis: Flow<HeartRateZones.Basis?>): Flow<Map<MetricTile, MetricUiState>> = channelFlow {
+    fun metrics(
+        zoneBasis: Flow<HeartRateZones.Basis?>,
+        phoneDays: Flow<Map<Long, DaySummary>> = flowOf(emptyMap()),
+    ): Flow<Readings> = channelFlow {
         var reading: Job? = null
-        combine(zoneBasis.distinctUntilChanged(), store.updates(WearMetrics.ENTRIES)) { basis, _ -> basis }.collect { basis ->
-            // One reader at a time: the days that are kept are not a shared map.
-            reading?.cancelAndJoin()
-            reading = launch {
-                while (true) {
-                    send(load(basis))
-                    delay(REFRESH_MILLIS)
+        combine(zoneBasis.distinctUntilChanged(), phoneDays, store.updates(WearMetrics.ENTRIES)) { basis, phone, _ -> basis to phone }
+            .collect { (basis, phone) ->
+                // One reader at a time: the days that are kept are not a shared map.
+                reading?.cancelAndJoin()
+                reading = launch {
+                    while (true) {
+                        send(Readings(load(basis, phone), WearReadings.sleepStages(phone, LocalDate.now(clock))))
+                        delay(REFRESH_MILLIS)
+                    }
                 }
             }
-        }
     }.flowOn(Dispatchers.IO)
 
-    internal fun load(zoneBasis: HeartRateZones.Basis? = null): Map<MetricTile, MetricUiState> {
+    internal fun load(zoneBasis: HeartRateZones.Basis? = null, phone: Map<Long, DaySummary> = emptyMap()): Map<MetricTile, MetricUiState> {
         val zone = clock.zone
         val today = LocalDate.now(clock)
         val days = (DAYS - 1 downTo 0).map { back ->
@@ -68,7 +83,7 @@ internal class WearReadingsSource(
             if (back == 0) read(date, zone, zoneBasis) else pastDays.getOrPut(date) { read(date, zone) }
         }
         pastDays.keys.retainAll { it >= today.minusDays(DAYS.toLong()) }
-        return WearReadings.metrics(days, clock.instant(), zone, readEntries(), waterGoalMl)
+        return WearReadings.metrics(days, clock.instant(), zone, readEntries(), waterGoalMl, phone)
     }
 
     /** The entries made on the watch, oldest first, read again each time one is made. */

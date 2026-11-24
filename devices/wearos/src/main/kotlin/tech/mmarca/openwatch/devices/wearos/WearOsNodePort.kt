@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.devices.wearos
 
 import java.time.Instant
+import tech.mmarca.openwatch.wearlink.DaySummary
 
 /**
  * What the phone can tell about the OpenWatch Wear OS app on a watch.
@@ -196,5 +197,16 @@ interface WearOsNodePort {
         targetAddress: String?,
         targetName: String?,
         at: Instant,
+    ): Boolean
+
+    /**
+     * Hands the watch the phone's figures for [days] (`PUT_DAY`). False when no
+     * bonded watch matches or the watch app does not take them. Any other
+     * failure throws [WearOsLinkFailure].
+     */
+    suspend fun pushDays(
+        targetAddress: String?,
+        targetName: String?,
+        days: List<DaySummary>,
     ): Boolean
 }

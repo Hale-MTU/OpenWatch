@@ -31,6 +31,7 @@ import org.junit.Test
 import tech.mmarca.openwatch.core.performance.DefaultDispatcherProvider
 import tech.mmarca.openwatch.core.security.testSeal
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
+import tech.mmarca.openwatch.wearlink.DaySummary
 import tech.mmarca.openwatch.wearlink.Page
 import tech.mmarca.openwatch.wearlink.WearLinkConnection
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
@@ -119,10 +120,23 @@ class BluetoothWearOsNodePortTest {
             assertNull(port.pullWatchSettings(REGISTERED, NAME))
             assertFalse(port.setWatchSetting(REGISTERED, NAME, WearLinkProtocol.Preferences.HEART_RATE_MAX, "190"))
             assertFalse(port.notifyPhoneActive(REGISTERED, NAME, Instant.ofEpochMilli(T0)))
+            assertFalse(port.pushDays(REGISTERED, NAME, listOf(DaySummary(20_400, sleepMinutes = 400))))
         }
 
         assertEquals(1, watch.data.hellos.get())
         assertEquals(listOf("HR"), watch.data.asked)
+    }
+
+    @Test
+    fun `the phone's days go to a watch that takes them, all in one turn`() = runTest {
+        watch = LoopbackWatch(linkStore.tokenFor(REGISTERED, BOND), setOf(WearLinkProtocol.CAP_HEART_RATE, WearLinkProtocol.CAP_DAY_SUMMARY))
+        val days = listOf(DaySummary(20_400, sleepMinutes = 400), DaySummary(20_401, restingBpm = 54, activeKcal = 300, distanceMetres = 4_022))
+
+        assertTrue(port.pushDays(REGISTERED, NAME, days))
+
+        assertEquals(days, watch.data.days)
+        assertEquals(listOf("DAY", "DAY"), watch.data.asked)
+        assertEquals(1, watch.connects.get())
     }
 
     @Test
@@ -470,6 +484,14 @@ class BluetoothWearOsNodePortTest {
         }
 
         override fun setPreference(key: String, value: String): Boolean = true.also { asked += "SET" }
+
+        /** The days the phone put, in order. */
+        val days: MutableList<DaySummary> = Collections.synchronizedList(mutableListOf())
+
+        override fun putDay(day: DaySummary): Boolean = true.also {
+            asked += "DAY"
+            days += day
+        }
 
         /** While set, each live window sends a reading and lasts [LIVE_WINDOW_MILLIS]; otherwise the watch is off the wrist. */
         @Volatile

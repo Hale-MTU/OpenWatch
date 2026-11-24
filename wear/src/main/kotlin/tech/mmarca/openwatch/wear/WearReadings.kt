@@ -10,6 +10,7 @@ import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.healthcalculations.model.HeartRateSample as ZoneSample
 import tech.mmarca.healthcalculations.stats.medianOrNull
 import tech.mmarca.healthcalculations.stats.timeBucketedAverageOrNull
+import tech.mmarca.openwatch.wearlink.DaySummary
 import tech.mmarca.openwatch.wearlink.WearLinkEntry
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.AscentMinute
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HeartRateSample
@@ -234,10 +235,11 @@ internal object WearReadings {
         )
 
     /**
-     * The tiles the watch's own recording can fill, and the [entries] made on
-     * it ([putEntries]). [days] are the last seven, oldest first, today last.
-     * A tile with no row in any of them is left out, so the screen says "no
-     * reading yet" instead of showing zero.
+     * The tiles the watch's own recording can fill, the [entries] made on it
+     * ([putEntries]) and the [phone]'s figures by day number ([putPhoneDays]).
+     * [days] are the last seven, oldest first, today last. A tile with no row
+     * in any of them is left out, so the screen says "no reading yet" instead
+     * of showing zero.
      */
     fun metrics(
         days: List<DayReadings>,
@@ -245,6 +247,7 @@ internal object WearReadings {
         zone: ZoneId,
         entries: List<WearLinkEntry> = emptyList(),
         waterGoalMl: Double = DisplayPreferences.DEFAULT_WATER_GOAL_ML.toDouble(),
+        phone: Map<Long, DaySummary> = emptyMap(),
     ): Map<MetricTile, MetricUiState> {
         val today = days.lastOrNull() ?: return emptyMap()
         val thisHour = hourOf(now.toEpochMilli(), zone)
@@ -291,6 +294,7 @@ internal object WearReadings {
                 )
             }
             putEntries(days, entries, thisHour, zone, waterGoalMl)
+            putPhoneDays(days, phone)
         }.mapValues { (_, state) -> state.copy(weekEnd = today.date) }
     }
 
@@ -339,6 +343,46 @@ internal object WearReadings {
             val state = this[metric] ?: MetricUiState()
             if (state.current == null) put(metric, state.copy(current = logged.value))
         }
+    }
+
+    /**
+     * The phone's figures ([DaySummary], `PUT_DAY`) on the tiles the watch
+     * cannot fill itself: the night's sleep, the resting heart rate, the
+     * active calories and the distance, each in its tile's base unit. As for
+     * the night's vitals, the value now is today's only, the night that ended
+     * today or today's total: an older day has its bar and is not passed off
+     * as today's. A day the phone sent nothing for is no data, not a zero.
+     */
+    private fun MutableMap<MetricTile, MetricUiState>.putPhoneDays(days: List<DayReadings>, phone: Map<Long, DaySummary>) {
+        if (phone.isEmpty()) return
+        for ((metric, value) in PHONE_FIGURES) {
+            val week = days.map { day -> phone[day.date.toEpochDay()]?.let(value)?.toDouble() }
+            if (week.all { it == null }) continue
+            put(metric, MetricUiState(current = week.last(), week = week.dropWhile { it == null }))
+        }
+    }
+
+    /** The tiles the phone's figures fill, each with its value of a day. */
+    private val PHONE_FIGURES: List<Pair<MetricTile, (DaySummary) -> Int?>> = listOf(
+        MetricTile.SLEEP to { it.sleepMinutes },
+        MetricTile.RESTING_HEART_RATE to { it.restingBpm },
+        MetricTile.ACTIVE_CALORIES to { it.activeKcal },
+        MetricTile.DISTANCE to { it.distanceMetres },
+    )
+
+    /**
+     * The minutes of each stage of the night that ended on [date], as the
+     * phone sent them, for the sleep detail; empty when the phone sent no
+     * night for it, or one without stages.
+     */
+    fun sleepStages(phone: Map<Long, DaySummary>, date: LocalDate): Map<SleepStage, Double> {
+        val night = phone[date.toEpochDay()]?.takeIf { it.sleepMinutes != null } ?: return emptyMap()
+        return listOf(
+            SleepStage.AWAKE to night.awakeMinutes,
+            SleepStage.REM to night.remMinutes,
+            SleepStage.LIGHT to night.lightMinutes,
+            SleepStage.DEEP to night.deepMinutes,
+        ).mapNotNull { (stage, minutes) -> minutes?.let { stage to it.toDouble() } }.toMap()
     }
 
     /** The tiles a spot measurement's entry can stand in for, with its type. */

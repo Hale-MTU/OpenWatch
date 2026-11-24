@@ -15,7 +15,9 @@ import androidx.health.connect.client.records.FloorsClimbedRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.HeightRecord
+import androidx.health.connect.client.records.HydrationRecord
 import androidx.health.connect.client.records.LeanBodyMassRecord
+import androidx.health.connect.client.records.MindfulnessSessionRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.PowerRecord
 import androidx.health.connect.client.records.Record
@@ -106,6 +108,10 @@ object HealthDataCatalog {
             write(RespiratoryRateRecord::class, R.string.health_data_note_wearos_breathing),
             write(OxygenSaturationRecord::class, R.string.health_data_note_wearos_spo2),
             write(SkinTemperatureRecord::class, R.string.health_data_note_wearos_skin),
+            write(HydrationRecord::class, R.string.health_data_note_wearos_entry),
+            write(WeightRecord::class, R.string.health_data_note_wearos_entry),
+            write(BloodPressureRecord::class, R.string.health_data_note_wearos_entry),
+            write(MindfulnessSessionRecord::class, R.string.health_data_note_wearos_mindfulness),
         ),
         HealthDataSection.SCALE to listOf(
             write(WeightRecord::class),
@@ -127,6 +133,8 @@ object HealthDataCatalog {
             read(SleepSessionRecord::class, R.string.health_data_read_sleep),
             read(RestingHeartRateRecord::class, R.string.health_data_read_resting_heart_rate),
             read(HeartRateRecord::class, R.string.health_data_read_heart_rate),
+            read(ActiveCaloriesBurnedRecord::class, R.string.health_data_read_day_totals),
+            read(DistanceRecord::class, R.string.health_data_read_day_totals),
             HealthDataEntry(
                 HealthPermission.PERMISSION_READ_HEALTH_DATA_HISTORY,
                 noteRes = R.string.health_data_read_history,

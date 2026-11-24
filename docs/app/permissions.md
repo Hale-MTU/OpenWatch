@@ -24,6 +24,13 @@ settings card).
 Skin temperature is one record per night, the difference from the wearer's own usual night.
 A Garmin watch's oxygen saturation and respiratory rate come with its files.
 
+What the entries made on a Wear OS watch write, each when the phone pulls it: `WRITE_HYDRATION`,
+`WRITE_WEIGHT` and `WRITE_BLOOD_PRESSURE` (a glass of water, a weight, a blood pressure logged in
+the watch's quick log), `WRITE_MINDFULNESS` (a breathing session, only where Health Connect
+stores mindfulness sessions), and `WRITE_HEART_RATE` and `WRITE_HEART_RATE_VARIABILITY` (a spot
+measurement). An entry whose write is not granted waits on the watch, and the watch's card asks
+for the grant; the entries whose write is granted go on.
+
 What a scale weigh-in writes: `WRITE_WEIGHT`, `WRITE_BODY_FAT`, `WRITE_LEAN_BODY_MASS`,
 `WRITE_BODY_WATER_MASS`.
 
@@ -45,6 +52,12 @@ composition), `READ_EXERCISE` (a minute inside a workout gets no walking-energy 
 the heart rate zones the watch shows), `READ_HEART_RATE` (the highest heart rate, for those
 zones, and a workout's energy). `READ_HEALTH_DATA_HISTORY`: the latest weight and height are
 often older than the 30 days Health Connect shows without it.
+
+What a Wear OS watch shows of the phone's: after each sync the phone hands it the last week's
+nights (`READ_SLEEP`), resting heart rates (`READ_RESTING_HEART_RATE`), and each day's active
+calories and distance from every app (`READ_ACTIVE_CALORIES_BURNED`, `READ_DISTANCE`). A figure
+whose read is not granted stays off the watch, and a scheduled sync that cannot see other apps'
+data sends none.
 
 `READ_HEALTH_DATA_IN_BACKGROUND`: a scheduled sync with the app closed can only see other
 apps' weights, workouts and sleep with this grant. Without it the sync still writes the
@@ -100,6 +113,10 @@ it fails `HealthPermissionsTest`.
 | `WRITE_RESPIRATORY_RATE` | Only with “Breathing rate from the watch” switched on in Settings. |
 | `WRITE_OXYGEN_SATURATION` | Only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch. |
 | `WRITE_SKIN_TEMPERATURE` | Only from a Samsung watch, with “Skin temperature at night” switched on for that watch. One record per night: the difference from your own usual night. |
+| `WRITE_HYDRATION` | What you log on the watch, by hand. |
+| `WRITE_WEIGHT` | What you log on the watch, by hand. |
+| `WRITE_BLOOD_PRESSURE` | What you log on the watch, by hand. |
+| `WRITE_MINDFULNESS` | A breathing session you do on the watch, where Health Connect keeps them. |
 
 **Written from the scale**
 
@@ -130,6 +147,8 @@ it fails `HealthPermissionsTest`.
 | `READ_SLEEP` | So a night that already holds a sleep session is left alone. |
 | `READ_RESTING_HEART_RATE` | So a day that already holds a resting heart rate is left alone, and for the heart rate zones the watch shows. |
 | `READ_HEART_RATE` | Your highest heart rate, for those zones, and a workout's energy. |
+| `READ_ACTIVE_CALORIES_BURNED` | The day's total from every app, which the Wear OS watch shows. |
+| `READ_DISTANCE` | The day's total from every app, which the Wear OS watch shows. |
 | `READ_HEALTH_DATA_HISTORY` | Your latest weight and height are often older than the 30 days Health Connect shows without it. |
 | `READ_HEALTH_DATA_IN_BACKGROUND` | A sync that runs on a schedule, with the app closed, can only see another app's weights and workouts with it. |
 

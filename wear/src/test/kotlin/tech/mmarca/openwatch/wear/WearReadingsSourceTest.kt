@@ -55,8 +55,8 @@ class WearReadingsSourceTest {
         // A minute at 150 bpm: zone 4 of a 200 bpm maximum over a resting 60.
         store.putAll(WearMetrics.HEART_RATE, listOf(HeartRateSample(at("09:00:00"), 150), HeartRateSample(at("09:01:00"), 150)))
 
-        val without = withTimeout(TIMEOUT_MILLIS) { source.metrics(flowOf(null)).first() }
-        val with = withTimeout(TIMEOUT_MILLIS) { source.metrics(flowOf(HeartRateZones.Basis(maxBpm = 200, restingBpm = 60))).first() }
+        val without = withTimeout(TIMEOUT_MILLIS) { source.metrics(flowOf(null)).first().metrics }
+        val with = withTimeout(TIMEOUT_MILLIS) { source.metrics(flowOf(HeartRateZones.Basis(maxBpm = 200, restingBpm = 60))).first().metrics }
 
         assertTrue(without.getValue(MetricTile.HEART_RATE).zoneTime.isEmpty())
         assertEquals(Duration.ofMinutes(1), with.getValue(MetricTile.HEART_RATE).zoneTime[3])
@@ -70,7 +70,7 @@ class WearReadingsSourceTest {
         // The refresh is half a minute away: a second value inside the timeout can only come from the new basis.
         val zones = mutableListOf<List<Duration>>()
         withTimeout(TIMEOUT_MILLIS) {
-            source.metrics(basis).map { it.getValue(MetricTile.HEART_RATE).zoneTime }.take(2).collect {
+            source.metrics(basis).map { it.metrics.getValue(MetricTile.HEART_RATE).zoneTime }.take(2).collect {
                 zones += it
                 basis.value = HeartRateZones.Basis(maxBpm = 150)
             }
@@ -87,7 +87,7 @@ class WearReadingsSourceTest {
         // The refresh is half a minute away: a second value inside the timeout can only come from the entry.
         val water = mutableListOf<Double?>()
         withTimeout(TIMEOUT_MILLIS) {
-            source.metrics(flowOf(null)).map { it[MetricTile.HYDRATION]?.current }.take(2).collect {
+            source.metrics(flowOf(null)).map { it.metrics[MetricTile.HYDRATION]?.current }.take(2).collect {
                 water += it
                 entries.log(WearLinkEntry.Type.WATER, 250.0)
             }

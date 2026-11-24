@@ -189,6 +189,15 @@ class MemoryHandler(
     override fun phoneActive(epochMillis: Long) {
         phoneActive += epochMillis
     }
+
+    /** The days the phone pushed, as the watch keeps them: the latest per day. */
+    val days: MutableMap<Long, DaySummary> = linkedMapOf()
+
+    @Synchronized
+    override fun putDay(day: DaySummary): Boolean {
+        days[day.epochDay] = day
+        return true
+    }
     override fun liveHeartRate(seconds: Int, emit: (WearLinkProtocol.HeartRateSample) -> Unit): Int {
         live.forEach(emit)
         return live.size

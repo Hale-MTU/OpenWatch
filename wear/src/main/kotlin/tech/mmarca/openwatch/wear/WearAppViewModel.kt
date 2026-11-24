@@ -24,7 +24,9 @@ import tech.mmarca.openwatch.wearlink.WearLinkEntry
  * the moment they are logged. Only the metrics the watch can give are
  * offered ([MetricOffer]), and the dashboard shows those of the tiles the
  * wearer chose ([WearTilePreferences]), which the tile editor changes here.
- * Every screen shows its readings in the unit system the settings hold now.
+ * Every screen shows its readings in the unit system the settings hold now,
+ * and the phone's figures for the last days ([PhoneDays]) fill the sleep,
+ * resting heart rate, active calories and distance tiles as they arrive.
  */
 class WearAppViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -35,23 +37,27 @@ class WearAppViewModel(application: Application) : AndroidViewModel(application)
     /** The settings as they change. The first read loads their file: collected off the main thread. */
     private val settings = flow { emitAll(graph.settings) }.flowOn(Dispatchers.IO)
 
+    /** The days the phone put; the first read loads their file: collected off the main thread. */
+    private val phoneDays = flow { emitAll(graph.phoneDays.days) }.flowOn(Dispatchers.IO)
+
     /** Read once, off the main thread: the sensor list and the package manager. */
     private val sensors = flow { emit(graph.sensors) }.flowOn(Dispatchers.IO)
 
     val uiState: StateFlow<WearUiState> =
         combine(
-            readings.metrics(zoneBasis = settings.map { it.zoneBasis() }),
+            readings.metrics(zoneBasis = settings.map { it.zoneBasis() }, phoneDays = phoneDays),
             readings.entries(),
             sensors,
             // The first read of the chosen tiles loads their file too.
             flow { emitAll(graph.tiles.chosen) }.flowOn(Dispatchers.IO),
             settings.map { DisplayPreferences(unitSystem = it.unitSystem) }.distinctUntilChanged(),
-        ) { metrics, entries, sensors, tiles, preferences ->
+        ) { readings, entries, sensors, tiles, preferences ->
             WearUiState(
-                availableMetrics = MetricOffer.available(sensors, withReadings = metrics.keys),
+                availableMetrics = MetricOffer.available(sensors, withReadings = readings.metrics.keys),
                 sensors = sensors,
-                metrics = metrics,
+                metrics = readings.metrics,
                 preferences = preferences,
+                sleepStages = readings.sleepStages,
                 entries = entries,
                 tiles = tiles,
             )

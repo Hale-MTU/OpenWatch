@@ -211,6 +211,9 @@ internal class WearGraph(private val app: Application) {
         )
     }
 
+    /** The phone's figures for the last days (`PUT_DAY`): the night, the resting heart rate, energy and distance. The first read loads their file. */
+    val phoneDays: PhoneDays by lazy { PhoneDays(app) }
+
     /** When a phone last pulled, and the reminder to sync before unpulled rows are pruned. */
     val pulls: PhonePulls by lazy { PhonePulls(app) }
     val syncReminder: SyncReminder by lazy {
@@ -229,6 +232,7 @@ internal class WearGraph(private val app: Application) {
             heldPreferences = { WearPreferenceCodec.encode(WearSettings.read(app), abilities()) },
             setPreference = ::applyPhonePreference,
             workouts = ::workoutsPulled,
+            putDay = { day -> phoneDays.put(day) },
             localName = ::localName,
             state = linkState,
         )

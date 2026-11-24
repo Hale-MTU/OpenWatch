@@ -79,11 +79,13 @@ class WearOsSyncCursorStoreTest {
         store.setStepsCursor("w1", Instant.ofEpochMilli(1_000L))
         store.setSkinNightMedians("w1", listOf(NightMedian(null, 33.0)))
         store.setSeriesCursor("w1", "hv", "0123456789abcdef.12")
+        store.setSeriesCursor("w1", "lg", "0123456789abcdef.40")
 
         store.clear("w1")
 
         assertEquals(Instant.EPOCH, store.stepsCursor("w1"))
         assertNull(store.seriesCursor("w1", "hv"))
+        assertNull(store.seriesCursor("w1", "lg"))
         assertTrue(state.values.isEmpty())
     }
 

@@ -85,6 +85,12 @@ import tech.mmarca.openwatch.wearlink.WearLinkSince
  * read and write it, or the right to read other apps' data, none is written.
  * The sleep cursor moves once the nights are written.
  *
+ * Then the entries made on the watch, by hand or by a spot measurement
+ * ([WearOsEntrySync]), each type written where its grant is in, and the
+ * workouts last. After them the watch gets what the phone knows: the heart
+ * rate zones' basis ([WearOsZoneSync]) and the last week's figures
+ * ([WearOsDaySync]), neither of which can fail the sync.
+ *
  * If the user withheld the write permission for an estimate, it is skipped
  * and the sync goes on, as a [DeviceSyncResult.Succeeded.skipped] entry.
  *
@@ -162,6 +168,10 @@ class WearOsWatchSyncService(
 
     private val zones by lazy { WearOsZoneSync(healthConnect, nodePort, zoneProfile, clock, zone) }
 
+    private val entries = WearOsEntrySync(importRepository, healthConnect, cursors, zone)
+
+    private val days = WearOsDaySync(healthConnect, nodePort, clock, zone)
+
     private val linkRetry = object : WearOsLinkRetry {
         override suspend fun <T> run(pull: suspend () -> T): T = retryOnce(pull)
     }
@@ -204,8 +214,12 @@ class WearOsWatchSyncService(
                 val night = nightSeries.sync(device, reader) ?: return notPaired(device)
                 progress.skipped += night.skipped
                 if (spent()) return@series
+                val logged = entries.sync(device, reader) { progress.page() } ?: return notPaired(device)
+                if (logged.withheld.isNotEmpty()) progress.withheld(HealthSeries.RECORDS, logged.withheld)
+                // The workouts stay the last pull: the watch counts a phone's pull by them.
                 if (!pullWorkouts(device, progress)) return notPaired(device)
                 zones.sync(device, linkRetry)
+                days.sync(device, linkRetry)
             }
         } catch (error: CancellationException) {
             throw error

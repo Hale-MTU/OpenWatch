@@ -11,6 +11,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.mmarca.healthcalculations.insights.HeartRateZones
+import tech.mmarca.openwatch.wearlink.DaySummary
 import tech.mmarca.openwatch.wearlink.WearLinkEntry
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.AscentMinute
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HeartRateSample
@@ -544,5 +545,37 @@ class WearReadingsTest {
         val metrics = WearReadings.metrics(week(day(today)), now, zone, emptyList())
         assertFalse(MetricTile.HYDRATION in metrics)
         assertFalse(MetricTile.WEIGHT in metrics)
+    }
+
+    @Test
+    fun thePhonesFiguresFillSleepRestingRateEnergyAndDistanceTodayOnly() {
+        val yesterday = today.minusDays(1).toEpochDay()
+        val phone = mapOf(
+            yesterday to DaySummary(yesterday, sleepMinutes = 400, restingBpm = 55, activeKcal = 300, distanceMetres = 4000),
+            today.toEpochDay() to DaySummary(today.toEpochDay(), sleepMinutes = 430, awakeMinutes = 20, remMinutes = 90, lightMinutes = 250, deepMinutes = 70),
+        )
+        val metrics = WearReadings.metrics(week(day(today)), now, zone, phone = phone)
+
+        assertEquals(430.0, metrics.getValue(MetricTile.SLEEP).current!!, 0.0)
+        assertEquals(listOf(400.0, 430.0), metrics.getValue(MetricTile.SLEEP).week)
+        // Yesterday's resting rate and energy have their bar; they are not today's.
+        assertNull(metrics.getValue(MetricTile.RESTING_HEART_RATE).current)
+        assertEquals(listOf(55.0, null), metrics.getValue(MetricTile.RESTING_HEART_RATE).week)
+        assertNull(metrics.getValue(MetricTile.ACTIVE_CALORIES).current)
+        assertEquals(listOf(4000.0, null), metrics.getValue(MetricTile.DISTANCE).week)
+        assertEquals(today, metrics.getValue(MetricTile.DISTANCE).weekEnd)
+        assertEquals(
+            mapOf(SleepStage.AWAKE to 20.0, SleepStage.REM to 90.0, SleepStage.LIGHT to 250.0, SleepStage.DEEP to 70.0),
+            WearReadings.sleepStages(phone, today),
+        )
+        assertTrue(WearReadings.sleepStages(phone, today.plusDays(1)).isEmpty())
+    }
+
+    @Test
+    fun withoutThePhonesFiguresItsTilesHaveNoReading() {
+        val metrics = WearReadings.metrics(week(day(today)), now, zone)
+        for (tile in listOf(MetricTile.SLEEP, MetricTile.RESTING_HEART_RATE, MetricTile.ACTIVE_CALORIES, MetricTile.DISTANCE)) {
+            assertFalse(tile.name, tile in metrics)
+        }
     }
 }

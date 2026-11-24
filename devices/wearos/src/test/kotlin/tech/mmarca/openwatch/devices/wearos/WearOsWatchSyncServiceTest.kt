@@ -28,7 +28,9 @@ import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import tech.mmarca.openwatch.healthconnect.DayTotals
 import tech.mmarca.openwatch.healthconnect.HealthConnectReads
+import tech.mmarca.openwatch.wearlink.DaySummary
 import tech.mmarca.healthcalculations.model.WearSleepMinute
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
@@ -151,6 +153,8 @@ class WearOsWatchSyncServiceTest {
                     page(pulled.measurements, pulled.hasMore, cursor) { it.time }
                 }
                 WearLinkProtocol.CAP_SKIN_TEMPERATURE -> page(skinMinutes.filter { it.time.isAfter(since) }, hasMore = false, cursor) { it.time }
+                // The entries pass has its own test (WearOsEntrySyncTest); here the watch holds none.
+                WearLinkProtocol.CAP_ENTRIES -> page(emptyList<Any>(), hasMore = false, cursor) { Instant.EPOCH }
                 else -> error("no such series: $series")
             }
             return page as WearOsSeriesPage<T>?
@@ -170,7 +174,15 @@ class WearOsWatchSyncServiceTest {
             WearOsWorkoutPage(emptyList(), hasMore = false)
 
         override suspend fun notifyPhoneActive(targetAddress: String?, targetName: String?, at: Instant): Boolean = false
+
+        override suspend fun pushDays(targetAddress: String?, targetName: String?, days: List<DaySummary>): Boolean {
+            pushedDays += days
+            return true
+        }
     }
+
+    /** The days the sync handed the watch. */
+    private val pushedDays = mutableListOf<DaySummary>()
 
     /** Every pull, by series key and the cursor it went out with. */
     private val asked = mutableListOf<Pair<String, String>>()
@@ -203,6 +215,7 @@ class WearOsWatchSyncServiceTest {
     init {
         coEvery { healthConnect.grantedPermissions() } returns setOf(STEPS_WRITE, CALORIES_WRITE, EXERCISE_READ, WEIGHT_READ, RESTING_HR_READ, RESTING_HR_WRITE)
         coEvery { healthConnect.readsOtherAppsDataNow() } returns true
+        coEvery { healthConnect.readDayTotals(any(), any()) } returns emptyMap()
         coEvery { importRepository.insertImportedRecords(any()) } answers {
             val records = firstArg<List<androidx.health.connect.client.records.Record>>()
             if (records.any(refused)) throw SecurityException("Caller doesn't have the write permission")
@@ -505,6 +518,23 @@ class WearOsWatchSyncServiceTest {
         val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
         assertTrue((result as DeviceSyncResult.Succeeded).skipped.any { it.reason == SkipReason.NO_BODY_WEIGHT })
+    }
+
+    @Test
+    fun `the watch gets the week's days after the workouts, and none from a background sync blind to other apps`() = runTest {
+        pages += WearOsHeartRatePage(emptyList(), hasMore = false)
+        coEvery { healthConnect.readDayTotals(any(), any()) } returns mapOf(LocalDate.of(2026, 10, 7) to DayTotals(activeKcal = 312.4))
+
+        assertEquals(synced(), service().sync(WATCH, SyncTrigger.REQUESTED, null))
+        assertEquals((20_727L..20_733L).toList(), pushedDays.map { it.epochDay })
+        assertEquals(312, pushedDays.last().activeKcal)
+        assertEquals("lg", asked.last().first)
+
+        pushedDays.clear()
+        coEvery { healthConnect.readsOtherAppsDataNow() } returns false
+        pages += WearOsHeartRatePage(emptyList(), hasMore = false)
+        assertEquals(synced(), service().sync(WATCH, SyncTrigger.BACKGROUND, null))
+        assertTrue(pushedDays.isEmpty())
     }
 
     @Test

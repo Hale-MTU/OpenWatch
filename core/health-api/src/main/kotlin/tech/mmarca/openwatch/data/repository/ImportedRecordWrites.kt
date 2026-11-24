@@ -15,7 +15,9 @@ import androidx.health.connect.client.records.FloorsClimbedRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.HeightRecord
+import androidx.health.connect.client.records.HydrationRecord
 import androidx.health.connect.client.records.LeanBodyMassRecord
+import androidx.health.connect.client.records.MindfulnessSessionRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.PowerRecord
 import androidx.health.connect.client.records.Record
@@ -175,6 +177,8 @@ internal fun Record.timeSpan(): ClosedRange<Instant>? = when (this) {
     is ExerciseSessionRecord -> startTime..endTime
     is FloorsClimbedRecord -> startTime..endTime
     is HeartRateRecord -> startTime..endTime
+    is HydrationRecord -> startTime..endTime
+    is MindfulnessSessionRecord -> startTime..endTime
     is PowerRecord -> startTime..endTime
     is SleepSessionRecord -> startTime..endTime
     is SpeedRecord -> startTime..endTime

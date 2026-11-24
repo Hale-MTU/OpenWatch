@@ -16,6 +16,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.withContext
+import tech.mmarca.openwatch.wearlink.DaySummary
 import tech.mmarca.openwatch.wearlink.Page
 import tech.mmarca.openwatch.wearlink.WearLinkClient
 import tech.mmarca.openwatch.wearlink.WearLinkConnection
@@ -117,6 +118,16 @@ class BluetoothWearOsNodePort internal constructor(
         val match = bondedWatchOrNull(targetAddress, targetName) ?: return@onIo false
         val outcome = exchange(owner, match, targetAddress, PING_TIMEOUT_MS, WearLinkProtocol.CAP_PHONE_ACTIVE) {
             it.notifyPhoneActive(at.toEpochMilli())
+        } ?: return@onIo false
+        unwrap(outcome)
+        true
+    }
+
+    override suspend fun pushDays(targetAddress: String?, targetName: String?, days: List<DaySummary>): Boolean = onIo { owner ->
+        val match = bondedWatchOrNull(targetAddress, targetName) ?: return@onIo false
+        // Every day in one turn on the watch's link: a refusal ends the turn with it.
+        val outcome = exchange(owner, match, targetAddress, PULL_TIMEOUT_MS, WearLinkProtocol.CAP_DAY_SUMMARY) { session ->
+            days.asSequence().map(session::putDay).firstOrNull { it !is WearLinkOutcome.Ok } ?: WearLinkOutcome.Ok(Unit)
         } ?: return@onIo false
         unwrap(outcome)
         true
