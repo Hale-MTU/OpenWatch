@@ -9,7 +9,8 @@ import tech.mmarca.openwatch.wear.WearUiState
 
 /**
  * The dashboard, the start destination: today's tiles, each opening its
- * metric, the quick log, the workout ([onStartActivity]) and the status.
+ * metric, the spot measurements where the watch can take one, the quick
+ * log, the workout ([onStartActivity]) and the status.
  * [state] is read at each composition, so the screen shows the newest.
  */
 internal fun NavGraphBuilder.dashboardDestination(
@@ -23,8 +24,10 @@ internal fun NavGraphBuilder.dashboardDestination(
             tiles = MetricTile.DefaultTiles.filter { it in current.availableMetrics },
             metrics = current.metrics,
             unitSystem = current.preferences.unitSystem,
+            canMeasure = current.sensors?.spotKinds.orEmpty().isNotEmpty(),
             // A second tap before the screen is up must not push it twice.
             onOpenMetric = { navController.navigate(WearRoutes.metric(it)) { launchSingleTop = true } },
+            onMeasure = { navController.navigate(WearRoutes.MEASURE) { launchSingleTop = true } },
             onQuickLog = { navController.navigate(WearRoutes.QUICK_LOG) { launchSingleTop = true } },
             onStartActivity = onStartActivity,
             onOpenStatus = { navController.navigate(WearRoutes.STATUS) },

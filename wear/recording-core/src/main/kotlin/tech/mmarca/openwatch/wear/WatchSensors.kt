@@ -37,16 +37,20 @@ data class WatchSensors(
 
 /**
  * A reading the wearer starts by hand, by its plain kind; the screens give
- * each its name, icon and colour. The names are in the measurement's route,
- * so they are never renamed.
+ * each its name, icon and colour, and `SpotMeasurements` takes it
+ * ([SpotRules]). The names are in the measurement's route, so they are
+ * never renamed.
  */
-enum class SpotKind {
-    /** The pulse now, from the heart rate sensor. */
-    HEART_RATE,
+enum class SpotKind(
+    /** The longest the measurement runs, seconds. */
+    val seconds: Int,
+) {
+    /** The pulse now, from the heart rate sensor: settled once enough readings agree. */
+    HEART_RATE(30),
 
-    /** The RMSSD of a minute of single beats. */
-    HRV,
+    /** The RMSSD of a minute of single beats; it always runs the whole minute. */
+    HRV(60),
 
     /** The barometer, with the altitude it stands for at standard pressure. */
-    AIR_PRESSURE,
+    AIR_PRESSURE(10),
 }

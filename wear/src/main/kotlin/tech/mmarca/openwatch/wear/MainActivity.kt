@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
                 workoutActive = workout.running || workout.finished,
                 workoutRequests = workoutRequests,
                 onLog = viewModel::log,
+                spot = graph.spot::run,
                 statusScreen = { onOpenWorkout ->
                     StatusScreen(
                         onGrant = ::requestMissingPermissions,

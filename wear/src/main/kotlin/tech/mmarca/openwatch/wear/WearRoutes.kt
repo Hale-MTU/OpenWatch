@@ -25,4 +25,15 @@ object WearRoutes {
 
     /** The guided breathing minute, logged as a mindful session when it ends. */
     const val BREATHE = "breathe"
+
+    /** The spot measurements this watch can take. */
+    const val MEASURE = "measure"
+    const val MEASUREMENT_ARG = "measurement"
+
+    /** One spot measurement, `measure/HEART_RATE`, from the list or a metric's detail. */
+    const val MEASUREMENT = "measure/{$MEASUREMENT_ARG}"
+    fun measurement(kind: SpotKind) = "measure/${kind.name}"
+
+    /** The measurement a [MEASUREMENT_ARG] names; null for a name this build has none for, and for none. */
+    fun spotKindOf(argument: String?): SpotKind? = SpotKind.entries.firstOrNull { it.name == argument }
 }

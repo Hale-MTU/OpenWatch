@@ -7,7 +7,10 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import tech.mmarca.openwatch.wear.features.dashboard.dashboardDestination
+import tech.mmarca.openwatch.wear.features.measure.measureDestinations
 import tech.mmarca.openwatch.wear.features.metric.metricDestination
 import tech.mmarca.openwatch.wear.features.quicklog.quickLogDestinations
 import tech.mmarca.openwatch.wear.features.recording.workoutDestination
@@ -16,10 +19,11 @@ import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
 /**
- * The whole watch UI: theme, scaffold and navigation. It renders [state] and
- * hands what the wearer logs to [onLog]; nothing here reads a sensor. Each
- * feature declares its destinations in its own package; the dashboard opens
- * a metric, the quick log, the workout and the link and recorder status
+ * The whole watch UI: theme, scaffold and navigation. It renders [state],
+ * hands what the wearer logs to [onLog] and runs a spot measurement through
+ * [spot]; nothing here reads a sensor. Each feature declares its
+ * destinations in its own package; the dashboard opens a metric, the spot
+ * measurements, the quick log, the workout and the link and recorder status
  * ([statusScreen]).
  *
  * A running workout, or a saved one whose summary is still open, brings the
@@ -36,6 +40,8 @@ fun OpenWatchWearApp(
     workoutRequests: Int = 0,
     /** Logs a value entered by hand now: its type, its value and the second value of a pair. */
     onLog: (type: WearLinkEntry.Type, value: Double, second: Double?) -> Unit = { _, _, _ -> },
+    /** Runs one spot measurement (`WearGraph.spot`), which keeps its reading. */
+    spot: (SpotKind) -> Flow<SpotEvent> = { emptyFlow() },
     /** Link and recorder status, permissions and paired phones; it can open the workout. */
     statusScreen: @Composable (onOpenWorkout: () -> Unit) -> Unit = {},
 ) {
@@ -43,6 +49,7 @@ fun OpenWatchWearApp(
     // state through this holder instead of a value captured at build time.
     val currentState by rememberUpdatedState(state)
     val currentLog by rememberUpdatedState(onLog)
+    val currentSpot by rememberUpdatedState(spot)
 
     OpenWatchWearTheme {
         // AppScaffold draws the time once, above every screen.
@@ -55,6 +62,7 @@ fun OpenWatchWearApp(
             ) {
                 dashboardDestination(navController, { currentState }, onStartActivity = openWorkout)
                 metricDestination(navController) { currentState }
+                measureDestinations(navController, { currentState }) { kind -> currentSpot(kind) }
                 quickLogDestinations(navController, { currentState }) { type, value, second -> currentLog(type, value, second) }
                 statusDestination { statusScreen(openWorkout) }
                 workoutDestination(navController) { currentState }

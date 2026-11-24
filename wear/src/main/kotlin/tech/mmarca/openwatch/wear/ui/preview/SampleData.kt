@@ -8,6 +8,7 @@ import tech.mmarca.openwatch.wear.SampleStats
 import tech.mmarca.openwatch.wear.features.recording.RecordingUiState
 import tech.mmarca.openwatch.wear.SleepStage
 import tech.mmarca.openwatch.wear.MetricTile
+import tech.mmarca.openwatch.wear.WatchSensors
 import tech.mmarca.openwatch.wear.WearUiState
 import tech.mmarca.openwatch.wear.features.recording.ActivityType
 import tech.mmarca.openwatch.wear.features.recording.WorkoutField
@@ -121,7 +122,11 @@ object SampleData {
         WearLinkEntry.of(System.currentTimeMillis() - 600_000, WearLinkEntry.Type.BLOOD_PRESSURE, 121.0, 79.0),
     )
 
+    /** A watch with a heart rate sensor, a barometer and GPS, and no single-beat sensor. */
+    val sensors = WatchSensors.ALL.copy(heartBeat = false)
+
     val uiState = WearUiState(
+        sensors = sensors,
         metrics = metrics,
         sleepStages = sleepStages,
         entries = entries,

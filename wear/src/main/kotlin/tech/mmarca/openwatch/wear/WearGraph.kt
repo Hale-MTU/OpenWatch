@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothManager
 import android.content.pm.PackageManager
-import android.hardware.Sensor
-import android.hardware.SensorManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -166,19 +164,41 @@ internal class WearGraph(private val app: Application) {
     val liveHeartRate: LiveHeartRate by lazy { LiveHeartRate(app, isRecording = { heartRate.isRunning }) }
 
     /**
-     * What the watch has to measure with, read once: the facts the recorders
-     * and the link already go by (the heart rate, the step counter, the
-     * barometer), the heart-beat sensor and the GPS receiver. The screens
-     * offer a metric, a workout's field or a spot measurement by it. Reads the
-     * sensor list and the package manager: not on the main thread.
+     * What the watch has to measure with, read once: the facts the recorders,
+     * the link and the spot measurements go by (the heart rate, the
+     * heart-beat sensor, the step counter, the barometer) and the GPS
+     * receiver. The screens offer a metric, a workout's field or a spot
+     * measurement by it. Reads the sensor list and the package manager: not
+     * on the main thread.
      */
     val sensors: WatchSensors by lazy {
         WatchSensors(
             heartRate = liveHeartRate.hasSensor,
-            heartBeat = app.getSystemService(SensorManager::class.java)?.getDefaultSensor(Sensor.TYPE_HEART_BEAT) != null,
+            heartBeat = HeartBeatSensor.hasSensor(app),
             stepCounter = StepRecorder.hasStepCounter(app),
             barometer = AscentRecorder.hasBarometer(app),
             gps = app.packageManager.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS),
+        )
+    }
+
+    private val heartBeats: HeartBeatSensor by lazy { HeartBeatSensor(app) }
+    private val spotPressure: PressureSensor by lazy { PressureSensor(app) }
+
+    /**
+     * The spot measurements the wearer starts by hand, each over a source of
+     * its own and only where [sensors] has its sensor (read when one starts,
+     * off the main thread): the screens run them through it and never open a
+     * sensor.
+     */
+    val spot: SpotMeasurements by lazy {
+        SpotMeasurements(
+            app,
+            heartRate = { liveHeartRate.takeIf { sensors.heartRate }?.let { live -> SpotSensor(live::listen) } },
+            heartBeats = { heartBeats.takeIf { sensors.heartBeat } },
+            pressure = { spotPressure.takeIf { sensors.barometer } },
+            heartRateGranted = { WearPermissions.hasHeartRate(app) },
+            entries = entries,
+            debug = debug,
         )
     }
 

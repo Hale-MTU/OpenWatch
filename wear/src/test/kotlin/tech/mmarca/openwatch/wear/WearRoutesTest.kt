@@ -24,4 +24,13 @@ class WearRoutesTest {
         assertNull(WearRoutes.metricOf(""))
         assertNull(WearRoutes.metricOf(null))
     }
+
+    @Test
+    fun everyMeasurementsRouteNamesItsKind() {
+        for (kind in SpotKind.entries) {
+            assertEquals(kind, WearRoutes.spotKindOf(WearRoutes.measurement(kind).substringAfter("measure/")))
+        }
+        assertNull(WearRoutes.spotKindOf("SPO2"))
+        assertNull(WearRoutes.spotKindOf(null))
+    }
 }

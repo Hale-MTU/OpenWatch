@@ -113,6 +113,16 @@ The watch app's dashboard has a **Log** button, below the activity rings:
 
 The newest six entries are listed below, with their time. The entries count at once toward the dashboard's Water and Weight tiles and their detail screens (the newest weight is the value shown, however old). They are kept on the watch for a month, and the phone does not write them to Health Connect yet.
 
+### Spot measurements
+
+Where the watch has a sensor for one, its dashboard has a **Measure** button, and the heart rate and HRV detail screens a **Measure now**:
+
+- **Heart rate**: from the heart rate sensor, held still, usually within 15 seconds. The value is the median of the newest five readings once eight are in, so one stray reading while the sensor locks on does not move it; with none in half a minute it says the watch is off the wrist or the reading was not reliable.
+- **Heart rate variability**: a minute of single beats, sitting still, offered only on a watch whose sensor reports each beat. The value is the RMSSD, computed as for a night's windows, on at least 30 clean beats; while it runs the screen shows the pulse.
+- **Air pressure**: the barometer's mean of five readings, with the altitude it stands for at standard pressure.
+
+A heart rate or HRV asks for heart rate access first where it is missing. The measurement goes on when the screen goes off, and its result is on the screen when the watch wakes. A heart rate or HRV is kept as an entry measured on the watch, beside the quick log's, and stands in as the dashboard's value now where the watch's own recording has none that day; the air pressure is shown and not kept. Not yet tried on a watch.
+
 ### Settings on the watch and from the phone
 
 The watch app's screen and the phone's *Watch settings* card (on the watch's device screen) show the same settings, kept on the watch:
