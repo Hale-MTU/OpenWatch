@@ -5,6 +5,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.workout.WorkoutSnapshot
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
@@ -40,6 +41,12 @@ class WorkoutRecordingStateTest {
         val state = snapshot.copy(speedMetresPerSecond = 1.4).toRecordingState(WorkoutSport.RUNNING, title = 42)
         assertEquals(1.4, state.speedMetersPerSecond!!, 0.0)
         assertEquals(2.5, state.averageSpeedMetersPerSecond!!, 0.0)
+    }
+
+    @Test
+    fun `the pause button is named for what it does now`() {
+        assertEquals(R.string.workout_pause, pauseActionLabel(paused = false))
+        assertEquals(R.string.workout_resume, pauseActionLabel(paused = true))
     }
 
     @Test

@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.wear.features.recording
 
 import android.text.format.DateUtils
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.pager.HorizontalPager
 import androidx.wear.compose.foundation.pager.PagerState
@@ -275,17 +277,29 @@ private fun PacePage(state: RecordingUiState, fields: Set<WorkoutField>, unitSys
     }
 }
 
+/** What the pause button does now, its caption and its name for a screen reader: resume a paused workout, pause a running one. */
+@StringRes
+internal fun pauseActionLabel(paused: Boolean): Int = if (paused) R.string.workout_resume else R.string.workout_pause
+
+/**
+ * Pause or resume, and stop. Each button carries its action as its content
+ * description, so a screen reader names it; the caption under it says the
+ * same and is left out of the semantics, or it would be read twice.
+ */
 @Composable
 private fun ControlsPage(state: RecordingUiState, onTogglePause: () -> Unit, onStop: () -> Unit) {
+    val pauseLabel = stringResource(pauseActionLabel(state.paused))
+    val stopLabel = stringResource(R.string.workout_stop)
     PageColumn {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 FilledTonalIconButton(onClick = onTogglePause, modifier = Modifier.size(56.dp)) {
-                    Icon(if (state.paused) Icons.Outlined.PlayArrow else Icons.Outlined.Pause, contentDescription = null)
+                    Icon(if (state.paused) Icons.Outlined.PlayArrow else Icons.Outlined.Pause, contentDescription = pauseLabel)
                 }
                 Text(
-                    text = stringResource(if (state.paused) R.string.workout_resume else R.string.workout_pause),
+                    text = pauseLabel,
                     style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.clearAndSetSemantics { },
                 )
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -297,9 +311,9 @@ private fun ControlsPage(state: RecordingUiState, onTogglePause: () -> Unit, onS
                         contentColor = MaterialTheme.colorScheme.onErrorContainer,
                     ),
                 ) {
-                    Icon(Icons.Outlined.Stop, contentDescription = null)
+                    Icon(Icons.Outlined.Stop, contentDescription = stopLabel)
                 }
-                Text(text = stringResource(R.string.workout_stop), style = MaterialTheme.typography.labelSmall)
+                Text(text = stopLabel, style = MaterialTheme.typography.labelSmall, modifier = Modifier.clearAndSetSemantics { })
             }
         }
     }
