@@ -71,6 +71,12 @@ internal class RecordingSettingsViewModel(
     /** SpO2 at night; switching on needs the grant the screen asked for. */
     fun setSpo2AtNight(on: Boolean) = change { it.copy(spo2AtNight = on) }
 
+    /** Whether a run or a ride with a route pauses by itself; a workout that runs keeps what it started with. */
+    fun setAutoPause(on: Boolean) = change { it.copy(autoPause = on) }
+
+    /** Whether the watch offers to record a walk or a run it sees in the step minutes. */
+    fun setAutoDetect(on: Boolean) = change { it.copy(autoDetect = on) }
+
     private fun change(edit: (WatchPreferences) -> WatchPreferences) {
         viewModelScope.launch(io) { port.change(edit) }
     }

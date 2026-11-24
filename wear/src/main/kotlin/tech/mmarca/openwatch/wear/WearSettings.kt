@@ -25,6 +25,9 @@ import tech.mmarca.openwatch.wearlink.HeartRateInterval
  *   cannot tell which mode is on.
  * - [unitSystem]: how the screens and tiles show a reading, chosen in the
  *   watch's settings; metric until the wearer chooses.
+ * - `auto_pause` and `auto_detect` ([WatchPreferences.autoPause],
+ *   [WatchPreferences.autoDetect]): a workout's pause by itself and the
+ *   offer of a walk or run seen in the step minutes, both on by default.
  */
 internal object WearSettings {
 
@@ -57,6 +60,10 @@ internal object WearSettings {
 
     /** A [UnitSystem] name; written only when the wearer chooses. */
     private const val KEY_UNIT_SYSTEM = "unit_system"
+
+    /** Whether a workout pauses by itself, and whether a walk or run is offered as one; both on until the wearer switches them off. */
+    private const val KEY_AUTO_PAUSE = "auto_pause"
+    private const val KEY_AUTO_DETECT = "auto_detect"
 
     fun heartRateDay(context: Context): HeartRateInterval =
         prefs(context).getString(KEY_HEART_RATE_DAY, null)?.let(HeartRateInterval::fromWire)
@@ -169,6 +176,8 @@ internal object WearSettings {
             SEX_MALE -> BiologicalSex.MALE
             else -> null
         },
+        autoPause = prefs(context).getBoolean(KEY_AUTO_PAUSE, true),
+        autoDetect = prefs(context).getBoolean(KEY_AUTO_DETECT, true),
     )
 
     /**
@@ -189,6 +198,8 @@ internal object WearSettings {
             .putInt(KEY_WEIGHT_HG, preferences.weightHectograms ?: 0)
             .putInt(KEY_HEIGHT_CM, preferences.heightCm ?: 0)
             .putInt(KEY_BIRTH_YEAR, preferences.birthYear ?: 0)
+            .putBoolean(KEY_AUTO_PAUSE, preferences.autoPause)
+            .putBoolean(KEY_AUTO_DETECT, preferences.autoDetect)
             .apply {
                 when (preferences.sex) {
                     BiologicalSex.FEMALE -> putString(KEY_SEX, SEX_FEMALE)

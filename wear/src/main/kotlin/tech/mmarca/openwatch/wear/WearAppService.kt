@@ -30,6 +30,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import tech.mmarca.openwatch.wear.workout.RecoveryAtStop
 import tech.mmarca.openwatch.wear.workout.WorkoutPillKey
 import tech.mmarca.openwatch.wear.workout.pillKey
 import tech.mmarca.openwatch.wear.workout.sportName
@@ -128,6 +129,7 @@ class WearAppService : Service(), WearGraph.Host {
         graph.worn.start()
         debugSnapshots.start()
         graph.syncReminder.start()
+        graph.detection.start()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -147,12 +149,16 @@ class WearAppService : Service(), WearGraph.Host {
             ACTION_WORKOUT_START -> {
                 val sport = WorkoutSport.fromId(intent.getStringExtra(EXTRA_SPORT)) ?: return START_STICKY
                 val gps = intent.getBooleanExtra(EXTRA_GPS, false) && WearPermissions.hasLocation(this)
-                graph.workout.start(sport, gps)
+                graph.workout.start(sport, gps, startMillis = intent.getLongExtra(EXTRA_START, 0L).takeIf { it > 0L })
                 return START_STICKY
             }
             ACTION_WORKOUT_PAUSE -> { graph.workout.pause(); return START_STICKY }
             ACTION_WORKOUT_RESUME -> { graph.workout.resume(); return START_STICKY }
-            ACTION_WORKOUT_STOP -> { graph.workout.stop(measureRecovery = intent.getBooleanExtra(EXTRA_RECOVERY, false)); return START_STICKY }
+            ACTION_WORKOUT_STOP -> {
+                val recovery = RecoveryAtStop.entries.firstOrNull { it.name == intent.getStringExtra(EXTRA_RECOVERY) } ?: RecoveryAtStop.NONE
+                graph.workout.stop(recovery)
+                return START_STICKY
+            }
             ACTION_SETTINGS_CHANGED -> onSettingsChanged()
         }
         graph.link.start()
@@ -398,6 +404,7 @@ class WearAppService : Service(), WearGraph.Host {
             unregisterReceiver(bluetoothReceiver)
             graph.worn.stop()
             graph.syncReminder.stop()
+            graph.detection.stop()
             bedtimeMonitor.stop()
             debugSnapshots.stop()
             mainHandler.removeCallbacksAndMessages(null)
@@ -416,7 +423,7 @@ class WearAppService : Service(), WearGraph.Host {
         private const val CHANNEL_ID = "phone_link"
         private const val WORKOUT_CHANNEL_ID = "workout"
         private const val NOTIFICATION_ID = 1
-        // 2 is WearPhoneRequests.NOTIFICATION_ID.
+        // 2 is WearPhoneRequests.NOTIFICATION_ID, 4 SyncReminder's, 5 ActivityDetectionMonitor's.
         private const val WORKOUT_NOTIFICATION_ID = 3
         private const val MILLIS_PER_SECOND = 1_000L
         private const val ACTION_TOGGLE_PPG_LOG = "tech.mmarca.openwatch.wear.TOGGLE_PPG_LOG"
@@ -428,20 +435,33 @@ class WearAppService : Service(), WearGraph.Host {
         private const val ACTION_WORKOUT_STOP = "tech.mmarca.openwatch.wear.WORKOUT_STOP"
         private const val EXTRA_SPORT = "sport"
         private const val EXTRA_GPS = "gps"
+        private const val EXTRA_START = "start"
         private const val EXTRA_RECOVERY = "recovery"
 
-        /** Starts a workout; [gps] only takes effect with the location grant. Called from the foreground app. */
-        fun startWorkout(context: Context, sport: WorkoutSport, gps: Boolean) =
-            sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_START).putExtra(EXTRA_SPORT, sport.id).putExtra(EXTRA_GPS, gps))
+        /**
+         * Starts a workout; [gps] only takes effect with the location grant. Called from the
+         * foreground app, or from the offer of a walk or run the watch saw, which begins it at
+         * [startMillis], in the past, and credits it with what the watch kept since.
+         */
+        fun startWorkout(context: Context, sport: WorkoutSport, gps: Boolean, startMillis: Long? = null) = sendWorkout(
+            context,
+            Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_START)
+                .putExtra(EXTRA_SPORT, sport.id)
+                .putExtra(EXTRA_GPS, gps)
+                .apply { startMillis?.let { putExtra(EXTRA_START, it) } },
+        )
 
         fun pauseWorkout(context: Context) = sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_PAUSE))
 
         fun resumeWorkout(context: Context) = sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_RESUME))
 
-        /** Ends the workout; with [measureRecovery] the heart rate stays live for the recovery's two minutes. */
-        fun stopWorkout(context: Context, measureRecovery: Boolean = false) = sendWorkout(
+        /**
+         * Ends the workout. [recovery] says what becomes of the heart rate recovery: nothing, the
+         * falls read from a rest before the stop, or the heart rate kept live for two minutes.
+         */
+        fun stopWorkout(context: Context, recovery: RecoveryAtStop = RecoveryAtStop.NONE) = sendWorkout(
             context,
-            Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_STOP).putExtra(EXTRA_RECOVERY, measureRecovery),
+            Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_STOP).putExtra(EXTRA_RECOVERY, recovery.name),
         )
 
         private fun sendWorkout(context: Context, intent: Intent) {

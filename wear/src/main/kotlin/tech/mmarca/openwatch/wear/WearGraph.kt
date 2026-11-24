@@ -16,6 +16,7 @@ import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateSource
 import tech.mmarca.openwatch.wear.samsung.SamsungIbiSource
 import tech.mmarca.openwatch.wear.samsung.SamsungSpotSource
+import tech.mmarca.openwatch.wear.workout.ActivityDetectionMonitor
 import tech.mmarca.openwatch.wear.workout.MetricStoreWorkoutRows
 import tech.mmarca.openwatch.wear.workout.WorkoutRecorder
 import tech.mmarca.openwatch.wear.workout.WorkoutState
@@ -189,6 +190,11 @@ internal class WearGraph(private val app: Application) {
     /** Its callback already runs on the main thread. */
     val workout: WorkoutRecorder by lazy {
         WorkoutRecorder(app, store, workoutState, debug, settings = { settings.value }) { host?.onWorkoutChanged() }
+    }
+
+    /** The offer of a walk or a run seen in the step minutes, while no workout or recovery runs. The service starts it. */
+    val detection: ActivityDetectionMonitor by lazy {
+        ActivityDetectionMonitor(app, store, debug, settings = { settings.value }, workoutRunning = { workout.isActive || workout.isRecovering })
     }
 
     val ppgLogger: PpgRawLogger by lazy { PpgRawLogger(app) }

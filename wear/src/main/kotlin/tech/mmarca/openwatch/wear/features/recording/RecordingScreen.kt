@@ -75,6 +75,7 @@ import tech.mmarca.openwatch.wear.ui.theme.HeartZoneColors
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 import tech.mmarca.openwatch.wear.ui.theme.StepsColor
 import tech.mmarca.openwatch.wear.ui.theme.WorkoutColor
+import tech.mmarca.openwatch.wear.workout.RecoveryAtStop
 
 internal enum class WorkoutPage { CONTROLS, OVERVIEW, HEART, PACE }
 
@@ -121,8 +122,12 @@ fun rememberRecordingScreenState(fields: Set<WorkoutField>): RecordingScreenStat
  * the middle, controls one swipe to the left, heart rate zones and pace to
  * the right. Only pages and values the workout reports in [fields] are shown.
  * The zones are those of [zoneBasis], the maximum and resting rate the phone
- * sent; without one no zone is drawn. Stop asks "End workout?", then whether
- * to measure the heart rate recovery, and [onStop] is told the answer. The
+ * sent; without one no zone is drawn. Stop asks "End workout?", then, where
+ * [recoveryAtStop] says a recovery is worth asking about
+ * ([RecoveryAtStop.LIVE]), whether to measure it, and [onStop] is told what
+ * becomes of it: a rest before the stop already holds it
+ * ([RecoveryAtStop.FROM_REST]), and without zones or with a heart rate too
+ * low nothing is asked ([RecoveryAtStop.NONE]). The
  * screen is not held on: in ambient mode `RunningWorkout` draws its
  * own dim layout instead of this one, and [screenState] is what this one
  * finds again afterwards.
@@ -134,8 +139,10 @@ fun RecordingScreen(
     unitSystem: UnitSystem,
     zoneBasis: HeartRateZones.Basis?,
     onTogglePause: () -> Unit,
-    onStop: (measureRecovery: Boolean) -> Unit,
+    onStop: (RecoveryAtStop) -> Unit,
     screenState: RecordingScreenState = rememberRecordingScreenState(fields),
+    /** What a stop now does about the recovery (`WorkoutViewModel.recoveryAtStop`), asked once "End workout?" is confirmed. */
+    recoveryAtStop: () -> RecoveryAtStop = { RecoveryAtStop.LIVE },
 ) {
     val pages = screenState.pages
     val pagerState = screenState.pagerState
@@ -159,7 +166,10 @@ fun RecordingScreen(
             AlertDialogDefaults.ConfirmButton(
                 onClick = {
                     screenState.confirmStop = false
-                    screenState.askRecovery = true
+                    when (val recovery = recoveryAtStop()) {
+                        RecoveryAtStop.LIVE -> screenState.askRecovery = true
+                        else -> onStop(recovery)
+                    }
                 },
             )
         },
@@ -170,10 +180,10 @@ fun RecordingScreen(
 
 /** After "End workout?": whether the heart rate recovery is measured. The workout ends either way, a swipe away too. */
 @Composable
-private fun RecoveryQuestion(screenState: RecordingScreenState, onStop: (measureRecovery: Boolean) -> Unit) {
+private fun RecoveryQuestion(screenState: RecordingScreenState, onStop: (RecoveryAtStop) -> Unit) {
     val answer = { measure: Boolean ->
         screenState.askRecovery = false
-        onStop(measure)
+        onStop(if (measure) RecoveryAtStop.LIVE else RecoveryAtStop.NONE)
     }
     AlertDialog(
         visible = screenState.askRecovery,
@@ -431,7 +441,7 @@ private fun RecordingScreenPreview() {
                 unitSystem = UnitSystem.METRIC,
                 zoneBasis = HeartRateZones.Basis(maxBpm = 190),
                 onTogglePause = {},
-                onStop = { _ -> },
+                onStop = {},
             )
         }
     }
@@ -448,7 +458,7 @@ private fun RecordingScreenPausedPreview() {
                 unitSystem = UnitSystem.IMPERIAL,
                 zoneBasis = HeartRateZones.Basis(maxBpm = 190),
                 onTogglePause = {},
-                onStop = { _ -> },
+                onStop = {},
             )
         }
     }

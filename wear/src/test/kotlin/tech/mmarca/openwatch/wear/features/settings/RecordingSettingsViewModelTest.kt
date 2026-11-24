@@ -61,6 +61,17 @@ class RecordingSettingsViewModelTest {
         )
     }
 
+    @Test
+    fun `auto-pause and workout detection are on until switched off`() {
+        val vm = viewModel()
+        assertTrue(SETTINGS.autoPause && SETTINGS.autoDetect)
+
+        vm.setAutoPause(false)
+        vm.setAutoDetect(false)
+
+        assertEquals(SETTINGS.copy(autoPause = false, autoDetect = false), port.stored)
+    }
+
     private class FakePort : RecordingSettingsPort {
         var stored = SETTINGS
 

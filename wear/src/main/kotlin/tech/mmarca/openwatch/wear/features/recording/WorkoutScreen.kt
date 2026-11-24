@@ -81,6 +81,7 @@ internal fun WorkoutScreen(unitSystem: UnitSystem, onClose: () -> Unit) {
                     onTogglePause = viewModel::togglePause,
                     onStop = viewModel::stop,
                     screenState = screenState,
+                    recoveryAtStop = viewModel::recoveryAtStop,
                 )
             }
         }

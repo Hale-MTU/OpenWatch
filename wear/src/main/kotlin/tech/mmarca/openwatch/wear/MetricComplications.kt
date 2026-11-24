@@ -109,7 +109,7 @@ abstract class MetricComplicationService : SuspendingComplicationDataSourceServi
 
     private fun openApp(): PendingIntent = PendingIntent.getActivity(
         this,
-        // One request code per complication, apart from the notifications' 0 and 4.
+        // One request code per complication, apart from the notifications' 0, 4 and 5.
         javaClass.name.hashCode(),
         Intent(this, MainActivity::class.java),
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,

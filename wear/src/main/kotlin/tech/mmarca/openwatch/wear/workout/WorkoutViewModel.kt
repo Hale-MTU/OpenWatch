@@ -36,8 +36,8 @@ internal interface WorkoutControl {
 
     fun resume()
 
-    /** Ends the workout; with [measureRecovery] its heart rate recovery follows. */
-    fun stop(measureRecovery: Boolean)
+    /** Ends the workout; [recovery] says what becomes of its heart rate recovery. */
+    fun stop(recovery: RecoveryAtStop)
 }
 
 /**
@@ -108,9 +108,19 @@ internal class WorkoutViewModel(
         if (snapshot.paused) control.resume() else control.pause()
     }
 
-    /** Ends the running workout; with [measureRecovery] its heart rate recovery follows. */
-    fun stop(measureRecovery: Boolean = false) {
-        if (workout.state.value.running) control.stop(measureRecovery)
+    /**
+     * What a stop now would do about the heart rate recovery ([RecoveryPlan]): read it from the
+     * rest before the stop, ask whether to measure it live, or nothing, without zones or with a
+     * heart rate too low for it.
+     */
+    fun recoveryAtStop(): RecoveryAtStop {
+        val snapshot = workout.state.value.snapshot ?: return RecoveryAtStop.NONE
+        return RecoveryPlan.atStop(snapshot.rest, snapshot.heartRateBpm, zoneBasis.value)
+    }
+
+    /** Ends the running workout; [recovery] says what becomes of its heart rate recovery. */
+    fun stop(recovery: RecoveryAtStop = RecoveryAtStop.NONE) {
+        if (workout.state.value.running) control.stop(recovery)
     }
 
     /** The wearer closed the summary of a saved workout. */
@@ -144,5 +154,5 @@ private class ServiceWorkoutControl(private val context: Context) : WorkoutContr
 
     override fun resume() = WearAppService.resumeWorkout(context)
 
-    override fun stop(measureRecovery: Boolean) = WearAppService.stopWorkout(context, measureRecovery)
+    override fun stop(recovery: RecoveryAtStop) = WearAppService.stopWorkout(context, recovery)
 }

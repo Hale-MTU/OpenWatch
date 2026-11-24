@@ -62,11 +62,12 @@ object WorkoutMetrics {
 
     /**
      * The heart rate's fall one and two minutes after the stop, from the peak of the
-     * seconds before it, as health-calculations reads a recovery ([calculateHeartRateRecovery]).
-     * A reading it judges misleading ([HeartRateRecoveryQuality.INVALID]: the heart rate was
-     * already falling before the stop, or did not fall after it) carries no fall.
+     * seconds before it ([peakBpm]), as health-calculations reads a recovery
+     * ([calculateHeartRateRecovery]). A reading it judges misleading
+     * ([HeartRateRecoveryQuality.INVALID]: the heart rate was already falling before the
+     * stop, or did not fall after it) carries no fall.
      */
-    data class Recovery(val oneMinuteBpm: Int?, val twoMinutesBpm: Int?)
+    data class Recovery(val oneMinuteBpm: Int?, val twoMinutesBpm: Int?, val peakBpm: Int? = null)
 
     /** [profile] is the wearer's body profile; [day] the day its age is read on, the workout's own. */
     fun summarize(
@@ -152,21 +153,28 @@ object WorkoutMetrics {
      * The recovery from [stopMillis], by [calculateHeartRateRecovery]: the falls from the peak
      * of the last seconds before the stop to the readings one and two minutes after it. Whether
      * the effort was near-maximal is judged against [profile]'s entered maximum, else the one its
-     * age predicts, with [restingBpm].
+     * age on [day] predicts, with [restingBpm]; the falls and the peak do not depend on them, so
+     * a workout that only asks whether a rest holds a recovery passes none.
      */
-    fun recovery(beats: List<Beat>, stopMillis: Long, profile: BodyProfile, restingBpm: Int?, day: LocalDate): Recovery {
+    fun recovery(
+        beats: List<Beat>,
+        stopMillis: Long,
+        profile: BodyProfile = BodyProfile(),
+        restingBpm: Int? = null,
+        day: LocalDate? = null,
+    ): Recovery {
         val reading = calculateHeartRateRecovery(
             recoveryStart = Instant.ofEpochMilli(stopMillis),
             samples = beats.map { it.sample() },
             restingHeartRateBpm = restingBpm,
-            ageYears = profile.ageYears(day),
+            ageYears = day?.let(profile::ageYears),
             observedMaxHeartRateBpm = null,
             explicitMaxHeartRateBpm = profile.maxHeartRateBpm,
             sex = profile.sex,
         )
         val measured = reading.quality != HeartRateRecoveryQuality.INVALID
         fun drop(minutes: Long) = reading.markAt(Duration.ofMinutes(minutes))?.dropBpm?.toInt()?.takeIf { measured }
-        return Recovery(drop(1), drop(2))
+        return Recovery(drop(1), drop(2), reading.peakBpm?.toInt())
     }
 
     /**

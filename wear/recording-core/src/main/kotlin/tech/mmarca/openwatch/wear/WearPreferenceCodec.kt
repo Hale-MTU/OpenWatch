@@ -24,6 +24,10 @@ data class WatchPreferences(
     val heightCm: Int? = null,
     val birthYear: Int? = null,
     val sex: BiologicalSex? = null,
+    /** A run or a ride with a route pauses by itself when the wearer stops (`AutoPause`). On the watch only, not a link token. */
+    val autoPause: Boolean = true,
+    /** The watch offers to record a walk or a run it sees in the step minutes (`ActivityDetector`). On the watch only. */
+    val autoDetect: Boolean = true,
 ) {
     /**
      * The body profile the phone sent, as health-calculations reads it: what a workout's

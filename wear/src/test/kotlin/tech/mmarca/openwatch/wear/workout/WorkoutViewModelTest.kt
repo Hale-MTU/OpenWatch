@@ -118,7 +118,7 @@ class WorkoutViewModelTest {
 
         viewModel.closeSummary()
 
-        assertEquals(listOf("stop false"), control.calls)
+        assertEquals(listOf("stop NONE"), control.calls)
         assertEquals(WorkoutUiState(), viewModel.state.value)
     }
 
@@ -130,13 +130,29 @@ class WorkoutViewModelTest {
         running(paused = false)
         workout.update { it.copy(startMillis = 1_794_000_000_000L) }
 
-        figured.stop(measureRecovery = true)
+        figured.stop(RecoveryAtStop.LIVE)
         assertNull("nothing is read while the workout runs", figured.figures.value)
         workout.update { it.copy(running = false, finished = true) }
 
-        assertEquals(listOf("stop true"), control.calls)
+        assertEquals(listOf("stop LIVE"), control.calls)
         assertEquals(summary, figured.figures.value)
         assertEquals(listOf(1_794_000_000_000L), read)
+    }
+
+    @Test
+    fun `a stop asks about the recovery only with zones and a heart rate in them, and reads a rest before it`() {
+        workout.update { WorkoutUiState(sport = WorkoutSport.RUNNING, running = true, snapshot = snapshot(paused = false).copy(heartRateBpm = 150)) }
+        assertEquals("no zones from the phone yet", RecoveryAtStop.NONE, viewModel.recoveryAtStop())
+
+        settings.value = settings.value.copy(maxHeartRate = 190, restingHeartRate = 60)
+        assertEquals(RecoveryAtStop.LIVE, viewModel.recoveryAtStop())
+
+        val rest = RestRecovery(startMillis = 0, peakBpm = 165, oneMinuteBpm = 28, twoMinutesBpm = null)
+        workout.update { it.copy(snapshot = it.snapshot?.copy(rest = rest)) }
+        assertEquals(RecoveryAtStop.FROM_REST, viewModel.recoveryAtStop())
+
+        workout.update { it.copy(snapshot = it.snapshot?.copy(heartRateBpm = 70, rest = null)) }
+        assertEquals("too low to be worth it", RecoveryAtStop.NONE, viewModel.recoveryAtStop())
     }
 
     @Test
@@ -175,8 +191,8 @@ class WorkoutViewModelTest {
             calls += "resume"
         }
 
-        override fun stop(measureRecovery: Boolean) {
-            calls += "stop $measureRecovery"
+        override fun stop(recovery: RecoveryAtStop) {
+            calls += "stop ${recovery.name}"
         }
     }
 }

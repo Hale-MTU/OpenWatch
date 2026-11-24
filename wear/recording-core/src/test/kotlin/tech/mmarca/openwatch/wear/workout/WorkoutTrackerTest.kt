@@ -6,6 +6,8 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.healthcalculations.insights.HeartRateZones
+import tech.mmarca.openwatch.wearlink.WorkoutMetrics
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
@@ -353,5 +355,69 @@ class WorkoutTrackerTest {
         val kept = (0..(day / 5_000).toInt()).count { tracker.onFix(fix(it * 5, it * 10.0)) != null }
 
         assertEquals(WorkoutTracker.MAX_STORED_POINTS, kept)
+    }
+}
+
+class WorkoutTrackerRestTest {
+
+    private val t0 = 1_700_000_040_000L
+
+    /** A second of the workout: the heart rate, and five readings of a swinging arm or of a still one. */
+    private fun second(tracker: WorkoutTracker, s: Int, bpm: Int, still: Boolean) {
+        tracker.onHeartRate(t0 + s * 1000L, bpm)
+        for (i in 0 until 5) tracker.onAcceleration(t0 + s * 1000L + i * 200L, if (still) 9.81 else 9.81 + if (i % 2 == 0) 3.0 else -3.0)
+    }
+
+    @Test fun `a rest at the end gives the fall from the peak before the arm came to rest`() {
+        val tracker = WorkoutTracker(WorkoutSport.RUNNING, t0, useGps = false)
+        // A minute of running at 160, then 100 s standing: 160 falls to 130 after one minute.
+        for (s in 0 until 60) second(tracker, s, 160, still = false)
+        for (s in 60 until 160) second(tracker, s, (160 - (s - 60) * 30 / 60).coerceAtLeast(120), still = true)
+
+        val rest = tracker.restRecovery(t0 + 160_000)!!
+
+        assertEquals(t0 + 60_000, rest.startMillis)
+        assertEquals(160, rest.peakBpm)
+        assertEquals(30, rest.oneMinuteBpm)
+        assertNull("the second minute is not over yet", rest.twoMinutesBpm)
+        assertEquals(rest, tracker.snapshot(t0 + 160_000).rest)
+        assertEquals(RecoveryAtStop.FROM_REST, RecoveryPlan.atStop(rest, 120, HeartRateZones.Basis(190, 60)))
+    }
+
+    @Test fun `without a rest the snapshot has none`() {
+        val tracker = WorkoutTracker(WorkoutSport.RUNNING, t0, useGps = false)
+        for (s in 0 until 90) second(tracker, s, 150, still = false)
+
+        assertNull(tracker.snapshot(t0 + 90_000).rest)
+    }
+}
+
+class WorkoutTrackerCreditTest {
+
+    private val t0 = 1_700_000_040_000L
+
+    @Test fun `a workout begun in the past is credited with the steps and heart rate since`() {
+        val tracker = WorkoutTracker(WorkoutSport.WALKING, t0, useGps = false)
+        val rows = (0 until 10).map { WearLinkProtocol.StepMinute(t0 + it * 60_000L, 100) }
+        val beats = (0 until 10).map { WorkoutMetrics.Beat(t0 + it * 60_000L, 110 + it) }
+
+        tracker.credit(rows, beats)
+        tracker.onStepTotal(t0 + 600_000L, 5_000L)
+        tracker.onStepTotal(t0 + 640_000L, 5_040L)
+
+        val snapshot = tracker.snapshot(t0 + 640_000L)
+        assertEquals(1_040, snapshot.steps)
+        assertEquals(119, snapshot.maxHeartRateBpm)
+        assertEquals(115, snapshot.averageHeartRateBpm)
+        assertEquals(1_040, tracker.finish(t0 + 650_000L).steps)
+    }
+
+    @Test fun `a minute that ended before the start is not credited`() {
+        val tracker = WorkoutTracker(WorkoutSport.WALKING, t0, useGps = false)
+
+        tracker.credit(listOf(WearLinkProtocol.StepMinute(t0 - 60_000L, 100), WearLinkProtocol.StepMinute(t0, 80)), emptyList())
+        tracker.onStepTotal(t0 + 60_000L, 1_000L)
+
+        assertEquals(80, tracker.snapshot(t0 + 60_000L).steps)
     }
 }

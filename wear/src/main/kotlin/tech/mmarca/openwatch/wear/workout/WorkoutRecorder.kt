@@ -15,6 +15,7 @@ import android.os.PowerManager
 import android.util.Log
 import java.time.Instant
 import java.time.ZoneId
+import kotlin.math.sqrt
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 import tech.mmarca.openwatch.wear.AscentMinuteCounter
 import tech.mmarca.openwatch.wear.DebugProtocol
@@ -22,6 +23,7 @@ import tech.mmarca.openwatch.wear.MetricStore
 import tech.mmarca.openwatch.wear.SensorTime
 import tech.mmarca.openwatch.wear.WatchPreferences
 import tech.mmarca.openwatch.wear.WearMetrics
+import tech.mmarca.openwatch.wear.haptics.HapticCue
 import tech.mmarca.openwatch.wear.haptics.Haptics
 import tech.mmarca.openwatch.wear.haptics.hapticCueForWorkoutEnd
 import tech.mmarca.openwatch.wearlink.WearLinkWorkoutLines
@@ -46,8 +48,21 @@ import tech.mmarca.openwatch.wearlink.WorkoutMetrics
  * runs for [RECOVERY_MILLIS]: [isRecovering] keeps the heart rate live
  * (`RecorderPlan`), the live value reaches the state, and the falls after one
  * and two minutes are worked out from the stored readings
- * ([WorkoutMetrics.recovery]). The workout itself is saved at the stop; a
- * recovery the service loses meanwhile is lost, the workout is not.
+ * ([WorkoutMetrics.recovery]). A stop after a minute of rest
+ * ([RecoveryAtStop.FROM_REST], which [RecoveryPlan] chose) needs no two
+ * minutes: the falls from the moment the arm came to rest are in the store
+ * already, and are worked out at the stop. The workout itself is saved at
+ * the stop; a recovery the service loses meanwhile is lost, the workout is not.
+ *
+ * The accelerometer runs beside the sleep minutes' own listener, at their
+ * five readings a second, so the shared sensor runs no faster; while it is
+ * registered without batching, the sleep minutes' readings come unbatched
+ * too, which costs nothing more while the workout's wake lock holds the
+ * processor. A run or a ride with a route pauses and goes on by itself
+ * ([WorkoutTracker.autoPauseStep], with the `auto_pause` setting), with a
+ * buzz each time. A workout started back in time, from a walk or run the
+ * watch saw ([ActivityDetectionMonitor]), is credited with the steps and the
+ * heart rate the store kept since its start ([WorkoutTracker.credit]).
  */
 class WorkoutRecorder(
     private val context: Context,
@@ -90,8 +105,12 @@ class WorkoutRecorder(
     var usesGps: Boolean = false
         private set
 
-    /** Starts [sport]. [useGps] is false when the wearer did not allow location. False if one is already running. */
-    fun start(sport: WorkoutSport, useGps: Boolean): Boolean {
+    /**
+     * Starts [sport]. [useGps] is false when the wearer did not allow location. A [startMillis]
+     * in the past begins it then, at most [MAX_CREDIT_MILLIS] back: a walk or run the watch saw.
+     * False if one is already running.
+     */
+    fun start(sport: WorkoutSport, useGps: Boolean, startMillis: Long? = null): Boolean {
         if (isActive) return false
         // A new workout ends a recovery still running: its two minutes are no longer a rest.
         cancelRecovery()
@@ -102,7 +121,8 @@ class WorkoutRecorder(
         thread = worker
         handler = h
         val now = System.currentTimeMillis()
-        val t = WorkoutTracker(sport, now, usesGps)
+        val begin = startMillis?.coerceIn(now - MAX_CREDIT_MILLIS, now) ?: now
+        val t = WorkoutTracker(sport, begin, usesGps, useAutoPause = settings().autoPause)
         tracker = t
         ascent = AscentMinuteCounter(null)
         wakeLock = context.getSystemService(PowerManager::class.java)
@@ -111,10 +131,12 @@ class WorkoutRecorder(
             .apply { setReferenceCounted(false) }
             .apply { acquire(WAKE_LOCK_MILLIS) }
         wakeLockRenewedAt = now
-        debug.event("Workout", "start", "sport" to sport.id, "gps" to usesGps)
+        debug.event("Workout", "start", "sport" to sport.id, "gps" to usesGps, "backMs" to now - begin)
         h.post { registerSensors(sport, now) }
+        // After the registration, which may replace the tracker, and before its first reading: the counter's steps go on top.
+        if (begin < now - CREDIT_AFTER_MILLIS) h.post { tracker?.let { creditEarlier(it, now) } }
         h.post(tick)
-        state.update { WorkoutUiState(sport = sport, running = true, snapshot = t.snapshot(now), gps = usesGps, startMillis = now) }
+        state.update { WorkoutUiState(sport = sport, running = true, snapshot = t.snapshot(now), gps = usesGps, startMillis = begin) }
         onActiveChange()
         return true
     }
@@ -141,11 +163,12 @@ class WorkoutRecorder(
 
     /**
      * Ends the workout and saves it; a slip shorter than half a minute is dropped. With
-     * [measureRecovery] a kept workout's heart rate recovery follows ([RECOVERY_MILLIS]).
+     * [RecoveryAtStop.LIVE] a kept workout's heart rate recovery follows ([RECOVERY_MILLIS]);
+     * with [RecoveryAtStop.FROM_REST] it is read from the rest before the stop.
      */
-    fun stop(measureRecovery: Boolean = false) {
+    fun stop(recovery: RecoveryAtStop = RecoveryAtStop.NONE) {
         val h = handler ?: return
-        h.post { finish(measureRecovery) }
+        h.post { finish(recovery) }
     }
 
     /** Saves a workout a killed app left behind. Call once, off the main thread, when no workout runs. */
@@ -166,6 +189,22 @@ class WorkoutRecorder(
         handler?.post { tracker?.let(block) }
     }
 
+    /** What the store kept since a start back in time: its step minutes and its heart rate. Recorder thread. */
+    private fun creditEarlier(t: WorkoutTracker, now: Long) {
+        try {
+            // The minute the start falls in began before it; the tracker takes its part.
+            val steps = metricStore.since(WearMetrics.STEPS, t.startMillis - MINUTE_MILLIS, CREDIT_STEP_ROWS, now)
+            val beats = metricStore.since(WearMetrics.HEART_RATE, t.startMillis - 1, CREDIT_HEART_RATE_ROWS, now)
+                .map { WorkoutMetrics.Beat(it.epochMillis, it.bpm) }
+            t.credit(steps, beats)
+            debug.event("Workout", "credited", "minutes" to steps.size, "readings" to beats.size)
+        } catch (e: RuntimeException) {
+            // A store that cannot be read credits nothing; the workout goes on from now.
+            Log.w(TAG, "Earlier minutes not credited", e)
+        }
+        publish(t, now)
+    }
+
     @SuppressLint("MissingPermission")
     private fun registerSensors(sport: WorkoutSport, now: Long) {
         val h = handler ?: return
@@ -174,6 +213,12 @@ class WorkoutRecorder(
                 runCatching { sensors.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL, 0, h) }
                     .onSuccess { registered -> if (registered) debug.registered("workoutSteps", it, SensorManager.SENSOR_DELAY_NORMAL, 0) }
                     .onFailure { e -> Log.w(TAG, "Step counter refused", e) }
+            }
+        }
+        // Whether the arm rests, for a recovery read from the rest before the stop.
+        sensors.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)?.let {
+            if (sensors.registerListener(this, it, ACCELEROMETER_PERIOD_MICROS, 0, h)) {
+                debug.registered("workoutAccel", it, ACCELEROMETER_PERIOD_MICROS, 0)
             }
         }
         if (sport.elevation) {
@@ -205,6 +250,11 @@ class WorkoutRecorder(
                 finish()
                 return
             }
+            if (t.autoPauseStep(now)) {
+                val paused = t.isPaused
+                debug.event("Workout", if (paused) "auto_pause" else "auto_resume")
+                Haptics.play(context, if (paused) HapticCue.PULSE else HapticCue.DOUBLE_PULSE)
+            }
             publish(t, now)
             if (now - wakeLockRenewedAt >= WAKE_LOCK_RENEW_MILLIS) {
                 wakeLockRenewedAt = now
@@ -228,6 +278,11 @@ class WorkoutRecorder(
         val at = SensorTime.epochMillisOf(event.timestamp)
         when (event.sensor.type) {
             Sensor.TYPE_STEP_COUNTER -> event.values.firstOrNull()?.let { t.onStepTotal(at, it.toLong()) }
+            Sensor.TYPE_ACCELEROMETER -> {
+                if (SensorTime.isStale(at) || event.values.size < AXES) return
+                val (x, y, z) = event.values
+                t.onAcceleration(at, sqrt(x * x + y * y + z * z).toDouble())
+            }
             Sensor.TYPE_PRESSURE -> {
                 val hpa = event.values.firstOrNull() ?: return
                 if (SensorTime.isStale(at)) return
@@ -251,9 +306,11 @@ class WorkoutRecorder(
         t.onFix(fix)?.let(store::savePoint)
     }
 
-    private fun finish(measureRecovery: Boolean = false) {
+    private fun finish(atStop: RecoveryAtStop = RecoveryAtStop.NONE) {
         val t = tracker ?: return
         val end = System.currentTimeMillis()
+        // As of the stop: the screen chose it from a snapshot of a second ago.
+        val rest = t.restRecovery(end).takeIf { atStop == RecoveryAtStop.FROM_REST }
         val workout = t.finish(end)
         val kept = store.finish(workout, end)
         val last = t.snapshot(end)
@@ -262,14 +319,32 @@ class WorkoutRecorder(
             "sport" to t.sport.id, "durationMs" to workout.endMillis - workout.startMillis, "steps" to workout.steps, "saved" to kept,
         )
         val gps = usesGps
-        val recovery = RecoveryState(end, end + RECOVERY_MILLIS).takeIf { kept && measureRecovery }
-        if (recovery != null) beginRecovery()
+        val recovery = when {
+            !kept -> null
+            rest != null -> fromRest(rest)
+            atStop == RecoveryAtStop.LIVE -> RecoveryState(end, end + RECOVERY_MILLIS)
+            else -> null
+        }
+        if (recovery?.measuring == true) beginRecovery()
         teardown(keepState = false)
         state.update {
             WorkoutUiState(sport = t.sport, running = false, snapshot = last, finished = kept, gps = gps, startMillis = t.startMillis, recovery = recovery)
         }
         if (!kept) state.clearFinished()
         Haptics.play(context, hapticCueForWorkoutEnd(kept))
+    }
+
+    /** A recovery from the rest before the stop: its falls, from the moment the arm came to rest, are in the store already. */
+    private fun fromRest(rest: RestRecovery): RecoveryState {
+        val recovery = RecoveryState(rest.startMillis, rest.startMillis + RECOVERY_MILLIS)
+        val falls = try {
+            recoveryFalls(recovery)
+        } catch (e: RuntimeException) {
+            // A store that cannot be read gives no falls; the workout is saved all the same.
+            Log.w(TAG, "Recovery not worked out", e)
+            WorkoutMetrics.Recovery(null, null)
+        }
+        return recovery.copy(falls = falls)
     }
 
     /** The recovery's two minutes start: the heart rate stays live, and the processor awake until they end. */
@@ -377,5 +452,21 @@ class WorkoutRecorder(
 
         const val RECOVERY_WAKE_LOCK_TAG = "OpenWatch:recovery"
         const val WAKE_LOCK_SLACK_MILLIS = 10_000L
+
+        const val MINUTE_MILLIS = 60_000L
+
+        /** A start further back than this is a workout taken from the stored minutes, not one begun now. */
+        const val CREDIT_AFTER_MILLIS = MINUTE_MILLIS
+
+        /** The furthest back a workout may begin: what `ActivityDetectionMonitor` looks back over. */
+        const val MAX_CREDIT_MILLIS = 3 * 60 * MINUTE_MILLIS
+
+        /** A row a minute over [MAX_CREDIT_MILLIS], and a heart rate a second. */
+        const val CREDIT_STEP_ROWS = (MAX_CREDIT_MILLIS / MINUTE_MILLIS).toInt() + 2
+        const val CREDIT_HEART_RATE_ROWS = (MAX_CREDIT_MILLIS / 1_000).toInt() + 1
+
+        /** Five readings a second, the sleep minutes' own rate (`SleepMinuteRecorder`): the shared sensor runs no faster. */
+        const val ACCELEROMETER_PERIOD_MICROS = 200_000
+        const val AXES = 3
     }
 }

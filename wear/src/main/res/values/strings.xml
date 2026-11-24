@@ -327,4 +327,19 @@
     <string name="settings_skin_explained">Skin temperature at the wrist while you sleep, a reading a minute from the Samsung platform. Little power; nothing else changes.</string>
     <string name="settings_spo2_explained">Blood oxygen at most once an hour while you sleep, about 15 s of red light. A few mAh a night; skipped when the arm moves.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
+    <string name="settings_auto_pause_on">Auto-pause: on</string>
+    <string name="settings_auto_pause_off">Auto-pause: off</string>
+    <string name="settings_auto_pause_explained">A run or a ride with a route pauses by itself once you have stood still for 8 seconds, and goes on when you move again, with a buzz each time. The GPS speed decides; a pause you tap stays until you tap again.</string>
+    <string name="settings_auto_detect_on">Detect workouts: on</string>
+    <string name="settings_auto_detect_off">Detect workouts: off</string>
+    <string name="settings_auto_detect_explained">After 10 minutes of brisk walking or running without a workout, the watch offers to record it from where it began. It reads the step minutes it keeps anyway; nothing is recorded unless you tap Record.</string>
+    <string name="detected_channel_name">Detected workouts</string>
+    <string name="detected_walk">Looks like a walk</string>
+    <string name="detected_run">Looks like a run</string>
+    <string name="detected_body">%1$d min, %2$s. Record it?</string>
+    <string name="detected_start">Record</string>
+    <plurals name="detected_steps">
+        <item quantity="one">%d step</item>
+        <item quantity="other">%d steps</item>
+    </plurals>
 </resources>

@@ -127,7 +127,7 @@ class WearOsWorkoutMetricsTest {
         val measured = figures(listOf(session, after)).summarize(workout.copy(end = end), salt = "")!!
         val none = figures(listOf(session)).summarize(workout.copy(end = end), salt = "")!!
 
-        assertEquals(WorkoutMetrics.Recovery(oneMinuteBpm = 30, twoMinutesBpm = 50), measured.recovery)
+        assertEquals(WorkoutMetrics.Recovery(oneMinuteBpm = 30, twoMinutesBpm = 50, peakBpm = 160), measured.recovery)
         assertNull(none.recovery)
     }
 

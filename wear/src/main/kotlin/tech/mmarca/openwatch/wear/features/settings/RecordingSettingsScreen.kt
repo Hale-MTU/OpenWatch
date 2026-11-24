@@ -47,6 +47,8 @@ internal class RecordingSettingsActions(
     /** Switches skin temperature on or off; on asks for the platform's grant first. */
     val onSkinTemperature: (Boolean) -> Unit,
     val onSpo2AtNight: (Boolean) -> Unit,
+    val onAutoPause: (Boolean) -> Unit = {},
+    val onAutoDetect: (Boolean) -> Unit = {},
 )
 
 /**
@@ -78,6 +80,8 @@ internal fun RecordingSettingsRoute() {
             onSpo2AtNight = { on ->
                 if (on && !WearPermissions.hasOxygenSaturation(context)) askSpo2.launch(WearPermissions.oxygenSaturation) else viewModel.setSpo2AtNight(on)
             },
+            onAutoPause = viewModel::setAutoPause,
+            onAutoDetect = viewModel::setAutoDetect,
         )
     }
     RecordingSettingsScreen(state, actions)
@@ -86,9 +90,10 @@ internal fun RecordingSettingsRoute() {
 /**
  * The watch's own recording settings ([WearSettings]), each with a line on
  * what it does, what it costs and what it loses: the heart rate outside
- * bedtime mode and how a sleep hold works, and, on a watch with the Samsung
- * Health Platform only, where the heart rate and the HRV windows come from,
- * skin temperature and SpO2. The running service follows a change at once,
+ * bedtime mode and how a sleep hold works, a workout's pause by itself and
+ * the offer of a walk or a run the watch sees, and, on a watch with the
+ * Samsung Health Platform only, where the heart rate and the HRV windows
+ * come from, skin temperature and SpO2. The running service follows a change at once,
  * and a change the phone makes shows at once too.
  */
 @Composable
@@ -123,6 +128,14 @@ private fun TransformingLazyColumnScope.recordingSettingsItems(
     val synced = settings.syncedSleepHold
     setting(spec, if (synced) R.string.settings_sleep_hold_synced else R.string.settings_sleep_hold_wake_lock, R.string.settings_sleep_hold_explained) {
         actions.onSyncedSleepHold(!synced)
+    }
+    val autoPause = settings.autoPause
+    setting(spec, if (autoPause) R.string.settings_auto_pause_on else R.string.settings_auto_pause_off, R.string.settings_auto_pause_explained) {
+        actions.onAutoPause(!autoPause)
+    }
+    val autoDetect = settings.autoDetect
+    setting(spec, if (autoDetect) R.string.settings_auto_detect_on else R.string.settings_auto_detect_off, R.string.settings_auto_detect_explained) {
+        actions.onAutoDetect(!autoDetect)
     }
     if (!samsung) return
 

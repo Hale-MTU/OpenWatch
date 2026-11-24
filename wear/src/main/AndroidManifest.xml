@@ -101,6 +101,11 @@
             android:name=".WearPhoneConfirmReceiver"
             android:exported="false" />
 
+        <!-- Record from the offer of a walk or run the watch saw; see ActivityDetectionMonitor. -->
+        <receiver
+            android:name=".workout.ActivityDetectionReceiver"
+            android:exported="false" />
+
         <!-- The power-save heart rate window's alarm; see HeartRateRecorder. -->
         <receiver
             android:name=".HeartRateAlarmReceiver"

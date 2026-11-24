@@ -101,7 +101,7 @@ internal class SyncReminder(
         private const val TAG = "OpenWatch:syncReminder"
         const val CHANNEL_ID = "sync_reminders"
 
-        // 1 is the link's, 2 WearPhoneRequests', 3 the workout's.
+        // 1 is the link's, 2 WearPhoneRequests', 3 the workout's, 5 a detected workout's.
         const val NOTIFICATION_ID = 4
 
         /** About hourly: the levels are days apart. */

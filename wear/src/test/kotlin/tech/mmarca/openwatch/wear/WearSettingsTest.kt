@@ -87,6 +87,18 @@ class WearSettingsTest {
     }
 
     @Test
+    fun `auto-pause and workout detection are on until switched off, under their own keys`() {
+        assertTrue(WearSettings.read(context).autoPause && WearSettings.read(context).autoDetect)
+
+        WearSettings.write(context, WearSettings.read(context).copy(autoPause = false))
+        assertFalse(prefs.getBoolean("auto_pause", true))
+        assertTrue(prefs.getBoolean("auto_detect", false))
+
+        WearSettings.write(context, WearSettings.read(context).copy(autoDetect = false))
+        assertEquals(false to false, WearSettings.read(context).let { it.autoPause to it.autoDetect })
+    }
+
+    @Test
     fun `a watch whose heart rate sensor cannot wake it keeps the lock by default`() {
         addHeartRateSensor(wakeUp = false)
 

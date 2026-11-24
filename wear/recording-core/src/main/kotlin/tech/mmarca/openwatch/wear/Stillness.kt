@@ -35,7 +35,8 @@ object Stillness {
         return moving > MAX_MOVING_SHARE * judged.size
     }
 
-    private fun spread(values: List<Double>): Double {
+    /** The standard deviation of [values], m/s²: a block's spread. A workout's rest is judged by it too (`RestDetector`). */
+    fun spread(values: List<Double>): Double {
         val mean = values.average()
         return sqrt(values.sumOf { (it - mean) * (it - mean) } / values.size)
     }

@@ -145,7 +145,7 @@ class WorkoutMetricsTest {
         val stop = start + minutes(10)
         val beats = steady(160, 10, stop - 9_000) + steady(130, 11, stop + 55_000) + steady(110, 11, stop + 115_000)
 
-        assertEquals(WorkoutMetrics.Recovery(oneMinuteBpm = 30, twoMinutesBpm = 50), WorkoutMetrics.recovery(beats, stop, man, 50, day))
+        assertEquals(WorkoutMetrics.Recovery(oneMinuteBpm = 30, twoMinutesBpm = 50, peakBpm = 160), WorkoutMetrics.recovery(beats, stop, man, 50, day))
     }
 
     @Test
@@ -153,6 +153,14 @@ class WorkoutMetricsTest {
         val stop = start + minutes(10)
         val beats = steady(160, 10, stop - 9_000) + steady(165, 11, stop + 55_000) + steady(150, 11, stop + 115_000)
 
-        assertEquals(WorkoutMetrics.Recovery(null, null), WorkoutMetrics.recovery(beats, stop, man, 50, day))
+        assertEquals(WorkoutMetrics.Recovery(null, null, peakBpm = 160), WorkoutMetrics.recovery(beats, stop, man, 50, day))
+    }
+
+    @Test
+    fun `the falls and the peak need no profile, only the verdict does`() {
+        val stop = start + minutes(10)
+        val beats = steady(160, 10, stop - 9_000) + steady(130, 11, stop + 55_000) + steady(110, 11, stop + 115_000)
+
+        assertEquals(WorkoutMetrics.Recovery(oneMinuteBpm = 30, twoMinutesBpm = 50, peakBpm = 160), WorkoutMetrics.recovery(beats, stop))
     }
 }
