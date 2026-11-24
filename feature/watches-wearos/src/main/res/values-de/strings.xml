@@ -35,4 +35,9 @@
     <string name="watch_settings_spo2_explained">Blutsauerstoff höchstens einmal pro Stunde im Schlaf, etwa 15 s Rotlicht. Wenige mAh pro Nacht; entfällt, wenn sich der Arm bewegt.</string>
     <string name="settings_watch_wearos_companion_missing">Android hat diese Uhr nicht mit OpenWatch verknüpft. Ohne die Verknüpfung kann OpenWatch keine Workouts aufzeichnen, die eine andere App auf der Uhr startet.</string>
     <string name="settings_watch_wearos_companion_link">Uhr verknüpfen</string>
+    <string name="watch_settings_goals_explained">Tagesziele, an denen die Uhr ihre Ringe misst. Apps, die mit der Einstellungs-Berechtigung mit OpenWatch verbunden sind, teilen sie in beide Richtungen; ein leeres Ziel zeigt keinen Ring.</string>
+    <string name="watch_settings_goal_steps">Schrittziel</string>
+    <string name="watch_settings_goal_active_kcal">Ziel aktive Energie (kcal)</string>
+    <string name="watch_settings_goal_water_ml">Wasserziel (ml)</string>
+    <string name="watch_settings_goal_none">Kein Ziel</string>
 </resources>

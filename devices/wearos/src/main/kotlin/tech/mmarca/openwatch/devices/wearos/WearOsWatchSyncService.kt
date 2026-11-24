@@ -1,6 +1,5 @@
 package tech.mmarca.openwatch.devices.wearos
 
-import tech.mmarca.healthcalculations.preferences.BodyProfile
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.ActiveCaloriesBurnedRecord
 import androidx.health.connect.client.records.ElevationGainedRecord
@@ -22,31 +21,33 @@ import kotlin.reflect.KClass
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import tech.mmarca.healthcalculations.insights.AscentCredit
+import tech.mmarca.healthcalculations.insights.WearSleepEstimator
+import tech.mmarca.healthcalculations.insights.sleepNightWindow
+import tech.mmarca.healthcalculations.model.WearSleepMinute
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.core.presentation.isPermissionFailure
 import tech.mmarca.openwatch.data.repository.HealthRecordStore
+import tech.mmarca.openwatch.data.repository.RecordWrite
 import tech.mmarca.openwatch.data.repository.contract.BodyProfileRepository
 import tech.mmarca.openwatch.data.repository.contract.DeviceRegistry
 import tech.mmarca.openwatch.data.repository.contract.WearOsSyncPreferences
+import tech.mmarca.openwatch.data.repository.insertNewer
+import tech.mmarca.openwatch.data.repository.insertWithOutcomes
+import tech.mmarca.openwatch.data.repository.replaceImportedRecord
+import tech.mmarca.openwatch.devices.core.SharedGoals
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPhase
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncProgress
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
+import tech.mmarca.openwatch.devices.core.sync.HealthSeries
 import tech.mmarca.openwatch.devices.core.sync.SyncFailure
 import tech.mmarca.openwatch.devices.core.sync.SyncTrigger
-import tech.mmarca.openwatch.devices.core.sync.HealthSeries
-import tech.mmarca.openwatch.data.repository.RecordWrite
-import tech.mmarca.openwatch.data.repository.insertNewer
-import tech.mmarca.openwatch.data.repository.insertWithOutcomes
-import tech.mmarca.healthcalculations.insights.sleepNightWindow
-import tech.mmarca.healthcalculations.insights.WearSleepEstimator
+import tech.mmarca.openwatch.devices.core.sync.syncBudgetSpent
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
-import tech.mmarca.healthcalculations.model.WearSleepMinute
-import tech.mmarca.openwatch.data.repository.replaceImportedRecord
 import tech.mmarca.openwatch.healthconnect.HealthConnectReads
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
 import tech.mmarca.openwatch.healthconnect.isHealthConnectRateLimit
-import tech.mmarca.healthcalculations.insights.AscentCredit
-import tech.mmarca.openwatch.devices.core.sync.syncBudgetSpent
 import tech.mmarca.openwatch.wearlink.WearLinkSince
 
 /**
@@ -120,6 +121,8 @@ class WearOsWatchSyncService(
      * read, since the zones take no weight and a sync with nothing to estimate reads none.
      */
     private val zoneProfile: suspend () -> BodyProfile = { BodyProfile() },
+    /** The daily goals the connected apps share, as watch settings. */
+    private val goals: suspend () -> List<Pair<String, String>> = { emptyList() },
 ) : DeviceSyncPort {
 
     @Inject
@@ -132,6 +135,7 @@ class WearOsWatchSyncService(
         linkStore: WearOsLinkStore,
         bodyProfile: BodyProfileRepository,
         preferences: WearOsSyncPreferences,
+        sharedGoals: SharedGoals,
     ) : this(
         nodePort, cursors, importRepository, bleDeviceRepository, healthConnect, linkStore,
         // Strict by construction: a failed Health Connect read throws, it never passes for "no weight".
@@ -141,6 +145,7 @@ class WearOsWatchSyncService(
         { preferences.writeSleepBesideOthers },
         { bodyProfile.resolve() },
         { bodyProfile.declared() },
+        { WatchGoals.tokens(sharedGoals.current()) },
     )
 
     private val syncMutex = Mutex()
@@ -170,7 +175,7 @@ class WearOsWatchSyncService(
         zone = zone,
     )
 
-    private val zones by lazy { WearOsZoneSync(healthConnect, nodePort, zoneProfile, profile, clock, zone) }
+    private val zones by lazy { WearOsZoneSync(healthConnect, nodePort, zoneProfile, profile, clock, zone, goals) }
 
     private val entries = WearOsEntrySync(importRepository, healthConnect, cursors, zone)
 

@@ -49,9 +49,11 @@ class QuickLogTileService : OpenWatchTileService() {
             graph.entries.log(WearLinkEntry.Type.WATER, DisplayPreferences.WATER_SERVING_ML)
         }
         val water = readWaterToday(store, TileDay.of(System.currentTimeMillis(), ZoneId.systemDefault()))
-        val units = graph.settings.value.unitSystem
-        val total = getString(R.string.quicklog_water_today, water(water, units), water(GOAL_ML, units), waterUnit(units))
-        return frameOf(water / GOAL_ML, total, units, canMeasure = graph.sensors.heartRate, addWaterId = taps.id)
+        val settings = graph.settings.value
+        val units = settings.unitSystem
+        val goal = settings.waterGoalMl.toDouble()
+        val total = getString(R.string.quicklog_water_today, water(water, units), water(goal, units), waterUnit(units))
+        return frameOf(water / goal, total, units, canMeasure = graph.sensors.heartRate, addWaterId = taps.id)
     }
 
     /** No ring, and why, rather than the system's error tile; the buttons still work. */
@@ -129,8 +131,6 @@ class QuickLogTileService : OpenWatchTileService() {
         const val ICON_WATER = "water"
         const val ICON_HEART = "heart"
         const val ICON_ADD = "add"
-
-        val GOAL_ML: Double = DisplayPreferences.DEFAULT_WATER_GOAL_ML.toDouble()
 
         /** `HydrationColor` and `HeartColor`, as the app draws them; the track is the water's colour, faint. */
         const val HYDRATION: Int = 0xFF2E97C9.toInt()

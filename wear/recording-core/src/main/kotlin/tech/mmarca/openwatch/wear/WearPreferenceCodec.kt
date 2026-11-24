@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.wear
 
 import tech.mmarca.healthcalculations.insights.HeartRateZones
+import tech.mmarca.healthcalculations.insights.MetricDailyGoalKey
 import tech.mmarca.healthcalculations.preferences.BiologicalSex
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
@@ -28,6 +29,13 @@ data class WatchPreferences(
     val autoPause: Boolean = true,
     /** The watch offers to record a walk or a run it sees in the step minutes (`ActivityDetector`). On the watch only. */
     val autoDetect: Boolean = true,
+    /**
+     * The daily goals the rings, the steps complication and the quick log tile are drawn against,
+     * set on the phone; health-calculations' defaults until it does. Null for no step or energy goal.
+     */
+    val stepGoal: Int? = DEFAULT_STEP_GOAL,
+    val activeKcalGoal: Int? = DEFAULT_ACTIVE_KCAL_GOAL,
+    val waterGoalMl: Int = DEFAULT_WATER_GOAL_ML,
 ) {
     /**
      * The body profile the phone sent, as health-calculations reads it: what a workout's
@@ -49,13 +57,22 @@ data class WatchPreferences(
      */
     fun zoneBasis(): HeartRateZones.Basis? = maxHeartRate?.let { HeartRateZones.Basis(it, restingHeartRate) }
 
-    private companion object {
-        const val HECTOGRAMS_PER_KG = 10.0
+    companion object {
+        private const val HECTOGRAMS_PER_KG = 10.0
+
+        /** The daily goals until the phone sets others: health-calculations' defaults, as the phone app's own first goals. */
+        val DEFAULT_STEP_GOAL: Int = MetricDailyGoalKey.STEPS.defaultValue.toInt()
+        val DEFAULT_ACTIVE_KCAL_GOAL: Int = MetricDailyGoalKey.ACTIVE_CALORIES_KCAL.defaultValue.toInt()
+
+        /** Two litres, a common goal for a day. */
+        const val DEFAULT_WATER_GOAL_ML: Int = 2_000
     }
 }
 
-/** What the watch can offer, which the phone reads but cannot change. */
-/** [ppgGranted]: the grant the platform checks for its green PPG, which only the watch can ask for. */
+/**
+ * What the watch can offer, which the phone reads but cannot change. [ppgGranted]: the grant the
+ * platform checks for its green PPG, which only the watch can ask for.
+ */
 data class WatchAbilities(
     val samsung: Boolean,
     val skinGranted: Boolean,
@@ -82,6 +99,9 @@ object WearPreferenceCodec {
         Preferences.BODY_HEIGHT to (preferences.heightCm ?: 0).toString(),
         Preferences.BIRTH_YEAR to (preferences.birthYear ?: 0).toString(),
         Preferences.SEX to sex(preferences.sex),
+        Preferences.GOAL_STEPS to (preferences.stepGoal ?: 0).toString(),
+        Preferences.GOAL_ACTIVE_KCAL to (preferences.activeKcalGoal ?: 0).toString(),
+        Preferences.GOAL_WATER_ML to preferences.waterGoalMl.toString(),
         Preferences.SAMSUNG_AVAILABLE to flag(abilities.samsung),
         Preferences.SKIN_GRANTED to flag(abilities.skinGranted),
         Preferences.SPO2_GRANTED to flag(abilities.spo2Granted),
@@ -111,6 +131,9 @@ object WearPreferenceCodec {
         Preferences.BODY_WEIGHT -> whole(value, WEIGHT_HECTOGRAM_RANGE)?.let { preferences.copy(weightHectograms = it.takeIf { hg -> hg > 0 }) }
         Preferences.BODY_HEIGHT -> whole(value, HEIGHT_CM_RANGE)?.let { preferences.copy(heightCm = it.takeIf { cm -> cm > 0 }) }
         Preferences.BIRTH_YEAR -> whole(value, BIRTH_YEAR_RANGE)?.let { preferences.copy(birthYear = it.takeIf { year -> year > 0 }) }
+        Preferences.GOAL_STEPS -> whole(value, Preferences.STEP_GOAL_RANGE)?.let { preferences.copy(stepGoal = it.takeIf { goal -> goal > 0 }) }
+        Preferences.GOAL_ACTIVE_KCAL -> whole(value, Preferences.ACTIVE_KCAL_GOAL_RANGE)?.let { preferences.copy(activeKcalGoal = it.takeIf { goal -> goal > 0 }) }
+        Preferences.GOAL_WATER_ML -> value.toIntOrNull()?.takeIf { it in Preferences.WATER_GOAL_RANGE }?.let { preferences.copy(waterGoalMl = it) }
         Preferences.SEX -> when (value) {
             Preferences.FEMALE -> preferences.copy(sex = BiologicalSex.FEMALE)
             Preferences.MALE -> preferences.copy(sex = BiologicalSex.MALE)

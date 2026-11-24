@@ -28,7 +28,9 @@ import tech.mmarca.openwatch.core.permissions.RuntimePermissions
 import tech.mmarca.openwatch.core.presentation.ScreenError
 import tech.mmarca.openwatch.core.presentation.toScreenError
 import tech.mmarca.openwatch.data.repository.BleDeviceRepository
+import tech.mmarca.openwatch.devices.core.SharedGoals
 import tech.mmarca.openwatch.devices.wearos.OnboardWearOsWatchUseCase
+import tech.mmarca.openwatch.devices.wearos.WatchGoals
 import tech.mmarca.openwatch.devices.wearos.WearOsCompanionManager
 import tech.mmarca.openwatch.devices.wearos.WearOsCompanionStatus
 import tech.mmarca.openwatch.devices.wearos.WearOsLinkSnapshot
@@ -93,6 +95,7 @@ class WearOsWatchPanelViewModel @Inject constructor(
     private val linkStore: WearOsLinkStore,
     private val onboardWearOsWatch: OnboardWearOsWatchUseCase,
     private val cursors: WearOsSyncCursorStore,
+    private val sharedGoals: SharedGoals,
 ) : ViewModel() {
 
     val deviceId: String = savedStateHandle.toRoute<DeviceDetail>().deviceId
@@ -260,6 +263,9 @@ class WearOsWatchPanelViewModel @Inject constructor(
             try {
                 companionManager.setWatchSetting(device.address, device.bluetoothName, key, value)
                 val held = companionManager.watchSettings(device.address, device.bluetoothName)
+                // A goal the watch took is shared with the connected apps; one it refused, or an older
+                // watch app without goals, changes nothing there.
+                if (held?.get(key) == value) WatchGoals.goalOf(key, value)?.let { (goal, number) -> sharedGoals.set(goal, number) }
                 localState.update { it.copy(watchSettings = held, watchSettingsError = null) }
             } catch (e: Exception) {
                 localState.update { it.copy(watchSettingsError = e.toScreenError(logTag = TAG, logMessage = "Watch setting change failed")) }
