@@ -54,6 +54,12 @@ class WorkoutAmbientTest {
     }
 
     @Test
+    fun `a page that fits the screen gets no padding and one that does not gets the scaffold's`() {
+        assertEquals(ScrollPadding(0, 0), scrollPadding(contentHeight = 384, screenHeight = 384, top = 40, bottom = 36))
+        assertEquals(ScrollPadding(40, 36), scrollPadding(contentHeight = 385, screenHeight = 384, top = 40, bottom = 36))
+    }
+
+    @Test
     fun `a workout opens with the controls left of the overview and only the pages it fills`() {
         assertEquals(
             listOf(WorkoutPage.CONTROLS, WorkoutPage.OVERVIEW, WorkoutPage.HEART, WorkoutPage.PACE),

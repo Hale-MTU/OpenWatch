@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.material.icons.outlined.Favorite
@@ -29,14 +31,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.pager.HorizontalPager
 import androidx.wear.compose.foundation.pager.PagerState
 import androidx.wear.compose.foundation.pager.rememberPagerState
+import androidx.wear.compose.foundation.requestFocusOnHierarchyActive
+import androidx.wear.compose.foundation.rotary.RotaryScrollableDefaults
+import androidx.wear.compose.foundation.rotary.rotaryScrollable
 import androidx.wear.compose.material3.AlertDialog
 import androidx.wear.compose.material3.AlertDialogDefaults
 import androidx.wear.compose.material3.AppScaffold
@@ -129,13 +137,12 @@ fun RecordingScreen(
 
     HorizontalPagerScaffold(pagerState = pagerState) {
         HorizontalPager(state = pagerState) { page ->
-            ScreenScaffold {
-                when (pages[page]) {
-                    WorkoutPage.CONTROLS -> ControlsPage(state, onTogglePause, onStop = { screenState.confirmStop = true })
-                    WorkoutPage.OVERVIEW -> OverviewPage(state, fields, unitSystem, zoneBasis)
-                    WorkoutPage.HEART -> HeartPage(state, zoneBasis)
-                    WorkoutPage.PACE -> PacePage(state, fields, unitSystem)
-                }
+            when (pages[page]) {
+                WorkoutPage.CONTROLS -> ControlsPage(state, onTogglePause, onStop = { screenState.confirmStop = true })
+                WorkoutPage.OVERVIEW -> OverviewPage(state, fields, unitSystem, zoneBasis)
+                // The arc runs along the screen's edge: this page is the screen, and has nothing to scroll.
+                WorkoutPage.HEART -> ScreenScaffold { HeartPage(state, zoneBasis) }
+                WorkoutPage.PACE -> PacePage(state, fields, unitSystem)
             }
         }
     }
@@ -319,18 +326,60 @@ private fun ControlsPage(state: RecordingUiState, onTogglePause: () -> Unit, onS
     }
 }
 
+/**
+ * One page of rows, centred while they fit the screen. Rows that do not fit
+ * (a small round watch, a large font, every value of a run at once) scroll,
+ * by touch and with the crown, instead of being cut off: the column then
+ * takes the scaffold's padding above and below, so its first row starts
+ * under the time and its last one clears the screen's curve.
+ *
+ * The pager owns the horizontal drag and this column the vertical one, and
+ * only the page in view has the focus the crown's input goes to (the pager
+ * keeps each page in a focus group of its own), so the two do not compete.
+ */
 @Composable
 private fun PageColumn(content: @Composable () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
-    ) {
-        content()
+    val scrollState = rememberScrollState()
+    val focusRequester = remember { FocusRequester() }
+    ScreenScaffold(scrollState = scrollState) { contentPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .requestFocusOnHierarchyActive()
+                .rotaryScrollable(
+                    // A page that fits has nothing to scroll: the crown then stays silent, as before.
+                    behavior = RotaryScrollableDefaults.behavior(scrollState, hapticFeedbackEnabled = scrollState.maxValue > 0),
+                    focusRequester = focusRequester,
+                )
+                .verticalScroll(scrollState)
+                .paddingWhenTallerThanTheScreen(contentPadding.calculateTopPadding(), contentPadding.calculateBottomPadding())
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
+        ) {
+            content()
+        }
     }
 }
+
+/**
+ * [top] and [bottom] around content that is taller than the screen, nothing
+ * around content that fits. Inside a vertical scroll the content is measured
+ * at least as tall as the screen ([androidx.compose.ui.unit.Constraints.minHeight]),
+ * so a page that fits is laid out exactly as it was before it could scroll.
+ */
+private fun Modifier.paddingWhenTallerThanTheScreen(top: Dp, bottom: Dp): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val padding = scrollPadding(placeable.height, constraints.minHeight, top.roundToPx(), bottom.roundToPx())
+    layout(placeable.width, placeable.height + padding.top + padding.bottom) { placeable.place(0, padding.top) }
+}
+
+/** The pixels above and below a page's rows. */
+internal data class ScrollPadding(val top: Int, val bottom: Int)
+
+/** [top] and [bottom] when the rows, [contentHeight] tall, do not fit a screen of [screenHeight]; none when they do. */
+internal fun scrollPadding(contentHeight: Int, screenHeight: Int, top: Int, bottom: Int): ScrollPadding =
+    if (contentHeight > screenHeight) ScrollPadding(top, bottom) else ScrollPadding(0, 0)
 
 @Composable
 private fun FieldRow(icon: ImageVector, color: Color, value: String?, unit: String) {
