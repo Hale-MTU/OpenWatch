@@ -342,4 +342,7 @@
         <item quantity="one">%d step</item>
         <item quantity="other">%d steps</item>
     </plurals>
+    <string name="recovery_approximate">Recovery approximate</string>
+    <string name="recovery_not_comparable">Recovery not comparable</string>
+    <string name="recovery_invalid">Recovery not usable</string>
 </resources>

@@ -12,14 +12,13 @@ import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.units.Energy
 import androidx.health.connect.client.units.Length
-import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import tech.mmarca.healthcalculations.insights.WorkoutEnergyResult
-import tech.mmarca.healthcalculations.insights.estimateWorkoutEnergy
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.devices.core.saltedRecordId
+import tech.mmarca.openwatch.wearlink.WorkoutMetrics
 
 /**
  * Maps a workout the watch recorded to Health Connect: an
@@ -97,10 +96,13 @@ object WearOsWorkoutImport {
 
     /**
      * The workout's active calories, estimated, as an `ActiveCaloriesBurnedRecord`
-     * over the session: [estimateWorkoutEnergy] from the mean of the watch's
-     * heart rate [samples] outside the pauses, the walk or run's distance, or the
-     * activity's Compendium MET, with the body [profile]. The watch measures no
-     * calories itself; minutes inside the session get no walking energy
+     * over the session: [WorkoutMetrics.energy], the one estimate the watch's
+     * summary shows too, from the time-weighted mean of the watch's heart rate
+     * [beats] over the session less its pauses (each pair of readings for the
+     * time between them, at most five minutes), the walk or run's distance, or
+     * the activity's Compendium MET, with the body [profile] and its age on
+     * [day], the workout's own. The watch measures no calories itself; minutes
+     * inside the session get no walking energy
      * ([WearOsStepsImport.outsideExerciseSessions]), so nothing counts twice.
      *
      * [WorkoutEnergyResult.MissingInputs] when the profile has no weight, so the
@@ -110,28 +112,12 @@ object WearOsWorkoutImport {
         workout: WearOsWorkout,
         zone: ZoneId,
         profile: BodyProfile,
-        samples: List<Pair<Instant, Long>>,
-        today: LocalDate,
+        beats: List<WorkoutMetrics.Beat>,
+        day: LocalDate,
         salt: String = "",
     ): Pair<ActiveCaloriesBurnedRecord?, WorkoutEnergyResult> {
-        val pauses = workout.pauses.filter { it.start < it.endInclusive }
-        val moving = Duration.between(workout.start, workout.end) - pauses.fold(Duration.ZERO) { sum, pause ->
-            val from = maxOf(pause.start, workout.start)
-            val to = minOf(pause.endInclusive, workout.end)
-            if (from < to) sum + Duration.between(from, to) else sum
-        }
-        val beats = samples
-            .filter { (time, _) -> !time.isBefore(workout.start) && time.isBefore(workout.end) }
-            .filter { (time, _) -> pauses.none { time >= it.start && time < it.endInclusive } }
-            .map { (_, bpm) -> bpm }
-        val result = estimateWorkoutEnergy(
-            exerciseType = workout.exerciseType,
-            durationMinutes = moving.seconds / 60.0,
-            meanHeartRateBpm = beats.takeIf { it.isNotEmpty() }?.average(),
-            profile = profile,
-            today = today,
-            distanceMeters = distance(workout),
-        )
+        val link = WearOsWorkoutMetrics.linkWorkout(workout).copy(distanceMetres = distance(workout)?.toInt())
+        val result = WorkoutMetrics.energy(link, beats, profile, day)
         val estimate = result as? WorkoutEnergyResult.Estimate ?: return null to result
         val record = ActiveCaloriesBurnedRecord(
             startTime = workout.start,

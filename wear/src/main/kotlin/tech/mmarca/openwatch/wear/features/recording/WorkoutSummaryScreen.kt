@@ -21,6 +21,7 @@ import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
+import tech.mmarca.healthcalculations.insights.HeartRateRecoveryQuality
 import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.MetricTile
@@ -122,11 +123,13 @@ fun WorkoutSummaryScreen(
                     )
                 }
             }
-            if (WorkoutField.HEART_RATE in fields && state.averageHeartRateBpm != null) {
+            // The figures' mean once read, the phone's number: each pair of readings for the time between them.
+            val averageBpm = figures?.averageBpm ?: state.averageHeartRateBpm
+            if (WorkoutField.HEART_RATE in fields && averageBpm != null) {
                 item {
                     SummaryRow(
                         label = stringResource(R.string.summary_average_heart_rate),
-                        value = formatCount(state.averageHeartRateBpm),
+                        value = formatCount(averageBpm),
                         unit = stringResource(R.string.unit_bpm),
                     )
                 }
@@ -191,7 +194,12 @@ private fun TransformingLazyColumnScope.figureRows(figures: WorkoutMetrics.Summa
     }
 }
 
-/** How far the heart rate fell one and two minutes after the stop. */
+/**
+ * How far the heart rate fell one and two minutes after the stop, and under the falls, as a
+ * line of its own, the reading's verdict where it is less than clean: approximate, not
+ * comparable with other recoveries (the effort was not near-maximal), or not usable, which
+ * says why there is no fall.
+ */
 private fun TransformingLazyColumnScope.recoveryRows(recovery: WorkoutMetrics.Recovery) {
     recovery.oneMinuteBpm?.let { fall ->
         item { SummaryRow(stringResource(R.string.recovery_one_minute), "−${formatCount(fall)}", stringResource(R.string.unit_bpm)) }
@@ -199,6 +207,25 @@ private fun TransformingLazyColumnScope.recoveryRows(recovery: WorkoutMetrics.Re
     recovery.twoMinutesBpm?.let { fall ->
         item { SummaryRow(stringResource(R.string.recovery_two_minutes), "−${formatCount(fall)}", stringResource(R.string.unit_bpm)) }
     }
+    recoveryVerdict(recovery.quality)?.let { verdict ->
+        item {
+            Text(
+                text = stringResource(verdict),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 3.dp),
+            )
+        }
+    }
+}
+
+/** The verdict's line: none for a clean reading or one without data, a word for the others. */
+internal fun recoveryVerdict(quality: HeartRateRecoveryQuality): Int? = when (quality) {
+    HeartRateRecoveryQuality.APPROXIMATE -> R.string.recovery_approximate
+    HeartRateRecoveryQuality.NOT_COMPARABLE -> R.string.recovery_not_comparable
+    HeartRateRecoveryQuality.INVALID -> R.string.recovery_invalid
+    HeartRateRecoveryQuality.CLEAN, HeartRateRecoveryQuality.NO_DATA -> null
 }
 
 @Composable
@@ -210,7 +237,13 @@ private fun SummaryRow(label: String, value: String?, unit: String? = null) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        // The label takes what the value leaves and wraps; the value stays on one line.
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f).padding(end = 8.dp),
+        )
         MetricValueRow(value = value, unit = unit, valueStyle = MaterialTheme.typography.titleMedium)
     }
 }
@@ -231,7 +264,12 @@ private fun WorkoutSummaryScreenPreview() {
                     splits = listOf(WorkoutMetrics.Split(0, 0, 330_000, 330), WorkoutMetrics.Split(1, 330_000, 655_000, 325)),
                     paceSecondsPerKm = 327.0, vo2Max = 47.8,
                 ),
-                recovery = WorkoutMetrics.Recovery(oneMinuteBpm = 27, twoMinutesBpm = 44),
+                recovery = WorkoutMetrics.Recovery(
+                    oneMinuteBpm = 27,
+                    twoMinutesBpm = 44,
+                    peakBpm = 171,
+                    quality = HeartRateRecoveryQuality.NOT_COMPARABLE,
+                ),
             )
         }
     }

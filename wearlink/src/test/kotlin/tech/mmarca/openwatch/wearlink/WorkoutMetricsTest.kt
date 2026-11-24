@@ -8,6 +8,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.healthcalculations.insights.HeartRateRecoveryQuality
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.healthcalculations.insights.WorkoutEnergyResult
 import tech.mmarca.healthcalculations.preferences.BiologicalSex
@@ -145,7 +146,19 @@ class WorkoutMetricsTest {
         val stop = start + minutes(10)
         val beats = steady(160, 10, stop - 9_000) + steady(130, 11, stop + 55_000) + steady(110, 11, stop + 115_000)
 
-        assertEquals(WorkoutMetrics.Recovery(oneMinuteBpm = 30, twoMinutesBpm = 50, peakBpm = 160), WorkoutMetrics.recovery(beats, stop, man, 50, day))
+        // 30 years old: about 187 bpm at most (Tanaka), so a peak of 160 is a real fall, not comparable with a maximal one.
+        assertEquals(
+            WorkoutMetrics.Recovery(oneMinuteBpm = 30, twoMinutesBpm = 50, peakBpm = 160, quality = HeartRateRecoveryQuality.NOT_COMPARABLE),
+            WorkoutMetrics.recovery(beats, stop, man, 50, day),
+        )
+    }
+
+    @Test
+    fun `a recovery from a near-maximal effort is clean`() {
+        val stop = start + minutes(10)
+        val beats = steady(178, 10, stop - 9_000) + steady(148, 11, stop + 55_000) + steady(128, 11, stop + 115_000)
+
+        assertEquals(HeartRateRecoveryQuality.CLEAN, WorkoutMetrics.recovery(beats, stop, man, 50, day).quality)
     }
 
     @Test
@@ -153,7 +166,10 @@ class WorkoutMetricsTest {
         val stop = start + minutes(10)
         val beats = steady(160, 10, stop - 9_000) + steady(165, 11, stop + 55_000) + steady(150, 11, stop + 115_000)
 
-        assertEquals(WorkoutMetrics.Recovery(null, null, peakBpm = 160), WorkoutMetrics.recovery(beats, stop, man, 50, day))
+        assertEquals(
+            WorkoutMetrics.Recovery(null, null, peakBpm = 160, quality = HeartRateRecoveryQuality.INVALID),
+            WorkoutMetrics.recovery(beats, stop, man, 50, day),
+        )
     }
 
     @Test
@@ -161,6 +177,8 @@ class WorkoutMetricsTest {
         val stop = start + minutes(10)
         val beats = steady(160, 10, stop - 9_000) + steady(130, 11, stop + 55_000) + steady(110, 11, stop + 115_000)
 
-        assertEquals(WorkoutMetrics.Recovery(oneMinuteBpm = 30, twoMinutesBpm = 50, peakBpm = 160), WorkoutMetrics.recovery(beats, stop))
+        val recovery = WorkoutMetrics.recovery(beats, stop)
+        assertEquals(WorkoutMetrics.Recovery(oneMinuteBpm = 30, twoMinutesBpm = 50, peakBpm = 160), recovery.copy(quality = HeartRateRecoveryQuality.NO_DATA))
+        assertEquals("no maximum to judge the effort by", HeartRateRecoveryQuality.APPROXIMATE, recovery.quality)
     }
 }

@@ -63,11 +63,18 @@ object WorkoutMetrics {
     /**
      * The heart rate's fall one and two minutes after the stop, from the peak of the
      * seconds before it ([peakBpm]), as health-calculations reads a recovery
-     * ([calculateHeartRateRecovery]). A reading it judges misleading
-     * ([HeartRateRecoveryQuality.INVALID]: the heart rate was already falling before the
-     * stop, or did not fall after it) carries no fall.
+     * ([calculateHeartRateRecovery]), and its verdict ([quality]): clean, approximate (a
+     * maximum only estimated, a peak from one reading), not comparable (an effort short of
+     * near-maximal, Cole et al.'s condition), invalid or without data. A reading it judges
+     * misleading ([HeartRateRecoveryQuality.INVALID]: the heart rate was already falling
+     * before the stop, or did not fall after it) carries no fall.
      */
-    data class Recovery(val oneMinuteBpm: Int?, val twoMinutesBpm: Int?, val peakBpm: Int? = null)
+    data class Recovery(
+        val oneMinuteBpm: Int?,
+        val twoMinutesBpm: Int?,
+        val peakBpm: Int? = null,
+        val quality: HeartRateRecoveryQuality = HeartRateRecoveryQuality.NO_DATA,
+    )
 
     /** [profile] is the wearer's body profile; [day] the day its age is read on, the workout's own. */
     fun summarize(
@@ -174,7 +181,7 @@ object WorkoutMetrics {
         )
         val measured = reading.quality != HeartRateRecoveryQuality.INVALID
         fun drop(minutes: Long) = reading.markAt(Duration.ofMinutes(minutes))?.dropBpm?.toInt()?.takeIf { measured }
-        return Recovery(drop(1), drop(2), reading.peakBpm?.toInt())
+        return Recovery(drop(1), drop(2), reading.peakBpm?.toInt(), reading.quality)
     }
 
     /**

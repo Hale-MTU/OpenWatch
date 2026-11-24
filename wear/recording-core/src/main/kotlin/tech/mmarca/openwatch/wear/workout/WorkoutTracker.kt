@@ -1,10 +1,7 @@
 package tech.mmarca.openwatch.wear.workout
 
-import kotlin.math.atan2
-import kotlin.math.cos
 import kotlin.math.roundToInt
-import kotlin.math.sin
-import kotlin.math.sqrt
+import tech.mmarca.healthcalculations.geo.haversineMeters
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 import tech.mmarca.healthcalculations.insights.AscentCredit
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
@@ -412,7 +409,6 @@ class WorkoutTracker(
 
         /** How far back a rest's heart rate is kept: a rest that began earlier is no end of the exercise. */
         private const val REST_LOOKBACK_MILLIS = 15 * MINUTE_MILLIS
-        private const val EARTH_RADIUS_METRES = 6_371_000.0
 
         /**
          * The most points one workout stores: a day at the shortest gap between
@@ -443,14 +439,8 @@ class WorkoutTracker(
         fun clipPauses(pauses: List<WearLinkWorkout.Pause>, endMillis: Long): List<WearLinkWorkout.Pause> =
             pauses.filter { it.startMillis < endMillis }.map { it.copy(endMillis = minOf(it.endMillis, endMillis)) }
 
-        /** Great-circle distance in metres. */
-        fun distanceBetween(a: WorkoutFix, b: WorkoutFix): Double {
-            val lat1 = Math.toRadians(a.latitude)
-            val lat2 = Math.toRadians(b.latitude)
-            val dLat = lat2 - lat1
-            val dLon = Math.toRadians(b.longitude - a.longitude)
-            val h = sin(dLat / 2) * sin(dLat / 2) + cos(lat1) * cos(lat2) * sin(dLon / 2) * sin(dLon / 2)
-            return 2 * EARTH_RADIUS_METRES * atan2(sqrt(h), sqrt(1 - h))
-        }
+        /** Great-circle distance in metres: health-calculations' haversine, as the splits' and the phone's. */
+        fun distanceBetween(a: WorkoutFix, b: WorkoutFix): Double =
+            haversineMeters(a.latitude, a.longitude, b.latitude, b.longitude)
     }
 }

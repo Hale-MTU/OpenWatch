@@ -167,7 +167,6 @@ class WearOsWatchSyncService(
         healthConnect = healthConnect,
         profile = profile,
         insert = { records -> insertEstimates(records, "workout energy") },
-        clock = clock,
         zone = zone,
     )
 

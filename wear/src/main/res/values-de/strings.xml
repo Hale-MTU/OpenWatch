@@ -317,4 +317,7 @@
         <item quantity="one">%d Schritt</item>
         <item quantity="other">%d Schritte</item>
     </plurals>
+    <string name="recovery_approximate">Erholung nur näherungsweise</string>
+    <string name="recovery_not_comparable">Erholung nicht vergleichbar</string>
+    <string name="recovery_invalid">Erholung nicht verwertbar</string>
 </resources>

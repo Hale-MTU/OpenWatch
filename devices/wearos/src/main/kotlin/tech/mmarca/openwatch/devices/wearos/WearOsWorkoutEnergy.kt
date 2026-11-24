@@ -1,27 +1,28 @@
 package tech.mmarca.openwatch.devices.wearos
 
 import androidx.health.connect.client.permission.HealthPermission
-import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.Record
 import androidx.health.connect.client.records.WeightRecord
-import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
 import tech.mmarca.healthcalculations.insights.WorkoutEnergyResult
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.healthconnect.HealthConnectReads
+import tech.mmarca.openwatch.wearlink.WorkoutMetrics
 
 /**
- * Writes a watch workout's active calories ([WearOsWorkoutImport.activeCalories])
- * once the session is written. The heart rate is the watch's own, which the
- * same sync wrote to Health Connect before it pulled the workouts. Optional like
- * the walking energy: a missing grant or a failed read never fails the sync.
+ * Writes a watch workout's active calories ([WearOsWorkoutImport.activeCalories],
+ * the estimate the watch's summary shows) once the session is written. The
+ * heart rate is the watch's own hour records ([watchBeats]), which the same
+ * sync wrote to Health Connect before it pulled the workouts, read as far as
+ * the hour record a workout began in reaches back; the age is read on the
+ * workout's day, as on the watch. Optional like the walking energy: a missing
+ * grant or a failed read never fails the sync.
  */
 internal class WearOsWorkoutEnergy(
     private val healthConnect: HealthConnectReads,
     private val profile: suspend () -> BodyProfile,
     private val insert: suspend (List<Record>) -> Unit,
-    private val clock: () -> Instant,
     private val zone: () -> ZoneId,
 ) {
 
@@ -52,8 +53,8 @@ internal class WearOsWorkoutEnergy(
             workout = workout,
             zone = zone(),
             profile = body,
-            samples = heartRate(workout),
-            today = clock().atZone(zone()).toLocalDate(),
+            beats = heartRate(workout, salt),
+            day = workout.start.atZone(zone()).toLocalDate(),
             salt = salt,
         )
         if (result is WorkoutEnergyResult.MissingInputs) {
@@ -65,15 +66,9 @@ internal class WearOsWorkoutEnergy(
         return Outcome.Written
     }
 
-    /** The heart rate in the workout's span; empty when it could not be read, and the activity's MET is used. */
-    private suspend fun heartRate(workout: WearOsWorkout): List<Pair<Instant, Long>> = try {
-        val samples = ArrayList<Pair<Instant, Long>>()
-        healthConnect.forEachSyncRecordPage(HeartRateRecord::class, workout.start, workout.end) { page ->
-            page.filterIsInstance<HeartRateRecord>().forEach { record ->
-                record.samples.mapTo(samples) { it.time to it.beatsPerMinute }
-            }
-        }
-        samples
+    /** The watch's heart rate in the workout's span; empty when it could not be read, and the activity's MET is used. */
+    private suspend fun heartRate(workout: WearOsWorkout, salt: String): List<WorkoutMetrics.Beat> = try {
+        healthConnect.watchBeats(workout.start, workout.end, salt)
     } catch (error: CancellationException) {
         throw error
     } catch (error: Exception) {

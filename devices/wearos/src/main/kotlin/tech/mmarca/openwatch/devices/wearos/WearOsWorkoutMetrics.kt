@@ -9,6 +9,7 @@ import androidx.health.connect.client.units.Length
 import java.time.Instant
 import java.time.ZoneId
 import kotlin.math.roundToInt
+import tech.mmarca.healthcalculations.insights.HeartRateRecoveryQuality
 import tech.mmarca.openwatch.devices.core.saltedRecordId
 import tech.mmarca.openwatch.wearlink.WearLinkWorkout
 import tech.mmarca.openwatch.wearlink.WorkoutMetrics
@@ -61,7 +62,8 @@ internal object WearOsWorkoutMetrics {
     /**
      * One line of plain figures for the session's notes, the way another app shows a session's
      * text: the mean and highest heart rate, the minutes per zone (zone 1 first), the TRIMP and
-     * the heart rate's fall after the stop. Null with nothing to say.
+     * the heart rate's fall after the stop, with the reading's verdict where it is less than
+     * clean, as the watch's summary says it. Null with nothing to say.
      */
     fun notes(summary: WorkoutMetrics.Summary): String? {
         val parts = buildList {
@@ -76,7 +78,13 @@ internal object WearOsWorkoutMetrics {
     private fun recoveryNote(recovery: WorkoutMetrics.Recovery?): String? {
         val one = recovery?.oneMinuteBpm ?: return null
         val two = recovery.twoMinutesBpm
-        return if (two == null) "Recovery 1 min $one bpm" else "Recovery 1 min $one, 2 min $two bpm"
+        val falls = if (two == null) "Recovery 1 min $one bpm" else "Recovery 1 min $one, 2 min $two bpm"
+        return when (recovery.quality) {
+            HeartRateRecoveryQuality.NOT_COMPARABLE -> "$falls (effort not near-maximal)"
+            HeartRateRecoveryQuality.APPROXIMATE -> "$falls (approximate)"
+            // An invalid reading carries no fall, and nothing is said of one without data.
+            HeartRateRecoveryQuality.CLEAN, HeartRateRecoveryQuality.INVALID, HeartRateRecoveryQuality.NO_DATA -> falls
+        }
     }
 
     /** The workout's VO2max at its end, when the figures hold one in Health Connect's range; [granted] must hold its write grant. */

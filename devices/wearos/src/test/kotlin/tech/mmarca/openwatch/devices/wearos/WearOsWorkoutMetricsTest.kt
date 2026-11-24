@@ -16,6 +16,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.healthcalculations.insights.HeartRateRecoveryQuality
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.data.repository.HealthRecordStore
 import tech.mmarca.openwatch.data.repository.contract.FakeDeviceStateRepository
@@ -51,6 +52,16 @@ class WearOsWorkoutMetricsTest {
         )
         val none = WorkoutMetrics.Summary(null, null, List(5) { 0L }, null, null, null, emptyList(), null, null)
         assertNull(WearOsWorkoutMetrics.notes(none))
+    }
+
+    @Test
+    fun `the notes say when a recovery is not comparable or only approximate, as the watch's summary does`() {
+        fun note(quality: HeartRateRecoveryQuality) =
+            WearOsWorkoutMetrics.notes(summary().copy(recovery = WorkoutMetrics.Recovery(25, null, 150, quality)))!!.substringAfter("TRIMP 85. ")
+
+        assertEquals("Recovery 1 min 25 bpm (effort not near-maximal)", note(HeartRateRecoveryQuality.NOT_COMPARABLE))
+        assertEquals("Recovery 1 min 25 bpm (approximate)", note(HeartRateRecoveryQuality.APPROXIMATE))
+        assertEquals("Recovery 1 min 25 bpm", note(HeartRateRecoveryQuality.CLEAN))
     }
 
     @Test
@@ -127,7 +138,9 @@ class WearOsWorkoutMetricsTest {
         val measured = figures(listOf(session, after)).summarize(workout.copy(end = end), salt = "")!!
         val none = figures(listOf(session)).summarize(workout.copy(end = end), salt = "")!!
 
-        assertEquals(WorkoutMetrics.Recovery(oneMinuteBpm = 30, twoMinutesBpm = 50, peakBpm = 160), measured.recovery)
+        // Born 1990: about 183 bpm at most by Tanaka's formula, so a peak of 160 is short of near-maximal.
+        val expected = WorkoutMetrics.Recovery(30, 50, peakBpm = 160, quality = HeartRateRecoveryQuality.NOT_COMPARABLE)
+        assertEquals(expected, measured.recovery)
         assertNull(none.recovery)
     }
 

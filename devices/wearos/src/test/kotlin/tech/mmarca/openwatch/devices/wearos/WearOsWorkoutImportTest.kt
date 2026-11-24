@@ -22,6 +22,7 @@ import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.data.repository.HealthRecordStore
 import tech.mmarca.openwatch.data.repository.contract.FakeDeviceStateRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
+import tech.mmarca.openwatch.wearlink.WorkoutMetrics
 
 class WearOsWorkoutImportTest {
 
@@ -91,21 +92,34 @@ class WearOsWorkoutImportTest {
     private val body = BodyProfile(birthYear = 1996, weightKg = 70.0, heightCm = 175.0, sex = BiologicalSex.MALE)
     private val today = LocalDate.of(2026, 11, 8)
 
+    private fun beat(seconds: Long, bpm: Int) = WorkoutMetrics.Beat(start.plusSeconds(seconds).toEpochMilli(), bpm)
+
     @Test
     fun `a run's calories come from the watch's heart rate, without the pause`() {
-        val samples = listOf(
-            start.plusSeconds(60) to 150L,
-            start.plusSeconds(630) to 60L, // in the pause: left out
-            start.plusSeconds(1200) to 150L,
-            start.plusSeconds(1900) to 60L, // after the end: left out
+        val beats = listOf(
+            beat(60, 150),
+            beat(630, 60), // in the pause: left out
+            beat(1200, 150),
+            beat(1900, 60), // after the end: left out
         )
-        val (record, result) = WearOsWorkoutImport.activeCalories(run(), zone, body, samples, today)
+        val (record, result) = WearOsWorkoutImport.activeCalories(run(), zone, body, beats, today)
 
         // Keytel, men: 59.5051 kJ/min at 150 bpm, 412.44 kcal in 29 minutes, less 33.20 at rest.
         assertEquals(WorkoutEnergyMethod.HEART_RATE, (result as WorkoutEnergyResult.Estimate).method)
         assertEquals(379.2357536, record!!.energy.inKilocalories, 1e-6)
         assertEquals("wearos_workout_energy_${start.toEpochMilli()}", record.metadata.clientRecordId)
         assertEquals(start, record.startTime)
+    }
+
+    @Test
+    fun `the calories are the watch summary's energy, from the mean over time rather than over readings`() {
+        // Ten minutes a reading every ten seconds, then one a second: the readings' plain mean would lean to the second part.
+        val beats = (0L until 600L step 10).map { beat(it, 120) } + (600L until 1800L).map { beat(it, if (it < 660) 120 else 160) }
+
+        val (record, _) = WearOsWorkoutImport.activeCalories(run(), zone, body, beats, today)
+
+        val watch = WorkoutMetrics.summarize(WearOsWorkoutMetrics.linkWorkout(run()), beats, null, body, today)
+        assertEquals(watch.activeKcal!!, record!!.energy.inKilocalories, 1e-9)
     }
 
     @Test
