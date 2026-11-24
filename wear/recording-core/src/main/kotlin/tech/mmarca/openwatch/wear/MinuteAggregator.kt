@@ -36,6 +36,11 @@ class MinuteAggregator(
         val sparseSamples: Int = 150,
         /** A minute closes this long after it started, once every batch for it has arrived. */
         val closeLagMillis: Long = 90_000L,
+        /**
+         * How long a closed minute still takes a late heart rate. The Samsung platform hands its
+         * readings over minutes late with the screen off, after the minute they belong to closed.
+         */
+        val lateHeartRateMillis: Long = 30 * MINUTE_MILLIS,
     )
 
     private class Bucket(start: Long) {
@@ -48,14 +53,23 @@ class MinuteAggregator(
         var heartRateNoContact = false
     }
 
+    /** A closed minute's row and its heart rate samples, kept for [Config.lateHeartRateMillis]. */
+    private class Closed(var row: WearLinkProtocol.SleepMinute, val heartRates: ArrayList<Double>)
+
     private val buckets = TreeMap<Long, Bucket>()
+    private val closedRecently = TreeMap<Long, Closed>()
+    private val revised = sortedSetOf<Long>()
+
+    /** The start of the newest closed minute: a reading for it or an older one never opens a bucket again. */
+    private var closedThrough = Long.MIN_VALUE
     private var lastMagnitude = Double.NaN
     private var lastAngle: Double? = null
     private var worn = true
     private var charging = false
 
     fun onAcceleration(epochMillis: Long, xG: Double, yG: Double, zG: Double) {
-        val bucket = bucketAt(epochMillis)
+        // A reading for a closed minute is dropped: a bucket of its own would replace the stored row with an emptier one.
+        val bucket = openBucketAt(epochMillis) ?: return
         bucket.features.add(epochMillis, xG, yG, zG)
         val magnitude = sqrt(xG * xG + yG * yG + zG * zG)
         if (!lastMagnitude.isNaN() && abs(magnitude - lastMagnitude) > config.jerkThresholdG) bucket.counts++
@@ -66,29 +80,46 @@ class MinuteAggregator(
 
     /** A stored heart rate sample; never a no-contact reading. */
     fun onHeartRate(epochMillis: Long, bpm: Int) {
-        bucketAt(epochMillis).heartRates += bpm.toDouble()
+        val bucket = openBucketAt(epochMillis)
+        if (bucket != null) {
+            bucket.heartRates += bpm.toDouble()
+            return
+        }
+        // Late: it joins the closed minute, which [revisions] hands out again.
+        val closed = closedRecently[minuteOf(epochMillis)] ?: return
+        closed.heartRates += bpm.toDouble()
+        revised += closed.row.epochMillis
     }
 
     /** The off-body sensor's verdict. Sticky until the next one. */
     fun onWorn(epochMillis: Long, worn: Boolean) {
         this.worn = worn
-        if (!worn) bucketAt(epochMillis).offBody = true
+        if (!worn) openBucketAt(epochMillis)?.offBody = true
     }
 
     /** The charger plugged or unplugged. Sticky until the next one. */
     fun onCharging(epochMillis: Long, charging: Boolean) {
         this.charging = charging
-        if (charging) bucketAt(epochMillis).charging = true
+        if (charging) openBucketAt(epochMillis)?.charging = true
     }
 
     /** The screen became interactive: the wearer looked at the watch, so the minute is awake. */
     fun onScreenOn(epochMillis: Long) {
-        bucketAt(epochMillis).screenOn = true
+        openBucketAt(epochMillis)?.screenOn = true
     }
 
     /** The heart rate sensor reported no contact, an unreliable reading or 0 bpm. */
     fun onHeartRateContact(epochMillis: Long, contact: Boolean) {
-        if (!contact) bucketAt(epochMillis).heartRateNoContact = true
+        if (contact) return
+        val bucket = openBucketAt(epochMillis)
+        if (bucket != null) {
+            bucket.heartRateNoContact = true
+            return
+        }
+        val closed = closedRecently[minuteOf(epochMillis)] ?: return
+        if (closed.row.flags and WearLinkProtocol.FLAG_HR_NO_CONTACT != 0) return
+        closed.row = closed.row.copy(flags = closed.row.flags or WearLinkProtocol.FLAG_HR_NO_CONTACT)
+        revised += closed.row.epochMillis
     }
 
     /** Closes and returns every minute old enough as of [nowEpochMillis], oldest first. */
@@ -98,10 +129,39 @@ class MinuteAggregator(
         while (iterator.hasNext()) {
             val (start, bucket) = iterator.next()
             if (nowEpochMillis - start < config.closeLagMillis) break
-            closed += row(start, bucket)
+            val row = row(start, bucket)
+            closed += row
+            closedRecently[start] = Closed(row, bucket.heartRates)
+            closedThrough = maxOf(closedThrough, start)
             iterator.remove()
         }
+        while (closedRecently.isNotEmpty() && nowEpochMillis - closedRecently.firstKey() > config.lateHeartRateMillis) {
+            revised -= closedRecently.pollFirstEntry().key
+        }
         return closed
+    }
+
+    /**
+     * The closed minutes a late heart rate reached since the last call, oldest first: the whole
+     * row again, with the heart rate of every sample it now holds, so the stored row is replaced
+     * by a fuller one, never an emptier one.
+     */
+    fun revisions(): List<WearLinkProtocol.SleepMinute> {
+        val rows = revised.mapNotNull { start ->
+            val closed = closedRecently[start] ?: return@mapNotNull null
+            val hn = closed.heartRates.size
+            val (heartMean, heartSd) = AccelerationMinuteFeatures.meanSd(closed.heartRates)
+            val row = closed.row
+            closed.row = row.copy(
+                kind = kindOf(row.flags, hn),
+                bpm = if (hn > 0) round(heartMean) else null,
+                heartRateSd10 = if (hn > 0) round(heartSd * 10) else null,
+                heartRateSamples = hn,
+            )
+            closed.row
+        }
+        revised.clear()
+        return rows
     }
 
     private fun row(start: Long, bucket: Bucket): WearLinkProtocol.SleepMinute {
@@ -128,16 +188,11 @@ class MinuteAggregator(
         if (n < config.sparseSamples) flags = flags or WearLinkProtocol.FLAG_SPARSE
 
         val hn = bucket.heartRates.size
-        val kind = when {
-            bucket.charging || bucket.offBody || (heartRateRecording && hn == 0) -> WearLinkProtocol.MinuteKind.UNMEASURABLE
-            bucket.screenOn -> WearLinkProtocol.MinuteKind.AWAKE
-            else -> WearLinkProtocol.MinuteKind.RAW
-        }
         val (heartMean, heartSd) = AccelerationMinuteFeatures.meanSd(bucket.heartRates)
 
         return WearLinkProtocol.SleepMinute(
             epochMillis = start,
-            kind = kind,
+            kind = kindOf(flags, hn),
             offsetSeconds = offsetSecondsAt(start),
             flags = flags,
             sampleCount = n,
@@ -153,8 +208,20 @@ class MinuteAggregator(
         )
     }
 
-    private fun bucketAt(epochMillis: Long): Bucket {
-        val start = epochMillis - epochMillis % MINUTE_MILLIS
+    /** Off the wrist, on the charger, or no pulse while recording: unmeasurable; else a screen wake-up is awake. */
+    private fun kindOf(flags: Int, heartRateSamples: Int): WearLinkProtocol.MinuteKind = when {
+        flags and (WearLinkProtocol.FLAG_CHARGING or WearLinkProtocol.FLAG_OFF_BODY) != 0 ||
+            (flags and WearLinkProtocol.FLAG_HR_RECORDING != 0 && heartRateSamples == 0) -> WearLinkProtocol.MinuteKind.UNMEASURABLE
+        flags and WearLinkProtocol.FLAG_SCREEN_ON != 0 -> WearLinkProtocol.MinuteKind.AWAKE
+        else -> WearLinkProtocol.MinuteKind.RAW
+    }
+
+    private fun minuteOf(epochMillis: Long): Long = epochMillis - epochMillis % MINUTE_MILLIS
+
+    /** The minute's bucket, opened on its first reading; null once the minute has closed. */
+    private fun openBucketAt(epochMillis: Long): Bucket? {
+        val start = minuteOf(epochMillis)
+        if (start <= closedThrough) return null
         return buckets.getOrPut(start) {
             Bucket(start).also {
                 it.charging = charging
