@@ -6,8 +6,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.StateFlow
+import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wear.WearAppService
 import tech.mmarca.openwatch.wear.WearPermissions
+import tech.mmarca.openwatch.wear.WearSettings
 import tech.mmarca.openwatch.wear.wearGraph
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
@@ -34,6 +36,8 @@ internal interface WorkoutControl {
 internal class WorkoutViewModel(
     private val workout: WorkoutState,
     private val control: WorkoutControl,
+    /** What the heart rate zones rest on: the maximum and resting rate the phone sent. */
+    val zoneBasis: HeartRateZones.Basis,
     scope: CoroutineScope,
 ) : ViewModel(scope) {
 
@@ -63,7 +67,12 @@ internal class WorkoutViewModel(
         /** The screen's ViewModel over the process's graph and the service. */
         fun create(context: Context): WorkoutViewModel {
             val app = context.applicationContext
-            return WorkoutViewModel(app.wearGraph.workoutState, ServiceWorkoutControl(app), CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate))
+            return WorkoutViewModel(
+                app.wearGraph.workoutState,
+                ServiceWorkoutControl(app),
+                WearSettings.zoneBasis(app),
+                CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+            )
         }
     }
 }

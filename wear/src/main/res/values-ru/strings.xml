@@ -56,7 +56,6 @@
     <string name="workout_open">Тренировка</string>
     <string name="workout_pick">Начать тренировку</string>
     <string name="workout_back">Назад</string>
-    <string name="workout_paused">Пауза</string>
     <string name="workout_waiting_for_gps">Ожидание GPS…</string>
     <string name="workout_pause">Пауза</string>
     <string name="workout_resume">Продолжить</string>

@@ -56,7 +56,6 @@
     <string name="workout_open">Treening</string>
     <string name="workout_pick">Alusta treeningut</string>
     <string name="workout_back">Tagasi</string>
-    <string name="workout_paused">Peatatud</string>
     <string name="workout_waiting_for_gps">GPS-i ootamine…</string>
     <string name="workout_pause">Paus</string>
     <string name="workout_resume">Jätka</string>

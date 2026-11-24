@@ -56,7 +56,6 @@
     <string name="workout_open">Treino</string>
     <string name="workout_pick">Iniciar um treino</string>
     <string name="workout_back">Voltar</string>
-    <string name="workout_paused">Em pausa</string>
     <string name="workout_waiting_for_gps">A aguardar o GPS…</string>
     <string name="workout_pause">Pausa</string>
     <string name="workout_resume">Retomar</string>

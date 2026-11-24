@@ -8,8 +8,8 @@ import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.MetricTile
 
-private const val MetersPerKilometer = 1000.0
-private const val MetersPerMile = 1609.344
+internal const val MetersPerKilometer = 1000.0
+internal const val MetersPerMile = 1609.344
 private const val FeetPerMeter = 3.28084
 private const val PoundsPerKilogram = 2.20462
 private const val MillilitresPerFluidOunce = 29.5735

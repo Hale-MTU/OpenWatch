@@ -56,7 +56,6 @@
     <string name="workout_open">تمرين</string>
     <string name="workout_pick">بدء تمرين</string>
     <string name="workout_back">رجوع</string>
-    <string name="workout_paused">متوقف مؤقتًا</string>
     <string name="workout_waiting_for_gps">في انتظار GPS…</string>
     <string name="workout_pause">إيقاف مؤقت</string>
     <string name="workout_resume">استئناف</string>

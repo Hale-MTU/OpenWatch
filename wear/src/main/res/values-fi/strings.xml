@@ -56,7 +56,6 @@
     <string name="workout_open">Treeni</string>
     <string name="workout_pick">Aloita treeni</string>
     <string name="workout_back">Takaisin</string>
-    <string name="workout_paused">Tauolla</string>
     <string name="workout_waiting_for_gps">Odotetaan GPS:ää…</string>
     <string name="workout_pause">Tauko</string>
     <string name="workout_resume">Jatka</string>

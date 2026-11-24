@@ -13,7 +13,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openwatch.wear.features.status.StatusScreen
-import tech.mmarca.openwatch.wear.workout.WorkoutScreen
+import tech.mmarca.openwatch.wear.features.recording.WorkoutScreen
 
 /**
  * The watch app: today's dashboard, with the workout recorder and the link
@@ -56,7 +56,7 @@ class MainActivity : ComponentActivity() {
                         onOpenBluetoothSettings = ::openBluetoothSettings,
                     )
                 },
-                workoutScreen = { onClose -> WorkoutScreen(onClose) },
+                workoutScreen = { onClose -> WorkoutScreen(uiState.preferences.unitSystem, onClose) },
             )
         }
     }

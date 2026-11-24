@@ -13,6 +13,8 @@ data class WorkoutUiState(
     val snapshot: WorkoutSnapshot? = null,
     /** True after a stop that kept the workout, until the summary is closed. */
     val finished: Boolean = false,
+    /** True when the workout records a route: decided at the start, false again if location is refused on the way. */
+    val gps: Boolean = false,
 )
 
 /**
