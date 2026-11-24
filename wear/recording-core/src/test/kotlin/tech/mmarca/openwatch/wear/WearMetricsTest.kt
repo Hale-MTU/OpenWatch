@@ -2,7 +2,9 @@ package tech.mmarca.openwatch.wear
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
 class WearMetricsTest {
@@ -45,6 +47,19 @@ class WearMetricsTest {
         val hrv = WearLinkProtocol.HrvWindow(1_791_568_860_000, 452, 280)
         assertEquals(hrv, roundTrip(WearMetrics.HRV, hrv))
         assertEquals(hrv.epochMillis, WearMetrics.HRV.timeOf(hrv))
+
+        val entry = WearLinkEntry.of(1_791_616_222_062, WearLinkEntry.Type.BLOOD_PRESSURE, 121.0, 79.0)
+        assertEquals(entry, roundTrip(WearMetrics.ENTRIES, entry))
+        assertEquals(entry.epochMillis, WearMetrics.ENTRIES.timeOf(entry))
+    }
+
+    @Test
+    fun `an entry is final once made, and kept a month like a workout`() {
+        assertEquals(WearMetric.OnSameTime.KEEP, WearMetrics.ENTRIES.onSameTime)
+        assertEquals(WearMetric.MONTH_MILLIS, WearMetrics.ENTRIES.retentionMillis)
+        assertEquals(WearMetrics.WORKOUTS.retentionMillis, WearMetrics.ENTRIES.retentionMillis)
+        // The link serves it to `SINCE` by its key, as every one-line series.
+        assertTrue(WearMetrics.ENTRIES in WearMetrics.SERIES)
     }
 
     @Test
@@ -60,7 +75,7 @@ class WearMetricsTest {
         assertEquals(
             listOf(WearLinkProtocol.CAP_HEART_RATE, WearLinkProtocol.CAP_SLEEP_MINUTES, WearLinkProtocol.CAP_STEPS, WearLinkProtocol.CAP_ASCENT, WearLinkProtocol.CAP_HRV,
                 WearLinkProtocol.CAP_RESPIRATORY_RATE, WearLinkProtocol.CAP_SKIN_TEMPERATURE, WearLinkProtocol.CAP_SPO2,
-                WearLinkProtocol.CAP_WORKOUTS, "wp", "wr",
+                WearLinkProtocol.CAP_ENTRIES, WearLinkProtocol.CAP_WORKOUTS, "wp", "wr",
             ),
             keys,
         )

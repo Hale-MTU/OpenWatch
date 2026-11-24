@@ -99,6 +99,16 @@ The watch app's screen has a **Workout** button: pick a sport (walking, running,
 
 The phone writes each workout as an exercise session with its route and pauses, and a distance for one with GPS. Steps, climbed height and heart rate are not written again: the watch's all-day series already carry them minute by minute. This needs the Health Connect grants for exercise, exercise routes and distance; without them the workouts wait on the watch. Each workout also gets its active calories, as an estimate, once your weight is known from Health Connect or the body profile: from the watch's heart rate during the workout (Keytel and colleagues, J Sports Sci 2005, which needs sex and birth year and holds at 57 to 90 % of the maximum heart rate), else for a walk or run from its distance at the pace ACSM's metabolic equations cover, else from the sport's value in the 2024 Adult Compendium of Physical Activities. The resting share, from the basal metabolic rate, is taken off. Without a weight, or without the grant to write active calories, the workout is written without them and the card says what is missing. While a workout runs, the watch face shows its pill (sport and time; a tap opens the workout), and the workout screen stays on in ambient mode with a dim layout of its own: the time in whole minutes and dashes where the heart rate and distance would be, since the screen changes only once a minute there. The ambient layout needs the ambient service of the Wear SDK, a system library of recent Wear OS releases; without it the system dims the screen as for any app. Not yet tried on a watch.
 
+### Quick log
+
+The watch app's dashboard has a **Log** button, below the activity rings:
+
+- **Water**: one tap adds a glass, 250 ml, toward a goal of two litres a day; the button shows the day's total against the goal.
+- **Weight** and **Blood pressure**: a value picked with the + and − buttons or the crown, starting from the last one logged; blood pressure asks for the systolic, then the diastolic. Blood pressure stays within what Health Connect can store (a systolic of up to 200 mmHg).
+- **Breathe**: a guided minute, six breaths of four seconds in and six out, a circle that grows and shrinks with a buzz at each turn. The screen stays on for that minute only. A finished minute is logged as a mindful minute; one swiped away is not.
+
+The newest six entries are listed below, with their time. The entries count at once toward the dashboard's Water and Weight tiles and their detail screens (the newest weight is the value shown, however old). They are kept on the watch for a month, and the phone does not write them to Health Connect yet.
+
 ### Settings on the watch and from the phone
 
 The watch app's screen and the phone's *Watch settings* card (on the watch's device screen) show the same settings, kept on the watch:

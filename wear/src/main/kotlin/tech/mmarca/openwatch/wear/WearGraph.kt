@@ -20,9 +20,9 @@ import tech.mmarca.openwatch.wear.workout.WorkoutStore
 
 /**
  * Everything the watch app runs on, built by hand once per process
- * ([OpenWatchWearApplication]): the store, the link's state and trust, the
- * recorders and the sources they share, the link server and the debug
- * protocol. The watch has no DI framework; this file is its wiring, and
+ * ([OpenWatchWearApplication]): the store and the entry log over it, the
+ * link's state and trust, the recorders and the sources they share, the link
+ * server and the debug protocol. The watch has no DI framework; this file is its wiring, and
  * nothing else builds one of these parts.
  *
  * A part is built on first use, so a tile that only reads the store builds
@@ -63,6 +63,9 @@ internal class WearGraph(private val app: Application) {
     val secretKey = WearSecretKey()
     val phoneRequests: WearPhoneRequests by lazy { WearPhoneRequests(app) }
     val store: MetricStore by lazy { MetricStore(app) }
+
+    /** The entries made on the watch, by hand or by a spot measurement: their one writer. */
+    val entries: EntryLog by lazy { EntryLog(store) }
 
     /** The settings as they change, on the watch or from the phone. The first read loads their file: off the main thread. */
     val settings: StateFlow<WatchPreferences> by lazy { WearSettingsState(app).state }

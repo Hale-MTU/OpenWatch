@@ -6,16 +6,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
-import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
-import tech.mmarca.openwatch.wear.features.dashboard.DashboardScreen
-import tech.mmarca.openwatch.wear.features.metric.MetricDetailScreen
+import tech.mmarca.openwatch.wear.features.dashboard.dashboardDestination
+import tech.mmarca.openwatch.wear.features.metric.metricDestination
+import tech.mmarca.openwatch.wear.features.quicklog.quickLogDestinations
+import tech.mmarca.openwatch.wear.features.recording.workoutDestination
+import tech.mmarca.openwatch.wear.features.status.statusDestination
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
 /**
- * The whole watch UI: theme, scaffold and navigation. It renders [state];
- * nothing here reads a sensor. The dashboard opens the workout
- * ([workoutScreen]) and the link and recorder status ([statusScreen]).
+ * The whole watch UI: theme, scaffold and navigation. It renders [state] and
+ * hands what the wearer logs to [onLog]; nothing here reads a sensor. Each
+ * feature declares its destinations in its own package; the dashboard opens
+ * a metric, the quick log, the workout and the link and recorder status
+ * ([statusScreen]).
  *
  * A running workout, or a saved one whose summary is still open, brings the
  * workout forward when the app opens ([workoutActive]) and when the wearer
@@ -29,14 +34,15 @@ fun OpenWatchWearApp(
     workoutActive: Boolean = false,
     /** Bumped each time the workout is asked for from outside the app. */
     workoutRequests: Int = 0,
+    /** Logs a value entered by hand now: its type, its value and the second value of a pair. */
+    onLog: (type: WearLinkEntry.Type, value: Double, second: Double?) -> Unit = { _, _, _ -> },
     /** Link and recorder status, permissions and paired phones; it can open the workout. */
     statusScreen: @Composable (onOpenWorkout: () -> Unit) -> Unit = {},
-    /** The workout, which closes itself when the wearer leaves the picker or the summary. */
-    workoutScreen: @Composable (onClose: () -> Unit) -> Unit = {},
 ) {
     // The nav graph is built once, so every destination reads the latest
     // state through this holder instead of a value captured at build time.
     val currentState by rememberUpdatedState(state)
+    val currentLog by rememberUpdatedState(onLog)
 
     OpenWatchWearTheme {
         // AppScaffold draws the time once, above every screen.
@@ -47,34 +53,11 @@ fun OpenWatchWearApp(
                 navController = navController,
                 startDestination = WearRoutes.DASHBOARD,
             ) {
-                composable(WearRoutes.DASHBOARD) {
-                    DashboardScreen(
-                        tiles = MetricTile.DefaultTiles.filter { it in currentState.availableMetrics },
-                        metrics = currentState.metrics,
-                        unitSystem = currentState.preferences.unitSystem,
-                        // A second tap before the screen is up must not push it twice.
-                        onOpenMetric = { navController.navigate(WearRoutes.metric(it)) { launchSingleTop = true } },
-                        onStartActivity = openWorkout,
-                        onOpenStatus = { navController.navigate(WearRoutes.STATUS) },
-                    )
-                }
-                composable(WearRoutes.METRIC) { entry ->
-                    val metric = WearRoutes.metricOf(entry.arguments?.getString(WearRoutes.METRIC_ARG))
-                    if (metric == null) {
-                        // A name this build has no metric for: back to the dashboard, the start destination.
-                        LaunchedEffect(Unit) { navController.popBackStack(WearRoutes.DASHBOARD, inclusive = false) }
-                    } else {
-                        MetricDetailScreen(
-                            metric = metric,
-                            state = currentState.metrics[metric] ?: MetricUiState(),
-                            unitSystem = currentState.preferences.unitSystem,
-                            restingHeartRate = currentState.metrics[MetricTile.RESTING_HEART_RATE]?.current,
-                            sleepStages = currentState.sleepStages,
-                        )
-                    }
-                }
-                composable(WearRoutes.STATUS) { statusScreen(openWorkout) }
-                composable(WearRoutes.WORKOUT) { workoutScreen { navController.popBackStack() } }
+                dashboardDestination(navController, { currentState }, onStartActivity = openWorkout)
+                metricDestination(navController) { currentState }
+                quickLogDestinations(navController, { currentState }) { type, value, second -> currentLog(type, value, second) }
+                statusDestination { statusScreen(openWorkout) }
+                workoutDestination(navController) { currentState }
             }
             LaunchedEffect(workoutActive, workoutRequests) {
                 if (workoutActive && navController.currentDestination?.route != WearRoutes.WORKOUT) openWorkout()

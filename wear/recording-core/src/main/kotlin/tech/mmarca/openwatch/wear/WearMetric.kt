@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.wear
 
+import tech.mmarca.openwatch.wearlink.WearLinkEntries
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 import tech.mmarca.openwatch.wearlink.WearLinkWorkoutLines
 
@@ -39,6 +40,9 @@ class WearMetric<T>(
     companion object {
         /** A week: long enough to miss a few days of syncing, small enough to stay bounded. */
         const val WEEK_MILLIS: Long = 7L * 24 * 60 * 60 * 1000
+
+        /** A month: what a workout or an entry made by hand is worth keeping, longer than a week of minutes. */
+        const val MONTH_MILLIS: Long = 30L * 24 * 60 * 60 * 1000
     }
 }
 
@@ -139,9 +143,6 @@ object WearMetrics {
         onSameTime = WearMetric.OnSameTime.KEEP,
     )
 
-    /** A month: a workout is worth keeping longer than a week of minutes. */
-    private const val WORKOUT_RETENTION_MILLIS: Long = 30L * 24 * 60 * 60 * 1000
-
     /** One header per finished workout, keyed on its start; see `WorkoutRecorder`. */
     val WORKOUTS = WearMetric(
         key = WearLinkProtocol.CAP_WORKOUTS,
@@ -149,7 +150,7 @@ object WearMetrics {
         decode = WearLinkWorkoutLines::parseHeader,
         timeOf = { it.startMillis },
         onSameTime = WearMetric.OnSameTime.KEEP,
-        retentionMillis = WORKOUT_RETENTION_MILLIS,
+        retentionMillis = WearMetric.MONTH_MILLIS,
     )
 
     /** The pauses of the workouts, keyed on a pause's start. */
@@ -159,7 +160,7 @@ object WearMetrics {
         decode = WearLinkWorkoutLines::parsePause,
         timeOf = { it.startMillis },
         onSameTime = WearMetric.OnSameTime.KEEP,
-        retentionMillis = WORKOUT_RETENTION_MILLIS,
+        retentionMillis = WearMetric.MONTH_MILLIS,
     )
 
     /** The GPS fixes of the workouts, keyed on a fix's time. Stored as they arrive, so a killed app keeps its route. */
@@ -169,7 +170,22 @@ object WearMetrics {
         decode = WearLinkWorkoutLines::parsePoint,
         timeOf = { it.epochMillis },
         onSameTime = WearMetric.OnSameTime.KEEP,
-        retentionMillis = WORKOUT_RETENTION_MILLIS,
+        retentionMillis = WearMetric.MONTH_MILLIS,
+    )
+
+    /**
+     * The entries made on the watch, by hand (the quick log) or by a spot
+     * measurement, keyed on their time; see `EntryLog`, their one writer, which
+     * moves an entry to the next free millisecond, since a second value at the
+     * same time would be dropped. Final once made. Kept a month, like a workout.
+     */
+    val ENTRIES = WearMetric(
+        key = WearLinkProtocol.CAP_ENTRIES,
+        encode = WearLinkEntries::format,
+        decode = WearLinkEntries::parse,
+        timeOf = { it.epochMillis },
+        onSameTime = WearMetric.OnSameTime.KEEP,
+        retentionMillis = WearMetric.MONTH_MILLIS,
     )
 
     /**
@@ -178,7 +194,7 @@ object WearMetrics {
      * under three keys, so it keeps its own request.
      */
     val SERIES: List<WearMetric<*>> = listOf(
-        HEART_RATE, SLEEP_MINUTES, STEPS, ASCENT, HRV, RESPIRATORY_RATE, SKIN_TEMPERATURE, SPO2,
+        HEART_RATE, SLEEP_MINUTES, STEPS, ASCENT, HRV, RESPIRATORY_RATE, SKIN_TEMPERATURE, SPO2, ENTRIES,
     )
 
     val ALL: List<WearMetric<*>> = SERIES + listOf(WORKOUTS, WORKOUT_PAUSES, WORKOUT_POINTS)

@@ -36,7 +36,7 @@ import java.util.UUID
  * - `SINCE <key> <cursor> <limit>` → the series' lines by the watch's sequence
  *   numbers, then `END <count> <more> <cursor>` ([WearLinkSince]). For every
  *   series below with one line per value; only a series the watch announces by
- *   its key (`hr`, `sm`, `st`, `as`, `hv`, `rr`, `sk`, `o2`) is served. Version 5
+ *   its key (`hr`, `sm`, `st`, `as`, `hv`, `rr`, `sk`, `o2`, `lg`) is served. Version 5
  *   replaced the eight per-series requests of version 4 (`HR_SINCE` and the rest).
  * - `GET_PREF` → one `PREF <key> <value>` line per setting the watch holds,
  *   then `END <count> 0`. Only a watch announcing `pref` serves it.
@@ -67,6 +67,10 @@ import java.util.UUID
  *   Samsung platform: its time, the saturation in percent, the heart rate.
  * - `SK <minuteMillis> <skin100> <ambient100>` — one minute of the Samsung
  *   platform's skin temperature, in hundredths of a degree Celsius.
+ * - `LG <epochMillis> <type> <value1000> <second1000|-> <m|h>` — one entry made
+ *   on the watch, logged by hand (`h`) or spot-measured (`m`), its values in
+ *   thousandths of its type's unit ([WearLinkEntries]). Added without a
+ *   version bump: a phone that does not know `lg` never asks for it.
  * - `SM <epochMillis> <kind> <offsetSeconds> <flags> <n> <mv10> <bpm|-> <hsd10|->
  *   <hn> <mx> <my> <mz> <sx> <sy> <sz> <zmin|-> <zmax|-> <zd10|->` — one sleep
  *   minute, the sleep pipeline's input on the phone, every field an integer
@@ -162,6 +166,9 @@ object WearLinkProtocol {
 
     /** The phone reads the watch's clock in `OK`; a watch announces it back only with the time there. */
     const val CAP_CLOCK: String = "tm"
+
+    /** The watch keeps the entries made on it, logged by hand or spot-measured: `SINCE lg` ([WearLinkEntries]). */
+    const val CAP_ENTRIES: String = "lg"
 
     /**
      * The settings the phone may read with `GET_PREF` and change with

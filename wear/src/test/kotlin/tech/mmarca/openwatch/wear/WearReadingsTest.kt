@@ -11,6 +11,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.mmarca.healthcalculations.insights.HeartRateZones
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.AscentMinute
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HeartRateSample
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HrvWindow
@@ -473,5 +474,75 @@ class WearReadingsTest {
         assertTrue(spo2.today.isEmpty())
         assertNull(spo2.todayStats)
         assertEquals(listOf(97.0, null), spo2.week)
+    }
+
+    private fun entry(date: LocalDate, hour: Int, type: WearLinkEntry.Type, value: Double, minute: Int = 0) =
+        WearLinkEntry.of(at(date, hour, minute), type, value)
+
+    @Test
+    fun waterLoggedOnTheWatchIsTheDaysTotalByTheHourWithItsGoal() {
+        val yesterday = today.minusDays(1)
+        val entries = listOf(
+            entry(yesterday, 9, WearLinkEntry.Type.WATER, 500.0),
+            entry(today, 8, WearLinkEntry.Type.WATER, 250.0),
+            entry(today, 10, WearLinkEntry.Type.WATER, 250.0),
+            entry(today, 10, WearLinkEntry.Type.WATER, 250.0, minute = 20),
+        )
+
+        val water = WearReadings.metrics(week(day(today)), now, zone, entries, waterGoalMl = 2_000.0).getValue(MetricTile.HYDRATION)
+
+        assertEquals(750.0, water.current!!, 0.0)
+        assertEquals(2_000.0, water.goal!!, 0.0)
+        // Midnight to the hour of 10:30, as the steps.
+        assertEquals(11, water.today.size)
+        assertEquals(500.0, water.today[10], 0.0)
+        // From the first day with water; today last.
+        assertEquals(listOf(500.0, 750.0), water.week)
+        assertEquals(today, water.weekEnd)
+    }
+
+    @Test
+    fun theNewestWeightIsTheValueNowHoweverOldAndEachDaysLastIsItsBar() {
+        val entries = listOf(
+            entry(today.minusDays(20), 7, WearLinkEntry.Type.WEIGHT, 74.0),
+            entry(today.minusDays(2), 7, WearLinkEntry.Type.WEIGHT, 72.9),
+            entry(today.minusDays(2), 21, WearLinkEntry.Type.WEIGHT, 73.2),
+        )
+
+        val weight = WearReadings.metrics(week(day(today)), now, zone, entries).getValue(MetricTile.WEIGHT)
+
+        assertEquals(73.2, weight.current!!, 0.0)
+        assertEquals(listOf(73.2, null, null), weight.week)
+        assertTrue(weight.today.isEmpty())
+
+        val old = WearReadings.metrics(week(day(today)), now, zone, entries.take(1)).getValue(MetricTile.WEIGHT)
+        assertEquals(74.0, old.current!!, 0.0)
+        assertTrue(old.week.isEmpty())
+    }
+
+    @Test
+    fun aSpotMeasurementTodayStandsInOnlyWhereTheRecordingHasNoValue() {
+        val measured = listOf(
+            entry(today, 9, WearLinkEntry.Type.HEART_RATE, 64.0),
+            entry(today, 9, WearLinkEntry.Type.HRV, 48.0),
+        )
+
+        val empty = WearReadings.metrics(week(day(today)), now, zone, measured)
+        assertEquals(64.0, empty.getValue(MetricTile.HEART_RATE).current!!, 0.0)
+        assertEquals(48.0, empty.getValue(MetricTile.HRV).current!!, 0.0)
+
+        val recorded = WearReadings.metrics(week(day(today, heartRate = listOf(HeartRateSample(at(today, 10), 72)))), now, zone, measured)
+        assertEquals(72.0, recorded.getValue(MetricTile.HEART_RATE).current!!, 0.0)
+
+        // Yesterday's measurement is not today's value.
+        val yesterday = listOf(entry(today.minusDays(1), 9, WearLinkEntry.Type.HEART_RATE, 64.0))
+        assertFalse(MetricTile.HEART_RATE in WearReadings.metrics(week(day(today)), now, zone, yesterday))
+    }
+
+    @Test
+    fun withoutEntriesNoLoggedTileIsShown() {
+        val metrics = WearReadings.metrics(week(day(today)), now, zone, emptyList())
+        assertFalse(MetricTile.HYDRATION in metrics)
+        assertFalse(MetricTile.WEIGHT in metrics)
     }
 }

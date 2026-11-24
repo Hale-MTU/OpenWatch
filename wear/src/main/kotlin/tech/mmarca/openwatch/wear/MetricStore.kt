@@ -8,7 +8,12 @@ import android.database.sqlite.SQLiteException
 import android.database.sqlite.SQLiteOpenHelper
 import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import tech.mmarca.openwatch.wearlink.Page
 
 /**
@@ -36,6 +41,9 @@ import tech.mmarca.openwatch.wearlink.Page
  * time, each write one transaction, and a failure (a full disk, a corrupt
  * file) counted in [writeFailures] and answered with false instead of thrown
  * on a recorder's thread, where it would end the process. Reads still throw.
+ *
+ * A screen that shows a metric can follow its writes ([updates]) instead of
+ * polling: a count per metric that goes up after each committed write.
  */
 class MetricStore(context: Context, name: String? = DB_NAME) : SQLiteOpenHelper(context, name, null, DB_VERSION) {
 
@@ -58,6 +66,9 @@ class MetricStore(context: Context, name: String? = DB_NAME) : SQLiteOpenHelper(
 
     /** The highest sequence number handed out, under [writeLock]; -1 until read from the database. */
     private var highSeq = -1L
+
+    /** One write count per metric key that someone follows ([updates]). */
+    private val writeCounts = ConcurrentHashMap<String, MutableStateFlow<Long>>()
 
     /** Names this database's numbering: a cursor of another store, or of this one before its data was cleared, starts over. */
     val storeId: String by lazy { state(KEY_STORE_ID) ?: newStoreId().also { setState(KEY_STORE_ID, it) } }
@@ -112,19 +123,32 @@ class MetricStore(context: Context, name: String? = DB_NAME) : SQLiteOpenHelper(
         putState(db, KEY_STORE_ID, newStoreId())
     }
 
+    /**
+     * A count that goes up after each committed write that may have changed
+     * [metric]'s rows: a value stored, a range deleted, rows pruned. A screen
+     * reads the rows again when it moves. This store's writes only, so a
+     * second instance over the same file (a test's) has counts of its own.
+     */
+    fun updates(metric: WearMetric<*>): StateFlow<Long> = writeCounts.getOrPut(metric.key) { MutableStateFlow(0L) }.asStateFlow()
+
+    /** Moves [metric]'s count on, for whoever follows it; after a committed write. */
+    private fun changed(metric: WearMetric<*>) {
+        writeCounts[metric.key]?.update { it + 1 }
+    }
+
     /** Stores one value; one already at its time stays or is replaced as [WearMetric.onSameTime] says. False when the write failed. */
-    fun <T> put(metric: WearMetric<T>, value: T): Boolean = write { db -> insert(db, metric, value) }
+    fun <T> put(metric: WearMetric<T>, value: T): Boolean = write { db -> insert(db, metric, value) }.also { if (it) changed(metric) }
 
     /** Stores several values in one transaction: all of them, or none and false. */
     fun <T> putAll(metric: WearMetric<T>, values: Iterable<T>): Boolean = write { db ->
         for (value in values) insert(db, metric, value)
-    }
+    }.also { if (it) changed(metric) }
 
     /** Stores [values] and sets the state [key] to [state], in one transaction: both, or neither and false. */
     fun <T> putAll(metric: WearMetric<T>, values: Iterable<T>, key: String, state: String): Boolean = write { db ->
         for (value in values) insert(db, metric, value)
         putState(db, key, state)
-    }
+    }.also { if (it) changed(metric) }
 
     /** The state stored under [key], or null when there is none. */
     fun state(key: String): String? =
@@ -237,7 +261,19 @@ class MetricStore(context: Context, name: String? = DB_NAME) : SQLiteOpenHelper(
             "$COL_METRIC = ? AND $COL_TIME >= ? AND $COL_TIME <= ?",
             arrayOf(metric.key, fromEpochMillis.toString(), toEpochMillis.toString()),
         )
-    }
+    }.also { if (it) changed(metric) }
+
+    /** The times [metric] has a row at, from [fromEpochMillis] up to [untilEpochMillis] (excluded), whether this build can read the row or not. */
+    fun timesTaken(metric: WearMetric<*>, fromEpochMillis: Long, untilEpochMillis: Long): Set<Long> =
+        readableDatabase.query(
+            TABLE,
+            arrayOf(COL_TIME),
+            "$COL_METRIC = ? AND $COL_TIME >= ? AND $COL_TIME < ?",
+            arrayOf(metric.key, fromEpochMillis.toString(), untilEpochMillis.toString()),
+            null,
+            null,
+            null,
+        ).use { cursor -> buildSet { while (cursor.moveToNext()) add(cursor.getLong(0)) } }
 
     /** The newest value, or null when there is none or this build cannot read it. */
     fun <T> latest(metric: WearMetric<T>): T? =
@@ -256,12 +292,15 @@ class MetricStore(context: Context, name: String? = DB_NAME) : SQLiteOpenHelper(
         DatabaseUtils.queryNumEntries(readableDatabase, TABLE, "$COL_METRIC = ?", arrayOf(metric.key))
 
     /** Drops what is older than [metric]'s retention as of [nowEpochMillis]. */
-    fun prune(metric: WearMetric<*>, nowEpochMillis: Long): Boolean = write { db ->
-        db.delete(
-            TABLE,
-            "$COL_METRIC = ? AND $COL_TIME < ?",
-            arrayOf(metric.key, (nowEpochMillis - metric.retentionMillis).toString()),
-        )
+    fun prune(metric: WearMetric<*>, nowEpochMillis: Long): Boolean {
+        var dropped = 0
+        return write { db ->
+            dropped = db.delete(
+                TABLE,
+                "$COL_METRIC = ? AND $COL_TIME < ?",
+                arrayOf(metric.key, (nowEpochMillis - metric.retentionMillis).toString()),
+            )
+        }.also { if (it && dropped > 0) changed(metric) }
     }
 
     /**

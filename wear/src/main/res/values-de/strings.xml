@@ -172,6 +172,25 @@
     <string name="sleep_light">Leicht</string>
     <string name="sleep_deep">Tief</string>
     <string name="measure_now">Jetzt messen</string>
+    <string name="quicklog_title">Eintragen</string>
+    <string name="quicklog_add_water">Wasser +%1$s %2$s</string>
+    <string name="quicklog_water_today">%1$s / %2$s %3$s</string>
+    <string name="quicklog_blood_pressure">Blutdruck</string>
+    <string name="quicklog_blood_pressure_value">%1$s/%2$s mmHg</string>
+    <string name="quicklog_systolic">Systolisch</string>
+    <string name="quicklog_diastolic">Diastolisch</string>
+    <plurals name="quicklog_minutes">
+        <item quantity="one">%1$d min</item>
+        <item quantity="other">%1$d min</item>
+    </plurals>
+    <string name="quicklog_not_logged">Noch nicht eingetragen</string>
+    <string name="quicklog_recent">Zuletzt</string>
+    <string name="breathe_title">Atmen</string>
+    <string name="breathe_description">1 Minute geführtes Atmen</string>
+    <string name="breathe_in">Einatmen</string>
+    <string name="breathe_out">Ausatmen</string>
+    <string name="unit_mmhg">mmHg</string>
+    <string name="action_save">Speichern</string>
     <string name="activity_walk">Gehen</string>
     <string name="activity_run">Laufen</string>
     <string name="activity_cycle">Radfahren</string>

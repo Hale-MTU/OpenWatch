@@ -13,11 +13,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import tech.mmarca.openwatch.wear.features.status.StatusScreen
-import tech.mmarca.openwatch.wear.features.recording.WorkoutScreen
 
 /**
- * The watch app: today's dashboard, with the workout recorder and the link
- * and recorder status one step down. Asks for the permissions
+ * The watch app: today's dashboard, with the quick log, the workout recorder
+ * and the link and recorder status one step down. Asks for the permissions
  * the link and the recorders need; each part starts on its own once
  * granted. The recording itself lives in [WearAppService], so closing the
  * app changes nothing.
@@ -49,6 +48,7 @@ class MainActivity : ComponentActivity() {
                 state = uiState,
                 workoutActive = workout.running || workout.finished,
                 workoutRequests = workoutRequests,
+                onLog = viewModel::log,
                 statusScreen = { onOpenWorkout ->
                     StatusScreen(
                         onGrant = ::requestMissingPermissions,
@@ -56,7 +56,6 @@ class MainActivity : ComponentActivity() {
                         onOpenBluetoothSettings = ::openBluetoothSettings,
                     )
                 },
-                workoutScreen = { onClose -> WorkoutScreen(uiState.preferences.unitSystem, onClose) },
             )
         }
     }

@@ -141,6 +141,45 @@ class MetricStoreTest {
         }
     }
 
+    @Test
+    fun aMetricsCountMovesAfterEachCommittedWriteOfItsOwn() {
+        val heartRate = store.updates(WearMetrics.HEART_RATE)
+        val steps = store.updates(WearMetrics.STEPS)
+
+        store.put(WearMetrics.HEART_RATE, hr(1_000, 60))
+        store.putAll(WearMetrics.HEART_RATE, listOf(hr(2_000, 61), hr(3_000, 62)))
+        assertEquals(2L, heartRate.value)
+        assertEquals(0L, steps.value)
+
+        store.deleteRange(WearMetrics.HEART_RATE, 2_000, 2_000)
+        assertEquals(3L, heartRate.value)
+        // A prune that drops nothing changed nothing; one that drops a row did.
+        store.prune(WearMetrics.HEART_RATE, nowEpochMillis = 3_000)
+        assertEquals(3L, heartRate.value)
+        store.prune(WearMetrics.HEART_RATE, nowEpochMillis = 2_000 + WearMetric.WEEK_MILLIS)
+        assertEquals(4L, heartRate.value)
+        // The same count for whoever asks.
+        assertEquals(4L, store.updates(WearMetrics.HEART_RATE).value)
+    }
+
+    @Test
+    fun aFailedWriteMovesNoCount() {
+        val heartRate = store.updates(WearMetrics.HEART_RATE)
+        store.writableDatabase.execSQL("DROP TABLE ${MetricStore.TABLE}")
+
+        assertFalse(store.put(WearMetrics.HEART_RATE, hr(1_000, 60)))
+        assertEquals(0L, heartRate.value)
+    }
+
+    @Test
+    fun theTimesTakenCountEveryRowReadableOrNot() {
+        store.putAll(WearMetrics.HEART_RATE, listOf(hr(1_000, 60), hr(1_002, 61), hr(1_010, 62)))
+        insertRaw(WearMetrics.HEART_RATE.key, 1_001L, "HR from a future build")
+
+        assertEquals(setOf(1_000L, 1_001L, 1_002L), store.timesTaken(WearMetrics.HEART_RATE, 1_000, 1_010))
+        assertTrue(store.timesTaken(WearMetrics.STEPS, 0, 10_000).isEmpty())
+    }
+
     private fun insertRaw(key: String, at: Long, line: String) {
         store.writableDatabase.insert(
             MetricStore.TABLE,

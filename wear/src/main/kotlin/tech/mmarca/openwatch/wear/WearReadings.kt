@@ -11,6 +11,7 @@ import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.healthcalculations.model.HeartRateSample as ZoneSample
 import tech.mmarca.healthcalculations.stats.medianOrNull
 import tech.mmarca.healthcalculations.stats.timeBucketedAverageOrNull
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.AscentMinute
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HeartRateSample
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HrvWindow
@@ -237,11 +238,18 @@ internal object WearReadings {
         )
 
     /**
-     * The tiles the watch's own recording can fill. [days] are the last
-     * seven, oldest first, today last. A tile with no row in any of them is
-     * left out, so the screen says "no reading yet" instead of showing zero.
+     * The tiles the watch's own recording can fill, and the [entries] made on
+     * it ([putEntries]). [days] are the last seven, oldest first, today last.
+     * A tile with no row in any of them is left out, so the screen says "no
+     * reading yet" instead of showing zero.
      */
-    fun metrics(days: List<DayReadings>, now: Instant, zone: ZoneId): Map<MetricTile, MetricUiState> {
+    fun metrics(
+        days: List<DayReadings>,
+        now: Instant,
+        zone: ZoneId,
+        entries: List<WearLinkEntry> = emptyList(),
+        waterGoalMl: Double = DisplayPreferences.DEFAULT_WATER_GOAL_ML.toDouble(),
+    ): Map<MetricTile, MetricUiState> {
         val today = days.lastOrNull() ?: return emptyMap()
         val thisHour = hourOf(now.toEpochMilli(), zone)
         return buildMap {
@@ -286,8 +294,62 @@ internal object WearReadings {
                     ),
                 )
             }
+            putEntries(days, entries, thisHour, zone, waterGoalMl)
         }.mapValues { (_, state) -> state.copy(weekEnd = today.date) }
     }
+
+    /**
+     * The entries made on the watch, folded into the tiles they feed: the
+     * water drunk into the water tile, with its goal, as a daily total by the
+     * hour; the weights into the weight tile, the newest as the value now
+     * however old, today's as its chart and each day's last as the week. A
+     * heart rate or an HRV measured on the spot today is the value now only
+     * where the watch's own recording has none.
+     */
+    private fun MutableMap<MetricTile, MetricUiState>.putEntries(
+        days: List<DayReadings>,
+        entries: List<WearLinkEntry>,
+        thisHour: Int,
+        zone: ZoneId,
+        waterGoalMl: Double,
+    ) {
+        if (entries.isEmpty()) return
+        val entryDays = EntryDays.of(entries, days.map { it.date }, zone)
+        val today = entryDays.last()
+        if (entryDays.any { it.hasWater }) {
+            put(
+                MetricTile.HYDRATION,
+                MetricUiState(
+                    current = today.waterByHour.sum(),
+                    goal = waterGoalMl,
+                    today = today.waterByHour.take(thisHour + 1),
+                    week = entryDays.dropWhile { !it.hasWater }.map { day -> day.waterByHour.sum().takeIf { day.hasWater } },
+                ),
+            )
+        }
+        EntryDays.latest(entries, WearLinkEntry.Type.WEIGHT)?.let { latest ->
+            put(
+                MetricTile.WEIGHT,
+                MetricUiState(
+                    current = latest.value,
+                    today = today.weights.map { it.value },
+                    line = line(today.weights.map { it.epochMillis to it.value }, breakAfterMillis = Long.MAX_VALUE),
+                    week = entryDays.dropWhile { it.weights.isEmpty() }.map { day -> day.weights.lastOrNull()?.value },
+                ),
+            )
+        }
+        for ((metric, type) in SPOT_ENTRIES) {
+            val logged = EntryDays.latestOn(entries, type, today.date, zone) ?: continue
+            val state = this[metric] ?: MetricUiState()
+            if (state.current == null) put(metric, state.copy(current = logged.value))
+        }
+    }
+
+    /** The tiles a spot measurement's entry can stand in for, with its type. */
+    private val SPOT_ENTRIES = listOf(
+        MetricTile.HEART_RATE to WearLinkEntry.Type.HEART_RATE,
+        MetricTile.HRV to WearLinkEntry.Type.HRV,
+    )
 
     /** What the Today tile shows: the day's steps and the latest heart rate, each null when there is none. */
     fun totals(day: DayReadings): TodayTotals = TodayTotals(

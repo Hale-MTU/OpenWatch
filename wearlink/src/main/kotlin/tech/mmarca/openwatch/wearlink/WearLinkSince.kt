@@ -2,14 +2,15 @@ package tech.mmarca.openwatch.wearlink
 
 /**
  * The one pull for every series the watch keeps one line per value (heart rate,
- * sleep minutes, steps, ascent, HRV, breathing, SpO2, skin temperature):
+ * sleep minutes, steps, ascent, HRV, breathing, SpO2, skin temperature, the
+ * entries made on the watch):
  * `SINCE <key> <cursor> <limit>`, served straight from the watch's store by
  * sequence number. Every row there is numbered when it is inserted and again
  * when it is replaced, so a row rewritten in place or written late comes again,
  * after the rows sent before it.
  *
  * - `<key>` is a series the watch announces in its hello reply (`hr`, `sm`,
- *   `st`, `as`, `hv`, `rr`, `sk`, `o2`): the key of its rows.
+ *   `st`, `as`, `hv`, `rr`, `sk`, `o2`, `lg`): the key of its rows.
  * - `<cursor>` is one of two positions:
  *   - `<store>.<seq>`, the cursor the watch's last reply for that key ended
  *     with: its store's id and the sequence number of the last row it sent.

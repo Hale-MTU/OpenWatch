@@ -2,6 +2,7 @@ package tech.mmarca.openwatch.wear
 
 import java.time.Duration
 import java.time.LocalDate
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
 /** Everything the screens render. A null value means "no reading yet". */
 data class WearUiState(
@@ -15,6 +16,8 @@ data class WearUiState(
     val preferences: DisplayPreferences = DisplayPreferences(),
     /** Last night's minutes per stage, as synced from the phone. */
     val sleepStages: Map<SleepStage, Double> = emptyMap(),
+    /** The entries made on this watch, by hand or by a spot measurement, oldest first. */
+    val entries: List<WearLinkEntry> = emptyList(),
 )
 
 /** One metric's readings, in the base unit documented on [MetricTile]. */
@@ -85,4 +88,11 @@ data class SampleStats(val low: Double, val average: Double?, val high: Double)
  */
 data class DisplayPreferences(
     val unitSystem: UnitSystem = UnitSystem.METRIC,
-)
+    /** The day's water goal, millilitres. */
+    val waterGoalMl: Int = DEFAULT_WATER_GOAL_ML,
+) {
+    companion object {
+        /** Two litres, a common goal for a day; there is no setting for it yet. */
+        const val DEFAULT_WATER_GOAL_ML = 2_000
+    }
+}

@@ -21,6 +21,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import tech.mmarca.healthcalculations.insights.HeartRateZones
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.AscentMinute
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HeartRateSample
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HrvWindow
@@ -77,6 +78,38 @@ class WearReadingsSourceTest {
 
         assertEquals(Duration.ofMinutes(1), zones[0][3]) // zone 4 of 200 over 60
         assertEquals(Duration.ofMinutes(1), zones[1][4]) // zone 5 of a maximum of 150
+    }
+
+    @Test
+    fun `an entry made on the watch is read on at once, not at the next refresh`() = runBlocking {
+        val entries = EntryLog(store, now = { at("09:00:00") })
+
+        // The refresh is half a minute away: a second value inside the timeout can only come from the entry.
+        val water = mutableListOf<Double?>()
+        withTimeout(TIMEOUT_MILLIS) {
+            source.metrics(flowOf(null)).map { it[MetricTile.HYDRATION]?.current }.take(2).collect {
+                water += it
+                entries.log(WearLinkEntry.Type.WATER, 250.0)
+            }
+        }
+
+        assertEquals(listOf(null, 250.0), water)
+    }
+
+    @Test
+    fun `the entries come oldest first, read again as each is made`() = runBlocking {
+        val entries = EntryLog(store, now = { at("09:00:00") })
+        entries.log(WearLinkEntry.Type.WEIGHT, 72.4, atMillis = at("08:00:00"))
+
+        val seen = mutableListOf<List<WearLinkEntry.Type>>()
+        withTimeout(TIMEOUT_MILLIS) {
+            source.entries().map { list -> list.map { it.type } }.take(2).collect {
+                seen += it
+                entries.log(WearLinkEntry.Type.WATER, 250.0)
+            }
+        }
+
+        assertEquals(listOf(listOf(WearLinkEntry.Type.WEIGHT), listOf(WearLinkEntry.Type.WEIGHT, WearLinkEntry.Type.WATER)), seen)
     }
 
     @Test

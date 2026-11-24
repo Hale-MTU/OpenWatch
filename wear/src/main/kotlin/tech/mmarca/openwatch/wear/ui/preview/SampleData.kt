@@ -8,8 +8,10 @@ import tech.mmarca.openwatch.wear.SampleStats
 import tech.mmarca.openwatch.wear.features.recording.RecordingUiState
 import tech.mmarca.openwatch.wear.SleepStage
 import tech.mmarca.openwatch.wear.MetricTile
+import tech.mmarca.openwatch.wear.WearUiState
 import tech.mmarca.openwatch.wear.features.recording.ActivityType
 import tech.mmarca.openwatch.wear.features.recording.WorkoutField
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
 /**
  * Made-up values for previews and for debug builds, where nothing feeds the
@@ -111,6 +113,19 @@ object SampleData {
             if (activity != ActivityType.CYCLE && activity != ActivityType.WORKOUT) add(WorkoutField.STEPS)
         }
     }
+
+    /** A morning's entries: a weigh-in, a measured pulse and a blood pressure. */
+    val entries = listOf(
+        WearLinkEntry.of(System.currentTimeMillis() - 3_600_000, WearLinkEntry.Type.WEIGHT, 72.4),
+        WearLinkEntry.of(System.currentTimeMillis() - 1_800_000, WearLinkEntry.Type.HEART_RATE, 64.0, measured = true),
+        WearLinkEntry.of(System.currentTimeMillis() - 600_000, WearLinkEntry.Type.BLOOD_PRESSURE, 121.0, 79.0),
+    )
+
+    val uiState = WearUiState(
+        metrics = metrics,
+        sleepStages = sleepStages,
+        entries = entries,
+    )
 
     val recording = RecordingUiState(
         elapsedSeconds = 23 * 60 + 41,

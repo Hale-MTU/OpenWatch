@@ -9,23 +9,30 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import tech.mmarca.healthcalculations.insights.HeartRateZones
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
 /**
  * What the watch itself recorded, as the dashboard and the detail screens
  * read it: today by the hour and the last seven days by the day, each day
- * with the night that ended on it.
+ * with the night that ended on it, and the entries made on the watch.
  *
  * A day that is over is read from the store once and kept. Only today is
  * read again, so a refresh costs one day of rows, not the week's. A
- * heart-rate day is the largest, up to some 8 600 rows.
+ * heart-rate day is the largest, up to some 8 600 rows. The entries are few,
+ * the month the store keeps of what a wearer logs by hand, and are read whole
+ * each time, so the newest weight counts however old it is.
  */
 internal class WearReadingsSource(
     private val store: MetricStore,
     private val clock: Clock = Clock.systemDefaultZone(),
+    /** The water tile's goal, millilitres. */
+    private val waterGoalMl: Double = DisplayPreferences.DEFAULT_WATER_GOAL_ML.toDouble(),
 ) {
     private val pastDays = HashMap<LocalDate, DayReadings>()
 
@@ -34,12 +41,13 @@ internal class WearReadingsSource(
      * collects. Today's time in the heart rate zones is counted on the basis
      * [zoneBasis] gives, here with the read, off the main thread; null counts
      * none. A basis that changes (the phone sent a maximum or a resting rate)
-     * is read on at once, not at the next refresh. [zoneBasis] is collected on
-     * the IO dispatcher too, so it may load a file when it starts.
+     * is read on at once, not at the next refresh, and so is an entry made on
+     * the watch ([MetricStore.updates]). [zoneBasis] is collected on the IO
+     * dispatcher too, so it may load a file when it starts.
      */
     fun metrics(zoneBasis: Flow<HeartRateZones.Basis?>): Flow<Map<MetricTile, MetricUiState>> = channelFlow {
         var reading: Job? = null
-        zoneBasis.distinctUntilChanged().collect { basis ->
+        combine(zoneBasis.distinctUntilChanged(), store.updates(WearMetrics.ENTRIES)) { basis, _ -> basis }.collect { basis ->
             // One reader at a time: the days that are kept are not a shared map.
             reading?.cancelAndJoin()
             reading = launch {
@@ -60,8 +68,15 @@ internal class WearReadingsSource(
             if (back == 0) read(date, zone, zoneBasis) else pastDays.getOrPut(date) { read(date, zone) }
         }
         pastDays.keys.retainAll { it >= today.minusDays(DAYS.toLong()) }
-        return WearReadings.metrics(days, clock.instant(), zone)
+        return WearReadings.metrics(days, clock.instant(), zone, readEntries(), waterGoalMl)
     }
+
+    /** The entries made on the watch, oldest first, read again each time one is made. */
+    fun entries(): Flow<List<WearLinkEntry>> =
+        store.updates(WearMetrics.ENTRIES).map { readEntries() }.flowOn(Dispatchers.IO)
+
+    /** Every entry the store keeps: the series' retention bounds them. */
+    private fun readEntries(): List<WearLinkEntry> = store.since(WearMetrics.ENTRIES, -1L, ENTRY_LIMIT)
 
     /** Today only, read now: what the Today tile shows. */
     fun today(): DayReadings = read(LocalDate.now(clock), clock.zone)
@@ -99,5 +114,8 @@ internal class WearReadingsSource(
 
         /** Above a day's most: a heart rate sample every ten seconds is 8 640. */
         const val ROW_LIMIT = 10_000
+
+        /** Above a month of entries at any pace a wearer logs by hand. */
+        const val ENTRY_LIMIT = 10_000
     }
 }
