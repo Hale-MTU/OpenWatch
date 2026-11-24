@@ -90,6 +90,28 @@
     <string name="settings_watch_auto_sync_background_access_action">Povolit přístup na pozadí</string>
     <string name="settings_watch_wearos_needs_workout_write">Tréninky nebyly zapsány: povolte OpenWatch zapisovat tréninky, trasy a vzdálenost do Health Connect a znovu synchronizujte.</string>
     <string name="settings_watch_garmin_withheld">Neuloženo do Health Connect kvůli chybějícímu oprávnění: %1$s. Povolte je a další synchronizace už uloží, co hodinky od té doby pošlou.</string>
+    <string name="home_section_devices">Další zařízení</string>
+    <string name="devices_intro">Senzory a měřicí přístroje, které se párují přímo s telefonem. Co naměří, putuje do Health Connect.</string>
+    <string name="devices_add">Přidat zařízení</string>
+    <string name="devices_permissions_title">Oprávnění pro vaše zařízení</string>
+    <string name="devices_permissions_body">Android žádá o toto oprávnění zvlášť, mimo Health Connect. Bez něj nelze zařízení najít ani z něj číst.</string>
+    <string name="devices_scan_empty">Zatím nic nenalezeno. Probuďte zařízení a mějte ho blízko telefonu.</string>
+    <string name="devices_scan_again">Hledat znovu</string>
+    <string name="devices_pairing">Párování…</string>
+    <string name="devices_pair_refused">Párování nebylo dokončeno. Dokončete ho přijetím žádosti Androidu o spárování.</string>
+    <string name="devices_pair_unreachable">Zařízení se nepodařilo zastihnout. Probuďte ho, mějte ho blízko a zkuste to znovu.</string>
+    <string name="devices_pair_not_associated">Povolte OpenWatch v dialogu Androidu: tak telefon zařízení uslyší, když má nové měření.</string>
+    <string name="devices_last_reading">Poslední měření %1$s</string>
+    <string name="devices_no_reading">Zatím žádné měření</string>
+    <string name="device_live_section">Živě</string>
+    <string name="device_live_waiting">Čeká se na měření…</string>
+    <plurals name="device_readings_waiting">
+        <item quantity="one">%1$d měření zatím není v Health Connect</item>
+        <item quantity="few">%1$d měření zatím nejsou v Health Connect</item>
+        <item quantity="many">%1$d měření zatím není v Health Connect</item>
+        <item quantity="other">%1$d měření zatím není v Health Connect</item>
+    </plurals>
+    <string name="device_readings_waiting_grant">%1$s. Povolte OpenWatch je zapisovat do Health Connect a uloží se.</string>
     <string name="settings_watch_wearos_companion_required">Android hodinky s OpenWatch nepropojil, takže nebyly přidány. OpenWatch toto propojení potřebuje k záznamu tréninků, které na hodinkách spustí jiná aplikace. Klepněte znovu na Spárovat a žádost povolte.</string>
     <string name="settings_sensors_open_bluetooth">Otevřít nastavení Bluetooth</string>
 </resources>

@@ -5,4 +5,5 @@
     <string name="home_section_app">Aplikacja</string>
     <string name="home_settings">Ustawienia</string>
     <string name="home_settings_body">Profil ciała, dostęp do powiadomień, o aplikacji</string>
+    <string name="home_detail_placeholder">Wybierz urządzenie, aby zobaczyć je tutaj.</string>
 </resources>

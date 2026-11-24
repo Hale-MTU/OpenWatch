@@ -3,6 +3,11 @@
     <string name="health_data_section_garmin">Zapisywane z zegarka Garmin</string>
     <string name="health_data_section_wearos">Zapisywane z zegarka Wear OS</string>
     <string name="health_data_section_scale">Zapisywane z wagi</string>
+    <string name="health_data_section_standard">Zapisywane z urządzenia ze standardowym profilem Bluetooth</string>
+    <string name="health_data_note_standard_heart_rate">Z pasa do pomiaru tętna, gdy jego ekran jest otwarty lub nagrywa z nim aplikacja, która ma Twoją zgodę: jeden rekord na minutę.</string>
+    <string name="health_data_note_standard_blood_pressure">Z ciśnieniomierza: każdy odczyt, który przekaże po wybudzeniu, a zmierzony puls jest zapisywany jako tętno.</string>
+    <string name="health_data_note_standard_blood_glucose">Z glukometru: zapisane w nim odczyty, przekazywane po wybudzeniu. Test z płynem kontrolnym nie jest zapisywany.</string>
+    <string name="health_data_note_standard_weight">Z wagi ze standardowym profilem Weight Scale: każde ważenie, które przekaże po wybudzeniu.</string>
     <string name="health_data_section_reads">Odczytywane z Health Connect</string>
     <string name="health_data_section_watch_app">Wymagane przez aplikację zegarka, udzielane na zegarku</string>
     <string name="health_data_note_garmin_weight">Pomiar masy ciała, który waga Garmin przekazuje przez zegarek.</string>
@@ -10,6 +15,8 @@
     <string name="health_data_note_wearos_sleep">Jedna szacowana sesja na noc i na każdą drzemkę.</string>
     <string name="health_data_note_wearos_hrv">W nocy, na zegarku, który potrafi ją mierzyć.</string>
     <string name="health_data_note_wearos_workout">Trening, który nagrywasz na zegarku, z jego trasą i dystansem.</string>
+    <string name="health_data_note_wearos_entry">To, co wpiszesz ręcznie na zegarku.</string>
+    <string name="health_data_note_wearos_mindfulness">Sesja oddechowa wykonana na zegarku, jeśli Health Connect takie sesje przechowuje.</string>
     <string name="health_data_note_wearos_skin">Tylko z zegarka Samsung, z włączoną dla niego opcją „Temperatura skóry w nocy”. Jeden rekord na noc: różnica względem Twojej zwykłej nocy.</string>
     <string name="health_data_note_scale_estimate">Szacowane na telefonie na podstawie pomiaru z wagi i Twojego profilu ciała.</string>
     <string name="health_data_read_weight">Do kalorii z chodzenia i składu ciała z wagi.</string>
@@ -18,9 +25,14 @@
     <string name="health_data_read_sleep">Aby noc, która ma już sesję snu, pozostała nietknięta.</string>
     <string name="health_data_read_resting_heart_rate">Aby dzień, który ma już tętno spoczynkowe, pozostał nietknięty, oraz do stref tętna, które pokazuje zegarek.</string>
     <string name="health_data_read_heart_rate">Twoje tętno maksymalne do tych stref oraz energia treningu.</string>
+    <string name="health_data_read_day_totals">Dzienna suma ze wszystkich aplikacji, którą pokazuje zegarek Wear OS.</string>
     <string name="health_data_read_history">Twoja najnowsza masa ciała i wzrost są często starsze niż 30 dni, które Health Connect pokazuje bez tego dostępu.</string>
     <string name="health_data_read_background">Synchronizacja uruchamiana według harmonogramu, przy zamkniętej aplikacji, widzi pomiary masy ciała i treningi z innej aplikacji tylko z tym dostępem.</string>
     <string name="health_data_watch_heart_rate">Czujnik tętna zegarka: tętno, nocna zmienność rytmu serca i szacunek snu.</string>
     <string name="health_data_watch_background">Aby nagrywanie trwało przy wyłączonym ekranie zegarka.</string>
     <string name="health_data_watch_skin">Tylko na zegarku Samsung i tylko wtedy, gdy włączysz temperaturę skóry w nocy.</string>
+    <string name="health_data_note_wearos_breathing_logged">W nocy tylko z włączoną opcją „Częstość oddechu z zegarka” w Ustawieniach; oraz częstość oddechu wpisana na zegarku.</string>
+    <string name="health_data_note_wearos_spo2_measured">W nocy tylko z zegarka Samsung, z włączoną dla niego opcją „SpO2 co godzinę w nocy”; oraz natlenienie krwi wpisane lub zmierzone na zegarku.</string>
+    <string name="health_data_note_wearos_vo2">Szacunek z marszu lub biegu nagranego na zegarku z trasą, gdy Twój profil ciała zawiera tętno spoczynkowe.</string>
+    <string name="health_data_watch_spo2_spot">Tylko na zegarku Samsung: gdy włączysz SpO2 w nocy i gdy zmierzysz natlenienie krwi na zegarku.</string>
 </resources>

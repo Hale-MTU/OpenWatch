@@ -27,4 +27,6 @@
     <string name="settings_respiratory_rate_title">Częstość oddechu z zegarka (eksperymentalne)</string>
     <string name="settings_respiratory_rate_body">Zapisuje w Health Connect częstość oddechu z nocnych okien HRV zegarka. Jeszcze nie porównano jej z urządzeniem referencyjnym.</string>
     <string name="health_data_open_body">Każdy typ danych o zdrowiu, urządzenie, z którego pochodzi, i dlaczego.</string>
+    <string name="settings_sleep_beside_others_title">Zapisuj sen z zegarka obok innych aplikacji</string>
+    <string name="settings_sleep_beside_others_body">Zapisuje noc, nawet jeśli Samsung Health lub inna aplikacja już ją zapisała. O tym, którą noc pokażą aplikacje, decyduje wtedy priorytet źródeł danych w Health Connect. Wyłączone: wygrywa noc innej aplikacji.</string>
 </resources>

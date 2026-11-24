@@ -27,4 +27,6 @@
     <string name="settings_respiratory_rate_title">Частота дыхания с часов (экспериментально)</string>
     <string name="settings_respiratory_rate_body">Записывает в Health Connect частоту дыхания из ночных окон ВСР часов. Ещё не сверена с эталонным устройством.</string>
     <string name="health_data_open_body">Все типы данных о здоровье, откуда они поступают и зачем нужны.</string>
+    <string name="settings_sleep_beside_others_title">Записывать сон с часов наряду с другими приложениями</string>
+    <string name="settings_sleep_beside_others_body">Записывает ночь, даже если Samsung Health или другое приложение уже её записали. Какую ночь покажут приложения, тогда решает приоритет источников данных в Health Connect. Выключено: побеждает ночь другого приложения.</string>
 </resources>

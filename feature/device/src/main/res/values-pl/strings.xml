@@ -90,6 +90,28 @@
     </plurals>
     <string name="settings_watch_wearos_needs_workout_write">Treningi nie zostały zapisane: zezwól OpenWatch na zapis treningów, tras i dystansu w Health Connect i zsynchronizuj ponownie.</string>
     <string name="settings_watch_garmin_withheld">Nie zapisano w Health Connect z powodu braku uprawnień: %1$s. Zezwól na nie, a następna synchronizacja zapisze to, co zegarek wyśle od tej chwili.</string>
+    <string name="home_section_devices">Inne urządzenia</string>
+    <string name="devices_intro">Czujniki i mierniki parowane bezpośrednio z telefonem. To, co zmierzą, trafia do Health Connect.</string>
+    <string name="devices_add">Dodaj urządzenie</string>
+    <string name="devices_permissions_title">Uprawnienia dla urządzenia</string>
+    <string name="devices_permissions_body">Android prosi o to uprawnienie osobno, poza Health Connect. Bez niego urządzenia nie da się znaleźć ani odczytać.</string>
+    <string name="devices_scan_empty">Jeszcze nic nie znaleziono. Wybudź urządzenie i trzymaj je blisko telefonu.</string>
+    <string name="devices_scan_again">Skanuj ponownie</string>
+    <string name="devices_pairing">Parowanie…</string>
+    <string name="devices_pair_refused">Parowanie nie zostało ukończone. Zaakceptuj prośbę Androida o sparowanie, aby je dokończyć.</string>
+    <string name="devices_pair_unreachable">Nie udało się połączyć z urządzeniem. Wybudź je, trzymaj blisko i spróbuj ponownie.</string>
+    <string name="devices_pair_not_associated">Zezwól OpenWatch w oknie Androida: dzięki temu telefon usłyszy urządzenie, gdy będzie miało odczyt.</string>
+    <string name="devices_last_reading">Ostatni odczyt %1$s</string>
+    <string name="devices_no_reading">Brak odczytu</string>
+    <string name="device_live_section">Na żywo</string>
+    <string name="device_live_waiting">Oczekiwanie na odczyt…</string>
+    <plurals name="device_readings_waiting">
+        <item quantity="one">%1$d odczyt jeszcze nie trafił do Health Connect</item>
+        <item quantity="few">%1$d odczyty jeszcze nie trafiły do Health Connect</item>
+        <item quantity="many">%1$d odczytów jeszcze nie trafiło do Health Connect</item>
+        <item quantity="other">%1$d odczytu jeszcze nie trafiło do Health Connect</item>
+    </plurals>
+    <string name="device_readings_waiting_grant">%1$s. Zezwól OpenWatch na zapisywanie ich w Health Connect, a zostaną zapisane.</string>
     <string name="settings_watch_wearos_companion_required">Android nie powiązał zegarka z OpenWatch, więc nie został dodany. OpenWatch potrzebuje tego powiązania, aby nagrywać treningi, które inna aplikacja uruchamia na zegarku. Dotknij ponownie Sparuj i zezwól na żądanie.</string>
     <string name="settings_sensors_open_bluetooth">Otwórz ustawienia Bluetooth</string>
 </resources>

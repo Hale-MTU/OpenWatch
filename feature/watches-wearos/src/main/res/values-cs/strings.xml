@@ -11,6 +11,12 @@
     <string name="settings_watch_wearos_sync_body">Aplikace OpenWatch v hodinkách zaznamenává tep a to, co je potřeba k odhadu spánku, a uchovává týden dat. Synchronizace zkopíruje nový tep do Health Connect a zapíše jeden odhadnutý spánek za noc.</string>
     <string name="settings_watch_wearos_sync_now">Synchronizovat hodinky</string>
     <string name="settings_watch_wearos_syncing">Synchronizace hodinek…</string>
+    <plurals name="settings_watch_wearos_skin_baseline_nights_to_go">
+        <item quantity="one">Výchozí hodnota teploty kůže: potřeba ještě %1$d noc.</item>
+        <item quantity="few">Výchozí hodnota teploty kůže: potřeba ještě %1$d noci.</item>
+        <item quantity="many">Výchozí hodnota teploty kůže: potřeba ještě %1$d noci.</item>
+        <item quantity="other">Výchozí hodnota teploty kůže: potřeba ještě %1$d nocí.</item>
+    </plurals>
     <string name="watch_settings_section">Nastavení hodinek</string>
     <string name="watch_settings_not_read">Hodinky si tato nastavení ukládají samy. Načtěte je, abyste je zde mohli změnit.</string>
     <string name="watch_settings_unreachable">Hodinky neodpověděly. Jsou poblíž a běží na nich aplikace OpenWatch?</string>
@@ -25,6 +31,10 @@
     <string name="watch_settings_skin">Teplota kůže v noci</string>
     <string name="watch_settings_spo2">SpO2 každou hodinu v noci</string>
     <string name="watch_settings_allow_on_watch">Povolte to na hodinkách: otevřete tam OpenWatch a jednou to zapněte.</string>
+    <string name="watch_settings_hr_source_explained">Vypnuto: vlastní snímač hodinek, živě. Zapnuto: hodnota platformy, předávaná v dávkách se zpožděním až 10 minut při vypnuté obrazovce. Trénink používá snímač v obou případech.</string>
+    <string name="watch_settings_hrv_source_explained">Vypnuto: HRV ze surového pulzního signálu, každý interval. Zapnuto: intervaly mezi údery z platformy; dnes se ztrácí asi 60 % z nich, takže hodnotu má méně nocí.</string>
+    <string name="watch_settings_skin_explained">Teplota kůže na zápěstí během spánku, jedno měření za minutu. Málo energie; nic jiného se nemění.</string>
+    <string name="watch_settings_spo2_explained">Okysličení krve nejvýš jednou za hodinu během spánku, asi 15 s červeného světla. Pár mAh za noc; vynechá se, když se paže hýbe.</string>
     <string name="settings_watch_wearos_companion_missing">Android tyto hodinky s OpenWatch nepropojil. Bez propojení nemůže OpenWatch zaznamenávat tréninky, které na hodinkách spustí jiná aplikace.</string>
     <string name="settings_watch_wearos_companion_link">Propojit hodinky</string>
 </resources>

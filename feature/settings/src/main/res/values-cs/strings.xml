@@ -27,4 +27,6 @@
     <string name="settings_respiratory_rate_title">Dechová frekvence z hodinek (experimentální)</string>
     <string name="settings_respiratory_rate_body">Zapisuje do Health Connect dechovou frekvenci z nočních oken HRV hodinek. Zatím nebyla ověřena proti referenčnímu zařízení.</string>
     <string name="health_data_open_body">Každý typ zdravotních dat, zařízení, ze kterého pochází, a proč.</string>
+    <string name="settings_sleep_beside_others_title">Zapisovat spánek z hodinek vedle jiných aplikací</string>
+    <string name="settings_sleep_beside_others_body">Zapíše noc, i když ji už zapsal Samsung Health nebo jiná aplikace. Kterou noc aplikace ukážou, pak rozhodne priorita zdrojů dat v Health Connect. Vypnuto: vyhraje noc jiné aplikace.</string>
 </resources>

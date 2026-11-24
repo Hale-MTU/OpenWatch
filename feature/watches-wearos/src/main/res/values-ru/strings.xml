@@ -11,6 +11,12 @@
     <string name="settings_watch_wearos_sync_body">Приложение OpenWatch на часах записывает пульс и данные для оценки сна и хранит их неделю. Синхронизация копирует новый пульс в Health Connect и записывает по одной оценённой сессии сна за ночь.</string>
     <string name="settings_watch_wearos_sync_now">Синхронизировать часы</string>
     <string name="settings_watch_wearos_syncing">Синхронизация часов…</string>
+    <plurals name="settings_watch_wearos_skin_baseline_nights_to_go">
+        <item quantity="one">Базовый уровень температуры кожи: нужна ещё %1$d ночь.</item>
+        <item quantity="few">Базовый уровень температуры кожи: нужно ещё %1$d ночи.</item>
+        <item quantity="many">Базовый уровень температуры кожи: нужно ещё %1$d ночей.</item>
+        <item quantity="other">Базовый уровень температуры кожи: нужно ещё %1$d ночи.</item>
+    </plurals>
     <string name="watch_settings_section">Настройки часов</string>
     <string name="watch_settings_not_read">Часы хранят эти настройки сами. Прочитайте их, чтобы изменить здесь.</string>
     <string name="watch_settings_unreachable">Часы не ответили. Они рядом и приложение OpenWatch на них запущено?</string>
@@ -25,6 +31,10 @@
     <string name="watch_settings_skin">Температура кожи ночью</string>
     <string name="watch_settings_spo2">SpO2 каждый час ночью</string>
     <string name="watch_settings_allow_on_watch">Разрешите это на часах: откройте там OpenWatch и включите один раз.</string>
+    <string name="watch_settings_hr_source_explained">Выкл.: собственный датчик часов, в реальном времени. Вкл.: значение платформы, передаётся пакетами с задержкой до 10 минут при выключенном экране. Тренировка в любом случае использует датчик.</string>
+    <string name="watch_settings_hrv_source_explained">Выкл.: ВСР по сырому сигналу пульса, каждый интервал. Вкл.: межударные интервалы платформы; сейчас теряется около 60 % RR-интервалов, поэтому значение есть не у каждой ночи.</string>
+    <string name="watch_settings_skin_explained">Температура кожи на запястье во время сна, одно измерение в минуту. Мало энергии; больше ничего не меняется.</string>
+    <string name="watch_settings_spo2_explained">Кислород в крови не чаще раза в час во время сна, около 15 с красного света. Несколько мА·ч за ночь; пропускается, если рука двигается.</string>
     <string name="settings_watch_wearos_companion_missing">Android не связал эти часы с OpenWatch. Без этой связи OpenWatch не может записывать тренировки, которые другое приложение запускает на часах.</string>
     <string name="settings_watch_wearos_companion_link">Связать часы</string>
 </resources>
