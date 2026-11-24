@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_section_watches">手表</string>
+    <string name="home_section_scale">体重秤</string>
+    <string name="home_section_app">应用</string>
+    <string name="home_settings">设置</string>
+    <string name="home_settings_body">身体档案、通知访问权限、关于</string>
+</resources>

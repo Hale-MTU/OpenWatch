@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_streaming_channel">קריאות חיות לאפליקציות אחרות</string>
+    <string name="link_streaming_heart_rate">הדופק נשלח אל %1$s</string>
+    <string name="link_streaming_heart_rate_steps">הדופק והצעדים נשלחים אל %1$s</string>
+    <string name="link_streaming_keeping">השעון ממשיך לשדר עבור %1$s</string>
+    <string name="link_streaming_waiting">ממתין לשעון, עבור %1$s</string>
+    <string name="link_streaming_from">מ-%1$s</string>
+    <string name="link_streaming_waiting_for">ממתין לקריאה מ-%1$s</string>
+</resources>

@@ -3,42 +3,46 @@ package tech.mmarca.openwatch.wear.features.dashboard
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.material3.AppScaffold
-import tech.mmarca.openwatch.wear.R
+import tech.mmarca.openwatch.wear.Choices
 import tech.mmarca.openwatch.wear.MetricTile
-import tech.mmarca.openwatch.wear.ui.components.ChoiceEditorScreen
-import tech.mmarca.openwatch.wear.ui.components.ChoiceEditorTexts
-import tech.mmarca.openwatch.wear.ui.components.ChoiceRow
+import tech.mmarca.openwatch.wear.R
+import tech.mmarca.openwatch.wear.ui.components.ChoiceEditor
+import tech.mmarca.openwatch.wear.ui.components.ChoiceEditorText
+import tech.mmarca.openwatch.wear.ui.components.ChoiceLook
 import tech.mmarca.openwatch.wear.ui.preview.SampleData
 import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
- * Adds, removes and reorders dashboard tiles. Only [available] metrics are
- * listed: a metric the watch has no sensor for cannot be switched on. The list
- * itself is the shared [ChoiceEditorScreen].
+ * Adds, removes and orders the dashboard's tiles. Only the [available]
+ * metrics are listed, those this watch offers now: a night's vital once a
+ * night gave one, never one without its sensor. A chosen tile that is not on
+ * offer stays chosen, out of sight, and keeps its place. Each change goes to
+ * [onEdit] as a change of the stored choice, so two quick taps both count.
  */
 @Composable
 fun TileEditorScreen(
-    available: List<MetricTile>,
+    available: Set<MetricTile>,
     tiles: List<MetricTile>,
-    onToggle: (MetricTile, Boolean) -> Unit,
-    onMove: (moved: MetricTile, target: MetricTile) -> Unit,
+    onEdit: ((List<MetricTile>) -> List<MetricTile>) -> Unit,
     onReset: () -> Unit,
 ) {
-    ChoiceEditorScreen(
-        texts = ChoiceEditorTexts(
+    val shown = tiles.filter { it in available }
+    ChoiceEditor(
+        chosen = shown,
+        others = MetricTile.entries.filter { it in available && it !in tiles },
+        look = { ChoiceLook(it.label, it.icon, it.accentColor) },
+        key = { it.name },
+        text = ChoiceEditorText(
             title = stringResource(R.string.tiles_title),
-            activeHeader = stringResource(R.string.tiles_active_header),
-            availableHeader = stringResource(R.string.tiles_available_header),
-            reorderHint = stringResource(R.string.tiles_reorder_hint),
-            resetLabel = stringResource(R.string.tiles_reset_default),
-            footerHint = stringResource(R.string.tiles_sensor_hint),
+            chosenHeader = stringResource(R.string.tiles_active_header),
+            othersHeader = stringResource(R.string.tiles_available_header),
+            reset = stringResource(R.string.tiles_reset_default),
+            hint = stringResource(R.string.tiles_move_hint),
+            footer = stringResource(R.string.tiles_sensor_hint),
         ),
-        available = available,
-        active = tiles,
-        row = { metric -> ChoiceRow(stringResource(metric.label), metric.icon, metric.accentColor) },
-        onToggle = onToggle,
-        onMove = onMove,
+        onSwitch = { metric, on -> onEdit { Choices.switched(it, metric, on) } },
+        onMove = { metric, up -> onEdit { Choices.moved(it, metric, up) { tile -> tile in available } } },
         onReset = onReset,
     )
 }
@@ -49,10 +53,9 @@ private fun TileEditorScreenPreview() {
     OpenWatchWearTheme {
         AppScaffold {
             TileEditorScreen(
-                available = SampleData.uiState.availableMetrics.toList(),
+                available = SampleData.uiState.availableMetrics,
                 tiles = MetricTile.DefaultTiles,
-                onToggle = { _, _ -> },
-                onMove = { _, _ -> },
+                onEdit = {},
                 onReset = {},
             )
         }

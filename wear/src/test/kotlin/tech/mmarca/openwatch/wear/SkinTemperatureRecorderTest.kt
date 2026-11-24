@@ -3,7 +3,6 @@ package tech.mmarca.openwatch.wear
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import tech.mmarca.openwatch.wear.samsung.SkinPoint
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
 class SkinTemperatureRecorderTest {
@@ -14,9 +13,9 @@ class SkinTemperatureRecorderTest {
     fun `good points become one row per minute, the mean of each`() {
         val rows = SkinTemperatureRecorder.minutes(
             listOf(
-                SkinPoint(minute + 1_000, 34.0f, 22.0f, 0),
-                SkinPoint(minute + 31_000, 34.2f, 22.4f, 0),
-                SkinPoint(minute + 61_000, 33.9f, 22.1f, 0),
+                SkinReading(minute + 1_000, 34.0f, 22.0f, measured = true),
+                SkinReading(minute + 31_000, 34.2f, 22.4f, measured = true),
+                SkinReading(minute + 61_000, 33.9f, 22.1f, measured = true),
             ),
         )
         assertEquals(
@@ -29,9 +28,9 @@ class SkinTemperatureRecorderTest {
     fun `a flagged, missing or impossible point is left out`() {
         val rows = SkinTemperatureRecorder.minutes(
             listOf(
-                SkinPoint(minute, 34.0f, 22.0f, -1),
-                SkinPoint(minute, Float.NaN, 22.0f, 0),
-                SkinPoint(minute, 12.0f, 22.0f, 0),
+                SkinReading(minute, 34.0f, 22.0f, measured = false),
+                SkinReading(minute, Float.NaN, 22.0f, measured = true),
+                SkinReading(minute, 12.0f, 22.0f, measured = true),
             ),
         )
         assertTrue(rows.isEmpty())

@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.4.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.4.1)" variant="all" version="9.4.1">
+
+    <issue
+        id="InlinedApi"
+        message="Field requires API level 34 (current min is 30): `android.content.pm.ServiceInfo#FOREGROUND_SERVICE_TYPE_HEALTH`"
+        errorLine1="        healthTypeAvailable &amp;&amp; sensing &amp;&amp; running and ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH == 0"
+        errorLine2="                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/ForegroundStart.kt"
+            line="23"
+            column="55"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;samples&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;status_samples_stored&quot;>%1$d samples on the watch&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="10"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;sleep&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;status_minutes_stored&quot;>%1$d sleep minutes on the watch&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="11"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;minutes&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;status_step_minutes_stored&quot;>%1$d minutes of steps on the watch&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="12"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;steps&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;workout_steps&quot;>%1$d steps&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="67"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+        errorLine1="    private var permissionsVersion by mutableStateOf(0)"
+        errorLine2="                                      ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/MainActivity.kt"
+            line="34"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
+        errorLine1="    var count by remember { mutableStateOf(0L) }"
+        errorLine2="                            ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WatchStatusScreen.kt"
+            line="57"
+            column="29"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
+        errorLine1="    var minuteCount by remember { mutableStateOf(0L) }"
+        errorLine2="                                  ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WatchStatusScreen.kt"
+            line="58"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="AutoboxingStateCreation"
+        message="Prefer `mutableLongStateOf` instead of `mutableStateOf`"
+        errorLine1="    var stepMinuteCount by remember { mutableStateOf(0L) }"
+        errorLine2="                                      ~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WatchStatusScreen.kt"
+            line="59"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="SquareAndRoundTilePreviews"
+        message="Tiles need a preview asset in both drawable-round and drawable"
+        errorLine1="                android:resource=&quot;@drawable/tile_preview_heart_rate&quot; />"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="121"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="SquareAndRoundTilePreviews"
+        message="Tiles need a preview asset in both drawable-round and drawable"
+        errorLine1="                android:resource=&quot;@drawable/tile_preview_steps&quot; />"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="135"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="SquareAndRoundTilePreviews"
+        message="Tiles need a preview asset in both drawable-round and drawable"
+        errorLine1="                android:resource=&quot;@drawable/tile_preview_floors&quot; />"
+        errorLine2="                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/AndroidManifest.xml"
+            line="149"
+            column="35"/>
+    </issue>
+
+    <issue
+        id="WearRecents"
+        message="Avoid using `FLAG_ACTIVITY_NEW_TASK` and `FLAG_ACTIVITY_CLEAR_TOP`"
+        errorLine1="            Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP),"
+        errorLine2="                                                                   ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WearAppService.kt"
+            line="332"
+            column="68"/>
+    </issue>
+
+    <issue
+        id="WearRecents"
+        message="Avoid using `FLAG_ACTIVITY_NEW_TASK` and `FLAG_ACTIVITY_CLEAR_TOP`"
+        errorLine1="            Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),"
+        errorLine2="                                                                      ~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WearPhoneRequests.kt"
+            line="42"
+            column="71"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SQLiteDatabase.transaction` instead?"
+        errorLine1="        db.beginTransaction()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/MetricStore.kt"
+            line="51"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SQLiteDatabase.transaction` instead?"
+        errorLine1="        db.beginTransaction()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/MetricStore.kt"
+            line="63"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX function `createBitmap` instead?"
+        errorLine1="        val bitmap = Bitmap.createBitmap(widthPx, heightPx, Bitmap.Config.ARGB_8888)"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/TileChart.kt"
+            line="89"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs(context).edit().putString(KEY_HEART_RATE_DAY, interval.wire).apply()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WearSettings.kt"
+            line="40"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs(context).edit().putBoolean(KEY_SYNCED_SLEEP_HOLD, synced).apply()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WearSettings.kt"
+            line="61"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs(context).edit().putBoolean(KEY_SKIN_TEMPERATURE, on).apply()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WearSettings.kt"
+            line="68"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs(context).edit().putBoolean(KEY_SPO2, on).apply()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WearSettings.kt"
+            line="75"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs(context).edit()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WearSettings.kt"
+            line="108"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs(context).edit().putString(key, source.name).apply()"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WearSettings.kt"
+            line="120"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs.edit()"
+        errorLine2="        ~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WearTrustStore.kt"
+            line="45"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs.edit().putStringSet(BLOCKED, (blocked() + address).toMutableSet()).apply()"
+        errorLine2="        ~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WearTrustStore.kt"
+            line="57"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs.edit().putStringSet(BLOCKED, (blocked() - address).toMutableSet()).apply()"
+        errorLine2="        ~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WearTrustStore.kt"
+            line="63"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseKtx"
+        message="Use the KTX extension function `SharedPreferences.edit` instead?"
+        errorLine1="        prefs.edit().remove(tokenKey(address)).remove(nameKey(address)).remove(trustedAtKey(address)).apply()"
+        errorLine2="        ~~~~~~~~~~~~">
+        <location
+            file="src/main/kotlin/tech/mmarca/openwatch/wear/WearTrustStore.kt"
+            line="84"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="UseTomlInstead"
+        message="Use version catalog instead"
+        errorLine1="    implementation(&quot;tech.mmarca.healthcalculations:health-calculations&quot;)"
+        errorLine2="                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="build.gradle.kts"
+            line="65"
+            column="20"/>
+    </issue>
+
+</issues>

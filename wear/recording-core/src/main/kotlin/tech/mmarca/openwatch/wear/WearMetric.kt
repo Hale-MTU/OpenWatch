@@ -1,0 +1,201 @@
+package tech.mmarca.openwatch.wear
+
+import tech.mmarca.openwatch.wearlink.WearLinkEntries
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol
+import tech.mmarca.openwatch.wearlink.WearLinkWorkoutLines
+
+/**
+ * One series the watch records for the phone, and everything [MetricStore]
+ * needs to keep it: a stable key, how a value becomes the row's text and
+ * back, its time, what a second value at the same time does, and how long
+ * rows stay.
+ *
+ * The row text is the value's line in the `:wearlink` protocol, so the
+ * format is defined and tested once, in that module, and what the store
+ * holds is exactly what the phone receives. A new metric is one more
+ * definition in [WearMetrics] plus its line in `:wearlink`; the store, its
+ * pruning and its tests do not change.
+ */
+class WearMetric<T>(
+    /** The table key. Never reused or renamed: it is how the rows are found. */
+    val key: String,
+    val encode: (T) -> String,
+    /** Null for a row this build cannot read; such a row is skipped, never fatal. */
+    val decode: (String) -> T?,
+    val timeOf: (T) -> Long,
+    val onSameTime: OnSameTime,
+    val retentionMillis: Long = WEEK_MILLIS,
+) {
+    /** What a value does when the store already holds one at its time. */
+    enum class OnSameTime {
+        /** The first value stays: a sample is final once taken. */
+        KEEP,
+
+        /** The new value replaces it: a row that is rewritten as its period fills in. */
+        REPLACE,
+    }
+
+    override fun toString(): String = "WearMetric($key)"
+
+    companion object {
+        /** A week: long enough to miss a few days of syncing, small enough to stay bounded. */
+        const val WEEK_MILLIS: Long = 7L * 24 * 60 * 60 * 1000
+
+        /** A month: what a workout or an entry made by hand is worth keeping, longer than a week of minutes. */
+        const val MONTH_MILLIS: Long = 30L * 24 * 60 * 60 * 1000
+    }
+}
+
+/** Every series the watch records. */
+object WearMetrics {
+
+    /** One heart rate sample every ten seconds at most; see `HeartRateRecorder`. */
+    val HEART_RATE = WearMetric(
+        key = WearLinkProtocol.CAP_HEART_RATE,
+        encode = { s: WearLinkProtocol.HeartRateSample -> WearLinkProtocol.formatSample(s.epochMillis, s.bpm) },
+        decode = WearLinkProtocol::parseSample,
+        timeOf = { it.epochMillis },
+        onSameTime = WearMetric.OnSameTime.KEEP,
+    )
+
+    /**
+     * One row per clock minute, the sleep pipeline's input; see
+     * `docs/engineering/sleep-minute-features.md`. A minute is written again
+     * while late readings for it arrive, so the newest row wins.
+     */
+    val SLEEP_MINUTES = WearMetric(
+        key = WearLinkProtocol.CAP_SLEEP_MINUTES,
+        encode = WearLinkProtocol::formatSleepMinute,
+        decode = WearLinkProtocol::parseSleepMinute,
+        timeOf = { it.epochMillis },
+        onSameTime = WearMetric.OnSameTime.REPLACE,
+    )
+
+    /**
+     * Steps per clock minute; see `StepRecorder`. A minute is written again
+     * while late steps for it arrive, so the newest row wins.
+     */
+    val STEPS = WearMetric(
+        key = WearLinkProtocol.CAP_STEPS,
+        encode = WearLinkProtocol::formatStepMinute,
+        decode = WearLinkProtocol::parseStepMinute,
+        timeOf = { it.epochMillis },
+        onSameTime = WearMetric.OnSameTime.REPLACE,
+    )
+
+    /**
+     * Height climbed per clock minute, in decimetres; see `AscentRecorder`. A
+     * minute is written again while late readings arrive, so the newest row
+     * wins. Rows of builds that sent whole floors (`fl`) are under another
+     * key and are never read as ascent.
+     */
+    val ASCENT = WearMetric(
+        key = WearLinkProtocol.CAP_ASCENT,
+        encode = WearLinkProtocol::formatAscentMinute,
+        decode = WearLinkProtocol::parseAscentMinute,
+        timeOf = { it.epochMillis },
+        onSameTime = WearMetric.OnSameTime.REPLACE,
+    )
+
+    /**
+     * One row per night-time HRV window, keyed on its start; see
+     * `NightHrvRecorder`. A window is final once measured.
+     */
+    val HRV = WearMetric(
+        key = WearLinkProtocol.CAP_HRV,
+        encode = WearLinkProtocol::formatHrvWindow,
+        decode = WearLinkProtocol::parseHrvWindow,
+        timeOf = { it.epochMillis },
+        onSameTime = WearMetric.OnSameTime.KEEP,
+    )
+
+    /**
+     * The breathing rate of a night-time window, keyed on its start; see
+     * `NightHrvRecorder`. A window is final once measured.
+     */
+    val RESPIRATORY_RATE = WearMetric(
+        key = WearLinkProtocol.CAP_RESPIRATORY_RATE,
+        encode = WearLinkProtocol::formatRespiratoryWindow,
+        decode = WearLinkProtocol::parseRespiratoryWindow,
+        timeOf = { it.epochMillis },
+        onSameTime = WearMetric.OnSameTime.KEEP,
+    )
+
+    /**
+     * Skin temperature per clock minute from the Samsung platform; see
+     * `SkinTemperatureRecorder`. A minute is written again while late points
+     * for it arrive, so the newest row wins.
+     */
+    val SKIN_TEMPERATURE = WearMetric(
+        key = WearLinkProtocol.CAP_SKIN_TEMPERATURE,
+        encode = WearLinkProtocol::formatSkinMinute,
+        decode = WearLinkProtocol::parseSkinMinute,
+        timeOf = { it.epochMillis },
+        onSameTime = WearMetric.OnSameTime.REPLACE,
+    )
+
+    /** One SpO2 spot measurement at night from the Samsung platform; see `Spo2Recorder`. Final once taken. */
+    val SPO2 = WearMetric(
+        key = WearLinkProtocol.CAP_SPO2,
+        encode = WearLinkProtocol::formatSpo2,
+        decode = WearLinkProtocol::parseSpo2,
+        timeOf = { it.epochMillis },
+        onSameTime = WearMetric.OnSameTime.KEEP,
+    )
+
+    /** One header per finished workout, keyed on its start; see `WorkoutRecorder`. */
+    val WORKOUTS = WearMetric(
+        key = WearLinkProtocol.CAP_WORKOUTS,
+        encode = WearLinkWorkoutLines::formatHeader,
+        decode = WearLinkWorkoutLines::parseHeader,
+        timeOf = { it.startMillis },
+        onSameTime = WearMetric.OnSameTime.KEEP,
+        retentionMillis = WearMetric.MONTH_MILLIS,
+    )
+
+    /** The pauses of the workouts, keyed on a pause's start. */
+    val WORKOUT_PAUSES = WearMetric(
+        key = "wp",
+        encode = WearLinkWorkoutLines::formatPause,
+        decode = WearLinkWorkoutLines::parsePause,
+        timeOf = { it.startMillis },
+        onSameTime = WearMetric.OnSameTime.KEEP,
+        retentionMillis = WearMetric.MONTH_MILLIS,
+    )
+
+    /** The GPS fixes of the workouts, keyed on a fix's time. Stored as they arrive, so a killed app keeps its route. */
+    val WORKOUT_POINTS = WearMetric(
+        key = "wr",
+        encode = WearLinkWorkoutLines::formatPoint,
+        decode = WearLinkWorkoutLines::parsePoint,
+        timeOf = { it.epochMillis },
+        onSameTime = WearMetric.OnSameTime.KEEP,
+        retentionMillis = WearMetric.MONTH_MILLIS,
+    )
+
+    /**
+     * The entries made on the watch, by hand (the quick log) or by a spot
+     * measurement, keyed on their time; see `EntryLog`, their one writer, which
+     * moves an entry to the next free millisecond, since a second value at the
+     * same time would be dropped. Final once made. Kept a month, like a workout.
+     */
+    val ENTRIES = WearMetric(
+        key = WearLinkProtocol.CAP_ENTRIES,
+        encode = WearLinkEntries::format,
+        decode = WearLinkEntries::parse,
+        timeOf = { it.epochMillis },
+        onSameTime = WearMetric.OnSameTime.KEEP,
+        retentionMillis = WearMetric.MONTH_MILLIS,
+    )
+
+    /**
+     * The series whose row is one value and one whole protocol line: what the link serves to
+     * `SINCE` by key, straight from the store. A workout is a header with its pauses and route
+     * under three keys, so it keeps its own request.
+     */
+    val SERIES: List<WearMetric<*>> = listOf(
+        HEART_RATE, SLEEP_MINUTES, STEPS, ASCENT, HRV, RESPIRATORY_RATE, SKIN_TEMPERATURE, SPO2, ENTRIES,
+    )
+
+    val ALL: List<WearMetric<*>> = SERIES + listOf(WORKOUTS, WORKOUT_PAUSES, WORKOUT_POINTS)
+}

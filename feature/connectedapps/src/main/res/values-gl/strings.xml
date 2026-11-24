@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connected_apps_in_use">En uso agora</string>
+    <string name="connected_apps_last_connected">Última conexión %1$s</string>
+    <string name="connected_apps_profile_received">Último perfil recibido %1$s</string>
+    <string name="connected_apps_session_heart_rate">Gravando: enviando a frecuencia cardíaca de %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">Gravando: enviando a frecuencia cardíaca e os pasos de %1$s</string>
+    <string name="connected_apps_session_keeping">Gravando: mantendo %1$s transmitindo</string>
+    <string name="connected_apps_session_waiting">Gravando: agardando unha lectura de %1$s</string>
+    <string name="connected_apps_intro">Estas apps pediron usar OpenWatch. Cada unha ve só o que permitas aquí, e nada sae do teléfono.</string>
+    <string name="connected_apps_empty">Ningunha app o pediu aínda. OpenVitals conéctase cando as dúas apps están instaladas.</string>
+    <string name="connected_apps_unknown_signer">Esta app di ser %1$s, pero non foi asinada polo proxecto OpenVitals. Permítea só se a compilaches ou instalaches ti e confías na súa orixe.</string>
+    <string name="connected_apps_identity">%1$s\nClave de sinatura %2$s</string>
+    <string name="connected_apps_lookalike">Esta app di ser %1$s, pero non é %2$s: o seu paquete non é o paquete co que se distribúe %2$s. Permítea só se sabes por que usa ese nome.</string>
+    <string name="connected_apps_state_pending">Pide conectarse</string>
+    <string name="connected_apps_state_trusted">Conectada</string>
+    <string name="connected_apps_state_blocked">Bloqueada</string>
+    <string name="connected_apps_asks_for">Pide:</string>
+    <string name="connected_apps_allow">Permitir</string>
+    <string name="connected_apps_block">Bloquear</string>
+    <string name="connected_apps_forget">Esquecer</string>
+    <string name="connected_apps_unblock">Desbloquear</string>
+    <string name="connected_apps_capability_devices">Ver os teus reloxos e a túa báscula, a súa batería e última sincronización, e iniciar unha sincronización</string>
+    <string name="connected_apps_capability_profile">Compartir o teu perfil corporal (ano de nacemento, sexo, altura, peso) con OpenWatch, nos dous sentidos</string>
+    <string name="connected_apps_capability_recording">Manter o teu reloxo transmitindo mentres grava unha actividade</string>
+    <string name="connected_apps_capability_live">Recibir a frecuencia cardíaca e os pasos do teu reloxo mentres grava</string>
+</resources>

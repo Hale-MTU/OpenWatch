@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connected_apps_in_use">Praegu kasutusel</string>
+    <string name="connected_apps_last_connected">Viimati ühendatud %1$s</string>
+    <string name="connected_apps_profile_received">Viimane profiil saadud %1$s</string>
+    <string name="connected_apps_session_heart_rate">Salvestamine: pulssi saadetakse seadmest %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">Salvestamine: pulssi ja samme saadetakse seadmest %1$s</string>
+    <string name="connected_apps_session_keeping">Salvestamine: %1$s jätkab saatmist</string>
+    <string name="connected_apps_session_waiting">Salvestamine: ootan näitu seadmest %1$s</string>
+    <string name="connected_apps_intro">Need rakendused küsisid OpenWatchi kasutamist. Igaüks näeb ainult seda, mida siin lubad, ja miski ei lahku telefonist.</string>
+    <string name="connected_apps_empty">Ükski rakendus pole veel küsinud. OpenVitals ühendub, kui mõlemad rakendused on paigaldatud.</string>
+    <string name="connected_apps_unknown_signer">See rakendus nimetab end %1$s, kuid OpenVitalsi projekt pole seda allkirjastanud. Luba see ainult siis, kui ehitasid või paigaldasid selle ise ja usaldad selle päritolu.</string>
+    <string name="connected_apps_identity">%1$s\nAllkirjastamisvõti %2$s</string>
+    <string name="connected_apps_lookalike">See rakendus nimetab end %1$s, kuid see pole %2$s: selle pakett pole rakenduse %2$s pakett. Luba see ainult siis, kui tead, miks see seda nime kasutab.</string>
+    <string name="connected_apps_state_pending">Küsib ühendust</string>
+    <string name="connected_apps_state_trusted">Ühendatud</string>
+    <string name="connected_apps_state_blocked">Blokeeritud</string>
+    <string name="connected_apps_asks_for">See küsib luba:</string>
+    <string name="connected_apps_allow">Luba</string>
+    <string name="connected_apps_block">Blokeeri</string>
+    <string name="connected_apps_forget">Unusta</string>
+    <string name="connected_apps_unblock">Tühista blokeering</string>
+    <string name="connected_apps_capability_devices">Näha sinu kelli ja kaalu, nende akut ja viimast sünkroonimist ning käivitada sünkroonimine</string>
+    <string name="connected_apps_capability_profile">Jagada sinu kehaprofiili (sünniaasta, sugu, pikkus, kehakaal) OpenWatchiga, mõlemas suunas</string>
+    <string name="connected_apps_capability_recording">Hoida kella saatmas, kuni see salvestab tegevust</string>
+    <string name="connected_apps_capability_live">Saada salvestamise ajal sinu kella pulssi ja samme</string>
+</resources>
