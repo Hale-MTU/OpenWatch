@@ -1,42 +1,47 @@
 package tech.mmarca.openwatch.di
 
-import android.content.Context
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import dagger.multibindings.IntoSet
+import dagger.multibindings.Multibinds
+import javax.inject.Provider
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import tech.mmarca.openwatch.StartupActor
+import tech.mmarca.openwatch.core.performance.ApplicationScope
+import tech.mmarca.openwatch.data.repository.RegisteredFamilies
+import tech.mmarca.openwatch.devices.core.DeviceClassifier
+import tech.mmarca.openwatch.devices.core.DeviceFamily
+import tech.mmarca.openwatch.devices.core.DeviceScanClassifier
+import tech.mmarca.openwatch.devices.core.measure.DeviceMeasurementSink
+import tech.mmarca.openwatch.devices.core.measure.MeasurementRecords
+import tech.mmarca.openwatch.devices.core.measure.MeasurementSink
 import tech.mmarca.openwatch.devices.core.pairing.BleWatchPairing
-import tech.mmarca.openwatch.devices.core.pairing.CompanionPresenceObserver
 import tech.mmarca.openwatch.devices.core.pairing.WatchPairingPort
+import tech.mmarca.openwatch.devices.core.sync.AndroidSyncWakeLock
+import tech.mmarca.openwatch.devices.core.sync.AutoSyncIntervalStore
+import tech.mmarca.openwatch.devices.core.sync.CompositeDeviceSyncPort
 import tech.mmarca.openwatch.devices.core.sync.DeviceSyncPort
-import tech.mmarca.openwatch.devices.garmin.GarminCounterWatermarkStore
+import tech.mmarca.openwatch.devices.core.sync.SyncWakeLock
+import tech.mmarca.openwatch.devices.core.sync.WatchAutoSyncScheduler
+import tech.mmarca.openwatch.devices.garmin.GarminDeviceClassifier
 import tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore
-import tech.mmarca.openwatch.devices.garmin.GarminFileStore
-import tech.mmarca.openwatch.devices.garmin.GarminGattProbe
-import tech.mmarca.openwatch.devices.garmin.GarminGattRadio
-import tech.mmarca.openwatch.devices.garmin.GarminNotificationBridge
-import tech.mmarca.openwatch.devices.garmin.GarminRadio
-import tech.mmarca.openwatch.devices.garmin.GarminTransportProbe
-import tech.mmarca.openwatch.devices.garmin.GarminWatchSyncService
-import tech.mmarca.openwatch.devices.garmin.garminFileStore
+import tech.mmarca.openwatch.devices.garmin.GarminScanClassifier
 import tech.mmarca.openwatch.devices.media.AndroidPhoneMediaSource
 import tech.mmarca.openwatch.devices.media.PhoneMediaSource
-import tech.mmarca.openwatch.devices.xiaomi.ScaleForeground
-import tech.mmarca.openwatch.devices.xiaomi.ScaleListeningForeground
-import tech.mmarca.openwatch.devices.xiaomi.ScaleScanRadio
-import tech.mmarca.openwatch.devices.xiaomi.SystemScaleScanRadio
-import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleListener
-import tech.mmarca.openwatch.devices.xiaomi.XiaomiScaleStore
-import tech.mmarca.openwatch.devices.core.sync.CompositeDeviceSyncPort
-import tech.mmarca.openwatch.devices.wearos.BluetoothWearOsNodePort
-import tech.mmarca.openwatch.devices.wearos.WearOsNodePort
-import tech.mmarca.openwatch.devices.wearos.WearOsWatchSyncService
+import tech.mmarca.openwatch.devices.wearos.WearOsDeviceClassifier
 
-/** Wiring for the `devices/` layer, kept apart so [AppModule] carries no watch knowledge. */
+/**
+ * Wiring for the device layer, kept apart so [AppModule] carries no watch knowledge: what every
+ * family shares (`:devices:core`'s pieces, the composite sync port, the measurement sink) and
+ * the rules across families (the classifiers' order, where every watch's sync interval is
+ * kept). Each family binds itself in its own module: `:devices:garmin`'s `GarminModule`,
+ * `:devices:wearos`'s `WearOsModule`, `:devices:xiaomi`'s `XiaomiScaleModule`.
+ */
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class DevicesModule {
@@ -45,81 +50,63 @@ abstract class DevicesModule {
     @Singleton
     abstract fun bindWatchPairingPort(impl: BleWatchPairing): WatchPairingPort
 
-    // One port per integration; the composite hands each device to the one that claims it.
-    @Binds
-    @IntoSet
-    abstract fun bindGarminSyncPort(impl: GarminWatchSyncService): DeviceSyncPort
-
-    @Binds
-    @IntoSet
-    abstract fun bindWearOsSyncPort(impl: WearOsWatchSyncService): DeviceSyncPort
-
     @Binds
     @Singleton
     abstract fun bindPhoneMediaSource(impl: AndroidPhoneMediaSource): PhoneMediaSource
 
+    // Every watch's sync interval, Wear OS included, lives in the Garmin store under its old key.
     @Binds
-    @Singleton
-    abstract fun bindGarminRadio(impl: GarminGattRadio): GarminRadio
+    abstract fun bindAutoSyncIntervalStore(impl: GarminDeviceStateStore): AutoSyncIntervalStore
 
     @Binds
-    @Singleton
-    abstract fun bindScaleScanRadio(impl: SystemScaleScanRadio): ScaleScanRadio
+    abstract fun bindSyncWakeLock(impl: AndroidSyncWakeLock): SyncWakeLock
 
+    // Where pushed measurements go: kept per device, then written to Health Connect.
     @Binds
-    @Singleton
-    abstract fun bindScaleForeground(impl: ScaleListeningForeground): ScaleForeground
+    abstract fun bindMeasurementSink(impl: DeviceMeasurementSink): MeasurementSink
 
-    // What OpenWatchCompanionDeviceService tells when an associated device comes into range.
-    @Binds
-    @IntoSet
-    abstract fun bindScalePresenceObserver(impl: XiaomiScaleListener): CompanionPresenceObserver
-
-    @Binds
-    @IntoSet
-    abstract fun bindWatchPresenceObserver(impl: GarminNotificationBridge): CompanionPresenceObserver
-
-    @Binds
-    @Singleton
-    abstract fun bindWearOsNodePort(impl: BluetoothWearOsNodePort): WearOsNodePort
+    /** Each family that pushes measurements binds its mapping by its persisted name; none may. */
+    @Multibinds
+    abstract fun measurementRecords(): Map<String, MeasurementRecords>
 
     companion object {
+        @Provides
+        @IntoSet
+        fun provideSyncSchedulesAtStart(scheduler: WatchAutoSyncScheduler) =
+            // Re-plans the sync schedules after what WorkManager does not cover.
+            StartupActor("sync schedules", scheduler::restoreAll)
+
+        /**
+         * The families' persisted names, which the registry reads its rows against. Providers: a
+         * family takes the registry, so only the keys are read, never a family built.
+         */
+        @Provides
+        fun provideRegisteredFamilies(families: Map<String, @JvmSuppressWildcards Provider<DeviceFamily>>) =
+            RegisteredFamilies(families.keys)
+
+        @Provides
+        @IntoSet
+        fun providePendingMeasurementsAtStart(sink: MeasurementSink, @ApplicationScope scope: CoroutineScope) =
+            // A measurement that could not be written before the process ended is tried again.
+            StartupActor("pending measurements") { scope.launch { sink.retryPending() } }
+
+        /**
+         * Each integration's verdict on a scanned device. A list, not a set: the first that
+         * claims a device wins, so the order is part of the rule, across families, and stays
+         * here though each family binds the rest of itself in its own module. A new
+         * integration adds its classifier here, and nothing in `sensors/` changes.
+         */
+        @Provides
+        fun provideDeviceClassifiers(): List<@JvmSuppressWildcards DeviceClassifier> =
+            listOf(GarminDeviceClassifier(), WearOsDeviceClassifier())
+
+        @Provides
+        fun provideDeviceScanClassifiers(): List<@JvmSuppressWildcards DeviceScanClassifier> =
+            listOf(GarminScanClassifier())
 
         @Provides
         @Singleton
         fun provideDeviceSyncPort(ports: Set<@JvmSuppressWildcards DeviceSyncPort>): DeviceSyncPort =
             CompositeDeviceSyncPort(ports)
-
-        @Provides
-        @Singleton
-        fun provideGarminTransportProbe(
-            @ApplicationContext context: Context,
-        ): GarminTransportProbe = GarminGattProbe(context)
-
-        @Provides
-        @Singleton
-        fun provideGarminDeviceStateStore(
-            @ApplicationContext context: Context,
-        ): GarminDeviceStateStore = GarminDeviceStateStore(context)
-
-        // One instance: the store finds a file's pending note by the object that saved it.
-        @Provides
-        @Singleton
-        fun provideGarminFileStore(
-            @ApplicationContext context: Context,
-        ): GarminFileStore = garminFileStore(context)
-
-        @Provides
-        @Singleton
-        fun provideGarminCounterWatermarkStore(
-            @ApplicationContext context: Context,
-        ): GarminCounterWatermarkStore = GarminCounterWatermarkStore(context)
-
-        // One instance: the receiver, the worker and the screen read the same state.
-        @Provides
-        @Singleton
-        fun provideXiaomiScaleStore(
-            @ApplicationContext context: Context,
-        ): XiaomiScaleStore = XiaomiScaleStore(context)
     }
 }

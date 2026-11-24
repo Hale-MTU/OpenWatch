@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="garmin_find_phone_channel">Mein Telefon finden</string>
+    <string name="garmin_find_phone_title">Deine Uhr sucht dieses Telefon</string>
+    <string name="garmin_find_phone_body">Tippen, um das Klingeln zu beenden.</string>
+    <string name="garmin_find_phone_stop">Stopp</string>
+</resources>

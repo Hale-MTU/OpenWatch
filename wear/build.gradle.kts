@@ -1,5 +1,7 @@
+import com.android.build.api.variant.HostTestBuilder
+
 plugins {
-    alias(libs.plugins.android.application)
+    id("openwatch.android.application")
     alias(libs.plugins.kotlin.compose)
 }
 
@@ -14,31 +16,7 @@ val wearBaseVersionCode = providers.gradleProperty("openwatch.versionCode")
     .map { wearVersionCodeBase + it.toInt() }
 val wearBaseVersionName = providers.gradleProperty("openwatch.versionName")
 
-// Same signing as the phone app, from the same environment variables: both
-// form factors ship under one applicationId, so one key signs both.
-val releaseStoreFilePath = System.getenv("OPENWATCH_RELEASE_STORE_FILE")
-val releaseStorePassword = System.getenv("OPENWATCH_RELEASE_STORE_PASSWORD")
-val releaseKeyAlias = System.getenv("OPENWATCH_RELEASE_KEY_ALIAS")
-val releaseKeyPassword = System.getenv("OPENWATCH_RELEASE_KEY_PASSWORD")
-val isPkcs12ReleaseStore = releaseStoreFilePath
-    ?.lowercase()
-    ?.let { it.endsWith(".p12") || it.endsWith(".pfx") || it.endsWith(".pkcs12") }
-    ?: false
-val effectiveReleaseKeyPassword = if (isPkcs12ReleaseStore) {
-    releaseStorePassword
-} else {
-    releaseKeyPassword
-}
-val hasReleaseSigning = listOf(
-    releaseStoreFilePath,
-    releaseStorePassword,
-    releaseKeyAlias,
-    effectiveReleaseKeyPassword,
-).all { !it.isNullOrBlank() }
-val signDebugWithReleaseKey = System.getenv("OPENWATCH_SIGN_DEBUG_WITH_RELEASE_KEY") == "true"
-// Same switch as the phone app: a published debug APK is not debuggable, and
-// is not run through R8 (it was until 2026-10; see app/build.gradle.kts).
-val publishedDebugApk = System.getenv("OPENWATCH_PUBLISHED_DEBUG_APK") == "true"
+// Signing, R8 and the shared build types: openwatch.android.application (build-logic/).
 val wearVersionCodeOverride = providers.environmentVariable("OPENWATCH_WEAR_VERSION_CODE")
     .map { it.toInt() }
 val wearVersionNameOverride = providers.environmentVariable("OPENWATCH_WEAR_VERSION_NAME")
@@ -56,8 +34,6 @@ require(wearVersionCode in (wearVersionCodeBase + 1)..2_099_999_999) {
 android {
     // Kotlin namespace stays under .wear; only the applicationId is shared.
     namespace = "tech.mmarca.openwatch.wear"
-    compileSdk = 37
-    buildToolsVersion = "37.0.0"
 
     defaultConfig {
         applicationId = "tech.mmarca.openwatch"
@@ -68,75 +44,51 @@ android {
         versionName = wearVersionNameOverride.orElse(wearBaseVersionName).get()
     }
 
-    signingConfigs {
-        if (hasReleaseSigning) {
-            create("release") {
-                storeFile = file(checkNotNull(releaseStoreFilePath))
-                storePassword = checkNotNull(releaseStorePassword)
-                keyAlias = checkNotNull(releaseKeyAlias)
-                keyPassword = checkNotNull(effectiveReleaseKeyPassword)
-            }
-        }
-    }
-
     buildTypes {
-        // Same suffix as the phone debug build, so a debug watch pairs with a
-        // debug phone.
-        debug {
-            applicationIdSuffix = ".debug"
-            versionNameSuffix = "-debug"
-            if (signDebugWithReleaseKey && hasReleaseSigning) {
-                signingConfig = signingConfigs.getByName("release")
-            }
-            if (publishedDebugApk) {
-                isDebuggable = false
-            }
+        // The debug suffix is the phone debug build's, so a debug watch pairs with a debug phone.
+        // The ci type is the watch gate's, as the phone app's is: its unit tests and lint run on
+        // it, and nothing installs it. Its suffix is the phone's ci one, by the same rule. The
+        // version code is defaultConfig's, inside the watch range like every other type's.
+        create("ci") {
+            initWith(getByName("debug"))
+            applicationIdSuffix = ".ci"
+            versionNameSuffix = "-ci"
         }
 
-        // R8 on, the same way the phone app does it. The newer
-        // optimization.enable DSL needs an experimental AGP flag.
-        release {
-            if (hasReleaseSigning) {
-                signingConfig = signingConfigs.getByName("release")
-            }
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
-            )
-        }
-
-        create("nightly") {
-            initWith(getByName("release"))
+        getByName("nightly") {
             versionNameSuffix = wearNightlyVersionNameSuffix.get()
-            matchingFallbacks += listOf("release")
         }
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 
     buildFeatures {
         compose = true
     }
 
-    // The release build runs after the gate's lint (verifyWearCi); lintVital
-    // would repeat part of it inside the signing build.
     lint {
-        checkReleaseBuilds = false
+        // As on the phone: a string added between releases ships in English until the release
+        // translates it, and scripts/verify-translations.py checks what can break at run time.
+        disable += "MissingTranslation"
     }
 
-    dependenciesInfo {
-        includeInApk = false
-        includeInBundle = false
+    // The store tests run twice: on the JVM under Robolectric, in every watch gate, and on a
+    // watch as instrumented tests, against the watch's own SQLite.
+    sourceSets.getByName("test").kotlin.directories.add("src/sharedTest/kotlin")
+    sourceSets.getByName("androidTest").kotlin.directories.add("src/sharedTest/kotlin")
+}
+
+// The instrumented tests stay on debug, the tested build type, so a run on a watch installs
+// over the debug app (docs/engineering/development.md). AGP gives only that type unit tests,
+// so the ci type asks for its own: the gate runs those.
+androidComponents {
+    beforeVariants(selector().withBuildType("ci")) { variant ->
+        variant.hostTests.getValue(HostTestBuilder.UNIT_TEST_TYPE).enable = true
     }
 }
 
 dependencies {
     implementation(project(":wearlink"))
+    // The recorders' pure decisions and computations, tested on the plain JVM.
+    implementation(project(":wear:recording-core"))
     // HRV, respiratory rate and the minute features from the raw sensors, shared with the phone.
     implementation("tech.mmarca.healthcalculations:health-calculations")
     val composeBom = platform(libs.androidx.compose.bom)
@@ -152,15 +104,23 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     // The watch face pill of a running workout.
     implementation(libs.androidx.wear.ongoing)
-    implementation(libs.androidx.core.ktx)
     // The metric tiles: Material 3 tile layouts, no Play Services.
     implementation(libs.androidx.wear.tiles)
     implementation(libs.androidx.wear.protolayout)
     implementation(libs.androidx.wear.protolayout.material3)
     // A suspend function as the ListenableFuture a TileService returns.
     implementation(libs.androidx.concurrent.futures.ktx)
-    testImplementation(libs.kotlinx.coroutines.test)
+    // The heart rate and steps complications: a watch face's slot, read like the tiles. The
+    // library declares androidx.preference, which brings AppCompat and Fragment, yet none of its
+    // classes or resources refers to it (checked in 1.3.0): it is left out. Check again on an update.
+    implementation(libs.androidx.wear.watchface.complications.data.source.ktx) {
+        exclude(group = "androidx.preference", module = "preference")
+    }
     testImplementation(libs.junit4)
+    // The shared store tests, on the JVM.
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.test.ext.junit)
     debugImplementation(libs.androidx.compose.ui.tooling)
     // Real org.json for local tests (the android.jar copy is a throwing stub): the feature vector is JSON.
     testImplementation(libs.org.json)

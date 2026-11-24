@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="privacy_policy_title">Tietosuojakäytäntö</string>
+    <string name="body_profile_synced">Pidetään synkronoituna: %1$s</string>
+    <string name="body_profile_synced_updated">Pidetään synkronoituna: %1$s · päivitetty %2$s</string>
+    <string name="connected_apps_title">Yhdistetyt sovellukset</string>
+    <string name="connected_apps_settings_body">Sovellukset, jotka käyttävät kellojasi, vaakaasi ja kehoprofiiliasi OpenWatchin kautta, ja mitä kukin saa tehdä</string>
+    <string name="settings_notification_access_title">Ilmoitusten käyttöoikeus</string>
+    <string name="settings_notification_access_body">Antaa pariksi liitetyn Garmin-kellon näyttää puhelimen ilmoitukset. Pois päältä.</string>
+    <string name="settings_notification_access_granted">Myönnetty. Muuta sitä Androidin asetuksissa napauttamalla.</string>
+    <string name="settings_about_version">OpenWatch %1$s</string>
+    <string name="settings_privacy_policy_body">Mitä OpenWatch lukee, kirjoittaa ja säilyttää. Avautuu selaimessa.</string>
+    <string name="settings_privacy_policy_no_browser">Mikään tämän puhelimen sovellus ei voi avata linkkiä. Käytäntö on osoitteessa %1$s</string>
+    <string name="settings_about_body">Avointa lähdekoodia AGPL-3.0-or-later-lisenssillä. Kellon, vaa\'an ja synkronoinnin koodi on peräisin OpenVitalsista.</string>
+    <string name="body_profile_title">Kehoprofiili</string>
+    <string name="body_profile_settings_body">Syntymävuosi, sukupuoli, pituus ja paino arvioita varten</string>
+    <string name="body_profile_intro">Vaa\'an kehonkoostumus tarvitsee sukupuolesi ja pituutesi; kävelyn energia-arvio tarvitsee painosi. Health Connectissa olevaa painoa tai pituutta käytetään tähän kirjoitetun sijasta.</string>
+    <string name="body_profile_birth_year">Syntymävuosi</string>
+    <string name="body_profile_sex">Sukupuoli</string>
+    <string name="body_profile_sex_female">Nainen</string>
+    <string name="body_profile_sex_male">Mies</string>
+    <string name="body_profile_height_cm">Pituus (cm)</string>
+    <string name="body_profile_height_in">Pituus (in)</string>
+    <string name="body_profile_weight_kg">Paino (kg)</string>
+    <string name="body_profile_weight_lb">Paino (lb)</string>
+    <string name="body_profile_measured">Health Connect: %1$s</string>
+    <string name="settings_respiratory_rate_title">Hengitystiheys kellosta (kokeellinen)</string>
+    <string name="settings_respiratory_rate_body">Kirjoittaa kellon yöllisten HRV-ikkunoiden hengitystiheyden Health Connectiin. Ei vielä verrattu viitelaitteeseen.</string>
+    <string name="health_data_open_body">Jokainen terveystietotyyppi, laite, josta se tulee, ja miksi.</string>
+</resources>

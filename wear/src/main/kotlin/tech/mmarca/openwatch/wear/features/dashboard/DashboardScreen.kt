@@ -42,8 +42,9 @@ import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
  * Today's [tiles], in order. The first three of them with a daily goal also
- * show as activity rings at the top. The measure
- * button only appears when the watch supports at least one measurement.
+ * show as activity rings at the top, and the quick log is one tap below
+ * them ([onQuickLog]), after the spot measurements ([onMeasure]) where the
+ * watch can take one ([canMeasure]).
  */
 @Composable
 fun DashboardScreen(

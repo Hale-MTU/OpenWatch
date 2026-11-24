@@ -26,26 +26,35 @@ import tech.mmarca.openwatch.devices.core.pairing.CompanionDevicePairing
 import tech.mmarca.openwatch.domain.model.HealthConnectAvailability
 import tech.mmarca.openwatch.healthconnect.HealthConnectGateway
 import tech.mmarca.openwatch.navigation.AppNavigation
-import tech.mmarca.openwatch.navigation.Screen
+import tech.mmarca.openwatch.navigation.ConnectedApps
+import tech.mmarca.openwatch.navigation.Home
+import tech.mmarca.openwatch.navigation.Onboarding
+import tech.mmarca.openwatch.navigation.WatchSendPoint
 import tech.mmarca.openwatch.ui.components.AppBarState
 import tech.mmarca.openwatch.ui.components.LocalAppBarState
+import tech.mmarca.openwatch.ui.components.ObscuredTouchGuard
 import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ObscuredTouchGuard {
 
     @Inject lateinit var preferences: OpenWatchPreferences
     @Inject lateinit var healthConnect: HealthConnectGateway
     @Inject lateinit var unitFormatter: UnitFormatter
     @Inject lateinit var companionDevicePairing: CompanionDevicePairing
 
-    private var externalNavigationRoute by mutableStateOf<String?>(null)
-    private var startDestination by mutableStateOf<String?>(null)
+    private var externalNavigationRoute by mutableStateOf<Any?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (redirectHealthConnectOnboardingIfNeeded(intent)) {
-            return
+        // Once, before the graph exists: changing it under a live NavHost would set the graph again.
+        val startDestination = if (
+            preferences.onboardingDone &&
+            healthConnect.availability() == HealthConnectAvailability.AVAILABLE
+        ) {
+            Home
+        } else {
+            Onboarding
         }
         enableEdgeToEdge()
         // The companion association dialog needs an Activity launcher. Without this
@@ -75,33 +84,16 @@ class MainActivity : AppCompatActivity() {
             }
 
             OpenWatchTheme(dynamicColor = true) {
-                val resolvedStartDestination = startDestination ?: run {
-                    if (
-                        preferences.onboardingDone &&
-                        healthConnect.availability() == HealthConnectAvailability.AVAILABLE
-                    ) {
-                        Screen.Home.route
-                    } else {
-                        Screen.HealthConnectSetup.route
-                    }
-                }.also { destination ->
-                    if (startDestination == null) {
-                        startDestination = destination
-                    }
-                }
                 val rememberedAppBarState = remember { AppBarState() }
 
                 // Where each screen declares what it wants in the app bar.
                 CompositionLocalProvider(LocalAppBarState provides rememberedAppBarState) {
                     AppNavigation(
                         unitFormatter = unitFormatter,
-                        startDestination = resolvedStartDestination,
+                        startDestination = startDestination,
                         externalNavigationRoute = externalNavigationRoute,
                         onExternalNavigationHandled = { externalNavigationRoute = null },
-                        onSetupComplete = {
-                            preferences.onboardingDone = true
-                            startDestination = Screen.Home.route
-                        },
+                        onSetupComplete = { preferences.onboardingDone = true },
                     )
                 }
             }
@@ -114,7 +106,7 @@ class MainActivity : AppCompatActivity() {
      * cannot steer a tap. The check `View.filterTouchesWhenObscured` makes, done here because
      * Compose's view does not make it.
      */
-    var dropObscuredTouches: Boolean = false
+    override var dropObscuredTouches: Boolean = false
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         if (dropObscuredTouches && event.flags and MotionEvent.FLAG_WINDOW_IS_OBSCURED != 0) return true
@@ -129,28 +121,12 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        if (redirectHealthConnectOnboardingIfNeeded(intent)) {
-            return
-        }
         updateExternalNavigationRoute(intent)
-    }
-
-    private fun redirectHealthConnectOnboardingIfNeeded(intent: Intent?): Boolean {
-        if (intent?.isHealthConnectOnboardingIntent() != true) return false
-        startActivity(
-            Intent(this, HealthConnectOnboardingActivity::class.java).apply {
-                action = intent.action
-                data = intent.data
-                putExtras(intent)
-            },
-        )
-        finish()
-        return true
     }
 
     private fun updateExternalNavigationRoute(intent: Intent?) {
         externalNavigationRoute = intent?.sendPointRoute()
-            ?: Screen.ConnectedApps.route.takeIf { intent?.action == ACTION_OPENLINK_CONSENT }
+            ?: ConnectedApps.takeIf { intent?.action == ACTION_OPENLINK_CONSENT }
     }
 
     companion object {
@@ -159,18 +135,12 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
-private fun Intent.isHealthConnectOnboardingIntent(): Boolean {
-    val action = action ?: return false
-    return action == "androidx.health.ACTION_SHOW_ONBOARDING" ||
-        action == "android.health.connect.action.SHOW_ONBOARDING"
-}
-
 /**
  * The send-a-point route for a place another app shared: a `geo:` link, or
  * text holding one, a maps URL or bare coordinates. Built here from parsed
  * numbers, so nothing from the intent reaches the navigator as a route.
  */
-internal fun Intent.sendPointRoute(): String? = when (action) {
+internal fun Intent.sendPointRoute(): WatchSendPoint? = when (action) {
     Intent.ACTION_VIEW -> sharedPlaceRoute(geoLink = dataString, text = null)
     Intent.ACTION_SEND -> sharedPlaceRoute(
         geoLink = null,
@@ -181,15 +151,16 @@ internal fun Intent.sendPointRoute(): String? = when (action) {
 }
 
 /** Null when there is nothing place-like at all. A share with no position still opens the form, which says so. */
-internal fun sharedPlaceRoute(geoLink: String?, text: String?): String? {
+internal fun sharedPlaceRoute(geoLink: String?, text: String?): WatchSendPoint? {
     val point = when {
         geoLink != null -> GeoUri.parse(geoLink) ?: return null
         text != null -> SharedLocationText.parse(text) ?: SharedGeoPoint()
         else -> return null
     }
-    return Screen.WatchSendPoint.createRoute(
-        latitude = point.latitude,
-        longitude = point.longitude,
+    // Both or neither: half a position is no position.
+    return WatchSendPoint(
+        latitude = point.latitude.takeIf { point.hasPosition },
+        longitude = point.longitude.takeIf { point.hasPosition },
         name = point.name?.take(SharedPlaceNameLimit),
         unreadable = !point.hasPosition,
     )

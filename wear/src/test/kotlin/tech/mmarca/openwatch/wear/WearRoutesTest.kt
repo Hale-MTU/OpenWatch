@@ -1,19 +1,36 @@
 package tech.mmarca.openwatch.wear
 
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
-import tech.mmarca.openwatch.wear.health.WearCapabilities
 
 class WearRoutesTest {
 
+    /** The argument the navigation host reads back from a metric's route. */
+    private fun argumentOf(route: String): String = route.substringAfter("metric/")
+
     @Test
-    fun availableMetrics_offerPhoneAndLoggedMetrics_andOnlyMeasuredSensorOnes() {
-        val available = WearCapabilities(probed = true, sensorMetrics = setOf(MetricTile.STEPS)).availableMetrics()
-        assertTrue(MetricTile.STEPS in available)
-        assertTrue(MetricTile.SLEEP in available)
-        assertTrue(MetricTile.HYDRATION in available)
-        assertFalse(MetricTile.HEART_RATE in available)
-        assertFalse(MetricTile.BLOOD_OXYGEN in available)
+    fun everyMetricsRouteNamesItsMetric() {
+        for (metric in MetricTile.entries) {
+            assertEquals(metric, WearRoutes.metricOf(argumentOf(WearRoutes.metric(metric))))
+        }
+    }
+
+    @Test
+    fun aNameWithoutAMetricIsNoMetric() {
+        // A name a later build stored, another case, or no argument at all: none throws.
+        assertNull(WearRoutes.metricOf("BODY_BATTERY"))
+        assertNull(WearRoutes.metricOf("steps"))
+        assertNull(WearRoutes.metricOf(""))
+        assertNull(WearRoutes.metricOf(null))
+    }
+
+    @Test
+    fun everyMeasurementsRouteNamesItsKind() {
+        for (kind in SpotKind.entries) {
+            assertEquals(kind, WearRoutes.spotKindOf(WearRoutes.measurement(kind).substringAfter("measure/")))
+        }
+        assertNull(WearRoutes.spotKindOf("SPO2"))
+        assertNull(WearRoutes.spotKindOf(null))
     }
 }

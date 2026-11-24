@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connected_apps_in_use">正在使用</string>
+    <string name="connected_apps_last_connected">上次连接：%1$s</string>
+    <string name="connected_apps_profile_received">上次收到个人资料：%1$s</string>
+    <string name="connected_apps_session_heart_rate">记录中：正在传送 %1$s 的心率</string>
+    <string name="connected_apps_session_heart_rate_steps">记录中：正在传送 %1$s 的心率和步数</string>
+    <string name="connected_apps_session_keeping">记录中：保持 %1$s 持续传输</string>
+    <string name="connected_apps_session_waiting">记录中：正在等待 %1$s 的读数</string>
+    <string name="connected_apps_intro">这些应用请求使用 OpenWatch。每个应用只能看到你在这里允许的内容，任何数据都不会离开手机。</string>
+    <string name="connected_apps_empty">还没有应用提出请求。两个应用都安装后，OpenVitals 会自动连接。</string>
+    <string name="connected_apps_unknown_signer">此应用自称 %1$s，但不是由 OpenVitals 项目签名的。只有在你自己构建或安装了它并信任其来源时才允许它。</string>
+    <string name="connected_apps_identity">%1$s\n签名密钥 %2$s</string>
+    <string name="connected_apps_lookalike">此应用自称 %1$s，但它不是 %2$s：它的软件包不是 %2$s 所用的软件包。只有在你知道它为何使用这个名称时才允许它。</string>
+    <string name="connected_apps_state_pending">请求连接</string>
+    <string name="connected_apps_state_trusted">已连接</string>
+    <string name="connected_apps_state_blocked">已阻止</string>
+    <string name="connected_apps_asks_for">它请求：</string>
+    <string name="connected_apps_allow">允许</string>
+    <string name="connected_apps_block">阻止</string>
+    <string name="connected_apps_forget">忘记</string>
+    <string name="connected_apps_unblock">取消阻止</string>
+    <string name="connected_apps_capability_devices">查看手表和体重秤及其电量和上次同步时间，并发起同步</string>
+    <string name="connected_apps_capability_profile">与 OpenWatch 双向共享身体档案（出生年份、性别、身高、体重）</string>
+    <string name="connected_apps_capability_recording">在它记录活动时保持手表持续传输</string>
+    <string name="connected_apps_capability_live">在它记录时接收手表的心率和步数</string>
+</resources>

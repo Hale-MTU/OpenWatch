@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="garmin_find_phone_channel">Localiser mon téléphone</string>
+    <string name="garmin_find_phone_title">Votre montre cherche ce téléphone</string>
+    <string name="garmin_find_phone_body">Touchez pour arrêter la sonnerie.</string>
+    <string name="garmin_find_phone_stop">Arrêter</string>
+</resources>

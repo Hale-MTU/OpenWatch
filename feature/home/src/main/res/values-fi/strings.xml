@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_section_watches">Kellot</string>
+    <string name="home_section_scale">Vaaka</string>
+    <string name="home_section_app">Sovellus</string>
+    <string name="home_settings">Asetukset</string>
+    <string name="home_settings_body">Kehoprofiili, ilmoitusten käyttöoikeus, tietoja</string>
+</resources>

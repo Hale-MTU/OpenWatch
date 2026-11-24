@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hc_setup_missing_title">Veel andmata:</string>
+    <string name="hc_setup_missing_extra">Taustal ja ajaloo juurdepääs on eraldi lehel: ava Health Connecti seaded, siis OpenWatch, siis Täiendav juurdepääs.</string>
+    <string name="hc_setup_intro">OpenWatch kopeerib sinu kella ja kaalu salvestatu Health Connecti, kust seda loevad OpenVitals ja teised rakendused. Miski ei lahku telefonist: rakendusel pole internetiluba.</string>
+    <string name="hc_setup_permissions_title">Load</string>
+    <string name="hc_setup_status_all_granted">Kõik %1$d luba on antud</string>
+    <string name="hc_setup_status_partial">Antud %1$d luba %2$d-st. Kirje, mille kirjutamiseks luba pole, jääb seadmesse.</string>
+    <string name="hc_setup_status_update">Health Connect vajab uuendamist, enne kui OpenWatch saab seda kasutada.</string>
+    <string name="hc_setup_status_play_store">Health Connect on paigaldatud ilma Google Playta, seega ei saa seda selles telefonis kasutada.</string>
+    <string name="hc_setup_status_unavailable">Health Connect pole selles telefonis saadaval.</string>
+    <string name="hc_setup_grant">Anna load</string>
+    <string name="hc_setup_open_settings">Ava Health Connecti seaded</string>
+    <string name="hc_setup_continue">Jätka</string>
+</resources>

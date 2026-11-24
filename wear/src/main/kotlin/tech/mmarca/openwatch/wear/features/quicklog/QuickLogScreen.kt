@@ -41,9 +41,9 @@ import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
 import java.util.Date
+import tech.mmarca.openwatch.wear.MetricTile
 import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.UnitSystem
-import tech.mmarca.openwatch.wear.MetricTile
 import tech.mmarca.openwatch.wear.WearUiState
 import tech.mmarca.openwatch.wear.ui.components.formatMetricValue
 import tech.mmarca.openwatch.wear.ui.components.metricUnitLabel
@@ -54,6 +54,7 @@ import tech.mmarca.openwatch.wear.ui.theme.MindfulnessColor
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 import tech.mmarca.openwatch.wear.ui.theme.VitalsColor
 import tech.mmarca.openwatch.wear.ui.theme.WeightColor
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
 /** Millilitres one tap on "water" adds: a glass. */
 const val WaterServingMl = 250.0
@@ -77,8 +78,8 @@ fun QuickLogScreen(
     val transformationSpec = rememberTransformationSpec()
     val unitSystem = state.preferences.unitSystem
     var showSaved by remember { mutableStateOf(false) }
-    val lastWeight = state.entries.lastOrNull { it.type == EntryType.WEIGHT }
-    val lastPressure = state.entries.lastOrNull { it.type == EntryType.BLOOD_PRESSURE }
+    val lastWeight = state.entries.lastOrNull { it.type == WearLinkEntry.Type.WEIGHT }
+    val lastPressure = state.entries.lastOrNull { it.type == WearLinkEntry.Type.BLOOD_PRESSURE }
     val waterToday = state.metrics[MetricTile.HYDRATION]?.current ?: 0.0
     val waterUnit = stringResource(metricUnitLabel(MetricTile.HYDRATION, unitSystem))
     val notLogged = stringResource(R.string.quicklog_not_logged)
@@ -154,7 +155,7 @@ fun QuickLogScreen(
             val recent = state.entries.takeLast(RecentEntries).asReversed()
             if (recent.isNotEmpty()) {
                 item { ListSubHeader { Text(stringResource(R.string.quicklog_recent)) } }
-                items(recent) { entry -> RecentEntryRow(entry, unitSystem) }
+                items(recent, key = { it.epochMillis }) { entry -> RecentEntryRow(entry, unitSystem) }
             }
         }
     }
@@ -188,9 +189,9 @@ private fun QuickLogButton(
 }
 
 @Composable
-private fun RecentEntryRow(entry: LoggedEntry, unitSystem: UnitSystem) {
+private fun RecentEntryRow(entry: WearLinkEntry, unitSystem: UnitSystem) {
     val context = LocalContext.current
-    val time = remember(entry.timeMillis) { DateFormat.getTimeFormat(context).format(Date(entry.timeMillis)) }
+    val time = remember(entry.epochMillis) { DateFormat.getTimeFormat(context).format(Date(entry.epochMillis)) }
     Row(
         modifier = Modifier
             .fillMaxWidth()

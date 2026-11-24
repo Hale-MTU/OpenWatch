@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_watch_wearos_bt_not_paired">Seotud Wear OS kella ei leitud</string>
+    <string name="settings_watch_wearos_app_running">OpenWatchi Wear OS rakendus töötab kellas</string>
+    <string name="settings_watch_wearos_app_no_answer">Vastust pole: kell on välja lülitatud, levist väljas või OpenWatchi rakendus pole kellas paigaldatud või ei tööta.</string>
+    <string name="settings_watch_wearos_status_pending">Ootame, et lubaksid selle telefoni kellas. Ava kellas OpenWatch ja puuduta Luba.</string>
+    <string name="settings_watch_wearos_status_unauthorized_mismatch">Kell keeldus sellest telefonist: selle võti ei klapi. Ava kellas OpenWatch, unusta see telefon ja kontrolli uuesti.</string>
+    <string name="settings_watch_wearos_status_unauthorized_blocked">See telefon on kellas blokeeritud. Ava kellas OpenWatch ja eemalda blokeering.</string>
+    <string name="settings_watch_wearos_status_update_watch">Kella OpenWatchi rakendus on sellest vanem. Uuenda kella rakendust.</string>
+    <string name="settings_watch_wearos_status_update_phone">Kella OpenWatchi rakendus on sellest uuem. Uuenda OpenWatchit telefonis.</string>
+    <string name="settings_watch_wearos_status_protocol">Kell vastas midagi, mida OpenWatch ei suutnud lugeda. Uuenda mõlemat rakendust ja proovi uuesti.</string>
+</resources>

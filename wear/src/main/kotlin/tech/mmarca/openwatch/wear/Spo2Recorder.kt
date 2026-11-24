@@ -5,16 +5,11 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.os.PowerManager
 import android.util.Log
-import tech.mmarca.openwatch.wear.samsung.RawPoint
-import tech.mmarca.openwatch.wear.samsung.SamsungHealthPlatform
-import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
-import tech.mmarca.openwatch.wear.samsung.Spo2Point
-import tech.mmarca.openwatch.wear.samsung.toSpo2Point
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
 /**
- * SpO2 spot measurements at night from the Samsung Health Platform, one
- * [WearMetrics.SPO2] row each. The platform's SpO2 tracker is an on-demand
+ * SpO2 spot measurements at night, one [WearMetrics.SPO2] row each, from a
+ * [SpotSource]: the Samsung Health Platform's tracker, an on-demand
  * measurement (red and infrared light, a still arm): started, it reports
  * "completed" with a value after about 13 seconds on a Galaxy Watch7, then
  * "ended"; a moving arm reports "moving" instead.
@@ -30,10 +25,11 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 internal class Spo2Recorder(
     context: Context,
     private val store: MetricStore,
-    private val feed: SamsungHeartRateFeed,
+    private val source: SpotSource<Spo2Reading>,
+    private val debug: DebugProtocol,
     /** Whether sleep is held now; read on the recorder's thread. */
     private val isHolding: () -> Boolean,
-) : SamsungHeartRateFeed.RawSubscriber {
+) : Recorder, SpotSource.Sink<Spo2Reading> {
 
     private val wakeLock = (context.getSystemService(Context.POWER_SERVICE) as PowerManager)
         .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
@@ -49,14 +45,16 @@ internal class Spo2Recorder(
     private var sawMoving = false
 
     val isAvailable: Boolean
-        get() = feed.isAvailable
+        get() = source.isAvailable
 
-    val isRunning: Boolean
+    override val isRunning: Boolean
         get() = thread != null
+
+    override fun apply(plan: RecorderPlan.Plan) = setEnabled(plan.spo2)
 
     /** Starts or stops the recorder. Main thread. */
     fun setEnabled(enabled: Boolean) {
-        if (enabled && feed.isAvailable) start() else stop()
+        if (enabled && source.isAvailable) start() else stop()
     }
 
     private fun start() {
@@ -72,7 +70,7 @@ internal class Spo2Recorder(
         Log.i(TAG, "SpO2 at night on")
     }
 
-    fun stop() {
+    override fun stop() {
         val worker = thread ?: return
         handler?.removeCallbacks(tick)
         handler?.post { endMeasurement(null, "stopped") }
@@ -94,51 +92,51 @@ internal class Spo2Recorder(
 
     private fun beginMeasurement(now: Long) {
         val workerHandler = handler ?: return
-        if (!feed.subscribeRaw(SamsungHealthPlatform.TRACKER_SPO2, this, workerHandler)) {
+        if (!source.start(workerHandler, this)) {
             nextAllowedAt = now + RETRY_GAP_MILLIS
-            DebugProtocol.event("Spo2", "refused")
+            debug.event("Spo2", "refused")
             return
         }
         measuringSince = now
         sawMoving = false
         wakeLock.acquire(MEASUREMENT_TIMEOUT_MILLIS + WAKE_LOCK_SLACK_MILLIS)
         workerHandler.postDelayed(timeout, MEASUREMENT_TIMEOUT_MILLIS)
-        DebugProtocol.event("Spo2", "started")
+        debug.event("Spo2", "started")
     }
 
     override fun onError() {
         endMeasurement(null, "tracker_error")
     }
 
-    override fun onRawPoints(points: List<RawPoint>) {
+    override fun onReadings(readings: List<Spo2Reading>) {
         if (measuringSince == 0L) return
-        val decoded = points.map { it.toSpo2Point() }
-        if (decoded.any { it.status == Spo2Point.STATUS_MOVING }) sawMoving = true
+        if (readings.any { it.moving }) sawMoving = true
         // A completed reading from before this measurement would be an old one the platform kept.
-        val done = decoded.firstOrNull { it.isComplete && it.epochMillis >= measuringSince - STALE_MILLIS } ?: return
+        val done = readings.firstOrNull { it.percent != null && it.epochMillis >= measuringSince - STALE_MILLIS } ?: return
         endMeasurement(done, "completed")
     }
 
-    private fun endMeasurement(result: Spo2Point?, why: String) {
+    private fun endMeasurement(result: Spo2Reading?, why: String) {
         val started = measuringSince
         if (started == 0L) return
         measuringSince = 0L
         handler?.removeCallbacks(timeout)
-        feed.unsubscribeRaw(SamsungHealthPlatform.TRACKER_SPO2, this)
+        source.stop()
         if (wakeLock.isHeld) wakeLock.release()
         val now = System.currentTimeMillis()
-        DebugProtocol.event(
+        debug.event(
             "Spo2", "ended",
             "why" to why, "afterMs" to now - started, "moving" to sawMoving,
             "percent" to result?.percent, "bpm" to result?.bpm,
         )
-        if (result == null) {
+        val percent = result?.percent
+        if (result == null || percent == null) {
             nextAllowedAt = now + RETRY_GAP_MILLIS
             return
         }
         nextAllowedAt = started + MIN_GAP_MILLIS
         val bpm = result.bpm.takeIf { it in WearLinkProtocol.MIN_BPM..WearLinkProtocol.MAX_BPM }
-        store.put(WearMetrics.SPO2, WearLinkProtocol.Spo2Measurement(result.epochMillis, result.percent, bpm))
+        store.put(WearMetrics.SPO2, WearLinkProtocol.Spo2Measurement(result.epochMillis, percent, bpm))
         store.prune(WearMetrics.SPO2, now)
     }
 

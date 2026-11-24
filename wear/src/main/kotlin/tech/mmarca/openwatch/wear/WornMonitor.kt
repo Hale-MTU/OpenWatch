@@ -23,12 +23,15 @@ import android.util.Log
  */
 class WornMonitor(
     private val context: Context,
+    private val debug: DebugProtocol,
     private val onWorn: (epochMillis: Long, worn: Boolean) -> Unit,
     private val onHeartRateWanted: (Boolean) -> Unit,
 ) : SensorEventListener {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private val gate = WornGate()
+
+    /** New at each [start], with [wanted]: a run begins as the service does, with the heart rate wanted. */
+    private var gate = WornGate()
     private var thread: HandlerThread? = null
     private var handler: Handler? = null
 
@@ -56,6 +59,8 @@ class WornMonitor(
             Log.i(TAG, "No off-body sensor; heart rate stays on")
             return
         }
+        gate = WornGate()
+        wanted = true
         val worker = HandlerThread("WornMonitor").apply { start() }
         val workerHandler = Handler(worker.looper)
         if (!sensorManager.registerListener(this, offBody, SensorManager.SENSOR_DELAY_NORMAL, workerHandler)) {
@@ -63,6 +68,7 @@ class WornMonitor(
             Log.w(TAG, "Off-body listener not registered; heart rate stays on")
             return
         }
+        debug.registered("offBody", offBody, SensorManager.SENSOR_DELAY_NORMAL, 0)
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_SCREEN_ON)
             addAction(Intent.ACTION_POWER_DISCONNECTED)
@@ -84,7 +90,7 @@ class WornMonitor(
 
     override fun onSensorChanged(event: SensorEvent) {
         if (event.sensor.type != Sensor.TYPE_LOW_LATENCY_OFFBODY_DETECT) return
-        DebugProtocol.arrival("offbody")
+        debug.arrival("offbody")
         val at = SensorTime.epochMillisOf(event.timestamp)
         // 1 on the body, 0 off it.
         val worn = (event.values.firstOrNull() ?: 1f) >= 0.5f

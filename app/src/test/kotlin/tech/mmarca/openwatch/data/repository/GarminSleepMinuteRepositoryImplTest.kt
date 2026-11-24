@@ -22,8 +22,8 @@ class GarminSleepMinuteRepositoryImplTest {
             minutes.forEach { rows[it.timeMillis] = it }
         }
 
-        override suspend fun minutesBetween(fromMillis: Long, toMillis: Long): List<GarminSleepMinuteEntity> =
-            rows.subMap(fromMillis, toMillis).values.toList()
+        override suspend fun minutesBetween(fromMillis: Long, toMillis: Long, deviceSalt: String): List<GarminSleepMinuteEntity> =
+            rows.subMap(fromMillis, toMillis).values.filter { it.deviceSalt == deviceSalt }
 
         override suspend fun pruneBefore(beforeMillis: Long) {
             rows.headMap(beforeMillis).clear()

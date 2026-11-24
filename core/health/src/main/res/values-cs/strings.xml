@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="health_data_section_garmin">Zapisuje se z hodinek Garmin</string>
+    <string name="health_data_section_wearos">Zapisuje se z hodinek Wear OS</string>
+    <string name="health_data_section_scale">Zapisuje se z váhy</string>
+    <string name="health_data_section_reads">Čte se z Health Connect</string>
+    <string name="health_data_section_watch_app">Žádá o ně aplikace v hodinkách, přímo na hodinkách</string>
+    <string name="health_data_note_garmin_weight">Hmotnost, kterou váha Garmin předá přes hodinky.</string>
+    <string name="health_data_note_wearos_calories">Odhad, kolik energie stála chůze, podle vašich kroků a hmotnosti, a kalorie z tréninku.</string>
+    <string name="health_data_note_wearos_sleep">Jeden odhadnutý spánek za noc a za každé zdřímnutí.</string>
+    <string name="health_data_note_wearos_hrv">V noci, na hodinkách, které ji umějí měřit.</string>
+    <string name="health_data_note_wearos_workout">Trénink, který zaznamenáte na hodinkách, s jeho trasou a vzdáleností.</string>
+    <string name="health_data_note_wearos_breathing">Jen se zapnutou volbou „Dechová frekvence z hodinek“ v Nastavení.</string>
+    <string name="health_data_note_wearos_spo2">Jen z hodinek Samsung se zapnutou volbou „SpO2 každou hodinu v noci“ pro tyto hodinky.</string>
+    <string name="health_data_note_wearos_skin">Jen z hodinek Samsung se zapnutou volbou „Teplota kůže v noci“ pro tyto hodinky. Jeden záznam za noc: rozdíl oproti vaší obvyklé noci.</string>
+    <string name="health_data_note_scale_estimate">Odhadnuto v telefonu z měření váhy a vašeho tělesného profilu.</string>
+    <string name="health_data_read_weight">Pro kalorie z chůze a složení těla z váhy.</string>
+    <string name="health_data_read_height">Pro složení těla z váhy.</string>
+    <string name="health_data_read_exercise">Aby minuta během tréninku nedostala druhý odhad kalorií.</string>
+    <string name="health_data_read_sleep">Aby noc, která už spánek obsahuje, zůstala beze změny.</string>
+    <string name="health_data_read_resting_heart_rate">Aby den, který už klidový srdeční tep obsahuje, zůstal beze změny, a pro tepové zóny, které hodinky ukazují.</string>
+    <string name="health_data_read_heart_rate">Pro váš maximální tep k těmto zónám a pro energii tréninku.</string>
+    <string name="health_data_read_history">Vaše poslední hmotnost a výška bývají starší než 30 dní, které Health Connect bez tohoto přístupu ukáže.</string>
+    <string name="health_data_read_background">Synchronizace spuštěná podle plánu při zavřené aplikaci vidí hmotnosti a tréninky z jiné aplikace jen s tímto přístupem.</string>
+    <string name="health_data_watch_heart_rate">Snímač tepu v hodinkách: tep, noční variabilita srdeční frekvence a odhad spánku.</string>
+    <string name="health_data_watch_background">Aby záznam pokračoval i s vypnutou obrazovkou hodinek.</string>
+    <string name="health_data_watch_skin">Jen na hodinkách Samsung a jen když zapnete teplotu kůže v noci.</string>
+    <string name="health_data_watch_spo2">Jen na hodinkách Samsung a jen když zapnete SpO2 v noci.</string>
+</resources>
