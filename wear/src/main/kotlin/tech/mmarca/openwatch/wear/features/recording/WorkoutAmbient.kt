@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.wear.features.recording
 
 import android.content.Context
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,7 +32,10 @@ import androidx.wear.compose.foundation.rememberAmbientModeManager
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
+import kotlin.math.roundToInt
 import tech.mmarca.openwatch.wear.R
+import tech.mmarca.openwatch.wear.UnitSystem
+import tech.mmarca.openwatch.wear.ui.components.FeetPerMeter
 import tech.mmarca.openwatch.wear.workout.WorkoutSnapshot
 import tech.mmarca.openwatch.wear.workout.sportName
 import tech.mmarca.openwatch.wearlink.WorkoutSport
@@ -39,6 +43,8 @@ import tech.mmarca.openwatch.wearlink.WorkoutSport
 /**
  * The running workout, which stays on the screen in ambient mode: the
  * [interactive] layout while the screen is awake, a dim one of its own in ambient.
+ * The interactive layout leaves composition meanwhile, so what it must find
+ * again (its page, an open dialog) is remembered by the caller, above this.
  *
  * Wear OS 6 keeps an app that targets API 36 visible in ambient mode, dimmed,
  * on every screen. A screen that observes the ambient state draws its own
@@ -52,10 +58,16 @@ import tech.mmarca.openwatch.wearlink.WorkoutSport
  * The ambient layout follows the always-on guidance: black, no buttons,
  * nothing bright, and nothing that would be stale between the system's
  * once-a-minute updates: the time in whole minutes, as of the last ambient
- * tick, and dashes where the heart rate and the distance would be.
+ * tick, and dashes where the heart rate and the distance would be. Its units
+ * are [unitSystem]'s, as on the interactive pages.
  */
 @Composable
-internal fun RunningWorkout(sport: WorkoutSport, snapshot: WorkoutSnapshot, interactive: @Composable () -> Unit) {
+internal fun RunningWorkout(
+    sport: WorkoutSport,
+    snapshot: WorkoutSnapshot,
+    unitSystem: UnitSystem,
+    interactive: @Composable () -> Unit,
+) {
     val manager = rememberAmbientModeManagerIfSupported()
     if (manager == null) {
         interactive()
@@ -68,13 +80,13 @@ internal fun RunningWorkout(sport: WorkoutSport, snapshot: WorkoutSnapshot, inte
         manager.AmbientTickEffect { ticked = latest }
         val ambient = manager.currentAmbientMode is AmbientMode.Ambient
         LaunchedEffect(ambient) { if (ambient) ticked = latest }
-        if (ambient) AmbientWorkout(sport, ticked) else interactive()
+        if (ambient) AmbientWorkout(sport, ticked, unitSystem) else interactive()
     }
 }
 
 /** The ambient layout: sport, minutes, paused, and placeholders for the values that change by the second. */
 @Composable
-private fun AmbientWorkout(sport: WorkoutSport, snapshot: WorkoutSnapshot) {
+private fun AmbientWorkout(sport: WorkoutSport, snapshot: WorkoutSnapshot, unitSystem: UnitSystem) {
     val dim = MaterialTheme.colorScheme.onSurfaceVariant
     ScreenScaffold { contentPadding ->
         Column(
@@ -89,18 +101,11 @@ private fun AmbientWorkout(sport: WorkoutSport, snapshot: WorkoutSnapshot) {
                 color = dim,
             )
             if (snapshot.paused) WorkoutLine(stringResource(R.string.recording_paused), color = dim)
-            for (line in ambientLines(sport, snapshot)) WorkoutLine(line, color = dim)
+            for (line in ambientLines(sport, snapshot, unitSystem)) {
+                val value = line.value
+                WorkoutLine(if (value == null) stringResource(line.text) else stringResource(line.text, value), color = dim)
+            }
         }
-    }
-}
-
-/** The values the interactive layout shows, with the ones that change by the second as dashes. */
-@Composable
-private fun ambientLines(sport: WorkoutSport, snapshot: WorkoutSnapshot): List<String> = valueLines(sport, snapshot).map { line ->
-    when (line.text) {
-        R.string.workout_heart_rate -> stringResource(R.string.workout_heart_rate_placeholder)
-        R.string.workout_distance -> stringResource(R.string.workout_distance_placeholder)
-        else -> stringResource(line.text, line.value)
     }
 }
 
@@ -109,15 +114,33 @@ private fun WorkoutLine(text: String, style: TextStyle = MaterialTheme.typograph
     Text(text, style = style, color = color, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp))
 }
 
-/** One value line: its string and the number it formats. */
-private class ValueLine(val text: Int, val value: Any)
+/** One line of the ambient layout: its string, and the number it formats, or null for a string that takes none. */
+internal data class AmbientLine(@param:StringRes val text: Int, val value: Int? = null)
 
-/** The heart rate (the latest, else the average), distance, steps and height climbed that the sport has. */
-private fun valueLines(sport: WorkoutSport, snapshot: WorkoutSnapshot): List<ValueLine> = buildList {
-    (snapshot.heartRateBpm ?: snapshot.averageHeartRateBpm)?.let { add(ValueLine(R.string.workout_heart_rate, it)) }
-    snapshot.distanceMetres?.let { add(ValueLine(R.string.workout_distance, it / 1000.0)) }
-    snapshot.steps?.takeIf { sport.steps }?.let { add(ValueLine(R.string.workout_steps, it)) }
-    snapshot.ascentMetres?.takeIf { it > 0 }?.let { add(ValueLine(R.string.workout_ascent, it)) }
+/**
+ * The values the workout has, as the ambient layout shows them: the heart
+ * rate and the distance, which change by the second, as dashes with their
+ * unit, then the steps and the height climbed as of the last tick, the
+ * distance's unit and the height in [unitSystem].
+ */
+internal fun ambientLines(sport: WorkoutSport, snapshot: WorkoutSnapshot, unitSystem: UnitSystem): List<AmbientLine> = buildList {
+    val imperial = unitSystem == UnitSystem.IMPERIAL
+    if (snapshot.heartRateBpm != null || snapshot.averageHeartRateBpm != null) {
+        add(AmbientLine(R.string.workout_heart_rate_placeholder))
+    }
+    if (snapshot.distanceMetres != null) {
+        add(AmbientLine(if (imperial) R.string.workout_distance_placeholder_mi else R.string.workout_distance_placeholder))
+    }
+    snapshot.steps?.takeIf { sport.steps }?.let { add(AmbientLine(R.string.workout_steps, it)) }
+    snapshot.ascentMetres?.takeIf { it > 0 }?.let { metres ->
+        add(
+            if (imperial) {
+                AmbientLine(R.string.workout_ascent_ft, (metres * FeetPerMeter).roundToInt())
+            } else {
+                AmbientLine(R.string.workout_ascent, metres)
+            },
+        )
+    }
 }
 
 /** Hours and minutes: in ambient mode the screen changes once a minute, so seconds would be wrong. */

@@ -62,8 +62,6 @@
     <string name="workout_stop">終了</string>
     <string name="workout_saved">ワークアウトを保存しました</string>
     <string name="workout_done">完了</string>
-    <string name="workout_heart_rate">%1$d bpm</string>
-    <string name="workout_distance">%1$.2f km</string>
     <string name="workout_steps">%1$d 歩</string>
     <string name="workout_ascent">上昇 %1$d m</string>
     <string name="workout_sport_walking">ウォーキング</string>

@@ -62,8 +62,6 @@
     <string name="workout_stop">Zakończ</string>
     <string name="workout_saved">Trening zapisany</string>
     <string name="workout_done">Gotowe</string>
-    <string name="workout_heart_rate">%1$d bpm</string>
-    <string name="workout_distance">%1$.2f km</string>
     <string name="workout_steps">Kroki: %1$d</string>
     <string name="workout_ascent">%1$d m w górę</string>
     <string name="workout_sport_walking">Chodzenie</string>

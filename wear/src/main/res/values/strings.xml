@@ -72,13 +72,13 @@
     <string name="workout_stop">Stop</string>
     <string name="workout_saved">Workout saved</string>
     <string name="workout_done">Done</string>
-    <string name="workout_heart_rate">%1$d bpm</string>
-    <string name="workout_distance">%1$.2f km</string>
     <string name="workout_steps">%1$d steps</string>
     <string name="workout_ascent">%1$d m up</string>
+    <string name="workout_ascent_ft">%1$d ft up</string>
     <!-- In ambient mode, where the screen changes once a minute and a live value would be stale. -->
     <string name="workout_heart_rate_placeholder">-- bpm</string>
     <string name="workout_distance_placeholder">-- km</string>
+    <string name="workout_distance_placeholder_mi">-- mi</string>
     <string name="workout_sport_walking">Walking</string>
     <string name="workout_sport_running">Running</string>
     <string name="workout_sport_hiking">Hiking</string>

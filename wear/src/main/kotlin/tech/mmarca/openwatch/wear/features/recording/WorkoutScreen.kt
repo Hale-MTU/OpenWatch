@@ -62,15 +62,21 @@ internal fun WorkoutScreen(unitSystem: UnitSystem, onClose: () -> Unit) {
     val snapshot = state.snapshot
     val sport = state.sport
     when {
-        state.running && sport != null && snapshot != null -> RunningWorkout(sport, snapshot) {
-            RecordingScreen(
-                state = snapshot.toRecordingState(sport, sportName(sport)),
-                fields = workoutFieldsOf(sport, state.gps),
-                unitSystem = unitSystem,
-                zoneBasis = viewModel.zoneBasis,
-                onTogglePause = viewModel::togglePause,
-                onStop = viewModel::stop,
-            )
+        state.running && sport != null && snapshot != null -> {
+            val fields = workoutFieldsOf(sport, state.gps)
+            // Remembered here, above the ambient layout: the page and an open "End workout?" outlive it.
+            val screenState = rememberRecordingScreenState(fields)
+            RunningWorkout(sport, snapshot, unitSystem) {
+                RecordingScreen(
+                    state = snapshot.toRecordingState(sport, sportName(sport)),
+                    fields = fields,
+                    unitSystem = unitSystem,
+                    zoneBasis = viewModel.zoneBasis,
+                    onTogglePause = viewModel::togglePause,
+                    onStop = viewModel::stop,
+                    screenState = screenState,
+                )
+            }
         }
         state.finished && sport != null && snapshot != null -> WorkoutSummaryScreen(
             state = snapshot.toRecordingState(sport, sportName(sport)),

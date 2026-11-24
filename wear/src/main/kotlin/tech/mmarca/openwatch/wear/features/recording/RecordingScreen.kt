@@ -19,6 +19,8 @@ import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.Terrain
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +33,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.pager.HorizontalPager
+import androidx.wear.compose.foundation.pager.PagerState
 import androidx.wear.compose.foundation.pager.rememberPagerState
 import androidx.wear.compose.material3.AlertDialog
 import androidx.wear.compose.material3.AlertDialogDefaults
@@ -63,7 +66,42 @@ import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 import tech.mmarca.openwatch.wear.ui.theme.StepsColor
 import tech.mmarca.openwatch.wear.ui.theme.WorkoutColor
 
-private enum class WorkoutPage { CONTROLS, OVERVIEW, HEART, PACE }
+internal enum class WorkoutPage { CONTROLS, OVERVIEW, HEART, PACE }
+
+/** The pages a workout that reports [fields] has, left to right: the controls, the overview, then the pages its values fill. */
+internal fun workoutPagesOf(fields: Set<WorkoutField>): List<WorkoutPage> = buildList {
+    add(WorkoutPage.CONTROLS)
+    add(WorkoutPage.OVERVIEW)
+    if (WorkoutField.HEART_RATE in fields) add(WorkoutPage.HEART)
+    if (fields.any { it == WorkoutField.PACE || it == WorkoutField.SPEED || it == WorkoutField.ELEVATION }) {
+        add(WorkoutPage.PACE)
+    }
+}
+
+/**
+ * What the running workout's screen keeps while it is not drawn: the page
+ * the wearer is on, and an open "End workout?". `RunningWorkout` takes the
+ * screen out of composition in ambient mode, so its caller remembers this
+ * above it ([rememberRecordingScreenState]) and both are there again when the
+ * watch wakes.
+ */
+@Stable
+class RecordingScreenState internal constructor(
+    internal val pages: List<WorkoutPage>,
+    internal val pagerState: PagerState,
+    confirmStop: MutableState<Boolean>,
+) {
+    internal var confirmStop by confirmStop
+}
+
+/** The screen state of a workout that reports [fields], opened on the overview. */
+@Composable
+fun rememberRecordingScreenState(fields: Set<WorkoutField>): RecordingScreenState {
+    val pages = remember(fields) { workoutPagesOf(fields) }
+    val pagerState = rememberPagerState(initialPage = pages.indexOf(WorkoutPage.OVERVIEW)) { pages.size }
+    val confirmStop = rememberSaveable { mutableStateOf(false) }
+    return remember(pages, pagerState, confirmStop) { RecordingScreenState(pages, pagerState, confirmStop) }
+}
 
 /**
  * A running workout, laid out like the watch makers' own: the overview in
@@ -71,7 +109,8 @@ private enum class WorkoutPage { CONTROLS, OVERVIEW, HEART, PACE }
  * the right. Only pages and values the workout reports in [fields] are shown.
  * The zones are those of [zoneBasis], the maximum and resting rate the phone
  * sent. The screen is not held on: in ambient mode `RunningWorkout` draws its
- * own dim layout instead of this one.
+ * own dim layout instead of this one, and [screenState] is what this one
+ * finds again afterwards.
  */
 @Composable
 fun RecordingScreen(
@@ -81,25 +120,16 @@ fun RecordingScreen(
     zoneBasis: HeartRateZones.Basis,
     onTogglePause: () -> Unit,
     onStop: () -> Unit,
+    screenState: RecordingScreenState = rememberRecordingScreenState(fields),
 ) {
-    val pages = remember(fields) {
-        buildList {
-            add(WorkoutPage.CONTROLS)
-            add(WorkoutPage.OVERVIEW)
-            if (WorkoutField.HEART_RATE in fields) add(WorkoutPage.HEART)
-            if (fields.any { it == WorkoutField.PACE || it == WorkoutField.SPEED || it == WorkoutField.ELEVATION }) {
-                add(WorkoutPage.PACE)
-            }
-        }
-    }
-    val pagerState = rememberPagerState(initialPage = pages.indexOf(WorkoutPage.OVERVIEW)) { pages.size }
-    var confirmStop by rememberSaveable { mutableStateOf(false) }
+    val pages = screenState.pages
+    val pagerState = screenState.pagerState
 
     HorizontalPagerScaffold(pagerState = pagerState) {
         HorizontalPager(state = pagerState) { page ->
             ScreenScaffold {
                 when (pages[page]) {
-                    WorkoutPage.CONTROLS -> ControlsPage(state, onTogglePause, onStop = { confirmStop = true })
+                    WorkoutPage.CONTROLS -> ControlsPage(state, onTogglePause, onStop = { screenState.confirmStop = true })
                     WorkoutPage.OVERVIEW -> OverviewPage(state, fields, unitSystem, zoneBasis)
                     WorkoutPage.HEART -> HeartPage(state, zoneBasis)
                     WorkoutPage.PACE -> PacePage(state, fields, unitSystem)
@@ -109,12 +139,12 @@ fun RecordingScreen(
     }
 
     AlertDialog(
-        visible = confirmStop,
-        onDismissRequest = { confirmStop = false },
+        visible = screenState.confirmStop,
+        onDismissRequest = { screenState.confirmStop = false },
         confirmButton = {
             AlertDialogDefaults.ConfirmButton(
                 onClick = {
-                    confirmStop = false
+                    screenState.confirmStop = false
                     onStop()
                 },
             )

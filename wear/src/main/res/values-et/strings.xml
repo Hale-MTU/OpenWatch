@@ -62,8 +62,6 @@
     <string name="workout_stop">Lõpeta</string>
     <string name="workout_saved">Treening salvestatud</string>
     <string name="workout_done">Valmis</string>
-    <string name="workout_heart_rate">%1$d bpm</string>
-    <string name="workout_distance">%1$.2f km</string>
     <string name="workout_steps">%1$d sammu</string>
     <string name="workout_ascent">%1$d m tõusu</string>
     <string name="workout_sport_walking">Kõndimine</string>
