@@ -1,6 +1,6 @@
 package tech.mmarca.openwatch.wear.features.metric
 
-import kotlin.math.roundToInt
+import java.time.Duration
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wear.R
 
@@ -37,11 +37,13 @@ object HeartZoneDisplay {
         return (zone + within) / HeartRateZones.COUNT
     }
 
-    /** The share of [samples] in each of the five zones; a sample below zone 1 counts towards none. */
-    fun zoneShares(samples: List<Double>, basis: HeartRateZones.Basis): List<Float> {
-        if (samples.isEmpty()) return List(HeartRateZones.COUNT) { 0f }
-        val counts = IntArray(HeartRateZones.COUNT)
-        samples.forEach { bpm -> zoneOf(bpm.roundToInt(), basis)?.let { counts[it]++ } }
-        return counts.map { it.toFloat() / samples.size }
+    /**
+     * Each zone's share of [zoneTime], the time spent in a zone, zone 1 first:
+     * the five add up to one, and time below zone 1 is in neither a share nor
+     * the total. Empty when no time was spent in any zone.
+     */
+    fun timeShares(zoneTime: List<Duration>): List<Float> {
+        val total = zoneTime.sumOf { it.toMillis() }
+        return if (total <= 0L) emptyList() else zoneTime.map { it.toMillis().toFloat() / total }
     }
 }

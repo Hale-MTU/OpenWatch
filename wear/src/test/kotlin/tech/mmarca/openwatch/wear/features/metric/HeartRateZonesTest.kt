@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.wear.features.metric
 
+import java.time.Duration
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -37,12 +38,16 @@ class HeartRateZonesTest {
     }
 
     @Test
-    fun `the zones' shares count each sample in its zone and none below zone 1`() {
-        val basis = HeartRateZones.Basis(maxBpm = 200, restingBpm = 60)
-        val bounds = basis.boundsBpm
-        val samples = listOf(40.0, bounds[0].toDouble(), bounds[0].toDouble(), bounds[4].toDouble())
-        val shares = HeartZoneDisplay.zoneShares(samples, basis)
-        assertEquals(listOf(0.5f, 0f, 0f, 0f, 0.25f), shares)
-        assertEquals(List(5) { 0f }, HeartZoneDisplay.zoneShares(emptyList(), basis))
+    fun `the zones' shares split the time spent in a zone and add up to one`() {
+        val zoneTime = listOf(30L, 0L, 0L, 6L, 4L).map(Duration::ofMinutes)
+        val shares = HeartZoneDisplay.timeShares(zoneTime)
+        assertEquals(listOf(0.75f, 0f, 0f, 0.15f, 0.1f), shares)
+        assertEquals(1f, shares.sum(), 1e-6f)
+    }
+
+    @Test
+    fun `a day with no time in a zone has no shares to draw`() {
+        assertTrue(HeartZoneDisplay.timeShares(List(5) { Duration.ZERO }).isEmpty())
+        assertTrue(HeartZoneDisplay.timeShares(emptyList()).isEmpty())
     }
 }

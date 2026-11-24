@@ -34,11 +34,11 @@ import androidx.wear.compose.material3.Text
 import java.time.LocalDate
 import java.time.format.TextStyle
 import java.util.Locale
-import tech.mmarca.healthcalculations.insights.HeartRateZones
 import kotlin.math.roundToInt
 import tech.mmarca.openwatch.wear.MetricKind
 import tech.mmarca.openwatch.wear.MetricUiState
 import tech.mmarca.openwatch.wear.R
+import tech.mmarca.openwatch.wear.SampleStats
 import tech.mmarca.openwatch.wear.SleepStage
 import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.MetricTile
@@ -72,8 +72,6 @@ fun MetricDetailScreen(
     metric: MetricTile,
     state: MetricUiState,
     unitSystem: UnitSystem,
-    /** What the zones rest on; null draws no zones. */
-    zoneBasis: HeartRateZones.Basis? = null,
     restingHeartRate: Double? = null,
     sleepStages: Map<SleepStage, Double> = emptyMap(),
     /** Starts a spot measurement of this metric; null when the watch cannot measure it. */
@@ -82,9 +80,8 @@ fun MetricDetailScreen(
     val listState = rememberTransformingLazyColumnState()
     val unit = stringResource(metricUnitLabel(metric, unitSystem))
     val stats = remember(metric, state, restingHeartRate) { metricStats(metric, state, restingHeartRate) }
-    val zoneShares = remember(metric, state.today, zoneBasis) {
-        if (metric == MetricTile.HEART_RATE && zoneBasis != null) HeartZoneDisplay.zoneShares(state.today, zoneBasis) else emptyList()
-    }
+    // The bar and the legend read the same shares, so they split the same total.
+    val zoneShares = remember(state.zoneTime) { HeartZoneDisplay.timeShares(state.zoneTime) }
 
     ScreenScaffold(scrollState = listState) { contentPadding ->
         TransformingLazyColumn(state = listState, contentPadding = contentPadding) {
@@ -130,7 +127,7 @@ fun MetricDetailScreen(
                     }
                 }
             }
-            if (zoneShares.any { it > 0f }) {
+            if (zoneShares.isNotEmpty()) {
                 item { ListSubHeader { Text(stringResource(R.string.detail_heart_zones)) } }
                 item {
                     BreakdownSection(
@@ -297,19 +294,27 @@ private fun DayLabels(count: Int) {
     }
 }
 
-private data class MetricStat(@param:StringRes val label: Int, val value: Double)
+internal data class MetricStat(@param:StringRes val label: Int, val value: Double)
 
-/** The stats that make sense for the metric's kind, from the data that is there. */
-private fun metricStats(metric: MetricTile, state: MetricUiState, restingHeartRate: Double?): List<MetricStat> =
+/**
+ * The stats that make sense for the metric's kind, from the data that is
+ * there. A sampled metric's low, average and high are those of its samples
+ * ([MetricUiState.todayStats]) where the chart's points are not the samples.
+ */
+internal fun metricStats(metric: MetricTile, state: MetricUiState, restingHeartRate: Double?): List<MetricStat> =
     buildList {
         if (metric == MetricTile.HEART_RATE && restingHeartRate != null) {
             add(MetricStat(R.string.stat_resting, restingHeartRate))
         }
         when (metric.kind) {
-            MetricKind.SAMPLED -> if (state.today.isNotEmpty()) {
-                add(MetricStat(R.string.stat_low, state.today.min()))
-                add(MetricStat(R.string.stat_average, state.today.average()))
-                add(MetricStat(R.string.stat_high, state.today.max()))
+            MetricKind.SAMPLED -> {
+                val stats = state.todayStats
+                    ?: state.today.takeIf { it.isNotEmpty() }?.let { SampleStats(it.min(), it.average(), it.max()) }
+                if (stats != null) {
+                    add(MetricStat(R.string.stat_low, stats.low))
+                    add(MetricStat(R.string.stat_average, stats.average))
+                    add(MetricStat(R.string.stat_high, stats.high))
+                }
             }
             MetricKind.CUMULATIVE -> {
                 val goal = state.goal
@@ -344,7 +349,6 @@ private fun MetricDetailScreenSampledPreview() {
                 SampleData.metrics.getValue(MetricTile.HEART_RATE),
                 UnitSystem.METRIC,
                 restingHeartRate = 58.0,
-                zoneBasis = SampleData.zoneBasis,
                 onMeasure = {},
             )
         }

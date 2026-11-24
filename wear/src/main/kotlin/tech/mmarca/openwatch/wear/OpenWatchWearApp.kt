@@ -58,15 +58,19 @@ fun OpenWatchWearApp(
                     )
                 }
                 composable(WearRoutes.METRIC) { entry ->
-                    val metric = MetricTile.valueOf(checkNotNull(entry.arguments?.getString(WearRoutes.METRIC_ARG)))
-                    MetricDetailScreen(
-                        metric = metric,
-                        state = currentState.metrics[metric] ?: MetricUiState(),
-                        unitSystem = currentState.preferences.unitSystem,
-                        zoneBasis = currentState.zoneBasis,
-                        restingHeartRate = currentState.metrics[MetricTile.RESTING_HEART_RATE]?.current,
-                        sleepStages = currentState.sleepStages,
-                    )
+                    val metric = WearRoutes.metricOf(entry.arguments?.getString(WearRoutes.METRIC_ARG))
+                    if (metric == null) {
+                        // A name this build has no metric for: back to the dashboard, the start destination.
+                        LaunchedEffect(Unit) { navController.popBackStack(WearRoutes.DASHBOARD, inclusive = false) }
+                    } else {
+                        MetricDetailScreen(
+                            metric = metric,
+                            state = currentState.metrics[metric] ?: MetricUiState(),
+                            unitSystem = currentState.preferences.unitSystem,
+                            restingHeartRate = currentState.metrics[MetricTile.RESTING_HEART_RATE]?.current,
+                            sleepStages = currentState.sleepStages,
+                        )
+                    }
                 }
                 composable(WearRoutes.STATUS) { statusScreen(openWorkout) }
                 composable(WearRoutes.WORKOUT) { workoutScreen { navController.popBackStack() } }

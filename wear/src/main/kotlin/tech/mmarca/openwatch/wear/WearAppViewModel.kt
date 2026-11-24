@@ -16,7 +16,7 @@ class WearAppViewModel(application: Application) : AndroidViewModel(application)
     private val initial = WearUiState(zoneBasis = WearSettings.zoneBasis(application))
 
     val uiState: StateFlow<WearUiState> =
-        readings.metrics()
+        readings.metrics(initial.zoneBasis)
             .map { metrics -> initial.copy(metrics = metrics) }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(StopTimeoutMillis), initial)
 

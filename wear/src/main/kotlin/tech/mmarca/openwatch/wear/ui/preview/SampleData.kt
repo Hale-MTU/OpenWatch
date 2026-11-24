@@ -1,7 +1,9 @@
 package tech.mmarca.openwatch.wear.ui.preview
 
+import java.time.Duration
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wear.MetricUiState
+import tech.mmarca.openwatch.wear.SampleStats
 import tech.mmarca.openwatch.wear.features.recording.RecordingUiState
 import tech.mmarca.openwatch.wear.SleepStage
 import tech.mmarca.openwatch.wear.MetricTile
@@ -25,6 +27,8 @@ object SampleData {
             current = 72.0,
             today = doubles(64, 66, 63, 70, 78, 91, 104, 98, 86, 79, 74, 71, 69, 72, 75, 72),
             week = doubles(68, 71, 66, 70, 74, 69, 73),
+            todayStats = SampleStats(low = 56.0, average = 76.0, high = 118.0),
+            zoneTime = listOf(214L, 61L, 22L, 6L, 0L).map(Duration::ofMinutes),
         ),
         MetricTile.DISTANCE to MetricUiState(
             current = 4_730.0,
