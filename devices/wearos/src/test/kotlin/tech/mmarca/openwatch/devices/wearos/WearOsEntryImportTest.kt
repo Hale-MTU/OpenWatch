@@ -1,0 +1,77 @@
+package tech.mmarca.openwatch.devices.wearos
+
+import androidx.health.connect.client.records.BloodPressureRecord
+import androidx.health.connect.client.records.HeartRateRecord
+import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
+import androidx.health.connect.client.records.HydrationRecord
+import androidx.health.connect.client.records.MindfulnessSessionRecord
+import androidx.health.connect.client.records.WeightRecord
+import androidx.health.connect.client.records.metadata.Device
+import androidx.health.connect.client.records.metadata.Metadata
+import java.time.Duration
+import java.time.Instant
+import java.time.ZoneOffset
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
+import tech.mmarca.openwatch.wearlink.WearLinkEntry.Type
+
+class WearOsEntryImportTest {
+
+    private val zone = ZoneOffset.UTC
+    private val at = 1_794_000_000_000L
+
+    @Test
+    fun `water, weight and blood pressure become their records, entered by hand, under a salted stable id`() {
+        val water = WearOsEntryImport.record(WearLinkEntry.of(at, Type.WATER, 250.0), zone, salt = "s1") as HydrationRecord
+        assertEquals(250.0, water.volume.inMilliliters, 0.001)
+        assertEquals("wearos_entry_water_$at@s1", water.metadata.clientRecordId)
+        assertEquals(Metadata.RECORDING_METHOD_MANUAL_ENTRY, water.metadata.recordingMethod)
+        assertEquals(Device.TYPE_WATCH, water.metadata.device?.type)
+        val weight = WearOsEntryImport.record(WearLinkEntry.of(at, Type.WEIGHT, 72.5), zone) as WeightRecord
+        assertEquals(72.5, weight.weight.inKilograms, 0.001)
+        assertEquals("wearos_entry_weight_$at", weight.metadata.clientRecordId)
+        val pressure = WearOsEntryImport.record(WearLinkEntry.of(at, Type.BLOOD_PRESSURE, 120.0, 80.0), zone) as BloodPressureRecord
+        assertEquals(80.0, pressure.diastolic.inMillimetersOfMercury, 0.001)
+    }
+
+    @Test
+    fun `a spot measurement is actively recorded`() {
+        val pulse = WearOsEntryImport.record(WearLinkEntry.of(at, Type.HEART_RATE, 61.0, measured = true), zone) as HeartRateRecord
+        assertEquals(61L, pulse.samples.single().beatsPerMinute)
+        assertEquals(Metadata.RECORDING_METHOD_ACTIVELY_RECORDED, pulse.metadata.recordingMethod)
+        val hrv = WearOsEntryImport.record(WearLinkEntry.of(at, Type.HRV, 42.5, measured = true), zone) as HeartRateVariabilityRmssdRecord
+        assertEquals(42.5, hrv.heartRateVariabilityMillis, 0.001)
+    }
+
+    @Test
+    fun `a breathing session ends when it was logged`() {
+        val session = WearOsEntryImport.record(WearLinkEntry.of(at, Type.MINDFULNESS, 1.0), zone) as MindfulnessSessionRecord
+        assertEquals(Instant.ofEpochMilli(at), session.endTime)
+        assertEquals(Duration.ofMinutes(1), Duration.between(session.startTime, session.endTime))
+        assertEquals(MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_BREATHING, session.mindfulnessSessionType)
+    }
+
+    @Test
+    fun `a value Health Connect refuses is dropped`() {
+        assertNull(WearOsEntryImport.record(WearLinkEntry.of(at, Type.WEIGHT, 5000.0), zone))
+        assertNull(WearOsEntryImport.record(WearLinkEntry.of(at, Type.HRV, 500.0, measured = true), zone))
+    }
+
+    @Test
+    fun `a breathing session is kept only where Health Connect stores mindfulness, every other type always`() {
+        assertFalse(WearOsEntryImport.isStorable(Type.MINDFULNESS, mindfulness = false))
+        assertTrue(WearOsEntryImport.isStorable(Type.MINDFULNESS, mindfulness = true))
+        for (type in Type.entries - Type.MINDFULNESS) assertTrue(type.name, WearOsEntryImport.isStorable(type, mindfulness = false))
+    }
+
+    @Test
+    fun `every entry type has its record's write grant`() {
+        assertEquals("android.permission.health.WRITE_HYDRATION", WearOsEntryImport.writePermission(Type.WATER))
+        assertEquals("android.permission.health.WRITE_MINDFULNESS", WearOsEntryImport.writePermission(Type.MINDFULNESS))
+        for (type in Type.entries) assertTrue(WearOsEntryImport.writePermission(type).startsWith("android.permission.health.WRITE_"))
+    }
+}

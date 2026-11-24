@@ -37,12 +37,22 @@ import kotlin.math.sign
 import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.ui.components.MetricValueRow
+import tech.mmarca.openwatch.wear.ui.components.PoundsPerKilogram
 import tech.mmarca.openwatch.wear.ui.components.formatCount
 import tech.mmarca.openwatch.wear.ui.components.formatOneDecimal
 import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
-private const val PoundsPerKilogram = 2.20462
+/** The weights the stepper offers, kilograms. */
+private val WeightRangeKg = 20..300
+
+/**
+ * The pressures the steppers offer, mmHg: what a cuff reads, within what
+ * Health Connect stores (a systolic of 20 to 200, a diastolic of 10 to 180),
+ * so an entry the phone cannot write is never made.
+ */
+private val SystolicRange = 70..200
+private val DiastolicRange = 40..150
 
 /**
  * One number picked with the stepper buttons or the crown. [range] is in
@@ -112,13 +122,14 @@ fun WeightEntryScreen(
     onSave: (kilograms: Double) -> Unit,
 ) {
     val perKg = if (unitSystem == UnitSystem.IMPERIAL) PoundsPerKilogram else 1.0
-    var tenths by rememberSaveable { mutableIntStateOf((initialKg * perKg * 10).roundToInt()) }
+    val range = (WeightRangeKg.first * perKg * 10).roundToInt()..(WeightRangeKg.last * perKg * 10).roundToInt()
+    var tenths by rememberSaveable { mutableIntStateOf((initialKg * perKg * 10).roundToInt().coerceIn(range)) }
     ValueStepper(
         title = stringResource(R.string.metric_weight),
         unit = stringResource(if (unitSystem == UnitSystem.IMPERIAL) R.string.unit_lb else R.string.unit_kg),
         value = tenths,
         onValueChange = { tenths = it },
-        range = (WeightRangeKg.first * perKg * 10).roundToInt()..(WeightRangeKg.last * perKg * 10).roundToInt(),
+        range = range,
         format = { formatOneDecimal(it / 10.0) },
         onConfirm = { onSave(tenths / 10.0 / perKg) },
     )
@@ -131,8 +142,8 @@ fun BloodPressureEntryScreen(
     initialDiastolic: Int,
     onSave: (systolic: Int, diastolic: Int) -> Unit,
 ) {
-    var systolic by rememberSaveable { mutableIntStateOf(initialSystolic) }
-    var diastolic by rememberSaveable { mutableIntStateOf(initialDiastolic) }
+    var systolic by rememberSaveable { mutableIntStateOf(initialSystolic.coerceIn(SystolicRange)) }
+    var diastolic by rememberSaveable { mutableIntStateOf(initialDiastolic.coerceIn(DiastolicRange)) }
     var editingDiastolic by rememberSaveable { mutableStateOf(false) }
     val unit = stringResource(R.string.unit_mmhg)
     if (!editingDiastolic) {
@@ -141,7 +152,7 @@ fun BloodPressureEntryScreen(
             unit = unit,
             value = systolic,
             onValueChange = { systolic = it },
-            range = 70..250,
+            range = SystolicRange,
             format = ::formatCount,
             onConfirm = { editingDiastolic = true },
         )
@@ -151,14 +162,12 @@ fun BloodPressureEntryScreen(
             unit = unit,
             value = diastolic,
             onValueChange = { diastolic = it },
-            range = 40..150,
+            range = DiastolicRange,
             format = ::formatCount,
             onConfirm = { onSave(systolic, diastolic) },
         )
     }
 }
-
-private val WeightRangeKg = 20..300
 
 @WearPreviews
 @Composable

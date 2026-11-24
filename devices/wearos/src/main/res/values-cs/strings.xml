@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_watch_wearos_bt_not_paired">Nebyly nalezeny žádné spárované hodinky Wear OS</string>
+    <string name="settings_watch_wearos_app_running">Aplikace OpenWatch pro Wear OS na hodinkách běží</string>
+    <string name="settings_watch_wearos_app_no_answer">Bez odpovědi: hodinky jsou vypnuté, mimo dosah, nebo v nich aplikace OpenWatch není nainstalovaná či neběží.</string>
+    <string name="settings_watch_wearos_status_pending">Čeká se, až tento telefon povolíte v hodinkách. Otevřete v hodinkách OpenWatch a klepněte na Povolit.</string>
+    <string name="settings_watch_wearos_status_unauthorized_mismatch">Hodinky tento telefon odmítly: jeho klíč nesouhlasí. V hodinkách otevřete OpenWatch, zapomeňte tento telefon a pak ověřte znovu.</string>
+    <string name="settings_watch_wearos_status_unauthorized_blocked">Tento telefon je v hodinkách zablokovaný. V hodinkách otevřete OpenWatch a odblokujte ho.</string>
+    <string name="settings_watch_wearos_status_update_watch">Aplikace OpenWatch v hodinkách je starší než tato. Aktualizujte aplikaci v hodinkách.</string>
+    <string name="settings_watch_wearos_status_update_phone">Aplikace OpenWatch v hodinkách je novější než tato. Aktualizujte OpenWatch v telefonu.</string>
+    <string name="settings_watch_wearos_status_protocol">Hodinky odpověděly něčím, co OpenWatch nedokáže přečíst. Aktualizujte obě aplikace a zkuste to znovu.</string>
+</resources>

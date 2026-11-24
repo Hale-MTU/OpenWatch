@@ -25,14 +25,20 @@ internal class NightWindowResult(
 }
 
 /**
- * Where the beats of one night-time HRV window come from. [NightHrvRecorder]
- * owns the schedule, the wake lock and the store; a source only listens
- * between [begin] and [finish]. Every call is on the recorder's thread, and
- * so is every [finish] callback.
+ * Where the beats of one night-time HRV window come from: Samsung's raw PPG
+ * ([PpgWindowSource]) or the Samsung platform's own intervals
+ * (`samsung/SamsungIbiSource`), both built in [WearGraph]. [NightHrvRecorder]
+ * owns the schedule, the wake lock, the store and the fall-back; a source only
+ * listens between [begin] and [finish]. Every call is on the recorder's
+ * thread, and so is every [finish] callback.
  */
 internal interface HrvWindowSource {
     /** Whether this watch can serve the source at all. */
     val isAvailable: Boolean
+
+    /** Whether the last window ended with the source not serving (an error, or nothing at all): a reason to fall back. */
+    val lastWindowFailed: Boolean
+        get() = false
 
     /** Starts listening for the window that opens at [startMillis]. False when the source refused. */
     fun begin(handler: Handler, startMillis: Long): Boolean
@@ -51,7 +57,7 @@ internal interface HrvWindowSource {
  * the batched sensor's gaps lose beats. Whether it can run beside the normal
  * heart rate sensor is not verified on a watch.
  */
-internal class PpgWindowSource(context: Context) : HrvWindowSource, SensorEventListener {
+internal class PpgWindowSource(context: Context, private val debug: DebugProtocol) : HrvWindowSource, SensorEventListener {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val sensor: Sensor? = sensorManager.getSensorList(Sensor.TYPE_ALL).firstOrNull {
@@ -72,6 +78,7 @@ internal class PpgWindowSource(context: Context) : HrvWindowSource, SensorEventL
         startedAt = startMillis
         val registered = try {
             sensorManager.registerListener(this, raw, raw.minDelay.coerceAtLeast(1), 0, handler)
+                .also { if (it) debug.registered("ppgWindow", raw, raw.minDelay.coerceAtLeast(1), 0) }
         } catch (_: SecurityException) {
             Log.w(TAG, "Raw PPG refused")
             false
@@ -102,7 +109,7 @@ internal class PpgWindowSource(context: Context) : HrvWindowSource, SensorEventL
         cancel()
         val result = NightHrv.analyze(t, v)
         val breathing = NightHrv.respiration(t, v)
-        DebugProtocol.event(
+        debug.event(
             "NightHrv", "ppg_window",
             "startedAt" to window, "samples" to t.size, "rmssd" to result?.rmssdMillis, "beats" to result?.beatCount,
             "rrIntervals" to breathing.fromIntervals?.breathsPerMinute, "rrIntervalsShare" to breathing.fromIntervals?.peakShare,

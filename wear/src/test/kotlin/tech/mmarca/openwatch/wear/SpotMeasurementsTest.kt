@@ -1,0 +1,161 @@
+package tech.mmarca.openwatch.wear
+
+import android.app.Application
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowPowerManager
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol
+
+/** The spot measurements over sources that hand their readings at once, and a real store. */
+@RunWith(AndroidJUnit4::class)
+class SpotMeasurementsTest {
+
+    private val app: Application = ApplicationProvider.getApplicationContext()
+    private val store = MetricStore(app, name = null)
+    private val entries = EntryLog(store)
+    private var granted = true
+
+    @After
+    fun close() = store.close()
+
+    /** A source that hands [readings] as soon as it is listened to, and counts its open handles. */
+    private class FakeSensor<T>(private val readings: List<T>, private val refuses: Boolean = false) : SpotSensor<T> {
+        var listened = 0
+        var open = 0
+
+        override fun listen(onReading: (T) -> Unit): AutoCloseable? {
+            listened++
+            if (refuses) return null
+            open++
+            readings.forEach(onReading)
+            return AutoCloseable { open-- }
+        }
+    }
+
+    private fun spot(
+        heartRate: SpotSensor<LiveHeartRate.Reading>? = null,
+        heartBeats: SpotSensor<Double>? = null,
+        pressure: SpotSensor<Float>? = null,
+    ) = SpotMeasurements(
+        app,
+        heartRate = { heartRate },
+        heartBeats = { heartBeats },
+        pressure = { pressure },
+        heartRateGranted = { granted },
+        entries = entries,
+        debug = DebugProtocol.off(),
+        // Long enough for every fake's readings; short where a measurement waits its time out.
+        limitMillis = { 300L },
+    )
+
+    private fun events(spot: SpotMeasurements, kind: SpotKind): List<SpotEvent> =
+        runBlocking { withTimeout(TIMEOUT_MILLIS) { spot.run(kind).toList() } }
+
+    private fun stored(): List<WearLinkEntry> = store.since(WearMetrics.ENTRIES, 0, 100)
+
+    private fun sample(bpm: Int): LiveHeartRate.Reading = LiveHeartRate.Reading.Sample(WearLinkProtocol.HeartRateSample(System.currentTimeMillis(), bpm))
+
+    @Test
+    fun `a heart rate settles, is shown as it comes and is kept as a measured entry`() {
+        val sensor = FakeSensor(
+            listOf(LiveHeartRate.Reading.NoContact, LiveHeartRate.Reading.Unreliable) + List(SpotRules.HEART_RATE_READINGS) { sample(64) },
+        )
+
+        val events = events(spot(heartRate = sensor), SpotKind.HEART_RATE)
+
+        assertEquals(SpotEvent.Waiting(offBody = true), events[0])
+        assertEquals(SpotEvent.Waiting(offBody = false), events[1])
+        assertEquals(List(SpotRules.HEART_RATE_READINGS) { SpotEvent.Live(64.0) }, events.subList(2, events.size - 1))
+        assertEquals(SpotEvent.Result(64.0), events.last())
+        assertEquals(0, sensor.open)
+        val entry = stored().single()
+        assertEquals(WearLinkEntry.Type.HEART_RATE, entry.type)
+        assertEquals(64.0, entry.value, 0.0)
+        assertTrue(entry.measured)
+    }
+
+    @Test
+    fun `a watch off the wrist the whole time says so, and keeps nothing`() {
+        val events = events(spot(heartRate = FakeSensor(listOf(LiveHeartRate.Reading.NoContact))), SpotKind.HEART_RATE)
+
+        assertEquals(SpotEvent.Failed(SpotFailure.OFF_BODY), events.last())
+        assertTrue(stored().isEmpty())
+    }
+
+    @Test
+    fun `too few readings in the time is no signal`() {
+        val events = events(spot(heartRate = FakeSensor(List(3) { sample(70) })), SpotKind.HEART_RATE)
+
+        assertEquals(SpotEvent.Failed(SpotFailure.NO_SIGNAL), events.last())
+    }
+
+    @Test
+    fun `without the grant, without the sensor or with a refused registration nothing is measured`() {
+        val sensor = FakeSensor(List(SpotRules.HEART_RATE_READINGS) { sample(64) })
+        granted = false
+        assertEquals(listOf(SpotEvent.Failed(SpotFailure.PERMISSION_DENIED)), events(spot(heartRate = sensor), SpotKind.HEART_RATE))
+        assertEquals(0, sensor.listened)
+
+        granted = true
+        assertEquals(listOf(SpotEvent.Failed(SpotFailure.NOT_SUPPORTED)), events(spot(), SpotKind.HRV))
+        assertEquals(
+            listOf(SpotEvent.Failed(SpotFailure.FAILED)),
+            events(spot(pressure = FakeSensor(emptyList(), refuses = true)), SpotKind.AIR_PRESSURE),
+        )
+        assertTrue(stored().isEmpty())
+    }
+
+    @Test
+    fun `an HRV is the RMSSD of its beats, the pulse between two beats shown as it runs`() {
+        // Alternating intervals of 800 and 840 ms: an RMSSD of 40 ms.
+        val beats = (0..SpotRules.HRV_MIN_CLEAN_BEATS + 1).runningFold(10_000.0) { at, index -> at + if (index % 2 == 0) 800.0 else 840.0 }
+        val sensor = FakeSensor(beats)
+
+        val events = events(spot(heartBeats = sensor), SpotKind.HRV)
+
+        assertEquals(SpotEvent.Live(75.0), events.first())
+        assertEquals(40.0, (events.last() as SpotEvent.Result).value, 1e-9)
+        assertEquals(0, sensor.open)
+        val entry = stored().single()
+        assertEquals(WearLinkEntry.Type.HRV, entry.type)
+        assertEquals(40.0, entry.value, 1e-3)
+        assertTrue(entry.measured)
+    }
+
+    @Test
+    fun `the air pressure is shown with its altitude, and not kept`() {
+        val events = events(spot(pressure = FakeSensor(listOf(1000f, 1001f, 1002f, 1003f, 1004f, 1100f))), SpotKind.AIR_PRESSURE)
+
+        val result = events.last() as SpotEvent.Result
+        assertEquals(SpotRules.PRESSURE_READINGS, events.count { it is SpotEvent.Live })
+        assertEquals(1002.0, result.value, 1e-9)
+        assertEquals(AscentMinuteCounter.altitudeMetres(1002.0), result.secondary!!, 1e-9)
+        assertTrue(stored().isEmpty())
+    }
+
+    @Test
+    fun `a measurement holds a wake lock of its own while it runs, and lets it go`() {
+        val sensor = FakeSensor(List(SpotRules.HEART_RATE_READINGS) { sample(64) })
+
+        events(spot(heartRate = sensor), SpotKind.HEART_RATE)
+
+        val lock = ShadowPowerManager.getLatestWakeLock()
+        assertEquals("OpenWatch:spot", shadowOf(lock).tag)
+        assertFalse(lock.isHeld)
+    }
+
+    private companion object {
+        const val TIMEOUT_MILLIS = 10_000L
+    }
+}

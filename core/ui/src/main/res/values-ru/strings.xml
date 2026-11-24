@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">Отмена</string>
+    <string name="action_save">Сохранить</string>
+    <string name="action_grant">Предоставить</string>
+    <string name="action_grant_permission">Предоставить разрешение</string>
+    <string name="action_not_now">Не сейчас</string>
+    <string name="screen_error_not_found">Запрошенный элемент не найден.</string>
+    <string name="screen_error_missing_argument">Необходимая информация отсутствует.</string>
+    <string name="screen_error_permission_denied">Для загрузки этих данных требуется разрешение.</string>
+    <string name="screen_error_health_connect_unavailable">Health Connect недоступен на этом устройстве.</string>
+    <string name="screen_error_feature_unavailable">Недоступно на этом устройстве.</string>
+    <string name="message_missing_permissions_title">Некоторые разрешения отсутствуют</string>
+    <string name="watch_permissions_continue">Всё равно продолжить</string>
+    <string name="onboarding_os_bluetooth">Bluetooth</string>
+    <string name="onboarding_os_bluetooth_desc">Поиск и подключение часов, нагрудных пульсометров и других датчиков.</string>
+    <string name="onboarding_os_notifications">Уведомления</string>
+    <string name="onboarding_os_notifications_desc">Прогресс синхронизации, напоминания и уведомления о тренировках.</string>
+    <string name="onboarding_os_location">Местоположение</string>
+    <string name="onboarding_os_location_desc">Необходимо для поиска Bluetooth-устройств в старых версиях Android.</string>
+    <string name="onboarding_os_battery">Неограниченное использование батареи</string>
+    <string name="onboarding_os_battery_desc">Позволяет завершать фоновую синхронизацию, не приостанавливая её из-за энергосбережения. Открывает настройки Android.</string>
+    <string name="onboarding_os_notification_forwarding">Пересылка уведомлений</string>
+    <string name="onboarding_os_notification_forwarding_desc">Отправка уведомлений телефона на подключённые часы. Открывает настройки Android.</string>
+    <string name="onboarding_action_grant_all">Предоставить все</string>
+    <string name="option_not_specified">Не указано</string>
+    <string name="settings_watch_name_label">Название</string>
+    <string name="action_remove">Удалить</string>
+    <string name="screen_error_generic">Не удалось выполнить запрос.</string>
+    <string name="settings_watch_notifications_disclosure_accept">Продолжить</string>
+    <string name="settings_watch_notifications_disclosure_decline">Не сейчас</string>
+    <string name="time_just_now">только что</string>
+    <string name="hc_setup_sync_title">Записывать в Health Connect</string>
+    <string name="hc_setup_sync_body">Выключение приостанавливает любую запись. Устройства хранят записанное, пока запись снова не включат.</string>
+    <string name="health_data_title">Что OpenWatch читает и записывает</string>
+    <string name="settings_watch_notifications_disclosure_title">OpenWatch будет читать ваши уведомления</string>
+    <string name="settings_watch_notifications_disclosure_body">Чтобы показывать уведомления на часах, OpenWatch читает уведомления, которые получает ваш телефон, включая их текст.\n\nОни читаются на этом устройстве и отправляются только на сопряжённые с вами часы через Bluetooth. Ничего не сохраняется в файлах или базе данных, а у OpenWatch нет разрешения на доступ к интернету, поэтому уведомления не могут быть отправлены куда-либо ещё.\n\nВы можете отключить эту функцию в любое время и отозвать доступ к уведомлениям в настройках Android.</string>
+    <string name="home_health_connect">Health Connect</string>
+    <string name="home_health_connect_body">Что OpenWatch может читать и записывать</string>
+    <string name="action_delete">Удалить</string>
+</resources>

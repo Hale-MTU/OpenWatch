@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scale_notification_channel">Vážení z váhy</string>
+    <string name="scale_notification_title">Načítá se vaše vážení</string>
+</resources>

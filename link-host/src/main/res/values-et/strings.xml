@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_streaming_channel">Reaalajas näidud teistele rakendustele</string>
+    <string name="link_streaming_heart_rate">Pulssi saadetakse rakendusse %1$s</string>
+    <string name="link_streaming_heart_rate_steps">Pulssi ja samme saadetakse rakendusse %1$s</string>
+    <string name="link_streaming_keeping">Kell jätkab saatmist rakendusele %1$s</string>
+    <string name="link_streaming_waiting">Ootan kella rakendusele %1$s</string>
+    <string name="link_streaming_from">Seadmest %1$s</string>
+    <string name="link_streaming_waiting_for">Ootan näitu seadmest %1$s</string>
+</resources>

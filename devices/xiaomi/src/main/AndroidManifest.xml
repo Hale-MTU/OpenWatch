@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Merged into the app's manifest. The permissions these components need are declared there,
+     with the reasons the privacy documents give (the scan grants, the companion foreground start,
+     FOREGROUND_SERVICE_CONNECTED_DEVICE). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Where the system delivers the bathroom scale's broadcasts, with the app
+             open or not (ScaleScanRadio.kt). Reached only through this app's own
+             explicit PendingIntent. -->
+        <receiver
+            android:name="tech.mmarca.openwatch.devices.xiaomi.ScaleScanReceiver"
+            android:exported="false" />
+        <!-- Held for the seconds a weigh-in takes, so the scan runs full time. Runs no logic. -->
+        <service
+            android:name="tech.mmarca.openwatch.devices.xiaomi.ScaleListeningService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+    </application>
+</manifest>

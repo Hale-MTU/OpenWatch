@@ -51,7 +51,7 @@ internal fun MaterialScope.metricTileLayout(tile: MetricTileContent, open: Click
         titleSlot = { text(tile.title.layoutString) },
         mainSlot = {
             val parts = buildList {
-                add(basicText(tile.value.layoutString, valueStyle(tile.accent), maxLines = 1))
+                add(basicText(tile.value.layoutString, tileValueStyle(tile.accent), maxLines = 1))
                 add(text(tile.caption.layoutString, typography = Typography.BODY_SMALL, color = colorScheme.onSurfaceVariant))
                 tile.chart?.let { chart ->
                     add(spacer(height = dp(CHART_GAP_DP)))
@@ -85,13 +85,14 @@ private fun chartImage(chart: TileChart.Png, density: Float): LayoutElement =
         .build()
 
 /**
- * The value: large, in the metric's accent, as the phone prints a metric's
- * headline. A plain font on purpose: the Material 3 display and numeral
- * styles use a variable font that some tile renderers drop the text over.
+ * A tile's figure: large, in its metric's accent, as the phone prints a
+ * metric's headline, [sizeSp] high. A plain font on purpose: the Material 3
+ * display and numeral styles use a variable font that some tile renderers
+ * drop the text over.
  */
-private fun valueStyle(accent: Int): FontStyle =
+internal fun tileValueStyle(accent: Int, sizeSp: Float = VALUE_SIZE_SP): FontStyle =
     FontStyle.Builder()
-        .setSize(sp(VALUE_SIZE_SP))
+        .setSize(sp(sizeSp))
         .setWeight(FONT_WEIGHT_BOLD)
         .setColor(colorProp(accent))
         .build()

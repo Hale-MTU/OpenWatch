@@ -14,7 +14,7 @@ class GarminWellnessRepositoryImpl @Inject constructor(
     private val dao: GarminWellnessDao,
 ) : GarminWellnessRepository {
 
-    override suspend fun upsert(samples: List<GarminWellnessSample>) {
+    override suspend fun upsert(samples: List<GarminWellnessSample>, deviceSalt: String) {
         if (samples.isEmpty()) return
         dao.upsertSamples(
             samples.map { sample ->
@@ -22,6 +22,7 @@ class GarminWellnessRepositoryImpl @Inject constructor(
                     metric = sample.metric.storageName,
                     timeMillis = sample.time.toEpochMilli(),
                     value = sample.value,
+                    deviceSalt = deviceSalt,
                 )
             },
         )
@@ -31,12 +32,13 @@ class GarminWellnessRepositoryImpl @Inject constructor(
         metric: GarminWellnessMetric,
         from: Instant,
         to: Instant,
+        deviceSalt: String,
     ): List<GarminWellnessSample> =
-        dao.samplesBetween(metric.storageName, from.toEpochMilli(), to.toEpochMilli())
+        dao.samplesBetween(metric.storageName, from.toEpochMilli(), to.toEpochMilli(), deviceSalt)
             .map { it.toSample(metric) }
 
-    override suspend fun latest(metric: GarminWellnessMetric): GarminWellnessSample? =
-        dao.latest(metric.storageName)?.toSample(metric)
+    override suspend fun latest(metric: GarminWellnessMetric, deviceSalt: String): GarminWellnessSample? =
+        dao.latest(metric.storageName, deviceSalt)?.toSample(metric)
 
     override suspend fun countFor(metric: GarminWellnessMetric): Long =
         dao.countFor(metric.storageName)

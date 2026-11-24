@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="garmin_find_phone_channel">Найти мой телефон</string>
+    <string name="garmin_find_phone_title">Часы ищут этот телефон</string>
+    <string name="garmin_find_phone_body">Нажмите, чтобы прекратить звонок.</string>
+    <string name="garmin_find_phone_stop">Остановить</string>
+</resources>

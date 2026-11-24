@@ -26,7 +26,9 @@ private const val GapAngle = 3f
 fun HeartZoneArc(zone: Int?, progress: Float, modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
         val stroke = 8.dp.toPx()
-        val inset = stroke / 2 + 2.dp.toPx()
+        val dot = stroke * 0.9f
+        // The dot is wider than the stroke: the inset leaves room for it, so it never clips at the screen edge.
+        val inset = dot + 1.dp.toPx()
         val arcSize = Size(size.width - inset * 2, size.height - inset * 2)
         val segment = SweepAngle / HeartZoneColors.size
         HeartZoneColors.forEachIndexed { index, color ->
@@ -46,7 +48,7 @@ fun HeartZoneArc(zone: Int?, progress: Float, modifier: Modifier = Modifier) {
             val center = Offset(size.width / 2, size.height / 2)
             drawCircle(
                 color = HeartZoneColors[zone],
-                radius = stroke * 0.9f,
+                radius = dot,
                 center = Offset(
                     center.x + (radius * cos(angle)).toFloat(),
                     center.y + (radius * sin(angle)).toFloat(),

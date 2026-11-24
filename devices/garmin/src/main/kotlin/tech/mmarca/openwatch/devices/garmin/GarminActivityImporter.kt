@@ -1,0 +1,188 @@
+package tech.mmarca.openwatch.devices.garmin
+
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
+import tech.mmarca.healthcalculations.insights.WorkoutEnergyResult
+import tech.mmarca.healthcalculations.preferences.BodyProfile
+import tech.mmarca.openwatch.activityimport.DefaultActivityEntryTypes
+import tech.mmarca.openwatch.activityimport.ImportedActivityRequest
+import tech.mmarca.openwatch.activityimport.RouteElevationCorrector
+import tech.mmarca.openwatch.activityimport.RouteFileParser
+import tech.mmarca.openwatch.activityimport.toImportWriteRequest
+import tech.mmarca.openwatch.data.repository.contract.BodyProfileRepository
+import tech.mmarca.openwatch.data.repository.contract.GarminActivityPreferences
+import tech.mmarca.openwatch.data.repository.contract.ActivityRepository
+import tech.mmarca.openwatch.domain.model.ActivityRecordSource
+import tech.mmarca.openwatch.domain.model.ActivityWriteRequest
+import tech.mmarca.openwatch.healthconnect.HealthConnectSyncDisabledException
+
+/**
+ * What an activity import did with the files it was given. A file that did not convert is
+ * done with: parsing is deterministic, so a retry cannot help.
+ */
+data class GarminActivityImportResult(
+    val written: Int = 0,
+    /** Skipped because Health Connect write access is missing. */
+    val missingPermission: List<GarminDownloadedFile> = emptyList(),
+    /** The write grants those workouts needed, for the screen's grant button. */
+    val missingWritePermissions: Set<String> = emptySet(),
+    /** Converted, but the Health Connect write failed. */
+    val failedWrites: List<GarminDownloadedFile> = emptyList(),
+    /** Workouts written without calories: the file measured none and the body profile has no weight. */
+    val withoutCaloriesForWantOfWeight: Int = 0,
+    /**
+     * The write permissions whose wellness records the same files carried were left out.
+     * Set by [GarminDownloadImport], which runs the wellness import beside this one.
+     */
+    val wellnessWithheldPermissions: Set<String> = emptySet(),
+) {
+    /**
+     * Files whose workout did not land. The watch archived them on download and will not offer
+     * them again, so their keys are not recorded and their saved copies stay pending: the next
+     * sync imports them from the phone.
+     */
+    val retry: List<GarminDownloadedFile> get() = missingPermission + failedWrites
+}
+
+/**
+ * Imports the activity FIT files a sync pulled, down the same path a folder
+ * import uses ([toImportWriteRequest]), so the two cannot differ. Throws only for
+ * cancellation and for a paused Health Connect sync, which holds every file for later
+ * rather than marking each one failed: per-file failures are reported in the result.
+ */
+@Singleton
+class GarminActivityImporter @Inject constructor(
+    private val activityRepository: ActivityRepository,
+    private val preferencesRepository: GarminActivityPreferences,
+    private val elevationCorrector: RouteElevationCorrector,
+    private val bodyProfile: BodyProfileRepository,
+) {
+
+    /** Imports the activity files in [files] and says which ones must be fetched again. */
+    suspend fun import(files: List<GarminDownloadedFile>): GarminActivityImportResult {
+        val activityFiles = files.filter { it.entry.type == GarminFileType.ACTIVITY }
+        if (activityFiles.isEmpty()) return GarminActivityImportResult()
+
+        val profile = profile()
+        val pending = mutableListOf<Pair<GarminDownloadedFile, ActivityWriteRequest>>()
+        val missingPermission = mutableListOf<GarminDownloadedFile>()
+        val missingWritePermissions = mutableSetOf<String>()
+        val failedWrites = mutableListOf<GarminDownloadedFile>()
+        var withoutCalories = 0
+        for (file in activityFiles) {
+            val imported = try {
+                buildRequest(file, profile)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                GarminLog.log(
+                    "[GARMIN-IMPORT] activity index=${file.entry.fileIndex} " +
+                        "did not convert: $error",
+                )
+                continue
+            } ?: continue
+            val request = imported.request
+            try {
+                if (!activityRepository.hasActivityWritePermission(request)) {
+                    GarminLog.log(
+                        "[GARMIN-IMPORT] activity index=${file.entry.fileIndex} " +
+                            "skipped: write permissions are missing",
+                    )
+                    missingPermission += file
+                    missingWritePermissions += activityRepository.activityWritePermissions(request)
+                    continue
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                GarminLog.log("[GARMIN-IMPORT] permission check failed: $error")
+                failedWrites += file
+                continue
+            }
+            pending += file to request
+            if (imported.energyEstimate is WorkoutEnergyResult.MissingInputs) withoutCalories += 1
+        }
+
+        var written = 0
+        if (pending.isNotEmpty()) {
+            try {
+                activityRepository.writeActivityEntries(pending.map { it.second })
+                written = pending.size
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: HealthConnectSyncDisabledException) {
+                throw error
+            } catch (error: Exception) {
+                // The batch is atomic; retry file by file so only the bad one fails.
+                GarminLog.log("[GARMIN-IMPORT] activity batch failed, retrying singly: $error")
+                for ((file, request) in pending) {
+                    try {
+                        activityRepository.writeActivityEntry(request)
+                        written += 1
+                    } catch (retryError: CancellationException) {
+                        throw retryError
+                    } catch (retryError: HealthConnectSyncDisabledException) {
+                        throw retryError
+                    } catch (retryError: Exception) {
+                        GarminLog.log("[GARMIN-IMPORT] activity write failed: $retryError")
+                        failedWrites += file
+                    }
+                }
+            }
+        }
+        if (written > 0) {
+            // The last imported type seeds the next manual entry's default.
+            preferencesRepository.lastActivityExerciseType = pending.last().second.exerciseType
+            GarminLog.log("[GARMIN-IMPORT] wrote $written watch activities")
+        }
+        return GarminActivityImportResult(
+            written = written,
+            missingPermission = missingPermission,
+            missingWritePermissions = missingWritePermissions,
+            failedWrites = failedWrites,
+            withoutCaloriesForWantOfWeight = withoutCalories,
+        )
+    }
+
+    /** The body profile for the calorie estimates; null when it could not be read, and no estimate is made. */
+    private suspend fun profile(): BodyProfile? = try {
+        bodyProfile.resolve()
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Exception) {
+        GarminLog.log("[GARMIN-IMPORT] could not read the body profile, so no calorie estimates: $error")
+        null
+    }
+
+    private suspend fun buildRequest(file: GarminDownloadedFile, profile: BodyProfile?): ImportedActivityRequest? {
+        // Indexed, not numbered: several files share the 65535 "unset" number.
+        val routeImport = elevationCorrector.correct(
+            RouteFileParser.parseFile(
+                file.bytes,
+                fileName = "${file.entry.type.label}_${file.entry.fileIndex}.fit",
+            ),
+        )
+        // Straight from the file, not through the entry form: exact times, a client id
+        // that is a function of the file, and a record that says a watch made it.
+        return routeImport.toImportWriteRequest(
+            fallbackType = preferredActivityType(requireGpsRoute = routeImport.points.isNotEmpty()),
+            source = ActivityRecordSource.WATCH,
+            profile = profile,
+        )
+    }
+
+    /** Mirror of the settings importer's preferred-type resolution. */
+    private fun preferredActivityType(requireGpsRoute: Boolean) =
+        DefaultActivityEntryTypes
+            .filter { !requireGpsRoute || it.supportsGpsRoute }
+            .ifEmpty { DefaultActivityEntryTypes }
+            .let { activityTypes ->
+                val preferredExerciseType = preferencesRepository.favoriteActivityExerciseType
+                    ?.takeIf { exerciseType -> activityTypes.any { it.exerciseType == exerciseType } }
+                    ?: preferencesRepository.lastActivityExerciseType
+                        ?.takeIf { exerciseType -> activityTypes.any { it.exerciseType == exerciseType } }
+                activityTypes.firstOrNull { it.exerciseType == preferredExerciseType }
+                    ?: activityTypes.first()
+            }
+}

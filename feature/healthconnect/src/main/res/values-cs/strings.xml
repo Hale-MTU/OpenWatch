@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hc_setup_missing_title">Zatím neuděleno:</string>
+    <string name="hc_setup_missing_extra">Přístup na pozadí a k historii je na samostatné stránce: otevřete nastavení Health Connect, pak OpenWatch, pak Další přístup.</string>
+    <string name="hc_setup_intro">OpenWatch kopíruje to, co zaznamenají vaše hodinky a váha, do Health Connect, kde to čte OpenVitals a další aplikace. Nic neopouští telefon: aplikace nemá oprávnění k internetu.</string>
+    <string name="hc_setup_permissions_title">Oprávnění</string>
+    <string name="hc_setup_status_all_granted">Všech %1$d oprávnění uděleno</string>
+    <string name="hc_setup_status_partial">Uděleno %1$d z %2$d oprávnění. Záznam, jehož zápis není povolen, zůstává v zařízení.</string>
+    <string name="hc_setup_status_update">Health Connect je potřeba aktualizovat, než ho OpenWatch bude moci používat.</string>
+    <string name="hc_setup_status_play_store">Health Connect je nainstalován bez Google Play, takže ho na tomto telefonu nelze používat.</string>
+    <string name="hc_setup_status_unavailable">Health Connect není na tomto telefonu k dispozici.</string>
+    <string name="hc_setup_grant">Udělit oprávnění</string>
+    <string name="hc_setup_open_settings">Otevřít nastavení Health Connect</string>
+    <string name="hc_setup_continue">Pokračovat</string>
+</resources>

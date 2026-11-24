@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="health_data_section_garmin">נכתב משעון Garmin</string>
+    <string name="health_data_section_wearos">נכתב משעון Wear OS</string>
+    <string name="health_data_section_scale">נכתב מהמשקל</string>
+    <string name="health_data_section_reads">נקרא מ-Health Connect</string>
+    <string name="health_data_section_watch_app">מבוקש על ידי אפליקציית השעון, בשעון</string>
+    <string name="health_data_note_garmin_weight">שקילה שמשקל Garmin מעביר דרך השעון.</string>
+    <string name="health_data_note_wearos_calories">הערכה של האנרגיה שההליכה צרכה, לפי הצעדים והמשקל שלך, והקלוריות של אימון.</string>
+    <string name="health_data_note_wearos_sleep">סשן משוער אחד לכל לילה ולכל תנומה.</string>
+    <string name="health_data_note_wearos_hrv">בלילה, בשעון שיכול למדוד את זה.</string>
+    <string name="health_data_note_wearos_workout">אימון שהקלטת בשעון, עם המסלול והמרחק שלו.</string>
+    <string name="health_data_note_wearos_breathing">רק כשהאפשרות \"קצב נשימה מהשעון\" מופעלת בהגדרות.</string>
+    <string name="health_data_note_wearos_spo2">רק משעון Samsung, כשהאפשרות \"מדידת SpO2 כל שעה בלילה\" מופעלת עבור השעון הזה.</string>
+    <string name="health_data_note_wearos_skin">רק משעון Samsung, כשהאפשרות \"טמפרטורת העור בלילה\" מופעלת עבור השעון הזה. רשומה אחת לכל לילה: ההפרש מהלילה הרגיל שלך.</string>
+    <string name="health_data_note_scale_estimate">מוערך בטלפון לפי המדידה של המשקל ולפי פרופיל הגוף שלך.</string>
+    <string name="health_data_read_weight">עבור קלוריות ההליכה והרכב הגוף שהמשקל מודד.</string>
+    <string name="health_data_read_height">עבור הרכב הגוף שהמשקל מודד.</string>
+    <string name="health_data_read_exercise">כדי שדקה בתוך אימון לא תקבל הערכת קלוריות שנייה.</string>
+    <string name="health_data_read_sleep">כדי לא לגעת בלילה שכבר יש בו סשן שינה.</string>
+    <string name="health_data_read_resting_heart_rate">כדי לא לגעת ביום שכבר יש בו דופק במנוחה, ועבור אזורי הדופק שהשעון מציג.</string>
+    <string name="health_data_read_heart_rate">הדופק הגבוה ביותר שלך, עבור האזורים האלה, והאנרגיה של אימון.</string>
+    <string name="health_data_read_history">המשקל והגובה האחרונים שלך ישנים לעיתים קרובות יותר מ-30 הימים ש-Health Connect מציג בלי ההרשאה הזו.</string>
+    <string name="health_data_read_background">סנכרון שרץ לפי לוח זמנים, כשהאפליקציה סגורה, יכול לראות משקלים ואימונים של אפליקציה אחרת רק עם ההרשאה הזו.</string>
+    <string name="health_data_watch_heart_rate">חיישן הדופק של השעון: דופק, שונות קצב הלב בלילה והערכת השינה.</string>
+    <string name="health_data_watch_background">כדי להמשיך להקליט כשמסך השעון כבוי.</string>
+    <string name="health_data_watch_skin">רק בשעון Samsung, ורק כשמפעילים טמפרטורת עור בלילה.</string>
+    <string name="health_data_watch_spo2">רק בשעון Samsung, ורק כשמפעילים SpO2 בלילה.</string>
+</resources>
