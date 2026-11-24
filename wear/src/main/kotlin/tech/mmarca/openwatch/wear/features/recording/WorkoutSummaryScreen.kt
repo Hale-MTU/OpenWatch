@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
@@ -20,7 +21,6 @@ import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import tech.mmarca.openwatch.wear.R
-import tech.mmarca.openwatch.wear.RecordingUiState
 import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.MetricTile
 import tech.mmarca.openwatch.wear.ui.components.MetricValueRow
@@ -32,7 +32,10 @@ import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 import tech.mmarca.openwatch.wear.ui.theme.WorkoutColor
 
-/** What a finished workout came to. Rows the workout did not report are left out. */
+/**
+ * What a finished, saved workout came to. Rows the workout did not report are
+ * left out; pace and speed are the workout's average.
+ */
 @Composable
 fun WorkoutSummaryScreen(
     state: RecordingUiState,
@@ -44,7 +47,7 @@ fun WorkoutSummaryScreen(
 
     ScreenScaffold(
         scrollState = listState,
-        edgeButton = { EdgeButton(onClick = onDone) { Text(stringResource(R.string.action_done)) } },
+        edgeButton = { EdgeButton(onClick = onDone) { Text(stringResource(R.string.workout_done)) } },
     ) { contentPadding ->
         TransformingLazyColumn(state = listState, contentPadding = contentPadding) {
             item {
@@ -59,6 +62,15 @@ fun WorkoutSummaryScreen(
                 }
             }
             item {
+                Text(
+                    text = stringResource(R.string.workout_saved),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            item {
                 SummaryRow(
                     label = stringResource(R.string.summary_duration),
                     value = DateUtils.formatElapsedTime(state.elapsedSeconds),
@@ -68,17 +80,36 @@ fun WorkoutSummaryScreen(
                 item {
                     SummaryRow(
                         label = stringResource(R.string.metric_distance),
-                        value = formatMetricValue(MetricTile.DISTANCE, state.distanceMeters.toDouble(), unitSystem),
+                        value = formatWorkoutDistance(state.distanceMeters, unitSystem),
                         unit = stringResource(metricUnitLabel(MetricTile.DISTANCE, unitSystem)),
                     )
                 }
             }
-            if (WorkoutField.PACE in fields && state.speedMetersPerSecond != null) {
+            val averageSpeed = state.averageSpeedMetersPerSecond
+            if (WorkoutField.PACE in fields && averageSpeed != null) {
                 item {
                     SummaryRow(
                         label = stringResource(R.string.recording_pace),
-                        value = formatPace(state.speedMetersPerSecond, unitSystem),
+                        value = formatPace(averageSpeed, unitSystem),
                         unit = stringResource(paceUnit(unitSystem)),
+                    )
+                }
+            }
+            if (WorkoutField.SPEED in fields && averageSpeed != null) {
+                item {
+                    SummaryRow(
+                        label = stringResource(R.string.recording_speed),
+                        value = formatSpeed(averageSpeed, unitSystem),
+                        unit = stringResource(speedUnit(unitSystem)),
+                    )
+                }
+            }
+            if (WorkoutField.STEPS in fields && state.steps != null) {
+                item {
+                    SummaryRow(
+                        label = stringResource(R.string.metric_steps),
+                        value = formatCount(state.steps),
+                        unit = stringResource(R.string.unit_steps),
                     )
                 }
             }
@@ -88,15 +119,6 @@ fun WorkoutSummaryScreen(
                         label = stringResource(R.string.summary_average_heart_rate),
                         value = formatCount(state.averageHeartRateBpm),
                         unit = stringResource(R.string.unit_bpm),
-                    )
-                }
-            }
-            if (WorkoutField.CALORIES in fields && state.caloriesKcal != null) {
-                item {
-                    SummaryRow(
-                        label = stringResource(R.string.metric_active_calories),
-                        value = formatCount(state.caloriesKcal),
-                        unit = stringResource(R.string.unit_kcal),
                     )
                 }
             }
@@ -134,7 +156,7 @@ private fun WorkoutSummaryScreenPreview() {
         AppScaffold {
             WorkoutSummaryScreen(
                 state = SampleData.recording,
-                fields = SampleData.capabilities.workouts.getValue(ActivityType.RUN),
+                fields = SampleData.workoutFields.getValue(ActivityType.RUN),
                 unitSystem = UnitSystem.METRIC,
                 onDone = {},
             )

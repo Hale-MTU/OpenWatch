@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <service
+            android:name="tech.mmarca.openwatch.link.OpenWatchLinkService"
+            android:exported="true">
+            <!--
+                OpenLink: other apps (OpenVitals first) bind it for the body profile, the
+                devices, recording sessions and live readings. No permission: who gets what
+                is decided per call by the trust store, from the caller's signing certificate
+                (link/, openlink/docs/spec.md).
+            -->
+            <intent-filter>
+                <action android:name="tech.mmarca.openlink.action.HOST" />
+            </intent-filter>
+        </service>
+    </application>
+
+</manifest>

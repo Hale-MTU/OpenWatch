@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_section_watches">Orologi</string>
+    <string name="home_section_scale">Bilancia</string>
+    <string name="home_section_app">App</string>
+    <string name="home_settings">Impostazioni</string>
+    <string name="home_settings_body">Profilo corporeo, accesso alle notifiche, informazioni</string>
+</resources>

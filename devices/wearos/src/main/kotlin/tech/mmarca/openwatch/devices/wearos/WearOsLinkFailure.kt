@@ -1,0 +1,79 @@
+package tech.mmarca.openwatch.devices.wearos
+
+import tech.mmarca.openwatch.devices.core.R as CoreR
+import tech.mmarca.openwatch.devices.core.sync.SyncFailure
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol
+
+/**
+ * Why the phone could not get what it wanted from the watch, one case per
+ * thing the user can do about it. A missing Bluetooth permission is not
+ * here: it stays a `SecurityException`, which a sync turns into
+ * `SyncFailure.BluetoothPermission`.
+ */
+sealed class WearOsLinkFailure(message: String, cause: Throwable? = null) : Exception(message, cause) {
+
+    /** The phone's Bluetooth is off. */
+    class BluetoothOff : WearOsLinkFailure("Bluetooth is off")
+
+    /** No bonded device matches the registered watch. */
+    class NotBonded : WearOsLinkFailure("No bonded Wear OS watch matches")
+
+    /** The watch is off, out of range, or its app is not installed or not running. */
+    class NoAnswer(cause: Throwable? = null) : WearOsLinkFailure("The watch did not answer", cause)
+
+    /** The watch is asking the wearer whether to allow this phone. */
+    class PendingConfirmation : WearOsLinkFailure("Waiting for the wearer to allow this phone")
+
+    /** The watch refused this phone's token. */
+    class Unauthorized(val reason: WearLinkProtocol.UnauthorizedReason) : WearOsLinkFailure("Unauthorized: ${reason.word}")
+
+    /** The watch speaks versions [min] to [max]; this phone speaks another. */
+    class VersionMismatch(val min: Int, val max: Int) : WearOsLinkFailure("Protocol version mismatch: watch speaks $min..$max")
+
+    /** The watch answered something the protocol does not allow. */
+    class Protocol(detail: String) : WearOsLinkFailure("Protocol error: $detail")
+
+    /** The watch's refusal code, such as busy. */
+    class Refused(val code: WearLinkProtocol.ErrorCode) : WearOsLinkFailure("Refused: ${code.word}")
+
+    /** The status row this failure stands for. */
+    fun toAppStatus(): WearOsAppStatus = when (this) {
+        is BluetoothOff -> WearOsAppStatus.BLUETOOTH_OFF
+        is NotBonded -> WearOsAppStatus.NOT_PAIRED
+        is NoAnswer -> WearOsAppStatus.NO_ANSWER
+        is PendingConfirmation -> WearOsAppStatus.PENDING_CONFIRMATION
+        is Unauthorized -> when (reason) {
+            WearLinkProtocol.UnauthorizedReason.MISMATCH -> WearOsAppStatus.UNAUTHORIZED_MISMATCH
+            WearLinkProtocol.UnauthorizedReason.BLOCKED -> WearOsAppStatus.UNAUTHORIZED_BLOCKED
+        }
+        // No version in common: the watch's range is wholly past this phone's, or wholly before it.
+        is VersionMismatch -> if (min > WearLinkProtocol.VERSION) WearOsAppStatus.UPDATE_PHONE else WearOsAppStatus.UPDATE_WATCH
+        is Protocol -> WearOsAppStatus.PROTOCOL_ERROR
+        is Refused -> WearOsAppStatus.NO_ANSWER
+    }
+
+    /**
+     * The sync failure this stands for. Bluetooth off is everyone's; the rest is this link's own
+     * state, in its own words. No answer may clear up by itself, so the schedule retries it.
+     */
+    fun toSyncFailure(): SyncFailure = when (val status = toAppStatus()) {
+        WearOsAppStatus.BLUETOOTH_OFF -> SyncFailure.BluetoothOff
+        WearOsAppStatus.NO_ANSWER -> SyncFailure.Described(status.messageRes(), transient = true)
+        else -> SyncFailure.Described(status.messageRes())
+    }
+}
+
+/** The sentence for a status that is not success. */
+fun WearOsAppStatus.messageRes(): Int = when (this) {
+    // Every family's words for it: the sync failure screen says the same (:devices:core's string).
+    WearOsAppStatus.BLUETOOTH_OFF -> CoreR.string.settings_watch_wearos_status_bluetooth_off
+    WearOsAppStatus.NOT_PAIRED -> R.string.settings_watch_wearos_bt_not_paired
+    WearOsAppStatus.NO_ANSWER -> R.string.settings_watch_wearos_app_no_answer
+    WearOsAppStatus.PENDING_CONFIRMATION -> R.string.settings_watch_wearos_status_pending
+    WearOsAppStatus.UNAUTHORIZED_MISMATCH -> R.string.settings_watch_wearos_status_unauthorized_mismatch
+    WearOsAppStatus.UNAUTHORIZED_BLOCKED -> R.string.settings_watch_wearos_status_unauthorized_blocked
+    WearOsAppStatus.UPDATE_WATCH -> R.string.settings_watch_wearos_status_update_watch
+    WearOsAppStatus.UPDATE_PHONE -> R.string.settings_watch_wearos_status_update_phone
+    WearOsAppStatus.PROTOCOL_ERROR -> R.string.settings_watch_wearos_status_protocol
+    WearOsAppStatus.APP_RUNNING -> R.string.settings_watch_wearos_app_running
+}

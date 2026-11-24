@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scale_notification_channel">Pesajes de la báscula</string>
+    <string name="scale_notification_title">Leyendo tu pesaje</string>
+</resources>

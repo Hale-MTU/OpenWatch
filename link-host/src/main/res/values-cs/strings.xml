@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_streaming_channel">Živá měření pro jiné aplikace</string>
+    <string name="link_streaming_heart_rate">Tep se odesílá do %1$s</string>
+    <string name="link_streaming_heart_rate_steps">Tep a kroky se odesílají do %1$s</string>
+    <string name="link_streaming_keeping">Hodinky zůstávají ve vysílání pro %1$s</string>
+    <string name="link_streaming_waiting">Čeká se na hodinky, pro %1$s</string>
+    <string name="link_streaming_from">Z %1$s</string>
+    <string name="link_streaming_waiting_for">Čeká se na měření z %1$s</string>
+</resources>

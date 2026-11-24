@@ -42,9 +42,11 @@ import tech.mmarca.openwatch.wear.ui.theme.HydrationColor
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
- * [tiles] is what the user chose to see, in their order. The first three of
- * them with a daily goal also show as activity rings at the top. The measure
- * button only appears when the watch supports at least one measurement.
+ * Today's [tiles], the ones the wearer chose, in their order ([onEditTiles]
+ * changes them). The first three of them with a daily goal also show as
+ * activity rings at the top, and the quick log is one tap below them
+ * ([onQuickLog]), after the spot measurements ([onMeasure]) where the watch
+ * can take one ([canMeasure]).
  */
 @Composable
 fun DashboardScreen(

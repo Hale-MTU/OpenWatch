@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 9.4.1" type="baseline" client="gradle" dependencies="false" name="AGP (9.4.1)" variant="all" version="9.4.1">
+
+    <issue
+        id="MissingQuantity"
+        message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
+        errorLine1="    &lt;plurals name=&quot;settings_watch_synced_files&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-it/strings.xml"
+            line="153"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="MissingQuantity"
+        message="For locale &quot;pt&quot; (Portuguese) the following quantity should also be defined: `many`"
+        errorLine1="    &lt;plurals name=&quot;settings_watch_synced_files&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="153"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="MissingQuantity"
+        message="For locale &quot;it&quot; (Italian) the following quantity should also be defined: `many`"
+        errorLine1="    &lt;plurals name=&quot;home_watch_more&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-it/strings.xml"
+            line="511"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="MissingQuantity"
+        message="For locale &quot;pt&quot; (Portuguese) the following quantity should also be defined: `many`"
+        errorLine1="    &lt;plurals name=&quot;home_watch_more&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="511"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="PluralsCandidate"
+        message="Formatting %d followed by words (&quot;steps&quot;): This should probably be a plural rather than a string"
+        errorLine1="    &lt;string name=&quot;home_watch_live_steps&quot;>%1$d steps&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="13"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>All %2$d permissions granted&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values/strings.xml"
+            line="22"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>Alle %2$d Berechtigungen erteilt&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-de/strings.xml"
+            line="464"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>Kõik %2$d luba on antud&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-et/strings.xml"
+            line="464"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>Kaikki %2$d käyttöoikeutta myönnetty&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fi/strings.xml"
+            line="464"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>Tutte le %2$d autorizzazioni concesse&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-it/strings.xml"
+            line="464"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>Todas as %2$d permissões concedidas&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pt/strings.xml"
+            line="464"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>已授予全部 %2$d 项权限&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="464"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>Os %2$d permisos están concedidos&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-gl/strings.xml"
+            line="468"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>%2$d 件の権限をすべて許可済み&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="468"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>Los %2$d permisos están concedidos&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-es/strings.xml"
+            line="469"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>Les %2$d autorisations sont accordées&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-fr/strings.xml"
+            line="469"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>Všech %2$d oprávnění uděleno&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-cs/strings.xml"
+            line="474"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>Udzielono wszystkich uprawnień (%2$d)&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-pl/strings.xml"
+            line="474"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="StringFormatCount"
+        message="Formatting string &apos;`hc_setup_status_granted`&apos; is not referencing numbered arguments [1]"
+        errorLine1="    &lt;string name=&quot;hc_setup_status_granted&quot;>Все разрешения предоставлены (%2$d)&lt;/string>"
+        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="src/main/res/values-ru/strings.xml"
+            line="474"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UnusedQuantity"
+        message="For language &quot;ja&quot; (Japanese) the following quantities are not relevant: `one`"
+        errorLine1="    &lt;plurals name=&quot;settings_watch_synced_files&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="21"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UnusedQuantity"
+        message="For language &quot;zh&quot; (Chinese) the following quantities are not relevant: `one`"
+        errorLine1="    &lt;plurals name=&quot;settings_watch_synced_files&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="157"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UnusedQuantity"
+        message="For language &quot;zh&quot; (Chinese) the following quantities are not relevant: `one`"
+        errorLine1="    &lt;plurals name=&quot;home_watch_more&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-zh-rCN/strings.xml"
+            line="511"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="UnusedQuantity"
+        message="For language &quot;ja&quot; (Japanese) the following quantities are not relevant: `one`"
+        errorLine1="    &lt;plurals name=&quot;home_watch_more&quot;>"
+        errorLine2="    ^">
+        <location
+            file="src/main/res/values-ja/strings.xml"
+            line="515"
+            column="5"/>
+    </issue>
+
+    <issue
+        id="ObsoleteSdkInt"
+        message="This folder configuration (`v26`) is unnecessary; `minSdkVersion` is 26. Merge all the resources in this folder into `mipmap-anydpi`.">
+        <location
+            file="src/main/res/mipmap-anydpi-v26"/>
+    </issue>
+
+</issues>

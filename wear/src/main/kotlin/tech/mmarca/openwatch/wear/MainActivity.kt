@@ -1,7 +1,5 @@
 package tech.mmarca.openwatch.wear
 
-import tech.mmarca.openwatch.wear.workout.WorkoutScreen
-import tech.mmarca.openwatch.wear.workout.WorkoutState
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -10,39 +8,44 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import tech.mmarca.openwatch.wear.features.settings.PhoneScreen
-import tech.mmarca.openwatch.wear.features.settings.SensorAccess
-import tech.mmarca.openwatch.wear.features.settings.SensorAccessScreen
-import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
- * The watch app: the dashboard, tiles' screens and quick log, with the link
- * and recorder status one step down in Settings. Asks for the permissions
- * the link and the recorders need; each part starts on its own once
- * granted. The recording itself lives in [WearAppService], so closing the
- * app changes nothing.
+ * The watch app: today's dashboard, with the quick log, the workout recorder
+ * and the settings one step down, the link and recorder status below them.
+ * Asks for the permissions the link and the recorders need; each part
+ * starts on its own once granted. The recording itself lives in
+ * [WearAppService], so closing the app changes nothing.
+ *
+ * One instance (`singleTask`): a tile, the watch face pill or a notification
+ * reaches the one already open. A tile may name the screen to open
+ * ([EXTRA_ROUTE]), which `OpenWatchWearApp` opens once if a tile may open it
+ * (`WearRoutes.isDeepLinkable`).
  */
 class MainActivity : ComponentActivity() {
 
     private val viewModel: WearAppViewModel by viewModels()
-    private val store by lazy { MetricStore(this) }
-    private val trust by lazy { WearTrustStore(this) }
+    private val graph by lazy { wearGraph }
 
-    private var permissionsVersion by mutableStateOf(0)
+    /** Bumped when the watch face pill opens the app again: a running workout comes forward. */
+    private var workoutRequests by mutableIntStateOf(0)
 
-    /** A screen a tile asked for, opened once and then cleared. */
-    private var pendingRoute by mutableStateOf<String?>(null)
+    /** The screen a tile asked for, until the navigation has opened it. */
+    private var deepLink by mutableStateOf<String?>(null)
+
+    /** What the screens ask of the activity. */
+    private val actions = ActivityActions(
+        requestGrants = ::requestMissingPermissions,
+        openBluetoothSettings = ::openBluetoothSettings,
+    )
 
     private val requestPermissions = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions(),
     ) {
-        permissionsVersion++
         WearAppService.startIfPermitted(this)
         // The background grant is asked on its own, and only after the foreground one.
         requestBackgroundHeartRateIfNeeded()
@@ -51,113 +54,38 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestMissingPermissions()
-
-        pendingRoute = intent.getStringExtra(EXTRA_ROUTE)
+        // A recreated activity has its screens back already; the extra was for its first start.
+        if (savedInstanceState == null) deepLink = intent.getStringExtra(EXTRA_ROUTE)
 
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-            val link by WearLinkState.state.collectAsStateWithLifecycle()
-            // Read again on every resume: a grant can change in the system settings.
-            val settings = remember(link, permissionsVersion) {
-                SettingsUiState.from(
-                    link = link,
-                    sensorAccessGranted = WearPermissions.hasHeartRate(this) &&
-                        WearPermissions.hasHeartRateInBackground(this),
-                )
-            }
-            // A running or just finished workout takes the screen.
-            val workout by WorkoutState.state.collectAsStateWithLifecycle()
-            var workoutOpen by remember { mutableStateOf(false) }
-            if (workoutOpen || workout.running || workout.finished) {
-                OpenWatchWearTheme { WorkoutScreen(onClose = { workoutOpen = false }) }
-                return@setContent
-            }
+            val workout by graph.workoutState.state.collectAsStateWithLifecycle()
             OpenWatchWearApp(
-                state = uiState.copy(settings = settings),
+                state = uiState,
+                workoutActive = workout.running || workout.finished,
+                workoutRequests = workoutRequests,
+                deepLink = deepLink,
+                onDeepLinkHandled = { deepLink = null },
                 onLog = viewModel::log,
-                deepLinkRoute = pendingRoute,
-                onDeepLinkHandled = { pendingRoute = null },
-                onStartWorkout = { workoutOpen = true },
-                statusScreen = { StatusScreen(onOpenWorkout = { workoutOpen = true }) },
-                phoneScreen = { PhoneRoute() },
-                sensorScreen = { onOpenDetails -> SensorAccessRoute(onOpenDetails) },
+                onEditTiles = viewModel::editTiles,
+                onResetTiles = viewModel::resetTiles,
+                spot = graph.spot::run,
+                actions = actions,
             )
         }
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        pendingRoute = intent.getStringExtra(EXTRA_ROUTE)
+        setIntent(intent)
+        deepLink = intent.getStringExtra(EXTRA_ROUTE)
+        workoutRequests++
     }
 
     override fun onResume() {
         super.onResume()
-        // Also catches a grant made in the system settings.
-        permissionsVersion++
+        // Also catches a grant made in the system settings; the status and settings screens read the grants again by themselves.
         WearAppService.startIfPermitted(this)
-    }
-
-    /** What the watch records, whether the phone can reach it, and which phones may. */
-    @Composable
-    private fun StatusScreen(onOpenWorkout: () -> Unit) {
-        WatchStatusScreen(
-            onOpenWorkout = onOpenWorkout,
-            permissionsVersion = permissionsVersion,
-            hasHeartRate = { WearPermissions.hasHeartRate(this) },
-            hasBluetooth = { WearPermissions.hasBluetooth(this) },
-            hasSteps = { WearPermissions.hasActivityRecognition(this) },
-            hasStepCounter = StepRecorder.hasStepCounter(this),
-            readLatest = { store.latest(WearMetrics.HEART_RATE) },
-            readCount = { store.count(WearMetrics.HEART_RATE) },
-            readMinuteCount = { store.count(WearMetrics.SLEEP_MINUTES) },
-            readStepMinuteCount = { store.count(WearMetrics.STEPS) },
-            ppgLogAvailable = PpgRawLogger(this).isAvailable,
-            readSamsungDiagnostics = { SamsungDiagnostics.consentOn(contentResolver) },
-            onTogglePpgLog = { WearAppService.togglePpgLog(this) },
-            onGrant = ::requestMissingPermissions,
-            onAllow = { pending ->
-                trust.trust(pending.address, pending.token, pending.name)
-                WearPhoneRequests.cancel(this)
-            },
-            onBlock = { pending ->
-                trust.block(pending.address)
-                WearPhoneRequests.cancel(this)
-            },
-            onOpenBluetoothSettings = ::openBluetoothSettings,
-        )
-    }
-
-    /** The phones that may read this watch, and the link they use. */
-    @Composable
-    private fun PhoneRoute() {
-        val link by WearLinkState.state.collectAsStateWithLifecycle()
-        PhoneScreen(
-            link = link,
-            bluetoothGranted = remember(permissionsVersion) { WearPermissions.hasBluetooth(this) },
-            onAllow = { pending ->
-                trust.trust(pending.address, pending.token, pending.name)
-                WearPhoneRequests.cancel(this)
-            },
-            onBlock = { pending ->
-                trust.block(pending.address)
-                WearPhoneRequests.cancel(this)
-            },
-            onOpenBluetoothSettings = ::openBluetoothSettings,
-        )
-    }
-
-    /** One row per grant the watch app uses. */
-    @Composable
-    private fun SensorAccessRoute(onOpenDetails: () -> Unit) {
-        val access = remember(permissionsVersion) {
-            SensorAccess(
-                heartRate = WearPermissions.hasHeartRate(this),
-                heartRateInBackground = WearPermissions.hasHeartRateInBackground(this),
-                steps = WearPermissions.hasActivityRecognition(this).takeIf { StepRecorder.hasStepCounter(this) },
-                nearbyDevices = WearPermissions.hasBluetooth(this),
-            )
-        }
-        SensorAccessScreen(access = access, onGrant = ::requestMissingPermissions, onOpenDetails = onOpenDetails)
     }
 
     private fun openBluetoothSettings() {
@@ -193,7 +121,7 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
-        /** Extra a tile sets to open a screen; see [WearRoutes.isDeepLinkable]. */
+        /** The screen a tile opens the app at, a route; see `WearRoutes.isDeepLinkable`. */
         const val EXTRA_ROUTE = "tech.mmarca.openwatch.wear.ROUTE"
     }
 }

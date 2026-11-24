@@ -17,13 +17,13 @@ class GarminSleepMinuteRepositoryImpl @Inject constructor(
     private val dao: GarminSleepMinuteDao,
 ) : GarminSleepMinuteRepository {
 
-    override suspend fun upsert(minutes: List<GarminSleepMinute>) {
+    override suspend fun upsert(minutes: List<GarminSleepMinute>, deviceSalt: String) {
         if (minutes.isEmpty()) return
-        dao.upsertMinutes(minutes.map { it.toEntity() })
+        dao.upsertMinutes(minutes.map { it.toEntity(deviceSalt) })
     }
 
-    override suspend fun minutesBetween(from: Instant, to: Instant): List<GarminSleepMinute> =
-        dao.minutesBetween(from.toEpochMilli(), to.toEpochMilli()).mapNotNull { it.toMinute() }
+    override suspend fun minutesBetween(from: Instant, to: Instant, deviceSalt: String): List<GarminSleepMinute> =
+        dao.minutesBetween(from.toEpochMilli(), to.toEpochMilli(), deviceSalt).mapNotNull { it.toMinute() }
 
     override suspend fun pruneBefore(before: Instant) {
         dao.pruneBefore(before.toEpochMilli())
@@ -33,7 +33,8 @@ class GarminSleepMinuteRepositoryImpl @Inject constructor(
         dao.deleteAll()
     }
 
-    private fun GarminSleepMinute.toEntity(): GarminSleepMinuteEntity = GarminSleepMinuteEntity(
+    private fun GarminSleepMinute.toEntity(deviceSalt: String): GarminSleepMinuteEntity = GarminSleepMinuteEntity(
+        deviceSalt = deviceSalt,
         timeMillis = time.toEpochMilli(),
         kind = kind.storageName,
         heartRate = heartRate,

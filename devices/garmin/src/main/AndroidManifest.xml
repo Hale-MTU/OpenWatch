@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Merged into the app's manifest. The permissions the Garmin stack needs are declared there,
+     with the reasons the privacy documents give. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- The find-my-phone notification's stop action (GarminFindPhoneRinger). -->
+        <receiver
+            android:name="tech.mmarca.openwatch.devices.garmin.GarminFindPhoneStopReceiver"
+            android:exported="false" />
+    </application>
+</manifest>

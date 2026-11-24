@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.wear.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import tech.mmarca.openwatch.wear.SleepStage
 
 // Copied from the phone app's ui/theme/Color.kt. The two modules share no
 // code yet, so a colour changed there has to be changed here too.
@@ -39,6 +40,15 @@ val SleepAwakeColor = Color(0xFFE8A54B)
 val SleepRemColor = Color(0xFF8FB4F2)
 val SleepLightColor = Color(0xFF6C5CD6)
 val SleepDeepColor = Color(0xFF3B2F91)
+
+/** A sleep stage's color in the charts. */
+val SleepStage.color: Color
+    get() = when (this) {
+        SleepStage.AWAKE -> SleepAwakeColor
+        SleepStage.REM -> SleepRemColor
+        SleepStage.LIGHT -> SleepLightColor
+        SleepStage.DEEP -> SleepDeepColor
+    }
 
 // Surface variants
 val SurfaceDark = Color(0xFF1A1C1E)
