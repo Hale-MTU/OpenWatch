@@ -82,6 +82,8 @@ class LinkDevicesTest {
         assertEquals(now.toEpochMilli(), garmin.lastSyncedAtMillis)
         assertEquals(setOf(OpenLinkSampleType.HEART_RATE, OpenLinkSampleType.STEPS), garmin.liveSampleTypes)
         assertEquals(OpenLinkConnection.CONNECTED, devices[1].connection)
+        // A RECORD start is refused (LinkLiveSessions) until a watch can record one, so none is offered it.
+        assertTrue(devices.all { it.recordingFeatures.isEmpty() })
         assertEquals(setOf(OpenLinkSampleType.HEART_RATE), devices[1].liveSampleTypes)
         val scale = devices[2]
         assertEquals(OpenLinkDeviceKind.SCALE, scale.kind)
