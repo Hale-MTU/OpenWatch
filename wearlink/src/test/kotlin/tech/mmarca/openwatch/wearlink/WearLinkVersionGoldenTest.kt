@@ -22,7 +22,7 @@ class WearLinkVersionGoldenTest {
     private val token = WearLinkToken.generate()
 
     /** This build's phone, as `BluetoothWearOsNodePort` says hello. */
-    private val newHello = WearLinkProtocol.Hello(WearLinkProtocol.VERSION, setOf(WearLinkProtocol.CAP_CLOCK), token, "Pixel 6 Pro")
+    private val newHello = WearLinkProtocol.Hello(WearLinkProtocol.VERSION, setOf(WearLinkProtocol.CAP_CLOCK, WearLinkProtocol.CAP_BODY_COMPOSITION), token, "Pixel 6 Pro")
 
     @Test
     fun `a new phone and a 0_4_0 or 0_4_1 watch end in the phone telling the wearer to update the watch`() {
@@ -36,7 +36,7 @@ class WearLinkVersionGoldenTest {
             watch.join(5_000)
 
             assertEquals(build, WearLinkOutcome.VersionMismatch(4, 4), outcome)
-            assertEquals(build, listOf("> HELLO 5 tm $token Pixel 6 Pro", "< VERSION 4 4"), transcript.lines)
+            assertEquals(build, listOf("> HELLO 5 bc,tm $token Pixel 6 Pro", "< VERSION 4 4"), transcript.lines)
             // The phone's own reading of it: nothing in common, the watch's range below this phone's.
             assertEquals(null, WearLinkClient.commonVersion(WearLinkClient.VERSIONS, 4..4))
         }
@@ -84,7 +84,7 @@ class WearLinkVersionGoldenTest {
 
         assertEquals(
             listOf(
-                "> HELLO 5 tm $token Pixel 6 Pro",
+                "> HELLO 5 bc,tm $token Pixel 6 Pro",
                 "< OK 5 as,hr,hv,sm,st,tm 1763800000000 Galaxy Watch8 (89FZ)",
                 "> SINCE hr t0 2000",
                 "< HR 1700000000000 61",
@@ -111,9 +111,9 @@ class WearLinkVersionGoldenTest {
 
         val session = (outcome as WearLinkOutcome.Ok).value
         assertEquals(5, session.peer.version)
-        assertEquals(listOf("> HELLO 6 tm $token Pixel 6 Pro", "< VERSION 5 5"), first.lines)
+        assertEquals(listOf("> HELLO 6 bc,tm $token Pixel 6 Pro", "< VERSION 5 5"), first.lines)
         assertEquals(WearLinkServer.Outcome.VERSION_MISMATCH, firstLink.serverOutcome())
-        assertEquals("> HELLO 5 tm $token Pixel 6 Pro", second.lines.first())
+        assertEquals("> HELLO 5 bc,tm $token Pixel 6 Pro", second.lines.first())
         assertTrue(second.lines[1].startsWith("< OK 5 "))
         session.close()
         assertEquals(WearLinkServer.Outcome.SERVED, again!!.serverOutcome())

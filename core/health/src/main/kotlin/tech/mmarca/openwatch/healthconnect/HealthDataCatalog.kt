@@ -115,6 +115,8 @@ object HealthDataCatalog {
             write(BloodPressureRecord::class, R.string.health_data_note_wearos_entry),
             write(MindfulnessSessionRecord::class, R.string.health_data_note_wearos_mindfulness),
             write(BodyFatRecord::class, R.string.health_data_note_wearos_entry),
+            write(LeanBodyMassRecord::class, R.string.health_data_note_wearos_entry),
+            write(BodyWaterMassRecord::class, R.string.health_data_note_wearos_entry),
             write(BodyTemperatureRecord::class, R.string.health_data_note_wearos_entry),
             write(BloodGlucoseRecord::class, R.string.health_data_note_wearos_entry),
             write(HeightRecord::class, R.string.health_data_note_wearos_entry),
