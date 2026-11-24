@@ -232,6 +232,20 @@ class WearReadingsTest {
     }
 
     @Test
+    fun aWorkoutsOneASecondCountsLikeTheDaysGridInTheMeanButEveryReadingInTheZones() {
+        // An hour below the zones at 55 every ten seconds, then ten minutes of a workout at 150 every second.
+        val rest = (0 until 360).map { HeartRateSample(at(today, 8, 0) + it * 10_000L, 55) }
+        val workout = (0 until 600).map { HeartRateSample(at(today, 9, 0) + it * 1_000L, 150) }
+
+        val heartRate = heartRateOf(rest + workout, zoneBasis)
+
+        // 360 samples at 55 and the workout's 60 grid slots at 150: 68.6, not the 114 of every sample.
+        assertEquals((360 * 55 + 60 * 150.0) / 420, heartRate.todayStats!!.average!!, 1e-9)
+        assertEquals(150.0, heartRate.todayStats!!.high, 0.0)
+        assertEquals(seconds(0, 0, 0, 599, 0), heartRate.zoneTime)
+    }
+
+    @Test
     fun withoutAZoneBasisNoZoneTimeIsCounted() {
         val samples = listOf(HeartRateSample(at(today, 9, 0), 150), HeartRateSample(at(today, 9, 1), 150))
 

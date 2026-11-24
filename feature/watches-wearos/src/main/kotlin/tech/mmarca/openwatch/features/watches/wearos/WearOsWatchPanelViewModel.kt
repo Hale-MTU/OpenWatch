@@ -39,7 +39,7 @@ import tech.mmarca.openwatch.devices.wearos.isWearOs
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.features.watches.WatchPermissionRequest
 import tech.mmarca.openwatch.navigation.DeviceDetail
-import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Preferences
+import tech.mmarca.openwatch.wearlink.WearLinkPreferences as Preferences
 
 /** What the Wear OS panel of the device view shows: the link's status, the watch's own settings and what its sync still waits for. */
 @Immutable

@@ -31,7 +31,7 @@ Nineteen space-separated fields. Every numeric field is an integer, so both impl
 ## Inputs
 
 - Accelerometer samples `(t, ax, ay, az)` in **g**. The watch divides the sensor's m/s² by 9.80665 before anything else. A sample belongs to the minute `floor(t / 60000)`.
-- Heart rate samples `(t, bpm)`: the samples the watch stores, one every ten seconds at most, never a no-contact reading. A sample belongs to the minute of its `t`.
+- Heart rate samples `(t, bpm)`: the samples the watch stores, one every ten seconds at most (one a second while a workout reads the heart rate live, so a workout's minute holds up to 60), never a no-contact reading. A sample belongs to the minute of its `t`.
 - Events, each stamped: `worn(bool)` from the off-body sensor (sticky until the next event; initially worn), `charging(bool)` (sticky; initially from the battery state), `screenOn` (instantaneous), `hrContact(false)` when the heart rate sensor reported no contact, an unreliable reading or 0 bpm.
 - `hrRecording`: whether heart rate is being recorded at all while the minute closes.
 

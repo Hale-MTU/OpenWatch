@@ -349,6 +349,7 @@ class WearAppService : Service(), WearGraph.Host {
         "storeLastFailure" to graph.store.lastWriteFailure,
         "hrSec" to graph.heartRate.interval.seconds,
         "hrSource" to graph.heartRate.source.name,
+        "hrLive" to graph.heartRate.isLive,
         "hrvSource" to WearSettings.hrvSource(this).name,
         "hrvOn" to graph.nightHrv.isRunning,
         "bedtime" to bedtimeMonitor.isBedtime,

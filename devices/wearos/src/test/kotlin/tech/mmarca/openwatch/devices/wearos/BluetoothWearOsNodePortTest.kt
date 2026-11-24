@@ -34,6 +34,7 @@ import tech.mmarca.openwatch.devices.FakeSharedPreferences
 import tech.mmarca.openwatch.wearlink.DaySummary
 import tech.mmarca.openwatch.wearlink.Page
 import tech.mmarca.openwatch.wearlink.WearLinkConnection
+import tech.mmarca.openwatch.wearlink.WearLinkPreferences
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 import tech.mmarca.openwatch.wearlink.WearLinkRequestHandler
 import tech.mmarca.openwatch.wearlink.WearLinkServer
@@ -95,7 +96,7 @@ class BluetoothWearOsNodePortTest {
                 port.pullSeries(REGISTERED, NAME, series, FROM_START)
             }
             port.pullWorkouts(REGISTERED, NAME, Instant.EPOCH)
-            assertTrue(port.setWatchSetting(REGISTERED, NAME, WearLinkProtocol.Preferences.HEART_RATE_MAX, "190"))
+            assertTrue(port.setWatchSetting(REGISTERED, NAME, WearLinkPreferences.HEART_RATE_MAX, "190"))
         }
 
         assertEquals(1, watch.connects.get())
@@ -118,7 +119,7 @@ class BluetoothWearOsNodePortTest {
             }
             assertEquals(WearOsWorkoutPage(emptyList(), false), port.pullWorkouts(REGISTERED, NAME, Instant.EPOCH))
             assertNull(port.pullWatchSettings(REGISTERED, NAME))
-            assertFalse(port.setWatchSetting(REGISTERED, NAME, WearLinkProtocol.Preferences.HEART_RATE_MAX, "190"))
+            assertFalse(port.setWatchSetting(REGISTERED, NAME, WearLinkPreferences.HEART_RATE_MAX, "190"))
             assertFalse(port.notifyPhoneActive(REGISTERED, NAME, Instant.ofEpochMilli(T0)))
             assertFalse(port.pushDays(REGISTERED, NAME, listOf(DaySummary(20_400, sleepMinutes = 400))))
         }
@@ -237,7 +238,7 @@ class BluetoothWearOsNodePortTest {
 
         // Off the wrist: two windows in a row without a reading end the stream.
         assertTrue(port.liveHeartRate(REGISTERED, NAME) {})
-        assertTrue(port.setWatchSetting(REGISTERED, NAME, WearLinkProtocol.Preferences.HEART_RATE_MAX, "190"))
+        assertTrue(port.setWatchSetting(REGISTERED, NAME, WearLinkPreferences.HEART_RATE_MAX, "190"))
 
         assertEquals(1, watch.connects.get())
         assertEquals(listOf("PREF", "LIVE", "LIVE", "SET"), watch.data.asked)
@@ -271,7 +272,7 @@ class BluetoothWearOsNodePortTest {
         // One sync in a coroutine of its own: its pages, then a setting, as the zones end it.
         withContext(Dispatchers.IO) {
             repeat(SYNC_PAGES) { assertNotNull(syncPage()) }
-            assertTrue(port.setWatchSetting(REGISTERED, NAME, WearLinkProtocol.Preferences.HEART_RATE_MAX, "190"))
+            assertTrue(port.setWatchSetting(REGISTERED, NAME, WearLinkPreferences.HEART_RATE_MAX, "190"))
         }
 
         val asked = watch.data.asked.toList()

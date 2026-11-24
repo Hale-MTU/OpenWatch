@@ -255,13 +255,13 @@ class WearReadingsSourceTest {
 
     @Test
     fun `the longest day of heart rate the recorder can write is read whole`() {
-        // A sample every ten seconds over the 25-hour day: 9 000 rows, the lowest first and the highest last.
+        // A workout's sample every second over the 25-hour day: 90 000 rows, the lowest first and the highest last.
         val midnight = utc("2026-10-24T22:00:00Z")
         val count = TileDay.MAX_HEART_RATE_SAMPLES_PER_DAY
         store.putAll(
             WearMetrics.HEART_RATE,
             (0 until count).map { index ->
-                HeartRateSample(midnight + index * 10_000L, bpm = when (index) { 0 -> 40; count - 1 -> 180; else -> 70 })
+                HeartRateSample(midnight + index * 1_000L, bpm = when (index) { 0 -> 40; count - 1 -> 180; else -> 70 })
             },
         )
 
@@ -270,7 +270,9 @@ class WearReadingsSourceTest {
         assertEquals(180.0, heartRate.current!!, 0.0)
         assertEquals(40.0, heartRate.todayStats!!.low, 0.0)
         assertEquals(180.0, heartRate.todayStats!!.high, 0.0)
-        assertEquals((40 + 180 + 70.0 * (count - 2)) / count, heartRate.todayStats!!.average!!, 1e-9)
+        // The mean counts the first sample of each ten seconds: the 40 at midnight, and 70 for the rest.
+        val grid = count / 10
+        assertEquals((40 + 70.0 * (grid - 1)) / grid, heartRate.todayStats!!.average!!, 1e-9)
     }
 
     @Test

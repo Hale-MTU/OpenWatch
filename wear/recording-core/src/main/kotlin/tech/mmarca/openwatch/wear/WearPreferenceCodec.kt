@@ -2,7 +2,7 @@ package tech.mmarca.openwatch.wear
 
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
-import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Preferences
+import tech.mmarca.openwatch.wearlink.WearLinkPreferences as Preferences
 
 /** The watch's settings in one value, as [WearSettings] keeps them. */
 data class WatchPreferences(
@@ -19,16 +19,12 @@ data class WatchPreferences(
     val unitSystem: UnitSystem = UnitSystem.METRIC,
 ) {
     /**
-     * What the heart rate zones rest on: the phone's maximum and resting rate,
-     * else a common middle-aged guess of [DEFAULT_MAX_HEART_RATE] bpm and no
-     * resting rate. Every screen that draws or counts zones takes it from
+     * What the heart rate zones rest on: the phone's maximum and resting rate;
+     * null until the phone sends a maximum, and then no screen draws or counts
+     * zones rather than zones on a guess. Every screen that does takes it from
      * here, so they agree, and follow a figure the phone sends.
      */
-    fun zoneBasis(): HeartRateZones.Basis = HeartRateZones.Basis(maxHeartRate ?: DEFAULT_MAX_HEART_RATE, restingHeartRate)
-
-    companion object {
-        const val DEFAULT_MAX_HEART_RATE: Int = 190
-    }
+    fun zoneBasis(): HeartRateZones.Basis? = maxHeartRate?.let { HeartRateZones.Basis(it, restingHeartRate) }
 }
 
 /** What the watch can offer, which the phone reads but cannot change. */

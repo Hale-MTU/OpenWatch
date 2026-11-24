@@ -36,7 +36,7 @@ import tech.mmarca.openwatch.domain.model.DeviceIntegration
 import tech.mmarca.openwatch.navigation.DeviceDetail
 import tech.mmarca.openwatch.navigation.routeHandle
 import tech.mmarca.openwatch.util.MainDispatcherRule
-import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Preferences
+import tech.mmarca.openwatch.wearlink.WearLinkPreferences as Preferences
 
 /** The Wear OS panel's status check on the way in, the live heart rate after it, and the skin temperature baseline's line. */
 @RunWith(RobolectricTestRunner::class)

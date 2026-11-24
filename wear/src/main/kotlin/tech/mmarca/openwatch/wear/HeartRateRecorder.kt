@@ -16,7 +16,8 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
  * only, [WearSettings.Source.SAMSUNG_PLATFORM]). The platform is used only
  * when chosen; when it refuses, fails or stays silent, the sensor takes over
  * at the same interval until a setting changes ([resetFallBack]). One stored
- * sample every ten seconds from either.
+ * sample every ten seconds from either; while the plan asks for the heart rate
+ * live (a workout), the sensor's every reading, one a second.
  *
  * [setPlan] is the only entry point; the service calls it with the plan in
  * force, and an unchanged one does nothing. The source runs on the
@@ -58,6 +59,14 @@ internal class HeartRateRecorder(
     @Volatile
     private var requestedSource: WearSettings.Source = WearSettings.Source.RAW_SENSOR
 
+    /** What the plan asked for: the readings live, unbatched, and every one kept ([RecorderPlan.Plan.heartRateLive]). */
+    @Volatile
+    private var live = false
+
+    /** Whether the recorder runs live. Read on any thread. */
+    val isLive: Boolean
+        get() = live && thread != null
+
     /** Set when the Samsung platform failed; the sensor stands in until [resetFallBack]. */
     @Volatile
     private var platformFailed = false
@@ -73,23 +82,26 @@ internal class HeartRateRecorder(
         get() = interval == HeartRateSchedule.FULL_RATE && source == WearSettings.Source.RAW_SENSOR
 
     override fun apply(plan: RecorderPlan.Plan) {
-        setPlan(plan.heartRate, plan.heartRateSource)
+        setPlan(plan.heartRate, plan.heartRateSource, plan.heartRateLive)
     }
 
     /**
-     * Brings the recorder to [wanted] from [wantedSource]: starts it, changes
-     * its interval or source, or stops it. False when [wanted] is not off and
-     * the source could not start (no sensor, a refused registration or bind).
+     * Brings the recorder to [wanted] from [wantedSource], [live] or batched:
+     * starts it, changes its interval, source or pace, or stops it. False when
+     * [wanted] is not off and the source could not start (no sensor, a refused
+     * registration or bind).
      */
-    internal fun setPlan(wanted: HeartRateInterval, wantedSource: WearSettings.Source): Boolean {
+    internal fun setPlan(wanted: HeartRateInterval, wantedSource: WearSettings.Source, live: Boolean = false): Boolean {
         val running = wanted != HeartRateInterval.OFF && thread != null
-        if (wanted == interval && (wanted == HeartRateInterval.OFF || (running && wantedSource == requestedSource))) return true
+        val unchanged = wanted == interval && (wanted == HeartRateInterval.OFF || (running && wantedSource == requestedSource && live == isLive))
+        if (unchanged) return true
         stop()
         requestedSource = wantedSource
+        this.live = live && wanted != HeartRateInterval.OFF
         if (wanted == HeartRateInterval.OFF) return true
         val usePlatform = wantedSource == WearSettings.Source.SAMSUNG_PLATFORM && platform?.isAvailable == true && !platformFailed
         val started = if (usePlatform) startPlatform(wanted) else startSensor(wanted)
-        debug.event("HeartRate", "plan", "intervalSec" to wanted.seconds, "source" to source.name, "started" to started)
+        debug.event("HeartRate", "plan", "intervalSec" to wanted.seconds, "source" to source.name, "live" to live, "started" to started)
         return started
     }
 
@@ -101,7 +113,7 @@ internal class HeartRateRecorder(
         val workerHandler = startThread()
         interval = wanted
         source = WearSettings.Source.RAW_SENSOR
-        if (!sensor.start(wanted, workerHandler, this)) {
+        if (!sensor.start(wanted, workerHandler, this, live)) {
             Log.w(TAG, "Heart rate listener not registered")
             stop()
             return false
@@ -115,7 +127,7 @@ internal class HeartRateRecorder(
         val workerHandler = startThread()
         interval = wanted
         source = WearSettings.Source.SAMSUNG_PLATFORM
-        if (!samsung.start(wanted, workerHandler, this)) {
+        if (!samsung.start(wanted, workerHandler, this, live)) {
             Log.w(TAG, "Samsung platform refused")
             stop()
             platformFailed = true
@@ -179,7 +191,7 @@ internal class HeartRateRecorder(
     }
 
     private fun keep(at: Long, bpm: Int) {
-        if (at - lastStoredAt < MIN_SAMPLE_GAP_MILLIS) return
+        if (at - lastStoredAt < if (live) LIVE_SAMPLE_GAP_MILLIS else MIN_SAMPLE_GAP_MILLIS) return
         lastStoredAt = at
         store.put(WearMetrics.HEART_RATE, WearLinkProtocol.HeartRateSample(at, bpm))
         onSample(at, bpm)
@@ -194,11 +206,15 @@ internal class HeartRateRecorder(
     private companion object {
         const val TAG = "HeartRateRecorder"
 
-        /**
-         * Stored sample spacing. Enough for resting and daily curves; a tenth of the bytes.
-         * [TileDay.MAX_HEART_RATE_SAMPLES_PER_DAY] counts on it: a closer spacing needs a higher limit there.
-         */
+        /** Stored sample spacing. Enough for resting and daily curves; a tenth of the bytes. */
         const val MIN_SAMPLE_GAP_MILLIS = 10_000L
+
+        /**
+         * The spacing while live: every reading of the 1 Hz sensor, a little early or late. A
+         * workout's zones and figures read the whole curve, and a heart rate recovery needs a
+         * reading within seconds of its marks. [TileDay.MAX_HEART_RATE_SAMPLES_PER_DAY] counts on it.
+         */
+        const val LIVE_SAMPLE_GAP_MILLIS = 900L
 
         const val PRUNE_EVERY_MILLIS = 6L * 60 * 60 * 1000
     }

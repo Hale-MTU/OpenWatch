@@ -22,13 +22,15 @@ class HeartRateRecorderTest {
 
     private class FakeSource(var accepts: Boolean = true) : HeartRateSource {
         val starts = ArrayList<HeartRateInterval>()
+        val liveStarts = ArrayList<Boolean>()
         var sink: HeartRateSource.Sink? = null
         var alarms = 0
 
         override val isAvailable: Boolean = true
 
-        override fun start(interval: HeartRateInterval, handler: Handler, sink: HeartRateSource.Sink): Boolean {
+        override fun start(interval: HeartRateInterval, handler: Handler, sink: HeartRateSource.Sink, live: Boolean): Boolean {
             starts += interval
+            liveStarts += live
             if (accepts) this.sink = sink
             return accepts
         }
@@ -108,6 +110,25 @@ class HeartRateRecorderTest {
         assertEquals(listOf(t0 to 60, t0 + 10_000 to 62), samples)
         assertEquals(2L, store.count(WearMetrics.HEART_RATE))
         assertEquals(listOf(t0 + 12_000 to false), contact)
+    }
+
+    @Test
+    fun `live, every reading of the sensor is kept, and the pace changing restarts the source`() {
+        recorder.setPlan(HeartRateInterval.EVERY_10_SECONDS, WearSettings.Source.RAW_SENSOR, live = true)
+        val t0 = 1_794_100_000_000L
+        for (second in 0 until 5) sensor.sink!!.onReading(t0 + second * 1_000L, 120 + second)
+
+        assertEquals(5, samples.size)
+        assertTrue(recorder.isLive)
+        assertTrue("live is the full rate from the sensor", recorder.isDense)
+
+        recorder.setPlan(HeartRateInterval.EVERY_10_SECONDS, WearSettings.Source.RAW_SENSOR, live = true)
+        recorder.setPlan(HeartRateInterval.EVERY_10_SECONDS, WearSettings.Source.RAW_SENSOR, live = false)
+
+        assertEquals(listOf(true, false), sensor.liveStarts)
+        assertFalse(recorder.isLive)
+        sensor.sink!!.onReading(t0 + 5_000, 125)
+        assertEquals("back on the ten-second grid", 5, samples.size)
     }
 
     @Test

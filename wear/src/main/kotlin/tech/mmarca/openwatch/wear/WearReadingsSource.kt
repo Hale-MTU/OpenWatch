@@ -124,8 +124,11 @@ internal class WearReadingsSource(
         const val DAYS = 7
         const val REFRESH_MILLIS = 30_000L
 
-        /** Above a day's most: a heart rate sample every ten seconds is 8 640. */
-        const val ROW_LIMIT = 10_000
+        /**
+         * Above a day's most of any series: the heart rate's, a sample every ten seconds, and one
+         * a second while a workout runs ([TileDay.MAX_HEART_RATE_SAMPLES_PER_DAY]).
+         */
+        const val ROW_LIMIT = TileDay.MAX_HEART_RATE_SAMPLES_PER_DAY
 
         /** Above a month of entries at any pace a wearer logs by hand. */
         const val ENTRY_LIMIT = 10_000

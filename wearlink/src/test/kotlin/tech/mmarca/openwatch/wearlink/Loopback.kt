@@ -134,7 +134,7 @@ class MemoryTrustStore : WearLinkTrustStore {
 class MemoryHandler(
     val phoneActive: MutableList<Long> = mutableListOf(),
     var workouts: List<WearLinkWorkout> = emptyList(),
-    val preferences: MutableMap<String, String> = linkedMapOf(WearLinkProtocol.Preferences.HEART_RATE_DAY to "10"),
+    val preferences: MutableMap<String, String> = linkedMapOf(WearLinkPreferences.HEART_RATE_DAY to "10"),
     /** What one `HR_LIVE` window hands out; empty is a watch off the wrist. */
     var live: List<WearLinkProtocol.HeartRateSample> = emptyList(),
     var name: String = "Galaxy Watch8 (89FZ)",

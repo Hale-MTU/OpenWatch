@@ -34,6 +34,13 @@ object RecorderPlan {
         val heartRate: HeartRateInterval,
         /** The source asked for; the recorder falls back to the sensor when the platform fails. */
         val heartRateSource: MeasurementSource,
+        /**
+         * The heart rate as it happens: the sensor unbatched, every reading kept, one a second.
+         * During a workout, whose zones, live value and figures read the whole curve; the
+         * day's batches hand it over up to 40 seconds late, the Samsung platform's minutes
+         * late with the screen off.
+         */
+        val heartRateLive: Boolean,
         val steps: Boolean,
         val sleepMinutes: Boolean,
         val ascent: Boolean,
@@ -63,9 +70,12 @@ object RecorderPlan {
         }
         // Skin temperature comes only from the Samsung platform, and only while sleep is held on the wrist.
         val night = granted && inputs.worn && inputs.sleepHolding
+        val live = heartRate != HeartRateInterval.OFF && inputs.workout
         return Plan(
             heartRate = heartRate,
-            heartRateSource = settings.heartRateSource,
+            // A workout reads the sensor, whatever the source setting: only the sensor can be read live.
+            heartRateSource = if (live) MeasurementSource.RAW_SENSOR else settings.heartRateSource,
+            heartRateLive = live,
             steps = inputs.stepsGranted && inputs.hasStepCounter,
             // The accelerometer and the barometer are open to every app.
             sleepMinutes = inputs.hasAccelerometer,

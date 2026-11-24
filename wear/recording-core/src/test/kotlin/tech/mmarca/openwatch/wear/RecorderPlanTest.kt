@@ -63,6 +63,24 @@ class RecorderPlanTest {
     }
 
     @Test
+    fun `a workout reads the sensor live, whatever the source setting, and the day goes back to it`() {
+        val samsung = day.copy(settings = settings.copy(heartRateSource = MeasurementSource.SAMSUNG_PLATFORM))
+
+        val workout = RecorderPlan.decide(samsung.copy(workout = true))
+        assertTrue(workout.heartRateLive)
+        assertEquals(MeasurementSource.RAW_SENSOR, workout.heartRateSource)
+        assertEquals(HeartRateSchedule.FULL_RATE, workout.heartRate)
+
+        val after = RecorderPlan.decide(samsung)
+        assertFalse(after.heartRateLive)
+        assertEquals(MeasurementSource.SAMSUNG_PLATFORM, after.heartRateSource)
+        assertFalse(
+            "nothing to read live without the grant",
+            RecorderPlan.decide(samsung.copy(workout = true, heartRateGranted = false)).heartRateLive,
+        )
+    }
+
+    @Test
     fun `without the heart rate grant nothing that reads the heart sensor runs`() {
         val plan = RecorderPlan.decide(day.copy(heartRateGranted = false, sleepHolding = true, workout = true))
 

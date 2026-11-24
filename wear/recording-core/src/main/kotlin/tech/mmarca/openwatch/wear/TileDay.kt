@@ -58,11 +58,15 @@ class TileDay(
         return perBucket.map { amount -> total += amount; total }
     }
 
-    /** The mean heart rate of each bucket so far; null where the watch stored none, so the line breaks. */
+    /**
+     * The mean heart rate of each bucket so far; null where the watch stored none, so the line
+     * breaks. The samples count on the day's ten-second grid ([onDayGrid]), so the part of a
+     * bucket a workout recorded once a second does not outweigh the rest of it.
+     */
     fun meanPerBucket(samples: List<HeartRateSample>): List<Int?> {
         val sums = LongArray(bucketsSoFar)
         val counts = IntArray(bucketsSoFar)
-        for (sample in samples) {
+        for (sample in onDayGrid(samples)) {
             if (!contains(sample.epochMillis)) continue
             val bucket = bucketOf(sample.epochMillis)
             sums[bucket] += sample.bpm.toLong()
@@ -90,8 +94,28 @@ class TileDay(
         /** The local hours the axis is labelled at. */
         val HOUR_MARKS: List<Int> = listOf(0, 6, 12, 18, 24)
 
-        /** At most one heart rate sample every ten seconds (`HeartRateRecorder`) over a 25-hour day. */
-        const val MAX_HEART_RATE_SAMPLES_PER_DAY: Int = 25 * 60 * 6
+        /**
+         * The store read limit for a day's heart rate: a 25-hour day at one sample a second, what
+         * `HeartRateRecorder` keeps while a workout reads it live, and a workout may last a day
+         * (`WearLinkWorkoutLines.MAX_DURATION_MILLIS`). A day without a workout holds a tenth.
+         */
+        const val MAX_HEART_RATE_SAMPLES_PER_DAY: Int = 25 * 60 * 60
+
+        /** The spacing of the samples `HeartRateRecorder` keeps outside a workout. */
+        const val DAY_GRID_MILLIS: Long = 10_000
+
+        /**
+         * [samples], oldest first, at most one per [DAY_GRID_MILLIS] slot: the first of each. A day
+         * recorded every ten seconds stays as it is; a workout's one a second counts like the rest
+         * of the day, so a mean of samples is not weighted towards the workout's minutes.
+         */
+        fun onDayGrid(samples: List<HeartRateSample>): List<HeartRateSample> {
+            var lastSlot = Long.MIN_VALUE
+            return samples.filter { sample ->
+                val slot = Math.floorDiv(sample.epochMillis, DAY_GRID_MILLIS)
+                (slot != lastSlot).also { lastSlot = slot }
+            }
+        }
 
         /** The day [nowMillis] falls on in [zone]. */
         fun of(nowMillis: Long, zone: ZoneId): TileDay {

@@ -29,7 +29,7 @@ internal class SamsungHeartRateSource(
     override val isAvailable: Boolean
         get() = feed.isAvailable
 
-    override fun start(interval: HeartRateInterval, handler: Handler, sink: HeartRateSource.Sink): Boolean {
+    override fun start(interval: HeartRateInterval, handler: Handler, sink: HeartRateSource.Sink, live: Boolean): Boolean {
         this.handler = handler
         this.sink = sink
         subscribedAt = clock()

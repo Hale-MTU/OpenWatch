@@ -22,7 +22,9 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
  * - [HeartRateInterval.EVERY_10_SECONDS]: the sensor stays registered, batched:
  *   the sensor hub buffers readings for up to [MAX_REPORT_LATENCY_MICROS] and
  *   wakes the CPU once per batch, and every other sensor's buffer is emptied in
- *   the same wake-up ([SensorWakeSync]).
+ *   the same wake-up ([SensorWakeSync]). Live (a workout's), unbatched: each
+ *   reading as it happens, once a second, and the other buffers emptied as
+ *   often as a batch would have come.
  * - [HeartRateInterval.POWER_SAVE]: the sensor is registered for a window of
  *   at most [WINDOW_CAP_MILLIS], unbatched, and is unregistered at its first
  *   usable reading. Between the windows the sensor, and usually the CPU, are
@@ -59,9 +61,11 @@ internal class SensorHeartRateSource(
 
     @Volatile
     private var interval: HeartRateInterval = HeartRateInterval.OFF
+    private var live = false
     private var sink: HeartRateSource.Sink? = null
     private var sensor: Sensor? = null
     private var lastArrivalAt = 0L
+    private var lastWakeAt = 0L
     private var lastSkipLogAt = 0L
 
     // Read and written on the handler's thread only. The tasks are fields:
@@ -79,14 +83,15 @@ internal class SensorHeartRateSource(
     override val isAvailable: Boolean
         get() = defaultSensor() != null
 
-    override fun start(interval: HeartRateInterval, handler: Handler, sink: HeartRateSource.Sink): Boolean {
+    override fun start(interval: HeartRateInterval, handler: Handler, sink: HeartRateSource.Sink, live: Boolean): Boolean {
         val found = defaultSensor() ?: return false
         this.handler = handler
         this.sink = sink
         this.interval = interval
+        this.live = live
         sensor = found
-        if (interval == HeartRateInterval.EVERY_10_SECONDS) {
-            if (!registerBatched(found, handler)) {
+        if (interval == HeartRateInterval.EVERY_10_SECONDS || live) {
+            if (!registerContinuous(found, handler)) {
                 stop()
                 return false
             }
@@ -108,6 +113,7 @@ internal class SensorHeartRateSource(
         sink = null
         sensor = null
         interval = HeartRateInterval.OFF
+        live = false
     }
 
     /**
@@ -121,11 +127,12 @@ internal class SensorHeartRateSource(
         workerHandler.post(openWindowTask)
     }
 
-    /** Registration for the continuous interval: one reading a second, batched. */
-    private fun registerBatched(found: Sensor, workerHandler: Handler): Boolean =
+    /** Registration for the continuous interval: one reading a second, batched; unbatched when live. */
+    private fun registerContinuous(found: Sensor, workerHandler: Handler): Boolean =
         try {
-            sensorManager.registerListener(this, found, SAMPLING_PERIOD_MICROS, MAX_REPORT_LATENCY_MICROS, workerHandler)
-                .also { if (it) debug.registered("heartRate", found, SAMPLING_PERIOD_MICROS, MAX_REPORT_LATENCY_MICROS) }
+            val latency = if (live) 0 else MAX_REPORT_LATENCY_MICROS
+            sensorManager.registerListener(this, found, SAMPLING_PERIOD_MICROS, latency, workerHandler)
+                .also { if (it) debug.registered(if (live) "heartRateLive" else "heartRate", found, SAMPLING_PERIOD_MICROS, latency) }
         } catch (e: SecurityException) {
             // The grant was revoked between the check and the registration.
             Log.e(TAG, "Heart rate sensor refused", e)
@@ -192,7 +199,7 @@ internal class SensorHeartRateSource(
         val target = sink ?: return
         debug.arrival("hr")
         val arrived = SystemClock.elapsedRealtime()
-        if (arrived - lastArrivalAt > BATCH_GAP_MILLIS && interval == HeartRateInterval.EVERY_10_SECONDS) wakeSync?.onWake()
+        noteWake(arrived)
         lastArrivalAt = arrived
         // No contact and unreliable readings carry a rate of zero or a flag; both are skipped.
         val bpm = event.values.firstOrNull()?.toInt() ?: return
@@ -212,6 +219,18 @@ internal class SensorHeartRateSource(
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
 
+    /**
+     * A batch is a wake-up every other sensor's buffer is emptied in ([SensorWakeSync]). Live
+     * readings come one a second, so the buffers are emptied as often as a batch would come.
+     */
+    private fun noteWake(arrived: Long) {
+        if (interval != HeartRateInterval.EVERY_10_SECONDS && !live) return
+        val due = if (live) arrived - lastWakeAt >= MAX_REPORT_LATENCY_MICROS / 1000 else arrived - lastArrivalAt > BATCH_GAP_MILLIS
+        if (!due) return
+        lastWakeAt = arrived
+        wakeSync?.onWake()
+    }
+
     /** Off the wrist the sensor keeps reporting; one line a minute says so without flooding. */
     private fun noteSkipped() {
         val now = SystemClock.elapsedRealtime()
@@ -224,7 +243,7 @@ internal class SensorHeartRateSource(
         const val TAG = "SensorHeartRateSource"
         const val WAKE_LOCK_TAG = "OpenWatch:heartRatePowerSave"
 
-        /** One reading a second from the sensor; the recorder keeps one in ten. */
+        /** One reading a second from the sensor; the recorder keeps one in ten, or every one while live. */
         const val SAMPLING_PERIOD_MICROS = 1_000_000
 
         /**

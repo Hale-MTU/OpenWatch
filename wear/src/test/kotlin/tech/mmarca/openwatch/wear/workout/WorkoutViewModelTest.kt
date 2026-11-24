@@ -43,7 +43,7 @@ class WorkoutViewModelTest {
 
     @Test
     fun `the zones rest on the settings, and follow a maximum and a resting rate the phone sends`() {
-        assertEquals(HeartRateZones.Basis(maxBpm = 190), viewModel.zoneBasis.value)
+        assertNull("no zones before the phone sends a maximum", viewModel.zoneBasis.value)
 
         settings.value = settings.value.copy(maxHeartRate = 176, restingHeartRate = 52)
 

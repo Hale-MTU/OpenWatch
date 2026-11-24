@@ -68,6 +68,20 @@ class TileDayTest {
     }
 
     @Test
+    fun `a workout's one a second counts like the ten-second grid in a bucket's mean`() {
+        val day = day("2026-11-03T00:14")
+        val start = at("2026-11-03T00:00")
+        // Ten minutes at 60 every ten seconds, then one minute of a workout at 150 every second.
+        val rest = (0 until 60).map { HeartRateSample(start + it * 10_000L, 60) }
+        val workout = (0 until 60).map { HeartRateSample(start + 600_000L + it * 1_000L, 150) }
+
+        assertEquals(6, TileDay.onDayGrid(workout).size)
+        assertEquals(rest, TileDay.onDayGrid(rest))
+        // 60 samples at 60 and 6 at 150: 68, not the 105 of every sample.
+        assertEquals(listOf(68), day.meanPerBucket(rest + workout))
+    }
+
+    @Test
     fun `a climb in decimetres counts as far as the steps around it carry it, in metres`() {
         val start = at("2026-11-03T09:00")
         val ascent = listOf(

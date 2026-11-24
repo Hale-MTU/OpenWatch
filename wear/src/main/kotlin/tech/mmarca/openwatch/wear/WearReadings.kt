@@ -184,7 +184,10 @@ internal object WearReadings {
     /**
      * The rows of [date] only, and of the night that ended on it ([night],
      * [nightWindow]); the caller reads them from the store. With a
-     * [zoneBasis] the day's time in the heart rate zones is counted too.
+     * [zoneBasis] the day's time in the heart rate zones is counted too. The
+     * day's mean heart rate counts its samples on the ten-second grid
+     * ([TileDay.onDayGrid]), so a workout's one a second does not outweigh
+     * the rest of the day; the low, the high and the zones take every sample.
      */
     fun day(
         date: LocalDate,
@@ -211,7 +214,7 @@ internal object WearReadings {
             stepsByHour = stepsByHour.toList(),
             ascentByHour = ascentByHour.toList(),
             heartRateLine = heartRateLine(heartRate, zone),
-            heartRateMean = heartRate.takeIf { it.isNotEmpty() }?.map { it.bpm }?.average(),
+            heartRateMean = TileDay.onDayGrid(heartRate).takeIf { it.isNotEmpty() }?.map { it.bpm }?.average(),
             heartRateRange = heartRate.takeIf { it.isNotEmpty() }?.let { samples -> samples.minOf { it.bpm }..samples.maxOf { it.bpm } },
             latestHeartRate = heartRate.maxByOrNull { it.epochMillis },
             hasSteps = steps.isNotEmpty(),

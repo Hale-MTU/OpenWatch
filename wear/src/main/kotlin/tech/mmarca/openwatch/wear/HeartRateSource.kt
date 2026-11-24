@@ -15,8 +15,12 @@ internal interface HeartRateSource {
     /** Whether this watch can serve the source at all. */
     val isAvailable: Boolean
 
-    /** Starts measuring at [interval]. False when the source refused (no sensor, a refused registration or bind). */
-    fun start(interval: HeartRateInterval, handler: Handler, sink: Sink): Boolean
+    /**
+     * Starts measuring at [interval]; [live] asks for every reading as it happens, unbatched
+     * (a workout's), which only the sensor does: the Samsung platform sets its own pace and
+     * ignores it. False when the source refused (no sensor, a refused registration or bind).
+     */
+    fun start(interval: HeartRateInterval, handler: Handler, sink: Sink, live: Boolean): Boolean
 
     /** Stops measuring; safe to call when not started. */
     fun stop()

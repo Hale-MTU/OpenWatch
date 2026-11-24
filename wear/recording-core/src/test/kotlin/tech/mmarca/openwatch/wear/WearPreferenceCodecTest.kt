@@ -61,9 +61,10 @@ class WearPreferenceCodecTest {
     }
 
     @Test
-    fun `the zones rest on the phone's heart rates, and on 190 bpm without a maximum`() {
-        assertEquals(HeartRateZones.Basis(maxBpm = 190), defaults.zoneBasis())
-        assertEquals(HeartRateZones.Basis(maxBpm = 190, restingBpm = 52), defaults.copy(restingHeartRate = 52).zoneBasis())
+    fun `the zones rest on the phone's heart rates, and there are none without a maximum`() {
+        assertNull(defaults.zoneBasis())
+        assertNull("a resting rate alone is no zones", defaults.copy(restingHeartRate = 52).zoneBasis())
+        assertEquals(HeartRateZones.Basis(maxBpm = 176), defaults.copy(maxHeartRate = 176).zoneBasis())
         assertEquals(
             HeartRateZones.Basis(maxBpm = 176, restingBpm = 52),
             defaults.copy(maxHeartRate = 176, restingHeartRate = 52).zoneBasis(),

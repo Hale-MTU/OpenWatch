@@ -10,7 +10,7 @@ import tech.mmarca.healthcalculations.insights.observedMaxHeartRateLookbackDays
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.healthconnect.HealthConnectReads
-import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Preferences
+import tech.mmarca.openwatch.wearlink.WearLinkPreferences as Preferences
 
 /**
  * Hands the watch what its heart rate zones rest on ([HeartRateZoneBasis],
