@@ -33,6 +33,11 @@ object RecorderPlan {
          * reading within its seconds.
          */
         val recovering: Boolean = false,
+        /**
+         * The watch app is on screen ([WearGraph.setInteractive], from `MainActivity`): the
+         * step counter hands its steps over at once, so the screens follow them as they come.
+         */
+        val interactive: Boolean = false,
     )
 
     data class Plan(
@@ -48,6 +53,12 @@ object RecorderPlan {
          */
         val heartRateLive: Boolean,
         val steps: Boolean,
+        /**
+         * The steps as they happen: the counter unbatched while the app is on screen, so the
+         * dashboard follows each one. Not in a workout or its recovery: the workout counts its
+         * own steps, and the screen shows the workout, not the day's.
+         */
+        val stepsLive: Boolean = false,
         val sleepMinutes: Boolean,
         val ascent: Boolean,
         /** The night HRV windows may run; each window still waits for a still arm in a sleep hold. */
@@ -78,12 +89,14 @@ object RecorderPlan {
         // Skin temperature comes only from the Samsung platform, and only while sleep is held on the wrist.
         val night = granted && inputs.worn && inputs.sleepHolding
         val live = heartRate != HeartRateInterval.OFF && active
+        val steps = inputs.stepsGranted && inputs.hasStepCounter
         return Plan(
             heartRate = heartRate,
             // A workout and its recovery read the sensor, whatever the source setting: only the sensor can be read live.
             heartRateSource = if (live) MeasurementSource.RAW_SENSOR else settings.heartRateSource,
             heartRateLive = live,
-            steps = inputs.stepsGranted && inputs.hasStepCounter,
+            steps = steps,
+            stepsLive = steps && inputs.interactive && !active,
             // The accelerometer and the barometer are open to every app.
             sleepMinutes = inputs.hasAccelerometer,
             ascent = inputs.hasBarometer,

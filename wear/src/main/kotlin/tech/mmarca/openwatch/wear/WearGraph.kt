@@ -60,6 +60,18 @@ internal class WearGraph(private val app: Application) {
         mainHandler.post { host?.action() }
     }
 
+    /** True while the watch app is on screen: an input of the plan ([RecorderPlan.Inputs.interactive]). */
+    @Volatile
+    var interactive: Boolean = false
+        private set
+
+    /** `MainActivity` came to the front or left it: the running service plans again, so the steps come live or batched. */
+    fun setInteractive(on: Boolean) {
+        if (on == interactive) return
+        interactive = on
+        tellHost { replan() }
+    }
+
     val debug: DebugProtocol by lazy { DebugProtocol.of(app) }
     val linkState = WearLinkState()
     val workoutState = WorkoutState()

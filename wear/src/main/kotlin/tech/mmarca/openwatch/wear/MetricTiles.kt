@@ -1,7 +1,6 @@
 package tech.mmarca.openwatch.wear
 
 import android.content.Context
-import tech.mmarca.healthcalculations.insights.AscentCredit
 
 /*
  * The three metric tiles (the Today and quick log tiles are in files of
@@ -105,23 +104,15 @@ class FloorsTileService : MetricTileService() {
     override val titleRes: Int = R.string.tile_floors_label
 
     override fun read(day: TileDay, chart: TileChart, store: MetricStore): MetricTileContent {
-        val missing = when {
-            !AscentRecorder.hasBarometer(this) -> R.string.tile_floors_no_sensor
-            // Height counts only with steps around it, so floors need the step counter too.
-            !StepRecorder.hasStepCounter(this) -> R.string.tile_steps_no_sensor
-            !WearPermissions.hasActivityRecognition(this) -> R.string.tile_not_granted
-            else -> null
+        val floors = when (val today = readFloorsToday(this, store, day)) {
+            is FloorsToday.Missing -> return unavailable(getString(today.reason))
+            is FloorsToday.Counted -> today
         }
-        if (missing != null) return unavailable(getString(missing))
-        val ascent = store.since(WearMetrics.ASCENT, day.startMillis - 1, TileDay.MAX_MINUTES_PER_DAY)
-        // The minute before midnight carries the first minute's credit.
-        val steps = store.since(WearMetrics.STEPS, day.startMillis - TileDay.MINUTE_MILLIS - 1, TileDay.MAX_MINUTES_PER_DAY + 1)
-        val metres = day.cumulative(TileDay.creditedAscent(ascent, steps))
-        val running = metres.map { it / AscentCredit.METRES_PER_FLOOR }
+        val running = floors.floors
         val title = getString(titleRes)
-        val value = formatCount(TileDay.wholeDown(running.last()))
+        val value = formatCount(floors.total)
         val caption = getString(R.string.tile_floors_caption)
-        val detail = getString(R.string.tile_floors_climbed, formatCount(TileDay.wholeDown(metres.last())))
+        val detail = getString(R.string.tile_floors_climbed, formatCount(floors.metresTotal))
         return MetricTileContent(
             title = title,
             value = value,

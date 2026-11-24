@@ -301,4 +301,5 @@
     <string name="settings_hrv_source_explained">Sensor: HRV aus dem rohen Pulssignal, jeder Schlag. Samsung: die Schlagabstände der Plattform; derzeit gehen davon etwa 60 % verloren, daher seltener ein Wert.</string>
     <string name="settings_skin_explained">Hauttemperatur am Handgelenk im Schlaf, ein Wert pro Minute von der Samsung-Plattform. Wenig Strom, sonst keine Änderung.</string>
     <string name="settings_spo2_explained">Blutsauerstoff höchstens einmal pro Stunde im Schlaf, etwa 15 s Rotlicht. Wenige mAh pro Nacht; entfällt, wenn sich der Arm bewegt.</string>
+    <string name="measure_value_placeholder">-- %1$s</string>
 </resources>

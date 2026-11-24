@@ -72,6 +72,7 @@ class MainActivity : ComponentActivity() {
                 onEditQuickLog = viewModel::editQuickLog,
                 onResetQuickLog = viewModel::resetQuickLog,
                 spot = graph.spot::run,
+                liveHeartRate = graph.liveHeartRate::bpm,
                 actions = actions,
             )
         }
@@ -88,6 +89,13 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         // Also catches a grant made in the system settings; the status and settings screens read the grants again by themselves.
         WearAppService.startIfPermitted(this)
+        // On screen: the steps come live while the wearer looks (RecorderPlan.Inputs.interactive).
+        graph.setInteractive(true)
+    }
+
+    override fun onPause() {
+        graph.setInteractive(false)
+        super.onPause()
     }
 
     private fun openBluetoothSettings() {

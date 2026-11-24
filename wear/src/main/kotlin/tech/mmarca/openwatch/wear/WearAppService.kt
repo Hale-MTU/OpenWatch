@@ -342,6 +342,7 @@ class WearAppService : Service(), WearGraph.Host {
         sleepHolding = graph.sleepMinutes.isSleepHolding,
         workout = graph.workout.isActive,
         recovering = graph.workout.isRecovering,
+        interactive = graph.interactive,
     )
 
     /** What the debug snapshots record as the plan in force, and today's held minutes against their budget. */
@@ -373,6 +374,7 @@ class WearAppService : Service(), WearGraph.Host {
         "recovering" to graph.workout.isRecovering,
         "worn" to heartRateWanted,
         "steps" to graph.steps.isRunning,
+        "interactive" to graph.interactive,
     )
 
     /** Trusted phones the watch is no longer bonded with: a bond the phone or the watch dropped. */

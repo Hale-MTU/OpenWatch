@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,6 +51,7 @@ import tech.mmarca.openwatch.wear.SpotKind
 import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.WearPermissions
 import tech.mmarca.openwatch.wear.haptics.Haptics
+import tech.mmarca.openwatch.wear.ui.ambient.AmbientAware
 import tech.mmarca.openwatch.wear.ui.components.MetricValueRow
 import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
 import tech.mmarca.openwatch.wear.ui.theme.Emphasis
@@ -124,7 +126,11 @@ internal fun MeasurementRoute(
  * One spot measurement: what to do and a start button, then the live value
  * inside an arc along the screen's edge that fills with the measurement's
  * time ([EdgeProgress]), then the reading or why there is none. The measurement holds a wake lock of its own, so it
- * ends with its reading even when the screen goes off meanwhile.
+ * ends with its reading even when the screen goes off meanwhile. While it
+ * runs the screen stays on in ambient mode with a dim layout of its own
+ * ([AmbientAware], as a running workout's): its name, a dash for the value,
+ * which would be stale between the system's once-a-minute updates, and
+ * what to do; the reading shows when the wearer raises the wrist.
  */
 @Composable
 fun MeasurementScreen(
@@ -156,12 +162,41 @@ fun MeasurementScreen(
         is MeasureUiState.Running -> null
     }
 
-    ScreenScaffold {
-        Box(modifier = Modifier.fillMaxSize()) {
-            MeasurementBody(measurement, state, unitSystem, onOpenSettings)
-            if (edgeButton != null) {
-                Box(modifier = Modifier.align(Alignment.BottomCenter)) { edgeButton() }
+    val layout = @Composable {
+        ScreenScaffold {
+            Box(modifier = Modifier.fillMaxSize()) {
+                MeasurementBody(measurement, state, unitSystem, onOpenSettings)
+                if (edgeButton != null) {
+                    Box(modifier = Modifier.align(Alignment.BottomCenter)) { edgeButton() }
+                }
             }
+        }
+    }
+    // Only a running measurement observes the ambient state: the other states are a reading, a reason or a start button.
+    if (state is MeasureUiState.Running) {
+        AmbientAware(latest = state, ambient = { AmbientMeasurement(measurement) }, interactive = layout)
+    } else {
+        layout()
+    }
+}
+
+/** The ambient layout of a running measurement: dim, still, no value that would be stale. */
+@Composable
+private fun AmbientMeasurement(measurement: Measurement) {
+    val dim = MaterialTheme.colorScheme.onSurfaceVariant
+    ScreenScaffold { contentPadding ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(contentPadding).padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+        ) {
+            Text(stringResource(measurement.label), style = MaterialTheme.typography.bodySmall, color = dim, textAlign = TextAlign.Center)
+            Text(
+                text = stringResource(R.string.measure_value_placeholder, stringResource(measurement.liveUnit)),
+                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Light),
+                color = dim,
+            )
+            Text(stringResource(measurement.instruction), style = MaterialTheme.typography.bodySmall, color = dim, textAlign = TextAlign.Center)
         }
     }
 }

@@ -107,6 +107,16 @@ class RecorderPlanTest {
     }
 
     @Test
+    fun `the steps come as they happen only while the app is on screen, and not in a workout`() {
+        assertFalse(RecorderPlan.decide(day).stepsLive)
+        val shown = day.copy(interactive = true)
+        assertTrue(RecorderPlan.decide(shown).stepsLive)
+        assertFalse("the workout counts its own", RecorderPlan.decide(shown.copy(workout = true)).stepsLive)
+        assertFalse(RecorderPlan.decide(shown.copy(recovering = true)).stepsLive)
+        assertFalse("no counter to hurry without the grant", RecorderPlan.decide(shown.copy(stepsGranted = false)).stepsLive)
+    }
+
+    @Test
     fun `the Samsung night measurements need their own switch and grant`() {
         val night = day.copy(sleepHolding = true)
 

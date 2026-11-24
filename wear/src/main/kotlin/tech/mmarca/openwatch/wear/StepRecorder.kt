@@ -28,6 +28,11 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
  * ([setHeartRateRunning]) the counter's waking variant is used, where the
  * watch has one.
  *
+ * While the watch app is on screen the plan asks for the steps live
+ * ([RecorderPlan.Plan.stepsLive]): the counter registers again without
+ * batching, so each step reaches the store within a second or two, and the
+ * screens, which follow the store's writes, count it as it happens.
+ *
  * A batch is written once, a second after its last event, in one
  * transaction with the last reading. So a restart neither loses nor
  * double-counts steps: what was not written is in the next difference.
@@ -61,11 +66,24 @@ internal class StepRecorder(
     /** True while the heart rate's wake-ups bring the readings; false asks for the waking counter. */
     private var heartRateRunning = true
 
+    /** True while the plan asks for the steps live: the counter unbatched. */
+    private var live = false
+
     /** The heart rate recorder applies its plan first ([WearGraph.recorders]), so its density is the new one. */
     override fun apply(plan: RecorderPlan.Plan) {
         // Without the heart rate's wake-ups the step counter must wake the watch itself.
         setHeartRateRunning(heartRateDense())
+        setLive(plan.stepsLive)
         if (plan.steps) start() else stop()
+    }
+
+    /** Switches between the batched counter and the live one. A running recorder registers again. */
+    private fun setLive(on: Boolean) {
+        if (on == live) return
+        live = on
+        val workerHandler = handler ?: return
+        sensorManager.unregisterListener(this)
+        if (!register(workerHandler)) Log.w(TAG, "Step listener not registered again")
     }
 
     /** Switches between the two variants of the counter. A running recorder registers again. */
@@ -84,12 +102,13 @@ internal class StepRecorder(
 
     private fun register(workerHandler: Handler): Boolean {
         val sensor = sensor() ?: return false
+        val latency = if (live) 0 else MAX_REPORT_LATENCY_MICROS
         val registered = try {
             sensorManager.registerListener(
                 this,
                 sensor,
                 SensorManager.SENSOR_DELAY_NORMAL,
-                MAX_REPORT_LATENCY_MICROS,
+                latency,
                 workerHandler,
             )
         } catch (e: SecurityException) {
@@ -98,8 +117,8 @@ internal class StepRecorder(
             false
         }
         if (registered) {
-            debug.registered("steps", sensor, SensorManager.SENSOR_DELAY_NORMAL, MAX_REPORT_LATENCY_MICROS)
-            debug.log(TAG) { "Recording steps from ${sensor.name}${if (sensor.isWakeUpSensor) " (waking)" else ""}" }
+            debug.registered("steps", sensor, SensorManager.SENSOR_DELAY_NORMAL, latency)
+            debug.log(TAG) { "Recording steps from ${sensor.name}${if (sensor.isWakeUpSensor) " (waking)" else ""}${if (live) " live" else ""}" }
         }
         return registered
     }

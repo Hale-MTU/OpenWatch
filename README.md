@@ -25,7 +25,7 @@ travels over Bluetooth between the device and the phone. Open source under AGPL-
   the breathing rate; on a Samsung watch, SpO2 and skin temperature too. Workouts recorded on
   the watch, with GPS, heart rate, distance and climb, reach Health Connect with their route
   and an estimate of their active calories. The watch app opens on today's dashboard and
-  offers three tiles and two watch face complications, and its settings can be changed from
+  offers five tiles and three watch face complications, and its settings can be changed from
   the phone.
 - **Xiaomi Body Composition Scale S400 and S400 Pro**: every weigh-in saved to Health Connect
   as it happens, with the app open or closed, decoded from the scale's own broadcast with the

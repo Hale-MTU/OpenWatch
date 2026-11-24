@@ -25,9 +25,9 @@ import tech.mmarca.openwatch.wearlink.WearLinkEntry
 /**
  * The whole watch UI: theme, scaffold and navigation. It renders [state],
  * hands what the wearer logs to [onLog], the tiles the wearer chooses to
- * [onEditTiles] and the quick log's entries to [onEditQuickLog], and runs a
- * spot measurement through [spot]; nothing here
- * reads a sensor. Each feature declares its destinations in its own package;
+ * [onEditTiles] and the quick log's entries to [onEditQuickLog], runs a
+ * spot measurement through [spot] and shows the heart rate now from
+ * [liveHeartRate]; nothing here reads a sensor. Each feature declares its destinations in its own package;
  * the dashboard opens a metric, the spot measurements, the quick log, the
  * workout, the tile editor and the settings, which lead on to the phone, the
  * sensor access and the link and recorder status. What only the activity
@@ -61,6 +61,8 @@ fun OpenWatchWearApp(
     onResetQuickLog: () -> Unit = {},
     /** Runs one spot measurement (`WearGraph.spot`), which keeps its reading. */
     spot: (SpotKind) -> Flow<SpotEvent> = { emptyFlow() },
+    /** The heart rate now, each reading's bpm while collected (`LiveHeartRate.bpm`), for the heart rate's detail. */
+    liveHeartRate: () -> Flow<Int> = { emptyFlow() },
     actions: ActivityActions = ActivityActions.NONE,
 ) {
     // The nav graph is built once, so every destination reads the latest
@@ -68,6 +70,7 @@ fun OpenWatchWearApp(
     val currentState by rememberUpdatedState(state)
     val currentLog by rememberUpdatedState(onLog)
     val currentSpot by rememberUpdatedState(spot)
+    val currentLiveHeartRate by rememberUpdatedState(liveHeartRate)
     val currentEditTiles by rememberUpdatedState(onEditTiles)
     val currentResetTiles by rememberUpdatedState(onResetTiles)
     val tiles = remember { TileChoice(edit = { change -> currentEditTiles(change) }, reset = { currentResetTiles() }) }
@@ -85,7 +88,7 @@ fun OpenWatchWearApp(
                 startDestination = WearRoutes.DASHBOARD,
             ) {
                 dashboardDestinations(navController, { currentState }, tiles, onStartActivity = openWorkout)
-                metricDestination(navController) { currentState }
+                metricDestination(navController, { currentState }) { currentLiveHeartRate() }
                 measureDestinations(navController, { currentState }) { kind -> currentSpot(kind) }
                 quickLogDestinations(navController, { currentState }, quickLog) { type, value, second -> currentLog(type, value, second) }
                 settingsDestinations(navController, actions)

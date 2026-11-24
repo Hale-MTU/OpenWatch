@@ -10,10 +10,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.DaySummary
@@ -53,8 +57,11 @@ internal class WearReadingsSource(
      * none. A basis that changes (the phone sent a maximum or a resting rate)
      * is read on at once, not at the next refresh, and so is an entry made on
      * the watch ([MetricStore.updates]) and a day the phone put
-     * ([phoneDays]). [zoneBasis] and [phoneDays] are collected on the IO
-     * dispatcher too, so they may load a file when they start.
+     * ([phoneDays]). New steps are read on soon too, at most every
+     * [MIN_REFRESH_MILLIS]: while the app is on screen the step counter hands
+     * each one over at once ([RecorderPlan.Plan.stepsLive]). [zoneBasis] and
+     * [phoneDays] are collected on the IO dispatcher too, so they may load a
+     * file when they start.
      */
     fun metrics(
         zoneBasis: Flow<HeartRateZones.Basis?>,
@@ -66,13 +73,22 @@ internal class WearReadingsSource(
                 // One reader at a time: the days that are kept are not a shared map.
                 reading?.cancelAndJoin()
                 reading = launch {
-                    while (true) {
+                    // The count's present value is the read the refresh starts with; each write after it asks for one more.
+                    merge(refreshes(), store.updates(WearMetrics.STEPS).drop(1)).conflate().collect {
                         send(Readings(load(basis, phone), WearReadings.sleepStages(phone, LocalDate.now(clock))))
-                        delay(REFRESH_MILLIS)
+                        delay(MIN_REFRESH_MILLIS)
                     }
                 }
             }
     }.flowOn(Dispatchers.IO)
+
+    /** A read now and one every [REFRESH_MILLIS]. */
+    private fun refreshes(): Flow<Unit> = flow {
+        while (true) {
+            emit(Unit)
+            delay(REFRESH_MILLIS)
+        }
+    }
 
     internal fun load(zoneBasis: HeartRateZones.Basis? = null, phone: Map<Long, DaySummary> = emptyMap()): Map<MetricTile, MetricUiState> {
         val zone = clock.zone
@@ -123,6 +139,9 @@ internal class WearReadingsSource(
     private companion object {
         const val DAYS = 7
         const val REFRESH_MILLIS = 30_000L
+
+        /** The shortest time between two reads, however fast the steps come: a read is today's rows, thousands of them. */
+        const val MIN_REFRESH_MILLIS = 2_000L
 
         /**
          * Above a day's most of any series: the heart rate's, a sample every ten seconds, and one

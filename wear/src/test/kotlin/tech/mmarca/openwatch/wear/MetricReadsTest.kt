@@ -55,6 +55,34 @@ class MetricReadsTest {
     }
 
     @Test
+    fun `floors say why without a barometer, a step counter or the grant`() {
+        assertEquals(FloorsToday.Missing(R.string.tile_floors_no_sensor), readFloorsToday(app, store, day))
+
+        addSensor(Sensor.TYPE_PRESSURE)
+        assertEquals(FloorsToday.Missing(R.string.tile_steps_no_sensor), readFloorsToday(app, store, day))
+
+        addStepCounter()
+        assertEquals(FloorsToday.Missing(R.string.tile_not_granted), readFloorsToday(app, store, day))
+    }
+
+    @Test
+    fun `today's floors are the height the steps carry, in whole floors and metres`() {
+        addSensor(Sensor.TYPE_PRESSURE)
+        addStepCounter()
+        shadowOf(app).grantPermissions(Manifest.permission.ACTIVITY_RECOGNITION)
+        val minute = day.startMillis + 60 * TileDay.MINUTE_MILLIS
+        // 7.5 m in a minute with steps enough to carry it, and 9 m climbed in a lift, without steps.
+        store.put(WearMetrics.ASCENT, WearLinkProtocol.AscentMinute(minute, 75))
+        store.put(WearMetrics.STEPS, WearLinkProtocol.StepMinute(minute, 40))
+        store.put(WearMetrics.ASCENT, WearLinkProtocol.AscentMinute(minute + 30 * TileDay.MINUTE_MILLIS, 90))
+
+        val today = readFloorsToday(app, store, day) as FloorsToday.Counted
+
+        assertEquals(2L, today.total)
+        assertEquals(7L, today.metresTotal)
+    }
+
+    @Test
     fun `the heart rate is the newest sample while granted and under an hour old`() {
         val now = day.nowMillis
         assertEquals(TileHeartRate.NotGranted, readHeartRateNow(app, store, now))
@@ -77,7 +105,9 @@ class MetricReadsTest {
         assertEquals(500.0, readWaterToday(store, day), 0.0)
     }
 
-    private fun addStepCounter() {
-        shadowOf(app.getSystemService(SensorManager::class.java)).addSensor(ShadowSensor.newInstance(Sensor.TYPE_STEP_COUNTER))
+    private fun addStepCounter() = addSensor(Sensor.TYPE_STEP_COUNTER)
+
+    private fun addSensor(type: Int) {
+        shadowOf(app.getSystemService(SensorManager::class.java)).addSensor(ShadowSensor.newInstance(type))
     }
 }

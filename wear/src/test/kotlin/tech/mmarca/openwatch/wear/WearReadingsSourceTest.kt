@@ -97,6 +97,22 @@ class WearReadingsSourceTest {
     }
 
     @Test
+    fun `new steps are read on within seconds, not at the next refresh`() = runBlocking {
+        store.put(WearMetrics.STEPS, StepMinute(at("09:00:00"), 40))
+
+        // The refresh is half a minute away: a second value inside the timeout can only come from the new steps.
+        val steps = mutableListOf<Double?>()
+        withTimeout(TIMEOUT_MILLIS) {
+            source.metrics(flowOf(null)).map { it.metrics[MetricTile.STEPS]?.current }.take(2).collect {
+                steps += it
+                store.put(WearMetrics.STEPS, StepMinute(at("09:01:00"), 60))
+            }
+        }
+
+        assertEquals(listOf(40.0, 100.0), steps)
+    }
+
+    @Test
     fun `the entries come oldest first, read again as each is made`() = runBlocking {
         val entries = EntryLog(store, now = { at("09:00:00") })
         entries.log(WearLinkEntry.Type.WEIGHT, 72.4, atMillis = at("08:00:00"))

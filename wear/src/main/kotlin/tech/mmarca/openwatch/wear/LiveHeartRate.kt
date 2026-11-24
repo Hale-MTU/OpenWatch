@@ -6,6 +6,11 @@ import android.hardware.SensorManager
 import android.util.Log
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.buffer
+import kotlinx.coroutines.flow.callbackFlow
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
 /**
@@ -68,6 +73,21 @@ class LiveHeartRate(
         if (handle == null) Log.w(TAG, "Heart rate sensor not registered")
         return handle
     }
+
+    /**
+     * Each usable reading's bpm for as long as it is collected, for a screen
+     * that shows the heart rate now (the heart rate's detail): a [listen]
+     * registration that closes with the collector. Nothing without a sensor
+     * or the grant, and nothing is stored.
+     */
+    fun bpm(): Flow<Int> = callbackFlow {
+        val handle = listen { reading -> if (reading is Reading.Sample) trySend(reading.sample.bpm) }
+        if (handle == null) {
+            close()
+            return@callbackFlow
+        }
+        awaitClose { handle.close() }
+    }.buffer(Channel.CONFLATED)
 
     /** Blocks for up to [seconds], handing each usable reading to [emit] on the caller's thread; returns how many. */
     fun window(seconds: Int, emit: (WearLinkProtocol.HeartRateSample) -> Unit): Int {
