@@ -18,18 +18,23 @@ data class WearUiState(
 
 /** One metric's readings, in the base unit documented on [MetricTile]. */
 data class MetricUiState(
-    /** Today's total for a cumulative metric, the latest sample otherwise. */
+    /**
+     * Today's total for a cumulative metric, the latest sample of the heart
+     * rate, and last night's value of a vital the watch takes at night: null
+     * when the night that ended today has none, however recent an older one.
+     */
     val current: Double? = null,
     /** A daily goal. Only meaningful for a cumulative metric. */
     val goal: Double? = null,
-    /** Today, oldest first: hourly totals for a cumulative metric, samples otherwise. */
+    /** Today, oldest first: hourly totals for a cumulative metric, samples otherwise; last night's for a night's vital. */
     val today: List<Double> = emptyList(),
-    /** The last days, oldest first, today last: daily totals or daily averages. */
+    /** The last days, oldest first, today last: daily totals, daily averages, or each night's value on the day it ended. */
     val week: List<Double> = emptyList(),
     /**
      * Today's lowest, mean and highest sample, where [today] is not the samples
-     * themselves: the heart rate's line is five-minute means, which hide the
-     * lowest and the highest reading. Null takes the three from [today].
+     * themselves: the heart rate's line is five-minute means and the skin
+     * temperature's quarter-hour means, which hide the lowest and the highest
+     * reading. Null takes the three from [today].
      */
     val todayStats: SampleStats? = null,
     /**
@@ -39,8 +44,12 @@ data class MetricUiState(
     val zoneTime: List<Duration> = emptyList(),
 )
 
-/** A day's samples in three figures, in the metric's base unit. */
-data class SampleStats(val low: Double, val average: Double, val high: Double)
+/**
+ * A day's samples in three figures, in the metric's base unit. [average] is
+ * null where the metric's headline is that figure already, as a night's
+ * value is: it then has no row of its own.
+ */
+data class SampleStats(val low: Double, val average: Double?, val high: Double)
 
 /**
  * Display settings the watch does not own: the phone app is where they are

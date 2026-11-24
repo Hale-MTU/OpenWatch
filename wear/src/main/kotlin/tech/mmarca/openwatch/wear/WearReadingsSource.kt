@@ -13,11 +13,11 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import tech.mmarca.healthcalculations.insights.HeartRateZones
-import tech.mmarca.openwatch.wearlink.WearLinkProtocol.SkinMinute
 
 /**
  * What the watch itself recorded, as the dashboard and the detail screens
- * read it: today by the hour and the last seven days by the day.
+ * read it: today by the hour and the last seven days by the day, each day
+ * with the night that ended on it.
  *
  * A day that is over is read from the store once and kept. Only today is
  * read again, so a refresh costs one day of rows, not the week's. A
@@ -76,23 +76,24 @@ internal class WearReadingsSource(
             heartRate = store.since(WearMetrics.HEART_RATE, from, ROW_LIMIT, until),
             steps = store.since(WearMetrics.STEPS, from, ROW_LIMIT, until),
             ascent = store.since(WearMetrics.ASCENT, from, ROW_LIMIT, until),
-            night = mapOf(
-                MetricTile.HRV to store.since(WearMetrics.HRV, from, ROW_LIMIT, until).map { it.rmssdMillis },
-                MetricTile.BLOOD_OXYGEN to store.since(WearMetrics.SPO2, from, ROW_LIMIT, until).map { it.percent.toDouble() },
-                MetricTile.SKIN_TEMPERATURE to skinByQuarterHour(store.since(WearMetrics.SKIN_TEMPERATURE, from, ROW_LIMIT, until)),
-                MetricTile.RESPIRATORY_RATE to store.since(WearMetrics.RESPIRATORY_RATE, from, ROW_LIMIT, until)
-                    .map { it.breathsPerMinute },
-            ),
+            night = night(WearReadings.nightWindow(date, zone)),
             zoneBasis = zoneBasis,
         )
     }
 
-    /** A night of skin temperature is a reading a minute; the chart takes the mean of each quarter hour. */
-    private fun skinByQuarterHour(minutes: List<SkinMinute>): List<Double> =
-        minutes.groupBy { it.epochMillis / QUARTER_HOUR_MILLIS }.toSortedMap().values.map { q -> q.map { it.skinCelsius }.average() }
+    /** The night's vitals are read by night, noon to noon, not by the day: a night is not cut in two at midnight. */
+    private fun night(window: NightWindow): NightRows {
+        val from = window.startMillis - 1
+        val until = window.endMillis
+        return NightRows(
+            hrv = store.since(WearMetrics.HRV, from, ROW_LIMIT, until),
+            spo2 = store.since(WearMetrics.SPO2, from, ROW_LIMIT, until),
+            skin = store.since(WearMetrics.SKIN_TEMPERATURE, from, ROW_LIMIT, until),
+            respiratory = store.since(WearMetrics.RESPIRATORY_RATE, from, ROW_LIMIT, until),
+        )
+    }
 
     private companion object {
-        const val QUARTER_HOUR_MILLIS = 15 * 60_000L
         const val DAYS = 7
         const val REFRESH_MILLIS = 30_000L
 

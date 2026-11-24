@@ -39,6 +39,15 @@ class MetricStatsTest {
     }
 
     @Test
+    fun `a night's value is the headline, so only its lowest and highest reading get a row`() {
+        val state = MetricUiState(current = 35.0, today = listOf(34.8, 35.1), todayStats = SampleStats(low = 34.0, average = null, high = 36.0))
+
+        val stats = metricStats(MetricTile.SKIN_TEMPERATURE, state, restingHeartRate = null)
+
+        assertEquals(listOf(MetricStat(R.string.stat_low, 34.0), MetricStat(R.string.stat_high, 36.0)), stats)
+    }
+
+    @Test
     fun `a sampled metric without a sample today has no low or high`() {
         assertEquals(emptyList<MetricStat>(), metricStats(MetricTile.HEART_RATE, MetricUiState(current = 58.0), restingHeartRate = null))
     }

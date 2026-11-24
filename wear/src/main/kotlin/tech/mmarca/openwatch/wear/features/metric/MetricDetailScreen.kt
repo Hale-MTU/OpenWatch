@@ -312,7 +312,7 @@ internal fun metricStats(metric: MetricTile, state: MetricUiState, restingHeartR
                     ?: state.today.takeIf { it.isNotEmpty() }?.let { SampleStats(it.min(), it.average(), it.max()) }
                 if (stats != null) {
                     add(MetricStat(R.string.stat_low, stats.low))
-                    add(MetricStat(R.string.stat_average, stats.average))
+                    stats.average?.let { add(MetricStat(R.string.stat_average, it)) }
                     add(MetricStat(R.string.stat_high, stats.high))
                 }
             }

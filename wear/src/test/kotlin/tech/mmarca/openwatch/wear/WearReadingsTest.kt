@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.wear
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.ZoneOffset
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -12,6 +13,10 @@ import org.junit.Test
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.AscentMinute
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HeartRateSample
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HrvWindow
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol.RespiratoryWindow
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol.SkinMinute
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Spo2Measurement
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.StepMinute
 
 class WearReadingsTest {
@@ -32,7 +37,8 @@ class WearReadingsTest {
         steps: List<StepMinute> = emptyList(),
         ascent: List<AscentMinute> = emptyList(),
         zoneBasis: HeartRateZones.Basis? = null,
-    ) = WearReadings.day(date, zone, heartRate, steps, ascent, zoneBasis = zoneBasis)
+        night: NightRows = NightRows(),
+    ) = WearReadings.day(date, zone, heartRate, steps, ascent, night, zoneBasis)
 
     private fun heartRateOf(samples: List<HeartRateSample>, zoneBasis: HeartRateZones.Basis? = null): MetricUiState =
         WearReadings.metrics(week(day(today, heartRate = samples, zoneBasis = zoneBasis)), now, zone).getValue(MetricTile.HEART_RATE)
@@ -251,16 +257,99 @@ class WearReadingsTest {
     }
 
     @Test
-    fun nightValuesShowTheLatestTodayAndADailyMean() {
+    fun aNightIsFromNoonToNoonAndNamedByTheDateItEndsOn() {
+        val window = WearReadings.nightWindow(today, zone)
+
+        assertEquals(at(today.minusDays(1), 12), window.startMillis)
+        assertEquals(at(today, 12), window.endMillis)
+    }
+
+    @Test
+    fun aNightTheClocksChangeInIsAnHourShorterOrLonger() {
+        val berlin = ZoneId.of("Europe/Berlin")
+        val hour = 3_600_000L
+
+        val spring = WearReadings.nightWindow(LocalDate.of(2026, 3, 29), berlin)
+        val autumn = WearReadings.nightWindow(LocalDate.of(2026, 10, 25), berlin)
+
+        assertEquals(23 * hour, spring.endMillis - spring.startMillis)
+        assertEquals(25 * hour, autumn.endMillis - autumn.startMillis)
+        // Noon by the wall clock on both sides: 11:00 UTC in winter time, 10:00 UTC in summer time.
+        assertEquals(Instant.parse("2026-03-28T11:00:00Z").toEpochMilli(), spring.startMillis)
+        assertEquals(Instant.parse("2026-03-29T10:00:00Z").toEpochMilli(), spring.endMillis)
+    }
+
+    @Test
+    fun aNightsHrvIsTheMeanOfItsMinutesMeansOverPositiveReadings() {
+        val yesterday = today.minusDays(1)
+        val rows = NightRows(
+            hrv = listOf(
+                // Two windows in one minute count as one minute: (40 + 60) / 2, then 80, and a failed window of 0.
+                HrvWindow(at(yesterday, 23, 0, 0), 400, 80),
+                HrvWindow(at(yesterday, 23, 0, 30), 600, 80),
+                HrvWindow(at(today, 3, 0), 800, 80),
+                HrvWindow(at(today, 4, 0), 0, 0),
+            ),
+        )
+
+        val hrv = WearReadings.metrics(week(day(today, night = rows)), now, zone).getValue(MetricTile.HRV)
+
+        assertEquals(65.0, hrv.current!!, 1e-9)
+        assertEquals(listOf(40.0, 60.0, 80.0), hrv.today)
+        assertEquals(SampleStats(low = 40.0, average = null, high = 80.0), hrv.todayStats)
+        assertEquals(listOf(65.0), hrv.week)
+    }
+
+    @Test
+    fun aNightsBloodOxygenAndBreathingRateAreTheMeanOfItsReadings() {
+        val rows = NightRows(
+            spo2 = listOf(Spo2Measurement(at(today, 1), 94, 52), Spo2Measurement(at(today, 2), 97, null), Spo2Measurement(at(today, 3), 97, 50)),
+            respiratory = listOf(RespiratoryWindow(at(today, 1), 142, 2), RespiratoryWindow(at(today, 2), 150, 3)),
+        )
+
+        val metrics = WearReadings.metrics(week(day(today, night = rows)), now, zone)
+
+        assertEquals(96.0, metrics.getValue(MetricTile.BLOOD_OXYGEN).current!!, 1e-9)
+        assertEquals(SampleStats(low = 94.0, average = null, high = 97.0), metrics.getValue(MetricTile.BLOOD_OXYGEN).todayStats)
+        assertEquals(14.6, metrics.getValue(MetricTile.RESPIRATORY_RATE).current!!, 1e-9)
+        assertEquals(listOf(14.2, 15.0), metrics.getValue(MetricTile.RESPIRATORY_RATE).today)
+    }
+
+    @Test
+    fun aNightsSkinTemperatureIsTheMedianOfItsMinutesWithLowAndHighFromTheMinutes() {
+        // Two quarter hours: 34.00, 34.40 and 36.00 degrees, then 35.00 and 35.20. The warm minute moves a mean, not the median.
+        val rows = NightRows(
+            skin = listOf(
+                SkinMinute(at(today, 2, 0), 3400, 2500),
+                SkinMinute(at(today, 2, 1), 3440, 2500),
+                SkinMinute(at(today, 2, 2), 3600, 2500),
+                SkinMinute(at(today, 2, 15), 3500, 2500),
+                SkinMinute(at(today, 2, 16), 3520, 2500),
+            ),
+        )
+
+        val skin = WearReadings.metrics(week(day(today, night = rows)), now, zone).getValue(MetricTile.SKIN_TEMPERATURE)
+
+        assertEquals(35.0, skin.current!!, 1e-9)
+        assertEquals(2, skin.today.size)
+        assertEquals((34.0 + 34.4 + 36.0) / 3, skin.today[0], 1e-9)
+        assertEquals(35.1, skin.today[1], 1e-9)
+        // The quarter hours' means run from 34.8 to 35.1; the minutes from 34.0 to 36.0.
+        assertEquals(SampleStats(low = 34.0, average = null, high = 36.0), skin.todayStats)
+    }
+
+    @Test
+    fun eachNightIsOneBarOnTheDayItEndedAndTwoNightsDoNotMix() {
         val yesterday = today.minusDays(1)
         val readings = week(
-            WearReadings.day(today, zone, emptyList(), emptyList(), emptyList(), night = mapOf(MetricTile.HRV to listOf(40.0, 60.0))),
-            earlier = mapOf(1 to WearReadings.day(yesterday, zone, emptyList(), emptyList(), emptyList(), night = mapOf(MetricTile.HRV to listOf(30.0)))),
+            day(today, night = NightRows(hrv = listOf(HrvWindow(at(yesterday, 23, 30), 400, 80), HrvWindow(at(today, 5), 600, 80)))),
+            earlier = mapOf(1 to day(yesterday, night = NightRows(hrv = listOf(HrvWindow(at(yesterday, 2), 300, 80))))),
         )
+
         val hrv = WearReadings.metrics(readings, now, zone).getValue(MetricTile.HRV)
-        assertEquals(60.0, hrv.current!!, 0.0)
-        assertEquals(listOf(40.0, 60.0), hrv.today)
+
         assertEquals(listOf(30.0, 50.0), hrv.week)
+        assertEquals(50.0, hrv.current!!, 0.0)
     }
 
     @Test
@@ -271,15 +360,18 @@ class WearReadingsTest {
     }
 
     @Test
-    fun theLastNightStaysCurrentOnADayWithoutOne() {
+    fun anOlderNightKeepsItsBarAndIsNotShownAsNow() {
         val yesterday = today.minusDays(1)
         val readings = week(
             day(today),
-            earlier = mapOf(1 to WearReadings.day(yesterday, zone, emptyList(), emptyList(), emptyList(), night = mapOf(MetricTile.BLOOD_OXYGEN to listOf(97.0)))),
+            earlier = mapOf(1 to day(yesterday, night = NightRows(spo2 = listOf(Spo2Measurement(at(yesterday, 3), 97, null))))),
         )
+
         val spo2 = WearReadings.metrics(readings, now, zone).getValue(MetricTile.BLOOD_OXYGEN)
-        assertEquals(97.0, spo2.current!!, 0.0)
+
+        assertNull(spo2.current)
         assertTrue(spo2.today.isEmpty())
+        assertNull(spo2.todayStats)
         assertEquals(listOf(97.0, 0.0), spo2.week)
     }
 }

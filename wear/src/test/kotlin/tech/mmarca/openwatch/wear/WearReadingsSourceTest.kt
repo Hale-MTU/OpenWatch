@@ -20,6 +20,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HeartRateSample
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HrvWindow
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Spo2Measurement
 
 /** The watch's own rows as the dashboard and the detail screens read them, from a real store. */
 @RunWith(AndroidJUnit4::class)
@@ -64,6 +66,39 @@ class WearReadingsSourceTest {
 
         assertEquals(Duration.ofMinutes(1), zones[0][3]) // zone 4 of 200 over 60
         assertEquals(Duration.ofMinutes(1), zones[1][4]) // zone 5 of a maximum of 150
+    }
+
+    @Test
+    fun `a night either side of midnight is one night, on the day it ends`() {
+        // Asleep from 23:00 to 07:00: readings on both calendar days, and one from the night before.
+        store.putAll(
+            WearMetrics.HRV,
+            listOf(
+                HrvWindow(Instant.parse("2026-11-01T02:00:00Z").toEpochMilli(), 300, 80),
+                HrvWindow(Instant.parse("2026-11-01T23:30:00Z").toEpochMilli(), 400, 80),
+                HrvWindow(at("05:00:00"), 600, 80),
+            ),
+        )
+
+        val hrv = source.load().getValue(MetricTile.HRV)
+
+        assertEquals(50.0, hrv.current!!, 1e-9)
+        assertEquals(listOf(40.0, 60.0), hrv.today)
+        assertEquals(listOf(30.0, 50.0), hrv.week)
+    }
+
+    @Test
+    fun `a reading after noon belongs to the night that ends tomorrow`() {
+        store.putAll(
+            WearMetrics.SPO2,
+            listOf(
+                Spo2Measurement(Instant.parse("2026-11-01T12:00:00Z").toEpochMilli(), 96, null), // noon is the night's first minute
+                Spo2Measurement(at("11:59:00"), 98, null),
+                Spo2Measurement(at("12:00:00"), 90, null),
+            ),
+        )
+
+        assertEquals(97.0, source.load().getValue(MetricTile.BLOOD_OXYGEN).current!!, 1e-9)
     }
 
     private companion object {

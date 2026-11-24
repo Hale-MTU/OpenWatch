@@ -3,19 +3,49 @@ package tech.mmarca.openwatch.wear
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 import kotlin.math.roundToInt
 import tech.mmarca.healthcalculations.insights.AscentCredit
 import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.healthcalculations.model.HeartRateSample as ZoneSample
+import tech.mmarca.healthcalculations.stats.medianOrNull
+import tech.mmarca.healthcalculations.stats.timeBucketedAverageOrNull
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.AscentMinute
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HeartRateSample
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol.HrvWindow
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol.RespiratoryWindow
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol.SkinMinute
+import tech.mmarca.openwatch.wearlink.WearLinkProtocol.Spo2Measurement
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol.StepMinute
 
 /**
+ * A night as the watch counts its vitals: from noon to noon, named by the
+ * date it ends on, so the hours either side of midnight are one night and
+ * the night a wearer wakes from is today's. [startMillis] is in it,
+ * [endMillis] is not.
+ */
+internal data class NightWindow(val startMillis: Long, val endMillis: Long)
+
+/** The rows of one night ([NightWindow]) as the store holds them, each series oldest first. */
+internal data class NightRows(
+    val hrv: List<HrvWindow> = emptyList(),
+    val spo2: List<Spo2Measurement> = emptyList(),
+    val skin: List<SkinMinute> = emptyList(),
+    val respiratory: List<RespiratoryWindow> = emptyList(),
+)
+
+/**
+ * One vital of one night, in its tile's base unit: the night's [value], the
+ * points its chart draws, oldest first, and the lowest and highest reading.
+ */
+internal data class NightValue(val value: Double, val chart: List<Double>, val low: Double, val high: Double)
+
+/**
  * One local day of what the watch recorded, cut down to what the screens
- * show. A day that is over does not change, so it is made once and kept;
- * only today is read again.
+ * show: the day from midnight to midnight, and the night that ended on it.
+ * A day that is over does not change, so it is made once and kept; only
+ * today is read again.
  */
 internal data class DayReadings(
     val date: LocalDate,
@@ -32,8 +62,8 @@ internal data class DayReadings(
     val latestHeartRate: HeartRateSample?,
     val hasSteps: Boolean,
     val hasAscent: Boolean,
-    /** The night values of the day, oldest first, each in its tile's base unit. Empty when there are none. */
-    val night: Map<MetricTile, List<Double>> = emptyMap(),
+    /** The vitals of the night that ended on the day; a vital the night has no reading of is left out. */
+    val night: Map<MetricTile, NightValue> = emptyMap(),
     /** The time in each heart rate zone, zone 1 first; empty for a day read without a basis for the zones. */
     val heartZoneTime: List<Duration> = emptyList(),
 )
@@ -51,9 +81,60 @@ internal object WearReadings {
     private const val DECIMETRES_PER_METRE = 10.0
     private const val MINUTE_MILLIS = 60_000L
     private const val HEART_RATE_BUCKET_MILLIS = 5 * MINUTE_MILLIS
+    private const val QUARTER_HOUR_MILLIS = 15 * MINUTE_MILLIS
 
     /**
-     * The rows of [date] only; the caller reads them from the store. With a
+     * The night that ends on [date]: from noon the day before to noon of
+     * [date], by the wall clock, so it is 23 or 25 hours long when the clocks
+     * change in it. health-calculations names a night the same way, by the
+     * date it ends on (`nightRmssdByDate`, `sleepNightWindow`).
+     */
+    fun nightWindow(date: LocalDate, zone: ZoneId): NightWindow = NightWindow(
+        startMillis = date.minusDays(1).atTime(LocalTime.NOON).atZone(zone).toInstant().toEpochMilli(),
+        endMillis = date.atTime(LocalTime.NOON).atZone(zone).toInstant().toEpochMilli(),
+    )
+
+    /**
+     * A night's vitals from its [rows], one value a night:
+     * - HRV: the mean of the positive readings as health-calculations takes a
+     *   night's (`nightRmssdByDate`), the mean of the means of each minute.
+     *   The watch keeps no sleep session, so the night's window stands in for
+     *   the session the library cuts by.
+     * - Skin temperature: the median of the night's minutes, as the phone
+     *   takes a night's for its baseline. The chart draws quarter-hour means;
+     *   the lowest and highest are those of the minutes.
+     * - Blood oxygen and breathing rate: the mean of the night's readings.
+     */
+    fun night(rows: NightRows): Map<MetricTile, NightValue> = buildMap {
+        val hrv = rows.hrv.filter { it.rmssdMillis > 0.0 }
+        hrv.timeBucketedAverageOrNull(time = { Instant.ofEpochMilli(it.epochMillis) }, value = { it.rmssdMillis })?.let { mean ->
+            put(MetricTile.HRV, nightValue(mean, hrv.map { it.rmssdMillis }))
+        }
+        if (rows.spo2.isNotEmpty()) {
+            val percents = rows.spo2.map { it.percent.toDouble() }
+            put(MetricTile.BLOOD_OXYGEN, nightValue(percents.average(), percents))
+        }
+        val skin = rows.skin.map { it.skinCelsius }
+        skin.medianOrNull()?.let { median ->
+            val byQuarterHour = rows.skin.groupBy { it.epochMillis / QUARTER_HOUR_MILLIS }
+                .toSortedMap()
+                .values
+                .map { quarter -> quarter.map { it.skinCelsius }.average() }
+            put(MetricTile.SKIN_TEMPERATURE, NightValue(median, byQuarterHour, low = skin.min(), high = skin.max()))
+        }
+        if (rows.respiratory.isNotEmpty()) {
+            val breaths = rows.respiratory.map { it.breathsPerMinute }
+            put(MetricTile.RESPIRATORY_RATE, nightValue(breaths.average(), breaths))
+        }
+    }
+
+    /** A night whose chart draws its [readings] themselves. */
+    private fun nightValue(value: Double, readings: List<Double>): NightValue =
+        NightValue(value, chart = readings, low = readings.min(), high = readings.max())
+
+    /**
+     * The rows of [date] only, and of the night that ended on it ([night],
+     * [nightWindow]); the caller reads them from the store. With a
      * [zoneBasis] the day's time in the heart rate zones is counted too.
      */
     fun day(
@@ -62,7 +143,7 @@ internal object WearReadings {
         heartRate: List<HeartRateSample>,
         steps: List<StepMinute>,
         ascent: List<AscentMinute>,
-        night: Map<MetricTile, List<Double>> = emptyMap(),
+        night: NightRows = NightRows(),
         zoneBasis: HeartRateZones.Basis? = null,
     ): DayReadings {
         val stepsAt = steps.associate { it.epochMillis to it.steps }
@@ -89,7 +170,7 @@ internal object WearReadings {
             latestHeartRate = heartRate.maxByOrNull { it.epochMillis },
             hasSteps = steps.isNotEmpty(),
             hasAscent = ascent.isNotEmpty(),
-            night = night.filterValues { it.isNotEmpty() },
+            night = night(night),
             heartZoneTime = zoneBasis?.let { timeInZones(heartRate, it) }.orEmpty(),
         )
     }
@@ -127,14 +208,18 @@ internal object WearReadings {
                 )
             }
             for (metric in NIGHT_METRICS) {
-                val latest = days.lastNotNullOfOrNull { it.night[metric]?.lastOrNull() } ?: continue
+                if (days.none { metric in it.night }) continue
+                // Last night's value is the one shown as now. An older night has its bar, and is not passed off as today's.
+                val lastNight = today.night[metric]
                 put(
                     metric,
                     MetricUiState(
-                        current = latest,
-                        today = today.night[metric].orEmpty(),
-                        // A day without a reading stays a zero bar, as for the heart rate.
-                        week = days.dropWhile { it.night[metric] == null }.map { day -> day.night[metric]?.average() ?: 0.0 },
+                        current = lastNight?.value,
+                        today = lastNight?.chart.orEmpty(),
+                        // A day without a night stays a zero bar, as for the heart rate.
+                        week = days.dropWhile { it.night[metric] == null }.map { day -> day.night[metric]?.value ?: 0.0 },
+                        // The headline is the night's value already: the lowest and highest reading frame it.
+                        todayStats = lastNight?.let { SampleStats(low = it.low, average = null, high = it.high) },
                     ),
                 )
             }
