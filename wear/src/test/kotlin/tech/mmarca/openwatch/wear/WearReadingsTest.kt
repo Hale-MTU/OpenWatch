@@ -290,6 +290,33 @@ class WearReadingsTest {
     }
 
     @Test
+    fun everyMetricsWeekEndsOnTheDayItWasReadOn() {
+        val readings = week(
+            day(
+                today,
+                heartRate = listOf(HeartRateSample(at(today, 8), 80)),
+                steps = listOf(StepMinute(at(today, 8), 40)),
+                night = NightRows(spo2 = listOf(Spo2Measurement(at(today, 3), 97, null))),
+            ),
+        )
+
+        val metrics = WearReadings.metrics(readings, now, zone)
+
+        assertEquals(setOf(MetricTile.STEPS, MetricTile.HEART_RATE, MetricTile.BLOOD_OXYGEN), metrics.keys)
+        assertTrue(metrics.values.all { it.weekEnd == today })
+    }
+
+    @Test
+    fun theNightsVitalsAreTheTilesTakenAtNight() {
+        assertEquals(
+            setOf(MetricTile.HRV, MetricTile.BLOOD_OXYGEN, MetricTile.SKIN_TEMPERATURE, MetricTile.RESPIRATORY_RATE),
+            WearReadings.NIGHT_METRICS.toSet(),
+        )
+        // The watch measures them itself: night says when, not where from.
+        assertTrue(WearReadings.NIGHT_METRICS.all { it.source == MetricSource.SENSOR })
+    }
+
+    @Test
     fun aNightIsFromNoonToNoonAndNamedByTheDateItEndsOn() {
         val window = WearReadings.nightWindow(today, zone)
 

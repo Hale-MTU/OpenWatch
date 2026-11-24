@@ -1,5 +1,7 @@
 package tech.mmarca.openwatch.wear.features.metric
 
+import java.time.LocalDate
+import java.util.Locale
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import tech.mmarca.openwatch.wear.MetricTile
@@ -8,6 +10,16 @@ import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.SampleStats
 
 class MetricStatsTest {
+
+    @Test
+    fun `the week's labels are the weekdays that end on the day the bars were read on`() {
+        val monday = LocalDate.of(2026, 11, 2)
+
+        assertEquals(listOf("F", "S", "S", "M"), weekdayLabels(monday, count = 4, Locale.US))
+        // Left open over midnight: the next reading is Tuesday's, and the labels follow it.
+        assertEquals(listOf("S", "S", "M", "T"), weekdayLabels(monday.plusDays(1), count = 4, Locale.US))
+        assertEquals(emptyList<String>(), weekdayLabels(monday, count = 0, Locale.US))
+    }
 
     @Test
     fun `the heart rate's low and high are its samples', not its line's`() {

@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.wear
 
 import java.time.Duration
+import java.time.LocalDate
 
 /** Everything the screens render. A null value means "no reading yet". */
 data class WearUiState(
@@ -39,6 +40,13 @@ data class MetricUiState(
      * day without data is null: no day reads as a zero it did not record.
      */
     val week: List<Double?> = emptyList(),
+    /**
+     * The date of [week]'s last entry, the day the readings were made on,
+     * which the week's labels count back from. It comes with the readings,
+     * so a screen left open over midnight is labelled for the new day as
+     * soon as it shows the new day's values.
+     */
+    val weekEnd: LocalDate? = null,
     /**
      * Today's lowest, mean and highest sample, where [today] is not the samples
      * themselves: the heart rate's line is five-minute means and the skin

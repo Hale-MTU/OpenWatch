@@ -1,13 +1,13 @@
 package tech.mmarca.openwatch.wear.ui.preview
 
 import java.time.Duration
+import java.time.LocalDate
 import tech.mmarca.openwatch.wear.LinePoint
 import tech.mmarca.openwatch.wear.MetricUiState
 import tech.mmarca.openwatch.wear.SampleStats
 import tech.mmarca.openwatch.wear.features.recording.RecordingUiState
 import tech.mmarca.openwatch.wear.SleepStage
 import tech.mmarca.openwatch.wear.MetricTile
-import tech.mmarca.openwatch.wear.WearUiState
 import tech.mmarca.openwatch.wear.features.recording.ActivityType
 import tech.mmarca.openwatch.wear.features.recording.WorkoutField
 
@@ -16,6 +16,9 @@ import tech.mmarca.openwatch.wear.features.recording.WorkoutField
  * screens yet. Never shown in a release build.
  */
 object SampleData {
+    /** The day the sample week ends on, a Sunday. */
+    private val today = LocalDate.of(2026, 11, 1)
+
     val metrics = mapOf(
         MetricTile.STEPS to MetricUiState(
             current = 6_482.0,
@@ -86,7 +89,7 @@ object SampleData {
             current = 72.4,
             week = listOf(73.1, 72.9, 72.8, 72.6, 72.7, 72.5, 72.4),
         ),
-    )
+    ).mapValues { (_, state) -> state.copy(weekEnd = today) }
 
     /** Minutes per stage for a 7:22 night. */
     val sleepStages = mapOf(
@@ -118,11 +121,6 @@ object SampleData {
         speedMetersPerSecond = 2.28,
         averageSpeedMetersPerSecond = 2.21,
         averageHeartRateBpm = 131,
-    )
-
-    val uiState = WearUiState(
-        metrics = metrics,
-        sleepStages = sleepStages,
     )
 
     private fun doubles(vararg values: Int): List<Double> = values.map(Int::toDouble)

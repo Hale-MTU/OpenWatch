@@ -174,7 +174,7 @@ fun MetricDetailScreen(
                                 .fillMaxWidth()
                                 .height(ChartHeight),
                         )
-                        DayLabels(count = state.week.size)
+                        state.weekEnd?.let { DayLabels(count = state.week.size, lastDay = it) }
                     }
                 }
             }
@@ -279,17 +279,14 @@ private fun StatRow(label: String, value: String, unit: String) {
     }
 }
 
-/** Narrow weekday names for the last [count] days, today last. */
+/**
+ * Narrow weekday names for the [count] days that end on [lastDay], the day
+ * the bars above were read on: the labels move on with the bars, not with a
+ * clock read when the screen was opened.
+ */
 @Composable
-private fun DayLabels(count: Int) {
-    val labels = remember(count) {
-        val today = LocalDate.now()
-        List(count) { index ->
-            today.minusDays((count - 1 - index).toLong())
-                .dayOfWeek
-                .getDisplayName(TextStyle.NARROW, Locale.getDefault())
-        }
-    }
+private fun DayLabels(count: Int, lastDay: LocalDate) {
+    val labels = remember(count, lastDay) { weekdayLabels(lastDay, count, Locale.getDefault()) }
     Row(modifier = Modifier.fillMaxWidth()) {
         labels.forEach { label ->
             Text(
@@ -302,6 +299,10 @@ private fun DayLabels(count: Int) {
         }
     }
 }
+
+/** The narrow weekday names of the [count] days that end on [lastDay], oldest first. */
+internal fun weekdayLabels(lastDay: LocalDate, count: Int, locale: Locale): List<String> =
+    List(count) { index -> lastDay.minusDays((count - 1 - index).toLong()).dayOfWeek.getDisplayName(TextStyle.NARROW, locale) }
 
 internal data class MetricStat(@param:StringRes val label: Int, val value: Double)
 

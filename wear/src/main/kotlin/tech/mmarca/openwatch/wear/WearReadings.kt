@@ -76,8 +76,8 @@ internal object WearReadings {
 
     private const val HOURS = 24
 
-    /** The tiles a day's [DayReadings.night] fills. */
-    val NIGHT_METRICS = listOf(MetricTile.HRV, MetricTile.BLOOD_OXYGEN, MetricTile.SKIN_TEMPERATURE, MetricTile.RESPIRATORY_RATE)
+    /** The tiles a day's [DayReadings.night] fills: the vitals the watch takes at night. */
+    val NIGHT_METRICS = MetricTile.entries.filter { it.period == MetricPeriod.NIGHT }
     private const val DECIMETRES_PER_METRE = 10.0
     private const val MINUTE_MILLIS = 60_000L
     private const val QUARTER_HOUR_MILLIS = 15 * MINUTE_MILLIS
@@ -286,7 +286,7 @@ internal object WearReadings {
                     ),
                 )
             }
-        }
+        }.mapValues { (_, state) -> state.copy(weekEnd = today.date) }
     }
 
     /** What the Today tile shows: the day's steps and the latest heart rate, each null when there is none. */

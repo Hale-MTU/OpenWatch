@@ -52,7 +52,8 @@ fun OpenWatchWearApp(
                         tiles = MetricTile.DefaultTiles.filter { it in currentState.availableMetrics },
                         metrics = currentState.metrics,
                         unitSystem = currentState.preferences.unitSystem,
-                        onOpenMetric = { navController.navigate(WearRoutes.metric(it)) },
+                        // A second tap before the screen is up must not push it twice.
+                        onOpenMetric = { navController.navigate(WearRoutes.metric(it)) { launchSingleTop = true } },
                         onStartActivity = openWorkout,
                         onOpenStatus = { navController.navigate(WearRoutes.STATUS) },
                     )
