@@ -27,4 +27,6 @@
     <string name="settings_respiratory_rate_title">Frecuencia respiratoria do reloxo (experimental)</string>
     <string name="settings_respiratory_rate_body">Escribe en Health Connect a frecuencia respiratoria das xanelas nocturnas de VFC do reloxo. Aínda non se comparou cun dispositivo de referencia.</string>
     <string name="health_data_open_body">Cada tipo de datos de saúde, o dispositivo do que vén e por que.</string>
+    <string name="settings_sleep_beside_others_title">Escribir o sono do reloxo xunto ao doutras apps</string>
+    <string name="settings_sleep_beside_others_body">Escribe a noite aínda que Samsung Health ou outra app xa escribise unha. A prioridade das fontes de datos de Health Connect decide entón que noite mostran as apps. Desactivado: gaña a noite da outra app.</string>
 </resources>

@@ -86,6 +86,27 @@
     <string name="settings_watch_auto_sync_background_access_action">Autoriser l\'accès en arrière-plan</string>
     <string name="settings_watch_wearos_needs_workout_write">Entraînements non enregistrés : autorisez OpenWatch à écrire les entraînements, itinéraires et distances dans Santé Connect, puis synchronisez à nouveau.</string>
     <string name="settings_watch_garmin_withheld">Non enregistrés dans Santé Connect, faute d\'autorisation : %1$s. Autorisez-les, et la prochaine synchronisation enregistrera ce que la montre envoie à partir de là.</string>
+    <string name="home_section_devices">Autres appareils</string>
+    <string name="devices_intro">Capteurs et appareils de mesure qui s\'appairent au téléphone lui-même. Ce qu\'ils mesurent va dans Santé Connect.</string>
+    <string name="devices_add">Ajouter un appareil</string>
+    <string name="devices_permissions_title">Autorisations pour votre appareil</string>
+    <string name="devices_permissions_body">Android la demande séparément de Santé Connect. Sans elle, aucun appareil ne peut être détecté ni lu.</string>
+    <string name="devices_scan_empty">Rien trouvé pour l\'instant. Réveillez l\'appareil et gardez-le près de votre téléphone.</string>
+    <string name="devices_scan_again">Relancer la recherche</string>
+    <string name="devices_pairing">Appairage…</string>
+    <string name="devices_pair_refused">L\'appairage n\'a pas abouti. Acceptez la demande d\'appairage d\'Android pour terminer.</string>
+    <string name="devices_pair_unreachable">Impossible de joindre l\'appareil. Réveillez-le et gardez-le à proximité, puis réessayez.</string>
+    <string name="devices_pair_not_associated">Autorisez OpenWatch dans la boîte de dialogue d\'Android : c\'est ainsi que le téléphone entend l\'appareil quand il a une mesure.</string>
+    <string name="devices_last_reading">Dernière mesure %1$s</string>
+    <string name="devices_no_reading">Aucune mesure pour l\'instant</string>
+    <string name="device_live_section">En direct</string>
+    <string name="device_live_waiting">En attente d\'une mesure…</string>
+    <plurals name="device_readings_waiting">
+        <item quantity="one">%1$d mesure pas encore dans Santé Connect</item>
+        <item quantity="many">%1$d mesures pas encore dans Santé Connect</item>
+        <item quantity="other">%1$d mesures pas encore dans Santé Connect</item>
+    </plurals>
+    <string name="device_readings_waiting_grant">%1$s. Autorisez OpenWatch à les écrire dans Santé Connect, et elles seront enregistrées.</string>
     <string name="settings_watch_wearos_companion_required">Android n\'a pas associé la montre à OpenWatch, elle n\'a donc pas été ajoutée. OpenWatch a besoin de cette association pour enregistrer les entraînements qu\'une autre application lance sur la montre. Appuyez de nouveau sur Appairer et acceptez la demande.</string>
     <string name="settings_sensors_open_bluetooth">Ouvrir les réglages Bluetooth</string>
 </resources>

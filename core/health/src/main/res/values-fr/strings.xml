@@ -3,6 +3,11 @@
     <string name="health_data_section_garmin">Écrit depuis une montre Garmin</string>
     <string name="health_data_section_wearos">Écrit depuis une montre Wear OS</string>
     <string name="health_data_section_scale">Écrit depuis la balance</string>
+    <string name="health_data_section_standard">Écrit depuis un appareil sur un profil Bluetooth standard</string>
+    <string name="health_data_note_standard_heart_rate">Depuis une ceinture cardio, tant que son écran est ouvert ou qu\'une application que vous avez autorisée enregistre avec elle : un enregistrement par minute.</string>
+    <string name="health_data_note_standard_blood_pressure">Depuis un tensiomètre, chaque mesure qu\'il transmet à son réveil, avec le pouls mesuré écrit comme fréquence cardiaque.</string>
+    <string name="health_data_note_standard_blood_glucose">Depuis un glucomètre, les mesures qu\'il a stockées, transmises à son réveil. Un contrôle avec solution de contrôle n\'est pas écrit.</string>
+    <string name="health_data_note_standard_weight">Depuis une balance sur le profil standard Weight Scale, chaque pesée qu\'elle transmet à son réveil.</string>
     <string name="health_data_section_reads">Lu dans Santé Connect</string>
     <string name="health_data_section_watch_app">Demandé par l\'app de la montre, sur la montre</string>
     <string name="health_data_note_garmin_weight">Un poids qu\'une balance Garmin transmet via la montre.</string>
@@ -10,6 +15,8 @@
     <string name="health_data_note_wearos_sleep">Une session estimée par nuit et par sieste.</string>
     <string name="health_data_note_wearos_hrv">La nuit, sur une montre capable de la mesurer.</string>
     <string name="health_data_note_wearos_workout">Un entraînement que vous enregistrez sur la montre, avec son itinéraire et sa distance.</string>
+    <string name="health_data_note_wearos_entry">Ce que vous saisissez à la main sur la montre.</string>
+    <string name="health_data_note_wearos_mindfulness">Une séance de respiration faite sur la montre, là où Santé Connect les conserve.</string>
     <string name="health_data_note_wearos_skin">Uniquement depuis une montre Samsung, si l\'option « Température cutanée la nuit » est activée pour cette montre. Un enregistrement par nuit : l\'écart par rapport à votre propre nuit habituelle.</string>
     <string name="health_data_note_scale_estimate">Estimé sur le téléphone à partir de la mesure de la balance et de votre profil corporel.</string>
     <string name="health_data_read_weight">Pour les calories de marche et la composition corporelle de la balance.</string>
@@ -18,9 +25,14 @@
     <string name="health_data_read_sleep">Pour ne pas toucher à une nuit qui contient déjà une session de sommeil.</string>
     <string name="health_data_read_resting_heart_rate">Pour ne pas toucher à un jour qui contient déjà une fréquence cardiaque au repos, et pour les zones de fréquence cardiaque qu\'affiche la montre.</string>
     <string name="health_data_read_heart_rate">Votre fréquence cardiaque la plus élevée, pour ces zones, et l\'énergie d\'un entraînement.</string>
+    <string name="health_data_read_day_totals">Le total du jour de toutes les applications, qu\'affiche la montre Wear OS.</string>
     <string name="health_data_read_history">Vos derniers poids et taille sont souvent antérieurs aux 30 jours que Santé Connect affiche sans cet accès.</string>
     <string name="health_data_read_background">Une synchronisation planifiée, application fermée, ne voit les poids et les entraînements d\'une autre application qu\'avec cet accès.</string>
     <string name="health_data_watch_heart_rate">Le capteur de fréquence cardiaque de la montre : fréquence cardiaque, variabilité de la fréquence cardiaque de la nuit et estimation du sommeil.</string>
     <string name="health_data_watch_background">Pour continuer à enregistrer lorsque l\'écran de la montre est éteint.</string>
     <string name="health_data_watch_skin">Uniquement sur une montre Samsung, et seulement si vous activez la température cutanée la nuit.</string>
+    <string name="health_data_note_wearos_breathing_logged">La nuit uniquement si « Fréquence respiratoire de la montre » est activé dans Paramètres ; et une fréquence respiratoire que vous saisissez sur la montre.</string>
+    <string name="health_data_note_wearos_spo2_measured">La nuit uniquement depuis une montre Samsung, si « SpO2 toutes les heures la nuit » est activé pour cette montre ; et un taux d\'oxygène sanguin que vous saisissez ou mesurez sur la montre.</string>
+    <string name="health_data_note_wearos_vo2">Une estimation à partir d\'une marche ou d\'une course que vous enregistrez sur la montre avec son itinéraire, si votre profil corporel contient une fréquence cardiaque au repos.</string>
+    <string name="health_data_watch_spo2_spot">Uniquement sur une montre Samsung : quand vous activez la SpO2 la nuit, et quand vous mesurez votre oxygène sanguin sur la montre.</string>
 </resources>

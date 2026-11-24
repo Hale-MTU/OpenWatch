@@ -27,4 +27,6 @@
     <string name="settings_respiratory_rate_title">Frequenza respiratoria dall\'orologio (sperimentale)</string>
     <string name="settings_respiratory_rate_body">Scrive in Health Connect la frequenza respiratoria delle finestre HRV notturne dell\'orologio. Non ancora verificata con un dispositivo di riferimento.</string>
     <string name="health_data_open_body">Ogni tipo di dato sanitario, il dispositivo da cui proviene e il perché.</string>
+    <string name="settings_sleep_beside_others_title">Scrivi il sonno dell\'orologio accanto alle altre app</string>
+    <string name="settings_sleep_beside_others_body">Scrive la notte anche se Samsung Health o un\'altra app ne ha già scritta una. La priorità delle fonti dati di Health Connect decide poi quale notte mostrano le app. Disattivato: vince la notte dell\'altra app.</string>
 </resources>

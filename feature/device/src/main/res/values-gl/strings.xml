@@ -82,6 +82,26 @@
     <string name="settings_watch_auto_sync_background_access_action">Permitir o acceso en segundo plano</string>
     <string name="settings_watch_wearos_needs_workout_write">Adestramentos sen escribir: permite que OpenWatch escriba adestramentos, rutas e distancia en Health Connect e sincroniza de novo.</string>
     <string name="settings_watch_garmin_withheld">Sen gardar en Health Connect por falta de permiso: %1$s. Concede eses permisos e a próxima sincronización gardará o que envíe o reloxo desde entón.</string>
+    <string name="home_section_devices">Outros dispositivos</string>
+    <string name="devices_intro">Sensores e medidores que se emparellan co propio teléfono. O que miden vai a Health Connect.</string>
+    <string name="devices_add">Engadir un dispositivo</string>
+    <string name="devices_permissions_title">Permisos para o teu dispositivo</string>
+    <string name="devices_permissions_body">Android pídeo por separado de Health Connect. Sen el non se pode atopar nin ler un dispositivo.</string>
+    <string name="devices_scan_empty">Aínda non se atopou nada. Esperta o dispositivo e achégao ao teléfono.</string>
+    <string name="devices_scan_again">Buscar de novo</string>
+    <string name="devices_pairing">Emparellando…</string>
+    <string name="devices_pair_refused">O emparellamento non se completou. Acepta a solicitude de emparellamento de Android para rematar.</string>
+    <string name="devices_pair_unreachable">Non se puido contactar co dispositivo. Espértao, achégao e téntao de novo.</string>
+    <string name="devices_pair_not_associated">Permite OpenWatch no diálogo de Android: así é como o teléfono escoita o dispositivo cando ten unha lectura.</string>
+    <string name="devices_last_reading">Última lectura %1$s</string>
+    <string name="devices_no_reading">Aínda sen lecturas</string>
+    <string name="device_live_section">En directo</string>
+    <string name="device_live_waiting">Agardando por unha lectura…</string>
+    <plurals name="device_readings_waiting">
+        <item quantity="one">%1$d lectura aínda non está en Health Connect</item>
+        <item quantity="other">%1$d lecturas aínda non están en Health Connect</item>
+    </plurals>
+    <string name="device_readings_waiting_grant">%1$s. Permite que OpenWatch as escriba en Health Connect e gardaranse.</string>
     <string name="settings_watch_wearos_companion_required">Android non vinculou o reloxo con OpenWatch, así que non se engadiu. OpenWatch precisa este vínculo para gravar os adestramentos que outra app inicia no reloxo. Toca Emparellar de novo e acepta a solicitude.</string>
     <string name="settings_sensors_open_bluetooth">Abrir os axustes de Bluetooth</string>
 </resources>

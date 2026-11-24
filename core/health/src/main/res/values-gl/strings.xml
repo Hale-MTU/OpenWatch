@@ -3,6 +3,11 @@
     <string name="health_data_section_garmin">Escrito desde un reloxo Garmin</string>
     <string name="health_data_section_wearos">Escrito desde un reloxo Wear OS</string>
     <string name="health_data_section_scale">Escrito desde a báscula</string>
+    <string name="health_data_section_standard">Escrito desde un dispositivo cun perfil Bluetooth estándar</string>
+    <string name="health_data_note_standard_heart_rate">Desde unha banda de pulso, mentres a súa pantalla está aberta ou unha app que permitiches grava con ela: un rexistro por minuto.</string>
+    <string name="health_data_note_standard_blood_pressure">Desde un tensiómetro, cada lectura que entrega ao espertar, co pulso que mediu escrito como frecuencia cardíaca.</string>
+    <string name="health_data_note_standard_blood_glucose">Desde un glucómetro, as lecturas que gardou, entregadas ao espertar. Unha proba con solución de control non se escribe.</string>
+    <string name="health_data_note_standard_weight">Desde unha báscula co perfil estándar Weight Scale, cada pesaxe que entrega ao espertar.</string>
     <string name="health_data_section_reads">Lido de Health Connect</string>
     <string name="health_data_section_watch_app">Solicitado pola app do reloxo, no propio reloxo</string>
     <string name="health_data_note_garmin_weight">Un peso que unha báscula Garmin envía a través do reloxo.</string>
@@ -10,6 +15,8 @@
     <string name="health_data_note_wearos_sleep">Unha sesión estimada por noite e por sesta.</string>
     <string name="health_data_note_wearos_hrv">Pola noite, nun reloxo que poida medila.</string>
     <string name="health_data_note_wearos_workout">Un adestramento que rexistras no reloxo, coa súa ruta e distancia.</string>
+    <string name="health_data_note_wearos_entry">O que rexistras a man no reloxo.</string>
+    <string name="health_data_note_wearos_mindfulness">Unha sesión de respiración que fas no reloxo, onde Health Connect as garda.</string>
     <string name="health_data_note_wearos_skin">Só desde un reloxo Samsung, con «Temperatura da pel pola noite» activada para ese reloxo. Un rexistro por noite: a diferenza respecto da túa noite habitual.</string>
     <string name="health_data_note_scale_estimate">Estimado no teléfono a partir da medición da báscula e do teu perfil corporal.</string>
     <string name="health_data_read_weight">Para as calorías ao camiñar e a composición corporal da báscula.</string>
@@ -18,9 +25,14 @@
     <string name="health_data_read_sleep">Para que unha noite que xa ten unha sesión de sono quede como está.</string>
     <string name="health_data_read_resting_heart_rate">Para que un día que xa ten unha frecuencia cardíaca en repouso quede como está, e para as zonas de frecuencia cardíaca que mostra o reloxo.</string>
     <string name="health_data_read_heart_rate">A túa frecuencia cardíaca máxima, para esas zonas, e a enerxía dun adestramento.</string>
+    <string name="health_data_read_day_totals">O total do día de todas as apps, que mostra o reloxo Wear OS.</string>
     <string name="health_data_read_history">O teu peso e a túa altura máis recentes adoitan ser anteriores aos 30 días que Health Connect mostra sen este acceso.</string>
     <string name="health_data_read_background">Unha sincronización programada, coa app pechada, só pode ver os pesos e os adestramentos doutra app con este acceso.</string>
     <string name="health_data_watch_heart_rate">O sensor de frecuencia cardíaca do reloxo: a frecuencia cardíaca, a variabilidade da frecuencia cardíaca da noite e a estimación do sono.</string>
     <string name="health_data_watch_background">Para seguir gravando coa pantalla do reloxo apagada.</string>
     <string name="health_data_watch_skin">Só nun reloxo Samsung, e só cando activas a temperatura da pel pola noite.</string>
+    <string name="health_data_note_wearos_breathing_logged">Pola noite só con «Frecuencia respiratoria do reloxo» activada en Axustes; e unha frecuencia respiratoria que rexistres no reloxo.</string>
+    <string name="health_data_note_wearos_spo2_measured">Pola noite só desde un reloxo Samsung, con «SpO2 cada hora pola noite» activado para ese reloxo; e un osíxeno en sangue que rexistres ou midas no reloxo.</string>
+    <string name="health_data_note_wearos_vo2">Unha estimación a partir dunha camiñada ou carreira que gravas no reloxo coa súa ruta, cando o teu perfil corporal ten unha frecuencia cardíaca en repouso.</string>
+    <string name="health_data_watch_spo2_spot">Só nun reloxo Samsung: cando activas a SpO2 pola noite e cando medes o osíxeno en sangue no reloxo.</string>
 </resources>

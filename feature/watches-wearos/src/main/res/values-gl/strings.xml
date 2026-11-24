@@ -11,6 +11,10 @@
     <string name="settings_watch_wearos_sync_body">A app OpenWatch do reloxo rexistra a frecuencia cardíaca e o necesario para estimar o sono, e garda unha semana. A sincronización copia a frecuencia cardíaca nova en Health Connect e escribe unha sesión de sono estimada por noite.</string>
     <string name="settings_watch_wearos_sync_now">Sincronizar reloxo</string>
     <string name="settings_watch_wearos_syncing">Sincronizando reloxo…</string>
+    <plurals name="settings_watch_wearos_skin_baseline_nights_to_go">
+        <item quantity="one">Liña base da temperatura da pel: falta %1$d noite máis.</item>
+        <item quantity="other">Liña base da temperatura da pel: faltan %1$d noites máis.</item>
+    </plurals>
     <string name="watch_settings_section">Axustes do reloxo</string>
     <string name="watch_settings_not_read">O reloxo garda estes axustes. Leos para cambialos aquí.</string>
     <string name="watch_settings_unreachable">O reloxo non respondeu. Está preto e coa app OpenWatch en marcha?</string>
@@ -25,6 +29,10 @@
     <string name="watch_settings_skin">Temperatura da pel pola noite</string>
     <string name="watch_settings_spo2">SpO2 cada hora pola noite</string>
     <string name="watch_settings_allow_on_watch">Permíteo no reloxo: abre alí OpenWatch e actívao unha vez.</string>
+    <string name="watch_settings_hr_source_explained">Desactivado: o sensor do propio reloxo, en directo. Activado: o valor da plataforma, entregado en lotes ata 10 minutos tarde coa pantalla apagada. Un adestramento usa o sensor en calquera caso.</string>
+    <string name="watch_settings_hrv_source_explained">Desactivado: VFC a partir do sinal de pulso sen procesar, en cada intervalo. Activado: os intervalos entre latexos da plataforma; hoxe pérdense arredor do 60 % deles, así que menos noites teñen un valor.</string>
+    <string name="watch_settings_skin_explained">Temperatura da pel no pulso mentres dormes, unha lectura por minuto. Pouca enerxía; nada máis cambia.</string>
+    <string name="watch_settings_spo2_explained">Osíxeno en sangue como moito unha vez por hora mentres dormes, uns 15 s de luz vermella. Uns poucos mAh por noite; omítese se o brazo se move.</string>
     <string name="settings_watch_wearos_companion_missing">Android non vinculou este reloxo con OpenWatch. Sen o vínculo, OpenWatch non pode gravar os adestramentos que outra app inicia no reloxo.</string>
     <string name="settings_watch_wearos_companion_link">Vincular reloxo</string>
 </resources>

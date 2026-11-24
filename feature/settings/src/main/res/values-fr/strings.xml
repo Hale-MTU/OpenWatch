@@ -27,4 +27,6 @@
     <string name="settings_respiratory_rate_title">Fréquence respiratoire de la montre (expérimental)</string>
     <string name="settings_respiratory_rate_body">Écrit dans Santé Connect la fréquence respiratoire des fenêtres VFC nocturnes de la montre. Pas encore vérifiée par rapport à un appareil de référence.</string>
     <string name="health_data_open_body">Chaque type de données de santé, l\'appareil d\'où il provient et pourquoi.</string>
+    <string name="settings_sleep_beside_others_title">Écrire le sommeil de la montre à côté des autres applications</string>
+    <string name="settings_sleep_beside_others_body">Écrit la nuit même si Samsung Health ou une autre application en a déjà écrit une. La priorité des sources de données de Santé Connect décide alors quelle nuit les applications affichent. Désactivé : la nuit de l\'autre application l\'emporte.</string>
 </resources>
