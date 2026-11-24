@@ -1,6 +1,5 @@
 package tech.mmarca.openwatch.wear.features.measure
 
-import android.app.Application
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -11,7 +10,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,9 +24,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,38 +38,46 @@ import androidx.wear.compose.material3.CircularProgressIndicator
 import androidx.wear.compose.material3.EdgeButton
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
-import androidx.wear.compose.material3.ProgressIndicatorDefaults
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
 import tech.mmarca.openwatch.wear.R
-import tech.mmarca.openwatch.wear.WearPermissions
+import tech.mmarca.openwatch.wear.SpotEvent
+import tech.mmarca.openwatch.wear.SpotFailure
+import tech.mmarca.openwatch.wear.SpotKind
 import tech.mmarca.openwatch.wear.UnitSystem
-import tech.mmarca.openwatch.wear.ui.ambient.AmbientLook
-import tech.mmarca.openwatch.wear.ui.ambient.ambientLook
-import tech.mmarca.openwatch.wear.ui.ambient.rememberAmbient
+import tech.mmarca.openwatch.wear.WearPermissions
+import tech.mmarca.openwatch.wear.haptics.Haptics
+import tech.mmarca.openwatch.wear.ui.ambient.AmbientAware
 import tech.mmarca.openwatch.wear.ui.components.MetricValueRow
 import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
 import tech.mmarca.openwatch.wear.ui.theme.Emphasis
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
- * Route for one spot measurement. [supported] is null while the watch's
- * capabilities are still being read; false shows why the measurement cannot
- * run here instead of a start button, which also covers a tile shortcut to a
- * measurement this watch lacks.
+ * The destination of one spot measurement. [supported] is null while the
+ * watch's sensors are read; false shows why the measurement cannot run here
+ * instead of a start button. The measurement runs through [events]
+ * (`WearGraph.spot`); it first asks for the grant it reads under where it is
+ * missing ([Measurement.grant]: the heart rate's for a heart rate or an HRV,
+ * the blood oxygen's for a blood oxygen). The wrist buzzes when a run ends ([endCue]).
  */
 @Composable
-fun MeasurementRoute(
+internal fun MeasurementRoute(
     measurement: Measurement,
     supported: Boolean?,
     unitSystem: UnitSystem,
+    events: (SpotKind) -> Flow<SpotEvent>,
     onDone: () -> Unit,
 ) {
     when (supported) {
         null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
         false -> MeasurementScreen(
             measurement = measurement,
-            state = MeasureUiState.Failed(MeasureError.NOT_SUPPORTED),
+            state = MeasureUiState.Failed(SpotFailure.NOT_SUPPORTED),
             unitSystem = unitSystem,
             onStart = {},
             onOpenSettings = {},
@@ -79,29 +85,30 @@ fun MeasurementRoute(
         )
         true -> {
             val context = LocalContext.current
-            val viewModel: MeasureViewModel = viewModel(
-                key = measurement.name,
-                factory = MeasureViewModel.factory(measurement, context.applicationContext as Application),
-            )
+            val viewModel = viewModel(key = measurement.name) {
+                val app = context.applicationContext
+                MeasureViewModel(
+                    measurement.kind,
+                    events,
+                    CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+                    onEnd = { ended -> Haptics.play(app, ended.endCue()) },
+                )
+            }
             val state by viewModel.state.collectAsStateWithLifecycle()
-            val permissionLauncher = rememberLauncherForActivityResult(
-                ActivityResultContracts.RequestPermission(),
-            ) { granted ->
-                if (granted) viewModel.start() else viewModel.fail(MeasureError.PERMISSION_DENIED)
+            val askGrant = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+                if (granted) viewModel.start() else viewModel.fail(SpotFailure.PERMISSION_DENIED)
             }
             MeasurementScreen(
                 measurement = measurement,
                 state = state,
                 unitSystem = unitSystem,
                 onStart = {
-                    val missing = measurement.permission()?.takeIf {
-                        context.checkSelfPermission(it) != android.content.pm.PackageManager.PERMISSION_GRANTED
+                    val missing = when (measurement.grant) {
+                        MeasureGrant.NONE -> null
+                        MeasureGrant.HEART_RATE -> WearPermissions.heartRate.takeUnless { WearPermissions.hasHeartRate(context) }
+                        MeasureGrant.OXYGEN_SATURATION -> WearPermissions.oxygenSaturation.takeUnless { WearPermissions.hasOxygenSaturation(context) }
                     }
-                    if (missing != null) {
-                        permissionLauncher.launch(missing)
-                    } else {
-                        viewModel.start()
-                    }
+                    if (missing != null) askGrant.launch(missing) else viewModel.start()
                 },
                 onOpenSettings = {
                     context.startActivity(
@@ -115,6 +122,16 @@ fun MeasurementRoute(
     }
 }
 
+/**
+ * One spot measurement: what to do and a start button, then the live value
+ * inside an arc along the screen's edge that fills with the measurement's
+ * time ([EdgeProgress]), then the reading or why there is none. The measurement holds a wake lock of its own, so it
+ * ends with its reading even when the screen goes off meanwhile. While it
+ * runs the screen stays on in ambient mode with a dim layout of its own
+ * ([AmbientAware], as a running workout's): its name, a dash for the value,
+ * which would be stale between the system's once-a-minute updates, and
+ * what to do; the reading shows when the wearer raises the wrist.
+ */
 @Composable
 fun MeasurementScreen(
     measurement: Measurement,
@@ -131,11 +148,11 @@ fun MeasurementScreen(
         is MeasureUiState.Done -> {
             { EdgeButton(onClick = onDone) { Text(stringResource(R.string.action_done)) } }
         }
-        is MeasureUiState.Failed -> when (state.error) {
-            MeasureError.NOT_SUPPORTED -> {
+        is MeasureUiState.Failed -> when (state.failure) {
+            SpotFailure.NOT_SUPPORTED -> {
                 { EdgeButton(onClick = onDone) { Text(stringResource(R.string.action_back)) } }
             }
-            MeasureError.PERMISSION_DENIED -> {
+            SpotFailure.PERMISSION_DENIED -> {
                 { EdgeButton(onClick = onStart) { Text(stringResource(R.string.measure_grant)) } }
             }
             else -> {
@@ -145,18 +162,41 @@ fun MeasurementScreen(
         is MeasureUiState.Running -> null
     }
 
-    // The screen is not held bright any more. While a measurement runs it may
-    // dim to the ambient view. The HRV window holds its own wake lock, so the
-    // run goes on either way.
-    val ambient = rememberAmbient(wanted = state is MeasureUiState.Running)
-    val look = ambientLook(ambient)
-
-    ScreenScaffold {
-        Box(modifier = Modifier.fillMaxSize().then(if (ambient) Modifier.background(Color.Black) else Modifier)) {
-            MeasurementBody(measurement, state, unitSystem, look, onStart, onOpenSettings)
-            if (edgeButton != null) {
-                Box(modifier = Modifier.align(Alignment.BottomCenter)) { edgeButton() }
+    val layout = @Composable {
+        ScreenScaffold {
+            Box(modifier = Modifier.fillMaxSize()) {
+                MeasurementBody(measurement, state, unitSystem, onOpenSettings)
+                if (edgeButton != null) {
+                    Box(modifier = Modifier.align(Alignment.BottomCenter)) { edgeButton() }
+                }
             }
+        }
+    }
+    // Only a running measurement observes the ambient state: the other states are a reading, a reason or a start button.
+    if (state is MeasureUiState.Running) {
+        AmbientAware(latest = state, ambient = { AmbientMeasurement(measurement) }, interactive = layout)
+    } else {
+        layout()
+    }
+}
+
+/** The ambient layout of a running measurement: dim, still, no value that would be stale. */
+@Composable
+private fun AmbientMeasurement(measurement: Measurement) {
+    val dim = MaterialTheme.colorScheme.onSurfaceVariant
+    ScreenScaffold { contentPadding ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(contentPadding).padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
+        ) {
+            Text(stringResource(measurement.label), style = MaterialTheme.typography.bodySmall, color = dim, textAlign = TextAlign.Center)
+            Text(
+                text = stringResource(R.string.measure_value_placeholder, stringResource(measurement.liveUnit)),
+                style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Light),
+                color = dim,
+            )
+            Text(stringResource(measurement.instruction), style = MaterialTheme.typography.bodySmall, color = dim, textAlign = TextAlign.Center)
         }
     }
 }
@@ -166,16 +206,14 @@ private fun MeasurementBody(
     measurement: Measurement,
     state: MeasureUiState,
     unitSystem: UnitSystem,
-    look: AmbientLook,
-    onStart: () -> Unit,
     onOpenSettings: () -> Unit,
 ) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        if (state is MeasureUiState.Running && look.showProgressArc) {
+        if (state is MeasureUiState.Running) {
             EdgeProgress(
                 progress = state.progress,
                 color = measurement.accentColor,
-                trackColor = measurement.accentColor.copy(alpha = Emphasis.disabled),
+                trackColor = measurement.accentColor.copy(alpha = Emphasis.subtle),
                 modifier = Modifier.fillMaxSize(),
             )
         }
@@ -194,32 +232,30 @@ private fun MeasurementBody(
                     Body(stringResource(measurement.instruction))
                 }
                 is MeasureUiState.Running -> {
-                    if (look.animate) PulsingIcon(measurement)
+                    PulsingIcon(measurement)
                     MetricValueRow(
                         value = state.live?.let { formatMeasurement(it) },
-                        unit = stringResource(measurementUnit(measurement)),
+                        unit = stringResource(measurement.liveUnit),
                         valueStyle = MaterialTheme.typography.displaySmall,
                     )
-                    if (look.showSecondaryValues) {
-                        Body(
-                            stringResource(
-                                when {
-                                    state.offBody -> R.string.measure_hint_off_body
-                                    state.waiting -> R.string.measure_hint_detecting
-                                    else -> measurement.instruction
-                                },
-                            ),
-                        )
-                    }
+                    Body(
+                        stringResource(
+                            when {
+                                state.offBody -> R.string.measure_hint_off_body
+                                state.waiting -> R.string.measure_hint_detecting
+                                else -> measurement.instruction
+                            },
+                        ),
+                    )
                 }
                 is MeasureUiState.Done -> {
                     Icon(measurement.icon, null, tint = measurement.accentColor, modifier = Modifier.size(24.dp))
                     MetricValueRow(
                         value = formatMeasurement(state.value),
-                        unit = stringResource(measurementUnit(measurement)),
+                        unit = stringResource(measurement.unit),
                         valueStyle = MaterialTheme.typography.displayMedium,
                     )
-                    state.secondary?.takeIf { measurement == Measurement.AIR_PRESSURE }?.let { altitude ->
+                    state.secondary?.let { altitude ->
                         val (value, unit) = formatAltitude(altitude, unitSystem)
                         Body(stringResource(R.string.measure_altitude, value, stringResource(unit)))
                     }
@@ -232,8 +268,8 @@ private fun MeasurementBody(
                         modifier = Modifier.size(28.dp),
                     )
                     Title(stringResource(measurement.label))
-                    Body(stringResource(state.error.message))
-                    if (state.error == MeasureError.PERMISSION_DENIED) {
+                    Body(stringResource(measurement.messageOf(state.failure)))
+                    if (state.failure == SpotFailure.PERMISSION_DENIED) {
                         Button(
                             onClick = onOpenSettings,
                             label = { Text(stringResource(R.string.measure_open_settings)) },
@@ -331,7 +367,7 @@ private fun MeasurementFailedPreview() {
         AppScaffold {
             MeasurementScreen(
                 Measurement.HEART_RATE,
-                MeasureUiState.Failed(MeasureError.PERMISSION_DENIED),
+                MeasureUiState.Failed(SpotFailure.PERMISSION_DENIED),
                 UnitSystem.METRIC,
                 {},
                 {},

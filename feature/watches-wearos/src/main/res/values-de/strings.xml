@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_watch_wearos_status_section">Status der Wear-OS-App</string>
+    <string name="settings_watch_wearos_bt_paired">Uhr mit diesem Telefon gekoppelt</string>
+    <string name="settings_watch_wearos_bt_permission">OpenWatch braucht die Berechtigung „Geräte in der Nähe“, um die Uhr zu erreichen.</string>
+    <string name="settings_watch_wearos_status_bond_lost">Die Uhr ist nicht mit diesem Telefon gekoppelt. Öffne die Bluetooth-Einstellungen und kopple sie; mache die Uhr vorher in ihren eigenen Bluetooth-Einstellungen sichtbar.</string>
+    <string name="settings_watch_wearos_linked_to">Verbunden mit %1$s</string>
+    <string name="settings_watch_wearos_check_app">Wear-OS-App prüfen</string>
+    <string name="settings_watch_wearos_checking">Wear-OS-App wird geprüft…</string>
+    <string name="settings_watch_wearos_sync_section">Uhr-Synchronisierung</string>
+    <string name="settings_watch_wearos_sync_body">Die OpenWatch-App auf der Uhr zeichnet die Herzfrequenz und die Daten für eine Schlafschätzung auf und behält eine Woche davon. Die Synchronisierung kopiert die neue Herzfrequenz nach Health Connect und schreibt pro Nacht eine geschätzte Schlafsitzung.</string>
+    <string name="settings_watch_wearos_sync_now">Uhr synchronisieren</string>
+    <string name="settings_watch_wearos_syncing">Uhr wird synchronisiert…</string>
+    <plurals name="settings_watch_wearos_skin_baseline_nights_to_go">
+        <item quantity="one">Ausgangswert der Hauttemperatur: noch %1$d Nacht nötig.</item>
+        <item quantity="other">Ausgangswert der Hauttemperatur: noch %1$d Nächte nötig.</item>
+    </plurals>
+    <string name="watch_settings_section">Uhr-Einstellungen</string>
+    <string name="watch_settings_not_read">Die Uhr speichert diese Einstellungen selbst. Lies sie aus, um sie hier zu ändern.</string>
+    <string name="watch_settings_unreachable">Die Uhr hat nicht geantwortet. Ist sie in der Nähe und läuft ihre OpenWatch-App?</string>
+    <string name="watch_settings_read">Von der Uhr lesen</string>
+    <string name="watch_settings_power_save">Puls im Sparmodus</string>
+    <string name="watch_settings_power_save_body">Etwa alle 10 Minuten außerhalb des Schlafenszeitmodus. Im Schlafenszeitmodus wird immer alle 10 Sekunden gemessen.</string>
+    <string name="watch_settings_synced">Gebündeltes Aufwecken im Schlaf</string>
+    <string name="watch_settings_synced_body">Hält jede Schlafminute vollständig über das Aufwecken durch den Pulssensor statt über einen dauerhaften Wake Lock. Funktioniert nur mit dem Puls vom Sensor.</string>
+    <string name="watch_settings_samsung_note">Samsung-Plattform: braucht den Entwicklermodus der Health Platform auf der Uhr. Ohne ihn fragt die Plattform bei Samsung nach dieser App. Eine Samsung-Quelle, die ausfällt, wechselt zum Sensor.</string>
+    <string name="watch_settings_hr_samsung">Puls von der Samsung-Plattform</string>
+    <string name="watch_settings_hrv_samsung">HRV von der Samsung-Plattform</string>
+    <string name="watch_settings_skin">Hauttemperatur in der Nacht</string>
+    <string name="watch_settings_spo2">SpO2 stündlich in der Nacht</string>
+    <string name="watch_settings_allow_on_watch">Erlaube es auf der Uhr: Öffne dort OpenWatch und schalte es einmal ein.</string>
+    <string name="watch_settings_hr_source_explained">Aus: der eigene Sensor der Uhr, live. An: der Wert der Plattform, bei ausgeschaltetem Display bis zu 10 Minuten verzögert. Ein Training nutzt immer den Sensor.</string>
+    <string name="watch_settings_hrv_source_explained">Aus: HRV aus dem rohen Pulssignal, jeder Schlag. An: die Schlagabstände der Plattform; derzeit gehen davon etwa 60 % verloren, daher seltener ein Wert.</string>
+    <string name="watch_settings_skin_explained">Hauttemperatur am Handgelenk im Schlaf, ein Wert pro Minute. Wenig Strom, sonst keine Änderung.</string>
+    <string name="watch_settings_spo2_explained">Blutsauerstoff höchstens einmal pro Stunde im Schlaf, etwa 15 s Rotlicht. Wenige mAh pro Nacht; entfällt, wenn sich der Arm bewegt.</string>
+    <string name="settings_watch_wearos_companion_missing">Android hat diese Uhr nicht mit OpenWatch verknüpft. Ohne die Verknüpfung kann OpenWatch keine Workouts aufzeichnen, die eine andere App auf der Uhr startet.</string>
+    <string name="settings_watch_wearos_companion_link">Uhr verknüpfen</string>
+</resources>

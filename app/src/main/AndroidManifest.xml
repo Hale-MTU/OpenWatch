@@ -17,42 +17,37 @@
     <uses-permission android:name="android.permission.health.WRITE_RESPIRATORY_RATE" />
     <uses-permission android:name="android.permission.health.WRITE_OXYGEN_SATURATION" />
     <uses-permission android:name="android.permission.health.WRITE_SKIN_TEMPERATURE" />
-    <uses-permission android:name="android.permission.health.WRITE_EXERCISE" />
-    <uses-permission android:name="android.permission.health.WRITE_EXERCISE_ROUTE" />
-    <uses-permission android:name="android.permission.health.WRITE_DISTANCE" />
     <uses-permission android:name="android.permission.health.WRITE_FLOORS_CLIMBED" />
-    <uses-permission android:name="android.permission.health.WRITE_WHEELCHAIR_PUSHES" />
     <uses-permission android:name="android.permission.health.WRITE_SPEED" />
     <uses-permission android:name="android.permission.health.WRITE_POWER" />
-    <uses-permission android:name="android.permission.health.WRITE_OXYGEN_SATURATION" />
-    <uses-permission android:name="android.permission.health.WRITE_RESPIRATORY_RATE" />
     <uses-permission android:name="android.permission.health.WRITE_VO2_MAX" />
     <uses-permission android:name="android.permission.health.WRITE_SLEEP" />
-    <!-- What the watch's own entries write: a glass of water, a blood pressure, a breathing session. -->
+    <!-- What the entries made on the Wear OS watch write, beside the types above and below: a
+         glass of water, a breathing session, a body temperature, a height. -->
     <uses-permission android:name="android.permission.health.WRITE_HYDRATION" />
-    <uses-permission android:name="android.permission.health.WRITE_BLOOD_PRESSURE" />
     <uses-permission android:name="android.permission.health.WRITE_MINDFULNESS" />
     <uses-permission android:name="android.permission.health.WRITE_BODY_TEMPERATURE" />
-    <uses-permission android:name="android.permission.health.WRITE_BLOOD_GLUCOSE" />
     <uses-permission android:name="android.permission.health.WRITE_HEIGHT" />
     <!-- What a scale weigh-in writes. -->
     <uses-permission android:name="android.permission.health.WRITE_WEIGHT" />
     <uses-permission android:name="android.permission.health.WRITE_BODY_FAT" />
     <uses-permission android:name="android.permission.health.WRITE_LEAN_BODY_MASS" />
     <uses-permission android:name="android.permission.health.WRITE_BODY_WATER_MASS" />
+    <!-- What a blood pressure monitor and a glucose meter on Bluetooth's standard profiles hand over. -->
+    <uses-permission android:name="android.permission.health.WRITE_BLOOD_PRESSURE" />
+    <uses-permission android:name="android.permission.health.WRITE_BLOOD_GLUCOSE" />
     <!-- What the estimates read: a weight and height for the walking energy and the body
          composition, the workouts a minute falls in, the sleep a night already holds. -->
     <uses-permission android:name="android.permission.health.READ_HEART_RATE" />
-    <uses-permission android:name="android.permission.health.READ_STEPS" />
-    <!-- The day's active energy and distance, which the watch shows. -->
-    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
-    <uses-permission android:name="android.permission.health.READ_DISTANCE" />
     <uses-permission android:name="android.permission.health.READ_SLEEP" />
     <uses-permission android:name="android.permission.health.READ_RESTING_HEART_RATE" />
     <uses-permission android:name="android.permission.health.READ_EXERCISE" />
     <uses-permission android:name="android.permission.health.READ_WEIGHT" />
     <uses-permission android:name="android.permission.health.READ_HEIGHT" />
     <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_HISTORY" />
+    <!-- The day's active energy and distance, from any app, which the Wear OS watch shows. -->
+    <uses-permission android:name="android.permission.health.READ_ACTIVE_CALORIES_BURNED" />
+    <uses-permission android:name="android.permission.health.READ_DISTANCE" />
     <!-- A scheduled sync with the app closed can only see other apps' weights and workouts with this. -->
     <uses-permission android:name="android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" />
 
@@ -286,79 +281,20 @@
             </intent-filter>
         </activity-alias>
 
-        <!-- Bound by the OS while an associated device is in range. For a watch the
-             binding elevates this process's priority so a multi-minute BLE file sync
-             is not killed. The primary companion service: the only one Android tells
-             that a device appeared, which it passes on (CompanionPresenceObserver) to
-             the watch's notification bridge and the scale listener. -->
-        <service
-            android:name=".devices.core.pairing.OpenWatchCompanionDeviceService"
-            android:exported="true"
-            android:permission="android.permission.BIND_COMPANION_DEVICE_SERVICE"
-            tools:targetApi="s">
-            <intent-filter>
-                <action android:name="android.companion.CompanionDeviceService" />
-            </intent-filter>
-        </service>
+        <!-- The primary companion service, OpenWatchCompanionDeviceService, the
+             notification listener, OpenWatchNotificationListenerService, and the weather
+             receiver, GenericWeatherReceiver, are declared by :devices:core
+             (devices/core/src/main/AndroidManifest.xml) and merged in. -->
 
-        <!--
-            devices/notifications: reads the phone's notifications so they can be
-            mirrored to a paired Garmin watch. The system alone may bind this; the
-            user grants notification access from a system settings screen. What it
-            reads never leaves the phone by any route but the watch: a bounded
-            in-memory buffer, no file, no database, and no INTERNET permission.
-        -->
-        <service
-            android:name=".devices.notifications.OpenWatchNotificationListenerService"
-            android:exported="true"
-            android:label="@string/notification_listener_label"
-            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
-            <intent-filter>
-                <action android:name="android.service.notification.NotificationListenerService" />
-            </intent-filter>
-        </service>
+        <!-- The Garmin find-my-phone stop receiver, GarminFindPhoneStopReceiver, is declared by
+             :devices:garmin (devices/garmin/src/main/AndroidManifest.xml) and merged in. -->
 
-        <receiver
-            android:name=".devices.garmin.GarminFindPhoneStopReceiver"
-            android:exported="false" />
+        <!-- The bathroom scale's receiver and listening service, ScaleScanReceiver and
+             ScaleListeningService, are declared by :devices:xiaomi
+             (devices/xiaomi/src/main/AndroidManifest.xml) and merged in. -->
 
-        <!-- Where the system delivers the bathroom scale's broadcasts, with the app
-             open or not (devices/xiaomi/ScaleScanRadio.kt). Reached only through
-             this app's own explicit PendingIntent. -->
-        <receiver
-            android:name=".devices.xiaomi.ScaleScanReceiver"
-            android:exported="false" />
-
-        <!-- Held for the seconds a weigh-in takes, so the scan runs full time. Runs no logic. -->
-        <service
-            android:name=".devices.xiaomi.ScaleListeningService"
-            android:exported="false"
-            android:foregroundServiceType="connectedDevice" />
-
-        <!-- Weather from a companion app (Breezy Weather et al.) over the
-             generic-weather broadcast contract. Exported because an external app
-             must reach it; the payload is public weather. -->
-        <receiver
-            android:name=".devices.weather.GenericWeatherReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="nodomain.freeyourgadget.gadgetbridge.ACTION_GENERIC_WEATHER" />
-                <action android:name="tech.mmarca.openwatch.ACTION_GENERIC_WEATHER" />
-            </intent-filter>
-        </receiver>
-        <service
-            android:name=".link.OpenWatchLinkService"
-            android:exported="true">
-            <!--
-                OpenLink: other apps (OpenVitals first) bind it for the body profile, the
-                devices, recording sessions and live readings. No permission: who gets what
-                is decided per call by the trust store, from the caller's signing certificate
-                (link/, openlink/docs/spec.md).
-            -->
-            <intent-filter>
-                <action android:name="tech.mmarca.openlink.action.HOST" />
-            </intent-filter>
-        </service>
+        <!-- The OpenLink host's exported service, OpenWatchLinkService, is declared by :link-host
+             (link-host/src/main/AndroidManifest.xml) and merged in. -->
     </application>
 
 </manifest>

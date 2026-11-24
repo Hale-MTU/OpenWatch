@@ -8,6 +8,9 @@ import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import tech.mmarca.openwatch.devices.garmin.isGarmin
+import tech.mmarca.openwatch.devices.garmin.isGarminWatch
+import tech.mmarca.openwatch.devices.wearos.isWearOs
 
 /** The ownership-helper matrix for an explicit Garmin watch, a plain sensor and an Edge. */
 class DeviceIntegrationParityTest {
@@ -30,7 +33,7 @@ class DeviceIntegrationParityTest {
     fun `an explicit Garmin watch is a Garmin watch`() {
         val w = watch(integration = DeviceIntegration.GARMIN)
         assertTrue(w.isGarminWatch)
-        assertFalse(w.isWearosWatch)
+        assertFalse(w.isWearOs)
     }
 
     @Test
@@ -46,9 +49,9 @@ class DeviceIntegrationParityTest {
             addedAt = Instant.parse("2026-01-01T00:00:00Z"),
         )
         assertFalse(sensor.isGarminWatch)
-        assertFalse(sensor.isWearosWatch)
+        assertFalse(sensor.isWearOs)
         assertFalse(sensor.isBikeComputer)
-        assertFalse(sensor.isGarminGfdi)
+        assertFalse(sensor.isGarmin)
         assertTrue(sensor.isLiveSensorCapable)
     }
 
@@ -67,10 +70,10 @@ class DeviceIntegrationParityTest {
             integration = DeviceIntegration.GARMIN,
         )
         assertTrue(edge.isBikeComputer)
-        assertTrue("pulls FIT files over GFDI", edge.isGarminGfdi)
+        assertTrue("pulls FIT files over GFDI", edge.isGarmin)
         assertTrue("can broadcast live", edge.isLiveSensorCapable)
         assertFalse(edge.isWatch)
         assertFalse(edge.isGarminWatch)
-        assertFalse(edge.isWearosWatch)
+        assertFalse(edge.isWearOs)
     }
 }

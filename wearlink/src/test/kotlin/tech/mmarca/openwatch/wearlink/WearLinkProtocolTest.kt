@@ -2,6 +2,7 @@ package tech.mmarca.openwatch.wearlink
 
 import java.util.UUID
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -19,13 +20,10 @@ class WearLinkProtocolTest {
     }
 
     @Test
-    fun `a heart rate request round-trips and clamps its limit`() {
-        val line = WearLinkProtocol.formatHeartRateRequest(1_700_000_000_000L, 99_999)
-
-        assertEquals(
-            WearLinkProtocol.HeartRateRequest(1_700_000_000_000L, WearLinkProtocol.MAX_SAMPLES_PER_REQUEST),
-            WearLinkProtocol.parseHeartRateRequest(line),
-        )
+    fun `the version 4 requests are gone, so a version 4 phone's request is a bad one`() {
+        for (word in listOf("HR_SINCE", "SM_SINCE", "ST_SINCE", "AS_SINCE", "HV_SINCE", "RR_SINCE", "SK_SINCE", "O2_SINCE")) {
+            assertNull(word, WearLinkProtocol.parseRequest("$word 1700000000000 2000"))
+        }
     }
 
     @Test
@@ -44,19 +42,57 @@ class WearLinkProtocolTest {
         assertNull(WearLinkProtocol.parseSample("HR abc 70"))
         assertNull(WearLinkProtocol.parseSample("HR 1700000000000 0"))
         assertNull(WearLinkProtocol.parseEnd("END 3 maybe"))
-        assertNull(WearLinkProtocol.parseHeartRateRequest("HR_SINCE -1 10"))
-        assertNull(WearLinkProtocol.parseHeartRateRequest("PING"))
+        assertNull(WearLinkProtocol.parseRequest("WO_SINCE -1 10"))
+        assertNull(WearLinkProtocol.parseRequest("WO_SINCE 10"))
     }
 
     @Test
-    fun `a sleep minutes request round-trips and clamps its limit`() {
-        val line = WearLinkProtocol.formatSleepMinutesRequest(1_700_000_000_000L, 99_999)
+    fun `a series request round-trips, clamps its limit and refuses what is not a key or a cursor`() {
+        val request = WearLinkProtocol.Request.SeriesSince("hv", "9f3a6b2c1d4e5f60.1234", 99_999)
+        val line = WearLinkProtocol.formatRequest(request)
 
+        assertEquals("SINCE hv 9f3a6b2c1d4e5f60.1234 2000", line)
+        assertEquals(request.copy(limit = WearLinkSince.MAX_LIMIT), WearLinkProtocol.parseRequest(line))
         assertEquals(
-            WearLinkProtocol.SleepMinutesRequest(1_700_000_000_000L, WearLinkProtocol.MAX_MINUTES_PER_REQUEST),
-            WearLinkProtocol.parseSleepMinutesRequest(line),
+            WearLinkProtocol.Request.SeriesSince("o2", "t1700000000000", 500),
+            WearLinkProtocol.parseRequest("SINCE o2 ${WearLinkSince.afterTime(1_700_000_000_000L)} 500"),
         )
-        assertNull(WearLinkProtocol.parseHeartRateRequest(line))
+        assertNull(WearLinkProtocol.parseRequest("SINCE hv t0"))
+        assertNull(WearLinkProtocol.parseRequest("SINCE hv t0 0"))
+        assertNull(WearLinkProtocol.parseRequest("SINCE h,v t0 10"))
+        assertNull(WearLinkProtocol.parseRequest("SINCE hv a:b 10"))
+        assertNull(WearLinkProtocol.parseRequest("SINCE hv ${"1".repeat(41)} 10"))
+        assertNull(WearLinkProtocol.parseRequest("SINCE hv t0 10 more"))
+    }
+
+    @Test
+    fun `a series reply ends with its cursor, and a cursor points into the watch's own store or before its first row`() {
+        assertEquals(WearLinkSince.End(2, true, "ab.7"), WearLinkSince.parseEnd(WearLinkSince.formatEnd(2, true, "ab.7")))
+        assertEquals(WearLinkSince.End(0, false, "ab.7"), WearLinkSince.parseEnd("END 0 0 ab.7 future"))
+        assertNull(WearLinkSince.parseEnd("END 2 1"))
+        assertNull(WearLinkSince.parseEnd("END 2 1 a:b"))
+
+        val store = "9f3a6b2c1d4e5f60"
+        val cursor = WearLinkSince.cursor(store, 1234)
+        assertEquals("9f3a6b2c1d4e5f60.1234", cursor)
+        assertEquals(WearLinkSince.Position.AfterSeq(1234), WearLinkSince.position(cursor, store))
+        assertEquals(WearLinkSince.Position.AfterTime(1_700_000_000_000L), WearLinkSince.position("t1700000000000", store))
+        // A time before the epoch is the epoch: everything the watch keeps.
+        assertEquals("t0", WearLinkSince.afterTime(-5))
+        // Another store, or anything the watch did not write: before the first row, never past one.
+        assertEquals(WearLinkSince.Position.AfterSeq(0), WearLinkSince.position(cursor, "0000000000000001"))
+        assertEquals(WearLinkSince.Position.AfterSeq(0), WearLinkSince.position("$store.x", store))
+        assertEquals(WearLinkSince.Position.AfterSeq(0), WearLinkSince.position("$store.-4", store))
+        assertEquals(WearLinkSince.Position.AfterSeq(0), WearLinkSince.position("tomorrow", store))
+    }
+
+    @Test
+    fun `a stored line goes out only whole and within the limit`() {
+        assertTrue(WearLinkSince.isSendable("HV 1700000000000 452 280"))
+        assertFalse(WearLinkSince.isSendable("HV 1\nEND 0 0"))
+        assertFalse(WearLinkSince.isSendable("HV 1\r"))
+        assertFalse(WearLinkSince.isSendable(" "))
+        assertFalse(WearLinkSince.isSendable("HV " + "1".repeat(WearLinkProtocol.MAX_LINE_LENGTH)))
     }
 
     private fun minute(bpm: Int?, kind: WearLinkProtocol.MinuteKind = WearLinkProtocol.MinuteKind.RAW) =
@@ -153,20 +189,32 @@ class WearLinkProtocolTest {
     }
 
     @Test
+    fun `the watch's clock sits before the name only where the reply says tm`() {
+        val ok = WearLinkProtocol.HelloReply.Ok(5, setOf("hr", "sm"), "Galaxy Watch8 (89FZ)", clockMillis = 1_763_800_000_000L)
+
+        assertEquals("OK 5 hr,sm,tm 1763800000000 Galaxy Watch8 (89FZ)", WearLinkProtocol.formatHelloReply(ok))
+        assertEquals(ok, WearLinkProtocol.parseHelloReply(WearLinkProtocol.formatHelloReply(ok)))
+        // Without tm a number is the start of the name, as every older phone reads it.
+        assertEquals(
+            WearLinkProtocol.HelloReply.Ok(5, setOf("hr"), "1763800000000 Watch"),
+            WearLinkProtocol.parseHelloReply("OK 5 hr 1763800000000 Watch"),
+        )
+        assertNull(WearLinkProtocol.parseHelloReply("OK 5 hr,tm Galaxy Watch8"))
+    }
+
+    @Test
     fun `requests parse to one type each`() {
         assertEquals(WearLinkProtocol.Request.Ping, WearLinkProtocol.parseRequest(" PING "))
-        assertEquals(WearLinkProtocol.Request.HeartRateSince(10, 50), WearLinkProtocol.parseRequest("HR_SINCE 10 50"))
-        assertEquals(WearLinkProtocol.Request.SleepMinutesSince(10, 2000), WearLinkProtocol.parseRequest("SM_SINCE 10 99999"))
-        assertEquals(WearLinkProtocol.Request.StepsSince(10, 2000), WearLinkProtocol.parseRequest("ST_SINCE 10 99999"))
+        assertEquals(WearLinkProtocol.Request.SeriesSince("st", "t10", 2000), WearLinkProtocol.parseRequest("SINCE st t10 99999"))
         assertEquals(WearLinkProtocol.Request.LiveHeartRate(WearLinkProtocol.MAX_LIVE_SECONDS), WearLinkProtocol.parseRequest("HR_LIVE 600"))
         assertNull(WearLinkProtocol.parseRequest("HR_LIVE 0"))
         assertNull(WearLinkProtocol.parseRequest("HELLO 4 - x y"))
         val requests = listOf(
             WearLinkProtocol.Request.Ping,
-            WearLinkProtocol.Request.HeartRateSince(1, 2),
-            WearLinkProtocol.Request.SleepMinutesSince(3, 4),
-            WearLinkProtocol.Request.StepsSince(5, 6),
+            WearLinkProtocol.Request.WorkoutsSince(3, 4),
+            WearLinkProtocol.Request.PhoneActive(5),
             WearLinkProtocol.Request.LiveHeartRate(5),
+            WearLinkProtocol.Request.SeriesSince("rr", "0123456789abcdef.12", 7),
         )
         for (request in requests) {
             assertEquals(request, WearLinkProtocol.parseRequest(WearLinkProtocol.formatRequest(request)))
@@ -194,7 +242,6 @@ class WearLinkProtocolTest {
         assertNull(WearLinkProtocol.parseAscentMinute("AS 1700000040000 ${WearLinkProtocol.MAX_ASCENT_DECIMETRES_PER_MINUTE + 1}"))
         // A line of the builds that sent whole floors is not ascent.
         assertNull(WearLinkProtocol.parseAscentMinute("FL 1700000040000 3"))
-        assertEquals(WearLinkProtocol.Request.AscentSince(10, 2000), WearLinkProtocol.parseRequest("AS_SINCE 10 99999"))
     }
 
     @Test
@@ -208,8 +255,6 @@ class WearLinkProtocolTest {
         assertEquals(sk, WearLinkProtocol.parseSkinMinute(WearLinkProtocol.formatSkinMinute(sk)))
         assertNull(WearLinkProtocol.parseSkinMinute("SK 1700000040000 1500 2250"))
         assertNull(WearLinkProtocol.parseSkinMinute("SK 1700000040001 3412 2250"))
-        assertEquals(WearLinkProtocol.Request.RespiratorySince(10, 500), WearLinkProtocol.parseRequest("RR_SINCE 10 99999"))
-        assertEquals(WearLinkProtocol.Request.SkinSince(10, 2000), WearLinkProtocol.parseRequest("SK_SINCE 10 99999"))
     }
 
     @Test
@@ -220,7 +265,6 @@ class WearLinkProtocolTest {
         assertEquals(o2.copy(bpm = null), WearLinkProtocol.parseSpo2("O2 1700000300000 96 -"))
         assertNull(WearLinkProtocol.parseSpo2("O2 1700000300000 0 54"))
         assertNull(WearLinkProtocol.parseSpo2("O2 1700000300000 101 54"))
-        assertEquals(WearLinkProtocol.Request.Spo2Since(10, 500), WearLinkProtocol.parseRequest("O2_SINCE 10 99999"))
     }
 
     @Test
@@ -254,8 +298,6 @@ class WearLinkProtocolTest {
         assertNull(WearLinkProtocol.parseHrvWindow("HV 0 452 280"))
         assertNull(WearLinkProtocol.parseHrvWindow("HV 1700000100000 452"))
         assertNull(WearLinkProtocol.parseHrvWindow("AS 1700000040000 32"))
-        assertEquals(WearLinkProtocol.Request.HrvSince(10, 500), WearLinkProtocol.parseRequest("HV_SINCE 10 99999"))
-        assertEquals("HV_SINCE 10 500", WearLinkProtocol.formatRequest(WearLinkProtocol.Request.HrvSince(10, 99999)))
     }
 
     @Test
@@ -269,5 +311,20 @@ class WearLinkProtocolTest {
         assertEquals("WO_SINCE 10 5", WearLinkProtocol.formatRequest(WearLinkProtocol.Request.WorkoutsSince(10, 99999)))
         assertNull(WearLinkProtocol.parseRequest("WO_SINCE 10"))
         assertNull(WearLinkProtocol.parseRequest("WO_SINCE -1 5"))
+    }
+
+    @Test
+    fun `a data line that grew at its end still reads, its new fields ignored`() {
+        val p = WearLinkProtocol
+        fun grown(line: String) = "$line 42 future"
+
+        assertEquals(WearLinkProtocol.HeartRateSample(1_700_000_000_000, 61), p.parseSample(grown(p.formatSample(1_700_000_000_000, 61))))
+        assertEquals(WearLinkProtocol.End(3, true), p.parseEnd(grown(p.formatEnd(3, true))))
+        val step = WearLinkProtocol.StepMinute(1_700_000_040_000, 12)
+        assertEquals(step, p.parseStepMinute(grown(p.formatStepMinute(step))))
+        val ascent = WearLinkProtocol.AscentMinute(1_700_000_040_000, 31)
+        assertEquals(ascent, p.parseAscentMinute(grown(p.formatAscentMinute(ascent))))
+        val raw = p.parseSleepMinute("SM 1700000000000 R 7200 16 300 42 58 15 6 -12 3 998 3 4 5 86 90 7")!!
+        assertEquals(raw, p.parseSleepMinute(grown(p.formatSleepMinute(raw))))
     }
 }

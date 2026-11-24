@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_watch_wearos_status_section">Wear OS -sovelluksen tila</string>
+    <string name="settings_watch_wearos_bt_paired">Kello on pariliitetty tähän puhelimeen</string>
+    <string name="settings_watch_wearos_bt_permission">OpenWatch tarvitsee Lähellä olevat laitteet -luvan tavoittaakseen kellon.</string>
+    <string name="settings_watch_wearos_status_bond_lost">Kelloa ei ole yhdistetty tähän puhelimeen. Avaa Bluetooth-asetukset ja yhdistä se; tee kello ensin näkyväksi sen omista Bluetooth-asetuksista.</string>
+    <string name="settings_watch_wearos_linked_to">Yhdistetty: %1$s</string>
+    <string name="settings_watch_wearos_check_app">Tarkista Wear OS -sovellus</string>
+    <string name="settings_watch_wearos_checking">Tarkistetaan Wear OS -sovellusta…</string>
+    <string name="settings_watch_wearos_sync_section">Kellon synkronointi</string>
+    <string name="settings_watch_wearos_sync_body">Kellon OpenWatch-sovellus tallentaa sykkeen ja unen arvioon tarvittavat tiedot ja säilyttää niitä viikon. Synkronointi kopioi uuden sykkeen Health Connectiin ja kirjoittaa yhden arvioidun unijakson yötä kohden.</string>
+    <string name="settings_watch_wearos_sync_now">Synkronoi kello</string>
+    <string name="settings_watch_wearos_syncing">Synkronoidaan kelloa…</string>
+    <string name="watch_settings_section">Kellon asetukset</string>
+    <string name="watch_settings_not_read">Kello säilyttää nämä asetukset itse. Lue ne muuttaaksesi niitä täällä.</string>
+    <string name="watch_settings_unreachable">Kello ei vastannut. Onko se lähellä ja onko sen OpenWatch-sovellus käynnissä?</string>
+    <string name="watch_settings_read">Lue kellosta</string>
+    <string name="watch_settings_power_save">Säästävä syke</string>
+    <string name="watch_settings_power_save_body">Noin 10 minuutin välein nukkumaanmenotilan ulkopuolella. Nukkumaanmenotila mittaa aina 10 sekunnin välein.</string>
+    <string name="watch_settings_synced">Yhdistetyt herätykset unen aikana</string>
+    <string name="watch_settings_synced_body">Pitää jokaisen uniminuutin sykeanturin herätysten avulla pysyvän herätyslukon sijaan. Toimii vain anturin sykkeellä.</string>
+    <string name="watch_settings_samsung_note">Samsung-alusta: vaatii kelloon Health Platformin kehittäjätilan. Ilman sitä alusta kysyy Samsungilta tästä sovelluksesta. Epäonnistuva Samsung-lähde vaihtuu anturiin.</string>
+    <string name="watch_settings_hr_samsung">Syke Samsung-alustalta</string>
+    <string name="watch_settings_hrv_samsung">HRV Samsung-alustalta</string>
+    <string name="watch_settings_skin">Ihon lämpötila yöllä</string>
+    <string name="watch_settings_spo2">SpO2 tunnin välein yöllä</string>
+    <string name="watch_settings_allow_on_watch">Salli se kellossa: avaa siellä OpenWatch ja kytke se päälle kerran.</string>
+    <string name="settings_watch_wearos_companion_missing">Android ei ole linkittänyt tätä kelloa OpenWatchiin. Ilman linkkiä OpenWatch ei voi tallentaa harjoituksia, jotka toinen sovellus käynnistää kellossa.</string>
+    <string name="settings_watch_wearos_companion_link">Linkitä kello</string>
+</resources>

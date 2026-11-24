@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hc_setup_missing_title">Ei vielä myönnetty:</string>
+    <string name="hc_setup_missing_extra">Taustakäyttö ja historian käyttö ovat omalla sivullaan: avaa Health Connectin asetukset, sitten OpenWatch ja sitten Lisäkäyttöoikeudet.</string>
+    <string name="hc_setup_intro">OpenWatch kopioi kellosi ja vaakasi tallentamat tiedot Health Connectiin, josta OpenVitals ja muut sovellukset lukevat ne. Mikään ei poistu puhelimesta: sovelluksella ei ole internet-käyttöoikeutta.</string>
+    <string name="hc_setup_permissions_title">Käyttöoikeudet</string>
+    <string name="hc_setup_status_all_granted">Kaikki %1$d käyttöoikeutta myönnetty</string>
+    <string name="hc_setup_status_partial">%1$d/%2$d käyttöoikeutta myönnetty. Tietue, jonka kirjoittamista ei ole sallittu, jää laitteeseen.</string>
+    <string name="hc_setup_status_update">Health Connect on päivitettävä, ennen kuin OpenWatch voi käyttää sitä.</string>
+    <string name="hc_setup_status_play_store">Health Connect on asennettu ilman Google Playta, joten sitä ei voi käyttää tässä puhelimessa.</string>
+    <string name="hc_setup_status_unavailable">Health Connect ei ole käytettävissä tässä puhelimessa.</string>
+    <string name="hc_setup_grant">Myönnä käyttöoikeudet</string>
+    <string name="hc_setup_open_settings">Avaa Health Connectin asetukset</string>
+    <string name="hc_setup_continue">Jatka</string>
+</resources>

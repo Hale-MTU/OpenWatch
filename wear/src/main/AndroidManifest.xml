@@ -67,7 +67,10 @@
     </queries>
 
     <application
+        android:name=".OpenWatchWearApplication"
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -103,7 +106,7 @@
             android:name=".HeartRateAlarmReceiver"
             android:exported="false" />
 
-        <!-- The metric tiles: each reads what the recorders stored and starts no sensor. -->
+        <!-- The tiles: each reads what the recorders stored and starts no sensor. -->
         <service
             android:name=".HeartRateTileService"
             android:description="@string/tile_heart_rate_description"
@@ -146,7 +149,91 @@
                 android:name="androidx.wear.tiles.PREVIEW"
                 android:resource="@drawable/tile_preview_floors" />
         </service>
+        <!-- Today's steps and heart rate side by side; reads as the two tiles above do. -->
+        <service
+            android:name=".MainVitalsTileService"
+            android:description="@string/tile_main_vitals_description"
+            android:exported="true"
+            android:icon="@drawable/open_watch_launcher_monochrome"
+            android:label="@string/tile_main_vitals_label"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter>
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.wear.tiles.PREVIEW"
+                android:resource="@drawable/tile_preview_main_vitals" />
+        </service>
+        <!-- Today's water with a glass to add on the tile, and the ways into the quick log and a heart rate measurement.
+             The one tile that writes: a glass, through the entry log. -->
+        <service
+            android:name=".QuickLogTileService"
+            android:description="@string/tile_quick_log_description"
+            android:exported="true"
+            android:icon="@drawable/ic_metric_hydration"
+            android:label="@string/tile_quick_log_label"
+            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER">
+            <intent-filter>
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.wear.tiles.PREVIEW"
+                android:resource="@drawable/tile_preview_quick_log" />
+        </service>
 
+        <!-- The heart rate, steps and floors complications: each reads what its tile reads and starts no sensor.
+             The system asks again about every five minutes. The steps also as a ranged value against the day's goal. -->
+        <service
+            android:name=".HeartRateComplicationService"
+            android:exported="true"
+            android:icon="@drawable/ic_metric_heart_rate"
+            android:label="@string/tile_heart_rate_label"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="SHORT_TEXT" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="300" />
+        </service>
+        <service
+            android:name=".StepsComplicationService"
+            android:exported="true"
+            android:icon="@drawable/ic_metric_steps"
+            android:label="@string/tile_steps_label"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="SHORT_TEXT,RANGED_VALUE" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="300" />
+        </service>
+        <service
+            android:name=".FloorsComplicationService"
+            android:exported="true"
+            android:icon="@drawable/ic_metric_floors"
+            android:label="@string/tile_floors_label"
+            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
+            </intent-filter>
+            <meta-data
+                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
+                android:value="SHORT_TEXT" />
+            <meta-data
+                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
+                android:value="300" />
+        </service>
+
+        <!-- One instance: a tile, the watch face pill or a notification that opens the app reaches the one
+             already open (onNewIntent), with the screen a tile asked for. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -157,74 +244,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <service
-            android:name=".tiles.MainVitalsTileService"
-            android:label="@string/tile_main_vitals_label"
-            android:description="@string/tile_main_vitals_description"
-            android:icon="@mipmap/ic_launcher"
-            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
-            </intent-filter>
-            <meta-data
-                android:name="androidx.wear.tiles.PREVIEW"
-                android:resource="@mipmap/ic_launcher" />
-        </service>
-
-        <service
-            android:name=".tiles.QuickLogTileService"
-            android:label="@string/tile_quick_log_label"
-            android:description="@string/tile_quick_log_description"
-            android:icon="@drawable/ic_tile_water"
-            android:permission="com.google.android.wearable.permission.BIND_TILE_PROVIDER"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
-            </intent-filter>
-            <meta-data
-                android:name="androidx.wear.tiles.PREVIEW"
-                android:resource="@mipmap/ic_launcher" />
-        </service>
-        <service
-            android:name=".HeartRateComplicationService"
-            android:label="@string/metric_heart_rate"
-            android:icon="@drawable/ic_metric_heart_rate"
-            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
-            </intent-filter>
-            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SHORT_TEXT" />
-            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="600" />
-        </service>
-
-        <service
-            android:name=".StepsComplicationService"
-            android:label="@string/metric_steps"
-            android:icon="@drawable/ic_metric_steps"
-            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
-            </intent-filter>
-            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SHORT_TEXT,RANGED_VALUE" />
-            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="600" />
-        </service>
-
-        <service
-            android:name=".FloorsComplicationService"
-            android:label="@string/metric_floors"
-            android:icon="@drawable/ic_metric_floors"
-            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
-            </intent-filter>
-            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SHORT_TEXT" />
-            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="600" />
-        </service>
     </application>
 
 </manifest>

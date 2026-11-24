@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scale_notification_channel">قياسات الوزن من الميزان</string>
+    <string name="scale_notification_title">جارٍ قراءة قياس وزنك</string>
+</resources>

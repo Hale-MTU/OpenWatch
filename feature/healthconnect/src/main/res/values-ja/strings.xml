@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hc_setup_missing_title">未許可:</string>
+    <string name="hc_setup_missing_extra">バックグラウンドと履歴へのアクセスは別のページにあります。ヘルスコネクトの設定を開き、OpenWatch、追加のアクセスの順に進んでください。</string>
+    <string name="hc_setup_intro">OpenWatch は、ウォッチと体重計が記録したデータを Health Connect にコピーします。OpenVitals などのアプリはそこから読み取ります。データがスマートフォンの外に出ることはありません。このアプリにはインターネットの権限がありません。</string>
+    <string name="hc_setup_permissions_title">権限</string>
+    <string name="hc_setup_status_all_granted">%1$d 件の権限をすべて許可済み</string>
+    <string name="hc_setup_status_partial">%2$d 件中 %1$d 件の権限を許可済み。書き込みが許可されていない記録はデバイスに残ります。</string>
+    <string name="hc_setup_status_update">OpenWatch で使用するには、Health Connect の更新が必要です。</string>
+    <string name="hc_setup_status_play_store">Health Connect が Google Play なしでインストールされているため、このスマートフォンでは使用できません。</string>
+    <string name="hc_setup_status_unavailable">このスマートフォンでは Health Connect を利用できません。</string>
+    <string name="hc_setup_grant">権限を許可</string>
+    <string name="hc_setup_open_settings">Health Connect の設定を開く</string>
+    <string name="hc_setup_continue">続行</string>
+</resources>

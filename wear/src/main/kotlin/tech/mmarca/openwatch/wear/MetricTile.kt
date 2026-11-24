@@ -51,8 +51,18 @@ enum class MetricSource {
 
     /** Entered by hand on the watch. Always offered. */
     LOGGED,
+}
 
-    /** Recorded by this watch at night, with the Samsung platform or the night HRV windows. Offered once there is a reading. */
+/** When a metric is taken, which decides the span its readings are counted over. Apart from where they come from ([MetricSource]). */
+enum class MetricPeriod {
+    /** Over the day: read from midnight to midnight. */
+    DAY,
+
+    /**
+     * While the wearer sleeps, with the Samsung platform or the night HRV
+     * windows: one value a night, counted from noon to noon and shown on the
+     * day the night ends on.
+     */
     NIGHT,
 }
 
@@ -61,6 +71,8 @@ enum class MetricSource {
  * Which of these a given watch offers depends on its sensors and arrives as
  * `WearUiState.availableMetrics`. Adding a metric here is all the UI needs:
  * the tile, the tile editor and the detail screen are driven by this enum.
+ * The names are stored, as the wearer's choice of tiles
+ * ([WearTilePreferences]): a metric is never renamed.
  *
  * Readings are stored in the base unit noted per entry; the unit system
  * only changes how they are displayed.
@@ -71,6 +83,7 @@ enum class MetricTile(
     val accentColor: Color,
     val kind: MetricKind,
     val source: MetricSource = MetricSource.SENSOR,
+    val period: MetricPeriod = MetricPeriod.DAY,
 ) {
     /** Count. */
     STEPS(R.string.metric_steps, Icons.AutoMirrored.Outlined.DirectionsWalk, StepsColor, MetricKind.CUMULATIVE),
@@ -95,8 +108,14 @@ enum class MetricTile(
     /** Metres gained. Needs a barometer. */
     ELEVATION(R.string.metric_elevation, Icons.Outlined.Terrain, ElevationColor, MetricKind.CUMULATIVE),
 
-    /** Percent. Needs a vendor SpO2 sensor. */
-    BLOOD_OXYGEN(R.string.metric_blood_oxygen, Icons.Outlined.Bloodtype, VitalsColor, MetricKind.SAMPLED),
+    /** Percent, at night. Needs a vendor SpO2 sensor. */
+    BLOOD_OXYGEN(
+        R.string.metric_blood_oxygen,
+        Icons.Outlined.Bloodtype,
+        VitalsColor,
+        MetricKind.SAMPLED,
+        period = MetricPeriod.NIGHT,
+    ),
 
     /** ml/kg/min. Never offered: only Health Services estimates it, and the watch app does not use it. */
     VO2_MAX(R.string.metric_vo2_max, Icons.Outlined.Speed, WorkoutColor, MetricKind.SAMPLED),
@@ -110,8 +129,8 @@ enum class MetricTile(
         MetricSource.PHONE,
     ),
 
-    /** Milliseconds RMSSD. Synced, or measured on a watch that reports single beats. */
-    HRV(R.string.metric_hrv, Icons.Outlined.Insights, VitalsColor, MetricKind.SAMPLED, MetricSource.PHONE),
+    /** Milliseconds RMSSD, at night. Measured by this watch, in the night HRV windows or by the Samsung platform. */
+    HRV(R.string.metric_hrv, Icons.Outlined.Insights, VitalsColor, MetricKind.SAMPLED, period = MetricPeriod.NIGHT),
 
     /** Minutes asleep. The stages arrive as `WearUiState.sleepStages`. */
     SLEEP(R.string.metric_sleep, Icons.Outlined.Bedtime, SleepColor, MetricKind.CUMULATIVE, MetricSource.PHONE),
@@ -131,7 +150,7 @@ enum class MetricTile(
         Icons.Outlined.Thermostat,
         SkinTemperatureColor,
         MetricKind.SAMPLED,
-        MetricSource.NIGHT,
+        period = MetricPeriod.NIGHT,
     ),
 
     /** Breaths per minute, from the night HRV windows. */
@@ -140,7 +159,7 @@ enum class MetricTile(
         Icons.Outlined.Air,
         VitalsColor,
         MetricKind.SAMPLED,
-        MetricSource.NIGHT,
+        period = MetricPeriod.NIGHT,
     ),
 
     /** Kilograms. */

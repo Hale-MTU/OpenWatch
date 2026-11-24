@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_watch_wearos_status_section">Stato dell\'app Wear OS</string>
+    <string name="settings_watch_wearos_bt_paired">Orologio associato a questo telefono</string>
+    <string name="settings_watch_wearos_bt_permission">OpenWatch ha bisogno dell\'autorizzazione Dispositivi nelle vicinanze per raggiungere l\'orologio.</string>
+    <string name="settings_watch_wearos_status_bond_lost">L’orologio non è associato a questo telefono. Apri le impostazioni Bluetooth e associalo; prima rendi l’orologio visibile dalle sue impostazioni Bluetooth.</string>
+    <string name="settings_watch_wearos_linked_to">Collegato a %1$s</string>
+    <string name="settings_watch_wearos_check_app">Verifica l\'app Wear OS</string>
+    <string name="settings_watch_wearos_checking">Verifica dell\'app Wear OS…</string>
+    <string name="settings_watch_wearos_sync_section">Sincronizzazione orologio</string>
+    <string name="settings_watch_wearos_sync_body">L’app OpenWatch sull’orologio registra la frequenza cardiaca e ciò che serve per stimare il sonno, e ne conserva una settimana. La sincronizzazione copia la nuova frequenza cardiaca in Health Connect e scrive una sessione di sonno stimata per notte.</string>
+    <string name="settings_watch_wearos_sync_now">Sincronizza orologio</string>
+    <string name="settings_watch_wearos_syncing">Sincronizzazione dell’orologio…</string>
+    <string name="watch_settings_section">Impostazioni dell\'orologio</string>
+    <string name="watch_settings_not_read">L\'orologio conserva queste impostazioni. Leggile per modificarle qui.</string>
+    <string name="watch_settings_unreachable">L\'orologio non ha risposto. È vicino e la sua app OpenWatch è in esecuzione?</string>
+    <string name="watch_settings_read">Leggi dall\'orologio</string>
+    <string name="watch_settings_power_save">Frequenza cardiaca a risparmio</string>
+    <string name="watch_settings_power_save_body">Circa ogni 10 minuti fuori dalla modalità notte. La modalità notte misura sempre ogni 10 secondi.</string>
+    <string name="watch_settings_synced">Risvegli sincronizzati durante il sonno</string>
+    <string name="watch_settings_synced_body">Conserva ogni minuto di sonno con i risvegli del sensore cardiaco invece di un wake lock permanente. Funziona solo con la frequenza cardiaca dal sensore.</string>
+    <string name="watch_settings_samsung_note">Piattaforma Samsung: richiede la modalità sviluppatore di Health Platform sull\'orologio. Senza, la piattaforma chiede a Samsung di questa app. Una fonte Samsung che fallisce torna al sensore.</string>
+    <string name="watch_settings_hr_samsung">Frequenza cardiaca dalla piattaforma Samsung</string>
+    <string name="watch_settings_hrv_samsung">HRV dalla piattaforma Samsung</string>
+    <string name="watch_settings_skin">Temperatura cutanea di notte</string>
+    <string name="watch_settings_spo2">SpO2 ogni ora di notte</string>
+    <string name="watch_settings_allow_on_watch">Consentilo sull\'orologio: apri lì OpenWatch e attivalo una volta.</string>
+    <string name="settings_watch_wearos_companion_missing">Android non ha collegato questo orologio a OpenWatch. Senza il collegamento, OpenWatch non può registrare gli allenamenti che un\'altra app avvia sull\'orologio.</string>
+    <string name="settings_watch_wearos_companion_link">Collega orologio</string>
+</resources>

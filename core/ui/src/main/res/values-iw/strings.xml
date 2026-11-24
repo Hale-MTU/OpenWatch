@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">ביטול</string>
+    <string name="action_save">שמירה</string>
+    <string name="action_grant">מתן גישה</string>
+    <string name="action_grant_permission">מתן הרשאה</string>
+    <string name="action_not_now">לא עכשיו</string>
+    <string name="screen_error_not_found">הפריט המבוקש לא נמצא.</string>
+    <string name="screen_error_missing_argument">חסר מידע נדרש.</string>
+    <string name="screen_error_permission_denied">נדרשת הרשאה כדי לטעון את הנתונים האלה.</string>
+    <string name="screen_error_health_connect_unavailable">השירות Health Connect לא זמין במכשיר הזה.</string>
+    <string name="screen_error_feature_unavailable">לא זמין במכשיר הזה.</string>
+    <string name="screen_error_generic">לא ניתן להשלים את הבקשה.</string>
+    <string name="message_missing_permissions_title">חסרות כמה הרשאות</string>
+    <string name="watch_permissions_continue">להמשיך בכל זאת</string>
+    <string name="onboarding_os_bluetooth">Bluetooth</string>
+    <string name="onboarding_os_bluetooth_desc">איתור שעונים, רצועות דופק וחיישנים אחרים והתחברות אליהם.</string>
+    <string name="onboarding_os_notifications">התראות</string>
+    <string name="onboarding_os_notifications_desc">התקדמות הסנכרון, תזכורות והתראות על אימונים.</string>
+    <string name="onboarding_os_location">מיקום</string>
+    <string name="onboarding_os_location_desc">נדרש לסריקת מכשירי Bluetooth בגרסאות Android ישנות יותר.</string>
+    <string name="onboarding_os_battery">שימוש בסוללה ללא הגבלות</string>
+    <string name="onboarding_os_battery_desc">מאפשר לסנכרונים ברקע להסתיים במקום להיות מושהים על ידי החיסכון בסוללה. נפתח בהגדרות Android.</string>
+    <string name="onboarding_os_notification_forwarding">העברת התראות</string>
+    <string name="onboarding_os_notification_forwarding_desc">שליחת התראות מהטלפון לשעון מחובר. נפתח בהגדרות Android.</string>
+    <string name="onboarding_action_grant_all">מתן כל ההרשאות</string>
+    <string name="option_not_specified">לא צוין</string>
+    <string name="settings_watch_name_label">שם</string>
+    <string name="action_remove">הסרה</string>
+    <string name="settings_watch_notifications_disclosure_accept">המשך</string>
+    <string name="settings_watch_notifications_disclosure_decline">לא עכשיו</string>
+    <string name="time_just_now">ממש עכשיו</string>
+    <string name="hc_setup_sync_title">כתיבה ל-Health Connect</string>
+    <string name="hc_setup_sync_body">כשהאפשרות כבויה, כל הכתיבה מושהית. המכשירים שומרים את מה שהם תיעדו עד שהיא מופעלת שוב.</string>
+    <string name="health_data_title">מה OpenWatch קורא וכותב</string>
+    <string name="home_health_connect">Health Connect</string>
+    <string name="home_health_connect_body">מה מותר ל-OpenWatch לקרוא ולכתוב</string>
+    <string name="settings_watch_notifications_disclosure_title">\u200FOpenWatch יקרא את ההתראות שלך</string>
+    <string name="settings_watch_notifications_disclosure_body">כדי להציג התראות בשעון שלך, OpenWatch קורא את ההתראות שהטלפון מקבל — כולל הטקסט שלהן.\n\nהן נקראות במכשיר הזה ונשלחות רק לשעון שהתאמת, דרך Bluetooth. שום דבר לא נשמר בקובץ או במסד נתונים, ול-OpenWatch אין הרשאת גישה לאינטרנט, כך שאי אפשר לשלוח את ההתראות לשום מקום אחר.\n\nאפשר לכבות את האפשרות הזו בכל שלב, ולבטל את הגישה להתראות בהגדרות Android.</string>
+    <string name="action_delete">מחיקה</string>
+</resources>

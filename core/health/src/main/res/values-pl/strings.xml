@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="health_data_section_garmin">Zapisywane z zegarka Garmin</string>
+    <string name="health_data_section_wearos">Zapisywane z zegarka Wear OS</string>
+    <string name="health_data_section_scale">Zapisywane z wagi</string>
+    <string name="health_data_section_reads">Odczytywane z Health Connect</string>
+    <string name="health_data_section_watch_app">Wymagane przez aplikację zegarka, udzielane na zegarku</string>
+    <string name="health_data_note_garmin_weight">Pomiar masy ciała, który waga Garmin przekazuje przez zegarek.</string>
+    <string name="health_data_note_wearos_calories">Szacunek energii zużytej na chodzenie na podstawie kroków i masy ciała oraz kalorie z treningu.</string>
+    <string name="health_data_note_wearos_sleep">Jedna szacowana sesja na noc i na każdą drzemkę.</string>
+    <string name="health_data_note_wearos_hrv">W nocy, na zegarku, który potrafi ją mierzyć.</string>
+    <string name="health_data_note_wearos_workout">Trening, który nagrywasz na zegarku, z jego trasą i dystansem.</string>
+    <string name="health_data_note_wearos_skin">Tylko z zegarka Samsung, z włączoną dla niego opcją „Temperatura skóry w nocy”. Jeden rekord na noc: różnica względem Twojej zwykłej nocy.</string>
+    <string name="health_data_note_scale_estimate">Szacowane na telefonie na podstawie pomiaru z wagi i Twojego profilu ciała.</string>
+    <string name="health_data_read_weight">Do kalorii z chodzenia i składu ciała z wagi.</string>
+    <string name="health_data_read_height">Do składu ciała z wagi.</string>
+    <string name="health_data_read_exercise">Aby minuta w trakcie treningu nie dostała drugiego szacunku kalorii.</string>
+    <string name="health_data_read_sleep">Aby noc, która ma już sesję snu, pozostała nietknięta.</string>
+    <string name="health_data_read_resting_heart_rate">Aby dzień, który ma już tętno spoczynkowe, pozostał nietknięty, oraz do stref tętna, które pokazuje zegarek.</string>
+    <string name="health_data_read_heart_rate">Twoje tętno maksymalne do tych stref oraz energia treningu.</string>
+    <string name="health_data_read_history">Twoja najnowsza masa ciała i wzrost są często starsze niż 30 dni, które Health Connect pokazuje bez tego dostępu.</string>
+    <string name="health_data_read_background">Synchronizacja uruchamiana według harmonogramu, przy zamkniętej aplikacji, widzi pomiary masy ciała i treningi z innej aplikacji tylko z tym dostępem.</string>
+    <string name="health_data_watch_heart_rate">Czujnik tętna zegarka: tętno, nocna zmienność rytmu serca i szacunek snu.</string>
+    <string name="health_data_watch_background">Aby nagrywanie trwało przy wyłączonym ekranie zegarka.</string>
+    <string name="health_data_watch_skin">Tylko na zegarku Samsung i tylko wtedy, gdy włączysz temperaturę skóry w nocy.</string>
+</resources>

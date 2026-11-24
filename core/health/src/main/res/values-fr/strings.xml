@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="health_data_section_garmin">Écrit depuis une montre Garmin</string>
+    <string name="health_data_section_wearos">Écrit depuis une montre Wear OS</string>
+    <string name="health_data_section_scale">Écrit depuis la balance</string>
+    <string name="health_data_section_reads">Lu dans Santé Connect</string>
+    <string name="health_data_section_watch_app">Demandé par l\'app de la montre, sur la montre</string>
+    <string name="health_data_note_garmin_weight">Un poids qu\'une balance Garmin transmet via la montre.</string>
+    <string name="health_data_note_wearos_calories">Une estimation de ce que la marche a coûté, à partir de vos pas et de votre poids, et les calories d\'un entraînement.</string>
+    <string name="health_data_note_wearos_sleep">Une session estimée par nuit et par sieste.</string>
+    <string name="health_data_note_wearos_hrv">La nuit, sur une montre capable de la mesurer.</string>
+    <string name="health_data_note_wearos_workout">Un entraînement que vous enregistrez sur la montre, avec son itinéraire et sa distance.</string>
+    <string name="health_data_note_wearos_skin">Uniquement depuis une montre Samsung, si l\'option « Température cutanée la nuit » est activée pour cette montre. Un enregistrement par nuit : l\'écart par rapport à votre propre nuit habituelle.</string>
+    <string name="health_data_note_scale_estimate">Estimé sur le téléphone à partir de la mesure de la balance et de votre profil corporel.</string>
+    <string name="health_data_read_weight">Pour les calories de marche et la composition corporelle de la balance.</string>
+    <string name="health_data_read_height">Pour la composition corporelle de la balance.</string>
+    <string name="health_data_read_exercise">Pour qu\'une minute comprise dans un entraînement ne reçoive pas une seconde estimation de calories.</string>
+    <string name="health_data_read_sleep">Pour ne pas toucher à une nuit qui contient déjà une session de sommeil.</string>
+    <string name="health_data_read_resting_heart_rate">Pour ne pas toucher à un jour qui contient déjà une fréquence cardiaque au repos, et pour les zones de fréquence cardiaque qu\'affiche la montre.</string>
+    <string name="health_data_read_heart_rate">Votre fréquence cardiaque la plus élevée, pour ces zones, et l\'énergie d\'un entraînement.</string>
+    <string name="health_data_read_history">Vos derniers poids et taille sont souvent antérieurs aux 30 jours que Santé Connect affiche sans cet accès.</string>
+    <string name="health_data_read_background">Une synchronisation planifiée, application fermée, ne voit les poids et les entraînements d\'une autre application qu\'avec cet accès.</string>
+    <string name="health_data_watch_heart_rate">Le capteur de fréquence cardiaque de la montre : fréquence cardiaque, variabilité de la fréquence cardiaque de la nuit et estimation du sommeil.</string>
+    <string name="health_data_watch_background">Pour continuer à enregistrer lorsque l\'écran de la montre est éteint.</string>
+    <string name="health_data_watch_skin">Uniquement sur une montre Samsung, et seulement si vous activez la température cutanée la nuit.</string>
+</resources>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_notification_access_title">Notification access</string>
+    <string name="settings_notification_access_body">Lets a paired Garmin watch show the phone\'s notifications. Off.</string>
+    <string name="settings_notification_access_granted">Granted. Tap to change it in Android settings.</string>
+    <string name="settings_about_version">OpenWatch %1$s</string>
+    <string name="settings_privacy_policy_body">What OpenWatch reads, writes and keeps. Opens in the browser.</string>
+    <string name="settings_privacy_policy_url" translatable="false">https://github.com/Hale-MTU/OpenWatch/blob/main/PRIVACY.md</string>
+    <string name="settings_privacy_policy_no_browser">No app on this phone can open the link. The policy is at %1$s</string>
+    <string name="settings_app_publisher" translatable="false">Hale · hale.ngo</string>
+    <string name="settings_about_body">Open source under the AGPL-3.0-or-later. The watch, scale and sync code comes from OpenVitals.</string>
+    <string name="body_profile_title">Body profile</string>
+    <string name="body_profile_settings_body">Birth year, sex, height and weight for the estimates</string>
+    <string name="body_profile_intro">The walking-energy estimate needs your weight. A weight or height Health Connect holds is used instead of the one typed here.</string>
+    <string name="body_profile_birth_year">Birth year</string>
+    <string name="body_profile_sex">Sex</string>
+    <string name="body_profile_sex_female">Female</string>
+    <string name="body_profile_sex_male">Male</string>
+    <string name="body_profile_height_cm">Height (cm)</string>
+    <string name="body_profile_height_in">Height (in)</string>
+    <string name="body_profile_weight_kg">Weight (kg)</string>
+    <string name="body_profile_weight_lb">Weight (lb)</string>
+    <string name="body_profile_measured">Health Connect: %1$s</string>
+    <string name="privacy_policy_title">Privacy policy</string>
+    <string name="connected_apps_title">Connected apps</string>
+    <string name="connected_apps_settings_body">Apps that use your watches, scale and body profile through OpenWatch, and what each may do</string>
+    <string name="body_profile_synced">Kept in sync with %1$s</string>
+    <string name="body_profile_synced_updated">Kept in sync with %1$s · updated %2$s</string>
+    <string name="settings_respiratory_rate_title">Breathing rate from the watch (experimental)</string>
+    <string name="settings_respiratory_rate_body">Writes the breathing rate of the watch\'s night-time HRV windows to Health Connect. Not yet checked against a reference device.</string>
+    <string name="health_data_open_body">Every health data type, the device it comes from and why.</string>
+    <string name="settings_sleep_beside_others_title">Write the watch\'s sleep beside other apps</string>
+    <string name="settings_sleep_beside_others_body">Writes the night although Samsung Health or another app already wrote one. Health Connect\'s data source priority then decides which night apps show. Off: another app\'s night wins.</string>
+</resources>

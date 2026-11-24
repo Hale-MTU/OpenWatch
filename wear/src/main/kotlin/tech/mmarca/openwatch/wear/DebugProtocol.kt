@@ -2,6 +2,7 @@ package tech.mmarca.openwatch.wear
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import android.hardware.Sensor
 import android.util.Log
 import java.io.File
 import java.text.SimpleDateFormat
@@ -28,25 +29,30 @@ import org.json.JSONObject
  *
  * The file stays in the app's private storage; `scripts/wear-debug-report.py`
  * pulls it with `run-as`. Seven days are kept.
+ *
+ * One per process, held by [WearGraph]; [off] is one that records nothing.
  */
-object DebugProtocol {
+class DebugProtocol private constructor(private val dir: File?) {
 
-    @Volatile
-    var isEnabled: Boolean = false
-        private set
+    /** True in a debuggable build; every call is a no-op otherwise. */
+    val isEnabled: Boolean = dir != null
 
-    private var dir: File? = null
-    private val writer = Executors.newSingleThreadExecutor { Thread(it, "DebugProtocol") }
+    private val writer by lazy { Executors.newSingleThreadExecutor { Thread(it, "DebugProtocol") } }
     private val counters = ConcurrentHashMap<String, AtomicLong>()
     private val lastArrival = ConcurrentHashMap<String, Long>()
     private val day = SimpleDateFormat("yyyyMMdd", Locale.US)
 
-    fun init(context: Context) {
-        if (isEnabled) return
-        if (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE == 0) return
-        dir = File(context.filesDir, "debug").apply { mkdirs() }
-        isEnabled = true
-        writer.execute { pruneOldFiles() }
+    /**
+     * A logcat line that carries a value (a reading, a time, a sensor's
+     * name), in a debuggable build only; elsewhere [message] is never even
+     * built. A line like that never goes to `Log.i` or `Log.d` directly: R8
+     * strips those from a release (`proguard-rules.pro`), but a build that
+     * skipped R8, as a non-debuggable debug build does, would keep them, and
+     * text that leaves the app holds structure, not data. Warnings and errors
+     * stay on `Log`, with the throwable and no value.
+     */
+    inline fun log(tag: String, message: () -> String) {
+        if (isEnabled) Log.d(tag, message())
     }
 
     /** Adds [n] to the counter [key]; the next snapshot reports and resets it. */
@@ -76,6 +82,29 @@ object DebugProtocol {
             val current = counter.get()
             if (value <= current || counter.compareAndSet(current, value)) return
         }
+    }
+
+    /**
+     * A recorder registered [sensor]: the variant it took (wake-up or not),
+     * the sampling period and report latency it asked for, and the sensor's
+     * FIFO, so a report tells whether a batch fits on this watch
+     * ([SensorReport]). [sampling] is microseconds or a `SENSOR_DELAY_*`
+     * constant; [latencyMicros] is 0 for an unbatched registration.
+     */
+    fun registered(recorder: String, sensor: Sensor, sampling: Int, latencyMicros: Int) {
+        if (!isEnabled) return
+        event(
+            "Sensors", "registered",
+            "recorder" to recorder,
+            "type" to sensor.stringType,
+            "name" to sensor.name,
+            "wakeUp" to sensor.isWakeUpSensor,
+            "samplingUs" to SensorReport.samplingMicros(sampling),
+            "latencyUs" to latencyMicros,
+            "fifoReserved" to sensor.fifoReservedEventCount,
+            "fifoMax" to sensor.fifoMaxEventCount,
+            "mode" to sensor.reportingMode,
+        )
     }
 
     fun event(source: String, name: String, vararg fields: Pair<String, Any?>) {
@@ -115,9 +144,20 @@ object DebugProtocol {
         files.dropLast(KEEP_DAYS).forEach { it.delete() }
     }
 
-    private const val TAG = "DebugProtocol"
-    private const val KEEP_DAYS = 7
+    companion object {
+        private const val TAG = "DebugProtocol"
+        private const val KEEP_DAYS = 7
 
-    /** Events closer than this belong to one delivery. */
-    private const val BATCH_GAP_MILLIS = 2_000L
+        /** Events closer than this belong to one delivery. */
+        private const val BATCH_GAP_MILLIS = 2_000L
+
+        /** The app's protocol: on in a debuggable build, [off] in any other. */
+        fun of(context: Context): DebugProtocol {
+            if (context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE == 0) return off()
+            return DebugProtocol(File(context.filesDir, "debug").apply { mkdirs() }).apply { writer.execute { pruneOldFiles() } }
+        }
+
+        /** A protocol that records nothing, for a release build and for tests. */
+        fun off(): DebugProtocol = DebugProtocol(null)
+    }
 }

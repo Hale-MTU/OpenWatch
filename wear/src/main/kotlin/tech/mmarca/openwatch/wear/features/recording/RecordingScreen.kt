@@ -1,7 +1,7 @@
 package tech.mmarca.openwatch.wear.features.recording
 
 import android.text.format.DateUtils
-import androidx.compose.foundation.background
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,15 +11,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.DirectionsWalk
 import androidx.compose.material.icons.outlined.Favorite
-import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Stop
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material.icons.outlined.Terrain
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,12 +31,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.pager.HorizontalPager
+import androidx.wear.compose.foundation.pager.PagerState
 import androidx.wear.compose.foundation.pager.rememberPagerState
+import androidx.wear.compose.foundation.requestFocusOnHierarchyActive
+import androidx.wear.compose.foundation.rotary.RotaryScrollableDefaults
+import androidx.wear.compose.foundation.rotary.rotaryScrollable
 import androidx.wear.compose.material3.AlertDialog
 import androidx.wear.compose.material3.AlertDialogDefaults
 import androidx.wear.compose.material3.AppScaffold
@@ -44,128 +56,133 @@ import androidx.wear.compose.material3.IconButtonDefaults
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
+import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wear.R
-import tech.mmarca.openwatch.wear.RecordingUiState
 import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.MetricTile
-import tech.mmarca.openwatch.wear.features.metric.HeartZoneLabels
-import tech.mmarca.openwatch.wear.features.metric.ZoneBasis
-import tech.mmarca.openwatch.wear.features.metric.heartRateZone
-import tech.mmarca.openwatch.wear.features.metric.heartRateZoneProgress
-import tech.mmarca.openwatch.wear.ui.ambient.ambientElapsedText
-import tech.mmarca.openwatch.wear.ui.ambient.rememberAmbient
+import tech.mmarca.openwatch.wear.features.metric.HeartZoneDisplay
 import tech.mmarca.openwatch.wear.ui.components.MetricValueRow
 import tech.mmarca.openwatch.wear.ui.components.formatCount
 import tech.mmarca.openwatch.wear.ui.components.formatMetricValue
 import tech.mmarca.openwatch.wear.ui.components.metricUnitLabel
 import tech.mmarca.openwatch.wear.ui.preview.SampleData
 import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
-import tech.mmarca.openwatch.wear.ui.theme.ActiveCaloriesColor
 import tech.mmarca.openwatch.wear.ui.theme.DistanceColor
 import tech.mmarca.openwatch.wear.ui.theme.ElevationColor
 import tech.mmarca.openwatch.wear.ui.theme.Emphasis
 import tech.mmarca.openwatch.wear.ui.theme.HeartColor
 import tech.mmarca.openwatch.wear.ui.theme.HeartZoneColors
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
+import tech.mmarca.openwatch.wear.ui.theme.StepsColor
 import tech.mmarca.openwatch.wear.ui.theme.WorkoutColor
 
-private enum class WorkoutPage { CONTROLS, OVERVIEW, HEART, PACE }
+internal enum class WorkoutPage { CONTROLS, OVERVIEW, HEART, PACE }
+
+/** The pages a workout that reports [fields] has, left to right: the controls, the overview, then the pages its values fill. */
+internal fun workoutPagesOf(fields: Set<WorkoutField>): List<WorkoutPage> = buildList {
+    add(WorkoutPage.CONTROLS)
+    add(WorkoutPage.OVERVIEW)
+    if (WorkoutField.HEART_RATE in fields) add(WorkoutPage.HEART)
+    if (fields.any { it == WorkoutField.PACE || it == WorkoutField.SPEED || it == WorkoutField.ELEVATION }) {
+        add(WorkoutPage.PACE)
+    }
+}
+
+/**
+ * What the running workout's screen keeps while it is not drawn: the page
+ * the wearer is on, and an open "End workout?" or "Measure heart rate
+ * recovery?". `RunningWorkout` takes the screen out of composition in
+ * ambient mode, so its caller remembers this above it
+ * ([rememberRecordingScreenState]) and all are there again when the watch wakes.
+ */
+@Stable
+class RecordingScreenState internal constructor(
+    internal val pages: List<WorkoutPage>,
+    internal val pagerState: PagerState,
+    confirmStop: MutableState<Boolean>,
+    askRecovery: MutableState<Boolean>,
+) {
+    internal var confirmStop by confirmStop
+    internal var askRecovery by askRecovery
+}
+
+/** The screen state of a workout that reports [fields], opened on the overview. */
+@Composable
+fun rememberRecordingScreenState(fields: Set<WorkoutField>): RecordingScreenState {
+    val pages = remember(fields) { workoutPagesOf(fields) }
+    val pagerState = rememberPagerState(initialPage = pages.indexOf(WorkoutPage.OVERVIEW)) { pages.size }
+    val confirmStop = rememberSaveable { mutableStateOf(false) }
+    val askRecovery = rememberSaveable { mutableStateOf(false) }
+    return remember(pages, pagerState, confirmStop, askRecovery) { RecordingScreenState(pages, pagerState, confirmStop, askRecovery) }
+}
 
 /**
  * A running workout, laid out like the watch makers' own: the overview in
  * the middle, controls one swipe to the left, heart rate zones and pace to
  * the right. Only pages and values the workout reports in [fields] are shown.
+ * The zones are those of [zoneBasis], the maximum and resting rate the phone
+ * sent; without one no zone is drawn. Stop asks "End workout?", then whether
+ * to measure the heart rate recovery, and [onStop] is told the answer. The
+ * screen is not held on: in ambient mode `RunningWorkout` draws its
+ * own dim layout instead of this one, and [screenState] is what this one
+ * finds again afterwards.
  */
 @Composable
 fun RecordingScreen(
     state: RecordingUiState,
     fields: Set<WorkoutField>,
     unitSystem: UnitSystem,
-    zones: ZoneBasis?,
+    zoneBasis: HeartRateZones.Basis?,
     onTogglePause: () -> Unit,
-    onStop: () -> Unit,
+    onStop: (measureRecovery: Boolean) -> Unit,
+    screenState: RecordingScreenState = rememberRecordingScreenState(fields),
 ) {
-    val pages = remember(fields) {
-        buildList {
-            add(WorkoutPage.CONTROLS)
-            add(WorkoutPage.OVERVIEW)
-            if (WorkoutField.HEART_RATE in fields) add(WorkoutPage.HEART)
-            if (fields.any { it == WorkoutField.PACE || it == WorkoutField.SPEED || it == WorkoutField.ELEVATION }) {
-                add(WorkoutPage.PACE)
-            }
-        }
-    }
-    val pagerState = rememberPagerState(initialPage = pages.indexOf(WorkoutPage.OVERVIEW)) { pages.size }
-    var confirmStop by rememberSaveable { mutableStateOf(false) }
-    // The screen is not held bright any more. It may dim to the ambient view;
-    // the recorder keeps its own wake lock, so the workout goes on either way.
-    val ambient = rememberAmbient(wanted = true)
-
-    if (ambient) {
-        AmbientRecording(state, fields)
-        return
-    }
+    val pages = screenState.pages
+    val pagerState = screenState.pagerState
 
     HorizontalPagerScaffold(pagerState = pagerState) {
         HorizontalPager(state = pagerState) { page ->
-            ScreenScaffold {
-                when (pages[page]) {
-                    WorkoutPage.CONTROLS -> ControlsPage(state, onTogglePause, onStop = { confirmStop = true })
-                    WorkoutPage.OVERVIEW -> OverviewPage(state, fields, unitSystem, zones)
-                    WorkoutPage.HEART -> HeartPage(state, zones)
-                    WorkoutPage.PACE -> PacePage(state, fields, unitSystem)
-                }
+            when (pages[page]) {
+                WorkoutPage.CONTROLS -> ControlsPage(state, onTogglePause, onStop = { screenState.confirmStop = true })
+                WorkoutPage.OVERVIEW -> OverviewPage(state, fields, unitSystem, zoneBasis)
+                // The arc runs along the screen's edge: this page is the screen, and has nothing to scroll.
+                WorkoutPage.HEART -> ScreenScaffold { HeartPage(state, zoneBasis) }
+                WorkoutPage.PACE -> PacePage(state, fields, unitSystem)
             }
         }
     }
 
     AlertDialog(
-        visible = confirmStop,
-        onDismissRequest = { confirmStop = false },
+        visible = screenState.confirmStop,
+        onDismissRequest = { screenState.confirmStop = false },
         confirmButton = {
             AlertDialogDefaults.ConfirmButton(
                 onClick = {
-                    confirmStop = false
-                    onStop()
+                    screenState.confirmStop = false
+                    screenState.askRecovery = true
                 },
             )
         },
         title = { Text(stringResource(R.string.recording_stop_confirm)) },
     )
+    RecoveryQuestion(screenState, onStop)
 }
 
-/**
- * The dimmed view: black, the time in hours and minutes, and the pulse if the
- * workout records one. No colour, no controls, nothing that moves.
- */
+/** After "End workout?": whether the heart rate recovery is measured. The workout ends either way, a swipe away too. */
 @Composable
-private fun AmbientRecording(state: RecordingUiState, fields: Set<WorkoutField>) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-            .padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-        Text(
-            text = stringResource(if (state.paused) R.string.recording_paused else state.title ?: state.activityType.label),
-            style = MaterialTheme.typography.labelMedium,
-            color = Color.LightGray,
-        )
-        Text(
-            text = ambientElapsedText(state.elapsedSeconds),
-            style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
-            color = Color.White,
-        )
-        if (WorkoutField.HEART_RATE in fields && state.heartRateBpm != null) {
-            Text(
-                text = "${state.heartRateBpm} ${stringResource(R.string.unit_bpm)}",
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.LightGray,
-            )
-        }
+private fun RecoveryQuestion(screenState: RecordingScreenState, onStop: (measureRecovery: Boolean) -> Unit) {
+    val answer = { measure: Boolean ->
+        screenState.askRecovery = false
+        onStop(measure)
     }
+    AlertDialog(
+        visible = screenState.askRecovery,
+        onDismissRequest = { answer(false) },
+        confirmButton = { AlertDialogDefaults.ConfirmButton(onClick = { answer(true) }) },
+        dismissButton = { AlertDialogDefaults.DismissButton(onClick = { answer(false) }) },
+        title = { Text(stringResource(R.string.recovery_ask)) },
+        text = { Text(stringResource(R.string.recovery_instruction)) },
+    )
 }
 
 @Composable
@@ -173,9 +190,9 @@ private fun OverviewPage(
     state: RecordingUiState,
     fields: Set<WorkoutField>,
     unitSystem: UnitSystem,
-    zones: ZoneBasis?,
+    zoneBasis: HeartRateZones.Basis?,
 ) {
-    val zone = zones?.let { basis -> state.heartRateBpm?.let { heartRateZone(it.toDouble(), basis) } }
+    val zone = zoneBasis?.let { basis -> state.heartRateBpm?.let { HeartZoneDisplay.zoneOf(it, basis) } }
     PageColumn {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(state.activityType.icon, null, tint = WorkoutColor, modifier = Modifier.size(16.dp))
@@ -210,29 +227,30 @@ private fun OverviewPage(
             FieldRow(
                 icon = Icons.Outlined.Straighten,
                 color = DistanceColor,
-                value = state.distanceMeters?.let { formatMetricValue(MetricTile.DISTANCE, it.toDouble(), unitSystem) },
+                value = state.distanceMeters?.let { formatWorkoutDistance(it, unitSystem) },
                 unit = stringResource(metricUnitLabel(MetricTile.DISTANCE, unitSystem)),
             )
         }
-        if (WorkoutField.CALORIES in fields) {
+        if (WorkoutField.STEPS in fields) {
             FieldRow(
-                icon = Icons.Outlined.LocalFireDepartment,
-                color = ActiveCaloriesColor,
-                value = state.caloriesKcal?.let(::formatCount),
-                unit = stringResource(R.string.unit_kcal),
+                icon = Icons.AutoMirrored.Outlined.DirectionsWalk,
+                color = StepsColor,
+                value = state.steps?.let(::formatCount),
+                unit = stringResource(R.string.unit_steps),
             )
         }
     }
 }
 
 @Composable
-private fun HeartPage(state: RecordingUiState, zones: ZoneBasis?) {
-    val bpm = state.heartRateBpm?.toDouble()
-    val zone = zones?.let { basis -> bpm?.let { heartRateZone(it, basis) } }
+private fun HeartPage(state: RecordingUiState, zoneBasis: HeartRateZones.Basis?) {
+    // Without a basis there is no reading to place: the arc stays dim and no zone is named.
+    val bpm = state.heartRateBpm?.takeIf { zoneBasis != null }
+    val zone = zoneBasis?.let { basis -> bpm?.let { HeartZoneDisplay.zoneOf(it, basis) } }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         HeartZoneArc(
             zone = zone,
-            progress = zones?.let { basis -> bpm?.let { heartRateZoneProgress(it, basis) } } ?: 0f,
+            progress = zoneBasis?.let { basis -> bpm?.let { HeartZoneDisplay.arcProgress(it, basis) } } ?: 0f,
             modifier = Modifier.fillMaxSize(),
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -247,13 +265,16 @@ private fun HeartPage(state: RecordingUiState, zones: ZoneBasis?) {
                 unit = stringResource(R.string.unit_bpm),
                 valueStyle = MaterialTheme.typography.displayMedium,
             )
-            Text(
-                text = zone?.let {
-                    stringResource(R.string.zone_label, it + 1, stringResource(HeartZoneLabels[it]))
-                } ?: stringResource(R.string.zone_below),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            // Without a reading there is no zone to name, not even "below zone 1".
+            if (bpm != null) {
+                Text(
+                    text = zone?.let {
+                        stringResource(R.string.zone_label, it + 1, stringResource(HeartZoneDisplay.labels[it]))
+                    } ?: stringResource(R.string.zone_below),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
@@ -287,17 +308,29 @@ private fun PacePage(state: RecordingUiState, fields: Set<WorkoutField>, unitSys
     }
 }
 
+/** What the pause button does now, its caption and its name for a screen reader: resume a paused workout, pause a running one. */
+@StringRes
+internal fun pauseActionLabel(paused: Boolean): Int = if (paused) R.string.workout_resume else R.string.workout_pause
+
+/**
+ * Pause or resume, and stop. Each button carries its action as its content
+ * description, so a screen reader names it; the caption under it says the
+ * same and is left out of the semantics, or it would be read twice.
+ */
 @Composable
 private fun ControlsPage(state: RecordingUiState, onTogglePause: () -> Unit, onStop: () -> Unit) {
+    val pauseLabel = stringResource(pauseActionLabel(state.paused))
+    val stopLabel = stringResource(R.string.workout_stop)
     PageColumn {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 FilledTonalIconButton(onClick = onTogglePause, modifier = Modifier.size(56.dp)) {
-                    Icon(if (state.paused) Icons.Outlined.PlayArrow else Icons.Outlined.Pause, contentDescription = null)
+                    Icon(if (state.paused) Icons.Outlined.PlayArrow else Icons.Outlined.Pause, contentDescription = pauseLabel)
                 }
                 Text(
-                    text = stringResource(if (state.paused) R.string.recording_resume else R.string.recording_pause),
+                    text = pauseLabel,
                     style = MaterialTheme.typography.labelSmall,
+                    modifier = Modifier.clearAndSetSemantics { },
                 )
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -309,26 +342,68 @@ private fun ControlsPage(state: RecordingUiState, onTogglePause: () -> Unit, onS
                         contentColor = MaterialTheme.colorScheme.onErrorContainer,
                     ),
                 ) {
-                    Icon(Icons.Outlined.Stop, contentDescription = null)
+                    Icon(Icons.Outlined.Stop, contentDescription = stopLabel)
                 }
-                Text(text = stringResource(R.string.recording_stop), style = MaterialTheme.typography.labelSmall)
+                Text(text = stopLabel, style = MaterialTheme.typography.labelSmall, modifier = Modifier.clearAndSetSemantics { })
             }
         }
     }
 }
 
+/**
+ * One page of rows, centred while they fit the screen. Rows that do not fit
+ * (a small round watch, a large font, every value of a run at once) scroll,
+ * by touch and with the crown, instead of being cut off: the column then
+ * takes the scaffold's padding above and below, so its first row starts
+ * under the time and its last one clears the screen's curve.
+ *
+ * The pager owns the horizontal drag and this column the vertical one, and
+ * only the page in view has the focus the crown's input goes to (the pager
+ * keeps each page in a focus group of its own), so the two do not compete.
+ */
 @Composable
 private fun PageColumn(content: @Composable () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
-    ) {
-        content()
+    val scrollState = rememberScrollState()
+    val focusRequester = remember { FocusRequester() }
+    ScreenScaffold(scrollState = scrollState) { contentPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .requestFocusOnHierarchyActive()
+                .rotaryScrollable(
+                    // A page that fits has nothing to scroll: the crown then stays silent, as before.
+                    behavior = RotaryScrollableDefaults.behavior(scrollState, hapticFeedbackEnabled = scrollState.maxValue > 0),
+                    focusRequester = focusRequester,
+                )
+                .verticalScroll(scrollState)
+                .paddingWhenTallerThanTheScreen(contentPadding.calculateTopPadding(), contentPadding.calculateBottomPadding())
+                .padding(horizontal = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
+        ) {
+            content()
+        }
     }
 }
+
+/**
+ * [top] and [bottom] around content that is taller than the screen, nothing
+ * around content that fits. Inside a vertical scroll the content is measured
+ * at least as tall as the screen ([androidx.compose.ui.unit.Constraints.minHeight]),
+ * so a page that fits is laid out exactly as it was before it could scroll.
+ */
+private fun Modifier.paddingWhenTallerThanTheScreen(top: Dp, bottom: Dp): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val padding = scrollPadding(placeable.height, constraints.minHeight, top.roundToPx(), bottom.roundToPx())
+    layout(placeable.width, placeable.height + padding.top + padding.bottom) { placeable.place(0, padding.top) }
+}
+
+/** The pixels above and below a page's rows. */
+internal data class ScrollPadding(val top: Int, val bottom: Int)
+
+/** [top] and [bottom] when the rows, [contentHeight] tall, do not fit a screen of [screenHeight]; none when they do. */
+internal fun scrollPadding(contentHeight: Int, screenHeight: Int, top: Int, bottom: Int): ScrollPadding =
+    if (contentHeight > screenHeight) ScrollPadding(top, bottom) else ScrollPadding(0, 0)
 
 @Composable
 private fun FieldRow(icon: ImageVector, color: Color, value: String?, unit: String) {
@@ -352,11 +427,11 @@ private fun RecordingScreenPreview() {
         AppScaffold {
             RecordingScreen(
                 state = SampleData.recording,
-                fields = SampleData.capabilities.workouts.getValue(ActivityType.RUN),
+                fields = SampleData.workoutFields.getValue(ActivityType.RUN),
                 unitSystem = UnitSystem.METRIC,
-                zones = ZoneBasis(190),
+                zoneBasis = HeartRateZones.Basis(maxBpm = 190),
                 onTogglePause = {},
-                onStop = {},
+                onStop = { _ -> },
             )
         }
     }
@@ -369,11 +444,11 @@ private fun RecordingScreenPausedPreview() {
         AppScaffold {
             RecordingScreen(
                 state = SampleData.recording.copy(paused = true),
-                fields = SampleData.capabilities.workouts.getValue(ActivityType.WORKOUT),
+                fields = SampleData.workoutFields.getValue(ActivityType.WORKOUT),
                 unitSystem = UnitSystem.IMPERIAL,
-                zones = ZoneBasis(190),
+                zoneBasis = HeartRateZones.Basis(maxBpm = 190),
                 onTogglePause = {},
-                onStop = {},
+                onStop = { _ -> },
             )
         }
     }

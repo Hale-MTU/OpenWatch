@@ -15,11 +15,14 @@ import android.os.PowerManager
  * cost. It listens to broadcasts the system sends anyway and wakes nothing.
  *
  * [plan] adds what the app runs at that moment: the heart rate interval and
- * source, the HRV source, which recorders run, bedtime and worn state.
+ * source, the HRV source, which recorders run, bedtime and worn state. At
+ * its start it also writes the watch's sensors and Samsung sources once
+ * ([SensorReport]).
  */
 class DebugSnapshots(
     private val context: Context,
     private val handler: Handler,
+    private val debug: DebugProtocol,
     private val plan: () -> Map<String, Any?>,
 ) {
     private val power = context.getSystemService(PowerManager::class.java)
@@ -46,7 +49,7 @@ class DebugSnapshots(
     }
 
     fun start() {
-        if (!DebugProtocol.isEnabled) return
+        if (!debug.isEnabled) return
         val filter = IntentFilter().apply {
             addAction(Intent.ACTION_BATTERY_CHANGED)
             addAction(Intent.ACTION_SCREEN_ON)
@@ -62,18 +65,20 @@ class DebugSnapshots(
         } else {
             context.registerReceiver(receiver, filter, null, handler)
         }
+        // What this watch's sensors are and which Samsung sources it has, once per service start.
+        debug.event("Sensors", "device", *SensorReport.fields(context))
         write("start")
     }
 
     fun stop() {
-        if (!DebugProtocol.isEnabled) return
+        if (!debug.isEnabled) return
         runCatching { context.unregisterReceiver(receiver) }
         write("stop")
     }
 
     /** A snapshot now, for a change the app itself made (a new plan). */
     fun write(reason: String) {
-        if (!DebugProtocol.isEnabled) return
+        if (!debug.isEnabled) return
         val fields = LinkedHashMap<String, Any?>()
         fields["level"] = battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
         fields["chargeUah"] = battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CHARGE_COUNTER)
@@ -84,6 +89,6 @@ class DebugSnapshots(
         fields["lightIdle"] = if (android.os.Build.VERSION.SDK_INT >= 33) power.isDeviceLightIdleMode else null
         fields["saver"] = power.isPowerSaveMode
         fields.putAll(plan())
-        DebugProtocol.snapshot(reason, fields)
+        debug.snapshot(reason, fields)
     }
 }

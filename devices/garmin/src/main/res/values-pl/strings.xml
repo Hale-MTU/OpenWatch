@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="garmin_find_phone_channel">Znajdź mój telefon</string>
+    <string name="garmin_find_phone_title">Twój zegarek szuka tego telefonu</string>
+    <string name="garmin_find_phone_body">Dotknij, aby przestać dzwonić.</string>
+    <string name="garmin_find_phone_stop">Stop</string>
+</resources>
