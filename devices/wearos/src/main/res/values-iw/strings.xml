@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_watch_wearos_bt_not_paired">לא נמצא שעון Wear OS מותאם</string>
+    <string name="settings_watch_wearos_app_running">אפליקציית OpenWatch ל-Wear OS פועלת בשעון</string>
+    <string name="settings_watch_wearos_app_no_answer">אין תשובה: השעון כבוי, מחוץ לטווח, או שאפליקציית OpenWatch בו לא מותקנת או לא פועלת.</string>
+    <string name="settings_watch_wearos_status_pending">ממתין לאישור הטלפון הזה בשעון. פתח את OpenWatch בשעון והקש על \"אישור\".</string>
+    <string name="settings_watch_wearos_status_unauthorized_mismatch">השעון דחה את הטלפון הזה: המפתח שלו לא תואם. בשעון, פתח את OpenWatch ושכח את הטלפון הזה, ואז בצע אימות שוב.</string>
+    <string name="settings_watch_wearos_status_unauthorized_blocked">הטלפון הזה חסום בשעון. בשעון, פתח את OpenWatch ובטל את החסימה.</string>
+    <string name="settings_watch_wearos_status_update_watch">אפליקציית OpenWatch בשעון ישנה יותר מזו. עדכן את אפליקציית השעון.</string>
+    <string name="settings_watch_wearos_status_update_phone">אפליקציית OpenWatch בשעון חדשה יותר מזו. עדכן את OpenWatch בטלפון.</string>
+    <string name="settings_watch_wearos_status_protocol">השעון השיב משהו ש-OpenWatch לא הצליח לקרוא. עדכן את שתי האפליקציות ונסה שוב.</string>
+</resources>

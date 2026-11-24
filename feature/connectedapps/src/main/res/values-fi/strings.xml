@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connected_apps_in_use">Käytössä nyt</string>
+    <string name="connected_apps_last_connected">Viimeksi yhdistetty %1$s</string>
+    <string name="connected_apps_profile_received">Viimeisin profiili vastaanotettu %1$s</string>
+    <string name="connected_apps_session_heart_rate">Tallennus: syke välitetään laitteesta %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">Tallennus: syke ja askeleet välitetään laitteesta %1$s</string>
+    <string name="connected_apps_session_keeping">Tallennus: %1$s pidetään lähettämässä</string>
+    <string name="connected_apps_session_waiting">Tallennus: odotetaan lukemaa laitteesta %1$s</string>
+    <string name="connected_apps_intro">Nämä sovellukset pyysivät lupaa käyttää OpenWatchia. Kukin näkee vain sen, minkä sallit tässä, eikä mikään poistu puhelimesta.</string>
+    <string name="connected_apps_empty">Yksikään sovellus ei ole vielä pyytänyt. OpenVitals yhdistää, kun molemmat sovellukset on asennettu.</string>
+    <string name="connected_apps_unknown_signer">Tämä sovellus kutsuu itseään nimellä %1$s, mutta OpenVitals-projekti ei ole allekirjoittanut sitä. Salli se vain, jos olet itse koonnut tai asentanut sen ja luotat sen alkuperään.</string>
+    <string name="connected_apps_identity">%1$s\nAllekirjoitusavain %2$s</string>
+    <string name="connected_apps_lookalike">Tämä sovellus kutsuu itseään nimellä %1$s, mutta se ei ole %2$s: sen paketti ei ole sovelluksen %2$s paketti. Salli se vain, jos tiedät, miksi se käyttää tätä nimeä.</string>
+    <string name="connected_apps_state_pending">Pyytää yhteyttä</string>
+    <string name="connected_apps_state_trusted">Yhdistetty</string>
+    <string name="connected_apps_state_blocked">Estetty</string>
+    <string name="connected_apps_asks_for">Se pyytää lupaa:</string>
+    <string name="connected_apps_allow">Salli</string>
+    <string name="connected_apps_block">Estä</string>
+    <string name="connected_apps_forget">Unohda</string>
+    <string name="connected_apps_unblock">Poista esto</string>
+    <string name="connected_apps_capability_devices">Nähdä kellosi ja vaakasi, niiden akun ja viimeisimmän synkronoinnin sekä käynnistää synkronoinnin</string>
+    <string name="connected_apps_capability_profile">Jakaa kehoprofiilisi (syntymävuosi, sukupuoli, pituus, paino) OpenWatchin kanssa, molempiin suuntiin</string>
+    <string name="connected_apps_capability_recording">Pitää kellosi lähettämässä, kun se tallentaa harjoitusta</string>
+    <string name="connected_apps_capability_live">Vastaanottaa kellosi sykkeen ja askeleet tallennuksen aikana</string>
+</resources>

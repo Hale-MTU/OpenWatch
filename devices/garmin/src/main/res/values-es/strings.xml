@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="garmin_find_phone_channel">Encuentra mi teléfono</string>
+    <string name="garmin_find_phone_title">Tu reloj está buscando este teléfono</string>
+    <string name="garmin_find_phone_body">Pulsa para silenciar el sonido.</string>
+    <string name="garmin_find_phone_stop">Detener</string>
+</resources>

@@ -1,0 +1,212 @@
+package tech.mmarca.openwatch.devices.wearos
+
+import java.time.Instant
+import tech.mmarca.openwatch.wearlink.DaySummary
+
+/**
+ * What the phone can tell about the OpenWatch Wear OS app on a watch.
+ *
+ * A bond says nothing about reach: a paired watch can be off or out of range.
+ * Only an answer to the ping proves the link, so a paired watch that stays
+ * silent is [NO_ANSWER], never "connected".
+ */
+enum class WearOsAppStatus {
+    /** The phone's Bluetooth is off. */
+    BLUETOOTH_OFF,
+
+    /** No bonded Wear OS watch matches the registered one. */
+    NOT_PAIRED,
+
+    /** Paired, but no answer: the watch is off or out of range, or the app on it is not installed or not running. */
+    NO_ANSWER,
+
+    /** The watch is asking the wearer whether to allow this phone. */
+    PENDING_CONFIRMATION,
+
+    /** The watch holds another token for this phone. */
+    UNAUTHORIZED_MISMATCH,
+
+    /** The wearer blocked this phone on the watch. */
+    UNAUTHORIZED_BLOCKED,
+
+    /** The watch app speaks an older protocol than this phone. */
+    UPDATE_WATCH,
+
+    /** The watch app speaks a newer protocol than this phone. */
+    UPDATE_PHONE,
+
+    /** The watch answered something the protocol does not allow. */
+    PROTOCOL_ERROR,
+
+    /** The OpenWatch Wear OS app answered the hello. */
+    APP_RUNNING,
+}
+
+/**
+ * Pairing and app responsiveness of a Wear OS watch.
+ */
+data class WearOsCompanionStatus(
+    val isPaired: Boolean = false,
+    val connectedNodeName: String? = null,
+    val connectedNodeAddress: String? = null,
+    val appStatus: WearOsAppStatus = WearOsAppStatus.NOT_PAIRED,
+    val lastCheckedAt: Instant? = null,
+    /** The name the watch gave in its hello, once it has. */
+    val watchName: String? = null,
+    /** The bond this watch once had with the phone is gone. */
+    val bondLost: Boolean = false,
+) {
+    val isAppRunning: Boolean
+        get() = appStatus == WearOsAppStatus.APP_RUNNING
+}
+
+/** One heart rate sample the watch recorded. */
+data class WearOsHeartRateSample(val time: Instant, val beatsPerMinute: Int)
+
+/** The steps the watch counted in the clock minute starting at [start]. */
+data class WearOsStepMinute(val start: Instant, val steps: Int)
+
+/** The height the watch's barometer climbed in the clock minute starting at [start], elevators included. */
+data class WearOsAscentMinute(val start: Instant, val metres: Double)
+
+/** One night-time HRV window the watch measured: its start, the RMSSD and the clean beats it rests on. */
+data class WearOsHrvWindow(val start: Instant, val rmssdMillis: Double, val beats: Int)
+
+/** One GPS fix of a watch workout. Altitude and accuracy in metres, null when the fix had none. */
+data class WearOsWorkoutPoint(
+    val time: Instant,
+    val latitude: Double,
+    val longitude: Double,
+    val altitudeMetres: Double?,
+    val accuracyMetres: Double?,
+)
+
+/**
+ * One finished workout the watch recorded. [exerciseType] is the Health Connect type; the totals are
+ * null where the watch measured none.
+ */
+data class WearOsWorkout(
+    val start: Instant,
+    val end: Instant,
+    val exerciseType: Int,
+    val steps: Int?,
+    val distanceMetres: Int?,
+    val ascentMetres: Double?,
+    val pauses: List<ClosedRange<Instant>>,
+    val route: List<WearOsWorkoutPoint>,
+)
+
+/** One page of a workout pull. [hasMore] means the watch cut the reply at its limit. */
+data class WearOsWorkoutPage(
+    val workouts: List<WearOsWorkout>,
+    val hasMore: Boolean,
+)
+
+/** One minute of skin temperature the watch recorded with the Samsung platform. */
+data class WearOsSkinMinute(val time: Instant, val celsius: Double)
+
+/** One SpO2 spot measurement the watch took with the Samsung platform. */
+data class WearOsSpo2Measurement(val time: Instant, val percent: Int)
+
+/** The breathing rate of one night-time window, and how many routes agreed on it. */
+data class WearOsRespiratoryWindow(val start: Instant, val breathsPerMinute: Double, val routes: Int)
+
+/**
+ * One page of a series pull ([WearOsNodePort.pullSeries]): the values the phone could read, in the
+ * order the watch wrote them, the cursor to ask with next, and whether the watch cut the reply at
+ * its limit.
+ */
+data class WearOsSeriesPage<T>(
+    val values: List<T>,
+    val cursor: String,
+    val hasMore: Boolean,
+)
+
+/**
+ * Port for talking to the OpenWatch app on a Wear OS watch.
+ *
+ * A missing Bluetooth permission surfaces as a [SecurityException], so the
+ * screen can turn it into a grant affordance.
+ */
+interface WearOsNodePort {
+    /**
+     * [targetAddress] is the registered address, [targetName] the advertised
+     * name. Both are hints: the address stored at onboarding is the BLE scan
+     * address, which on most watches differs from the bonded Classic one.
+     */
+    suspend fun checkStatus(
+        targetAddress: String? = null,
+        targetName: String? = null,
+    ): WearOsCompanionStatus
+
+    /**
+     * One page of [series] after [cursor]: a time position (`WearLinkSince.afterTime`) or the
+     * cursor a page of the same series ended with. The values come in the order the watch wrote
+     * its rows, so a row rewritten or written late comes again after those already read. An
+     * empty page with [cursor] back when the watch does not record the series. Null when no
+     * bonded watch matches. Throws a [WearOsLinkFailure] for everything else the watch could not give.
+     */
+    suspend fun <T : Any> pullSeries(
+        targetAddress: String?,
+        targetName: String?,
+        series: WearSeries<T>,
+        cursor: String,
+    ): WearOsSeriesPage<T>?
+
+    /**
+     * Hands each heart rate reading to [onSample], on an I/O thread, as the
+     * watch takes it, for as long as the watch sends them; the other calls on
+     * the watch go between. Returns true once the watch reports none (it is
+     * off the wrist); the caller asks again later. False when no bonded watch
+     * matches or the watch app cannot stream. Any other failure throws
+     * [WearOsLinkFailure], also when a sync keeps the link for longer.
+     */
+    suspend fun liveHeartRate(
+        targetAddress: String?,
+        targetName: String?,
+        onSample: (WearOsHeartRateSample) -> Unit,
+    ): Boolean
+
+    /**
+     * The watch's own settings (`WearLinkPreferences`). Null when
+     * no bonded watch matches or the watch app is too old to serve them. Any
+     * other failure throws [WearOsLinkFailure].
+     */
+    suspend fun pullWatchSettings(targetAddress: String?, targetName: String?): Map<String, String>?
+
+    /** Changes one setting on the watch. False when no bonded watch matches or the watch refused it. */
+    suspend fun setWatchSetting(targetAddress: String?, targetName: String?, key: String, value: String): Boolean
+
+    /**
+     * Workouts that started after [since], oldest first, at most a few per page. Empty page: the watch
+     * app is too old to record workouts. Null: no bonded watch matches. Any other failure throws
+     * [WearOsLinkFailure].
+     */
+    suspend fun pullWorkouts(
+        targetAddress: String?,
+        targetName: String?,
+        since: Instant,
+    ): WearOsWorkoutPage?
+
+    /**
+     * Tells the watch the wearer used the phone at [at], so it ends a sleep
+     * hold it started by itself. False when no bonded watch matches or the
+     * watch app does not take it. Any other failure throws [WearOsLinkFailure].
+     */
+    suspend fun notifyPhoneActive(
+        targetAddress: String?,
+        targetName: String?,
+        at: Instant,
+    ): Boolean
+
+    /**
+     * Hands the watch the phone's figures for [days] (`PUT_DAY`). False when no
+     * bonded watch matches or the watch app does not take them. Any other
+     * failure throws [WearOsLinkFailure].
+     */
+    suspend fun pushDays(
+        targetAddress: String?,
+        targetName: String?,
+        days: List<DaySummary>,
+    ): Boolean
+}

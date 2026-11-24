@@ -13,10 +13,15 @@ import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
-import tech.mmarca.openwatch.R
+import tech.mmarca.openwatch.features.device.R as DeviceR
+import tech.mmarca.openwatch.features.watches.garmin.R
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncUiState
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import tech.mmarca.openwatch.features.watches.garmin.ActionsRow
+import tech.mmarca.openwatch.features.watches.garmin.GarminWatchPanelUiState
+import tech.mmarca.openwatch.features.watches.garmin.OnDeviceSettingsRow
 import tech.mmarca.openwatch.testing.string
 import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 
@@ -61,7 +66,7 @@ class WatchDeviceRowsTest {
             }
         }
 
-        composeRule.onNodeWithText(string(R.string.settings_bike_detect_sensors))
+        composeRule.onNodeWithText(string(DeviceR.string.settings_bike_detect_sensors))
             .assertIsEnabled()
             .performClick()
 
@@ -114,7 +119,8 @@ class WatchDeviceRowsTest {
                     ActionsRow(
                         device = device,
                         // Empty capabilities means "never synced", which the screen reads as show.
-                        state = WatchDeviceUiState(device = device),
+                        state = GarminWatchPanelUiState(),
+                        sync = DeviceSyncUiState(),
                         isBikeComputer = device.isBikeComputer,
                         onOpenData = {},
                         onSync = {},

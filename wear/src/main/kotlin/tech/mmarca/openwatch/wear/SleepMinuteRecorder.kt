@@ -30,15 +30,20 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
  * two share their wake-ups. On a watch whose hub lets a still arm sleep for
  * minutes, that is not enough: while bedtime mode is on, or [SleepHold] sees
  * sleep starting (a still wrist and a falling pulse, any time of day), the
- * watch is worn and off the charger, a wake lock keeps the processor up so
- * every minute is recorded whole ([BedtimeHold]). Everything runs on one handler thread;
- * the heart rate recorder posts to it.
+ * watch is worn and off the charger, the hold keeps every minute whole
+ * ([BedtimeHold]): with the heart rate sensor's wake-ups and a flush of every
+ * sensor at each ([syncedHold], the default where that sensor is a wake-up
+ * one), or with a lasting wake lock. [holdBudget] counts the minutes held per
+ * day for the debug protocol. Everything runs on one handler thread; the
+ * heart rate recorder posts to it.
  */
-class SleepMinuteRecorder(
+internal class SleepMinuteRecorder(
     private val context: Context,
     private val store: MetricStore,
+    private val linkState: WearLinkState,
+    private val debug: DebugProtocol,
     /** Whether heart rate is being recorded: only then is a minute without one a sign of no wrist. */
-    isHeartRateRecording: () -> Boolean,
+    private val isHeartRateRecording: () -> Boolean,
     /** The steps counted in the minute that starts at the given time; read when the minute closes. */
     private val stepsInMinute: (minuteStartMillis: Long) -> Int = { 0 },
     /** Called on the handler thread when the sleep hold starts or stops. */
@@ -47,13 +52,12 @@ class SleepMinuteRecorder(
     private val wakeSync: SensorWakeSync? = null,
     /** Whether a sleep hold may rest on [wakeSync] instead of a lasting wake lock ([WearSettings.syncedSleepHold]). */
     private val syncedHold: () -> Boolean = { false },
-) : SensorEventListener2 {
+) : Recorder, SensorEventListener2 {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-    private val aggregator = MinuteAggregator(
-        offsetSecondsAt = { TimeZone.getDefault().getOffset(it) / 1000 },
-        isHeartRateRecording = isHeartRateRecording,
-    )
+
+    /** New at each [start]: a run of the recorder begins with no open minute and no evidence of sleep. */
+    private var aggregator = newAggregator()
     private var thread: HandlerThread? = null
     private var handler: Handler? = null
     private var lastPrunedAt = 0L
@@ -64,7 +68,19 @@ class SleepMinuteRecorder(
     private var bedtime: BedtimeMonitor? = null
     private var hold = BedtimeHold.OFF
     private var holdRenewedAt = 0L
-    private val autoHold = SleepHold()
+    private var autoHold = SleepHold()
+
+    /** False on a watch without an accelerometer: then nothing will ever start. */
+    val hasSensor: Boolean = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null
+
+    override fun apply(plan: RecorderPlan.Plan) {
+        if (plan.sleepMinutes) start() else stop()
+    }
+
+    private fun newAggregator() = MinuteAggregator(
+        offsetSecondsAt = { TimeZone.getDefault().getOffset(it) / 1000 },
+        isHeartRateRecording = isHeartRateRecording,
+    )
 
     /**
      * True while the wake lock is held for sleep, whatever started it:
@@ -78,6 +94,9 @@ class SleepMinuteRecorder(
     /** Whether the hold keeps a lasting wake lock now (false for a synced hold, or no hold). */
     val holdsLastingLock: Boolean
         get() = wakeLock.isHeld
+
+    /** The minutes held today and on the days before, by how; kept across runs, read by the debug snapshots. */
+    val holdBudget = SleepHoldBudget()
     private val wakeLock = (context.getSystemService(Context.POWER_SERVICE) as PowerManager)
         .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
         .apply { setReferenceCounted(false) }
@@ -93,7 +112,7 @@ class SleepMinuteRecorder(
         }
     }
 
-    val isRunning: Boolean
+    override val isRunning: Boolean
         get() = thread != null
 
     /** Starts recording. False when the watch has no accelerometer or the registration failed. */
@@ -104,6 +123,10 @@ class SleepMinuteRecorder(
             Log.w(TAG, "No accelerometer")
             return false
         }
+        // As a fresh recorder would: the last run's open minute and evidence are not this run's.
+        aggregator = newAggregator()
+        autoHold = SleepHold()
+        worn = true
         val worker = HandlerThread("SleepMinuteRecorder").apply { start() }
         val workerHandler = Handler(worker.looper)
         val registered = sensorManager.registerListener(
@@ -135,11 +158,12 @@ class SleepMinuteRecorder(
             bedtime = BedtimeMonitor(context, workerHandler) { applyHold() }.also { it.start() }
             applyHold()
         }
-        Log.i(TAG, "Recording sleep minutes from ${accelerometer.name}")
+        debug.registered("sleepMinutes", accelerometer, SAMPLING_PERIOD_MICROS, MAX_REPORT_LATENCY_MICROS)
+        debug.log(TAG) { "Recording sleep minutes from ${accelerometer.name}" }
         return true
     }
 
-    fun stop() {
+    override fun stop() {
         val worker = thread ?: return
         wakeSync?.leave(this)
         sensorManager.unregisterListener(this)
@@ -151,7 +175,8 @@ class SleepMinuteRecorder(
             hold = BedtimeHold.OFF
             autoHold.onNotWorn()
             setSleepHolding(false)
-            WearLinkState.update { it.copy(bedtimeHold = BedtimeHold.OFF) }
+            countHold(System.currentTimeMillis(), SleepHoldBudget.Mode.NONE)
+            linkState.update { it.copy(bedtimeHold = BedtimeHold.OFF) }
         }
         worker.quitSafely()
         thread = null
@@ -185,7 +210,7 @@ class SleepMinuteRecorder(
         val at = SensorTime.epochMillisOf(event.timestamp)
         if (SensorTime.isStale(at)) return
         if (event.sensor.type != Sensor.TYPE_ACCELEROMETER || event.values.size < 3) return
-        DebugProtocol.arrival("accel")
+        debug.arrival("accel")
         aggregator.onAcceleration(
             at,
             event.values[0] / GRAVITY,
@@ -232,17 +257,37 @@ class SleepMinuteRecorder(
         if (next != hold) {
             hold = next
             Log.i(TAG, "Bedtime hold: $next")
-            WearLinkState.update { it.copy(bedtimeHold = next) }
+            linkState.update { it.copy(bedtimeHold = next) }
         }
         setSleepHolding(holding)
+        val mode = when {
+            !holding -> SleepHoldBudget.Mode.NONE
+            lasting -> SleepHoldBudget.Mode.LOCK
+            else -> SleepHoldBudget.Mode.SYNCED
+        }
+        countHold(System.currentTimeMillis(), mode)
+    }
+
+    /** The minutes held per day, for the debug protocol: a line per finished day, one when today's lock passes the budget. */
+    private fun countHold(now: Long, mode: SleepHoldBudget.Mode) {
+        for (day in holdBudget.update(now, mode)) {
+            debug.event(
+                "SleepHold", "day",
+                "date" to day.date.toString(), "lockMin" to day.lockMinutes, "syncedMin" to day.syncedMinutes,
+                "budgetMin" to SleepHoldBudget.LOCK_BUDGET_MINUTES,
+            )
+        }
+        holdBudget.newlyOverBudget(now)?.let { day ->
+            debug.event("SleepHold", "over_budget", "lockMin" to day.lockMinutes, "budgetMin" to SleepHoldBudget.LOCK_BUDGET_MINUTES)
+        }
     }
 
     private fun setSleepHolding(holding: Boolean) {
         if (holding == isSleepHolding) return
         isSleepHolding = holding
         Log.i(TAG, "Sleep hold: $holding")
-        DebugProtocol.event("SleepHold", if (holding) "on" else "off", "bedtime" to (hold == BedtimeHold.HOLDING))
-        WearLinkState.update { it.copy(sleepHoldActive = holding) }
+        debug.event("SleepHold", if (holding) "on" else "off", "bedtime" to (hold == BedtimeHold.HOLDING))
+        linkState.update { it.copy(sleepHoldActive = holding) }
         onSleepHoldChange(holding)
     }
 
@@ -268,7 +313,7 @@ class SleepMinuteRecorder(
         handler?.post {
             val wasHolding = autoHold.isHolding
             autoHold.onPhoneActive(epochMillis)
-            DebugProtocol.event("SleepHold", "phone_active", "endedHold" to wasHolding)
+            debug.event("SleepHold", "phone_active", "endedHold" to wasHolding)
             applyHold()
         }
     }
@@ -285,7 +330,7 @@ class SleepMinuteRecorder(
         feedAutoHold(closed)
         applyHold()
         store.putAll(WearMetrics.SLEEP_MINUTES, closed)
-        Log.d(TAG, "Stored ${closed.size} minute(s) up to ${closed.last().epochMillis}")
+        debug.log(TAG) { "Stored ${closed.size} minute(s) up to ${closed.last().epochMillis}" }
         if (now - lastPrunedAt > PRUNE_EVERY_MILLIS) {
             lastPrunedAt = now
             store.prune(WearMetrics.SLEEP_MINUTES, now)

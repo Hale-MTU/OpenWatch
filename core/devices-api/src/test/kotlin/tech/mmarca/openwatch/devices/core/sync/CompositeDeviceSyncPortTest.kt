@@ -1,0 +1,66 @@
+package tech.mmarca.openwatch.devices.core.sync
+
+import java.time.Instant
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Test
+import tech.mmarca.openwatch.domain.model.BleDeviceKind
+import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.domain.model.DeviceIntegration
+
+class CompositeDeviceSyncPortTest {
+
+    /** Tells the ports apart by what they answer. */
+    private companion object {
+        fun answer(tag: Int) = DeviceSyncResult.Failed(SyncFailure.Described(tag))
+    }
+
+    private class PortFor(private val integration: DeviceIntegration, val tag: Int) : DeviceSyncPort {
+        var syncs = 0
+        override fun canSync(device: BleSensorDevice) = device.integration == integration
+        override suspend fun sync(
+            device: BleSensorDevice,
+            trigger: SyncTrigger,
+            onProgress: ((DeviceSyncProgress) -> Unit)?,
+        ): DeviceSyncResult {
+            syncs++
+            return answer(tag)
+        }
+    }
+
+    private val garmin = PortFor(DeviceIntegration.GARMIN, 1)
+    private val wearOs = PortFor(DeviceIntegration.WEAROS, 2)
+    private val composite = CompositeDeviceSyncPort(setOf(garmin, wearOs))
+
+    private fun watch(integration: DeviceIntegration?) = BleSensorDevice(
+        id = "w",
+        displayName = "w",
+        address = "AA",
+        bluetoothName = "w",
+        capabilities = emptySet(),
+        enabled = true,
+        wheelCircumferenceMm = null,
+        addedAt = Instant.parse("2026-01-01T00:00:00Z"),
+        kind = BleDeviceKind.WATCH,
+        integration = integration,
+    )
+
+    @Test
+    fun `each device goes to the port that claims it`() = runTest {
+        assertEquals(answer(2), composite.sync(watch(DeviceIntegration.WEAROS), SyncTrigger.REQUESTED, null))
+        assertEquals(answer(1), composite.sync(watch(DeviceIntegration.GARMIN), SyncTrigger.REQUESTED, null))
+        assertEquals(1, garmin.syncs)
+        assertEquals(1, wearOs.syncs)
+    }
+
+    @Test
+    fun `a device no port claims cannot sync`() = runTest {
+        val sensor = watch(null).copy(kind = BleDeviceKind.SENSOR)
+
+        assertFalse(composite.canSync(sensor))
+        assertTrue(composite.sync(sensor, SyncTrigger.REQUESTED, null) is DeviceSyncResult.Failed)
+        assertEquals(0, garmin.syncs + wearOs.syncs)
+    }
+}

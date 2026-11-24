@@ -19,10 +19,19 @@ import tech.mmarca.openwatch.wear.NightWindowResult
  * them (on a Galaxy Watch7 the flush answered in 0.2 s and the window's own
  * points were not among those delivered). So after the window the source
  * stays subscribed until a point stamped after the window's end arrives,
- * at most [BATCH_WAIT_MILLIS], and keeps the intervals that ended inside the
- * window ([SamsungIbiWindow]).
+ * at most [batchWaitMillis], and keeps the intervals that ended inside the
+ * window ([SamsungIbiWindow]). A night's window waits up to twelve minutes;
+ * a spot HRV, with the screen on and the points coming soon, a short while.
+ * The RMSSD rests on at least [minCleanBeats] clean beats.
  */
-internal class SamsungIbiSource(private val feed: SamsungHeartRateFeed) : HrvWindowSource, SamsungHeartRateFeed.Subscriber {
+internal class SamsungIbiSource(
+    private val feed: SamsungHeartRateFeed,
+    private val debug: DebugProtocol,
+    private val batchWaitMillis: Long = BATCH_WAIT_MILLIS,
+    private val minCleanBeats: Int = HrvRmssd.MIN_CLEAN_BEATS,
+    /** The debug event a finished window is logged as. */
+    private val windowEvent: String = "samsung_window",
+) : HrvWindowSource, SamsungHeartRateFeed.Subscriber {
 
     private var handler: Handler? = null
     private var startedAt = 0L
@@ -33,7 +42,7 @@ internal class SamsungIbiSource(private val feed: SamsungHeartRateFeed) : HrvWin
     private var subscribed = false
 
     /** Whether the last window ended with a platform error or no point at all: the platform is not serving. */
-    var lastWindowFailed: Boolean = false
+    override var lastWindowFailed: Boolean = false
         private set
 
     override val isAvailable: Boolean
@@ -70,11 +79,11 @@ internal class SamsungIbiSource(private val feed: SamsungHeartRateFeed) : HrvWin
             val intervals = SamsungIbiWindow.intervals(points, startedAt, endMillis)
             val hadError = failed
             lastWindowFailed = hadError || points.isEmpty()
-            val result = if (hadError) null else HrvRmssd.ofIntervals(intervals)
+            val result = if (hadError) null else HrvRmssd.ofIntervals(intervals, minCleanBeats)
             val (times, values) = SamsungIbiWindow.timedIntervals(points, startedAt, endMillis)
             val breathing = if (hadError) null else RespiratoryRate.fromIntervalSeries(times, values)
-            DebugProtocol.event(
-                "NightHrv", "samsung_window",
+            debug.event(
+                "NightHrv", windowEvent,
                 "startedAt" to startedAt,
                 "waitMs" to SystemClock.elapsedRealtime() - askedAt,
                 "points" to points.size,
@@ -94,7 +103,7 @@ internal class SamsungIbiSource(private val feed: SamsungHeartRateFeed) : HrvWin
         waitingFor = endMillis
         // A flush may still bring the newest points sooner; the answer itself is not waited for.
         feed.flush()
-        workerHandler.postAtTime(deliver, FLUSH_TOKEN, SystemClock.uptimeMillis() + BATCH_WAIT_MILLIS)
+        workerHandler.postAtTime(deliver, FLUSH_TOKEN, SystemClock.uptimeMillis() + batchWaitMillis)
     }
 
     override fun cancel() {

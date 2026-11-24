@@ -1,59 +1,68 @@
 package tech.mmarca.openwatch.wear
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
-import tech.mmarca.openwatch.wear.MetricTile.BLOOD_OXYGEN
-import tech.mmarca.openwatch.wear.MetricTile.DISTANCE
 import tech.mmarca.openwatch.wear.MetricTile.FLOORS
 import tech.mmarca.openwatch.wear.MetricTile.HEART_RATE
+import tech.mmarca.openwatch.wear.MetricTile.HRV
 import tech.mmarca.openwatch.wear.MetricTile.STEPS
 
+/** The dashboard's chosen tiles, as stored. How a choice is edited is `ChoicesTest`, in `:wear:recording-core`. */
 class WearTilePreferencesTest {
 
+    private val prefs = FakeSharedPreferences()
+
     @Test
-    fun decode_nothingStored_returnsDefaults() {
-        assertEquals(MetricTile.DefaultTiles, decodeTiles(null))
+    fun `nothing chosen yet is the default tiles`() {
+        assertEquals(MetricTile.DefaultTiles, WearTilePreferences(prefs).chosen.value)
     }
 
     @Test
-    fun decode_emptyString_returnsNoTiles() {
-        assertEquals(emptyList<MetricTile>(), decodeTiles(""))
+    fun `a choice survives a restart, stored as the tiles' names`() {
+        WearTilePreferences(prefs).edit { listOf(HEART_RATE, STEPS, FLOORS, HRV) }
+
+        assertEquals(listOf(HEART_RATE, STEPS, FLOORS, HRV), WearTilePreferences(prefs).chosen.value)
+        assertEquals("HEART_RATE,STEPS,FLOORS,HRV", prefs.getString(WearTilePreferences.KEY_TILES, null))
     }
 
     @Test
-    fun encodeThenDecode_keepsSelectionAndOrder() {
-        val custom = listOf(HEART_RATE, STEPS, FLOORS)
-        assertEquals(custom, decodeTiles(encodeTiles(custom)))
+    fun `every tile switched off stays off`() {
+        WearTilePreferences(prefs).edit { emptyList() }
+
+        assertEquals(emptyList<MetricTile>(), WearTilePreferences(prefs).chosen.value)
     }
 
     @Test
-    fun decode_dropsUnknownAndDuplicateNames() {
-        assertEquals(listOf(STEPS, HEART_RATE), decodeTiles("STEPS,NOPE,HEART_RATE,STEPS"))
+    fun `each change starts from the last one`() {
+        val tiles = WearTilePreferences(prefs)
+
+        tiles.edit { Choices.switched(it, FLOORS, on = true) }
+        tiles.edit { Choices.moved(it, FLOORS, up = true) { true } }
+
+        assertEquals(MetricTile.DefaultTiles.dropLast(1) + FLOORS + MetricTile.DefaultTiles.last(), tiles.chosen.value)
     }
 
     @Test
-    fun move_down_placesTileAfterTarget() {
+    fun `the tiles' names are stored, so none is ever renamed`() {
+        // A new tile adds its name here; a name that changed would drop its tile from every stored choice.
         assertEquals(
-            listOf(HEART_RATE, DISTANCE, STEPS, FLOORS),
-            listOf(STEPS, HEART_RATE, DISTANCE, FLOORS).withTileMoved(STEPS, DISTANCE),
+            listOf(
+                "STEPS", "HEART_RATE", "DISTANCE", "ACTIVE_CALORIES", "FLOORS", "ELEVATION", "BLOOD_OXYGEN", "VO2_MAX",
+                "RESTING_HEART_RATE", "HRV", "SLEEP", "HYDRATION", "SKIN_TEMPERATURE", "RESPIRATORY_RATE", "WEIGHT",
+            ),
+            MetricTile.entries.map { it.name },
         )
     }
 
     @Test
-    fun move_up_placesTileBeforeTarget() {
-        assertEquals(
-            listOf(FLOORS, STEPS, HEART_RATE, DISTANCE),
-            listOf(STEPS, HEART_RATE, DISTANCE, FLOORS).withTileMoved(FLOORS, STEPS),
-        )
-    }
+    fun `a reset forgets the choice, so the defaults of a later build apply`() {
+        val tiles = WearTilePreferences(prefs)
+        tiles.edit { listOf(FLOORS) }
 
-    @Test
-    fun move_skipsTilesHiddenFromTheEditor() {
-        // BLOOD_OXYGEN is chosen but has no sensor, so the editor never shows it.
-        // The editor sees HEART_RATE and STEPS as neighbours and swaps them.
-        assertEquals(
-            listOf(HEART_RATE, STEPS, BLOOD_OXYGEN),
-            listOf(STEPS, BLOOD_OXYGEN, HEART_RATE).withTileMoved(HEART_RATE, STEPS),
-        )
+        tiles.reset()
+
+        assertEquals(MetricTile.DefaultTiles, tiles.chosen.value)
+        assertNull(prefs.getString(WearTilePreferences.KEY_TILES, null))
     }
 }

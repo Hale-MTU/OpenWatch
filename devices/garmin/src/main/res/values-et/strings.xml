@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="garmin_find_phone_channel">Leia mu telefon</string>
+    <string name="garmin_find_phone_title">Sinu kell otsib seda telefoni</string>
+    <string name="garmin_find_phone_body">Puuduta helisemise lõpetamiseks.</string>
+    <string name="garmin_find_phone_stop">Peata</string>
+</resources>

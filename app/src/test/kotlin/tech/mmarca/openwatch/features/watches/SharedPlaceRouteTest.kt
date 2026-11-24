@@ -3,25 +3,15 @@ package tech.mmarca.openwatch.features.watches
 import android.content.Intent
 import io.mockk.every
 import io.mockk.mockk
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Before
 import org.junit.Test
-import tech.mmarca.openwatch.util.mockUriCodec
-import tech.mmarca.openwatch.util.unmockUriCodec
-import tech.mmarca.openwatch.navigation.Screen
+import tech.mmarca.openwatch.navigation.WatchSendPoint
 import tech.mmarca.openwatch.sendPointRoute
 import tech.mmarca.openwatch.sharedPlaceRoute
 
 /** A place shared by another app becomes a send-a-point route, built from parsed numbers only. */
 class SharedPlaceRouteTest {
-
-    @Before
-    fun setUp() = mockUriCodec()
-
-    @After
-    fun tearDown() = unmockUriCodec()
 
     private fun intent(action: String, data: String? = null, type: String? = null, text: String? = null): Intent =
         mockk<Intent>().also {
@@ -36,7 +26,7 @@ class SharedPlaceRouteTest {
         val route = intent(Intent.ACTION_VIEW, data = "geo:0,0?q=48.8584,2.2945(Eiffel+Tower)").sendPointRoute()
 
         assertEquals(
-            Screen.WatchSendPoint.createRoute(latitude = 48.8584, longitude = 2.2945, name = "Eiffel Tower"),
+            WatchSendPoint(latitude = 48.8584, longitude = 2.2945, name = "Eiffel Tower"),
             route,
         )
     }
@@ -50,7 +40,7 @@ class SharedPlaceRouteTest {
         ).sendPointRoute()
 
         assertEquals(
-            Screen.WatchSendPoint.createRoute(latitude = -33.8568, longitude = 151.2153, name = "Opera House"),
+            WatchSendPoint(latitude = -33.8568, longitude = 151.2153, name = "Opera House"),
             route,
         )
     }
@@ -60,8 +50,8 @@ class SharedPlaceRouteTest {
         val shortLink = sharedPlaceRoute(geoLink = null, text = "Eiffel Tower\nhttps://maps.app.goo.gl/AbCd")
         val nothing = sharedPlaceRoute(geoLink = null, text = "https://example.org/page")
 
-        assertEquals(Screen.WatchSendPoint.createRoute(name = "Eiffel Tower", unreadable = true), shortLink)
-        assertEquals(Screen.WatchSendPoint.createRoute(unreadable = true), nothing)
+        assertEquals(WatchSendPoint(name = "Eiffel Tower", unreadable = true), shortLink)
+        assertEquals(WatchSendPoint(unreadable = true), nothing)
     }
 
     @Test
@@ -80,7 +70,7 @@ class SharedPlaceRouteTest {
         val route = sharedPlaceRoute(geoLink = null, text = "x".repeat(500) + "\n48.8584, 2.2945")
 
         assertEquals(
-            Screen.WatchSendPoint.createRoute(latitude = 48.8584, longitude = 2.2945, name = "x".repeat(64)),
+            WatchSendPoint(latitude = 48.8584, longitude = 2.2945, name = "x".repeat(64)),
             route,
         )
     }

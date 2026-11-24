@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="privacy_policy_title">Политика конфиденциальности</string>
+    <string name="body_profile_synced">Синхронизируется с %1$s</string>
+    <string name="body_profile_synced_updated">Синхронизируется с %1$s · обновлено %2$s</string>
+    <string name="connected_apps_title">Подключённые приложения</string>
+    <string name="connected_apps_settings_body">Приложения, которые используют ваши часы, весы и профиль тела через OpenWatch, и что разрешено каждому</string>
+    <string name="settings_notification_access_title">Доступ к уведомлениям</string>
+    <string name="settings_notification_access_body">Позволяет сопряжённым часам Garmin показывать уведомления телефона. Выключено.</string>
+    <string name="settings_notification_access_granted">Предоставлен. Нажмите, чтобы изменить это в настройках Android.</string>
+    <string name="settings_about_version">OpenWatch %1$s</string>
+    <string name="settings_privacy_policy_body">Что OpenWatch читает, записывает и хранит. Открывается в браузере.</string>
+    <string name="settings_privacy_policy_no_browser">Ни одно приложение на этом телефоне не может открыть ссылку. Политика доступна по адресу %1$s</string>
+    <string name="settings_about_body">Открытый исходный код по лицензии AGPL-3.0-or-later. Код для часов, весов и синхронизации взят из OpenVitals.</string>
+    <string name="body_profile_title">Профиль тела</string>
+    <string name="body_profile_settings_body">Год рождения, пол, рост и вес для оценок</string>
+    <string name="body_profile_intro">Для состава тела по весам нужны ваш пол и рост; для оценки энергии ходьбы нужен ваш вес. Вес или рост из Health Connect используется вместо введённого здесь.</string>
+    <string name="body_profile_birth_year">Год рождения</string>
+    <string name="body_profile_sex">Пол</string>
+    <string name="body_profile_sex_female">Женский</string>
+    <string name="body_profile_sex_male">Мужской</string>
+    <string name="body_profile_height_cm">Рост (см)</string>
+    <string name="body_profile_height_in">Рост (дюймы)</string>
+    <string name="body_profile_weight_kg">Вес (кг)</string>
+    <string name="body_profile_weight_lb">Вес (фунты)</string>
+    <string name="body_profile_measured">Health Connect: %1$s</string>
+    <string name="settings_respiratory_rate_title">Частота дыхания с часов (экспериментально)</string>
+    <string name="settings_respiratory_rate_body">Записывает в Health Connect частоту дыхания из ночных окон ВСР часов. Ещё не сверена с эталонным устройством.</string>
+    <string name="health_data_open_body">Все типы данных о здоровье, откуда они поступают и зачем нужны.</string>
+</resources>

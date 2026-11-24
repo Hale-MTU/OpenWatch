@@ -28,42 +28,6 @@ class WearLinkSession internal constructor(
         if (line.trim() == WearLinkProtocol.PONG) Reply.Done(Unit) else Reply.Unexpected
     }
 
-    fun pullHeartRate(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.HeartRateSample>> {
-        val items = ArrayList<WearLinkProtocol.HeartRateSample>()
-        return exchange(WearLinkProtocol.Request.HeartRateSince(sinceEpochMillis, limit)) { line ->
-            WearLinkProtocol.parseSample(line)?.let { items += it; return@exchange Reply.More }
-            WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(Page(items, it.more)) }
-            Reply.Unexpected
-        }
-    }
-
-    fun pullSleepMinutes(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.SleepMinute>> {
-        val items = ArrayList<WearLinkProtocol.SleepMinute>()
-        return exchange(WearLinkProtocol.Request.SleepMinutesSince(sinceEpochMillis, limit)) { line ->
-            WearLinkProtocol.parseSleepMinute(line)?.let { items += it; return@exchange Reply.More }
-            WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(Page(items, it.more)) }
-            Reply.Unexpected
-        }
-    }
-
-    fun pullSteps(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.StepMinute>> {
-        val items = ArrayList<WearLinkProtocol.StepMinute>()
-        return exchange(WearLinkProtocol.Request.StepsSince(sinceEpochMillis, limit)) { line ->
-            WearLinkProtocol.parseStepMinute(line)?.let { items += it; return@exchange Reply.More }
-            WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(Page(items, it.more)) }
-            Reply.Unexpected
-        }
-    }
-
-    fun pullAscent(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.AscentMinute>> {
-        val items = ArrayList<WearLinkProtocol.AscentMinute>()
-        return exchange(WearLinkProtocol.Request.AscentSince(sinceEpochMillis, limit)) { line ->
-            WearLinkProtocol.parseAscentMinute(line)?.let { items += it; return@exchange Reply.More }
-            WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(Page(items, it.more)) }
-            Reply.Unexpected
-        }
-    }
-
     /** One live window of up to [seconds]: hands each reading to [onSample] as it arrives; the count when it ends. */
     fun liveHeartRate(seconds: Int, onSample: (WearLinkProtocol.HeartRateSample) -> Unit): WearLinkOutcome<Int> =
         exchange(WearLinkProtocol.Request.LiveHeartRate(seconds)) { line ->
@@ -71,33 +35,6 @@ class WearLinkSession internal constructor(
             WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(it.count) }
             Reply.Unexpected
         }
-
-    fun pullRespiratory(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.RespiratoryWindow>> {
-        val items = ArrayList<WearLinkProtocol.RespiratoryWindow>()
-        return exchange(WearLinkProtocol.Request.RespiratorySince(sinceEpochMillis, limit)) { line ->
-            WearLinkProtocol.parseRespiratoryWindow(line)?.let { items += it; return@exchange Reply.More }
-            WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(Page(items, it.more)) }
-            Reply.Unexpected
-        }
-    }
-
-    fun pullSpo2(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.Spo2Measurement>> {
-        val items = ArrayList<WearLinkProtocol.Spo2Measurement>()
-        return exchange(WearLinkProtocol.Request.Spo2Since(sinceEpochMillis, limit)) { line ->
-            WearLinkProtocol.parseSpo2(line)?.let { items += it; return@exchange Reply.More }
-            WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(Page(items, it.more)) }
-            Reply.Unexpected
-        }
-    }
-
-    fun pullSkin(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.SkinMinute>> {
-        val items = ArrayList<WearLinkProtocol.SkinMinute>()
-        return exchange(WearLinkProtocol.Request.SkinSince(sinceEpochMillis, limit)) { line ->
-            WearLinkProtocol.parseSkinMinute(line)?.let { items += it; return@exchange Reply.More }
-            WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(Page(items, it.more)) }
-            Reply.Unexpected
-        }
-    }
 
     /** Every setting the watch holds. Only call when the peer advertised [WearLinkProtocol.CAP_PREFERENCES]. */
     fun pullPreferences(): WearLinkOutcome<Map<String, String>> {
@@ -149,37 +86,39 @@ class WearLinkSession internal constructor(
     }
 
 
+    /** Hands the watch the phone's figures for one day. Only call when the peer advertised [WearLinkProtocol.CAP_DAY_SUMMARY]. */
+    fun putDay(day: DaySummary): WearLinkOutcome<Unit> =
+        exchange(WearLinkProtocol.Request.PutDay(day)) { line ->
+            if (line.trim() == WearLinkDaily.DAY_OK) Reply.Done(Unit) else Reply.Unexpected
+        }
+
     /** Tells the watch the wearer used the phone at [epochMillis]. */
     fun notifyPhoneActive(epochMillis: Long): WearLinkOutcome<Unit> =
         exchange(WearLinkProtocol.Request.PhoneActive(epochMillis)) { line ->
             if (WearLinkProtocol.parseEnd(line) != null) Reply.Done(Unit) else Reply.Unexpected
         }
 
-    fun pullHrv(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WearLinkProtocol.HrvWindow>> {
-        val items = ArrayList<WearLinkProtocol.HrvWindow>()
-        return exchange(WearLinkProtocol.Request.HrvSince(sinceEpochMillis, limit)) { line ->
-            WearLinkProtocol.parseHrvWindow(line)?.let { items += it; return@exchange Reply.More }
-            WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(Page(items, it.more)) }
-            Reply.Unexpected
-        }
-    }
-
-    /** Hands the watch the phone's figures for one day. */
-    fun putDay(day: DaySummary): WearLinkOutcome<Unit> =
-        exchange(WearLinkProtocol.Request.PutDay(day)) { line ->
-            if (line.trim() == WearLinkProtocol.DAY_OK) Reply.Done(Unit) else Reply.Unexpected
-        }
-
-    /** The entries made on the watch after [sinceEpochMillis]; a line this side cannot read is skipped. */
-    fun pullEntries(sinceEpochMillis: Long, limit: Int): WearLinkOutcome<Page<WatchEntry>> {
-        val items = ArrayList<WatchEntry>()
-        return exchange(WearLinkProtocol.Request.EntriesSince(sinceEpochMillis, limit)) { line ->
-            if (line.startsWith("${WearLinkProtocol.ENTRY} ")) {
-                WearLinkDaily.parseEntry(line)?.let { items += it }
-                return@exchange Reply.More
+    /**
+     * One page of the series [key] after [cursor] ([WearLinkSince]): every line up to `END`, as
+     * the watch stored it, for the caller to parse, and the cursor to ask with next. Refused as
+     * a protocol error when `END` counts other than the lines that arrived, so a reply cut short
+     * is never taken for a complete one, or carries no cursor. A line the caller cannot parse
+     * still counts: the watch sent it, and a row the phone finds implausible must not stall the
+     * series. Only call when the peer announced [key].
+     */
+    fun pullSince(key: String, cursor: String, limit: Int): WearLinkOutcome<WearLinkSince.Page> {
+        val lines = ArrayList<String>()
+        return exchange(WearLinkProtocol.Request.SeriesSince(key, cursor, limit)) { line ->
+            if (WearLinkProtocol.parseEnd(line) != null) {
+                val end = WearLinkSince.parseEnd(line) ?: return@exchange Reply.Mismatch("END carried no cursor")
+                return@exchange if (end.count == lines.size) {
+                    Reply.Done(WearLinkSince.Page(lines, end.more, end.cursor))
+                } else {
+                    Reply.Mismatch("END counted ${end.count} lines, ${lines.size} arrived")
+                }
             }
-            WearLinkProtocol.parseEnd(line)?.let { return@exchange Reply.Done(Page(items, it.more)) }
-            Reply.Unexpected
+            lines += line
+            Reply.More
         }
     }
 
@@ -190,6 +129,9 @@ class WearLinkSession internal constructor(
         data object More : Reply<Nothing>()
         data class Done<T>(val value: T) : Reply<T>()
         data object Unexpected : Reply<Nothing>()
+
+        /** The reply contradicts itself; the page is not used. */
+        data class Mismatch(val detail: String) : Reply<Nothing>()
     }
 
     private fun <T> exchange(request: WearLinkProtocol.Request, onLine: (String) -> Reply<T>): WearLinkOutcome<T> =
@@ -213,6 +155,7 @@ class WearLinkSession internal constructor(
                 is Reply.Done -> return WearLinkOutcome.Ok(reply.value)
                 // An older or newer watch may say something extra; a line that is not ours is skipped.
                 Reply.Unexpected -> continue
+                is Reply.Mismatch -> return WearLinkOutcome.ProtocolError(reply.detail)
             }
         }
     }
@@ -222,10 +165,54 @@ class WearLinkSession internal constructor(
  * The phone's end: says hello over a fresh connection and, when the watch
  * answers `OK`, hands back a session for requests. Blocking; the caller
  * owns the socket's timeout (closing it unblocks every read here).
+ *
+ * The hello offers the highest version this side speaks ([versions]). A watch
+ * that speaks an older one too refuses with `VERSION <min> <max>`, and the
+ * phone says hello once more, on a new connection from [reconnect], with the
+ * highest version both speak. With none in common the refusal stands: the
+ * caller tells whose app is behind from the watch's range.
  */
 object WearLinkClient {
 
-    fun hello(connection: WearLinkConnection, hello: WearLinkProtocol.Hello): WearLinkOutcome<WearLinkSession> {
+    /** The versions this build speaks, oldest to newest. */
+    val VERSIONS: IntRange = WearLinkProtocol.MIN_VERSION..WearLinkProtocol.VERSION
+
+    /**
+     * Says hello on [connection] with the highest of [versions], and, when the watch's
+     * refusal leaves a lower one both speak, once more on [reconnect]'s connection with it.
+     * [connection] is closed before that, since the watch waits for the close; a connection
+     * this call opened is closed by it unless it hands back a session on it.
+     */
+    fun hello(
+        connection: WearLinkConnection,
+        hello: WearLinkProtocol.Hello,
+        versions: IntRange = VERSIONS,
+        reconnect: (() -> WearLinkConnection)? = null,
+    ): WearLinkOutcome<WearLinkSession> {
+        val offered = hello.copy(version = versions.last)
+        val first = say(connection, offered)
+        val lower = (first as? WearLinkOutcome.VersionMismatch)?.let { commonVersion(versions, it.min..it.max) }
+        if (lower == null || lower >= offered.version || reconnect == null) return accepted(first, versions)
+        connection.close()
+        val again = reconnect()
+        val second = accepted(say(again, offered.copy(version = lower)), versions)
+        if (second !is WearLinkOutcome.Ok) again.close()
+        return second
+    }
+
+    /** The highest version in both ranges, or null when they do not meet. */
+    fun commonVersion(ours: IntRange, theirs: IntRange): Int? =
+        minOf(ours.last, theirs.last).takeIf { it >= maxOf(ours.first, theirs.first) }
+
+    /** A session on a version outside [versions] is refused here, as the watch would have. */
+    private fun accepted(outcome: WearLinkOutcome<WearLinkSession>, versions: IntRange): WearLinkOutcome<WearLinkSession> {
+        if (outcome !is WearLinkOutcome.Ok || outcome.value.peer.version in versions) return outcome
+        val spoken = outcome.value.peer.version
+        outcome.value.close()
+        return WearLinkOutcome.VersionMismatch(spoken, spoken)
+    }
+
+    private fun say(connection: WearLinkConnection, hello: WearLinkProtocol.Hello): WearLinkOutcome<WearLinkSession> {
         val reader = LineReader(connection.input)
         val writer = LineWriter(connection.output)
         return try {

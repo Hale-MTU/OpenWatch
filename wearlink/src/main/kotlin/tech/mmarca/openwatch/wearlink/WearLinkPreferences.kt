@@ -2,7 +2,7 @@ package tech.mmarca.openwatch.wearlink
 
 /**
  * The settings the phone may read with `GET_PREF` and change with
- * `SET_PREF`: the watch's own ([WearSettings] on the watch). Opaque
+ * `SET_PREF`: the watch's own (`WearSettings` on the watch). Opaque
  * tokens on the wire; the watch refuses an unknown key or value. The
  * read-only keys say what the watch can offer.
  */

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="garmin_find_phone_channel">العثور على هاتفي</string>
+    <string name="garmin_find_phone_title">تبحث ساعتك عن هذا الهاتف</string>
+    <string name="garmin_find_phone_body">انقر لإيقاف الرنين.</string>
+    <string name="garmin_find_phone_stop">إيقاف</string>
+</resources>

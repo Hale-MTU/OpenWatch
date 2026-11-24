@@ -1,28 +1,65 @@
 package tech.mmarca.openwatch.wear
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
-import tech.mmarca.openwatch.wear.features.measure.Measurement
-import tech.mmarca.openwatch.wear.health.WearCapabilities
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
 class WearRoutesTest {
 
+    /** The argument the navigation host reads back from a metric's route. */
+    private fun argumentOf(route: String): String = route.substringAfter("metric/")
+
     @Test
-    fun tilesMayOpenLoggingAndMeasuring_butNothingElse() {
-        assertTrue(WearRoutes.isDeepLinkable(WearRoutes.QUICK_LOG))
-        assertTrue(WearRoutes.isDeepLinkable(WearRoutes.measurement(Measurement.HEART_RATE)))
-        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.SETTINGS))
-        assertFalse(WearRoutes.isDeepLinkable("measure/ECG"))
+    fun everyMetricsRouteNamesItsMetric() {
+        for (metric in MetricTile.entries) {
+            assertEquals(metric, WearRoutes.metricOf(argumentOf(WearRoutes.metric(metric))))
+        }
     }
 
     @Test
-    fun availableMetrics_offerPhoneAndLoggedMetrics_andOnlyMeasuredSensorOnes() {
-        val available = WearCapabilities(probed = true, sensorMetrics = setOf(MetricTile.STEPS)).availableMetrics()
-        assertTrue(MetricTile.STEPS in available)
-        assertTrue(MetricTile.SLEEP in available)
-        assertTrue(MetricTile.HYDRATION in available)
-        assertFalse(MetricTile.HEART_RATE in available)
-        assertFalse(MetricTile.BLOOD_OXYGEN in available)
+    fun aNameWithoutAMetricIsNoMetric() {
+        // A name a later build stored, another case, or no argument at all: none throws.
+        assertNull(WearRoutes.metricOf("BODY_BATTERY"))
+        assertNull(WearRoutes.metricOf("steps"))
+        assertNull(WearRoutes.metricOf(""))
+        assertNull(WearRoutes.metricOf(null))
+    }
+
+    @Test
+    fun everyMeasurementsRouteNamesItsKind() {
+        for (kind in SpotKind.entries) {
+            assertEquals(kind, WearRoutes.spotKindOf(WearRoutes.measurement(kind).substringAfter("measure/")))
+        }
+        assertNull(WearRoutes.spotKindOf("ECG"))
+        assertNull(WearRoutes.spotKindOf(null))
+    }
+
+    @Test
+    fun aTileMayOpenTheLoggingAndMeasuringScreensAndNothingElse() {
+        for (route in listOf(WearRoutes.QUICK_LOG, WearRoutes.LOG_WEIGHT, WearRoutes.LOG_BLOOD_PRESSURE, WearRoutes.BREATHE, WearRoutes.MEASURE)) {
+            assertTrue(route, WearRoutes.isDeepLinkable(route))
+        }
+        for (kind in SpotKind.entries) assertTrue(WearRoutes.isDeepLinkable(WearRoutes.measurement(kind)))
+
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.STATUS))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.QUICK_LOG_EDITOR))
+        assertEquals(WearLinkEntry.Type.HEIGHT, WearRoutes.entryTypeOf(WearRoutes.logValue(WearLinkEntry.Type.HEIGHT).substringAfter('/')))
+        assertNull(WearRoutes.entryTypeOf("COFFEE"))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.SETTINGS))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.PHONE))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.SENSORS))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.TILE_EDITOR))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.WORKOUT))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.DASHBOARD))
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.metric(MetricTile.STEPS)))
+        // The pattern itself, a kind this build has not, another case, nothing.
+        assertFalse(WearRoutes.isDeepLinkable(WearRoutes.MEASUREMENT))
+        assertFalse(WearRoutes.isDeepLinkable("measure/ECG"))
+        assertFalse(WearRoutes.isDeepLinkable("QUICK_LOG"))
+        assertFalse(WearRoutes.isDeepLinkable(""))
+        assertFalse(WearRoutes.isDeepLinkable(null))
     }
 }

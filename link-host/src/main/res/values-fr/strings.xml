@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_streaming_channel">Mesures en direct pour d\'autres apps</string>
+    <string name="link_streaming_heart_rate">Fréquence cardiaque transmise à %1$s</string>
+    <string name="link_streaming_heart_rate_steps">Fréquence cardiaque et pas transmis à %1$s</string>
+    <string name="link_streaming_keeping">Votre montre reste en diffusion pour %1$s</string>
+    <string name="link_streaming_waiting">En attente de votre montre, pour %1$s</string>
+    <string name="link_streaming_from">Depuis %1$s</string>
+    <string name="link_streaming_waiting_for">En attente d\'une mesure de %1$s</string>
+</resources>
