@@ -64,6 +64,7 @@
     <string name="settings_watch_wearos_needs_respiratory_write">Frecuencia respiratoria sen escribir: permite que OpenWatch a escriba en Health Connect e sincroniza de novo.</string>
     <string name="settings_watch_wearos_needs_spo2_write">Osíxeno en sangue sen escribir: permite que OpenWatch o escriba en Health Connect e sincroniza de novo.</string>
     <string name="settings_watch_wearos_needs_skin_write">Temperatura da pel sen escribir: permite que OpenWatch a escriba en Health Connect e sincroniza de novo.</string>
+    <string name="settings_watch_wearos_skin_baseline_forming">Temperatura da pel aínda sen escribir: as tres primeiras noites forman a túa propia referencia e as seguintes escríbense respecto a ela.</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">Frecuencia cardíaca en repouso sen escribir: permite que OpenWatch lea e escriba a frecuencia cardíaca en repouso en Health Connect para estimala desde a próxima sincronización.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">%1$d mostra de frecuencia cardíaca sincronizada</item>

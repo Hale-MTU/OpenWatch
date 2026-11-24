@@ -4,12 +4,15 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.ZoneOffset
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.mmarca.openwatch.core.security.testSeal
@@ -33,6 +36,7 @@ import androidx.health.connect.client.records.RespiratoryRateRecord
 import androidx.health.connect.client.records.RestingHeartRateRecord
 import androidx.health.connect.client.records.ExerciseSessionRecord
 import androidx.health.connect.client.records.SleepSessionRecord
+import androidx.health.connect.client.records.SkinTemperatureRecord
 import androidx.health.connect.client.records.metadata.Metadata
 import io.mockk.slot
 import androidx.health.connect.client.permission.HealthPermission
@@ -93,6 +97,10 @@ class WearOsWatchSyncServiceTest {
 
     /** SpO2 pages; with none queued the watch answers an empty page. */
     private val spo2Pages = ArrayDeque<WearOsSpo2Page>()
+
+    /** The skin temperature minutes the watch holds; a pull answers those after its cursor's time. */
+    private val skinMinutes = mutableListOf<WearOsSkinMinute>()
+
     /**
      * The watch as the sync sees it: one `SINCE` pull per page, answered per series from the pages
      * and minutes above. A page's cursor names the newest time it held (`f.<millis>`), so every
@@ -142,7 +150,7 @@ class WearOsWatchSyncServiceTest {
                     val pulled = spo2Pages.removeFirstOrNull() ?: WearOsSpo2Page(emptyList(), hasMore = false)
                     page(pulled.measurements, pulled.hasMore, cursor) { it.time }
                 }
-                WearLinkProtocol.CAP_SKIN_TEMPERATURE -> WearOsSeriesPage(emptyList<WearOsSkinMinute>(), cursor, hasMore = false)
+                WearLinkProtocol.CAP_SKIN_TEMPERATURE -> page(skinMinutes.filter { it.time.isAfter(since) }, hasMore = false, cursor) { it.time }
                 else -> error("no such series: $series")
             }
             return page as WearOsSeriesPage<T>?
@@ -593,6 +601,80 @@ class WearOsWatchSyncServiceTest {
         )
         assertEquals(emptyList<Instant>(), stepPullsSince)
         assertEquals(Instant.EPOCH, cursors.stepsCursor(WATCH.id))
+    }
+
+    /** An hour of skin minutes at [celsius] from 23:00 local on the night [daysBefore] days before t0's. */
+    private fun skinNight(daysBefore: Long, celsius: Double, from: Duration = Duration.ZERO, length: Int = 60): List<WearOsSkinMinute> {
+        val start = Instant.parse("2026-10-06T21:00:00Z").minus(Duration.ofDays(daysBefore)).plus(from)
+        return List(length) { WearOsSkinMinute(start.plusSeconds(60L * it), celsius) }
+    }
+
+    private fun skinSyncWith(vararg granted: String) {
+        pages += WearOsHeartRatePage(emptyList(), hasMore = false)
+        every { healthConnect.isSkinTemperatureAvailable() } returns true
+        coEvery { healthConnect.grantedPermissions() } returns granted.toSet()
+    }
+
+    private val skinBaselineForming = SkippedSeries(HealthSeries.SKIN_TEMPERATURE, SkipReason.NO_BASELINE)
+
+    private val skinWithheld =
+        SkippedSeries(HealthSeries.SKIN_TEMPERATURE, SkipReason.PERMISSION, setOf(WearOsSkinTemperatureImport.writePermission))
+
+    @Test
+    fun `skin temperature nights before the baseline need no grant, are not written and still build it`() = runTest {
+        skinSyncWith()
+        skinMinutes += skinNight(3, 34.0) + skinNight(2, 34.1) + skinNight(1, 34.2)
+
+        val first = service().sync(WATCH, SyncTrigger.REQUESTED, null) as DeviceSyncResult.Succeeded
+
+        assertTrue(insertedOf<SkinTemperatureRecord>().isEmpty())
+        assertTrue(skinBaselineForming in first.skipped)
+        assertFalse(skinWithheld in first.skipped)
+        assertEquals(3, cursors.skinNightMedians(WATCH.id).size)
+        assertEquals(skinNight(1, 34.2).last().time, cursors.skinCursor(WATCH.id))
+
+        // The next sync has the grant and a fourth night: written against the three stored medians.
+        skinSyncWith(WearOsSkinTemperatureImport.writePermission)
+        skinMinutes += skinNight(0, 34.3)
+
+        val second = service().sync(WATCH, SyncTrigger.REQUESTED, null) as DeviceSyncResult.Succeeded
+
+        val record = insertedOf<SkinTemperatureRecord>().single()
+        assertEquals(skinNight(0, 34.3).first().time, record.startTime)
+        assertEquals(34.1, record.baseline!!.inCelsius, 1e-9)
+        assertFalse(skinBaselineForming in second.skipped)
+        assertEquals(4, cursors.skinNightMedians(WATCH.id).size)
+        assertEquals(skinNight(0, 34.3).last().time, cursors.skinCursor(WATCH.id))
+    }
+
+    @Test
+    fun `a first night the tracker dropped out of is one night, not its own baseline`() = runTest {
+        skinSyncWith(WearOsSkinTemperatureImport.writePermission)
+        // Four runs of 40 minutes, an hour apart: one night, cut by the gaps.
+        skinMinutes += (0L until 4L).flatMap { skinNight(1, 34.0 + it * 0.1, from = Duration.ofMinutes(100 * it), length = 40) }
+
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        assertTrue(insertedOf<SkinTemperatureRecord>().isEmpty())
+        assertEquals(1, cursors.skinNightMedians(WATCH.id).size)
+    }
+
+    @Test
+    fun `a skin temperature night that needs the missing grant stays on the watch`() = runTest {
+        skinSyncWith()
+        val earlier = listOf("2026-10-01", "2026-10-02", "2026-10-03").map {
+            WearOsSkinTemperatureImport.NightMedian(LocalDate.parse(it), 34.0)
+        }
+        cursors.setSkinNightMedians(WATCH.id, earlier)
+        skinMinutes += skinNight(1, 34.2)
+
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null) as DeviceSyncResult.Succeeded
+
+        assertTrue(insertedOf<SkinTemperatureRecord>().isEmpty())
+        assertTrue(skinWithheld in result.skipped)
+        assertFalse(skinBaselineForming in result.skipped)
+        assertEquals(earlier, cursors.skinNightMedians(WATCH.id))
+        assertEquals(Instant.EPOCH, cursors.skinCursor(WATCH.id))
     }
 
     @Test

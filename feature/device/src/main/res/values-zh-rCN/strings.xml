@@ -63,6 +63,7 @@
     <string name="settings_watch_wearos_needs_respiratory_write">未写入呼吸频率：请允许 OpenWatch 在 Health Connect 中写入，然后再次同步。</string>
     <string name="settings_watch_wearos_needs_spo2_write">未写入血氧：请允许 OpenWatch 在 Health Connect 中写入，然后再次同步。</string>
     <string name="settings_watch_wearos_needs_skin_write">未写入皮肤温度：请允许 OpenWatch 在 Health Connect 中写入，然后再次同步。</string>
+    <string name="settings_watch_wearos_skin_baseline_forming">尚未写入皮肤温度：前三晚用于建立您自己的基准，之后的夜晚将相对于该基准写入。</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">未写入静息心率：请允许 OpenWatch 在 Health Connect 中读取并写入静息心率，从下次同步起即可估算。</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">已同步 %1$d 个心率样本</item>

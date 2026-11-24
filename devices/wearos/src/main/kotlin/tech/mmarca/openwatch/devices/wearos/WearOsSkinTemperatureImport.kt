@@ -8,6 +8,7 @@ import androidx.health.connect.client.units.Temperature
 import androidx.health.connect.client.units.TemperatureDelta
 import java.time.Duration
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import tech.mmarca.healthcalculations.stats.medianOrNull
 import tech.mmarca.openwatch.devices.core.saltedRecordId
@@ -19,10 +20,13 @@ import tech.mmarca.openwatch.devices.core.saltedRecordId
  *
  * Health Connect stores a skin temperature as deltas from a baseline, which is
  * how the measure is meant to be read: a night warmer or cooler than the
- * wearer's own usual. The baseline is the median of the earlier nights'
- * medians once there are [MIN_BASELINE_NIGHTS] of them, otherwise the run's
- * own median, so a first night is flat around zero rather than against a
- * guess.
+ * wearer's own usual. The baseline is the median of the other nights'
+ * medians once there are [MIN_BASELINE_NIGHTS] of them. Before that a night
+ * has no baseline and is not written, only remembered for the baseline: a
+ * night against its own median would read as a measured "no change" (deltas
+ * around zero), where the change is in fact unknown. The baseline counts
+ * nights ([nightOf]), not runs: a night the tracker dropped out of several
+ * times is one night, never compared with its own fragments.
  *
  * Pure, so it is testable without a device.
  */
@@ -74,9 +78,34 @@ object WearOsSkinTemperatureImport {
     fun finished(runs: List<Run>, now: Instant): List<Run> =
         runs.filter { Duration.between(it.end, now) >= SETTLE && Duration.between(it.start, it.end) >= MIN_RUN }
 
-    /** The baseline for a run: the median of [earlierMedians] once there are enough, else the run's own. */
-    fun baseline(run: Run, earlierMedians: List<Double>): Double =
-        if (earlierMedians.size >= MIN_BASELINE_NIGHTS) checkNotNull(earlierMedians.medianOrNull()) else run.median
+    /** One night's median for the baseline. [night] is null for a median remembered before nights had dates. */
+    data class NightMedian(val night: LocalDate?, val celsius: Double)
+
+    /**
+     * The night a run belongs to: the local date of its start, counted from noon to noon, so the
+     * runs of one night either side of midnight, and a nap before it, share one night.
+     */
+    fun nightOf(run: Run, zone: ZoneId): LocalDate = run.start.atZone(zone).minusHours(12).toLocalDate()
+
+    /**
+     * The baseline for a run of [night]: the median of the other nights' medians once there are
+     * [MIN_BASELINE_NIGHTS], else null (unknown).
+     */
+    fun baseline(night: LocalDate, medians: List<NightMedian>): Double? {
+        val others = medians.filter { it.night != night }
+        return if (others.size >= MIN_BASELINE_NIGHTS) others.map { it.celsius }.medianOrNull() else null
+    }
+
+    /**
+     * [medians] with [night] added once, its median taken over all of [runs]' minutes, and only
+     * the newest [MAX_BASELINE_NIGHTS] kept. A night already remembered keeps its median: a run
+     * of it that arrives in a later sync is compared with the baseline, never added to it.
+     */
+    fun remember(medians: List<NightMedian>, night: LocalDate, runs: List<Run>): List<NightMedian> {
+        if (runs.isEmpty() || medians.any { it.night == night }) return medians
+        val median = checkNotNull(runs.flatMap { run -> run.minutes.map { it.celsius } }.medianOrNull())
+        return (medians + NightMedian(night, median)).takeLast(MAX_BASELINE_NIGHTS)
+    }
 
     /** The record for [run] against [baselineCelsius], or null when Health Connect would refuse it. */
     fun record(run: Run, baselineCelsius: Double, zone: ZoneId, version: Long, salt: String = ""): SkinTemperatureRecord? = try {

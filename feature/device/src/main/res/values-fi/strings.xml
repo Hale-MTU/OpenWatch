@@ -66,6 +66,7 @@
     <string name="settings_watch_wearos_needs_respiratory_write">Hengitystiheyttä ei kirjoitettu: salli OpenWatchin kirjoittaa se Health Connectiin ja synkronoi sitten uudelleen.</string>
     <string name="settings_watch_wearos_needs_spo2_write">Veren happipitoisuutta ei kirjoitettu: salli OpenWatchin kirjoittaa se Health Connectiin ja synkronoi sitten uudelleen.</string>
     <string name="settings_watch_wearos_needs_skin_write">Ihon lämpötilaa ei kirjoitettu: salli OpenWatchin kirjoittaa se Health Connectiin ja synkronoi sitten uudelleen.</string>
+    <string name="settings_watch_wearos_skin_baseline_forming">Ihon lämpötilaa ei vielä kirjoitettu: kolme ensimmäistä yötä muodostavat oman perustasosi, ja sen jälkeiset yöt kirjoitetaan sitä vasten.</string>
     <string name="settings_watch_wearos_needs_resting_heart_rate">Leposykettä ei kirjoitettu: salli OpenWatchin lukea ja kirjoittaa leposyke Health Connectissa, niin se arvioidaan seuraavasta synkronoinnista alkaen.</string>
     <plurals name="settings_watch_wearos_synced_samples">
         <item quantity="one">%1$d sykenäyte synkronoitu</item>

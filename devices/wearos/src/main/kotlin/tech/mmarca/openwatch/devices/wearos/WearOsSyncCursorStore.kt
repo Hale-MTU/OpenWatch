@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import java.time.Instant
+import java.time.LocalDate
 import javax.inject.Inject
 import javax.inject.Singleton
 import tech.mmarca.openwatch.data.repository.contract.DeviceRegistry
@@ -65,17 +66,28 @@ class WearOsSyncCursorStore(private val state: DeviceStateRepository) {
 
     fun setSpo2Cursor(deviceId: String, at: Instant) = setCursor(deviceId, SPO2, at)
 
-    /** The skin temperature cursor: the end of the newest night run written. [Instant.EPOCH] for a watch never synced. */
+    /**
+     * The skin temperature cursor: the end of the newest night run handled, written or, before the
+     * baseline exists, only remembered in [skinNightMedians]. [Instant.EPOCH] for a watch never synced.
+     */
     fun skinCursor(deviceId: String): Instant = cursor(deviceId, SKIN)
 
     fun setSkinCursor(deviceId: String, at: Instant) = setCursor(deviceId, SKIN, at)
 
-    /** The medians of the nights written so far, oldest first: the skin temperature baseline's memory. */
-    fun skinNightMedians(deviceId: String): List<Double> =
-        state.get(deviceId, SKIN_MEDIANS).orEmpty().split(',').mapNotNull { it.toDoubleOrNull() }
+    /**
+     * The medians of every night handled so far, written or not, oldest first: the skin temperature
+     * baseline's memory, which forms from the nights before any is written. Stored as
+     * `<median>@<night>`; a bare median, from before nights had dates, reads with no night.
+     */
+    fun skinNightMedians(deviceId: String): List<WearOsSkinTemperatureImport.NightMedian> =
+        state.get(deviceId, SKIN_MEDIANS).orEmpty().split(',').mapNotNull { entry ->
+            val median = entry.substringBefore('@').toDoubleOrNull() ?: return@mapNotNull null
+            val night = if ('@' in entry) runCatching { LocalDate.parse(entry.substringAfter('@')) }.getOrNull() else null
+            WearOsSkinTemperatureImport.NightMedian(night, median)
+        }
 
-    fun setSkinNightMedians(deviceId: String, medians: List<Double>) {
-        state.put(deviceId, SKIN_MEDIANS, medians.joinToString(","))
+    fun setSkinNightMedians(deviceId: String, medians: List<WearOsSkinTemperatureImport.NightMedian>) {
+        state.put(deviceId, SKIN_MEDIANS, medians.joinToString(",") { m -> m.night?.let { "${m.celsius}@$it" } ?: "${m.celsius}" })
     }
 
     /** The workout cursor: the start of the newest workout written. [Instant.EPOCH] for a watch never synced. */
