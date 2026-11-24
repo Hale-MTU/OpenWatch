@@ -29,15 +29,19 @@ import android.os.SystemClock
  * Members join with the listener they registered their sensors with and
  * forward `SensorEventListener2.onFlushCompleted` to [flushed]. All calls may
  * come from any thread.
+ *
+ * One per process, held by [WearGraph]: its thread starts with the first
+ * wake-up and stays, and [release] after a service run leaves it ready for
+ * the next.
  */
-class SensorWakeSync(context: Context) {
+class SensorWakeSync(context: Context, private val debug: DebugProtocol) {
 
     private val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     private val wakeLock = (context.getSystemService(Context.POWER_SERVICE) as PowerManager)
         .newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)
         .apply { setReferenceCounted(false) }
-    private val thread = HandlerThread("SensorWakeSync").apply { start() }
-    private val handler = Handler(thread.looper)
+    private val started = lazy { Handler(HandlerThread("SensorWakeSync").apply { start() }.looper) }
+    private val handler: Handler by started
     private val timeout = Runnable { finish(timedOut = true) }
 
     private val lock = Any()
@@ -61,7 +65,7 @@ class SensorWakeSync(context: Context) {
             // flush() is false for a listener with no sensor registered; that one is not waited for.
             members.filter { sensorManager.flush(it) }.also { pending += it }
         }
-        DebugProtocol.count("wake.cycles")
+        debug.count("wake.cycles")
         if (asked.isEmpty()) finish(timedOut = false) else handler.postDelayed(timeout, FLUSH_TIMEOUT_MILLIS)
     }
 
@@ -79,18 +83,18 @@ class SensorWakeSync(context: Context) {
             cycleStartedAt
         }
         if (wakeLock.isHeld) wakeLock.release()
-        if (started != 0L) DebugProtocol.count("wake.flushMs", SystemClock.elapsedRealtime() - started)
-        if (timedOut) DebugProtocol.count("wake.timeouts")
+        if (started != 0L) debug.count("wake.flushMs", SystemClock.elapsedRealtime() - started)
+        if (timedOut) debug.count("wake.timeouts")
     }
 
-    fun shutdown() {
+    /** The service is going away: no member is left, no cycle runs and the lock is released. The thread stays. */
+    fun release() {
         synchronized(lock) {
             members.clear()
             pending.clear()
         }
-        handler.removeCallbacksAndMessages(null)
+        if (started.isInitialized()) handler.removeCallbacksAndMessages(null)
         if (wakeLock.isHeld) wakeLock.release()
-        thread.quitSafely()
     }
 
     private companion object {

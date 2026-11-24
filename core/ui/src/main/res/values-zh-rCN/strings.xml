@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="action_cancel">取消</string>
+    <string name="action_save">保存</string>
+    <string name="action_grant">授予</string>
+    <string name="action_grant_permission">授予权限</string>
+    <string name="action_not_now">暂不</string>
+    <string name="screen_error_not_found">未找到请求的内容。</string>
+    <string name="screen_error_missing_argument">缺少必要信息。</string>
+    <string name="screen_error_permission_denied">需要权限才能加载此数据。</string>
+    <string name="screen_error_health_connect_unavailable">此设备不支持 Health Connect。</string>
+    <string name="screen_error_feature_unavailable">此设备不支持。</string>
+    <string name="message_missing_permissions_title">缺少部分权限</string>
+    <string name="watch_permissions_continue">仍然继续</string>
+    <string name="onboarding_os_bluetooth">蓝牙</string>
+    <string name="onboarding_os_bluetooth_desc">查找并连接手表、心率带和其他传感器。</string>
+    <string name="onboarding_os_notifications">通知</string>
+    <string name="onboarding_os_notifications_desc">同步进度、提醒和锻炼提醒。</string>
+    <string name="onboarding_os_location">位置</string>
+    <string name="onboarding_os_location_desc">在较旧 Android 版本上扫描蓝牙设备所需。</string>
+    <string name="onboarding_os_battery">无限制电池使用</string>
+    <string name="onboarding_os_battery_desc">让后台同步完成而非被省电暂停。打开 Android 设置。</string>
+    <string name="onboarding_os_notification_forwarding">通知转发</string>
+    <string name="onboarding_os_notification_forwarding_desc">将手机通知发送到已连接的手表。打开 Android 设置。</string>
+    <string name="onboarding_action_grant_all">全部授予</string>
+    <string name="option_not_specified">未指定</string>
+    <string name="settings_watch_name_label">名称</string>
+    <string name="action_remove">移除</string>
+    <string name="screen_error_generic">无法完成请求。</string>
+    <string name="settings_watch_notifications_disclosure_accept">继续</string>
+    <string name="settings_watch_notifications_disclosure_decline">暂不</string>
+    <string name="time_just_now">刚刚</string>
+    <string name="hc_setup_sync_title">写入 Health Connect</string>
+    <string name="hc_setup_sync_body">关闭后会暂停所有写入。设备会保留已记录的数据，直到重新开启。</string>
+    <string name="health_data_title">OpenWatch 读取和写入的数据</string>
+    <string name="settings_watch_notifications_disclosure_title">OpenWatch 将读取你的通知</string>
+    <string name="settings_watch_notifications_disclosure_body">要在手表上显示通知，OpenWatch 会读取你手机收到的通知 — 包括其文字内容。\n\n它们在此设备上读取，仅通过蓝牙发送到你配对的手表。不保存到文件或数据库，且 OpenWatch 无联网权限，因此通知无法发送到其他任何地方。\n\n你可随时关闭此功能，并从 Android 设置撤销通知访问。</string>
+    <string name="home_health_connect">Health Connect</string>
+    <string name="home_health_connect_body">OpenWatch 可以读取和写入的内容</string>
+    <string name="action_delete">删除</string>
+</resources>

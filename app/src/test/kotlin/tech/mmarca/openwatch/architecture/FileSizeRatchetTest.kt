@@ -14,7 +14,8 @@ import org.junit.Test
 class FileSizeRatchetTest {
 
     private val lineCounts: Map<String, Int> by lazy {
-        (File(SourceRoot).walkTopDown() + File(SharedRoot).walkTopDown() + File(DomainRoot).walkTopDown())
+        (File(SourceRoot).walkTopDown() + File(SharedRoot).walkTopDown() + libraryModuleFiles() +
+            File(WearRoot).walkTopDown() + File(WearCoreRoot).walkTopDown())
             .filter { it.isFile && it.extension == "kt" }
             .associate { it.rootRelativePath() to it.readLines().size }
     }
@@ -54,12 +55,21 @@ class FileSizeRatchetTest {
         /** The shared link module is held to the same limit; its paths are reported with a `wearlink/` prefix. */
         const val SharedRoot = "../wearlink/src/main/kotlin/tech/mmarca/openwatch"
 
-        /** The domain module keeps the app's package names, so its paths are reported as the app's. */
-        const val DomainRoot = "../domain/src/main/kotlin/tech/mmarca/openwatch"
+        /** The library modules keep the app's package names, so their paths are reported as the app's. */
+        fun libraryModuleFiles() = LibraryModuleRoots.values.asSequence().flatMap { File(it).walkTopDown() }
+
+        /** The watch app: the same limit, though its gate is a different task. */
+        const val WearRoot = "../wear/src/main/kotlin/tech/mmarca/openwatch"
+
+        /** The watch app's pure core, reported with a `wear/recording-core/` prefix. */
+        const val WearCoreRoot = "../wear/recording-core/src/main/kotlin/tech/mmarca/openwatch"
 
         fun File.rootRelativePath(): String = when {
+            invariantSeparatorsPath.contains("/wear/recording-core/src/") ->
+                "wear/recording-core/" + relativeTo(File(WearCoreRoot)).invariantSeparatorsPath
             invariantSeparatorsPath.contains("/wearlink/") -> "wearlink/" + relativeTo(File(SharedRoot)).invariantSeparatorsPath
-            invariantSeparatorsPath.contains("/domain/src/") -> relativeTo(File(DomainRoot)).invariantSeparatorsPath
+            libraryModuleRoot() != null -> relativeTo(File(libraryModuleRoot()!!)).invariantSeparatorsPath
+            invariantSeparatorsPath.contains("/wear/src/") -> "wear/" + relativeTo(File(WearRoot)).invariantSeparatorsPath
             else -> relativeTo(File(SourceRoot)).invariantSeparatorsPath
         }
         const val MaxLines = 800
@@ -67,7 +77,6 @@ class FileSizeRatchetTest {
         /** The files over the limit when the device code moved here (2026-11-06). Each ceiling leaves room for small fixes. */
         val Ceilings: Map<String, Int> = mapOf(
             "devices/garmin/wellness/GarminFitWellness.kt" to 1250,
-            "features/watches/WatchDeviceScreen.kt" to 1100,
             "devices/garmin/GarminMessages.kt" to 1100,
             "devices/garmin/GarminSession.kt" to 950,
         )

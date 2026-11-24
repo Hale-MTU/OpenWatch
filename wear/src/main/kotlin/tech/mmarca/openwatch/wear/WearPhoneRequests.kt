@@ -13,20 +13,13 @@ import android.util.Log
  * The wearer's answer to a phone that asked to be allowed, new or with a
  * new key: a notification with Allow and Block, and the same two choices on
  * the status screen. The notification is posted at most once a minute per phone.
+ * One per process, held by [WearGraph].
  */
-object WearPhoneRequests {
-
-    const val CHANNEL_ID = "phone_requests"
-    const val NOTIFICATION_ID = 2
-    const val ACTION_ALLOW = "tech.mmarca.openwatch.wear.ALLOW_PHONE"
-    const val ACTION_BLOCK = "tech.mmarca.openwatch.wear.BLOCK_PHONE"
-    const val EXTRA_ADDRESS = "address"
-    const val EXTRA_TOKEN = "token"
-    const val EXTRA_NAME = "name"
+class WearPhoneRequests(private val context: Context) {
 
     private val lastNotified = HashMap<String, Long>()
 
-    fun notify(context: Context, pending: PendingPhone, nowMillis: Long = System.currentTimeMillis()) {
+    fun notify(pending: PendingPhone, nowMillis: Long = System.currentTimeMillis()) {
         synchronized(lastNotified) {
             val last = lastNotified[pending.address] ?: 0L
             if (nowMillis - last < RENOTIFY_MILLIS) return
@@ -48,20 +41,27 @@ object WearPhoneRequests {
             .setSmallIcon(R.drawable.ic_launcher_monochrome)
             .setContentTitle(context.getString(title, pending.name))
             .setContentText(context.getString(body))
+            // The name is the phone's own; the address's end tells two phones of one name apart.
+            .setSubText(context.getString(R.string.phone_request_address, pending.address.takeLast(5)))
             .setContentIntent(open)
             .setAutoCancel(true)
-            .addAction(action(context, ACTION_ALLOW, R.string.action_allow, pending, 1))
-            .addAction(action(context, ACTION_BLOCK, R.string.action_block, pending, 2))
+            .addAction(action(context, ACTION_ALLOW, R.string.action_allow, pending))
+            .addAction(action(context, ACTION_BLOCK, R.string.action_block, pending))
             .build()
         runCatching { manager.notify(NOTIFICATION_ID, notification) }
-            .onFailure { Log.w(TAG, "Cannot post the request: ${it.message}") }
+            .onFailure { Log.w(TAG, "Cannot post the request", it) }
     }
 
-    fun cancel(context: Context) {
+    fun cancel() {
         context.getSystemService(NotificationManager::class.java).cancel(NOTIFICATION_ID)
     }
 
-    private fun action(context: Context, action: String, label: Int, pending: PendingPhone, code: Int): Notification.Action {
+    /**
+     * One request code per phone and answer: another phone's request does not rewrite the
+     * extras behind a button already on the wrist.
+     */
+    private fun action(context: Context, action: String, label: Int, pending: PendingPhone): Notification.Action {
+        val code = "$action ${pending.address}".hashCode()
         val intent = Intent(context, WearPhoneConfirmReceiver::class.java)
             .setAction(action)
             .putExtra(EXTRA_ADDRESS, pending.address)
@@ -71,23 +71,46 @@ object WearPhoneRequests {
         return Notification.Action.Builder(null, context.getString(label), pendingIntent).build()
     }
 
-    private const val TAG = "WearPhoneRequests"
-    private const val RENOTIFY_MILLIS = 60_000L
+    companion object {
+        const val CHANNEL_ID = "phone_requests"
+        const val NOTIFICATION_ID = 2
+        const val ACTION_ALLOW = "tech.mmarca.openwatch.wear.ALLOW_PHONE"
+        const val ACTION_BLOCK = "tech.mmarca.openwatch.wear.BLOCK_PHONE"
+        const val EXTRA_ADDRESS = "address"
+        const val EXTRA_TOKEN = "token"
+        const val EXTRA_NAME = "name"
+
+        private const val TAG = "WearPhoneRequests"
+        private const val RENOTIFY_MILLIS = 60_000L
+    }
 }
 
-/** Allow or Block from the notification. The screen's buttons call the store directly. */
+/**
+ * Allow or Block from the notification. The screen's buttons call the store directly.
+ *
+ * An answer counts only for the request the watch still holds, the same phone with the same
+ * key: a notification another phone's request replaced, or one left from before the app
+ * restarted, does nothing, and the phone that is still asking is asked again.
+ */
 class WearPhoneConfirmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val address = intent.getStringExtra(WearPhoneRequests.EXTRA_ADDRESS) ?: return
-        val store = WearTrustStore(context)
+        val graph = context.wearGraph
+        val pending = graph.linkState.pendingIfFresh(System.currentTimeMillis())
+        if (pending == null || pending.address != address ||
+            pending.token != intent.getStringExtra(WearPhoneRequests.EXTRA_TOKEN)
+        ) {
+            graph.phoneRequests.cancel()
+            return
+        }
         when (intent.action) {
             WearPhoneRequests.ACTION_ALLOW -> {
                 val token = intent.getStringExtra(WearPhoneRequests.EXTRA_TOKEN) ?: return
-                store.trust(address, token, intent.getStringExtra(WearPhoneRequests.EXTRA_NAME) ?: address)
+                graph.trust.trust(address, token, intent.getStringExtra(WearPhoneRequests.EXTRA_NAME) ?: address)
             }
-            WearPhoneRequests.ACTION_BLOCK -> store.block(address)
+            WearPhoneRequests.ACTION_BLOCK -> graph.trust.block(address)
             else -> return
         }
-        WearPhoneRequests.cancel(context)
+        graph.phoneRequests.cancel()
     }
 }

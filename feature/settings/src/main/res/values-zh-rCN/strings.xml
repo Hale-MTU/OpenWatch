@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="privacy_policy_title">隐私政策</string>
+    <string name="body_profile_synced">与 %1$s 保持同步</string>
+    <string name="body_profile_synced_updated">与 %1$s 保持同步 · 更新于%2$s</string>
+    <string name="connected_apps_title">已连接的应用</string>
+    <string name="connected_apps_settings_body">通过 OpenWatch 使用手表、体重秤和身体档案的应用，以及各自可以做什么</string>
+    <string name="settings_notification_access_title">通知访问权限</string>
+    <string name="settings_notification_access_body">让已配对的 Garmin 手表显示手机通知。已关闭。</string>
+    <string name="settings_notification_access_granted">已授予。点按可在 Android 设置中更改。</string>
+    <string name="settings_about_version">OpenWatch %1$s</string>
+    <string name="settings_privacy_policy_body">OpenWatch 读取、写入和保存的内容。在浏览器中打开。</string>
+    <string name="settings_privacy_policy_no_browser">此手机上没有可以打开该链接的应用。政策位于 %1$s</string>
+    <string name="settings_about_body">基于 AGPL-3.0-or-later 许可的开源软件。手表、体重秤和同步的代码来自 OpenVitals。</string>
+    <string name="body_profile_title">身体档案</string>
+    <string name="body_profile_settings_body">用于估算的出生年份、性别、身高和体重</string>
+    <string name="body_profile_intro">体重秤的身体成分需要你的性别和身高；步行能量估算需要你的体重。Health Connect 中已有的体重或身高会取代这里输入的数值。</string>
+    <string name="body_profile_birth_year">出生年份</string>
+    <string name="body_profile_sex">性别</string>
+    <string name="body_profile_sex_female">女</string>
+    <string name="body_profile_sex_male">男</string>
+    <string name="body_profile_height_cm">身高 (cm)</string>
+    <string name="body_profile_height_in">身高 (in)</string>
+    <string name="body_profile_weight_kg">体重 (kg)</string>
+    <string name="body_profile_weight_lb">体重 (lb)</string>
+    <string name="body_profile_measured">Health Connect：%1$s</string>
+    <string name="settings_respiratory_rate_title">来自手表的呼吸频率（实验性）</string>
+    <string name="settings_respiratory_rate_body">将手表夜间 HRV 窗口中的呼吸频率写入 Health Connect。尚未与参考设备进行比对。</string>
+    <string name="health_data_open_body">每种健康数据类型、其来源设备及原因。</string>
+</resources>

@@ -23,23 +23,24 @@ import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
 import tech.mmarca.openwatch.wear.R
-import tech.mmarca.openwatch.wear.health.WearCapabilities
+import tech.mmarca.openwatch.wear.WatchSensors
 import tech.mmarca.openwatch.wear.ui.preview.SampleData
 import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
- * The spot measurements this watch supports. A measurement without a sensor
- * is not listed at all, so nothing here can be tapped only to fail.
+ * The spot measurements this watch can take, from [sensors] (null while
+ * they are read). One without its sensor is not listed at all, so nothing
+ * here can be tapped only to fail.
  */
 @Composable
 fun MeasureListScreen(
-    capabilities: WearCapabilities,
+    sensors: WatchSensors?,
     onMeasure: (Measurement) -> Unit,
 ) {
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
-    val supported = Measurement.entries.filter { it in capabilities.measurements }
+    val supported = sensors?.let { it.spotKinds.map(Measurement::of).sortedBy(Measurement::ordinal) }
 
     ScreenScaffold(scrollState = listState) { contentPadding ->
         TransformingLazyColumn(state = listState, contentPadding = contentPadding) {
@@ -54,7 +55,7 @@ fun MeasureListScreen(
                 }
             }
             when {
-                !capabilities.probed -> item { CircularProgressIndicator() }
+                supported == null -> item { CircularProgressIndicator() }
                 supported.isEmpty() -> item {
                     Text(
                         text = stringResource(R.string.measure_none_supported),
@@ -66,7 +67,7 @@ fun MeasureListScreen(
                             .padding(horizontal = 12.dp),
                     )
                 }
-                else -> items(supported) { measurement ->
+                else -> items(supported, key = { it.name }) { measurement ->
                     Button(
                         onClick = { onMeasure(measurement) },
                         label = { Text(stringResource(measurement.label)) },
@@ -91,7 +92,7 @@ fun MeasureListScreen(
 private fun MeasureListScreenPreview() {
     OpenWatchWearTheme {
         AppScaffold {
-            MeasureListScreen(SampleData.capabilities, onMeasure = {})
+            MeasureListScreen(SampleData.sensors, onMeasure = {})
         }
     }
 }
@@ -101,7 +102,7 @@ private fun MeasureListScreenPreview() {
 private fun MeasureListScreenNoneSupportedPreview() {
     OpenWatchWearTheme {
         AppScaffold {
-            MeasureListScreen(WearCapabilities(probed = true), onMeasure = {})
+            MeasureListScreen(WatchSensors.NONE, onMeasure = {})
         }
     }
 }

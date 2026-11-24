@@ -5,9 +5,8 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import tech.mmarca.openwatch.features.healthconnect.HealthConnectSetupScreen
+import tech.mmarca.openwatch.features.healthconnect.HealthConnectSetupRoute
 import tech.mmarca.openwatch.ui.theme.OpenWatchTheme
 
 /** What Health Connect opens when it sends the user to set this app up. */
@@ -19,8 +18,7 @@ class HealthConnectOnboardingActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContent {
             OpenWatchTheme(dynamicColor = true) {
-                HealthConnectSetupScreen(
-                    viewModel = hiltViewModel(),
+                HealthConnectSetupRoute(
                     onContinue = {
                         startActivity(
                             Intent(this, MainActivity::class.java).apply {
@@ -29,6 +27,7 @@ class HealthConnectOnboardingActivity : AppCompatActivity() {
                         )
                         finish()
                     },
+                    onOpenHealthData = { startActivity(Intent(this, PermissionsRationaleActivity::class.java)) },
                 )
             }
         }

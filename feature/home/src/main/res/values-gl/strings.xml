@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_section_watches">Reloxos</string>
+    <string name="home_section_scale">Báscula</string>
+    <string name="home_section_app">Aplicación</string>
+    <string name="home_settings">Axustes</string>
+    <string name="home_settings_body">Perfil corporal, acceso ás notificacións, acerca de</string>
+</resources>
