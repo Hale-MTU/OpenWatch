@@ -3,49 +3,51 @@ package tech.mmarca.openwatch.wear
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import tech.mmarca.openwatch.wear.features.quicklog.QuickLogItem
-
-/** Persists which quick log entries show on the watch, and their order. */
-class WearQuickLogPreferences(context: Context) {
-    private val prefs: SharedPreferences =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-
-    fun loadItems(): List<QuickLogItem> = decodeQuickLogItems(prefs.getString(KEY_ITEMS, null))
-
-    fun saveItems(items: List<QuickLogItem>) {
-        prefs.edit { putString(KEY_ITEMS, encodeQuickLogItems(items)) }
-    }
-
-    fun resetItems(): List<QuickLogItem> {
-        prefs.edit { remove(KEY_ITEMS) }
-        return QuickLogItem.Defaults
-    }
-
-    private companion object {
-        const val PREFS_NAME = "wear_quicklog_prefs"
-        const val KEY_ITEMS = "active_items"
-    }
-}
-
-internal fun encodeQuickLogItems(items: List<QuickLogItem>): String = items.joinToString(",") { it.name }
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Reads a stored list. Nothing stored means all items in the default order; an
- * empty string means the user switched every item off. Unknown names are dropped.
+ * The quick log's entries the wearer chose, in their order, kept on the
+ * watch and followed as they change ([chosen]); the quick log's editor
+ * changes them, as the tile editor changes the dashboard's
+ * ([WearTilePreferences]).
+ *
+ * Stored as [Choices] stores a choice: the [QuickLogItem] names joined by
+ * commas, so no [QuickLogItem] is ever renamed. Nothing stored is
+ * [QuickLogItem.Defaults], every item; an empty string is none.
+ *
+ * One per process ([WearGraph.quickLog]); build it off the main thread, since
+ * the first read loads the file. A change is one write under a lock.
  */
-internal fun decodeQuickLogItems(raw: String?): List<QuickLogItem> {
-    if (raw == null) return QuickLogItem.Defaults
-    return raw.split(",")
-        .mapNotNull { name -> QuickLogItem.entries.firstOrNull { it.name == name.trim() } }
-        .distinct()
-}
+internal class WearQuickLogPreferences(private val prefs: SharedPreferences) {
 
-/** Moves [moved] to the position of [target], shifting the items in between. */
-internal fun List<QuickLogItem>.withItemMoved(moved: QuickLogItem, target: QuickLogItem): List<QuickLogItem> {
-    val targetIndex = indexOf(target)
-    if (moved == target || moved !in this || targetIndex < 0) return this
-    return toMutableList().apply {
-        remove(moved)
-        add(targetIndex, moved)
+    constructor(context: Context) : this(context.getSharedPreferences(PREFS, Context.MODE_PRIVATE))
+
+    private val lock = Any()
+    private val flow = MutableStateFlow(load())
+
+    /** The chosen entries now and after every change. */
+    val chosen: StateFlow<List<QuickLogItem>> = flow.asStateFlow()
+
+    /** Applies [change] to the chosen entries and keeps the result. Writes the file: not on the main thread. */
+    fun edit(change: (List<QuickLogItem>) -> List<QuickLogItem>) = synchronized(lock) {
+        val next = change(flow.value).distinct()
+        prefs.edit { putString(KEY_ITEMS, Choices.encode(next) { it.name }) }
+        flow.value = next
+    }
+
+    /** Back to the defaults: nothing stored, so the defaults of a later build apply too. */
+    fun reset() = synchronized(lock) {
+        prefs.edit { remove(KEY_ITEMS) }
+        flow.value = QuickLogItem.Defaults
+    }
+
+    private fun load(): List<QuickLogItem> = Choices.decode(prefs.getString(KEY_ITEMS, null), QuickLogItem.Defaults, QuickLogItem::byName)
+
+    companion object {
+        /** Final once shipped: the file and its key are read by every later build. */
+        const val PREFS = "wear_quicklog_prefs"
+        const val KEY_ITEMS = "active_items"
     }
 }

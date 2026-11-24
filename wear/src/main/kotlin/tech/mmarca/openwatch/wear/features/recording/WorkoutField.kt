@@ -4,7 +4,6 @@ package tech.mmarca.openwatch.wear.features.recording
 enum class WorkoutField {
     HEART_RATE,
     DISTANCE,
-    CALORIES,
     PACE,
     SPEED,
     ELEVATION,

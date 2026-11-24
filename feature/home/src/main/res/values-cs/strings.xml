@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_section_watches">Hodinky</string>
+    <string name="home_section_scale">Váha</string>
+    <string name="home_section_app">Aplikace</string>
+    <string name="home_settings">Nastavení</string>
+    <string name="home_settings_body">Tělesný profil, přístup k oznámením, o aplikaci</string>
+</resources>

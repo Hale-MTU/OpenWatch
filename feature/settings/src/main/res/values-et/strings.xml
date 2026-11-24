@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="privacy_policy_title">Privaatsuspoliitika</string>
+    <string name="body_profile_synced">Sünkroonis rakendusega %1$s</string>
+    <string name="body_profile_synced_updated">Sünkroonis rakendusega %1$s · uuendatud %2$s</string>
+    <string name="connected_apps_title">Ühendatud rakendused</string>
+    <string name="connected_apps_settings_body">Rakendused, mis kasutavad OpenWatchi kaudu sinu kelli, kaalu ja kehaprofiili, ning mida igaüks tohib teha</string>
+    <string name="settings_notification_access_title">Juurdepääs teavitustele</string>
+    <string name="settings_notification_access_body">Laseb seotud Garmini kellal näidata telefoni teavitusi. Väljas.</string>
+    <string name="settings_notification_access_granted">Antud. Puuduta, et muuta seda Androidi seadetes.</string>
+    <string name="settings_about_version">OpenWatch %1$s</string>
+    <string name="settings_privacy_policy_body">Mida OpenWatch loeb, kirjutab ja säilitab. Avaneb brauseris.</string>
+    <string name="settings_privacy_policy_no_browser">Ükski rakendus selles telefonis ei saa linki avada. Poliitika asub aadressil %1$s</string>
+    <string name="settings_about_body">Avatud lähtekood litsentsi AGPL-3.0-or-later all. Kella, kaalu ja sünkroonimise kood pärineb OpenVitalsist.</string>
+    <string name="body_profile_title">Kehaprofiil</string>
+    <string name="body_profile_settings_body">Sünniaasta, sugu, pikkus ja kehakaal hinnangute jaoks</string>
+    <string name="body_profile_intro">Kaalu kehakoostis vajab sinu sugu ja pikkust; kõndimise energia hinnang vajab sinu kehakaalu. Health Connectis olevat kehakaalu või pikkust kasutatakse siia sisestatu asemel.</string>
+    <string name="body_profile_birth_year">Sünniaasta</string>
+    <string name="body_profile_sex">Sugu</string>
+    <string name="body_profile_sex_female">Naine</string>
+    <string name="body_profile_sex_male">Mees</string>
+    <string name="body_profile_height_cm">Pikkus (cm)</string>
+    <string name="body_profile_height_in">Pikkus (in)</string>
+    <string name="body_profile_weight_kg">Kehakaal (kg)</string>
+    <string name="body_profile_weight_lb">Kehakaal (lb)</string>
+    <string name="body_profile_measured">Health Connect: %1$s</string>
+    <string name="settings_respiratory_rate_title">Hingamissagedus kellalt (katseline)</string>
+    <string name="settings_respiratory_rate_body">Kirjutab kella öiste HRV-akende hingamissageduse Health Connecti. Pole veel võrdlusseadmega kontrollitud.</string>
+    <string name="health_data_open_body">Iga terviseandmete tüüp, seade, kust see pärineb, ja miks.</string>
+</resources>

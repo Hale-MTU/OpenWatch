@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connected_apps_in_use">בשימוש עכשיו</string>
+    <string name="connected_apps_last_connected">חיבור אחרון %1$s</string>
+    <string name="connected_apps_profile_received">פרופיל אחרון התקבל %1$s</string>
+    <string name="connected_apps_session_heart_rate">הקלטה: הדופק נשלח מ-%1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">הקלטה: הדופק והצעדים נשלחים מ-%1$s</string>
+    <string name="connected_apps_session_keeping">הקלטה: %1$s ממשיך לשדר</string>
+    <string name="connected_apps_session_waiting">הקלטה: ממתין לקריאה מ-%1$s</string>
+    <string name="connected_apps_intro">האפליקציות האלה ביקשו להשתמש ב-OpenWatch. כל אחת רואה רק את מה שאישרת כאן, ושום דבר לא יוצא מהטלפון.</string>
+    <string name="connected_apps_empty">עדיין אף אפליקציה לא ביקשה. OpenVitals מתחבר ברגע ששתי האפליקציות מותקנות.</string>
+    <string name="connected_apps_unknown_signer">האפליקציה הזו מציגה את עצמה כ-%1$s, אבל היא לא נחתמה על ידי פרויקט OpenVitals. אשר אותה רק אם בנית או התקנת אותה בעצמך ויש לך אמון במקור שלה.</string>
+    <string name="connected_apps_identity">%1$s\nמפתח חתימה %2$s</string>
+    <string name="connected_apps_lookalike">האפליקציה הזו מציגה את עצמה כ-%1$s, אבל היא לא %2$s: החבילה שלה אינה זו ש-%2$s מופצת תחתיה. אשר אותה רק אם ידוע לך למה היא משתמשת בשם הזה.</string>
+    <string name="connected_apps_state_pending">מבקשת להתחבר</string>
+    <string name="connected_apps_state_trusted">מחוברת</string>
+    <string name="connected_apps_state_blocked">חסומה</string>
+    <string name="connected_apps_asks_for">היא מבקשת:</string>
+    <string name="connected_apps_allow">אישור</string>
+    <string name="connected_apps_block">חסימה</string>
+    <string name="connected_apps_forget">הסרה</string>
+    <string name="connected_apps_unblock">ביטול החסימה</string>
+    <string name="connected_apps_capability_devices">לראות את השעונים והמשקל שלך, את הסוללה והסנכרון האחרון שלהם, ולהפעיל סנכרון</string>
+    <string name="connected_apps_capability_profile">לשתף את פרופיל הגוף שלך (שנת לידה, מין, גובה, משקל) עם OpenWatch, בשני הכיוונים</string>
+    <string name="connected_apps_capability_recording">להשאיר את השעון שלך משדר בזמן שהוא מקליט פעילות</string>
+    <string name="connected_apps_capability_live">לקבל את הדופק והצעדים מהשעון שלך בזמן שהוא מקליט</string>
+</resources>

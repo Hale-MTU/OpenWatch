@@ -9,10 +9,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.MonitorWeight
-import androidx.compose.material.icons.outlined.SelfImprovement
-import androidx.compose.material.icons.outlined.Speed
-import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,30 +39,32 @@ import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
 import java.util.Date
+import tech.mmarca.openwatch.wear.DisplayPreferences
+import tech.mmarca.openwatch.wear.MetricTile
+import tech.mmarca.openwatch.wear.QuickLogItem
 import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.UnitSystem
-import tech.mmarca.openwatch.wear.MetricTile
 import tech.mmarca.openwatch.wear.WearUiState
 import tech.mmarca.openwatch.wear.ui.components.formatMetricValue
 import tech.mmarca.openwatch.wear.ui.components.metricUnitLabel
 import tech.mmarca.openwatch.wear.ui.preview.SampleData
 import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
-import tech.mmarca.openwatch.wear.ui.theme.HydrationColor
-import tech.mmarca.openwatch.wear.ui.theme.MindfulnessColor
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
-import tech.mmarca.openwatch.wear.ui.theme.VitalsColor
-import tech.mmarca.openwatch.wear.ui.theme.WeightColor
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
-/** Millilitres one tap on "water" adds: a glass. */
-const val WaterServingMl = 250.0
+/** Millilitres one tap on "water" adds: a glass, as on the quick log tile. */
+const val WaterServingMl = DisplayPreferences.WATER_SERVING_ML
 
 private const val RecentEntries = 6
 
 /**
  * Fast entries, the watch side of the phone's manual entry: one tap for a
- * glass of water, a stepper for weight and blood pressure, a guided breath.
+ * glass of water, a stepper for weight, blood pressure, body fat, blood
+ * oxygen, breathing rate, body temperature, blood glucose and height, a
+ * guided breath. The wearer chooses which show and in which order
+ * ([WearUiState.quickLogItems]); the last button edits that ([onEditItems]).
  * The latest entries made by hand are listed underneath so a mistake is easy
- * to spot. [chosen] is which entries show, in order; the last button edits it.
+ * to spot; a spot measurement's result is not one.
  */
 @Composable
 fun QuickLogScreen(
@@ -74,19 +72,14 @@ fun QuickLogScreen(
     onAddWater: () -> Unit,
     onLogWeight: () -> Unit,
     onLogBloodPressure: () -> Unit,
-    onLogValue: (EntryType) -> Unit,
+    onLogValue: (WearLinkEntry.Type) -> Unit,
     onBreathe: () -> Unit,
-    chosen: List<QuickLogItem> = QuickLogItem.Defaults,
     onEditItems: () -> Unit = {},
 ) {
     val listState = rememberTransformingLazyColumnState()
     val transformationSpec = rememberTransformationSpec()
     val unitSystem = state.preferences.unitSystem
     var showSaved by remember { mutableStateOf(false) }
-    val lastWeight = state.entries.lastOrNull { it.type == EntryType.WEIGHT }
-    val lastPressure = state.entries.lastOrNull { it.type == EntryType.BLOOD_PRESSURE }
-    val waterToday = state.metrics[MetricTile.HYDRATION]?.current ?: 0.0
-    val waterUnit = stringResource(metricUnitLabel(MetricTile.HYDRATION, unitSystem))
     val notLogged = stringResource(R.string.quicklog_not_logged)
 
     ScreenScaffold(scrollState = listState) { contentPadding ->
@@ -101,7 +94,7 @@ fun QuickLogScreen(
                     Text(stringResource(R.string.quicklog_title))
                 }
             }
-            if (chosen.isEmpty()) {
+            if (state.quickLogItems.isEmpty()) {
                 item {
                     Text(
                         text = stringResource(R.string.quicklog_none_chosen),
@@ -114,78 +107,31 @@ fun QuickLogScreen(
                     )
                 }
             }
-            // The user's choice and order; all items in the old order until they edit it.
-            items(chosen, key = { it.name }) { entry ->
-                val modifier = Modifier.transformedHeight(this, transformationSpec)
-                val transformation = SurfaceTransformation(transformationSpec)
-                when (entry) {
-                    QuickLogItem.WATER -> QuickLogButton(
-                        label = stringResource(
-                            R.string.quicklog_add_water,
-                            formatMetricValue(MetricTile.HYDRATION, WaterServingMl, unitSystem),
-                            waterUnit,
-                        ),
-                        secondary = stringResource(
-                            R.string.quicklog_water_today,
-                            formatMetricValue(MetricTile.HYDRATION, waterToday, unitSystem),
-                            formatMetricValue(MetricTile.HYDRATION, state.preferences.waterGoalMl.toDouble(), unitSystem),
-                            waterUnit,
-                        ),
-                        icon = Icons.Outlined.WaterDrop,
-                        color = HydrationColor,
-                        onClick = {
-                            onAddWater()
-                            showSaved = true
-                        },
-                        modifier = modifier,
-                        transformation = transformation,
-                    )
-                    QuickLogItem.WEIGHT -> QuickLogButton(
-                        label = stringResource(R.string.metric_weight),
-                        secondary = lastWeight?.let { formatEntry(it, unitSystem) } ?: notLogged,
-                        icon = Icons.Outlined.MonitorWeight,
-                        color = WeightColor,
-                        onClick = onLogWeight,
-                        modifier = modifier,
-                        transformation = transformation,
-                    )
-                    QuickLogItem.BLOOD_PRESSURE -> QuickLogButton(
-                        label = stringResource(R.string.quicklog_blood_pressure),
-                        secondary = lastPressure?.let { formatEntry(it, unitSystem) } ?: notLogged,
-                        icon = Icons.Outlined.Speed,
-                        color = VitalsColor,
-                        onClick = onLogBloodPressure,
-                        modifier = modifier,
-                        transformation = transformation,
-                    )
-                    QuickLogItem.BREATHE -> QuickLogButton(
-                        label = stringResource(R.string.breathe_title),
-                        secondary = stringResource(R.string.breathe_description),
-                        icon = Icons.Outlined.SelfImprovement,
-                        color = MindfulnessColor,
-                        onClick = onBreathe,
-                        modifier = modifier,
-                        transformation = transformation,
-                    )
-                    // The one-number entries.
-                    else -> {
-                        val type = entry.entryType
-                        QuickLogButton(
-                            label = stringResource(entry.label),
-                            secondary = state.entries.lastOrNull { it.type == type }?.let { formatEntry(it, unitSystem) } ?: notLogged,
-                            icon = type.icon,
-                            color = type.color,
-                            onClick = { onLogValue(type) },
-                            modifier = modifier,
-                            transformation = transformation,
-                        )
+            items(state.quickLogItems, key = { it.name }) { item ->
+                val (secondary, onClick) = when (item) {
+                    QuickLogItem.WATER -> waterToday(state) to {
+                        onAddWater()
+                        showSaved = true
                     }
+                    QuickLogItem.WEIGHT -> lastOf(state, item, notLogged) to onLogWeight
+                    QuickLogItem.BLOOD_PRESSURE -> lastOf(state, item, notLogged) to onLogBloodPressure
+                    QuickLogItem.BREATHE -> stringResource(R.string.breathe_description) to onBreathe
+                    else -> lastOf(state, item, notLogged) to { onLogValue(item.type) }
                 }
+                QuickLogButton(
+                    label = if (item == QuickLogItem.WATER) waterLabel(unitSystem) else stringResource(item.label),
+                    secondary = secondary,
+                    icon = item.type.icon,
+                    color = item.type.color,
+                    onClick = onClick,
+                    modifier = Modifier.transformedHeight(this, transformationSpec),
+                    transformation = SurfaceTransformation(transformationSpec),
+                )
             }
-            val recent = state.entries.filter(::isManual).takeLast(RecentEntries).asReversed()
+            val recent = state.entries.filterNot { it.measured }.takeLast(RecentEntries).asReversed()
             if (recent.isNotEmpty()) {
                 item { ListSubHeader { Text(stringResource(R.string.quicklog_recent)) } }
-                items(recent) { entry -> RecentEntryRow(entry, unitSystem) }
+                items(recent, key = { it.epochMillis }) { entry -> RecentEntryRow(entry, unitSystem) }
             }
             item {
                 Button(
@@ -209,6 +155,31 @@ fun QuickLogScreen(
     )
 }
 
+/** The water button's label: the glass it adds. */
+@Composable
+private fun waterLabel(unitSystem: UnitSystem): String = stringResource(
+    R.string.quicklog_add_water,
+    formatMetricValue(MetricTile.HYDRATION, WaterServingMl, unitSystem),
+    stringResource(metricUnitLabel(MetricTile.HYDRATION, unitSystem)),
+)
+
+/** The day's water against its goal. */
+@Composable
+private fun waterToday(state: WearUiState): String {
+    val unitSystem = state.preferences.unitSystem
+    return stringResource(
+        R.string.quicklog_water_today,
+        formatMetricValue(MetricTile.HYDRATION, state.metrics[MetricTile.HYDRATION]?.current ?: 0.0, unitSystem),
+        formatMetricValue(MetricTile.HYDRATION, state.preferences.waterGoalMl.toDouble(), unitSystem),
+        stringResource(metricUnitLabel(MetricTile.HYDRATION, unitSystem)),
+    )
+}
+
+/** The last value of [item]'s type logged, or [notLogged]. */
+@Composable
+private fun lastOf(state: WearUiState, item: QuickLogItem, notLogged: String): String =
+    state.entries.lastOrNull { it.type == item.type }?.let { formatEntry(it, state.preferences.unitSystem) } ?: notLogged
+
 @Composable
 private fun QuickLogButton(
     label: String,
@@ -231,9 +202,9 @@ private fun QuickLogButton(
 }
 
 @Composable
-private fun RecentEntryRow(entry: LoggedEntry, unitSystem: UnitSystem) {
+private fun RecentEntryRow(entry: WearLinkEntry, unitSystem: UnitSystem) {
     val context = LocalContext.current
-    val time = remember(entry.timeMillis) { DateFormat.getTimeFormat(context).format(Date(entry.timeMillis)) }
+    val time = remember(entry.epochMillis) { DateFormat.getTimeFormat(context).format(Date(entry.epochMillis)) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -260,7 +231,7 @@ private fun RecentEntryRow(entry: LoggedEntry, unitSystem: UnitSystem) {
 private fun QuickLogScreenPreview() {
     OpenWatchWearTheme {
         AppScaffold {
-            QuickLogScreen(SampleData.uiState, {}, {}, {}, {}, {})
+            QuickLogScreen(SampleData.uiState, {}, {}, {}, {}, {}, {})
         }
     }
 }

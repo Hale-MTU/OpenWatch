@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     allowBackup="false" keeps the app out of cloud backup, but from Android 12 on it
-    does not stop a transfer to a new phone. The device state moves with the phone;
-    a watch and a scale are paired again on the new one anyway.
+    does not stop a transfer to a new phone. Most of the device state may move with the
+    phone: the cursors and watermarks keep the new phone from fetching everything again.
+
+    The secrets do not move. The scale's key decrypts every weigh-in the scale broadcasts,
+    a Wear OS watch's link token says which phone the wearer allowed, and the OpenLink trust
+    records hold which apps the user allowed on this phone. On a new phone the scale's key
+    is entered again, the watch asks again, and the apps ask again.
 -->
 <data-extraction-rules>
     <cloud-backup>
@@ -12,4 +17,10 @@
         <exclude domain="sharedpref" path="." />
         <exclude domain="external" path="." />
     </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="xiaomi_scale.xml" />
+        <exclude domain="sharedpref" path="wearos_link.xml" />
+        <exclude domain="sharedpref" path="openlink_trust.xml" />
+        <exclude domain="sharedpref" path="openlink_profile.xml" />
+    </device-transfer>
 </data-extraction-rules>

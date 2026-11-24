@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.wear.workout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import tech.mmarca.openwatch.wearlink.WorkoutMetrics
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
 class WorkoutPillTest {
@@ -49,5 +50,16 @@ class WorkoutPillTest {
         val now = 1_000_000L
         assertEquals(now - 90_000, stopwatchBaseMillis(WorkoutPillKey(sport, paused = false), 90, now))
         assertNull(stopwatchBaseMillis(WorkoutPillKey(sport, paused = true), 90, now))
+    }
+
+    @Test
+    fun `the recovery after a workout keeps a pill without a stopwatch, until its falls are in`() {
+        val measuring = WorkoutUiState(sport = sport, snapshot = snapshot(paused = false), finished = true, recovery = RecoveryState(0, 120_000))
+        val key = measuring.pillKey()!!
+
+        assertEquals(WorkoutPillKey(sport, paused = false, recovering = true), key)
+        assertNull(stopwatchBaseMillis(key, 90, 1_000_000L))
+        val done = measuring.copy(recovery = measuring.recovery!!.copy(falls = WorkoutMetrics.Recovery(28, 45)))
+        assertNull(done.pillKey())
     }
 }

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="garmin_find_phone_channel">Find my phone</string>
+    <string name="garmin_find_phone_title">Your watch is looking for this phone</string>
+    <string name="garmin_find_phone_body">Tap to stop ringing.</string>
+    <string name="garmin_find_phone_stop">Stop</string>
+</resources>

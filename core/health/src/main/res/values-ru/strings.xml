@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="health_data_section_garmin">Записывается с часов Garmin</string>
+    <string name="health_data_section_wearos">Записывается с часов Wear OS</string>
+    <string name="health_data_section_scale">Записывается с весов</string>
+    <string name="health_data_section_reads">Читается из Health Connect</string>
+    <string name="health_data_section_watch_app">Запрашивается приложением для часов на самих часах</string>
+    <string name="health_data_note_garmin_weight">Вес, который весы Garmin передают через часы.</string>
+    <string name="health_data_note_wearos_calories">Оценка энергозатрат на ходьбу по вашим шагам и весу, а также калории тренировки.</string>
+    <string name="health_data_note_wearos_sleep">По одной оценённой сессии сна за каждую ночь и каждый дневной сон.</string>
+    <string name="health_data_note_wearos_hrv">Ночью, на часах, способных её измерять.</string>
+    <string name="health_data_note_wearos_workout">Тренировка, записанная вами на часах, с маршрутом и расстоянием.</string>
+    <string name="health_data_note_wearos_skin">Только с часов Samsung, если для этих часов включён параметр «Температура кожи ночью». Одна запись за ночь: отклонение от вашей обычной ночи.</string>
+    <string name="health_data_note_scale_estimate">Рассчитывается на телефоне по измерению весов и вашему профилю тела.</string>
+    <string name="health_data_read_weight">Для калорий ходьбы и состава тела по весам.</string>
+    <string name="health_data_read_height">Для состава тела по весам.</string>
+    <string name="health_data_read_exercise">Чтобы минуты во время тренировки не получали повторную оценку калорий.</string>
+    <string name="health_data_read_sleep">Чтобы не трогать ночь, для которой уже есть сессия сна.</string>
+    <string name="health_data_read_resting_heart_rate">Чтобы не трогать день, для которого уже есть пульс в покое, а также для зон пульса, которые показывают часы.</string>
+    <string name="health_data_read_heart_rate">Ваш максимальный пульс — для этих зон, а также для расчёта энергии тренировки.</string>
+    <string name="health_data_read_history">Ваши последние вес и рост часто старше 30 дней, которые Health Connect показывает без этого разрешения.</string>
+    <string name="health_data_read_background">Синхронизация по расписанию при закрытом приложении видит вес и тренировки из других приложений только с этим разрешением.</string>
+    <string name="health_data_watch_heart_rate">Датчик пульса часов: пульс, ночная вариабельность сердечного ритма и оценка сна.</string>
+    <string name="health_data_watch_background">Чтобы продолжать запись при выключенном экране часов.</string>
+    <string name="health_data_watch_skin">Только на часах Samsung и только если вы включите измерение температуры кожи ночью.</string>
+</resources>

@@ -1,14 +1,17 @@
 package tech.mmarca.openwatch.wear.features.settings
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
+import androidx.wear.compose.foundation.lazy.TransformingLazyColumnScope
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
+import androidx.wear.compose.material3.CircularProgressIndicator
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.SurfaceTransformation
@@ -19,77 +22,54 @@ import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
-/** What the watch app may use, one row per grant, and a way to ask for the ones that are missing. */
-internal data class SensorAccess(
-    val heartRate: Boolean,
-    val heartRateInBackground: Boolean,
-    /** Null when the watch has no step counter. */
-    val steps: Boolean?,
-    val nearbyDevices: Boolean,
-) {
-    val complete: Boolean get() = heartRate && heartRateInBackground && steps != false && nearbyDevices
-}
-
+/**
+ * What the watch app may use, one row per grant, a way to ask for the ones
+ * that are missing ([onGrant]), and the recording details one step further
+ * ([onOpenDetails]): the status screen, with what the recorders hold and
+ * their settings.
+ */
 @Composable
 internal fun SensorAccessScreen(
-    access: SensorAccess,
+    access: SensorAccess?,
     onGrant: () -> Unit,
     onOpenDetails: () -> Unit,
 ) {
     val listState = rememberTransformingLazyColumnState()
-    val transformationSpec = rememberTransformationSpec()
-    val rowModifier = Modifier.fillMaxWidth()
-    val granted = stringResource(R.string.settings_sensor_access_granted)
-    val missing = stringResource(R.string.settings_sensor_access_missing)
+    val spec = rememberTransformationSpec()
 
     ScreenScaffold(scrollState = listState) { contentPadding ->
         TransformingLazyColumn(state = listState, contentPadding = contentPadding) {
             item {
                 ListHeader(
-                    modifier = rowModifier.transformedHeight(this, transformationSpec),
-                    transformation = SurfaceTransformation(transformationSpec),
+                    modifier = Modifier.fillMaxWidth().transformedHeight(this, spec),
+                    transformation = SurfaceTransformation(spec),
                 ) { Text(stringResource(R.string.settings_sensor_access)) }
             }
-            item {
-                InfoRow(
-                    label = stringResource(R.string.sensors_heart_rate),
-                    value = if (access.heartRate) granted else missing,
-                    modifier = rowModifier.transformedHeight(this, transformationSpec),
-                )
-            }
-            item {
-                InfoRow(
-                    label = stringResource(R.string.sensors_heart_rate_background),
-                    value = if (access.heartRateInBackground) granted else missing,
-                    modifier = rowModifier.transformedHeight(this, transformationSpec),
-                )
-            }
-            item {
-                InfoRow(
-                    label = stringResource(R.string.sensors_steps),
-                    value = when (access.steps) {
-                        null -> stringResource(R.string.sensors_no_step_counter)
-                        true -> granted
-                        false -> missing
-                    },
-                    modifier = rowModifier.transformedHeight(this, transformationSpec),
-                )
-            }
-            item {
-                InfoRow(
-                    label = stringResource(R.string.sensors_nearby_devices),
-                    value = if (access.nearbyDevices) granted else missing,
-                    modifier = rowModifier.transformedHeight(this, transformationSpec),
-                )
-            }
-            if (!access.complete) {
+            if (access == null) {
+                item { CircularProgressIndicator() }
+            } else {
+                grantRow(R.string.sensors_heart_rate, access.heartRate)
+                grantRow(R.string.sensors_heart_rate_background, access.heartRateInBackground)
                 item {
-                    Button(
-                        onClick = onGrant,
-                        label = { Text(stringResource(R.string.action_grant)) },
-                        modifier = rowModifier.transformedHeight(this, transformationSpec),
-                        transformation = SurfaceTransformation(transformationSpec),
+                    InfoRow(
+                        label = stringResource(R.string.sensors_steps),
+                        value = when (access.steps) {
+                            null -> stringResource(R.string.sensors_no_step_counter)
+                            true -> stringResource(R.string.settings_sensor_access_granted)
+                            false -> stringResource(R.string.settings_sensor_access_missing)
+                        },
                     )
+                }
+                grantRow(R.string.sensors_nearby_devices, access.nearbyDevices)
+                if (!access.complete) {
+                    item {
+                        Button(
+                            onClick = onGrant,
+                            label = { Text(stringResource(R.string.action_grant)) },
+                            modifier = Modifier.fillMaxWidth().transformedHeight(this, spec),
+                            transformation = SurfaceTransformation(spec),
+                        )
+                    }
                 }
             }
             item {
@@ -97,11 +77,20 @@ internal fun SensorAccessScreen(
                     onClick = onOpenDetails,
                     label = { Text(stringResource(R.string.sensors_recording_details)) },
                     colors = ButtonDefaults.filledTonalButtonColors(),
-                    modifier = rowModifier.transformedHeight(this, transformationSpec),
-                    transformation = SurfaceTransformation(transformationSpec),
+                    modifier = Modifier.fillMaxWidth().transformedHeight(this, spec),
+                    transformation = SurfaceTransformation(spec),
                 )
             }
         }
+    }
+}
+
+private fun TransformingLazyColumnScope.grantRow(@StringRes label: Int, granted: Boolean) {
+    item {
+        InfoRow(
+            label = stringResource(label),
+            value = stringResource(if (granted) R.string.settings_sensor_access_granted else R.string.settings_sensor_access_missing),
+        )
     }
 }
 

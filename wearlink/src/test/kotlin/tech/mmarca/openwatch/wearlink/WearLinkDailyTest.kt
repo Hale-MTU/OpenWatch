@@ -6,39 +6,38 @@ import org.junit.Test
 
 class WearLinkDailyTest {
 
+    private val token = WearLinkToken.generate()
+
     @Test
     fun `a day round-trips, missing values included`() {
         val day = DaySummary(20_401, sleepMinutes = 432, awakeMinutes = 20, remMinutes = 90, lightMinutes = 250, deepMinutes = 72, restingBpm = 52)
-        val line = WearLinkDaily.formatPutDay(day)
+        val line = WearLinkDaily.format(day)
         assertEquals("PUT_DAY 20401 432 20 90 250 72 52 - -", line)
-        assertEquals(day, WearLinkDaily.parsePutDay(line))
+        assertEquals(day, WearLinkDaily.parse(line))
         assertEquals(WearLinkProtocol.Request.PutDay(day), WearLinkProtocol.parseRequest(line))
+        assertEquals(line, WearLinkProtocol.formatRequest(WearLinkProtocol.Request.PutDay(day)))
     }
 
     @Test
-    fun `a day with an impossible value is refused`() {
-        assertNull(WearLinkDaily.parsePutDay("PUT_DAY 20401 2000 - - - - - - -"))
-        assertNull(WearLinkDaily.parsePutDay("PUT_DAY 20401 -5 - - - - - - -"))
-        assertNull(WearLinkDaily.parsePutDay("PUT_DAY 20401 432 - - - -"))
+    fun `a day with an impossible value or too few fields is refused, a longer line is read`() {
+        assertNull(WearLinkDaily.parse("PUT_DAY 20401 2000 - - - - - - -"))
+        assertNull(WearLinkDaily.parse("PUT_DAY 20401 -5 - - - - - - -"))
+        assertNull(WearLinkDaily.parse("PUT_DAY 20401 - - - - - 300 - -"))
+        assertNull(WearLinkDaily.parse("PUT_DAY -1 - - - - - - - -"))
+        assertNull(WearLinkDaily.parse("PUT_DAY 20401 432 - - - -"))
+        assertNull(WearLinkDaily.parse("PUT_DAY 20401 7.5 - - - - - - -"))
+        assertEquals(DaySummary(20_401, activeKcal = 300), WearLinkDaily.parse("PUT_DAY 20401 - - - - - - 300 - 7 later"))
     }
 
     @Test
-    fun `an entry round-trips`() {
-        val water = WatchEntry(1_794_000_000_000, WearLinkDaily.WATER, 250.0)
-        val pressure = WatchEntry(1_794_000_000_000, WearLinkDaily.BLOOD_PRESSURE, 120.0, 80.0)
-        assertEquals(water, WearLinkDaily.parseEntry(WearLinkDaily.formatEntry(water)))
-        assertEquals(pressure, WearLinkDaily.parseEntry(WearLinkDaily.formatEntry(pressure)))
-    }
+    fun `the watch keeps a day the phone puts and answers DAY_OK`() {
+        val loopback = Loopback().also { it.trust.tokens[it.phoneAddress] = token }
+        val link = loopback.connect()
+        val session = (WearLinkClient.hello(link.clientConnection, WearLinkProtocol.Hello(WearLinkProtocol.VERSION, emptySet(), token, "Pixel")) as WearLinkOutcome.Ok).value
+        val day = DaySummary(20_401, sleepMinutes = 410, restingBpm = 54, activeKcal = 312, distanceMetres = 4022)
 
-    @Test
-    fun `an entry of an unknown type or value is refused`() {
-        assertNull(WearLinkDaily.parseEntry("LG 1794000000000 coffee 1.0 -"))
-        assertNull(WearLinkDaily.parseEntry("LG 1794000000000 water NaN -"))
-        assertNull(WearLinkDaily.parseEntry("LG 0 water 250.0 -"))
-    }
-
-    @Test
-    fun `the entries request parses`() {
-        assertEquals(WearLinkProtocol.Request.EntriesSince(5, 10), WearLinkProtocol.parseRequest("LG_SINCE 5 10"))
+        assertEquals(WearLinkOutcome.Ok(Unit), session.putDay(day))
+        assertEquals(mapOf(20_401L to day), loopback.handler.days)
+        session.close()
     }
 }
