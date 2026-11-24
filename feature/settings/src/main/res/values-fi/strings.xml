@@ -27,4 +27,6 @@
     <string name="settings_respiratory_rate_title">Hengitystiheys kellosta (kokeellinen)</string>
     <string name="settings_respiratory_rate_body">Kirjoittaa kellon yöllisten HRV-ikkunoiden hengitystiheyden Health Connectiin. Ei vielä verrattu viitelaitteeseen.</string>
     <string name="health_data_open_body">Jokainen terveystietotyyppi, laite, josta se tulee, ja miksi.</string>
+    <string name="settings_sleep_beside_others_title">Kirjoita kellon uni muiden sovellusten rinnalle</string>
+    <string name="settings_sleep_beside_others_body">Kirjoittaa yön, vaikka Samsung Health tai muu sovellus olisi jo kirjoittanut sellaisen. Health Connectin tietolähteiden tärkeysjärjestys päättää sitten, minkä yön sovellukset näyttävät. Pois: toisen sovelluksen yö voittaa.</string>
 </resources>

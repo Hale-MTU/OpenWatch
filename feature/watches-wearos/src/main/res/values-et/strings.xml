@@ -11,6 +11,10 @@
     <string name="settings_watch_wearos_sync_body">Kella OpenWatchi rakendus salvestab pulsi ja une hindamiseks vajaliku ning hoiab nädala jagu andmeid. Sünkroonimine kopeerib uue pulsi Health Connecti ja kirjutab iga öö kohta ühe hinnatud uneseansi.</string>
     <string name="settings_watch_wearos_sync_now">Sünkrooni kell</string>
     <string name="settings_watch_wearos_syncing">Kella sünkroonimine…</string>
+    <plurals name="settings_watch_wearos_skin_baseline_nights_to_go">
+        <item quantity="one">Naha temperatuuri lähtetase: vaja on veel %1$d öö.</item>
+        <item quantity="other">Naha temperatuuri lähtetase: vaja on veel %1$d ööd.</item>
+    </plurals>
     <string name="watch_settings_section">Kella seaded</string>
     <string name="watch_settings_not_read">Kell hoiab neid seadeid ise. Loe need, et neid siin muuta.</string>
     <string name="watch_settings_unreachable">Kell ei vastanud. Kas see on lähedal ja OpenWatchi rakendus töötab?</string>
@@ -25,6 +29,10 @@
     <string name="watch_settings_skin">Naha temperatuur öösel</string>
     <string name="watch_settings_spo2">SpO2 iga tund öösel</string>
     <string name="watch_settings_allow_on_watch">Luba see kellas: ava seal OpenWatch ja lülita see üks kord sisse.</string>
+    <string name="watch_settings_hr_source_explained">Väljas: kella enda andur, reaalajas. Sees: platvormi väärtus, mis ekraani väljas olles edastatakse kogumitena kuni 10 minutit hiljem. Treening kasutab igal juhul andurit.</string>
+    <string name="watch_settings_hrv_source_explained">Väljas: HRV toorest pulsisignaalist, iga intervall. Sees: platvormi löögiintervallid; praegu läheb neist umbes 60 % kaduma, seega on väärtus vähematel öödel.</string>
+    <string name="watch_settings_skin_explained">Naha temperatuur randmel une ajal, üks näit minutis. Vähe energiat; muu ei muutu.</string>
+    <string name="watch_settings_spo2_explained">Vere hapnikusisaldus une ajal kõige rohkem kord tunnis, umbes 15 s punast valgust. Paar mAh öö kohta; jäetakse vahele, kui käsi liigub.</string>
     <string name="settings_watch_wearos_companion_missing">Android pole seda kella OpenWatchiga sidunud. Ilma seoseta ei saa OpenWatch salvestada treeninguid, mille mõni teine rakendus kellas käivitab.</string>
     <string name="settings_watch_wearos_companion_link">Seo kell</string>
 </resources>

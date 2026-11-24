@@ -27,4 +27,6 @@
     <string name="settings_respiratory_rate_title">Hingamissagedus kellalt (katseline)</string>
     <string name="settings_respiratory_rate_body">Kirjutab kella öiste HRV-akende hingamissageduse Health Connecti. Pole veel võrdlusseadmega kontrollitud.</string>
     <string name="health_data_open_body">Iga terviseandmete tüüp, seade, kust see pärineb, ja miks.</string>
+    <string name="settings_sleep_beside_others_title">Kirjuta kella uni teiste rakenduste kõrvale</string>
+    <string name="settings_sleep_beside_others_body">Kirjutab öö ka siis, kui Samsung Health või mõni teine rakendus on selle juba kirjutanud. Seejärel otsustab Health Connecti andmeallikate prioriteet, millist ööd rakendused näitavad. Väljas: teise rakenduse öö jääb peale.</string>
 </resources>

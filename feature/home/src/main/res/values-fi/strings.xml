@@ -5,4 +5,5 @@
     <string name="home_section_app">Sovellus</string>
     <string name="home_settings">Asetukset</string>
     <string name="home_settings_body">Kehoprofiili, ilmoitusten käyttöoikeus, tietoja</string>
+    <string name="home_detail_placeholder">Valitse laite nähdäksesi sen tässä.</string>
 </resources>

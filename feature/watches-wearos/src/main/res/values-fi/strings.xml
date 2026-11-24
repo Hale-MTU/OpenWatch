@@ -11,6 +11,10 @@
     <string name="settings_watch_wearos_sync_body">Kellon OpenWatch-sovellus tallentaa sykkeen ja unen arvioon tarvittavat tiedot ja säilyttää niitä viikon. Synkronointi kopioi uuden sykkeen Health Connectiin ja kirjoittaa yhden arvioidun unijakson yötä kohden.</string>
     <string name="settings_watch_wearos_sync_now">Synkronoi kello</string>
     <string name="settings_watch_wearos_syncing">Synkronoidaan kelloa…</string>
+    <plurals name="settings_watch_wearos_skin_baseline_nights_to_go">
+        <item quantity="one">Ihon lämpötilan perustaso: tarvitaan vielä %1$d yö.</item>
+        <item quantity="other">Ihon lämpötilan perustaso: tarvitaan vielä %1$d yötä.</item>
+    </plurals>
     <string name="watch_settings_section">Kellon asetukset</string>
     <string name="watch_settings_not_read">Kello säilyttää nämä asetukset itse. Lue ne muuttaaksesi niitä täällä.</string>
     <string name="watch_settings_unreachable">Kello ei vastannut. Onko se lähellä ja onko sen OpenWatch-sovellus käynnissä?</string>
@@ -25,6 +29,10 @@
     <string name="watch_settings_skin">Ihon lämpötila yöllä</string>
     <string name="watch_settings_spo2">SpO2 tunnin välein yöllä</string>
     <string name="watch_settings_allow_on_watch">Salli se kellossa: avaa siellä OpenWatch ja kytke se päälle kerran.</string>
+    <string name="watch_settings_hr_source_explained">Pois: kellon oma anturi, reaaliajassa. Päällä: alustan arvo, joka toimitetaan näytön ollessa pois päältä erissä jopa 10 minuuttia myöhässä. Harjoitus käyttää anturia joka tapauksessa.</string>
+    <string name="watch_settings_hrv_source_explained">Pois: HRV raa\'asta pulssisignaalista, jokainen väli. Päällä: alustan lyöntivälit; nykyään niistä noin 60 % katoaa, joten harvemmalle yölle saadaan arvo.</string>
+    <string name="watch_settings_skin_explained">Ihon lämpötila ranteesta unen aikana, yksi lukema minuutissa. Vähän virtaa; muu ei muutu.</string>
+    <string name="watch_settings_spo2_explained">Veren happipitoisuus enintään kerran tunnissa unen aikana, noin 15 s punaista valoa. Muutama mAh yössä; ohitetaan, kun käsi liikkuu.</string>
     <string name="settings_watch_wearos_companion_missing">Android ei ole linkittänyt tätä kelloa OpenWatchiin. Ilman linkkiä OpenWatch ei voi tallentaa harjoituksia, jotka toinen sovellus käynnistää kellossa.</string>
     <string name="settings_watch_wearos_companion_link">Linkitä kello</string>
 </resources>

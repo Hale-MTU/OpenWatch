@@ -3,6 +3,11 @@
     <string name="health_data_section_garmin">Kirjutatakse Garmini kellast</string>
     <string name="health_data_section_wearos">Kirjutatakse Wear OS kellast</string>
     <string name="health_data_section_scale">Kirjutatakse kaalust</string>
+    <string name="health_data_section_standard">Kirjutatakse standardse Bluetoothi profiiliga seadmest</string>
+    <string name="health_data_note_standard_heart_rate">Pulsivööst, kui selle ekraan on avatud või mõni sinu lubatud rakendus sellega salvestab: üks kirje minutis.</string>
+    <string name="health_data_note_standard_blood_pressure">Vererõhumõõtjast: iga näit, mille see ärgates edastab; mõõdetud pulss kirjutatakse pulsikirjena.</string>
+    <string name="health_data_note_standard_blood_glucose">Glükomeetrist: salvestatud näidud, mille see ärgates edastab. Kontrolllahusega tehtud mõõtmist ei kirjutata.</string>
+    <string name="health_data_note_standard_weight">Standardse Weight Scale profiiliga kaalust: iga kaalumine, mille see ärgates edastab.</string>
     <string name="health_data_section_reads">Loetakse Health Connectist</string>
     <string name="health_data_section_watch_app">Küsib kellarakendus kellas</string>
     <string name="health_data_note_garmin_weight">Kehakaal, mille Garmini kaal kella kaudu edastab.</string>
@@ -10,6 +15,8 @@
     <string name="health_data_note_wearos_sleep">Üks hinnatud uneseanss iga öö ja iga uinaku kohta.</string>
     <string name="health_data_note_wearos_hrv">Öösel, kellas, mis suudab seda mõõta.</string>
     <string name="health_data_note_wearos_workout">Kellas salvestatud treening koos marsruudi ja vahemaaga.</string>
+    <string name="health_data_note_wearos_entry">Mida sa kellas käsitsi sisestad.</string>
+    <string name="health_data_note_wearos_mindfulness">Kellas tehtud hingamisseanss, kui Health Connect selliseid hoiab.</string>
     <string name="health_data_note_wearos_skin">Ainult Samsungi kellast, kui selle kella jaoks on „Naha temperatuur öösel“ sisse lülitatud. Üks kirje öö kohta: erinevus sinu tavapärasest ööst.</string>
     <string name="health_data_note_scale_estimate">Hinnatud telefonis kaalu mõõtmise ja sinu kehaprofiili põhjal.</string>
     <string name="health_data_read_weight">Kõndimise kalorite ja kaalu keha koostise jaoks.</string>
@@ -18,9 +25,14 @@
     <string name="health_data_read_sleep">Et ööd, millel on juba uneseanss, ei puudutataks.</string>
     <string name="health_data_read_resting_heart_rate">Et päeva, millel on juba puhkeoleku pulss, ei puudutataks, ja kella näidatavate pulsitsoonide jaoks.</string>
     <string name="health_data_read_heart_rate">Sinu kõrgeim pulss nende tsoonide jaoks ja treeningu energia arvutamiseks.</string>
+    <string name="health_data_read_day_totals">Päeva kogusumma kõigist rakendustest, mida Wear OS kell näitab.</string>
     <string name="health_data_read_history">Sinu viimane kehakaal ja pikkus on sageli vanemad kui 30 päeva, mida Health Connect ilma selle loata näitab.</string>
     <string name="health_data_read_background">Ajastatud sünkroonimine, kui rakendus on suletud, näeb teise rakenduse kehakaalu ja treeninguid ainult selle loaga.</string>
     <string name="health_data_watch_heart_rate">Kella pulsiandur: pulss, öine südame löögisageduse varieeruvus ja une hinnang.</string>
     <string name="health_data_watch_background">Et salvestamine jätkuks, kui kella ekraan on väljas.</string>
     <string name="health_data_watch_skin">Ainult Samsungi kellas ja ainult siis, kui lülitad sisse naha temperatuuri öösel.</string>
+    <string name="health_data_note_wearos_breathing_logged">Öösel ainult siis, kui Seadetes on „Hingamissagedus kellalt“ sisse lülitatud; ning kellas sisestatud hingamissagedus.</string>
+    <string name="health_data_note_wearos_spo2_measured">Öösel ainult Samsungi kellast, kui selle kella jaoks on „SpO2 iga tund öösel“ sisse lülitatud; ning vere hapnikusisaldus, mille kellas sisestad või mõõdad.</string>
+    <string name="health_data_note_wearos_vo2">Hinnang kellas marsruudiga salvestatud kõnnist või jooksust, kui sinu kehaprofiilis on puhkeoleku pulss.</string>
+    <string name="health_data_watch_spo2_spot">Ainult Samsungi kellas: kui lülitad sisse SpO2 öösel ja kui mõõdad kellas vere hapnikusisaldust.</string>
 </resources>

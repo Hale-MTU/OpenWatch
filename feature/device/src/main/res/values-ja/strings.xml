@@ -81,6 +81,25 @@
     <string name="settings_watch_auto_sync_background_access_action">バックグラウンドアクセスを許可</string>
     <string name="settings_watch_wearos_needs_workout_write">ワークアウトは書き込まれていません。ワークアウト、ルート、距離の Health Connect への書き込みを OpenWatch に許可してから、もう一度同期してください。</string>
     <string name="settings_watch_garmin_withheld">権限がないため Health Connect に保存されませんでした: %1$s。許可すると、次回の同期からウォッチが送るデータが保存されます。</string>
+    <string name="home_section_devices">その他のデバイス</string>
+    <string name="devices_intro">スマートフォン本体とペアリングするセンサーや測定器。測定した内容は Health Connect に送られます。</string>
+    <string name="devices_add">デバイスを追加</string>
+    <string name="devices_permissions_title">デバイスの権限</string>
+    <string name="devices_permissions_body">Android は Health Connect とは別にこれを求めます。ないとデバイスを見つけることも読み取ることもできません。</string>
+    <string name="devices_scan_empty">まだ何も見つかりません。デバイスを起動して、スマートフォンの近くに置いてください。</string>
+    <string name="devices_scan_again">再スキャン</string>
+    <string name="devices_pairing">ペアリング中…</string>
+    <string name="devices_pair_refused">ペアリングが完了しませんでした。完了するには Android のペアリングリクエストを承認してください。</string>
+    <string name="devices_pair_unreachable">デバイスに接続できませんでした。デバイスを起動して近くに置き、もう一度お試しください。</string>
+    <string name="devices_pair_not_associated">Android のダイアログで OpenWatch を許可してください。これにより、デバイスに測定値があるときにスマートフォンが受け取れます。</string>
+    <string name="devices_last_reading">最終測定 %1$s</string>
+    <string name="devices_no_reading">測定値はまだありません</string>
+    <string name="device_live_section">ライブ</string>
+    <string name="device_live_waiting">測定値を待機中…</string>
+    <plurals name="device_readings_waiting">
+        <item quantity="other">Health Connect にまだ入っていない測定値が %1$d 件</item>
+    </plurals>
+    <string name="device_readings_waiting_grant">%1$s。OpenWatch に Health Connect への書き込みを許可すると保存されます。</string>
     <string name="settings_watch_wearos_companion_required">Android がウォッチを OpenWatch にリンクしなかったため、追加されませんでした。別のアプリがウォッチで開始したワークアウトを記録するには、このリンクが必要です。もう一度「ペアリング」をタップして、リクエストを許可してください。</string>
     <string name="settings_sensors_open_bluetooth">Bluetooth 設定を開く</string>
 </resources>

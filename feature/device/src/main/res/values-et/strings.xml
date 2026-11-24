@@ -82,6 +82,26 @@
     <string name="settings_watch_auto_sync_background_access_action">Luba taustajuurdepääs</string>
     <string name="settings_watch_wearos_needs_workout_write">Treeninguid ei kirjutatud: luba OpenWatchil kirjutada treeningud, marsruudid ja vahemaa Health Connecti ning sünkrooni uuesti.</string>
     <string name="settings_watch_garmin_withheld">Health Connecti ei salvestatud, kuna luba puudub: %1$s. Luba need ja järgmisest sünkroonimisest alates salvestatakse see, mida kell saadab.</string>
+    <string name="home_section_devices">Muud seadmed</string>
+    <string name="devices_intro">Andurid ja mõõturid, mis seotakse otse telefoniga. Nende mõõdetu läheb Health Connecti.</string>
+    <string name="devices_add">Lisa seade</string>
+    <string name="devices_permissions_title">Load sinu seadme jaoks</string>
+    <string name="devices_permissions_body">Android küsib seda Health Connectist eraldi. Ilma selleta ei saa seadet leida ega lugeda.</string>
+    <string name="devices_scan_empty">Midagi pole veel leitud. Ärata seade ja hoia seda telefoni lähedal.</string>
+    <string name="devices_scan_again">Otsi uuesti</string>
+    <string name="devices_pairing">Sidumine…</string>
+    <string name="devices_pair_refused">Sidumine jäi lõpetamata. Lõpetamiseks nõustu Androidi sidumistaotlusega.</string>
+    <string name="devices_pair_unreachable">Seadmeni ei jõutud. Ärata see, hoia seda lähedal ja proovi uuesti.</string>
+    <string name="devices_pair_not_associated">Luba OpenWatch Androidi dialoogis: nii kuuleb telefon seadet, kui sellel on näit.</string>
+    <string name="devices_last_reading">Viimane näit %1$s</string>
+    <string name="devices_no_reading">Näitu veel pole</string>
+    <string name="device_live_section">Reaalajas</string>
+    <string name="device_live_waiting">Näidu ootamine…</string>
+    <plurals name="device_readings_waiting">
+        <item quantity="one">%1$d näit pole veel Health Connectis</item>
+        <item quantity="other">%1$d näitu pole veel Health Connectis</item>
+    </plurals>
+    <string name="device_readings_waiting_grant">%1$s. Luba OpenWatchil need Health Connecti kirjutada ja need salvestatakse.</string>
     <string name="settings_watch_wearos_companion_required">Android ei sidunud kella OpenWatchiga, seega seda ei lisatud. OpenWatch vajab seda seost, et salvestada treeninguid, mille mõni teine rakendus kellas käivitab. Puuduta uuesti Seo ja luba taotlus.</string>
     <string name="settings_sensors_open_bluetooth">Ava Bluetoothi seaded</string>
 </resources>

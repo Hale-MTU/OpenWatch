@@ -82,6 +82,26 @@
     </plurals>
     <string name="settings_watch_wearos_needs_workout_write">Harjoituksia ei kirjoitettu: salli OpenWatchin kirjoittaa harjoitukset, reitit ja matka Health Connectiin ja synkronoi uudelleen.</string>
     <string name="settings_watch_garmin_withheld">Ei tallennettu Health Connectiin puuttuvan käyttöoikeuden vuoksi: %1$s. Salli ne, niin kellon lähettämät tiedot tallennetaan seuraavasta synkronoinnista alkaen.</string>
+    <string name="home_section_devices">Muut laitteet</string>
+    <string name="devices_intro">Anturit ja mittarit, jotka pariliitetään suoraan puhelimeen. Niiden mittaukset menevät Health Connectiin.</string>
+    <string name="devices_add">Lisää laite</string>
+    <string name="devices_permissions_title">Laitteesi käyttöoikeudet</string>
+    <string name="devices_permissions_body">Android pyytää tämän erikseen Health Connectista. Ilman sitä laitetta ei löydy eikä sitä voi lukea.</string>
+    <string name="devices_scan_empty">Mitään ei vielä löytynyt. Herätä laite ja pidä se lähellä puhelinta.</string>
+    <string name="devices_scan_again">Etsi uudelleen</string>
+    <string name="devices_pairing">Pariliitetään…</string>
+    <string name="devices_pair_refused">Pariliitos jäi kesken. Viimeistele se hyväksymällä Androidin pariliitospyyntö.</string>
+    <string name="devices_pair_unreachable">Laitetta ei tavoitettu. Herätä se, pidä se lähellä ja yritä sitten uudelleen.</string>
+    <string name="devices_pair_not_associated">Salli OpenWatch Androidin valintaikkunassa: sen avulla puhelin kuulee laitteen, kun sillä on lukema.</string>
+    <string name="devices_last_reading">Viimeisin lukema %1$s</string>
+    <string name="devices_no_reading">Ei vielä lukemaa</string>
+    <string name="device_live_section">Reaaliajassa</string>
+    <string name="device_live_waiting">Odotetaan lukemaa…</string>
+    <plurals name="device_readings_waiting">
+        <item quantity="one">%1$d lukema puuttuu vielä Health Connectista</item>
+        <item quantity="other">%1$d lukemaa puuttuu vielä Health Connectista</item>
+    </plurals>
+    <string name="device_readings_waiting_grant">%1$s. Salli OpenWatchin kirjoittaa ne Health Connectiin, niin ne tallennetaan.</string>
     <string name="settings_watch_wearos_companion_required">Android ei linkittänyt kelloa OpenWatchiin, joten sitä ei lisätty. OpenWatch tarvitsee tämän linkin tallentaakseen harjoitukset, jotka toinen sovellus käynnistää kellossa. Napauta Pariliitä uudelleen ja hyväksy pyyntö.</string>
     <string name="settings_sensors_open_bluetooth">Avaa Bluetooth-asetukset</string>
 </resources>
