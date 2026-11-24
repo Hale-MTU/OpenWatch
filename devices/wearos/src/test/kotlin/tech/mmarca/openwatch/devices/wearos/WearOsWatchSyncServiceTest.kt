@@ -32,6 +32,7 @@ import tech.mmarca.openwatch.healthconnect.DayTotals
 import tech.mmarca.openwatch.healthconnect.HealthConnectReads
 import tech.mmarca.openwatch.wearlink.DaySummary
 import tech.mmarca.healthcalculations.model.WearSleepMinute
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.OxygenSaturationRecord
 import androidx.health.connect.client.records.RespiratoryRateRecord
@@ -239,8 +240,11 @@ class WearOsWatchSyncServiceTest {
 
     private inline fun <reified T> insertedOf(): List<T> = insertCalls.flatten().filterIsInstance<T>()
 
-    /** The user's breathing rate switch; off as in a fresh install. */
+    /** The user's breathing rate switch; off here, so a test that writes it says so. */
     private var writeBreathing = false
+
+    /** Whether the watch's night is written beside another app's; the user's setting, on by default. */
+    private var sleepBesideOthers = true
 
     private fun service() = WearOsWatchSyncService(
         nodePort = nodePort,
@@ -253,6 +257,7 @@ class WearOsWatchSyncServiceTest {
         clock = { t0 },
         zone = { ZoneId.of("+02:00") },
         writeRespiratoryRate = { writeBreathing },
+        writeSleepBesideOthers = { sleepBesideOthers },
     )
 
     private fun raw(time: Instant, movement: Float, heartRate: Float) =
@@ -483,6 +488,8 @@ class WearOsWatchSyncServiceTest {
             weightKg = { weightReads++; null },
             clock = { t0 },
             zone = { ZoneId.of("+02:00") },
+            // The profile sent to the watch for its workout figures is read on its own; this counts the walking energy's.
+            profile = { BodyProfile() },
         )
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         watchSteps += WearOsStepMinute(t0, 12)
@@ -866,7 +873,8 @@ class WearOsWatchSyncServiceTest {
     }
 
     @Test
-    fun `a night that already holds a session from elsewhere is left alone`() = runTest {
+    fun `a night that already holds a session from elsewhere is left alone when the user chose so`() = runTest {
+        sleepBesideOthers = false
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         sleepPages += WearOsSleepMinutePage(nightMinutes(), hasMore = false)
         val foreign = mockk<SleepSessionRecord> {
@@ -886,6 +894,22 @@ class WearOsWatchSyncServiceTest {
     }
 
     @Test
+    fun `by default the night is written beside another app's, and Health Connect's priority decides`() = runTest {
+        pages += WearOsHeartRatePage(emptyList(), hasMore = false)
+        sleepPages += WearOsSleepMinutePage(nightMinutes(), hasMore = false)
+        val foreign = mockk<SleepSessionRecord> {
+            every { metadata } returns Metadata.manualEntry(clientRecordId = "samsung_sleep_1")
+        }
+        coEvery { healthConnect.forEachSyncRecordPage(SleepSessionRecord::class, any(), any(), any()) } coAnswers {
+            arg<suspend (List<androidx.health.connect.client.records.Record>) -> Unit>(3).invoke(listOf(foreign))
+        }
+
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        assertEquals(1, insertedOf<SleepSessionRecord>().size)
+    }
+
+    @Test
     fun `a nap becomes its own session under its onset's id`() = runTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         sleepPages += WearOsSleepMinutePage(napDayMinutes(), hasMore = false)
@@ -901,7 +925,8 @@ class WearOsWatchSyncServiceTest {
     }
 
     @Test
-    fun `a nap whose time already holds a session from elsewhere is left alone`() = runTest {
+    fun `a nap whose time already holds a session from elsewhere is left alone when the user chose so`() = runTest {
+        sleepBesideOthers = false
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         sleepPages += WearOsSleepMinutePage(napDayMinutes(), hasMore = false)
         val foreign = mockk<SleepSessionRecord> {

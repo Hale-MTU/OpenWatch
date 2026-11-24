@@ -169,6 +169,13 @@ object WorkoutMetrics {
         return Recovery(drop(1), drop(2))
     }
 
+    /**
+     * The fewest readings in the two minutes after a stop that show a recovery was measured: one
+     * a second while the watch read the heart rate live, rather than the day's one in ten
+     * seconds, on which the marks (a reading within five seconds of each) are a matter of luck.
+     */
+    const val MIN_RECOVERY_READINGS: Int = 60
+
     /** The readings inside the session and outside its pauses. */
     private fun samples(beats: List<Beat>, workout: WearLinkWorkout): List<HeartRateSample> = beats
         .filter { it.epochMillis in workout.startMillis..workout.endMillis }

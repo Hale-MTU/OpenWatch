@@ -40,10 +40,21 @@ class SettingsViewModelTest {
         val vm = SettingsViewModel(preferences, notifications, versionName = "0.4.1")
 
         vm.setSyncEnabled(false)
-        vm.setWriteRespiratoryRate(true)
+        vm.setWriteRespiratoryRate(false)
+        vm.setWriteSleepBesideOthers(false)
 
         assertFalse(preferences.healthConnectSyncEnabled)
-        assertTrue(preferences.writeRespiratoryRate)
+        assertFalse(preferences.writeRespiratoryRate)
+        assertFalse(vm.uiState.value.writeRespiratoryRate)
+        assertFalse(preferences.writeSleepBesideOthers)
+        assertFalse(vm.uiState.value.writeSleepBesideOthers)
+    }
+
+    @Test
+    fun `the breathing rate and the night beside other apps' are written until switched off`() {
+        val vm = SettingsViewModel(preferences, notifications, versionName = "0.4.1")
+
         assertTrue(vm.uiState.value.writeRespiratoryRate)
+        assertTrue(vm.uiState.value.writeSleepBesideOthers)
     }
 }

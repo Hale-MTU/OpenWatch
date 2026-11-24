@@ -13,11 +13,11 @@ import tech.mmarca.openwatch.wear.ActivityActions
 import tech.mmarca.openwatch.wear.WearRoutes
 
 /**
- * The watch's settings, `settings`, which the dashboard opens, and the two
- * screens they lead to: the phone, `phone`, and the sensor access,
- * `sensors`, which leads on to the link and recorder status. What only the
- * activity can do (ask for the grants, open the Bluetooth settings) comes in
- * [actions].
+ * The watch's settings, `settings`, which the dashboard opens, and the
+ * screens they lead to: the phone, `phone`, the sensor access, `sensors`,
+ * which leads on to the link and recorder status, and the recording
+ * settings, `recording_settings`. What only the activity can do (ask for the
+ * grants, open the Bluetooth settings) comes in [actions].
  */
 internal fun NavGraphBuilder.settingsDestinations(navController: NavHostController, actions: ActivityActions) {
     composable(WearRoutes.SETTINGS) {
@@ -27,9 +27,11 @@ internal fun NavGraphBuilder.settingsDestinations(navController: NavHostControll
             state = state,
             onPhoneClick = { navController.navigate(WearRoutes.PHONE) { launchSingleTop = true } },
             onSensorAccessClick = { navController.navigate(WearRoutes.SENSORS) { launchSingleTop = true } },
+            onRecordingClick = { navController.navigate(WearRoutes.RECORDING_SETTINGS) { launchSingleTop = true } },
             onUnitSystemChange = viewModel::setUnitSystem,
         )
     }
+    composable(WearRoutes.RECORDING_SETTINGS) { RecordingSettingsRoute() }
     composable(WearRoutes.PHONE) {
         val viewModel = settingsViewModel()
         val state by viewModel.state.collectAsStateWithLifecycle()

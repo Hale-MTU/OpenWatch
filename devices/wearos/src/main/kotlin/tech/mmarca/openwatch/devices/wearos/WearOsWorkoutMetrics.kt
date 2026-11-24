@@ -60,16 +60,23 @@ internal object WearOsWorkoutMetrics {
 
     /**
      * One line of plain figures for the session's notes, the way another app shows a session's
-     * text: the mean and highest heart rate, the minutes per zone (zone 1 first) and the TRIMP.
-     * Null with nothing to say.
+     * text: the mean and highest heart rate, the minutes per zone (zone 1 first), the TRIMP and
+     * the heart rate's fall after the stop. Null with nothing to say.
      */
     fun notes(summary: WorkoutMetrics.Summary): String? {
         val parts = buildList {
             if (summary.averageBpm != null && summary.maxBpm != null) add("Heart rate avg ${summary.averageBpm}, max ${summary.maxBpm} bpm")
             if (summary.zoneSeconds.any { it > 0 }) add("Zones (min) " + summary.zoneSeconds.joinToString("/") { (it / SECONDS_PER_MINUTE).toString() })
             summary.trimp?.let { add("TRIMP ${it.roundToInt()}") }
+            recoveryNote(summary.recovery)?.let(::add)
         }
         return parts.takeIf { it.isNotEmpty() }?.joinToString(". ")
+    }
+
+    private fun recoveryNote(recovery: WorkoutMetrics.Recovery?): String? {
+        val one = recovery?.oneMinuteBpm ?: return null
+        val two = recovery.twoMinutesBpm
+        return if (two == null) "Recovery 1 min $one bpm" else "Recovery 1 min $one, 2 min $two bpm"
     }
 
     /** The workout's VO2max at its end, when the figures hold one in Health Connect's range; [granted] must hold its write grant. */

@@ -12,6 +12,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.TransformingLazyColumn
+import androidx.wear.compose.foundation.lazy.TransformingLazyColumnScope
 import androidx.wear.compose.foundation.lazy.rememberTransformingLazyColumnState
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.EdgeButton
@@ -23,6 +24,7 @@ import androidx.wear.compose.material3.Text
 import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.MetricTile
+import tech.mmarca.openwatch.wear.features.metric.HeartZoneDisplay
 import tech.mmarca.openwatch.wear.ui.components.MetricValueRow
 import tech.mmarca.openwatch.wear.ui.components.formatCount
 import tech.mmarca.openwatch.wear.ui.components.formatMetricValue
@@ -31,10 +33,15 @@ import tech.mmarca.openwatch.wear.ui.preview.SampleData
 import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 import tech.mmarca.openwatch.wear.ui.theme.WorkoutColor
+import tech.mmarca.openwatch.wearlink.WorkoutMetrics
+import kotlin.math.roundToInt
 
 /**
  * What a finished, saved workout came to. Rows the workout did not report are
- * left out; pace and speed are the workout's average.
+ * left out; pace and speed are the workout's average. Below them the
+ * workout's [figures], the same the phone writes to Health Connect
+ * ([WorkoutMetrics]; null until read), and the heart rate's [recovery]
+ * after the stop where it was measured.
  */
 @Composable
 fun WorkoutSummaryScreen(
@@ -42,6 +49,8 @@ fun WorkoutSummaryScreen(
     fields: Set<WorkoutField>,
     unitSystem: UnitSystem,
     onDone: () -> Unit,
+    figures: WorkoutMetrics.Summary? = null,
+    recovery: WorkoutMetrics.Recovery? = null,
 ) {
     val listState = rememberTransformingLazyColumnState()
 
@@ -131,7 +140,64 @@ fun WorkoutSummaryScreen(
                     )
                 }
             }
+            if (figures != null) figureRows(figures, unitSystem)
+            if (recovery != null) recoveryRows(recovery)
         }
+    }
+}
+
+/**
+ * The workout's figures: the highest heart rate, the time in each zone (when any counted),
+ * the training load, the energy above rest (else the whole), the kilometre splits and the
+ * VO2max, each where it has a value. The pace is the recorded rows' already.
+ */
+private fun TransformingLazyColumnScope.figureRows(figures: WorkoutMetrics.Summary, unitSystem: UnitSystem) {
+    figures.maxBpm?.let { bpm ->
+        item { SummaryRow(stringResource(R.string.summary_max_heart_rate), formatCount(bpm), stringResource(R.string.unit_bpm)) }
+    }
+    if (figures.zoneSeconds.any { it > 0 }) {
+        figures.zoneSeconds.forEachIndexed { zone, seconds ->
+            item {
+                SummaryRow(
+                    label = stringResource(R.string.zone_label, zone + 1, stringResource(HeartZoneDisplay.labels[zone])),
+                    value = DateUtils.formatElapsedTime(seconds),
+                )
+            }
+        }
+    }
+    figures.trimp?.let { trimp -> item { SummaryRow(stringResource(R.string.summary_trimp), formatCount(trimp.roundToInt())) } }
+    val active = figures.activeKcal
+    val energy = active ?: figures.totalKcal
+    if (energy != null) {
+        item {
+            SummaryRow(
+                label = stringResource(if (active != null) R.string.summary_active_energy else R.string.summary_total_energy),
+                value = formatCount(energy.roundToInt()),
+                unit = stringResource(R.string.unit_kcal),
+            )
+        }
+    }
+    for (split in figures.splits) {
+        item { SummaryRow(stringResource(R.string.summary_split, split.index + 1), DateUtils.formatElapsedTime(split.activeSeconds)) }
+    }
+    figures.vo2Max?.let { vo2 ->
+        item {
+            SummaryRow(
+                label = stringResource(R.string.metric_vo2_max),
+                value = formatMetricValue(MetricTile.VO2_MAX, vo2, unitSystem),
+                unit = stringResource(metricUnitLabel(MetricTile.VO2_MAX, unitSystem)),
+            )
+        }
+    }
+}
+
+/** How far the heart rate fell one and two minutes after the stop. */
+private fun TransformingLazyColumnScope.recoveryRows(recovery: WorkoutMetrics.Recovery) {
+    recovery.oneMinuteBpm?.let { fall ->
+        item { SummaryRow(stringResource(R.string.recovery_one_minute), "−${formatCount(fall)}", stringResource(R.string.unit_bpm)) }
+    }
+    recovery.twoMinutesBpm?.let { fall ->
+        item { SummaryRow(stringResource(R.string.recovery_two_minutes), "−${formatCount(fall)}", stringResource(R.string.unit_bpm)) }
     }
 }
 
@@ -159,6 +225,13 @@ private fun WorkoutSummaryScreenPreview() {
                 fields = SampleData.workoutFields.getValue(ActivityType.RUN),
                 unitSystem = UnitSystem.METRIC,
                 onDone = {},
+                figures = WorkoutMetrics.Summary(
+                    averageBpm = 148, maxBpm = 171, zoneSeconds = listOf(120L, 480L, 900L, 300L, 0L), trimp = 61.4,
+                    activeKcal = 312.0, totalKcal = 371.0,
+                    splits = listOf(WorkoutMetrics.Split(0, 0, 330_000, 330), WorkoutMetrics.Split(1, 330_000, 655_000, 325)),
+                    paceSecondsPerKm = 327.0, vo2Max = 47.8,
+                ),
+                recovery = WorkoutMetrics.Recovery(oneMinuteBpm = 27, twoMinutesBpm = 44),
             )
         }
     }

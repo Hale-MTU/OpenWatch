@@ -308,4 +308,22 @@
     <string name="metric_height">Height</string>
     <string name="unit_cm">cm</string>
     <string name="unit_inch">in</string>
+    <string name="recovery_ask">Measure heart rate recovery?</string>
+    <string name="recovery_instruction">Keep walking slowly for two minutes.</string>
+    <string name="recovery_title">Recovery</string>
+    <string name="summary_max_heart_rate">Max heart rate</string>
+    <string name="summary_trimp">Training load (TRIMP)</string>
+    <string name="summary_active_energy">Active energy</string>
+    <string name="summary_total_energy">Energy</string>
+    <string name="summary_split">Km %1$d</string>
+    <string name="recovery_one_minute">Recovery after 1 min</string>
+    <string name="recovery_two_minutes">Recovery after 2 min</string>
+    <string name="settings_recording">Recording</string>
+    <string name="settings_recording_description">Power save, sleep, sources</string>
+    <string name="settings_heart_rate_every_10_seconds_explained">A heart rate every 10 seconds all day, in batches that wake the watch about every 40 seconds: the day\'s curve, the zones and the sleep minutes are whole.</string>
+    <string name="settings_sleep_hold_explained">How a sleep hold keeps every minute: a wake lock keeps the watch awake; synced wake-ups let it sleep between the heart rate sensor\'s wake-ups and empty every sensor then, with the heart rate from the sensor only.</string>
+    <string name="settings_heart_rate_source_explained">Sensor: the watch\'s own heart rate, live. Samsung: the platform\'s value, handed over in batches up to 10 minutes late with the screen off. A workout uses the sensor either way.</string>
+    <string name="settings_hrv_source_explained">Sensor: HRV from the raw pulse signal, every interval. Samsung: the platform\'s beat intervals; today about 60 % of them get lost, so fewer nights have a value.</string>
+    <string name="settings_skin_explained">Skin temperature at the wrist while you sleep, a reading a minute from the Samsung platform. Little power; nothing else changes.</string>
+    <string name="settings_spo2_explained">Blood oxygen at most once an hour while you sleep, about 15 s of red light. A few mAh a night; skipped when the arm moves.</string>
 </resources>

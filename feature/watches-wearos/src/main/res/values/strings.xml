@@ -31,4 +31,8 @@
     <string name="watch_settings_skin">Skin temperature at night</string>
     <string name="watch_settings_spo2">SpO2 hourly at night</string>
     <string name="watch_settings_allow_on_watch">Allow it on the watch: open OpenWatch there and switch it on once.</string>
+    <string name="watch_settings_hr_source_explained">Off: the watch\'s own sensor, live. On: the platform\'s value, handed over in batches up to 10 minutes late with the screen off. A workout uses the sensor either way.</string>
+    <string name="watch_settings_hrv_source_explained">Off: HRV from the raw pulse signal, every interval. On: the platform\'s beat intervals; today about 60 % of them get lost, so fewer nights have a value.</string>
+    <string name="watch_settings_skin_explained">Skin temperature at the wrist while you sleep, a reading a minute. Little power; nothing else changes.</string>
+    <string name="watch_settings_spo2_explained">Blood oxygen at most once an hour while you sleep, about 15 s of red light. A few mAh a night; skipped when the arm moves.</string>
 </resources>

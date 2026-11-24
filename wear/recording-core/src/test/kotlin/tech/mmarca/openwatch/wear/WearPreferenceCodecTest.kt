@@ -4,6 +4,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 import tech.mmarca.healthcalculations.insights.HeartRateZones
+import tech.mmarca.healthcalculations.preferences.BiologicalSex
+import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
 
 class WearPreferenceCodecTest {
@@ -24,7 +26,9 @@ class WearPreferenceCodecTest {
         assertEquals(
             mapOf(
                 "hr_day" to "10", "hr_source" to "sensor", "hrv_source" to "sensor", "sleep_hold" to "lock",
-                "skin" to "0", "spo2" to "0", "hr_max" to "0", "hr_rest" to "0", "samsung" to "1", "skin_granted" to "1", "spo2_granted" to "0",
+                "skin" to "0", "spo2" to "0", "hr_max" to "0", "hr_rest" to "0",
+                "body_hg" to "0", "body_cm" to "0", "birth_year" to "0", "sex" to "0",
+                "samsung" to "1", "skin_granted" to "1", "spo2_granted" to "0",
             ),
             WearPreferenceCodec.encode(defaults, samsung),
         )
@@ -58,6 +62,25 @@ class WearPreferenceCodecTest {
         assertEquals(52, WearPreferenceCodec.apply(defaults, pixel, "hr_rest", "52")!!.restingHeartRate)
         assertNull(WearPreferenceCodec.apply(defaults, pixel, "hr_max", "40"))
         assertNull(WearPreferenceCodec.apply(defaults, pixel, "hr_rest", "x"))
+    }
+
+    @Test
+    fun `the profile takes whole numbers in range and a sex token, 0 clears it, and it is the figures' body`() {
+        var p = defaults
+        for ((key, value) in listOf("body_hg", "702", "body_cm", "178", "birth_year", "1990", "sex", "f").chunked(2).map { it[0] to it[1] }) {
+            p = WearPreferenceCodec.apply(p, pixel, key, value)!!
+            assertEquals(value, WearPreferenceCodec.encode(p, pixel)[key])
+        }
+
+        assertEquals(BodyProfile(birthYear = 1990, weightKg = 70.2, heightCm = 178.0, sex = BiologicalSex.FEMALE), p.bodyProfile())
+        assertEquals(null, WearPreferenceCodec.apply(p, pixel, "body_hg", "0")!!.weightHectograms)
+        assertEquals(null, WearPreferenceCodec.apply(p, pixel, "sex", "0")!!.sex)
+        assertEquals(BiologicalSex.MALE, WearPreferenceCodec.apply(p, pixel, "sex", "m")!!.sex)
+        assertNull(WearPreferenceCodec.apply(p, pixel, "body_hg", "150"))
+        assertNull(WearPreferenceCodec.apply(p, pixel, "body_cm", "300"))
+        assertNull(WearPreferenceCodec.apply(p, pixel, "birth_year", "1850"))
+        assertNull(WearPreferenceCodec.apply(p, pixel, "sex", "x"))
+        assertEquals(BodyProfile(), defaults.bodyProfile())
     }
 
     @Test

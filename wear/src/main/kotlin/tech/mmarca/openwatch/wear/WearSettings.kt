@@ -8,6 +8,7 @@ import androidx.core.content.edit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import tech.mmarca.healthcalculations.preferences.BiologicalSex
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
 
 /**
@@ -45,6 +46,14 @@ internal object WearSettings {
     private const val KEY_SPO2 = "spo2_at_night"
     private const val KEY_MAX_HEART_RATE = "max_heart_rate"
     private const val KEY_RESTING_HEART_RATE = "resting_heart_rate"
+
+    /** The body profile the phone sent: the weight in 100 g, the height in cm, the birth year, `0` for none; the sex `f` or `m`, absent for none. */
+    private const val KEY_WEIGHT_HG = "body_weight_hg"
+    private const val KEY_HEIGHT_CM = "body_height_cm"
+    private const val KEY_BIRTH_YEAR = "birth_year"
+    private const val KEY_SEX = "sex"
+    private const val SEX_FEMALE = "f"
+    private const val SEX_MALE = "m"
 
     /** A [UnitSystem] name; written only when the wearer chooses. */
     private const val KEY_UNIT_SYSTEM = "unit_system"
@@ -152,6 +161,14 @@ internal object WearSettings {
         maxHeartRate = maxHeartRate(context),
         restingHeartRate = restingHeartRate(context),
         unitSystem = unitSystem(context),
+        weightHectograms = positive(context, KEY_WEIGHT_HG),
+        heightCm = positive(context, KEY_HEIGHT_CM),
+        birthYear = positive(context, KEY_BIRTH_YEAR),
+        sex = when (prefs(context).getString(KEY_SEX, null)) {
+            SEX_FEMALE -> BiologicalSex.FEMALE
+            SEX_MALE -> BiologicalSex.MALE
+            else -> null
+        },
     )
 
     /**
@@ -169,10 +186,22 @@ internal object WearSettings {
         prefs(context).edit()
             .putInt(KEY_MAX_HEART_RATE, preferences.maxHeartRate ?: 0)
             .putInt(KEY_RESTING_HEART_RATE, preferences.restingHeartRate ?: 0)
+            .putInt(KEY_WEIGHT_HG, preferences.weightHectograms ?: 0)
+            .putInt(KEY_HEIGHT_CM, preferences.heightCm ?: 0)
+            .putInt(KEY_BIRTH_YEAR, preferences.birthYear ?: 0)
+            .apply {
+                when (preferences.sex) {
+                    BiologicalSex.FEMALE -> putString(KEY_SEX, SEX_FEMALE)
+                    BiologicalSex.MALE -> putString(KEY_SEX, SEX_MALE)
+                    null -> remove(KEY_SEX)
+                }
+            }
             .apply()
         // Like the sleep hold, kept only once chosen: a write of the other settings leaves it unset.
         if (preferences.unitSystem != unitSystem(context)) setUnitSystem(context, preferences.unitSystem)
     }
+
+    private fun positive(context: Context, key: String): Int? = prefs(context).getInt(key, 0).takeIf { it > 0 }
 
     private fun source(context: Context, key: String): Source {
         val stored = prefs(context).getString(key, null)

@@ -14,7 +14,10 @@ import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowPowerManager
 import org.robolectric.shadows.ShadowSystemClock
 import tech.mmarca.openwatch.wear.DebugProtocol
+import tech.mmarca.openwatch.wear.MeasurementSource
 import tech.mmarca.openwatch.wear.MetricStore
+import tech.mmarca.openwatch.wear.WatchPreferences
+import tech.mmarca.openwatch.wearlink.HeartRateInterval
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
 /** The wake lock a running workout holds: the app's tag, and a timeout the recorder's tick renews. */
@@ -23,7 +26,15 @@ class WorkoutRecorderWakeLockTest {
 
     private val app: Application = ApplicationProvider.getApplicationContext()
     private val store = MetricStore(app, name = null)
-    private val recorder = WorkoutRecorder(app, store, WorkoutState(), DebugProtocol.off()) {}
+    private val settings = WatchPreferences(
+        heartRateDay = HeartRateInterval.EVERY_10_SECONDS,
+        heartRateSource = MeasurementSource.RAW_SENSOR,
+        hrvSource = MeasurementSource.RAW_SENSOR,
+        syncedSleepHold = false,
+        skinTemperature = false,
+        spo2AtNight = false,
+    )
+    private val recorder = WorkoutRecorder(app, store, WorkoutState(), DebugProtocol.off(), settings = { settings }) {}
 
     @After
     fun tearDown() {

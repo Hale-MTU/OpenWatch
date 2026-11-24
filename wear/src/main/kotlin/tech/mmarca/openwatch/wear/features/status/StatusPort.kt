@@ -6,26 +6,21 @@ import tech.mmarca.openwatch.wear.PendingPhone
 import tech.mmarca.openwatch.wear.SamsungDiagnostics
 import tech.mmarca.openwatch.wear.StepRecorder
 import tech.mmarca.openwatch.wear.SyncRetention
-import tech.mmarca.openwatch.wear.WatchPreferences
 import tech.mmarca.openwatch.wear.WearAppService
 import tech.mmarca.openwatch.wear.WearGraph
 import tech.mmarca.openwatch.wear.WearMetrics
 import tech.mmarca.openwatch.wear.WearPermissions
-import tech.mmarca.openwatch.wear.WearSettings
 import tech.mmarca.openwatch.wear.samsung.SamsungHealthPlatform
 
 /**
  * What the status screen reads and changes, apart from the screen: the
- * store, the grants, the settings and the trust store on the watch
- * ([GraphStatusPort]), a fake in a test. Every call blocks; the ViewModel
- * makes them off the main thread.
+ * store, the grants and the trust store on the watch ([GraphStatusPort]), a
+ * fake in a test. Every call blocks; the ViewModel makes them off the main
+ * thread.
  */
 internal interface StatusPort {
     /** The store's counts, the grants and the system settings now; null when the store cannot be read. */
     fun read(): StatusReadings?
-
-    /** Applies [change] to the stored settings and tells the running service. */
-    fun changeSettings(change: (WatchPreferences) -> WatchPreferences)
 
     fun allow(phone: PendingPhone)
 
@@ -70,10 +65,6 @@ internal class GraphStatusPort(private val context: Context, private val graph: 
         }
     }
 
-    override fun changeSettings(change: (WatchPreferences) -> WatchPreferences) {
-        WearSettings.write(context, change(WearSettings.read(context)))
-        WearAppService.settingsChanged(context)
-    }
 
     override fun allow(phone: PendingPhone) {
         graph.trust.trust(phone.address, phone.token, phone.name)

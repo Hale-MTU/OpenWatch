@@ -16,11 +16,11 @@ What a watch sync writes: `WRITE_STEPS`, `WRITE_DISTANCE`, `WRITE_EXERCISE`,
 `WRITE_VO2_MAX`, `WRITE_SLEEP`. Steps cadence falls under `WRITE_STEPS` and cycling cadence under `WRITE_EXERCISE`:
 Health Connect has no separate cadence permission.
 
-Three of these are written only for a watch that measures them and only when the user
-switched the option on: `WRITE_RESPIRATORY_RATE` from a Wear OS watch (the "Breathing rate from
-the watch" switch in Settings), and `WRITE_OXYGEN_SATURATION` and `WRITE_SKIN_TEMPERATURE` from a Samsung
+Three of these are written only for a watch that measures them and only while their option is
+on: `WRITE_RESPIRATORY_RATE` from a Wear OS watch (the "Breathing rate from the watch" switch in
+Settings, on by default), and `WRITE_OXYGEN_SATURATION` and `WRITE_SKIN_TEMPERATURE` from a Samsung
 watch (the "SpO2 hourly at night" and "Skin temperature at night" switches on the watch's
-settings card).
+settings card, off until the user switches them on).
 Skin temperature is one record per night, the difference from the wearer's own usual night.
 A Garmin watch's oxygen saturation and respiratory rate come with its files.
 

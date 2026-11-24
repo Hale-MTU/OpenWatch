@@ -15,6 +15,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
 import org.robolectric.shadows.ShadowSensor
+import tech.mmarca.healthcalculations.preferences.BiologicalSex
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
 
 /** The sleep hold's default, and what counts as a choice that outlives it. */
@@ -50,6 +51,23 @@ class WearSettingsTest {
         assertEquals("lock", prefs.getString("sleep_hold_choice", null))
         assertFalse(WearSettings.syncedSleepHold(context))
         assertFalse("an older build reads the same hold", prefs.getBoolean("synced_sleep_hold", true))
+    }
+
+    @Test
+    fun `the phone's body profile is kept under its own keys, and none clears it`() {
+        val profile = WearSettings.read(context).copy(weightHectograms = 702, heightCm = 178, birthYear = 1990, sex = BiologicalSex.FEMALE)
+
+        WearSettings.write(context, profile)
+
+        assertEquals(702, prefs.getInt("body_weight_hg", 0))
+        assertEquals(178, prefs.getInt("body_height_cm", 0))
+        assertEquals(1990, prefs.getInt("birth_year", 0))
+        assertEquals("f", prefs.getString("sex", null))
+        assertEquals(profile, WearSettings.read(context))
+
+        WearSettings.write(context, profile.copy(weightHectograms = null, sex = null))
+        assertNull(WearSettings.read(context).weightHectograms)
+        assertNull(prefs.getString("sex", null))
     }
 
     @Test

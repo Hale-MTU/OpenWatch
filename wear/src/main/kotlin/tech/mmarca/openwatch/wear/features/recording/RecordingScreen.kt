@@ -90,18 +90,20 @@ internal fun workoutPagesOf(fields: Set<WorkoutField>): List<WorkoutPage> = buil
 
 /**
  * What the running workout's screen keeps while it is not drawn: the page
- * the wearer is on, and an open "End workout?". `RunningWorkout` takes the
- * screen out of composition in ambient mode, so its caller remembers this
- * above it ([rememberRecordingScreenState]) and both are there again when the
- * watch wakes.
+ * the wearer is on, and an open "End workout?" or "Measure heart rate
+ * recovery?". `RunningWorkout` takes the screen out of composition in
+ * ambient mode, so its caller remembers this above it
+ * ([rememberRecordingScreenState]) and all are there again when the watch wakes.
  */
 @Stable
 class RecordingScreenState internal constructor(
     internal val pages: List<WorkoutPage>,
     internal val pagerState: PagerState,
     confirmStop: MutableState<Boolean>,
+    askRecovery: MutableState<Boolean>,
 ) {
     internal var confirmStop by confirmStop
+    internal var askRecovery by askRecovery
 }
 
 /** The screen state of a workout that reports [fields], opened on the overview. */
@@ -110,7 +112,8 @@ fun rememberRecordingScreenState(fields: Set<WorkoutField>): RecordingScreenStat
     val pages = remember(fields) { workoutPagesOf(fields) }
     val pagerState = rememberPagerState(initialPage = pages.indexOf(WorkoutPage.OVERVIEW)) { pages.size }
     val confirmStop = rememberSaveable { mutableStateOf(false) }
-    return remember(pages, pagerState, confirmStop) { RecordingScreenState(pages, pagerState, confirmStop) }
+    val askRecovery = rememberSaveable { mutableStateOf(false) }
+    return remember(pages, pagerState, confirmStop, askRecovery) { RecordingScreenState(pages, pagerState, confirmStop, askRecovery) }
 }
 
 /**
@@ -118,7 +121,8 @@ fun rememberRecordingScreenState(fields: Set<WorkoutField>): RecordingScreenStat
  * the middle, controls one swipe to the left, heart rate zones and pace to
  * the right. Only pages and values the workout reports in [fields] are shown.
  * The zones are those of [zoneBasis], the maximum and resting rate the phone
- * sent; without one (the settings are still being read) no zone is drawn. The
+ * sent; without one no zone is drawn. Stop asks "End workout?", then whether
+ * to measure the heart rate recovery, and [onStop] is told the answer. The
  * screen is not held on: in ambient mode `RunningWorkout` draws its
  * own dim layout instead of this one, and [screenState] is what this one
  * finds again afterwards.
@@ -130,7 +134,7 @@ fun RecordingScreen(
     unitSystem: UnitSystem,
     zoneBasis: HeartRateZones.Basis?,
     onTogglePause: () -> Unit,
-    onStop: () -> Unit,
+    onStop: (measureRecovery: Boolean) -> Unit,
     screenState: RecordingScreenState = rememberRecordingScreenState(fields),
 ) {
     val pages = screenState.pages
@@ -155,11 +159,29 @@ fun RecordingScreen(
             AlertDialogDefaults.ConfirmButton(
                 onClick = {
                     screenState.confirmStop = false
-                    onStop()
+                    screenState.askRecovery = true
                 },
             )
         },
         title = { Text(stringResource(R.string.recording_stop_confirm)) },
+    )
+    RecoveryQuestion(screenState, onStop)
+}
+
+/** After "End workout?": whether the heart rate recovery is measured. The workout ends either way, a swipe away too. */
+@Composable
+private fun RecoveryQuestion(screenState: RecordingScreenState, onStop: (measureRecovery: Boolean) -> Unit) {
+    val answer = { measure: Boolean ->
+        screenState.askRecovery = false
+        onStop(measure)
+    }
+    AlertDialog(
+        visible = screenState.askRecovery,
+        onDismissRequest = { answer(false) },
+        confirmButton = { AlertDialogDefaults.ConfirmButton(onClick = { answer(true) }) },
+        dismissButton = { AlertDialogDefaults.DismissButton(onClick = { answer(false) }) },
+        title = { Text(stringResource(R.string.recovery_ask)) },
+        text = { Text(stringResource(R.string.recovery_instruction)) },
     )
 }
 
@@ -409,7 +431,7 @@ private fun RecordingScreenPreview() {
                 unitSystem = UnitSystem.METRIC,
                 zoneBasis = HeartRateZones.Basis(maxBpm = 190),
                 onTogglePause = {},
-                onStop = {},
+                onStop = { _ -> },
             )
         }
     }
@@ -426,7 +448,7 @@ private fun RecordingScreenPausedPreview() {
                 unitSystem = UnitSystem.IMPERIAL,
                 zoneBasis = HeartRateZones.Basis(maxBpm = 190),
                 onTogglePause = {},
-                onStop = {},
+                onStop = { _ -> },
             )
         }
     }

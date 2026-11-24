@@ -45,6 +45,10 @@ class WearOsWorkoutMetricsTest {
     @Test
     fun `the notes name the figures`() {
         assertEquals("Heart rate avg 120, max 160 bpm. Zones (min) 10/20/30/0/0. TRIMP 85", WearOsWorkoutMetrics.notes(summary()))
+        assertEquals(
+            "Heart rate avg 120, max 160 bpm. Zones (min) 10/20/30/0/0. TRIMP 85. Recovery 1 min 25, 2 min 41 bpm",
+            WearOsWorkoutMetrics.notes(summary().copy(recovery = WorkoutMetrics.Recovery(25, 41))),
+        )
         val none = WorkoutMetrics.Summary(null, null, List(5) { 0L }, null, null, null, emptyList(), null, null)
         assertNull(WearOsWorkoutMetrics.notes(none))
     }
@@ -93,6 +97,38 @@ class WearOsWorkoutMetricsTest {
 
         assertEquals("neither the readings before the session nor another source's count", 140, summary.maxBpm)
         assertTrue("the zones rest on the age's maximum", summary.zoneSeconds.sum() > 0)
+    }
+
+    @Test
+    fun `a recovery is read only where the two minutes after the stop hold a reading a second`() = runTest {
+        val end = start.plusSeconds(300)
+        val session = heartRate(start, "wearos_hr_1", 300, bpm = 160)
+        // Two minutes after the stop: a second each, falling from 160 to 130 at one minute and 110 at two.
+        val after = HeartRateRecord(
+            startTime = end.plusSeconds(1),
+            startZoneOffset = null,
+            endTime = end.plusSeconds(125),
+            endZoneOffset = null,
+            samples = (1..125L).map { second -> HeartRateRecord.Sample(end.plusSeconds(second), if (second < 90) 130L else 110L) },
+            metadata = Metadata.autoRecorded(device = Device(type = Device.TYPE_WATCH), clientRecordId = "wearos_hr_2"),
+        )
+        fun figures(records: List<Record>) = WearOsWorkoutFigures(
+            mockk {
+                coEvery { readMaxHeartRate(any(), any()) } returns null
+                coEvery { forEachSyncRecordPage(HeartRateRecord::class, any(), any(), any()) } coAnswers {
+                    arg<suspend (List<Record>) -> Unit>(3).invoke(records)
+                }
+                coEvery { forEachSyncRecordPage(neq(HeartRateRecord::class), any(), any(), any()) } returns Unit
+            },
+            profile = { BodyProfile(birthYear = 1990) },
+            zone = { ZoneOffset.UTC },
+        )
+
+        val measured = figures(listOf(session, after)).summarize(workout.copy(end = end), salt = "")!!
+        val none = figures(listOf(session)).summarize(workout.copy(end = end), salt = "")!!
+
+        assertEquals(WorkoutMetrics.Recovery(oneMinuteBpm = 30, twoMinutesBpm = 50), measured.recovery)
+        assertNull(none.recovery)
     }
 
     @Test

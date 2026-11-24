@@ -2,12 +2,14 @@ package tech.mmarca.openwatch.wear.workout
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flow
@@ -20,6 +22,7 @@ import tech.mmarca.openwatch.wear.WatchSensors
 import tech.mmarca.openwatch.wear.WearAppService
 import tech.mmarca.openwatch.wear.WearPermissions
 import tech.mmarca.openwatch.wear.wearGraph
+import tech.mmarca.openwatch.wearlink.WorkoutMetrics
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
 /** What the workout screen asks of the recorder: `WearAppService` on the watch, a fake in a test. */
@@ -33,7 +36,8 @@ internal interface WorkoutControl {
 
     fun resume()
 
-    fun stop()
+    /** Ends the workout; with [measureRecovery] its heart rate recovery follows. */
+    fun stop(measureRecovery: Boolean)
 }
 
 /**
@@ -50,6 +54,9 @@ internal class WorkoutViewModel(
     scope: CoroutineScope,
     /** What the watch has to measure with (`WearGraph.sensors`), read once. */
     sensors: Flow<WatchSensors> = emptyFlow(),
+    /** A saved workout's figures by its start ([WorkoutFigures]); reads the store, so it runs on [io]. */
+    figuresOf: (Long) -> WorkoutMetrics.Summary? = { null },
+    io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel(scope) {
 
     val state: StateFlow<WorkoutUiState> = workout.state
@@ -67,6 +74,17 @@ internal class WorkoutViewModel(
      * it. Null until read, and the screen then shows every field the sport has.
      */
     val sensors: StateFlow<WatchSensors?> = sensors.stateIn(scope, SharingStarted.Eagerly, null)
+
+    /**
+     * The figures of the workout the summary shows: read once it is saved, off the main
+     * thread. Null while it runs, until they are read, and for one the store does not hold.
+     */
+    val figures: StateFlow<WorkoutMetrics.Summary?> = workout.state
+        .map { it.startMillis.takeIf { _ -> it.finished } }
+        .distinctUntilChanged()
+        .map { start -> start?.let(figuresOf) }
+        .flowOn(io)
+        .stateIn(scope, SharingStarted.Eagerly, null)
 
     /**
      * True when [sport] records a route on a watch with a GPS receiver and the
@@ -90,8 +108,9 @@ internal class WorkoutViewModel(
         if (snapshot.paused) control.resume() else control.pause()
     }
 
-    fun stop() {
-        if (workout.state.value.running) control.stop()
+    /** Ends the running workout; with [measureRecovery] its heart rate recovery follows. */
+    fun stop(measureRecovery: Boolean = false) {
+        if (workout.state.value.running) control.stop(measureRecovery)
     }
 
     /** The wearer closed the summary of a saved workout. */
@@ -109,6 +128,7 @@ internal class WorkoutViewModel(
                 CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
                 // So does the sensor list.
                 flow { emit(app.wearGraph.sensors) }.flowOn(Dispatchers.IO),
+                figuresOf = WorkoutFigures(app.wearGraph.store, settings = { app.wearGraph.settings.value })::of,
             )
         }
     }
@@ -124,5 +144,5 @@ private class ServiceWorkoutControl(private val context: Context) : WorkoutContr
 
     override fun resume() = WearAppService.resumeWorkout(context)
 
-    override fun stop() = WearAppService.stopWorkout(context)
+    override fun stop(measureRecovery: Boolean) = WearAppService.stopWorkout(context, measureRecovery)
 }

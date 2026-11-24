@@ -27,6 +27,12 @@ object RecorderPlan {
         /** The sleep recorder holds sleep ([SleepMinuteRecorder.isSleepHolding]), from bedtime mode or [SleepHold]. */
         val sleepHolding: Boolean,
         val workout: Boolean,
+        /**
+         * The two minutes of a heart rate recovery after a workout's stop: the heart rate
+         * stays as it was during the workout, live, so each of the recovery's marks has a
+         * reading within its seconds.
+         */
+        val recovering: Boolean = false,
     )
 
     data class Plan(
@@ -54,8 +60,9 @@ object RecorderPlan {
     fun decide(inputs: Inputs): Plan {
         val granted = inputs.heartRateGranted
         val settings = inputs.settings
-        // The sensor rests off the wrist, except for a workout, which records at the full rate.
-        val heartRate = if (granted && (inputs.worn || inputs.workout)) {
+        val active = inputs.workout || inputs.recovering
+        // The sensor rests off the wrist, except for a workout and its recovery, which record at the full rate.
+        val heartRate = if (granted && (inputs.worn || active)) {
             HeartRateSchedule.interval(
                 heartRate = true,
                 sleepRecording = true,
@@ -63,17 +70,17 @@ object RecorderPlan {
                 bedtime = inputs.bedtime || inputs.sleepHolding,
                 day = settings.heartRateDay,
                 night = settings.heartRateDay,
-                workout = inputs.workout,
+                workout = active,
             )
         } else {
             HeartRateInterval.OFF
         }
         // Skin temperature comes only from the Samsung platform, and only while sleep is held on the wrist.
         val night = granted && inputs.worn && inputs.sleepHolding
-        val live = heartRate != HeartRateInterval.OFF && inputs.workout
+        val live = heartRate != HeartRateInterval.OFF && active
         return Plan(
             heartRate = heartRate,
-            // A workout reads the sensor, whatever the source setting: only the sensor can be read live.
+            // A workout and its recovery read the sensor, whatever the source setting: only the sensor can be read live.
             heartRateSource = if (live) MeasurementSource.RAW_SENSOR else settings.heartRateSource,
             heartRateLive = live,
             steps = inputs.stepsGranted && inputs.hasStepCounter,

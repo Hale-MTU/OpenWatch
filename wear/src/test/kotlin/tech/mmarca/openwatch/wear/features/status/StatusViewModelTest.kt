@@ -7,7 +7,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -18,22 +17,17 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.mmarca.openwatch.wear.PendingPhone
-import tech.mmarca.openwatch.wear.WatchPreferences
 import tech.mmarca.openwatch.wear.WearLinkState
-import tech.mmarca.openwatch.wear.WearSettings
-import tech.mmarca.openwatch.wearlink.HeartRateInterval
 
 /**
  * The status screen's ViewModel: the store is read off the main thread, at
- * each tick and on a refresh; a setting the phone changes shows at once; and
- * every change goes to the port.
+ * each tick and on a refresh, and every change goes to the port.
  */
 class StatusViewModelTest {
 
     private val scope = CoroutineScope(Job() + Dispatchers.Unconfined)
     private val port = FakePort()
     private val linkState = WearLinkState()
-    private val settings = MutableStateFlow(SETTINGS)
     private val ticks = MutableSharedFlow<Unit>(extraBufferCapacity = 8)
     private var now = 1_000_000L
 
@@ -41,7 +35,7 @@ class StatusViewModelTest {
     fun tearDown() = scope.cancel()
 
     private fun viewModel(io: kotlinx.coroutines.CoroutineDispatcher = Dispatchers.Unconfined) =
-        StatusViewModel(port, linkState, settings, ticks, io, clock = { now }, scope = scope).also { vm ->
+        StatusViewModel(port, linkState, ticks, io, clock = { now }, scope = scope).also { vm ->
             // The screen collects the state while it is shown; so does the test.
             scope.launch { vm.state.collect {} }
         }
@@ -90,37 +84,6 @@ class StatusViewModelTest {
     }
 
     @Test
-    fun `a setting the phone changes shows at once`() {
-        val vm = viewModel()
-        assertEquals(HeartRateInterval.EVERY_10_SECONDS, vm.state.value.settings?.heartRateDay)
-
-        // What SET_PREF ends in: the stored settings change, and the flow follows.
-        settings.value = SETTINGS.copy(heartRateDay = HeartRateInterval.POWER_SAVE)
-
-        assertEquals(HeartRateInterval.POWER_SAVE, vm.state.value.settings?.heartRateDay)
-    }
-
-    @Test
-    fun `a button changes the stored settings through the port, from what is stored then`() {
-        val vm = viewModel()
-        port.stored = SETTINGS.copy(maxHeartRate = 182)
-
-        vm.setHeartRatePowerSave(true)
-        vm.setSyncedSleepHold(false)
-        vm.setHrvSource(WearSettings.Source.SAMSUNG_PLATFORM)
-
-        assertEquals(
-            SETTINGS.copy(
-                heartRateDay = HeartRateInterval.POWER_SAVE,
-                syncedSleepHold = false,
-                hrvSource = WearSettings.Source.SAMSUNG_PLATFORM,
-                maxHeartRate = 182,
-            ),
-            port.stored,
-        )
-    }
-
-    @Test
     fun `a request the wearer left unanswered goes at the next tick after it expired`() {
         val vm = viewModel()
         val phone = PendingPhone("AA:BB:CC:DD:EE:01", "token", "Pixel", sinceMillis = now)
@@ -159,7 +122,6 @@ class StatusViewModelTest {
         var failing = false
         var bpm = 64
         var stepsGranted = true
-        var stored = SETTINGS
         val trustCalls = mutableListOf<String>()
 
         override fun read(): StatusReadings? {
@@ -181,9 +143,6 @@ class StatusViewModelTest {
             )
         }
 
-        override fun changeSettings(change: (WatchPreferences) -> WatchPreferences) {
-            stored = change(stored)
-        }
 
         override fun allow(phone: PendingPhone) {
             trustCalls += "allow ${phone.address}"
@@ -194,16 +153,5 @@ class StatusViewModelTest {
         }
 
         override fun togglePpgLog() = Unit
-    }
-
-    private companion object {
-        val SETTINGS = WatchPreferences(
-            heartRateDay = HeartRateInterval.EVERY_10_SECONDS,
-            heartRateSource = WearSettings.Source.RAW_SENSOR,
-            hrvSource = WearSettings.Source.RAW_SENSOR,
-            syncedSleepHold = true,
-            skinTemperature = false,
-            spo2AtNight = false,
-        )
     }
 }

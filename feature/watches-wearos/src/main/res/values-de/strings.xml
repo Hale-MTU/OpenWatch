@@ -29,6 +29,10 @@
     <string name="watch_settings_skin">Hauttemperatur in der Nacht</string>
     <string name="watch_settings_spo2">SpO2 stündlich in der Nacht</string>
     <string name="watch_settings_allow_on_watch">Erlaube es auf der Uhr: Öffne dort OpenWatch und schalte es einmal ein.</string>
+    <string name="watch_settings_hr_source_explained">Aus: der eigene Sensor der Uhr, live. An: der Wert der Plattform, bei ausgeschaltetem Display bis zu 10 Minuten verzögert. Ein Training nutzt immer den Sensor.</string>
+    <string name="watch_settings_hrv_source_explained">Aus: HRV aus dem rohen Pulssignal, jeder Schlag. An: die Schlagabstände der Plattform; derzeit gehen davon etwa 60 % verloren, daher seltener ein Wert.</string>
+    <string name="watch_settings_skin_explained">Hauttemperatur am Handgelenk im Schlaf, ein Wert pro Minute. Wenig Strom, sonst keine Änderung.</string>
+    <string name="watch_settings_spo2_explained">Blutsauerstoff höchstens einmal pro Stunde im Schlaf, etwa 15 s Rotlicht. Wenige mAh pro Nacht; entfällt, wenn sich der Arm bewegt.</string>
     <string name="settings_watch_wearos_companion_missing">Android hat diese Uhr nicht mit OpenWatch verknüpft. Ohne die Verknüpfung kann OpenWatch keine Workouts aufzeichnen, die eine andere App auf der Uhr startet.</string>
     <string name="settings_watch_wearos_companion_link">Uhr verknüpfen</string>
 </resources>

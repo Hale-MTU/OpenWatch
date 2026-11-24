@@ -43,7 +43,9 @@ import tech.mmarca.openwatch.wearlink.WorkoutSport
  * recording itself runs in `WearAppService` ([WorkoutRecorder]); this screen
  * shows [WorkoutState] through its [WorkoutViewModel] and sends it actions. A
  * sport with a route asks for location first, on a watch with a GPS receiver,
- * and records without a route when it is refused. The values shown are the
+ * and records without a route when it is refused. After the stop, the heart
+ * rate recovery's two minutes where the wearer asked for them
+ * ([RecoveryScreen]), then the summary with the workout's figures. The values shown are the
  * ones the watch's sensors give ([workoutFieldsOf]). While a workout runs the screen stays on in ambient mode
  * with a dim layout of its own ([RunningWorkout]). Distances and speeds are
  * shown in [unitSystem], the one chosen in the watch's settings.
@@ -55,6 +57,7 @@ internal fun WorkoutScreen(unitSystem: UnitSystem, onClose: () -> Unit) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val zoneBasis by viewModel.zoneBasis.collectAsStateWithLifecycle()
     val sensors by viewModel.sensors.collectAsStateWithLifecycle()
+    val figures by viewModel.figures.collectAsStateWithLifecycle()
     var pending by rememberSaveable { mutableStateOf<String?>(null) }
     val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         val sport = WorkoutSport.fromId(pending) ?: return@rememberLauncherForActivityResult
@@ -81,6 +84,7 @@ internal fun WorkoutScreen(unitSystem: UnitSystem, onClose: () -> Unit) {
                 )
             }
         }
+        state.finished && state.recovery?.measuring == true -> state.recovery?.let { RecoveryScreen(it) }
         state.finished && sport != null && snapshot != null -> WorkoutSummaryScreen(
             state = snapshot.toRecordingState(sport, sportName(sport)),
             fields = workoutFieldsOf(sport, state.gps, sensors),
@@ -89,6 +93,8 @@ internal fun WorkoutScreen(unitSystem: UnitSystem, onClose: () -> Unit) {
                 viewModel.closeSummary()
                 onClose()
             },
+            figures = figures,
+            recovery = state.recovery?.falls,
         )
         else -> SportPicker(
             onPick = { choice ->

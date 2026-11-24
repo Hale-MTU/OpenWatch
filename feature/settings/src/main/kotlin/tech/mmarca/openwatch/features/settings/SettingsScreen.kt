@@ -65,6 +65,7 @@ fun SettingsRoute(
         onOpenConnectedApps = onOpenConnectedApps,
         onSyncEnabledChange = viewModel::setSyncEnabled,
         onWriteRespiratoryRateChange = viewModel::setWriteRespiratoryRate,
+        onWriteSleepBesideOthersChange = viewModel::setWriteSleepBesideOthers,
         onOpenNotificationAccess = {
             if (state.notificationAccessGranted) {
                 context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
@@ -105,6 +106,7 @@ fun SettingsScreen(
     onOpenConnectedApps: () -> Unit,
     onSyncEnabledChange: (Boolean) -> Unit,
     onWriteRespiratoryRateChange: (Boolean) -> Unit,
+    onWriteSleepBesideOthersChange: (Boolean) -> Unit,
     onOpenNotificationAccess: () -> Unit,
     onOpenHealthData: () -> Unit,
     onOpenPrivacyPolicy: () -> Unit,
@@ -136,6 +138,13 @@ fun SettingsScreen(
             body = stringResource(R.string.settings_respiratory_rate_body),
             checked = state.writeRespiratoryRate,
             onCheckedChange = onWriteRespiratoryRateChange,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        SwitchCard(
+            title = stringResource(R.string.settings_sleep_beside_others_title),
+            body = stringResource(R.string.settings_sleep_beside_others_body),
+            checked = state.writeSleepBesideOthers,
+            onCheckedChange = onWriteSleepBesideOthersChange,
             modifier = Modifier.fillMaxWidth(),
         )
         SettingsRow(
@@ -194,6 +203,7 @@ private fun SettingsScreenPreview() {
             onOpenConnectedApps = {},
             onSyncEnabledChange = {},
             onWriteRespiratoryRateChange = {},
+            onWriteSleepBesideOthersChange = {},
             onOpenNotificationAccess = {},
             onOpenHealthData = {},
             onOpenPrivacyPolicy = {},

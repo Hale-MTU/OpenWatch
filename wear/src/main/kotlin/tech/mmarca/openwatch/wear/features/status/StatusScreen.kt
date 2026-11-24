@@ -55,7 +55,8 @@ internal class StatusActions(
 
 /**
  * The status screen: what the watch records, whether the phone can reach
- * it, the watch's settings, and the phones that may connect. Its
+ * it, and the phones that may connect; the recording settings are Settings'
+ * own screen (`RecordingSettingsScreen`). Its
  * [StatusViewModel] reads the store off the main thread while the screen is
  * shown, and again each time it comes back, which also catches a grant made
  * in the system settings.
@@ -79,12 +80,12 @@ internal fun StatusScreen(
         onOpenBluetoothSettings = onOpenBluetoothSettings,
         onTogglePpgLog = viewModel::togglePpgLog,
     )
-    StatusContent(state, actions, rememberStatusSettingsActions(viewModel))
+    StatusContent(state, actions)
 }
 
 /** The status screen for [state]; stateless, so a preview draws it too. */
 @Composable
-internal fun StatusContent(state: StatusUiState, actions: StatusActions, settingsActions: StatusSettingsActions) {
+internal fun StatusContent(state: StatusUiState, actions: StatusActions) {
     val listState = rememberTransformingLazyColumnState()
     val spec = rememberTransformationSpec()
     val readings = state.readings
@@ -99,7 +100,7 @@ internal fun StatusContent(state: StatusUiState, actions: StatusActions, setting
                 item { StatusLine(stringResource(if (on) R.string.status_samsung_diagnostics_on else R.string.status_samsung_diagnostics_off)) }
             }
 
-            state.settings?.let { settings -> settingsItems(settings, samsung = readings?.samsungPlatform == true, spec, settingsActions) }
+
             phoneItems(state.link, spec, actions.onAllow, actions.onBlock, actions.onOpenBluetoothSettings)
             if (state.link.ppgLogging) item { StatusLine(stringResource(R.string.status_ppg_logging)) }
         }
@@ -245,7 +246,6 @@ private fun StatusContentPreview() {
                     link = WearLinkUiState(listening = true),
                 ),
                 actions = StatusActions({}, {}, {}, {}, {}),
-                settingsActions = StatusSettingsActions({}, {}, {}, {}, {}, {}),
             )
         }
     }

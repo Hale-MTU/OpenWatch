@@ -14,9 +14,9 @@ import tech.mmarca.healthcalculations.signal.PpgBeats
 
 /**
  * What one night window gave: its RMSSD and its breathing rate, either may
- * be missing. [breathingRoutes] counts the routes that agreed on the rate:
- * two for the raw PPG (beat intervals and signal baseline), one for a source
- * that reports only intervals.
+ * be missing. [breathingRoutes] counts the routes the rate rests on: two for
+ * the raw PPG when its beat intervals and signal baseline agree, one when only
+ * one of them had a clear peak, and one for a source that reports only intervals.
  */
 internal class NightWindowResult(
     val hrv: HrvWindowResult?,
@@ -130,7 +130,8 @@ internal class PpgWindowSource(
             "rrSignal" to breathing.fromSignal?.breathsPerMinute, "rrSignalShare" to breathing.fromSignal?.peakShare,
             "rr" to breathing.value,
         )
-        onResult(NightWindowResult(result, breathing.value, if (breathing.value != null) 2 else 0))
+        // Both routes when they agree, one alone when only it found a clear peak (health-calculations' RespiratoryRate.Window).
+        onResult(NightWindowResult(result, breathing.value, breathing.routes))
     }
 
     override fun cancel() {

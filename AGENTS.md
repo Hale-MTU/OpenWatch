@@ -73,7 +73,7 @@ cannot be edited here, nor the reverse. Both apps may be installed side by side.
 - `devices/wearos` (`:devices:wearos`) — the phone side of the watch app, a device module: the
   RFCOMM link and its session cache, the series sync and its Health Connect mapping, the
   onboarding, the family, the link states' strings, and `WearOsModule`, which binds its family,
-  sync port and node port. The one preference it reads is its own contract
+  sync port and node port. The preferences it reads are its own contract
   (`WearOsSyncPreferences`); `OpenWatchPreferences` implements it.
 - `devices/xiaomi` (`:devices:xiaomi`) — the S400 scale's platform half, a device module: the
   scan, the receiver and the listening service (in its manifest), the listener and its worker,

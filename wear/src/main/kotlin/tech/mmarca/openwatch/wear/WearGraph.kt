@@ -117,7 +117,7 @@ internal class WearGraph(private val app: Application) {
             onSourceChanged = { tellHost { replan() } },
             onSample = { at, bpm ->
                 sleepMinutes.noteHeartRate(at, bpm)
-                if (workout.isActive) workout.noteHeartRate(at, bpm)
+                if (workout.isActive || workout.isRecovering) workout.noteHeartRate(at, bpm)
             },
             onContact = { at, contact -> sleepMinutes.noteHeartRateContact(at, contact) },
         )
@@ -175,7 +175,9 @@ internal class WearGraph(private val app: Application) {
     }
 
     /** Its callback already runs on the main thread. */
-    val workout: WorkoutRecorder by lazy { WorkoutRecorder(app, store, workoutState, debug) { host?.onWorkoutChanged() } }
+    val workout: WorkoutRecorder by lazy {
+        WorkoutRecorder(app, store, workoutState, debug, settings = { settings.value }) { host?.onWorkoutChanged() }
+    }
 
     val ppgLogger: PpgRawLogger by lazy { PpgRawLogger(app) }
 

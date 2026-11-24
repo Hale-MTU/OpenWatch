@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Sensors
 import androidx.compose.material.icons.outlined.Smartphone
 import androidx.compose.material.icons.outlined.Straighten
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -33,15 +34,16 @@ import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 
 /**
  * The watch's settings, one row each, with how it stands: the phone and its
- * link, the sensor access (with the recording details one step further), and
- * the unit system, which a tap switches. A line still being read shows no
- * second label.
+ * link, the sensor access (with the recording details one step further), the
+ * recording settings, and the unit system, which a tap switches. A line
+ * still being read shows no second label.
  */
 @Composable
 internal fun SettingsScreen(
     state: SettingsUiState,
     onPhoneClick: () -> Unit,
     onSensorAccessClick: () -> Unit,
+    onRecordingClick: () -> Unit,
     onUnitSystemChange: (UnitSystem) -> Unit,
 ) {
     val listState = rememberTransformingLazyColumnState()
@@ -72,6 +74,13 @@ internal fun SettingsScreen(
                 },
                 icon = Icons.Outlined.Sensors,
                 onClick = onSensorAccessClick,
+            )
+            settingsRow(
+                spec = spec,
+                label = R.string.settings_recording,
+                value = R.string.settings_recording_description,
+                icon = Icons.Outlined.Tune,
+                onClick = onRecordingClick,
             )
             val unitSystem = state.unitSystem
             settingsRow(
@@ -128,6 +137,7 @@ private fun SettingsScreenPreview() {
                 ),
                 onPhoneClick = {},
                 onSensorAccessClick = {},
+                onRecordingClick = {},
                 onUnitSystemChange = {},
             )
         }

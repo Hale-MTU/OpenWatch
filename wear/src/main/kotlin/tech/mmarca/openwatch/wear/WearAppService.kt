@@ -152,7 +152,7 @@ class WearAppService : Service(), WearGraph.Host {
             }
             ACTION_WORKOUT_PAUSE -> { graph.workout.pause(); return START_STICKY }
             ACTION_WORKOUT_RESUME -> { graph.workout.resume(); return START_STICKY }
-            ACTION_WORKOUT_STOP -> { graph.workout.stop(); return START_STICKY }
+            ACTION_WORKOUT_STOP -> { graph.workout.stop(measureRecovery = intent.getBooleanExtra(EXTRA_RECOVERY, false)); return START_STICKY }
             ACTION_SETTINGS_CHANGED -> onSettingsChanged()
         }
         graph.link.start()
@@ -256,8 +256,8 @@ class WearAppService : Service(), WearGraph.Host {
             .setOngoing(true)
             .setCategory(NotificationCompat.CATEGORY_WORKOUT)
         // The time also as the notification's own chronometer, for a surface that shows it rather than the ongoing status.
-        if (key.paused) {
-            builder.setContentText(getString(R.string.recording_paused))
+        if (key.paused || key.recovering) {
+            builder.setContentText(getString(pillState(key)))
         } else {
             builder.setUsesChronometer(true).setShowWhen(true).setWhen(System.currentTimeMillis() - activeSeconds * MILLIS_PER_SECOND)
         }
@@ -270,7 +270,7 @@ class WearAppService : Service(), WearGraph.Host {
         val base = stopwatchBaseMillis(key, activeSeconds, SystemClock.elapsedRealtime())
         val status = Status.Builder().addPart("sport", Status.TextPart(getString(sportName(key.sport))))
         if (base == null) {
-            status.addTemplate("#sport# · #state#").addPart("state", Status.TextPart(getString(R.string.recording_paused)))
+            status.addTemplate("#sport# · #state#").addPart("state", Status.TextPart(getString(pillState(key))))
         } else {
             status.addTemplate("#sport# · #time#").addPart("time", Status.StopwatchPart(base))
         }
@@ -289,6 +289,9 @@ class WearAppService : Service(), WearGraph.Host {
             .build()
             .apply(applicationContext)
     }
+
+    /** What the pill says instead of the time: the workout is paused, or its heart rate recovery runs. */
+    private fun pillState(key: WorkoutPillKey): Int = if (key.recovering) R.string.recovery_title else R.string.recording_paused
 
     /** Shows, updates or removes the pill; on the main thread, when a workout starts, pauses, resumes or ends. */
     private fun refreshNotification() {
@@ -338,6 +341,7 @@ class WearAppService : Service(), WearGraph.Host {
         bedtime = bedtimeMonitor.isBedtime,
         sleepHolding = graph.sleepMinutes.isSleepHolding,
         workout = graph.workout.isActive,
+        recovering = graph.workout.isRecovering,
     )
 
     /** What the debug snapshots record as the plan in force, and today's held minutes against their budget. */
@@ -366,6 +370,7 @@ class WearAppService : Service(), WearGraph.Host {
         "skin" to graph.skinTemperature.isRunning,
         "spo2" to graph.spo2.isRunning,
         "workout" to graph.workout.isActive,
+        "recovering" to graph.workout.isRecovering,
         "worn" to heartRateWanted,
         "steps" to graph.steps.isRunning,
     )
@@ -421,6 +426,7 @@ class WearAppService : Service(), WearGraph.Host {
         private const val ACTION_WORKOUT_STOP = "tech.mmarca.openwatch.wear.WORKOUT_STOP"
         private const val EXTRA_SPORT = "sport"
         private const val EXTRA_GPS = "gps"
+        private const val EXTRA_RECOVERY = "recovery"
 
         /** Starts a workout; [gps] only takes effect with the location grant. Called from the foreground app. */
         fun startWorkout(context: Context, sport: WorkoutSport, gps: Boolean) =
@@ -430,7 +436,11 @@ class WearAppService : Service(), WearGraph.Host {
 
         fun resumeWorkout(context: Context) = sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_RESUME))
 
-        fun stopWorkout(context: Context) = sendWorkout(context, Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_STOP))
+        /** Ends the workout; with [measureRecovery] the heart rate stays live for the recovery's two minutes. */
+        fun stopWorkout(context: Context, measureRecovery: Boolean = false) = sendWorkout(
+            context,
+            Intent(context, WearAppService::class.java).setAction(ACTION_WORKOUT_STOP).putExtra(EXTRA_RECOVERY, measureRecovery),
+        )
 
         private fun sendWorkout(context: Context, intent: Intent) {
             runCatching { context.startForegroundService(intent) }

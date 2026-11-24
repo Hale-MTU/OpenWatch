@@ -1,7 +1,6 @@
 package tech.mmarca.openwatch.wear.features.status
 
 import tech.mmarca.openwatch.wear.SyncRetention
-import tech.mmarca.openwatch.wear.WatchPreferences
 import tech.mmarca.openwatch.wear.WearLinkUiState
 
 /** What the status screen reads from the store, the grants and the system at one moment. */
@@ -33,7 +32,6 @@ internal data class StatusReadings(
 internal data class StatusUiState(
     val readings: StatusReadings? = null,
     val link: WearLinkUiState = WearLinkUiState(),
-    val settings: WatchPreferences? = null,
 ) {
     /** A grant the recorders or the link need is missing: the screen offers to ask for it. */
     val needsGrant: Boolean

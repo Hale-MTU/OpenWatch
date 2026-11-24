@@ -408,9 +408,10 @@ private val SettingPadding = PaddingValues(horizontal = Spacing.lg, vertical = S
 
 /**
  * The watch's own settings, read from and written to the watch over the
- * link (`GET_PREF`, `SET_PREF`): the same switches its status screen has.
- * The Samsung ones appear only when the watch reports the Samsung platform.
- * Each switch is one setting; the watch answers with all of them again.
+ * link (`GET_PREF`, `SET_PREF`): the same switches its recording settings
+ * have, each with the same line on what it does. The Samsung ones appear
+ * only when the watch reports the Samsung platform. Each switch is one
+ * setting; the watch answers with all of them again.
  */
 @Composable
 private fun WearOsWatchSettingsCard(
@@ -460,6 +461,7 @@ private fun WearOsWatchSettingsCard(
                 )
                 SwitchRow(
                     title = stringResource(R.string.watch_settings_hr_samsung),
+                    body = stringResource(R.string.watch_settings_hr_source_explained),
                     checked = settings[Preferences.HEART_RATE_SOURCE] == Preferences.SAMSUNG,
                     enabled = !busy,
                     contentPadding = SettingPadding,
@@ -467,6 +469,7 @@ private fun WearOsWatchSettingsCard(
                 )
                 SwitchRow(
                     title = stringResource(R.string.watch_settings_hrv_samsung),
+                    body = stringResource(R.string.watch_settings_hrv_source_explained),
                     checked = settings[Preferences.HRV_SOURCE] == Preferences.SAMSUNG,
                     enabled = !busy,
                     contentPadding = SettingPadding,
@@ -474,7 +477,9 @@ private fun WearOsWatchSettingsCard(
                 )
                 SwitchRow(
                     title = stringResource(R.string.watch_settings_skin),
-                    body = stringResource(R.string.watch_settings_allow_on_watch).takeIf { on(Preferences.SKIN_TEMPERATURE) && !on(Preferences.SKIN_GRANTED) },
+                    body = stringResource(
+                        if (on(Preferences.SKIN_TEMPERATURE) && !on(Preferences.SKIN_GRANTED)) R.string.watch_settings_allow_on_watch else R.string.watch_settings_skin_explained,
+                    ),
                     checked = on(Preferences.SKIN_TEMPERATURE),
                     enabled = !busy,
                     contentPadding = SettingPadding,
@@ -482,7 +487,9 @@ private fun WearOsWatchSettingsCard(
                 )
                 SwitchRow(
                     title = stringResource(R.string.watch_settings_spo2),
-                    body = stringResource(R.string.watch_settings_allow_on_watch).takeIf { on(Preferences.SPO2) && !on(Preferences.SPO2_GRANTED) },
+                    body = stringResource(
+                        if (on(Preferences.SPO2) && !on(Preferences.SPO2_GRANTED)) R.string.watch_settings_allow_on_watch else R.string.watch_settings_spo2_explained,
+                    ),
                     checked = on(Preferences.SPO2),
                     enabled = !busy,
                     contentPadding = SettingPadding,

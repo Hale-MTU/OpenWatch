@@ -17,6 +17,8 @@ import tech.mmarca.openwatch.wearlink.WorkoutMetrics
  * Connect over the session (the sync writes the readings before it pulls the
  * workouts), the body profile, and the zones' basis as [WearOsZoneSync] hands
  * it to the watch ([HeartRateZoneBasis]), each read through [HealthConnectReads].
+ * The heart rate recovery after the stop is read too where the watch measured
+ * one: the two minutes after it hold a reading a second.
  */
 internal class WearOsWorkoutFigures(
     private val healthConnect: HealthConnectReads,
@@ -27,13 +29,17 @@ internal class WearOsWorkoutFigures(
 
     /** Null without a heart rate reading of the watch's in the session. [salt] is the watch's id salt. */
     suspend fun summarize(workout: WearOsWorkout, salt: String): WorkoutMetrics.Summary? {
-        val beats = watchBeats(workout.start, workout.end, salt)
-        if (beats.isEmpty()) return null
+        val beats = watchBeats(workout.start, workout.end.plus(RECOVERY_SPAN), salt)
+        val end = workout.end.toEpochMilli()
+        if (beats.none { it.epochMillis <= end }) return null
         val body = profile()
         val day = workout.start.atZone(zone()).toLocalDate()
         val observed = healthConnect.readMaxHeartRate(workout.end.minus(Duration.ofDays(observedMaxHeartRateLookbackDays)), workout.end)?.toInt()
         val basis = HeartRateZoneBasis.of(body, day, observed, healthConnect.latestNightRestingBpm(workout.start))
-        return WorkoutMetrics.summarize(WearOsWorkoutMetrics.linkWorkout(workout), beats, basis, body, day)
+        val summary = WorkoutMetrics.summarize(WearOsWorkoutMetrics.linkWorkout(workout), beats, basis, body, day)
+        val afterStop = beats.count { it.epochMillis > end }
+        if (afterStop < WorkoutMetrics.MIN_RECOVERY_READINGS) return summary
+        return summary.copy(recovery = WorkoutMetrics.recovery(beats, end, body, basis?.restingBpm, day))
     }
 
     /**
@@ -60,5 +66,8 @@ internal class WearOsWorkoutFigures(
     private companion object {
         /** The longest a watch's heart rate record spans: its clock hour. */
         val HOUR_RECORD_SPAN: Duration = Duration.ofHours(1)
+
+        /** The watch measures a recovery for two minutes after the stop; its last mark may take a reading a few seconds past them. */
+        val RECOVERY_SPAN: Duration = Duration.ofSeconds(130)
     }
 }

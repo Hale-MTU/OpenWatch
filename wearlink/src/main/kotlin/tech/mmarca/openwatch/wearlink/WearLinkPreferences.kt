@@ -29,6 +29,18 @@ object WearLinkPreferences {
     const val HEART_RATE_MAX: String = "hr_max"
     const val HEART_RATE_REST: String = "hr_rest"
 
+    /**
+     * The body profile a workout's figures need on the watch, from the phone: the weight in
+     * 100 g, the height in whole cm, the birth year; `0` for none. The phone sends them beside
+     * the zones' heart rates.
+     */
+    const val BODY_WEIGHT: String = "body_hg"
+    const val BODY_HEIGHT: String = "body_cm"
+    const val BIRTH_YEAR: String = "birth_year"
+
+    /** The profile's sex, which the energy and the training load read. [FEMALE] / [MALE], or [OFF] for none. */
+    const val SEX: String = "sex"
+
     /** Read only: whether the watch has the Samsung Health Platform. [OFF] / [ON]. */
     const val SAMSUNG_AVAILABLE: String = "samsung"
 
@@ -42,6 +54,8 @@ object WearLinkPreferences {
     const val SAMSUNG: String = "samsung"
     const val LOCK: String = "lock"
     const val SYNCED: String = "synced"
+    const val FEMALE: String = "f"
+    const val MALE: String = "m"
     const val OFF: String = "0"
     const val ON: String = "1"
 }

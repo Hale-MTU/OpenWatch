@@ -22,10 +22,13 @@ class GarminActivityPreferencesStore @Inject constructor(
         get() = preferences.favoriteActivityExerciseType
 }
 
-/** The one preference the Wear OS sync reads (`:devices:wearos`), from [OpenWatchPreferences]. */
+/** The preferences the Wear OS sync reads (`:devices:wearos`), from [OpenWatchPreferences]. */
 class WearOsSyncPreferencesStore @Inject constructor(
     private val preferences: OpenWatchPreferences,
 ) : WearOsSyncPreferences {
     override val writeRespiratoryRate: Boolean
         get() = preferences.writeRespiratoryRate
+
+    override val writeSleepBesideOthers: Boolean
+        get() = preferences.writeSleepBesideOthers
 }

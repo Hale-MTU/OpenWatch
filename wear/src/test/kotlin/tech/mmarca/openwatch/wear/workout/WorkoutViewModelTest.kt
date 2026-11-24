@@ -18,6 +18,7 @@ import tech.mmarca.openwatch.wear.WatchPreferences
 import tech.mmarca.openwatch.wear.WatchSensors
 import tech.mmarca.openwatch.wear.WearSettings
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
+import tech.mmarca.openwatch.wearlink.WorkoutMetrics
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
 /** The workout screen's ViewModel: what it sends the recorder, and when it sends nothing. */
@@ -117,8 +118,25 @@ class WorkoutViewModelTest {
 
         viewModel.closeSummary()
 
-        assertEquals(listOf("stop"), control.calls)
+        assertEquals(listOf("stop false"), control.calls)
         assertEquals(WorkoutUiState(), viewModel.state.value)
+    }
+
+    @Test
+    fun `a stop that measures the recovery says so, and a saved workout's figures are read by its start`() {
+        val read = mutableListOf<Long>()
+        val summary = WorkoutMetrics.Summary(140, 171, List(5) { 60L }, 42.0, 310.0, 380.0, emptyList(), null, null)
+        val figured = WorkoutViewModel(workout, control, settings, scope, figuresOf = { start -> read += start; summary }, io = Dispatchers.Unconfined)
+        running(paused = false)
+        workout.update { it.copy(startMillis = 1_794_000_000_000L) }
+
+        figured.stop(measureRecovery = true)
+        assertNull("nothing is read while the workout runs", figured.figures.value)
+        workout.update { it.copy(running = false, finished = true) }
+
+        assertEquals(listOf("stop true"), control.calls)
+        assertEquals(summary, figured.figures.value)
+        assertEquals(listOf(1_794_000_000_000L), read)
     }
 
     @Test
@@ -157,8 +175,8 @@ class WorkoutViewModelTest {
             calls += "resume"
         }
 
-        override fun stop() {
-            calls += "stop"
+        override fun stop(measureRecovery: Boolean) {
+            calls += "stop $measureRecovery"
         }
     }
 }

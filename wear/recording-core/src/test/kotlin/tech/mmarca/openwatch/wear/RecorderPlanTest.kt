@@ -81,6 +81,15 @@ class RecorderPlanTest {
     }
 
     @Test
+    fun `the recovery after a workout keeps the heart rate live from the sensor, off the wrist too`() {
+        val plan = RecorderPlan.decide(day.copy(recovering = true, worn = false, settings = settings.copy(heartRateSource = MeasurementSource.SAMSUNG_PLATFORM)))
+
+        assertTrue(plan.heartRateLive)
+        assertEquals(HeartRateSchedule.FULL_RATE, plan.heartRate)
+        assertEquals(MeasurementSource.RAW_SENSOR, plan.heartRateSource)
+    }
+
+    @Test
     fun `without the heart rate grant nothing that reads the heart sensor runs`() {
         val plan = RecorderPlan.decide(day.copy(heartRateGranted = false, sleepHolding = true, workout = true))
 
