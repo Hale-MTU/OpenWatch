@@ -43,14 +43,19 @@ class SpotMeasurementsTest {
         }
     }
 
+    private val claim = SensorClaim()
+
     private fun spot(
         heartRate: SpotSensor<LiveHeartRate.Reading>? = null,
         heartBeats: SpotSensor<Double>? = null,
+        motion: SpotSensor<Motion>? = null,
         pressure: SpotSensor<Float>? = null,
     ) = SpotMeasurements(
         app,
         heartRate = { heartRate },
-        heartBeats = { heartBeats },
+        hrvWindows = { heartBeats?.let(::HeartBeatWindowSource) },
+        motion = { motion },
+        hrvClaim = claim,
         pressure = { pressure },
         heartRateGranted = { granted },
         entries = entries,
@@ -116,21 +121,49 @@ class SpotMeasurementsTest {
         assertTrue(stored().isEmpty())
     }
 
+    /** Alternating intervals of 800 and 840 ms: an RMSSD of 40 ms. */
+    private val beats = (0..SpotRules.HRV_MIN_CLEAN_BEATS + 1).runningFold(10_000.0) { at, index -> at + if (index % 2 == 0) 800.0 else 840.0 }
+
+    /** Ten accelerometer readings a second for twenty seconds, [swing] m/s² either side of gravity. */
+    private fun arm(swing: Double) = List(200) { Motion(timeMillis = it * 100L, magnitude = 9.81 + if (it % 2 == 0) swing else -swing) }
+
     @Test
-    fun `an HRV is the RMSSD of its beats, the pulse between two beats shown as it runs`() {
-        // Alternating intervals of 800 and 840 ms: an RMSSD of 40 ms.
-        val beats = (0..SpotRules.HRV_MIN_CLEAN_BEATS + 1).runningFold(10_000.0) { at, index -> at + if (index % 2 == 0) 800.0 else 840.0 }
-        val sensor = FakeSensor(beats)
+    fun `an HRV is the RMSSD of its window, the pulse shown as it runs, with the heart rate sensor held for it`() {
+        val beatSensor = FakeSensor(beats)
+        val pulse = FakeSensor(List(3) { sample(72) })
 
-        val events = events(spot(heartBeats = sensor), SpotKind.HRV)
+        val events = events(spot(heartRate = pulse, heartBeats = beatSensor, motion = FakeSensor(arm(0.01))), SpotKind.HRV)
 
-        assertEquals(SpotEvent.Live(75.0), events.first())
+        assertEquals(List(3) { SpotEvent.Live(72.0) }, events.dropLast(1))
         assertEquals(40.0, (events.last() as SpotEvent.Result).value, 1e-9)
-        assertEquals(0, sensor.open)
+        assertEquals(1, pulse.listened)
+        assertEquals(0, pulse.open)
+        assertEquals(0, beatSensor.open)
         val entry = stored().single()
         assertEquals(WearLinkEntry.Type.HRV, entry.type)
         assertEquals(40.0, entry.value, 1e-3)
         assertTrue(entry.measured)
+        assertEquals(null, claim.holder)
+    }
+
+    @Test
+    fun `an HRV from an arm that moved is not kept`() {
+        val events = events(spot(heartBeats = FakeSensor(beats), motion = FakeSensor(arm(2.0))), SpotKind.HRV)
+
+        assertEquals(SpotEvent.Failed(SpotFailure.MOVED), events.last())
+        assertTrue(stored().isEmpty())
+    }
+
+    @Test
+    fun `a spot HRV waits while the night's HRV window holds the sensor`() {
+        val beatSensor = FakeSensor(beats)
+        assertTrue(claim.take("night"))
+
+        assertEquals(listOf(SpotEvent.Failed(SpotFailure.BUSY)), events(spot(heartBeats = beatSensor), SpotKind.HRV))
+        assertEquals(0, beatSensor.listened)
+
+        claim.release("night")
+        assertTrue(events(spot(heartBeats = beatSensor), SpotKind.HRV).last() is SpotEvent.Result)
     }
 
     @Test

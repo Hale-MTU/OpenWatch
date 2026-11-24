@@ -11,8 +11,10 @@ class WatchSensorsTest {
         assertEquals(SpotKind.entries.toSet(), WatchSensors.ALL.spotKinds)
         assertTrue(WatchSensors.NONE.spotKinds.isEmpty())
         assertEquals(setOf(SpotKind.HEART_RATE), WatchSensors.NONE.copy(heartRate = true).spotKinds)
-        // A spot HRV needs single beats; the heart rate sensor alone is not enough.
-        assertEquals(setOf(SpotKind.HEART_RATE, SpotKind.AIR_PRESSURE), WatchSensors.ALL.copy(heartBeat = false).spotKinds)
+        // A spot HRV needs single beats or the raw pulse signal; the heart rate sensor alone is not enough.
+        assertEquals(setOf(SpotKind.HEART_RATE, SpotKind.AIR_PRESSURE), WatchSensors.ALL.copy(heartBeat = false, rawPpg = false).spotKinds)
+        assertTrue(SpotKind.HRV in WatchSensors.ALL.copy(heartBeat = false).spotKinds)
+        assertTrue(SpotKind.HRV in WatchSensors.ALL.copy(rawPpg = false).spotKinds)
         assertEquals(setOf(SpotKind.AIR_PRESSURE), WatchSensors.NONE.copy(barometer = true, stepCounter = true, gps = true).spotKinds)
     }
 }

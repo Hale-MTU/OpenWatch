@@ -1,6 +1,7 @@
 package tech.mmarca.openwatch.wear
 
 import tech.mmarca.healthcalculations.signal.HrvRmssd
+import tech.mmarca.healthcalculations.signal.HrvWindowResult
 import tech.mmarca.openwatch.wearlink.WearLinkProtocol
 
 /** What a running spot measurement ([SpotKind]) reports, and how it ends. */
@@ -32,6 +33,12 @@ enum class SpotFailure {
     /** The time ran out before the readings gave a value. */
     NO_SIGNAL,
 
+    /** The arm moved too much for an HRV ([Stillness]). */
+    MOVED,
+
+    /** The night's HRV window holds the sensor now; a spot HRV waits for it to end. */
+    BUSY,
+
     /** The sensor could not be started. */
     FAILED,
 }
@@ -46,10 +53,11 @@ object SpotRules {
     private const val SETTLED_OVER = 5
 
     /**
-     * Clean beats a minute of HRV must rest on: half a minute at a resting
-     * 60 bpm, a third of what a night's five-minute window needs.
+     * Clean beats a spot HRV's three minutes must rest on: a night's
+     * five-minute window needs 100, and three minutes at rest hold about 60
+     * percent of that.
      */
-    const val HRV_MIN_CLEAN_BEATS = 30
+    const val HRV_MIN_CLEAN_BEATS = 60
 
     /** Pressure readings the reading averages, one a second. */
     const val PRESSURE_READINGS = 5
@@ -71,14 +79,11 @@ object SpotRules {
      * health-calculations takes a night window's ([HrvRmssd]), on at least
      * [HRV_MIN_CLEAN_BEATS] clean beats. Null when too few are clean.
      */
-    fun rmssd(beatMillis: List<Double>): Double? =
-        HrvRmssd.of(beatMillis.toDoubleArray(), minCleanBeats = HRV_MIN_CLEAN_BEATS)?.rmssdMillis
+    fun rmssd(beatMillis: List<Double>): Double? = rmssdWindow(beatMillis)?.rmssdMillis
 
-    /** The pulse two successive beats stand for; null for an interval no resting heart beats at. */
-    fun beatBpm(previousMillis: Double, beatMillis: Double): Double? {
-        val interval = beatMillis - previousMillis
-        return if (interval in HrvRmssd.MIN_INTERVAL_MILLIS..HrvRmssd.MAX_INTERVAL_MILLIS) MILLIS_PER_MINUTE / interval else null
-    }
+    /** [rmssd] with the clean beats it rests on. */
+    fun rmssdWindow(beatMillis: List<Double>): HrvWindowResult? =
+        HrvRmssd.of(beatMillis.toDoubleArray(), minCleanBeats = HRV_MIN_CLEAN_BEATS)
 
     /**
      * The air pressure of [hectopascals], the mean of the readings, and the
@@ -94,6 +99,4 @@ object SpotRules {
 
     /** A reading of the barometer: the pressure in hPa and its altitude in metres. */
     data class AirPressure(val hectopascals: Double, val altitudeMetres: Double)
-
-    private const val MILLIS_PER_MINUTE = 60_000.0
 }

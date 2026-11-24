@@ -22,10 +22,11 @@
     <uses-permission android:name="android.permission.health.WRITE_POWER" />
     <uses-permission android:name="android.permission.health.WRITE_VO2_MAX" />
     <uses-permission android:name="android.permission.health.WRITE_SLEEP" />
-    <!-- What the entries made on the Wear OS watch write, beside the types above: a glass of
-         water, a breathing session. -->
+    <!-- What the entries made on the Wear OS watch write, beside the types above and below: a
+         glass of water, a breathing session, a body temperature. -->
     <uses-permission android:name="android.permission.health.WRITE_HYDRATION" />
     <uses-permission android:name="android.permission.health.WRITE_MINDFULNESS" />
+    <uses-permission android:name="android.permission.health.WRITE_BODY_TEMPERATURE" />
     <!-- What a scale weigh-in writes. -->
     <uses-permission android:name="android.permission.health.WRITE_WEIGHT" />
     <uses-permission android:name="android.permission.health.WRITE_BODY_FAT" />

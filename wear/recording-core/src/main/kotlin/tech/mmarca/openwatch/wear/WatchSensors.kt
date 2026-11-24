@@ -9,8 +9,10 @@ package tech.mmarca.openwatch.wear
 data class WatchSensors(
     /** The heart rate sensor (`TYPE_HEART_RATE`). */
     val heartRate: Boolean,
-    /** Single beats, each at its time (`TYPE_HEART_BEAT`): what a spot HRV rests on. */
+    /** Single beats, each at its time (`TYPE_HEART_BEAT`): one source of a spot HRV. */
     val heartBeat: Boolean,
+    /** Samsung's raw pulse signal (`com.samsung.sensor.hr_raw`), whose beats the night windows find: the other source of a spot HRV. */
+    val rawPpg: Boolean,
     /** The step counter (`TYPE_STEP_COUNTER`). */
     val stepCounter: Boolean,
     /** The barometer (`TYPE_PRESSURE`): the height climbed, and the air pressure itself. */
@@ -22,16 +24,16 @@ data class WatchSensors(
     val spotKinds: Set<SpotKind>
         get() = buildSet {
             if (heartRate) add(SpotKind.HEART_RATE)
-            if (heartBeat) add(SpotKind.HRV)
+            if (heartBeat || rawPpg) add(SpotKind.HRV)
             if (barometer) add(SpotKind.AIR_PRESSURE)
         }
 
     companion object {
         /** A watch with every sensor, for a test or a preview. */
-        val ALL = WatchSensors(heartRate = true, heartBeat = true, stepCounter = true, barometer = true, gps = true)
+        val ALL = WatchSensors(heartRate = true, heartBeat = true, rawPpg = true, stepCounter = true, barometer = true, gps = true)
 
         /** A watch with none. */
-        val NONE = WatchSensors(heartRate = false, heartBeat = false, stepCounter = false, barometer = false, gps = false)
+        val NONE = WatchSensors(heartRate = false, heartBeat = false, rawPpg = false, stepCounter = false, barometer = false, gps = false)
     }
 }
 
@@ -48,8 +50,11 @@ enum class SpotKind(
     /** The pulse now, from the heart rate sensor: settled once enough readings agree. */
     HEART_RATE(30),
 
-    /** The RMSSD of a minute of single beats; it always runs the whole minute. */
-    HRV(60),
+    /**
+     * The RMSSD of three minutes of beats, from single beats or the raw pulse signal (or the
+     * Samsung platform's own intervals, where the wearer chose them); it always runs the whole time.
+     */
+    HRV(180),
 
     /** The barometer, with the altitude it stands for at standard pressure. */
     AIR_PRESSURE(10),

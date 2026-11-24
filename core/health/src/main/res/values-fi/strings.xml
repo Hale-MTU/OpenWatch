@@ -10,8 +10,6 @@
     <string name="health_data_note_wearos_sleep">Yksi arvioitu unijakso kutakin yötä ja päiväunta kohden.</string>
     <string name="health_data_note_wearos_hrv">Yöllä, kellossa, joka pystyy mittaamaan sen.</string>
     <string name="health_data_note_wearos_workout">Kellolla tallentamasi harjoitus, sen reitti ja matka.</string>
-    <string name="health_data_note_wearos_breathing">Vain, kun ”Hengitystiheys kellosta” on kytketty päälle Asetuksissa.</string>
-    <string name="health_data_note_wearos_spo2">Vain Samsung-kellosta, kun ”SpO2 tunnin välein yöllä” on kytketty päälle kyseiselle kellolle.</string>
     <string name="health_data_note_wearos_skin">Vain Samsung-kellosta, kun ”Ihon lämpötila yöllä” on kytketty päälle kyseiselle kellolle. Yksi tietue yössä: ero omaan tavalliseen yöhösi.</string>
     <string name="health_data_note_scale_estimate">Arvioitu puhelimessa vaa\'an mittauksesta ja kehoprofiilistasi.</string>
     <string name="health_data_read_weight">Kävelykaloreita ja vaa\'an kehonkoostumusta varten.</string>

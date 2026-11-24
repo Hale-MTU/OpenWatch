@@ -7,6 +7,7 @@ import androidx.health.connect.client.records.BasalMetabolicRateRecord
 import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.BloodPressureRecord
 import androidx.health.connect.client.records.BodyFatRecord
+import androidx.health.connect.client.records.BodyTemperatureRecord
 import androidx.health.connect.client.records.BodyWaterMassRecord
 import androidx.health.connect.client.records.DistanceRecord
 import androidx.health.connect.client.records.ElevationGainedRecord
@@ -105,13 +106,16 @@ object HealthDataCatalog {
             write(ExerciseSessionRecord::class, R.string.health_data_note_wearos_workout),
             HealthDataEntry(HealthPermission.PERMISSION_WRITE_EXERCISE_ROUTE),
             write(DistanceRecord::class),
-            write(RespiratoryRateRecord::class, R.string.health_data_note_wearos_breathing),
-            write(OxygenSaturationRecord::class, R.string.health_data_note_wearos_spo2),
+            write(RespiratoryRateRecord::class, R.string.health_data_note_wearos_breathing_logged),
+            write(OxygenSaturationRecord::class, R.string.health_data_note_wearos_spo2_logged),
             write(SkinTemperatureRecord::class, R.string.health_data_note_wearos_skin),
             write(HydrationRecord::class, R.string.health_data_note_wearos_entry),
             write(WeightRecord::class, R.string.health_data_note_wearos_entry),
             write(BloodPressureRecord::class, R.string.health_data_note_wearos_entry),
             write(MindfulnessSessionRecord::class, R.string.health_data_note_wearos_mindfulness),
+            write(BodyFatRecord::class, R.string.health_data_note_wearos_entry),
+            write(BodyTemperatureRecord::class, R.string.health_data_note_wearos_entry),
+            write(BloodGlucoseRecord::class, R.string.health_data_note_wearos_entry),
         ),
         HealthDataSection.SCALE to listOf(
             write(WeightRecord::class),

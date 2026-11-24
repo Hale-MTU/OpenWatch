@@ -1,10 +1,15 @@
 package tech.mmarca.openwatch.devices.wearos
 
+import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.BloodPressureRecord
+import androidx.health.connect.client.records.BodyFatRecord
+import androidx.health.connect.client.records.BodyTemperatureRecord
 import androidx.health.connect.client.records.HeartRateRecord
 import androidx.health.connect.client.records.HeartRateVariabilityRmssdRecord
 import androidx.health.connect.client.records.HydrationRecord
 import androidx.health.connect.client.records.MindfulnessSessionRecord
+import androidx.health.connect.client.records.OxygenSaturationRecord
+import androidx.health.connect.client.records.RespiratoryRateRecord
 import androidx.health.connect.client.records.WeightRecord
 import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
@@ -53,6 +58,19 @@ class WearOsEntryImportTest {
         assertEquals(Instant.ofEpochMilli(at), session.endTime)
         assertEquals(Duration.ofMinutes(1), Duration.between(session.startTime, session.endTime))
         assertEquals(MindfulnessSessionRecord.MINDFULNESS_SESSION_TYPE_BREATHING, session.mindfulnessSessionType)
+    }
+
+    @Test
+    fun `body fat, blood oxygen, breathing rate, temperature and glucose become their records in their units`() {
+        assertEquals(21.5, (WearOsEntryImport.record(WearLinkEntry.of(at, Type.BODY_FAT, 21.5), zone) as BodyFatRecord).percentage.value, 0.001)
+        assertEquals(97.0, (WearOsEntryImport.record(WearLinkEntry.of(at, Type.BLOOD_OXYGEN, 97.0), zone) as OxygenSaturationRecord).percentage.value, 0.001)
+        assertEquals(14.0, (WearOsEntryImport.record(WearLinkEntry.of(at, Type.RESPIRATORY_RATE, 14.0), zone) as RespiratoryRateRecord).rate, 0.001)
+        val temperature = WearOsEntryImport.record(WearLinkEntry.of(at, Type.BODY_TEMPERATURE, 36.8), zone) as BodyTemperatureRecord
+        assertEquals(36.8, temperature.temperature.inCelsius, 0.001)
+        val glucose = WearOsEntryImport.record(WearLinkEntry.of(at, Type.BLOOD_GLUCOSE, 5.4), zone) as BloodGlucoseRecord
+        assertEquals(5.4, glucose.level.inMillimolesPerLiter, 0.001)
+        assertEquals("wearos_entry_glucose_$at", glucose.metadata.clientRecordId)
+        assertEquals(Metadata.RECORDING_METHOD_MANUAL_ENTRY, glucose.metadata.recordingMethod)
     }
 
     @Test

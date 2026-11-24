@@ -15,8 +15,6 @@
     <string name="health_data_note_wearos_sleep">One estimated session per night and per nap.</string>
     <string name="health_data_note_wearos_hrv">At night, on a watch that can measure it.</string>
     <string name="health_data_note_wearos_workout">A workout you record on the watch, with its route and distance.</string>
-    <string name="health_data_note_wearos_breathing">Only with “Breathing rate from the watch” switched on in Settings.</string>
-    <string name="health_data_note_wearos_spo2">Only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch.</string>
     <string name="health_data_note_wearos_entry">What you log on the watch, by hand.</string>
     <string name="health_data_note_wearos_mindfulness">A breathing session you do on the watch, where Health Connect keeps them.</string>
     <string name="health_data_note_wearos_skin">Only from a Samsung watch, with “Skin temperature at night” switched on for that watch. One record per night: the difference from your own usual night.</string>
@@ -34,4 +32,6 @@
     <string name="health_data_watch_background">To keep recording with the watch\'s screen off.</string>
     <string name="health_data_watch_skin">Only on a Samsung watch, and only when you switch on skin temperature at night.</string>
     <string name="health_data_watch_spo2">Only on a Samsung watch, and only when you switch on SpO2 at night.</string>
+    <string name="health_data_note_wearos_breathing_logged">At night only with “Breathing rate from the watch” switched on in Settings; and a breathing rate you log on the watch.</string>
+    <string name="health_data_note_wearos_spo2_logged">At night only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch; and a blood oxygen you log on the watch.</string>
 </resources>

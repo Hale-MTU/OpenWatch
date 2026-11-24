@@ -1,11 +1,15 @@
 package tech.mmarca.openwatch.wear.features.quicklog
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Air
+import androidx.compose.material.icons.outlined.Bloodtype
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.MonitorWeight
+import androidx.compose.material.icons.outlined.Opacity
 import androidx.compose.material.icons.outlined.SelfImprovement
 import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -19,6 +23,7 @@ import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.ui.components.formatCount
 import tech.mmarca.openwatch.wear.ui.components.formatMetricValue
 import tech.mmarca.openwatch.wear.ui.components.metricUnitLabel
+import tech.mmarca.openwatch.wear.ui.theme.ActiveCaloriesColor
 import tech.mmarca.openwatch.wear.ui.theme.HeartColor
 import tech.mmarca.openwatch.wear.ui.theme.HydrationColor
 import tech.mmarca.openwatch.wear.ui.theme.MindfulnessColor
@@ -35,6 +40,11 @@ val Type.icon: ImageVector
         Type.MINDFULNESS -> Icons.Outlined.SelfImprovement
         Type.HEART_RATE -> Icons.Outlined.Favorite
         Type.HRV -> Icons.Outlined.Insights
+        Type.BODY_FAT -> Icons.Outlined.MonitorWeight
+        Type.BLOOD_OXYGEN -> Icons.Outlined.Bloodtype
+        Type.RESPIRATORY_RATE -> Icons.Outlined.Air
+        Type.BODY_TEMPERATURE -> Icons.Outlined.Thermostat
+        Type.BLOOD_GLUCOSE -> Icons.Outlined.Opacity
     }
 
 val Type.color: Color
@@ -45,6 +55,11 @@ val Type.color: Color
         Type.MINDFULNESS -> MindfulnessColor
         Type.HEART_RATE -> HeartColor
         Type.HRV -> VitalsColor
+        Type.BODY_FAT -> WeightColor
+        Type.BLOOD_OXYGEN -> VitalsColor
+        Type.RESPIRATORY_RATE -> VitalsColor
+        Type.BODY_TEMPERATURE -> ActiveCaloriesColor
+        Type.BLOOD_GLUCOSE -> ActiveCaloriesColor
     }
 
 /** The entry's value with its unit, such as "72.4 kg" or "121/79 mmHg", in [unitSystem]. */
@@ -60,6 +75,10 @@ fun formatEntry(entry: WearLinkEntry, unitSystem: UnitSystem): String = when (en
         formatCount(entry.value.roundToInt()),
         formatCount(entry.second?.roundToInt() ?: 0),
     )
+    Type.BODY_FAT, Type.BLOOD_OXYGEN, Type.RESPIRATORY_RATE, Type.BODY_TEMPERATURE, Type.BLOOD_GLUCOSE ->
+        LogValueSpecs.getValue(entry.type).let { spec ->
+            "${spec.format(spec.toDisplay(entry.value, unitSystem), unitSystem)} ${stringResource(spec.unit(unitSystem))}"
+        }
 }
 
 @Composable

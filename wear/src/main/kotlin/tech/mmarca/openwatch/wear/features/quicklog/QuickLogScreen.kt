@@ -64,7 +64,8 @@ private const val RecentEntries = 6
 
 /**
  * Fast entries, the watch side of the phone's manual entry: one tap for a
- * glass of water, a stepper for weight and blood pressure, a guided breath.
+ * glass of water, a stepper for weight, blood pressure, body fat, blood
+ * oxygen, breathing rate, body temperature and blood glucose, a guided breath.
  * The latest entries are listed underneath so a mistake is easy to spot.
  */
 @Composable
@@ -73,6 +74,7 @@ fun QuickLogScreen(
     onAddWater: () -> Unit,
     onLogWeight: () -> Unit,
     onLogBloodPressure: () -> Unit,
+    onLogValue: (WearLinkEntry.Type) -> Unit,
     onBreathe: () -> Unit,
 ) {
     val listState = rememberTransformingLazyColumnState()
@@ -138,6 +140,18 @@ fun QuickLogScreen(
                     icon = Icons.Outlined.Speed,
                     color = VitalsColor,
                     onClick = onLogBloodPressure,
+                    modifier = Modifier.transformedHeight(this, transformationSpec),
+                    transformation = SurfaceTransformation(transformationSpec),
+                )
+            }
+            // The values with one number, in the order the phone lists them.
+            items(LogValueSpecs.toList(), key = { (type, _) -> type.name }) { (type, spec) ->
+                QuickLogButton(
+                    label = stringResource(spec.label),
+                    secondary = state.entries.lastOrNull { it.type == type }?.let { formatEntry(it, unitSystem) } ?: notLogged,
+                    icon = type.icon,
+                    color = type.color,
+                    onClick = { onLogValue(type) },
                     modifier = Modifier.transformedHeight(this, transformationSpec),
                     transformation = SurfaceTransformation(transformationSpec),
                 )
@@ -219,7 +233,7 @@ private fun RecentEntryRow(entry: WearLinkEntry, unitSystem: UnitSystem) {
 private fun QuickLogScreenPreview() {
     OpenWatchWearTheme {
         AppScaffold {
-            QuickLogScreen(SampleData.uiState, {}, {}, {}, {})
+            QuickLogScreen(SampleData.uiState, {}, {}, {}, {}, {})
         }
     }
 }

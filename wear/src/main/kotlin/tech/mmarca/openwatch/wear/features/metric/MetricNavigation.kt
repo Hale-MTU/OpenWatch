@@ -31,6 +31,7 @@ internal fun NavGraphBuilder.metricDestination(navController: NavHostController,
                 restingHeartRate = current.metrics[MetricTile.RESTING_HEART_RATE]?.current,
                 sleepStages = current.sleepStages,
                 onMeasure = spot?.let { kind -> { navController.navigate(WearRoutes.measurement(kind)) { launchSingleTop = true } } },
+                entries = current.entries,
             )
         }
     }

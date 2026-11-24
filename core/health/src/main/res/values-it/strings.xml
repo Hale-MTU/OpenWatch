@@ -10,8 +10,6 @@
     <string name="health_data_note_wearos_sleep">Una sessione stimata per notte e per pisolino.</string>
     <string name="health_data_note_wearos_hrv">Di notte, su un orologio in grado di misurarla.</string>
     <string name="health_data_note_wearos_workout">Un allenamento che registri sull\'orologio, con il suo percorso e la distanza.</string>
-    <string name="health_data_note_wearos_breathing">Solo con l\'opzione «Frequenza respiratoria dall\'orologio» attiva in Impostazioni.</string>
-    <string name="health_data_note_wearos_spo2">Solo da un orologio Samsung, con l\'opzione «SpO2 ogni ora di notte» attiva per quell\'orologio.</string>
     <string name="health_data_note_wearos_skin">Solo da un orologio Samsung, con l\'opzione «Temperatura cutanea di notte» attiva per quell\'orologio. Un record per notte: la differenza rispetto alla tua notte abituale.</string>
     <string name="health_data_note_scale_estimate">Stimato sul telefono dalla misurazione della bilancia e dal tuo profilo corporeo.</string>
     <string name="health_data_read_weight">Per le calorie della camminata e la composizione corporea della bilancia.</string>

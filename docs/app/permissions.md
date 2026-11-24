@@ -25,8 +25,10 @@ Skin temperature is one record per night, the difference from the wearer's own u
 A Garmin watch's oxygen saturation and respiratory rate come with its files.
 
 What the entries made on a Wear OS watch write, each when the phone pulls it: `WRITE_HYDRATION`,
-`WRITE_WEIGHT` and `WRITE_BLOOD_PRESSURE` (a glass of water, a weight, a blood pressure logged in
-the watch's quick log), `WRITE_MINDFULNESS` (a breathing session, only where Health Connect
+`WRITE_WEIGHT`, `WRITE_BLOOD_PRESSURE`, `WRITE_BODY_FAT`, `WRITE_OXYGEN_SATURATION`,
+`WRITE_RESPIRATORY_RATE`, `WRITE_BODY_TEMPERATURE` and `WRITE_BLOOD_GLUCOSE` (a value logged in
+the watch's quick log: a hand-logged blood oxygen or breathing rate is written whatever the night
+switches say), `WRITE_MINDFULNESS` (a breathing session, only where Health Connect
 stores mindfulness sessions), and `WRITE_HEART_RATE` and `WRITE_HEART_RATE_VARIABILITY` (a spot
 measurement). An entry whose write is not granted waits on the watch, and the watch's card asks
 for the grant; the entries whose write is granted go on.
@@ -110,13 +112,16 @@ it fails `HealthPermissionsTest`.
 | `WRITE_EXERCISE` | A workout you record on the watch, with its route and distance. |
 | `WRITE_EXERCISE_ROUTE` |  |
 | `WRITE_DISTANCE` |  |
-| `WRITE_RESPIRATORY_RATE` | Only with “Breathing rate from the watch” switched on in Settings. |
-| `WRITE_OXYGEN_SATURATION` | Only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch. |
+| `WRITE_RESPIRATORY_RATE` | At night only with “Breathing rate from the watch” switched on in Settings; and a breathing rate you log on the watch. |
+| `WRITE_OXYGEN_SATURATION` | At night only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch; and a blood oxygen you log on the watch. |
 | `WRITE_SKIN_TEMPERATURE` | Only from a Samsung watch, with “Skin temperature at night” switched on for that watch. One record per night: the difference from your own usual night. |
 | `WRITE_HYDRATION` | What you log on the watch, by hand. |
 | `WRITE_WEIGHT` | What you log on the watch, by hand. |
 | `WRITE_BLOOD_PRESSURE` | What you log on the watch, by hand. |
 | `WRITE_MINDFULNESS` | A breathing session you do on the watch, where Health Connect keeps them. |
+| `WRITE_BODY_FAT` | What you log on the watch, by hand. |
+| `WRITE_BODY_TEMPERATURE` | What you log on the watch, by hand. |
+| `WRITE_BLOOD_GLUCOSE` | What you log on the watch, by hand. |
 
 **Written from the scale**
 

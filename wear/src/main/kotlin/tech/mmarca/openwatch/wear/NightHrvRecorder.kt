@@ -21,7 +21,9 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
  * starts only while the sleep recorder holds the processor awake
  * ([BedtimeHold.HOLDING]: bedtime mode, worn, off the charger) and the last
  * ten minute rows show no movement. The result waits until the minute rows
- * that cover the window have closed, and is dropped when the arm moved.
+ * that cover the window have closed, and is dropped when the arm moved. A
+ * spot HRV the wearer started holds the sensor ([SensorClaim]) for its three
+ * minutes; a window does not start meanwhile and is tried at the next tick.
  *
  * Everything runs on one handler thread, which also does the SQLite work.
  */
@@ -35,6 +37,8 @@ internal class NightHrvRecorder(
     private val ppg: HrvWindowSource,
     /** The Samsung platform's own intervals, used once chosen. */
     private val samsung: HrvWindowSource,
+    /** Shared with the spot HRV: one window at a time reads the sensor. */
+    private val claim: SensorClaim = SensorClaim(),
 ) : Recorder {
 
     private val wakeLock = (context.getSystemService(Context.POWER_SERVICE) as PowerManager)
@@ -142,9 +146,14 @@ internal class NightHrvRecorder(
     private fun beginWindow(now: Long) {
         val chosen = chosenSource() ?: return
         val workerHandler = handler ?: return
+        // A spot HRV holds the sensor: the next tick tries again.
+        if (!claim.take(CLAIM)) return
         val started = chosen.begin(workerHandler, now)
         nextAllowedAt = NightHrvSchedule.nextStartAfter(now, spoiled = !started)
-        if (!started) return
+        if (!started) {
+            claim.release(CLAIM)
+            return
+        }
         source = chosen
         windowStartedAt = now
         wakeLock.acquire(NightHrv.WINDOW_MILLIS + WAKE_LOCK_SLACK_MILLIS)
@@ -161,6 +170,7 @@ internal class NightHrvRecorder(
         finishing = true
         finished.finish(now) { result ->
             finishing = false
+            claim.release(CLAIM)
             if (finished === samsung && samsung.lastWindowFailed && !samsungFailed) {
                 samsungFailed = true
                 Log.w(TAG, "Samsung platform failed, the next windows use the raw PPG")
@@ -188,6 +198,7 @@ internal class NightHrvRecorder(
         }
         if (wakeLock.isHeld) wakeLock.release()
         windowStartedAt = 0L
+        claim.release(CLAIM)
     }
 
     /** Stores the waiting result once the rows covering it show a still arm; drops it when they do not. */
@@ -233,6 +244,9 @@ internal class NightHrvRecorder(
     private companion object {
         const val TAG = "NightHrvRecorder"
         const val WAKE_LOCK_TAG = "OpenWatch:nightHrv"
+
+        /** The night window's name on [SensorClaim]. */
+        const val CLAIM = "night"
 
         const val TICK_MILLIS = 30_000L
         const val WINDOW_TICK_MILLIS = 10_000L

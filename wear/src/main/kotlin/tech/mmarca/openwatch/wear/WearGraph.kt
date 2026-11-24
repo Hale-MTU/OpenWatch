@@ -95,6 +95,9 @@ internal class WearGraph(private val app: Application) {
     private val sensorHeartRate: HeartRateSource by lazy { SensorHeartRateSource(app, debug, wakeSync) }
     private val samsungHeartRate: HeartRateSource? by lazy { SamsungHeartRateSource(samsungFeed).takeIf { it.isAvailable } }
     private val ppgWindows: HrvWindowSource by lazy { PpgWindowSource(app, debug) }
+
+    /** The night's HRV windows and a spot HRV take turns with the sensor: one window at a time. */
+    private val hrvClaim = SensorClaim()
     private val samsungWindows: HrvWindowSource by lazy { SamsungIbiSource(samsungFeed, debug) }
     private val spo2Source: SpotSource<Spo2Reading> by lazy { SamsungSpotSource.spo2(samsungFeed) }
     private val skinSource: SpotSource<SkinReading> by lazy { SamsungSpotSource.skinTemperature(samsungFeed) }
@@ -140,6 +143,7 @@ internal class WearGraph(private val app: Application) {
             isHolding = { linkState.state.value.sleepHoldActive },
             ppg = ppgWindows,
             samsung = samsungWindows,
+            claim = hrvClaim,
         )
     }
 
@@ -184,6 +188,7 @@ internal class WearGraph(private val app: Application) {
         WatchSensors(
             heartRate = liveHeartRate.hasSensor,
             heartBeat = HeartBeatSensor.hasSensor(app),
+            rawPpg = ppgWindows.isAvailable,
             stepCounter = StepRecorder.hasStepCounter(app),
             barometer = AscentRecorder.hasBarometer(app),
             gps = app.packageManager.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS),
@@ -192,6 +197,22 @@ internal class WearGraph(private val app: Application) {
 
     private val heartBeats: HeartBeatSensor by lazy { HeartBeatSensor(app) }
     private val spotPressure: PressureSensor by lazy { PressureSensor(app) }
+    private val spotMotion: MotionSensor by lazy { MotionSensor(app) }
+
+    /** A spot HRV's own raw PPG source: the night's holds its window's samples, so the two never share one. */
+    private val spotPpgWindows: HrvWindowSource by lazy {
+        PpgWindowSource(app, debug, minCleanBeats = SpotRules.HRV_MIN_CLEAN_BEATS, windowEvent = "spot_ppg_window")
+    }
+
+    /**
+     * The window a spot HRV takes its beats from, chosen when it starts: the single beats where
+     * the watch reports them, else the raw pulse signal; null with neither.
+     */
+    private fun spotHrvWindow(): HrvWindowSource? = when {
+        sensors.heartBeat -> HeartBeatWindowSource(heartBeats)
+        sensors.rawPpg -> spotPpgWindows
+        else -> null
+    }
 
     /**
      * The spot measurements the wearer starts by hand, each over a source of
@@ -203,7 +224,9 @@ internal class WearGraph(private val app: Application) {
         SpotMeasurements(
             app,
             heartRate = { liveHeartRate.takeIf { sensors.heartRate }?.let { live -> SpotSensor(live::listen) } },
-            heartBeats = { heartBeats.takeIf { sensors.heartBeat } },
+            hrvWindows = ::spotHrvWindow,
+            motion = { spotMotion },
+            hrvClaim = hrvClaim,
             pressure = { spotPressure.takeIf { sensors.barometer } },
             heartRateGranted = { WearPermissions.hasHeartRate(app) },
             entries = entries,

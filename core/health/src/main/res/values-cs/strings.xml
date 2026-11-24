@@ -10,8 +10,6 @@
     <string name="health_data_note_wearos_sleep">Jeden odhadnutý spánek za noc a za každé zdřímnutí.</string>
     <string name="health_data_note_wearos_hrv">V noci, na hodinkách, které ji umějí měřit.</string>
     <string name="health_data_note_wearos_workout">Trénink, který zaznamenáte na hodinkách, s jeho trasou a vzdáleností.</string>
-    <string name="health_data_note_wearos_breathing">Jen se zapnutou volbou „Dechová frekvence z hodinek“ v Nastavení.</string>
-    <string name="health_data_note_wearos_spo2">Jen z hodinek Samsung se zapnutou volbou „SpO2 každou hodinu v noci“ pro tyto hodinky.</string>
     <string name="health_data_note_wearos_skin">Jen z hodinek Samsung se zapnutou volbou „Teplota kůže v noci“ pro tyto hodinky. Jeden záznam za noc: rozdíl oproti vaší obvyklé noci.</string>
     <string name="health_data_note_scale_estimate">Odhadnuto v telefonu z měření váhy a vašeho tělesného profilu.</string>
     <string name="health_data_read_weight">Pro kalorie z chůze a složení těla z váhy.</string>

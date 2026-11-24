@@ -10,8 +10,6 @@
     <string name="health_data_note_wearos_sleep">Jedna szacowana sesja na noc i na każdą drzemkę.</string>
     <string name="health_data_note_wearos_hrv">W nocy, na zegarku, który potrafi ją mierzyć.</string>
     <string name="health_data_note_wearos_workout">Trening, który nagrywasz na zegarku, z jego trasą i dystansem.</string>
-    <string name="health_data_note_wearos_breathing">Tylko z włączoną opcją „Częstość oddechu z zegarka” w Ustawieniach.</string>
-    <string name="health_data_note_wearos_spo2">Tylko z zegarka Samsung, z włączoną dla niego opcją „SpO2 co godzinę w nocy”.</string>
     <string name="health_data_note_wearos_skin">Tylko z zegarka Samsung, z włączoną dla niego opcją „Temperatura skóry w nocy”. Jeden rekord na noc: różnica względem Twojej zwykłej nocy.</string>
     <string name="health_data_note_scale_estimate">Szacowane na telefonie na podstawie pomiaru z wagi i Twojego profilu ciała.</string>
     <string name="health_data_read_weight">Do kalorii z chodzenia i składu ciała z wagi.</string>

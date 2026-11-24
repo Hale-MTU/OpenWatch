@@ -1,23 +1,29 @@
 package tech.mmarca.openwatch.wear
 
 import android.content.Context
+import android.os.Handler
+import android.os.HandlerThread
 import android.os.PowerManager
+import kotlin.coroutines.resume
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
 /**
  * The spot measurements the wearer starts by hand ([SpotKind]), built once
  * in [WearGraph] over the sources it hands in, so no screen opens a sensor:
- * the heart rate through [LiveHeartRate.listen], the single beats of a
- * heart-beat sensor for the HRV, the barometer once a second for the air
- * pressure. Each source is asked for when a measurement starts, off the main
- * thread, and is null where the watch lacks its sensor.
+ * the heart rate through [LiveHeartRate.listen], for the HRV a window of its
+ * own ([HrvWindowSource]: the single beats of a heart-beat sensor, the raw
+ * pulse signal, or the Samsung platform's intervals) with the accelerometer
+ * beside it, the barometer once a second for the air pressure. Each source
+ * is asked for when a measurement starts, off the main thread, and is null
+ * where the watch lacks its sensor.
  *
  * [run] holds a partial wake lock of its own for as long as a measurement
  * lasts, so it ends with its reading even when the screen goes off. A heart
@@ -27,13 +33,20 @@ import tech.mmarca.openwatch.wearlink.WearLinkEntry
 internal class SpotMeasurements(
     context: Context,
     private val heartRate: () -> SpotSensor<LiveHeartRate.Reading>?,
-    private val heartBeats: () -> SpotSensor<Double>?,
+    /** A window of the HRV's beats on this watch, chosen when it starts; null without a source. */
+    private val hrvWindows: () -> HrvWindowSource?,
+    /** The accelerometer, by which an HRV is kept only from a still arm; null without one. */
+    private val motion: () -> SpotSensor<Motion>?,
+    /** Shared with the night's HRV windows: one of the two at a time. */
+    private val hrvClaim: SensorClaim,
     private val pressure: () -> SpotSensor<Float>?,
     private val heartRateGranted: () -> Boolean,
     private val entries: EntryLog,
     private val debug: DebugProtocol,
     /** How long a measurement of a kind may take, milliseconds; its own limit but in a test. */
     private val limitMillis: (SpotKind) -> Long = { it.seconds * MILLIS_PER_SECOND },
+    /** How long an HRV window's source may take to hand its result over once the window ends. */
+    private val resultWaitMillis: Long = RESULT_WAIT_MILLIS,
 ) {
     private val power = context.getSystemService(PowerManager::class.java)
 
@@ -45,7 +58,7 @@ internal class SpotMeasurements(
     fun run(kind: SpotKind): Flow<SpotEvent> = channelFlow {
         val lock = power?.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, WAKE_LOCK_TAG)?.apply {
             setReferenceCounted(false)
-            acquire(limitMillis(kind) + WAKE_LOCK_MARGIN_MILLIS)
+            acquire(limitMillis(kind) + resultWaitMillis + WAKE_LOCK_MARGIN_MILLIS)
         }
         debug.event(TAG, "start", "kind" to kind.name)
         try {
@@ -96,24 +109,74 @@ internal class SpotMeasurements(
         }
     }
 
-    /** The RMSSD of the kind's whole minute of single beats, the pulse between two beats as the live value. */
+    /**
+     * The RMSSD of the kind's whole window of beats from [hrvWindows], kept only from a still
+     * arm ([Stillness]). The heart rate sensor stays registered for the window: it keeps the LEDs
+     * lit for the raw pulse signal, and its pulse is the live value. A night's HRV window that
+     * holds the sensor ([hrvClaim]) comes first; the spot then says the watch is busy.
+     */
     private suspend fun ProducerScope<SpotEvent>.hrv(kind: SpotKind): SpotEvent {
-        val sensor = heartBeats() ?: return SpotEvent.Failed(SpotFailure.NOT_SUPPORTED)
+        val source = hrvWindows() ?: return SpotEvent.Failed(SpotFailure.NOT_SUPPORTED)
         if (!heartRateGranted()) return SpotEvent.Failed(SpotFailure.PERMISSION_DENIED)
-        val beats = Channel<Double>(Channel.UNLIMITED)
-        val handle = sensor.listen { beats.trySend(it) } ?: return SpotEvent.Failed(SpotFailure.FAILED)
+        if (!hrvClaim.take(CLAIM)) return SpotEvent.Failed(SpotFailure.BUSY)
+        val worker = HandlerThread("SpotHrv").apply { start() }
+        val handler = Handler(worker.looper)
+        val pulses = Channel<LiveHeartRate.Reading>(Channel.UNLIMITED)
+        val pulse = heartRate()?.listen { pulses.trySend(it) }
+        val moves = MotionTrace()
+        val stillness = motion()?.listen(moves::add)
         try {
-            val times = ArrayList<Double>()
+            if (!onHandler(handler) { source.begin(handler, System.currentTimeMillis()) }) return SpotEvent.Failed(SpotFailure.FAILED)
+            var offBody = false
             withTimeoutOrNull(limitMillis(kind)) {
-                for (beat in beats) {
-                    times.lastOrNull()?.let { SpotRules.beatBpm(it, beat) }?.let { send(SpotEvent.Live(it)) }
-                    times += beat
+                for (reading in pulses) {
+                    offBody = reading == LiveHeartRate.Reading.NoContact
+                    send(
+                        when (reading) {
+                            is LiveHeartRate.Reading.Sample -> SpotEvent.Live(reading.sample.bpm.toDouble())
+                            LiveHeartRate.Reading.NoContact -> SpotEvent.Waiting(offBody = true)
+                            LiveHeartRate.Reading.Unreliable -> SpotEvent.Waiting(offBody = false)
+                        },
+                    )
                 }
             }
-            return SpotRules.rmssd(times)?.let { SpotEvent.Result(it) } ?: SpotEvent.Failed(SpotFailure.NO_SIGNAL)
+            val end = System.currentTimeMillis()
+            val window = withTimeoutOrNull(resultWaitMillis) {
+                suspendCancellableCoroutine { done -> handler.post { source.finish(end) { if (done.isActive) done.resume(it) } } }
+            }
+            val hrv = window?.hrv
+            return when {
+                stillness != null && moves.moved() -> SpotEvent.Failed(SpotFailure.MOVED)
+                hrv == null || hrv.beatCount < SpotRules.HRV_MIN_CLEAN_BEATS -> SpotEvent.Failed(if (offBody) SpotFailure.OFF_BODY else SpotFailure.NO_SIGNAL)
+                else -> SpotEvent.Result(hrv.rmssdMillis)
+            }
         } finally {
-            handle.close()
+            pulse?.close()
+            stillness?.close()
+            handler.post { source.cancel() }
+            worker.quitSafely()
+            hrvClaim.release(CLAIM)
         }
+    }
+
+    /** [block]'s answer, run on [handler]'s thread, where a window's source takes its calls. */
+    private suspend fun <T> onHandler(handler: Handler, block: () -> T): T =
+        suspendCancellableCoroutine { done -> handler.post { if (done.isActive) done.resume(block()) } }
+
+    /** The accelerometer's readings through one window, from its sensor thread, judged once at the end. */
+    private class MotionTrace {
+        private val times = ArrayList<Long>()
+        private val magnitudes = ArrayList<Double>()
+
+        @Synchronized
+        fun add(motion: Motion) {
+            if (times.size >= MAX_MOTION_READINGS) return
+            times += motion.timeMillis
+            magnitudes += motion.magnitude
+        }
+
+        @Synchronized
+        fun moved(): Boolean = Stillness.moved(times.toLongArray(), magnitudes.toDoubleArray())
     }
 
     /** The mean of the first [SpotRules.PRESSURE_READINGS] readings, with the altitude they stand for. */
@@ -151,6 +214,15 @@ internal class SpotMeasurements(
         const val TAG = "Spot"
         const val WAKE_LOCK_TAG = "OpenWatch:spot"
         const val MILLIS_PER_SECOND = 1_000L
+
+        /** The spot's name on [SensorClaim]. */
+        const val CLAIM = "spot"
+
+        /** A source that hands its result over late, the Samsung platform's, waits up to this after the window. */
+        const val RESULT_WAIT_MILLIS = 30_000L
+
+        /** Five a second for three minutes is 900; more than this is not kept. */
+        const val MAX_MOTION_READINGS = 2_000
 
         /** A little past the measurement's own limit, so the lock never ends it early. */
         const val WAKE_LOCK_MARGIN_MILLIS = 10_000L

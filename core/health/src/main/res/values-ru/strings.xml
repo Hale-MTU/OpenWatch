@@ -10,8 +10,6 @@
     <string name="health_data_note_wearos_sleep">По одной оценённой сессии сна за каждую ночь и каждый дневной сон.</string>
     <string name="health_data_note_wearos_hrv">Ночью, на часах, способных её измерять.</string>
     <string name="health_data_note_wearos_workout">Тренировка, записанная вами на часах, с маршрутом и расстоянием.</string>
-    <string name="health_data_note_wearos_breathing">Только если в настройках включён параметр «Частота дыхания с часов».</string>
-    <string name="health_data_note_wearos_spo2">Только с часов Samsung, если для этих часов включён параметр «SpO2 каждый час ночью».</string>
     <string name="health_data_note_wearos_skin">Только с часов Samsung, если для этих часов включён параметр «Температура кожи ночью». Одна запись за ночь: отклонение от вашей обычной ночи.</string>
     <string name="health_data_note_scale_estimate">Рассчитывается на телефоне по измерению весов и вашему профилю тела.</string>
     <string name="health_data_read_weight">Для калорий ходьбы и состава тела по весам.</string>

@@ -6,6 +6,7 @@ import androidx.health.connect.client.records.BasalMetabolicRateRecord
 import androidx.health.connect.client.records.BloodGlucoseRecord
 import androidx.health.connect.client.records.BloodPressureRecord
 import androidx.health.connect.client.records.BodyFatRecord
+import androidx.health.connect.client.records.BodyTemperatureRecord
 import androidx.health.connect.client.records.BodyWaterMassRecord
 import androidx.health.connect.client.records.CyclingPedalingCadenceRecord
 import androidx.health.connect.client.records.DistanceRecord
@@ -190,6 +191,7 @@ internal fun Record.timeSpan(): ClosedRange<Instant>? = when (this) {
     is BloodGlucoseRecord -> time..time
     is BloodPressureRecord -> time..time
     is BodyFatRecord -> time..time
+    is BodyTemperatureRecord -> time..time
     is BodyWaterMassRecord -> time..time
     is HeartRateVariabilityRmssdRecord -> time..time
     is HeightRecord -> time..time

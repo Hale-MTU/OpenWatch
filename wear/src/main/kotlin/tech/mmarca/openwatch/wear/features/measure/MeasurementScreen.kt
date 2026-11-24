@@ -37,7 +37,6 @@ import androidx.wear.compose.material3.CircularProgressIndicator
 import androidx.wear.compose.material3.EdgeButton
 import androidx.wear.compose.material3.Icon
 import androidx.wear.compose.material3.MaterialTheme
-import androidx.wear.compose.material3.ProgressIndicatorDefaults
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import kotlinx.coroutines.CoroutineScope
@@ -50,6 +49,7 @@ import tech.mmarca.openwatch.wear.SpotFailure
 import tech.mmarca.openwatch.wear.SpotKind
 import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.WearPermissions
+import tech.mmarca.openwatch.wear.haptics.Haptics
 import tech.mmarca.openwatch.wear.ui.components.MetricValueRow
 import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
 import tech.mmarca.openwatch.wear.ui.theme.Emphasis
@@ -60,7 +60,7 @@ import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
  * watch's sensors are read; false shows why the measurement cannot run here
  * instead of a start button. The measurement runs through [events]
  * (`WearGraph.spot`); a heart rate or an HRV first asks for the heart rate
- * grant where it is missing.
+ * grant where it is missing. The wrist buzzes when a run ends ([endCue]).
  */
 @Composable
 internal fun MeasurementRoute(
@@ -83,7 +83,13 @@ internal fun MeasurementRoute(
         true -> {
             val context = LocalContext.current
             val viewModel = viewModel(key = measurement.name) {
-                MeasureViewModel(measurement.kind, events, CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate))
+                val app = context.applicationContext
+                MeasureViewModel(
+                    measurement.kind,
+                    events,
+                    CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate),
+                    onEnd = { ended -> Haptics.play(app, ended.endCue()) },
+                )
             }
             val state by viewModel.state.collectAsStateWithLifecycle()
             val askHeartRate = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -114,8 +120,8 @@ internal fun MeasurementRoute(
 
 /**
  * One spot measurement: what to do and a start button, then the live value
- * inside a ring that fills with the measurement's time, then the reading or
- * why there is none. The measurement holds a wake lock of its own, so it
+ * inside an arc along the screen's edge that fills with the measurement's
+ * time ([EdgeProgress]), then the reading or why there is none. The measurement holds a wake lock of its own, so it
  * ends with its reading even when the screen goes off meanwhile.
  */
 @Composable
@@ -167,15 +173,11 @@ private fun MeasurementBody(
 ) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         if (state is MeasureUiState.Running) {
-            CircularProgressIndicator(
-                progress = { state.progress },
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(2.dp),
-                colors = ProgressIndicatorDefaults.colors(
-                    indicatorColor = measurement.accentColor,
-                    trackColor = measurement.accentColor.copy(alpha = Emphasis.subtle),
-                ),
+            EdgeProgress(
+                progress = state.progress,
+                color = measurement.accentColor,
+                trackColor = measurement.accentColor.copy(alpha = Emphasis.subtle),
+                modifier = Modifier.fillMaxSize(),
             )
         }
         Column(

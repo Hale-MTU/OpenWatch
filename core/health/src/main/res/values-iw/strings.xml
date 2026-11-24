@@ -10,8 +10,6 @@
     <string name="health_data_note_wearos_sleep">סשן משוער אחד לכל לילה ולכל תנומה.</string>
     <string name="health_data_note_wearos_hrv">בלילה, בשעון שיכול למדוד את זה.</string>
     <string name="health_data_note_wearos_workout">אימון שהקלטת בשעון, עם המסלול והמרחק שלו.</string>
-    <string name="health_data_note_wearos_breathing">רק כשהאפשרות \"קצב נשימה מהשעון\" מופעלת בהגדרות.</string>
-    <string name="health_data_note_wearos_spo2">רק משעון Samsung, כשהאפשרות \"מדידת SpO2 כל שעה בלילה\" מופעלת עבור השעון הזה.</string>
     <string name="health_data_note_wearos_skin">רק משעון Samsung, כשהאפשרות \"טמפרטורת העור בלילה\" מופעלת עבור השעון הזה. רשומה אחת לכל לילה: ההפרש מהלילה הרגיל שלך.</string>
     <string name="health_data_note_scale_estimate">מוערך בטלפון לפי המדידה של המשקל ולפי פרופיל הגוף שלך.</string>
     <string name="health_data_read_weight">עבור קלוריות ההליכה והרכב הגוף שהמשקל מודד.</string>

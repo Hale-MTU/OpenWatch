@@ -10,8 +10,6 @@
     <string name="health_data_note_wearos_sleep">每晚和每次小睡各一条估算的睡眠记录。</string>
     <string name="health_data_note_wearos_hrv">在夜间，仅限能够测量它的手表。</string>
     <string name="health_data_note_wearos_workout">你在手表上记录的锻炼，包括其路线和距离。</string>
-    <string name="health_data_note_wearos_breathing">仅在设置中开启“来自手表的呼吸频率”时。</string>
-    <string name="health_data_note_wearos_spo2">仅限 Samsung 手表，且已为该手表开启“夜间每小时 SpO2”。</string>
     <string name="health_data_note_wearos_skin">仅限 Samsung 手表，且已为该手表开启“夜间皮肤温度”。每晚一条记录：与你平常夜晚的差值。</string>
     <string name="health_data_note_scale_estimate">由手机根据体重秤的测量值和你的身体档案估算。</string>
     <string name="health_data_read_weight">用于步行卡路里和体重秤的身体成分。</string>

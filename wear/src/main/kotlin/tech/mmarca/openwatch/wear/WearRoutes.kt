@@ -1,5 +1,7 @@
 package tech.mmarca.openwatch.wear
 
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
+
 /**
  * Navigation routes. Each feature package declares its own destinations, a
  * `NavGraphBuilder` extension in its `…Navigation.kt` that `OpenWatchWearApp`
@@ -33,6 +35,14 @@ object WearRoutes {
     const val QUICK_LOG = "quick_log"
     const val LOG_WEIGHT = "log_weight"
     const val LOG_BLOOD_PRESSURE = "log_blood_pressure"
+    const val LOG_VALUE_ARG = "type"
+
+    /** One value of a type the quick log takes one number of, `log_value/BODY_FAT`. */
+    const val LOG_VALUE = "log_value/{$LOG_VALUE_ARG}"
+    fun logValue(type: WearLinkEntry.Type) = "log_value/${type.name}"
+
+    /** The entry type a [LOG_VALUE_ARG] names; null for a name this build has no type for, and for none. */
+    fun entryTypeOf(argument: String?): WearLinkEntry.Type? = WearLinkEntry.Type.entries.firstOrNull { it.name == argument }
 
     /** The guided breathing minute, logged as a mindful session when it ends. */
     const val BREATHE = "breathe"

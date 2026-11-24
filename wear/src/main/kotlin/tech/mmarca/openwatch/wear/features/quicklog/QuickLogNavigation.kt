@@ -1,5 +1,6 @@
 package tech.mmarca.openwatch.wear.features.quicklog
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.wear.compose.navigation.composable
@@ -21,7 +22,8 @@ private const val DefaultDiastolic = 80
 
 /**
  * The quick log, `quick_log`, and the entries it opens: the weight and the
- * blood pressure steppers, `log_weight` and `log_blood_pressure`, and the
+ * blood pressure steppers, `log_weight` and `log_blood_pressure`, the stepper
+ * of a value with one number, `log_value/{type}` ([LogValueSpecs]), and the
  * breathing minute, `breathe`. Every entry goes to [log]; the steppers start
  * from the last value logged.
  */
@@ -32,6 +34,7 @@ internal fun NavGraphBuilder.quickLogDestinations(navController: NavHostControll
             onAddWater = { log(WearLinkEntry.Type.WATER, WaterServingMl, null) },
             onLogWeight = { navController.navigate(WearRoutes.LOG_WEIGHT) { launchSingleTop = true } },
             onLogBloodPressure = { navController.navigate(WearRoutes.LOG_BLOOD_PRESSURE) { launchSingleTop = true } },
+            onLogValue = { type -> navController.navigate(WearRoutes.logValue(type)) { launchSingleTop = true } },
             onBreathe = { navController.navigate(WearRoutes.BREATHE) { launchSingleTop = true } },
         )
     }
@@ -56,6 +59,24 @@ internal fun NavGraphBuilder.quickLogDestinations(navController: NavHostControll
                 navController.popBackStack()
             },
         )
+    }
+    composable(WearRoutes.LOG_VALUE) { entry ->
+        val type = WearRoutes.entryTypeOf(entry.arguments?.getString(WearRoutes.LOG_VALUE_ARG))?.takeIf { it in LogValueSpecs }
+        if (type == null) {
+            // A type this build has no stepper for: back to the dashboard, the start destination.
+            LaunchedEffect(Unit) { navController.popBackStack(WearRoutes.DASHBOARD, inclusive = false) }
+        } else {
+            val current = state()
+            LogValueScreen(
+                type = type,
+                initialMetric = current.entries.lastOrNull { it.type == type }?.value,
+                unitSystem = current.preferences.unitSystem,
+                onSave = { metric ->
+                    log(type, metric, null)
+                    navController.popBackStack()
+                },
+            )
+        }
     }
     composable(WearRoutes.BREATHE) {
         BreatheScreen(

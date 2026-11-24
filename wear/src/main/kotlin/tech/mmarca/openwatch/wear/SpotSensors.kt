@@ -7,6 +7,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.Handler
 import android.os.HandlerThread
+import kotlin.math.sqrt
 
 /**
  * A sensor a spot measurement listens to while it runs ([SpotMeasurements]):
@@ -73,6 +74,34 @@ internal class HeartBeatSensor(context: Context) : SpotSensor<Double> {
         /** Whether the watch reports single beats at all; without them there is no spot HRV. */
         fun hasSensor(context: Context): Boolean =
             context.getSystemService(SensorManager::class.java)?.getDefaultSensor(Sensor.TYPE_HEART_BEAT) != null
+    }
+}
+
+/** One accelerometer reading: its time in elapsed-realtime milliseconds and its magnitude in m/s². */
+internal class Motion(val timeMillis: Long, val magnitude: Double)
+
+/**
+ * The accelerometer at its normal rate (five readings a second), unbatched,
+ * for a spot HRV, which keeps its reading only when the arm stayed still
+ * ([Stillness]): its own listener beside the sleep recorder's batched one.
+ * No grant.
+ */
+internal class MotionSensor(context: Context) : SpotSensor<Motion> {
+
+    private val sensorManager = context.getSystemService(SensorManager::class.java)
+
+    override fun listen(onReading: (Motion) -> Unit): AutoCloseable? {
+        val sensor = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) ?: return null
+        return sensorManager.listenOnOwnThread(sensor, SensorManager.SENSOR_DELAY_NORMAL, "MotionSensor") { event ->
+            if (event.values.size < AXES) return@listenOnOwnThread
+            val (x, y, z) = event.values
+            onReading(Motion(event.timestamp / NANOS_PER_MILLI, sqrt((x * x + y * y + z * z).toDouble())))
+        }
+    }
+
+    private companion object {
+        const val AXES = 3
+        const val NANOS_PER_MILLI = 1_000_000L
     }
 }
 

@@ -44,13 +44,6 @@ class SpotRulesTest {
     }
 
     @Test
-    fun `two beats stand for a pulse only at an interval a heart beats at`() {
-        assertEquals(75.0, SpotRules.beatBpm(1_000.0, 1_800.0)!!, 1e-9)
-        assertNull(SpotRules.beatBpm(1_000.0, 1_100.0))
-        assertNull(SpotRules.beatBpm(1_000.0, 4_000.0))
-    }
-
-    @Test
     fun `the air pressure is the mean of five readings, with its altitude at standard pressure`() {
         assertNull(SpotRules.airPressure(List(SpotRules.PRESSURE_READINGS - 1) { 1013.25f }))
 
@@ -66,7 +59,7 @@ class SpotRulesTest {
     @Test
     fun `each measurement has its time limit`() {
         assertEquals(30, SpotKind.HEART_RATE.seconds)
-        assertEquals(60, SpotKind.HRV.seconds)
+        assertEquals(180, SpotKind.HRV.seconds)
         assertEquals(10, SpotKind.AIR_PRESSURE.seconds)
     }
 }

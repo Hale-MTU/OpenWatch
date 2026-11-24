@@ -12,6 +12,7 @@ import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.SpotFailure
 import tech.mmarca.openwatch.wear.SpotKind
 import tech.mmarca.openwatch.wear.UnitSystem
+import tech.mmarca.openwatch.wear.haptics.HapticCue
 import tech.mmarca.openwatch.wear.ui.components.FeetPerMeter
 import tech.mmarca.openwatch.wear.ui.components.formatCount
 import tech.mmarca.openwatch.wear.ui.theme.ElevationColor
@@ -49,12 +50,12 @@ enum class Measurement(
         unit = R.string.unit_bpm,
     ),
 
-    /** While it runs it shows the pulse its beats stand for; the result is the RMSSD. */
+    /** Three minutes; while it runs it shows the pulse, and the result is the RMSSD. */
     HRV(
         SpotKind.HRV,
         R.string.measure_hrv,
-        R.string.measure_hrv_description,
-        R.string.measure_instruction_still_minute,
+        R.string.measure_hrv_description_minutes,
+        R.string.measure_instruction_still_minutes,
         Icons.Outlined.Insights,
         VitalsColor,
         needsHeartRatePermission = true,
@@ -88,8 +89,24 @@ val SpotFailure.message: Int
         SpotFailure.PERMISSION_DENIED -> R.string.measure_error_permission
         SpotFailure.OFF_BODY -> R.string.measure_error_off_body
         SpotFailure.NO_SIGNAL -> R.string.measure_error_no_signal
+        SpotFailure.MOVED -> R.string.measure_error_moved
+        SpotFailure.BUSY -> R.string.measure_error_busy
         SpotFailure.FAILED -> R.string.measure_error_failed
     }
+
+/**
+ * How the wrist is told a run ended: one pulse for a reading, two for a
+ * failure. A failure found before anything ran (no sensor, no grant), while
+ * the wearer looks at the screen, is silent; so is a state that is no end.
+ */
+fun MeasureUiState.endCue(): HapticCue? = when (this) {
+    is MeasureUiState.Done -> HapticCue.PULSE
+    is MeasureUiState.Failed -> when (failure) {
+        SpotFailure.NOT_SUPPORTED, SpotFailure.PERMISSION_DENIED, SpotFailure.BUSY -> null
+        else -> HapticCue.DOUBLE_PULSE
+    }
+    MeasureUiState.Ready, is MeasureUiState.Running -> null
+}
 
 /** A measured value as the screen shows it: whole units. */
 fun formatMeasurement(value: Double): String = formatCount(value.roundToInt())

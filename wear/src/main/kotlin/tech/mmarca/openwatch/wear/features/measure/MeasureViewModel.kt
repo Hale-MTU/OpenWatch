@@ -39,12 +39,14 @@ sealed interface MeasureUiState {
  * Runs one spot measurement of [kind] for its screen, through [events]
  * (`WearGraph.spot`, which logs the reading): the screen opens no sensor.
  * Leaving the screen clears the ViewModel, which cancels the run and lets go
- * of the sensor.
+ * of the sensor. A run that ends, in its reading or in a failure, is told to
+ * [onEnd] once, so the wrist buzzes; one that is cancelled is not.
  */
 internal class MeasureViewModel(
     private val kind: SpotKind,
     private val events: (SpotKind) -> Flow<SpotEvent>,
     private val scope: CoroutineScope,
+    private val onEnd: (MeasureUiState) -> Unit = {},
     private val now: () -> Long = System::currentTimeMillis,
 ) : ViewModel(scope) {
 
@@ -80,10 +82,12 @@ internal class MeasureViewModel(
                 }
                 // A run that ended without its reading or its reason failed.
                 if (mutableState.value is MeasureUiState.Running) mutableState.value = MeasureUiState.Failed(SpotFailure.FAILED)
+                onEnd(mutableState.value)
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: RuntimeException) {
                 mutableState.value = MeasureUiState.Failed(if (error is SecurityException) SpotFailure.PERMISSION_DENIED else SpotFailure.FAILED)
+                onEnd(mutableState.value)
             } finally {
                 ticker.cancel()
             }

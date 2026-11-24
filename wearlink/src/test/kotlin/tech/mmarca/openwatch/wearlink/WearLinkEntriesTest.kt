@@ -37,7 +37,7 @@ class WearLinkEntriesTest {
 
     @Test fun `every type keeps its token, which is what the line carries`() {
         assertEquals(
-            listOf("water", "weight", "bp", "mindful", "hr", "hrv"),
+            listOf("water", "weight", "bp", "mindful", "hr", "hrv", "bodyfat", "spo2", "breath", "temp", "glucose"),
             Type.entries.map { it.token },
         )
         for (type in Type.entries) {
@@ -47,7 +47,8 @@ class WearLinkEntriesTest {
     }
 
     @Test fun `a type this build does not know is skipped, and a line may grow at its end`() {
-        assertNull(WearLinkEntries.parse("LG 1791616222062 glucose 5400 - h"))
+        assertNull(WearLinkEntries.parse("LG 1791616222062 coffee 5400 - h"))
+        assertEquals(Type.BLOOD_GLUCOSE, WearLinkEntries.parse("LG 1791616222062 glucose 5400 - h")?.type)
         assertEquals(
             WearLinkEntry(t, Type.WATER, 250_000, null, false),
             WearLinkEntries.parse("LG 1791616222062 water 250000 - h later fields"),

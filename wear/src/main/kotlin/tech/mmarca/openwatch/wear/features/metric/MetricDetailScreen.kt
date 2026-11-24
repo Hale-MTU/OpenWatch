@@ -33,6 +33,7 @@ import androidx.wear.compose.material3.ProgressIndicatorDefaults
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.TextStyle
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -58,6 +59,7 @@ import tech.mmarca.openwatch.wear.ui.theme.Emphasis
 import tech.mmarca.openwatch.wear.ui.theme.HeartZoneColors
 import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
 import tech.mmarca.openwatch.wear.ui.theme.color
+import tech.mmarca.openwatch.wearlink.WearLinkEntry
 
 private val ChartHeight = 44.dp
 private val SectionPadding = 12.dp
@@ -65,8 +67,8 @@ private val SectionPadding = 12.dp
 /**
  * One screen for every metric. The first screenful is the overview: the
  * value, and a goal ring where the metric has a goal. Scrolling on brings
- * today's chart, the stats and the last days. A section without data is
- * left out rather than drawn empty.
+ * today's chart, the latest entries made on the watch, the stats and the
+ * last days. A section without data is left out rather than drawn empty.
  */
 @Composable
 fun MetricDetailScreen(
@@ -77,10 +79,13 @@ fun MetricDetailScreen(
     sleepStages: Map<SleepStage, Double> = emptyMap(),
     /** Starts a spot measurement of this metric; null when the watch cannot measure it. */
     onMeasure: (() -> Unit)? = null,
+    /** The entries made on the watch, of every type; the five newest of this metric's are listed. */
+    entries: List<WearLinkEntry> = emptyList(),
 ) {
     val listState = rememberTransformingLazyColumnState()
     val unit = stringResource(metricUnitLabel(metric, unitSystem))
     val stats = remember(metric, state, restingHeartRate) { metricStats(metric, state, restingHeartRate) }
+    val recent = remember(metric, entries) { recentEntries(entries, metric, LocalDate.now(), ZoneId.systemDefault()) }
     // The bar and the legend read the same shares, so they split the same total.
     val zoneShares = remember(state.zoneTime) { HeartZoneDisplay.timeShares(state.zoneTime) }
 
@@ -148,6 +153,7 @@ fun MetricDetailScreen(
                     )
                 }
             }
+            recentEntryItems(recent, metric, unitSystem, unit)
             items(stats) { stat ->
                 StatRow(
                     label = stringResource(stat.label),

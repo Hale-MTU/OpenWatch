@@ -10,8 +10,6 @@
     <string name="health_data_note_wearos_sleep">Une session estimée par nuit et par sieste.</string>
     <string name="health_data_note_wearos_hrv">La nuit, sur une montre capable de la mesurer.</string>
     <string name="health_data_note_wearos_workout">Un entraînement que vous enregistrez sur la montre, avec son itinéraire et sa distance.</string>
-    <string name="health_data_note_wearos_breathing">Uniquement si l\'option « Fréquence respiratoire de la montre » est activée dans Paramètres.</string>
-    <string name="health_data_note_wearos_spo2">Uniquement depuis une montre Samsung, si l\'option « SpO2 toutes les heures la nuit » est activée pour cette montre.</string>
     <string name="health_data_note_wearos_skin">Uniquement depuis une montre Samsung, si l\'option « Température cutanée la nuit » est activée pour cette montre. Un enregistrement par nuit : l\'écart par rapport à votre propre nuit habituelle.</string>
     <string name="health_data_note_scale_estimate">Estimé sur le téléphone à partir de la mesure de la balance et de votre profil corporel.</string>
     <string name="health_data_read_weight">Pour les calories de marche et la composition corporelle de la balance.</string>

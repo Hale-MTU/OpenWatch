@@ -10,8 +10,6 @@
     <string name="health_data_note_wearos_sleep">Unha sesión estimada por noite e por sesta.</string>
     <string name="health_data_note_wearos_hrv">Pola noite, nun reloxo que poida medila.</string>
     <string name="health_data_note_wearos_workout">Un adestramento que rexistras no reloxo, coa súa ruta e distancia.</string>
-    <string name="health_data_note_wearos_breathing">Só con «Frecuencia respiratoria do reloxo» activada en Axustes.</string>
-    <string name="health_data_note_wearos_spo2">Só desde un reloxo Samsung, con «SpO2 cada hora pola noite» activado para ese reloxo.</string>
     <string name="health_data_note_wearos_skin">Só desde un reloxo Samsung, con «Temperatura da pel pola noite» activada para ese reloxo. Un rexistro por noite: a diferenza respecto da túa noite habitual.</string>
     <string name="health_data_note_scale_estimate">Estimado no teléfono a partir da medición da báscula e do teu perfil corporal.</string>
     <string name="health_data_read_weight">Para as calorías ao camiñar e a composición corporal da báscula.</string>

@@ -10,8 +10,6 @@
     <string name="health_data_note_wearos_sleep">Üks hinnatud uneseanss iga öö ja iga uinaku kohta.</string>
     <string name="health_data_note_wearos_hrv">Öösel, kellas, mis suudab seda mõõta.</string>
     <string name="health_data_note_wearos_workout">Kellas salvestatud treening koos marsruudi ja vahemaaga.</string>
-    <string name="health_data_note_wearos_breathing">Ainult siis, kui Seadetes on „Hingamissagedus kellalt“ sisse lülitatud.</string>
-    <string name="health_data_note_wearos_spo2">Ainult Samsungi kellast, kui selle kella jaoks on „SpO2 iga tund öösel“ sisse lülitatud.</string>
     <string name="health_data_note_wearos_skin">Ainult Samsungi kellast, kui selle kella jaoks on „Naha temperatuur öösel“ sisse lülitatud. Üks kirje öö kohta: erinevus sinu tavapärasest ööst.</string>
     <string name="health_data_note_scale_estimate">Hinnatud telefonis kaalu mõõtmise ja sinu kehaprofiili põhjal.</string>
     <string name="health_data_read_weight">Kõndimise kalorite ja kaalu keha koostise jaoks.</string>

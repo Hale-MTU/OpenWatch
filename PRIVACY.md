@@ -39,7 +39,7 @@ The app asks for Bluetooth and, on Android 11 and older, the location permission
 What a paired device recorded, when you sync it or when a sync runs on a schedule you chose:
 
 - From a Garmin watch: activities with their route and sensor samples, steps, distance, calories, heart rate, resting heart rate, heart rate variability, oxygen saturation, respiratory rate, VO2 max, basal metabolic rate, sleep, and the weight a Garmin scale relays through the watch.
-- From a Wear OS watch: heart rate, steps (with their cadence and an estimate of the calories walking cost), floors and elevation gained recorded on the watch, an estimated sleep session per night, the night's resting heart rate and, where the watch can measure it, heart rate variability, and workouts recorded on the watch with their route, distance and calories. If you switch them on: the breathing rate at night, and, on a Samsung watch, blood oxygen and skin temperature at night. Skin temperature is written as the difference from your own usual night. What you log on the watch by hand (water, weight, blood pressure, a breathing session) and what you measure on it on the spot (heart rate, heart rate variability) are written as entries.
+- From a Wear OS watch: heart rate, steps (with their cadence and an estimate of the calories walking cost), floors and elevation gained recorded on the watch, an estimated sleep session per night, the night's resting heart rate and, where the watch can measure it, heart rate variability, and workouts recorded on the watch with their route, distance and calories. If you switch them on: the breathing rate at night, and, on a Samsung watch, blood oxygen and skin temperature at night. Skin temperature is written as the difference from your own usual night. What you log on the watch by hand (water, weight, blood pressure, body fat, blood oxygen, breathing rate, body temperature, blood glucose, a breathing session) and what you measure on it on the spot (heart rate, heart rate variability) are written as entries.
 - From a heart rate strap: the heart rate it measured while OpenWatch was connected to it, one record per minute.
 - From a blood pressure monitor: each reading's systolic and diastolic pressure, and the pulse it measured as a heart rate. From a glucose meter: each blood glucose reading, with where the sample came from and how it stood to a meal when the meter says so; a check with control solution is not written. From a weight scale on the standard profile: each weight.
 - From the scale: weight and heart rate as the scale measured them, and the body fat, lean mass and body water the app estimates from the scale's measurement and your body profile.
@@ -102,13 +102,16 @@ The complete list, by Health Connect permission. The app shows the same list und
 | `WRITE_EXERCISE` | A workout you record on the watch, with its route and distance. |
 | `WRITE_EXERCISE_ROUTE` |  |
 | `WRITE_DISTANCE` |  |
-| `WRITE_RESPIRATORY_RATE` | Only with “Breathing rate from the watch” switched on in Settings. |
-| `WRITE_OXYGEN_SATURATION` | Only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch. |
+| `WRITE_RESPIRATORY_RATE` | At night only with “Breathing rate from the watch” switched on in Settings; and a breathing rate you log on the watch. |
+| `WRITE_OXYGEN_SATURATION` | At night only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch; and a blood oxygen you log on the watch. |
 | `WRITE_SKIN_TEMPERATURE` | Only from a Samsung watch, with “Skin temperature at night” switched on for that watch. One record per night: the difference from your own usual night. |
 | `WRITE_HYDRATION` | What you log on the watch, by hand. |
 | `WRITE_WEIGHT` | What you log on the watch, by hand. |
 | `WRITE_BLOOD_PRESSURE` | What you log on the watch, by hand. |
 | `WRITE_MINDFULNESS` | A breathing session you do on the watch, where Health Connect keeps them. |
+| `WRITE_BODY_FAT` | What you log on the watch, by hand. |
+| `WRITE_BODY_TEMPERATURE` | What you log on the watch, by hand. |
+| `WRITE_BLOOD_GLUCOSE` | What you log on the watch, by hand. |
 
 **Written from the scale**
 
@@ -168,7 +171,7 @@ If you switch them on, and only then:
 
 ## The Wear OS Watch App
 
-The watch app records with the watch's own sensors and keeps what it records on the watch until the phone collects it, and what you log on it (a glass of water, a weight, a blood pressure, a breathing session) or measure on the spot, for a month. It keeps the figures the phone sends it for your last two weeks (sleep, resting heart rate, active calories, distance), to show them. Like the phone app, it has no internet permission. It asks, on the watch:
+The watch app records with the watch's own sensors and keeps what it records on the watch until the phone collects it, and what you log on it (a glass of water, a weight, a blood pressure, a body fat, a blood oxygen, a breathing rate, a body temperature, a blood glucose, a breathing session) or measure on the spot, for a month. It keeps the figures the phone sends it for your last two weeks (sleep, resting heart rate, active calories, distance), to show them. Like the phone app, it has no internet permission. It asks, on the watch:
 
 - The heart rate sensor (Android's body sensors or heart rate permission, and its background form), for heart rate, the night's heart rate variability and the sleep estimate.
 - Physical activity, for steps.
