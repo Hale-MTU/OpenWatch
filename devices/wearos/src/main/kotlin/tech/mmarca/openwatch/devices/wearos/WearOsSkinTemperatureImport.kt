@@ -26,7 +26,8 @@ import tech.mmarca.openwatch.devices.core.saltedRecordId
  * night against its own median would read as a measured "no change" (deltas
  * around zero), where the change is in fact unknown. The baseline counts
  * nights ([nightOf]), not runs: a night the tracker dropped out of several
- * times is one night, never compared with its own fragments.
+ * times, or one that reached the phone over several syncs, is one night,
+ * never compared with its own fragments.
  *
  * Pure, so it is testable without a device.
  */
@@ -78,8 +79,11 @@ object WearOsSkinTemperatureImport {
     fun finished(runs: List<Run>, now: Instant): List<Run> =
         runs.filter { Duration.between(it.end, now) >= SETTLE && Duration.between(it.start, it.end) >= MIN_RUN }
 
-    /** One night's median for the baseline. [night] is null for a median remembered before nights had dates. */
-    data class NightMedian(val night: LocalDate?, val celsius: Double)
+    /**
+     * One night's median for the baseline, taken over [minutes] minutes; 0 where they were not
+     * kept. [night] is null for a median remembered before nights had dates.
+     */
+    data class NightMedian(val night: LocalDate?, val celsius: Double, val minutes: Int = 0)
 
     /**
      * The night a run belongs to: the local date of its start, counted from noon to noon, so the
@@ -97,14 +101,23 @@ object WearOsSkinTemperatureImport {
     }
 
     /**
-     * [medians] with [night] added once, its median taken over all of [runs]' minutes, and only
-     * the newest [MAX_BASELINE_NIGHTS] kept. A night already remembered keeps its median: a run
-     * of it that arrives in a later sync is compared with the baseline, never added to it.
+     * [medians] with [runs] of [night] counted in, and only the newest [MAX_BASELINE_NIGHTS] kept.
+     * A new night joins once, with the median of all the runs' minutes. A night already
+     * remembered, whose earlier runs came with an earlier sync, takes these in by their length:
+     * the phone keeps no minutes, so the night's median becomes the mean of the two medians,
+     * weighted by their minutes. An earlier part kept without its minutes counts as much as what
+     * arrives now. It stays one night, in its place, either way.
      */
     fun remember(medians: List<NightMedian>, night: LocalDate, runs: List<Run>): List<NightMedian> {
-        if (runs.isEmpty() || medians.any { it.night == night }) return medians
-        val median = checkNotNull(runs.flatMap { run -> run.minutes.map { it.celsius } }.medianOrNull())
-        return (medians + NightMedian(night, median)).takeLast(MAX_BASELINE_NIGHTS)
+        val celsius = runs.flatMap { run -> run.minutes.map { it.celsius } }
+        val median = celsius.medianOrNull() ?: return medians
+        val known = medians.indexOfFirst { it.night == night }
+        if (known < 0) return (medians + NightMedian(night, median, celsius.size)).takeLast(MAX_BASELINE_NIGHTS)
+        val earlier = medians[known]
+        val earlierMinutes = if (earlier.minutes > 0) earlier.minutes else celsius.size
+        val minutes = earlierMinutes + celsius.size
+        val merged = (earlier.celsius * earlierMinutes + median * celsius.size) / minutes
+        return medians.toMutableList().also { it[known] = NightMedian(night, merged, minutes) }
     }
 
     /** The record for [run] against [baselineCelsius], or null when Health Connect would refuse it. */

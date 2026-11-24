@@ -77,8 +77,8 @@ internal class WearOsNightSeriesSync(
      * cursor moves to the end of the last night handled, so an unfinished run,
      * or a night a missing grant stopped, is pulled again next time. A time
      * cursor, not the watch's: a record is made from a whole run, which the
-     * phone does not keep, and each night's median enters the baseline once.
-     * False when no bonded watch matches.
+     * phone does not keep, and each run is counted into its night's median
+     * once, whichever sync it comes with. False when no bonded watch matches.
      */
     private suspend fun syncSkin(
         device: BleSensorDevice,

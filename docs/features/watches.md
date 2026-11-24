@@ -89,7 +89,7 @@ While sleep is held, the watch can measure more than the minutes:
 - **Heart rate variability (HRV)**: a five-minute window once the arm was still for ten minutes, at most every half hour, written as RMSSD to Health Connect. The beats come from the raw pulse signal by default, or from the Samsung platform's own beat intervals.
 - **Breathing rate**: from the same windows, written only when you switch on *Breathing rate from the watch (experimental)* in the phone's settings; it is not yet checked against a reference.
 - **SpO2** (Samsung watches): a spot measurement once an hour while the arm is still, written as oxygen saturation.
-- **Skin temperature** (Samsung watches): one value a minute, written per night as the difference from your own usual night. The first three nights form that usual night and are not written; the sync card says so until it exists. A night the tracker dropped out of counts once.
+- **Skin temperature** (Samsung watches): one value a minute, written per night as the difference from your own usual night. The first three nights form that usual night and are not written; the sync card says so until it exists. A night the tracker dropped out of, or one synced in several parts, counts once, with all of it.
 
 None of these is checked against a reference device yet. Each needs its Health Connect grant on the phone; without it the values wait on the watch for a week and the sync card asks.
 

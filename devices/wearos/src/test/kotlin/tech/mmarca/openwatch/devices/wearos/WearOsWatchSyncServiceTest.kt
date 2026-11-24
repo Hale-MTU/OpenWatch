@@ -660,6 +660,58 @@ class WearOsWatchSyncServiceTest {
     }
 
     @Test
+    fun `a night that arrives in two syncs is one night, its median taken over both parts`() = runTest {
+        skinSyncWith()
+        // The night's first hour, synced on its own.
+        skinMinutes += skinNight(1, 34.0)
+
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        val tonight = LocalDate.parse("2026-10-05")
+        assertEquals(listOf(WearOsSkinTemperatureImport.NightMedian(tonight, 34.0, minutes = 60)), cursors.skinNightMedians(WATCH.id))
+
+        // The rest of it, three hours from 01:00, which the watch handed over after that sync.
+        skinSyncWith()
+        val rest = skinNight(1, 34.4, from = Duration.ofMinutes(120), length = 180)
+        skinMinutes += rest
+
+        val second = service().sync(WATCH, SyncTrigger.REQUESTED, null) as DeviceSyncResult.Succeeded
+
+        assertTrue(insertedOf<SkinTemperatureRecord>().isEmpty())
+        assertTrue(skinBaselineForming in second.skipped)
+        val night = cursors.skinNightMedians(WATCH.id).single()
+        assertEquals(tonight, night.night)
+        assertEquals(240, night.minutes)
+        assertEquals(34.3, night.celsius, 1e-9)
+        assertEquals(rest.last().time, cursors.skinCursor(WATCH.id))
+    }
+
+    @Test
+    fun `a later part of a night the baseline knows is written against the other nights and counted into its median`() = runTest {
+        skinSyncWith(WearOsSkinTemperatureImport.writePermission)
+        val tonight = LocalDate.parse("2026-10-05")
+        val earlier = listOf("2026-10-01", "2026-10-02", "2026-10-03").map {
+            WearOsSkinTemperatureImport.NightMedian(LocalDate.parse(it), 34.0, minutes = 60)
+        }
+        // The night's first hour came with an earlier sync.
+        cursors.setSkinNightMedians(WATCH.id, earlier + WearOsSkinTemperatureImport.NightMedian(tonight, 34.2, minutes = 60))
+        cursors.setSkinCursor(WATCH.id, skinNight(1, 34.2).last().time)
+        val rest = skinNight(1, 34.6, from = Duration.ofMinutes(120))
+        skinMinutes += skinNight(1, 34.2) + rest
+
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        val record = insertedOf<SkinTemperatureRecord>().single()
+        assertEquals(rest.first().time, record.startTime)
+        assertEquals(34.0, record.baseline!!.inCelsius, 1e-9)
+        val nights = cursors.skinNightMedians(WATCH.id)
+        assertEquals(earlier, nights.take(3))
+        assertEquals(tonight, nights.last().night)
+        assertEquals(120, nights.last().minutes)
+        assertEquals(34.4, nights.last().celsius, 1e-9)
+    }
+
+    @Test
     fun `a skin temperature night that needs the missing grant stays on the watch`() = runTest {
         skinSyncWith()
         val earlier = listOf("2026-10-01", "2026-10-02", "2026-10-03").map {

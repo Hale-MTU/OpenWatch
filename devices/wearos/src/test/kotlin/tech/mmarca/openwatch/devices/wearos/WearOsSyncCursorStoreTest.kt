@@ -8,6 +8,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.mmarca.openwatch.data.repository.contract.FakeDeviceStateRepository
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
+import tech.mmarca.openwatch.devices.wearos.WearOsSkinTemperatureImport.NightMedian
 
 class WearOsSyncCursorStoreTest {
 
@@ -30,10 +31,7 @@ class WearOsSyncCursorStoreTest {
         assertEquals(Instant.ofEpochMilli(1_000L), store.heartRateCursor("w1"))
         assertEquals(Instant.ofEpochMilli(2_000L), store.hrvCursor("w1"))
         // Medians from before nights had dates read with no night.
-        assertEquals(
-            listOf(WearOsSkinTemperatureImport.NightMedian(null, 33.1), WearOsSkinTemperatureImport.NightMedian(null, 33.4)),
-            store.skinNightMedians("w1"),
-        )
+        assertEquals(listOf(NightMedian(null, 33.1), NightMedian(null, 33.4)), store.skinNightMedians("w1"))
         // A watch removed before the move has nothing to keep.
         assertEquals(Instant.EPOCH, store.heartRateCursor("gone"))
         assertTrue(state.values.keys.none { it == "gone" })
@@ -45,20 +43,41 @@ class WearOsSyncCursorStoreTest {
     }
 
     @Test
-    fun `skin night medians keep their nights`() {
+    fun `skin night medians read in every form they were stored in and keep their night and minutes`() {
+        // A bare median (0.4.x), a night without its minutes (the first build that kept nights), and today's.
+        state.put("w1", "skin_medians", "33.1,34.25@2026-11-07,34.5@2026-11-08/412")
         val medians = listOf(
-            WearOsSkinTemperatureImport.NightMedian(null, 33.1),
-            WearOsSkinTemperatureImport.NightMedian(LocalDate.parse("2026-11-07"), 34.25),
+            NightMedian(null, 33.1),
+            NightMedian(LocalDate.parse("2026-11-07"), 34.25, minutes = 0),
+            NightMedian(LocalDate.parse("2026-11-08"), 34.5, minutes = 412),
         )
+        assertEquals(medians, store.skinNightMedians("w1"))
+
         store.setSkinNightMedians("w1", medians)
 
+        // The persisted shape: a night is written with its minutes, 0 where none were kept; a bare median stays bare.
+        assertEquals("33.1,34.25@2026-11-07/0,34.5@2026-11-08/412", state.values.getValue("w1").getValue("skin_medians"))
         assertEquals(medians, store.skinNightMedians("w1"))
+    }
+
+    @Test
+    fun `a skin night that does not read keeps its median, and one without a median is dropped`() {
+        state.put("w1", "skin_medians", "34.0@tomorrow/60,x@2026-11-07/60,34.5@2026-11-08/many,34.6@2026-11-09/-5")
+
+        assertEquals(
+            listOf(
+                NightMedian(null, 34.0),
+                NightMedian(LocalDate.parse("2026-11-08"), 34.5, minutes = 0),
+                NightMedian(LocalDate.parse("2026-11-09"), 34.6, minutes = 0),
+            ),
+            store.skinNightMedians("w1"),
+        )
     }
 
     @Test
     fun `clearing a watch forgets every cursor it had`() {
         store.setStepsCursor("w1", Instant.ofEpochMilli(1_000L))
-        store.setSkinNightMedians("w1", listOf(WearOsSkinTemperatureImport.NightMedian(null, 33.0)))
+        store.setSkinNightMedians("w1", listOf(NightMedian(null, 33.0)))
         store.setSeriesCursor("w1", "hv", "0123456789abcdef.12")
 
         store.clear("w1")

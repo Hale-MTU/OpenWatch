@@ -7,6 +7,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.openwatch.devices.wearos.WearOsSkinTemperatureImport.NightMedian
 
 class WearOsSkinTemperatureImportTest {
 
@@ -31,7 +32,7 @@ class WearOsSkinTemperatureImportTest {
         assertTrue(WearOsSkinTemperatureImport.finished(runs, t0.plusSeconds(60L * 185)).isEmpty())
     }
 
-    private fun night(date: String, celsius: Double) = WearOsSkinTemperatureImport.NightMedian(LocalDate.parse(date), celsius)
+    private fun night(date: String, celsius: Double, minutes: Int = 60) = NightMedian(LocalDate.parse(date), celsius, minutes)
 
     @Test
     fun `the baseline is the other nights' median once there are three, else unknown`() {
@@ -41,7 +42,7 @@ class WearOsSkinTemperatureImportTest {
         val three = listOf(night("2026-11-05", 33.0), night("2026-11-06", 33.5), night("2026-11-07", 34.0))
         assertEquals(33.5, WearOsSkinTemperatureImport.baseline(tonight, three)!!, 1e-9)
         // A median remembered before nights had dates still counts as another night.
-        val legacy = listOf(WearOsSkinTemperatureImport.NightMedian(null, 33.0), night("2026-11-06", 33.5), night("2026-11-07", 34.0))
+        val legacy = listOf(NightMedian(null, 33.0), night("2026-11-06", 33.5), night("2026-11-07", 34.0))
         assertEquals(33.5, WearOsSkinTemperatureImport.baseline(tonight, legacy)!!, 1e-9)
     }
 
@@ -66,11 +67,52 @@ class WearOsSkinTemperatureImportTest {
     fun `a night joins the baseline once, with the median of all its runs`() {
         val tonight = LocalDate.parse("2026-11-08")
         val runs = WearOsSkinTemperatureImport.runs(minutes(0, 60) { 34.0 } + minutes(100, 60) { 35.0 } + minutes(200, 61) { 35.0 })
-        val remembered = WearOsSkinTemperatureImport.remember(emptyList(), tonight, runs)
-        assertEquals(listOf(night("2026-11-08", 35.0)), remembered)
-        // A run of the same night from a later sync leaves the night's median as it was.
-        val later = WearOsSkinTemperatureImport.runs(minutes(400, 60) { 30.0 })
-        assertEquals(remembered, WearOsSkinTemperatureImport.remember(remembered, tonight, later))
+        assertEquals(listOf(night("2026-11-08", 35.0, minutes = 181)), WearOsSkinTemperatureImport.remember(emptyList(), tonight, runs))
+    }
+
+    @Test
+    fun `a night that arrives in two syncs is one night, its median weighted by each part's minutes`() {
+        val tonight = LocalDate.parse("2026-11-08")
+        val before = listOf(night("2026-11-07", 33.0, minutes = 400), night("2026-11-08", 34.0, minutes = 60))
+        val later = WearOsSkinTemperatureImport.runs(minutes(100, 180) { 35.0 })
+
+        val after = WearOsSkinTemperatureImport.remember(before, tonight, later)
+
+        // Still two nights; the 8th is now 60 minutes at 34.0 and 180 at 35.0.
+        assertEquals(listOf(before[0], night("2026-11-08", 34.75, minutes = 240)), after)
+        // Runs of which none was kept change nothing.
+        assertEquals(before, WearOsSkinTemperatureImport.remember(before, tonight, emptyList()))
+    }
+
+    @Test
+    fun `a night remembered without its minutes counts as much as the part that arrives`() {
+        val tonight = LocalDate.parse("2026-11-08")
+        val before = listOf(NightMedian(null, 33.0), night("2026-11-08", 34.0, minutes = 0))
+
+        val second = WearOsSkinTemperatureImport.remember(before, tonight, WearOsSkinTemperatureImport.runs(minutes(100, 180) { 35.0 }))
+
+        // The plain mean of the two medians, and from here on the night has minutes to weigh by.
+        assertEquals(listOf(before[0], night("2026-11-08", 34.5, minutes = 360)), second)
+        val third = WearOsSkinTemperatureImport.remember(second, tonight, WearOsSkinTemperatureImport.runs(minutes(400, 120) { 36.0 }))
+        assertEquals(listOf(before[0], night("2026-11-08", 34.875, minutes = 480)), third)
+    }
+
+    @Test
+    fun `the baseline remembers the newest thirty nights, and a night it knows takes no other's place`() {
+        val tonight = LocalDate.parse("2026-11-08")
+        val month = List(30) { night(LocalDate.parse("2026-10-01").plusDays(it.toLong()).toString(), 34.0) }
+        val run = WearOsSkinTemperatureImport.runs(minutes(0, 60))
+
+        val remembered = WearOsSkinTemperatureImport.remember(month, tonight, run)
+
+        assertEquals(30, remembered.size)
+        assertEquals(LocalDate.parse("2026-10-02"), remembered.first().night)
+        assertEquals(tonight, remembered.last().night)
+
+        // More of a night in the middle of the thirty: every night stays, each where it was.
+        val more = WearOsSkinTemperatureImport.remember(remembered, LocalDate.parse("2026-10-15"), run)
+        assertEquals(remembered.map { it.night }, more.map { it.night })
+        assertEquals(remembered.map { if (it.night == LocalDate.parse("2026-10-15")) 120 else it.minutes }, more.map { it.minutes })
     }
 
     @Test
