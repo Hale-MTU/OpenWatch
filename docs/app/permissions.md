@@ -172,6 +172,7 @@ it fails `HealthPermissionsTest`.
 | `READ_HEALTH_DATA_IN_BACKGROUND` | To keep recording with the watch's screen off. |
 | `READ_SKIN_TEMPERATURE` | Only on a Samsung watch, and only when you switch on skin temperature at night. |
 | `READ_OXYGEN_SATURATION` | Only on a Samsung watch: when you switch on SpO2 at night, and when you measure your blood oxygen on the watch. |
+| `READ_ADDITIONAL_HEALTH_DATA` | Samsung's own permission, only on a Samsung watch and only when you choose the Samsung PPG as the source of the night's heart rate variability. |
 
 <!-- health-data:end -->
 
@@ -188,6 +189,9 @@ asked on the wrist:
   when the user switches on "Skin temperature at night" or "SpO2 hourly at night" on a watch that has the
   Samsung Health Platform, which checks them per tracker, and `READ_OXYGEN_SATURATION` when the
   user starts a blood oxygen spot measurement there.
+- `com.samsung.android.hardware.sensormanager.permission.READ_ADDITIONAL_HEALTH_DATA` (Samsung's own): asked
+  only when the user chooses the Samsung PPG as the night's heart rate variability source on a watch that
+  has the Samsung Health Platform, which checks it for that tracker.
 - `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION` and `FOREGROUND_SERVICE_LOCATION`: a
   workout recorded with GPS on the watch, and only while it runs.
 - `BLUETOOTH_CONNECT`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_CONNECTED_DEVICE`,

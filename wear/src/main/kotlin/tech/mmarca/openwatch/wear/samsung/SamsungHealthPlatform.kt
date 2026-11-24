@@ -29,7 +29,8 @@ internal class RawPoint(val epochMillis: Long, val ints: IntArray, val floats: F
  *
  * Outbound, on the service token: 1 create(appId, type, profile?, exercise?),
  * 2 setListener(appId, type, binder), 3 unsetListener(appId, type),
- * 4 flush(appId, type). Inbound, on the listener token: 1 data (a typed list
+ * 4 flush(appId, type), 8 setPpgType(appId, type, colours). 6 and 7 carry an exercise's state and
+ * data to the sweat loss tracker and are not spoken here. Inbound, on the listener token: 1 data (a typed list
  * of points), 2 error(int), 3 flush done. A point is a time and a generic
  * list of values, each an (int, float, long).
  *
@@ -49,8 +50,17 @@ internal class SamsungHealthPlatform(
     /** The binding itself failed: the platform went away. Every tracker is affected. */
     private val onError: () -> Unit,
 ) {
-    /** What one tracker type delivers to; [onError] is that tracker's own failure (a refused permission, a platform error). */
-    class Tracker(val onPoints: (List<RawPoint>) -> Unit, val onFlushed: () -> Unit, val onError: () -> Unit)
+    /**
+     * What one tracker type delivers to; [onError] is that tracker's own failure (a refused permission, a platform error).
+     * [ppgColours] is what the continuous PPG tracker switches on ([PPG_GREEN]).
+     */
+    class Tracker(
+        val onPoints: (List<RawPoint>) -> Unit,
+        val onFlushed: () -> Unit,
+        val onError: () -> Unit,
+        val ppgColours: List<String> = emptyList(),
+    )
+
 
     private var service: IBinder? = null
     private var bound = false
@@ -122,6 +132,9 @@ internal class SamsungHealthPlatform(
         val tracker = trackers[type]?.first
         try {
             call(TX_CREATE) { writeString(appId()); writeString(type); writeInt(0); writeString(null) }
+            // The colours are read when the listener is set, so they go first.
+            val colours = tracker?.ppgColours.orEmpty()
+            if (colours.isNotEmpty()) call(TX_SET_PPG_TYPE) { writeString(appId()); writeString(type); writeStringList(colours) }
             call(TX_SET_LISTENER) { writeString(appId()); writeString(type); writeStrongBinder(listener) }
         } catch (e: RemoteException) {
             Log.w(TAG, "Tracker refused", e)
@@ -187,10 +200,13 @@ internal class SamsungHealthPlatform(
         const val TRACKER_HEART_RATE = "HEART_RATE"
         const val TRACKER_SKIN_TEMPERATURE = "SKIN_TEMPERATURE_CONTINUOUS"
         const val TRACKER_SPO2 = "SPO2"
+        const val TRACKER_PPG = "PPG_CONTINUOUS"
+        const val PPG_GREEN = "GREEN"
         private const val TX_CREATE = 1
         private const val TX_SET_LISTENER = 2
         private const val TX_UNSET_LISTENER = 3
         private const val TX_FLUSH = 4
+        private const val TX_SET_PPG_TYPE = 8
         private const val CB_DATA = 1
         private const val CB_ERROR = 2
         private const val CB_FLUSH_DONE = 3
@@ -357,3 +373,18 @@ internal fun RawPoint.toSpo2Reading(): Spo2Reading {
         moving = status == SPO2_MOVING,
     )
 }
+
+/**
+ * One continuous PPG sample: per colour a value and its status, green at
+ * ints 0-1, red at 2-3, infrared at 4-5. A colour that was not switched on
+ * reads 0 with status -1.
+ */
+internal class PpgPoint(val epochMillis: Long, val green: Int, val greenStatus: Int, val red: Int, val infrared: Int)
+
+internal fun RawPoint.toPpgPoint(): PpgPoint = PpgPoint(
+    epochMillis,
+    green = ints.getOrElse(0) { 0 },
+    greenStatus = ints.getOrElse(1) { -1 },
+    red = ints.getOrElse(2) { 0 },
+    infrared = ints.getOrElse(4) { 0 },
+)

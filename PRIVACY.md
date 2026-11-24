@@ -158,6 +158,7 @@ The complete list, by Health Connect permission. The app shows the same list und
 | `READ_HEALTH_DATA_IN_BACKGROUND` | To keep recording with the watch's screen off. |
 | `READ_SKIN_TEMPERATURE` | Only on a Samsung watch, and only when you switch on skin temperature at night. |
 | `READ_OXYGEN_SATURATION` | Only on a Samsung watch: when you switch on SpO2 at night, and when you measure your blood oxygen on the watch. |
+| `READ_ADDITIONAL_HEALTH_DATA` | Samsung's own permission, only on a Samsung watch and only when you choose the Samsung PPG as the source of the night's heart rate variability. |
 
 <!-- health-data:end -->
 

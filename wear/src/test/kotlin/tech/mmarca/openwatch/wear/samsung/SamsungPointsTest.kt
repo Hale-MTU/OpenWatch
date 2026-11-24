@@ -40,4 +40,13 @@ class SamsungPointsTest {
         assertTrue(reading.measured)
         assertFalse(raw(0, 0, -1).toSkinReading().measured)
     }
+
+    @Test
+    fun `a PPG point reads green, red and infrared from their pairs`() {
+        val point = raw(2_100_000, 0, 31, -1, 47, -1).toPpgPoint()
+        assertEquals(2_100_000, point.green)
+        assertEquals(0, point.greenStatus)
+        assertEquals(31, point.red)
+        assertEquals(47, point.infrared)
+    }
 }
