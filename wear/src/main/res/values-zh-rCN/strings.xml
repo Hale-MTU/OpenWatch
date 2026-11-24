@@ -56,7 +56,6 @@
     <string name="workout_open">锻炼</string>
     <string name="workout_pick">开始锻炼</string>
     <string name="workout_back">返回</string>
-    <string name="workout_paused">已暂停</string>
     <string name="workout_waiting_for_gps">正在等待 GPS…</string>
     <string name="workout_pause">暂停</string>
     <string name="workout_resume">继续</string>

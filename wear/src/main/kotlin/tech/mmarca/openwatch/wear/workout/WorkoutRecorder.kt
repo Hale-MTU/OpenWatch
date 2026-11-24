@@ -90,7 +90,7 @@ class WorkoutRecorder(
         debug.event("Workout", "start", "sport" to sport.id, "gps" to usesGps)
         h.post { registerSensors(sport, now) }
         h.post(tick)
-        state.update { WorkoutUiState(sport = sport, running = true, snapshot = t.snapshot(now)) }
+        state.update { WorkoutUiState(sport = sport, running = true, snapshot = t.snapshot(now), gps = usesGps) }
         onActiveChange()
         return true
     }
@@ -186,7 +186,7 @@ class WorkoutRecorder(
 
     private fun publish(t: WorkoutTracker, now: Long = System.currentTimeMillis()) {
         val snapshot = t.snapshot(now)
-        state.update { it.copy(snapshot = snapshot) }
+        state.update { it.copy(snapshot = snapshot, gps = usesGps) }
     }
 
     override fun onSensorChanged(event: SensorEvent) {
@@ -227,8 +227,9 @@ class WorkoutRecorder(
             "Workout", "stop",
             "sport" to t.sport.id, "durationMs" to workout.endMillis - workout.startMillis, "steps" to workout.steps, "saved" to kept,
         )
+        val gps = usesGps
         teardown(keepState = false)
-        state.update { WorkoutUiState(sport = t.sport, running = false, snapshot = last, finished = kept) }
+        state.update { WorkoutUiState(sport = t.sport, running = false, snapshot = last, finished = kept, gps = gps) }
         if (!kept) state.clearFinished()
         Haptics.play(context, hapticCueForWorkoutEnd(kept))
     }

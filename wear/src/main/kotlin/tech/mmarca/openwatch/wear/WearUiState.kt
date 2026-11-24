@@ -2,7 +2,10 @@ package tech.mmarca.openwatch.wear
 
 /** Everything the screens render. A null value means "no reading yet". */
 data class WearUiState(
-    /** The metrics the dashboard may show. */
+    /**
+     * The metrics this watch has a sensor for. Only these are offered as
+     * tiles.
+     */
     val availableMetrics: Set<MetricTile> = MetricTile.entries.toSet(),
     /** A metric without an entry renders as "no reading yet". */
     val metrics: Map<MetricTile, MetricUiState> = emptyMap(),

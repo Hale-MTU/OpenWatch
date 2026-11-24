@@ -56,7 +56,6 @@
     <string name="workout_open">אימון</string>
     <string name="workout_pick">התחלת אימון</string>
     <string name="workout_back">חזרה</string>
-    <string name="workout_paused">מושהה</string>
     <string name="workout_waiting_for_gps">ממתין ל-GPS…</string>
     <string name="workout_pause">השהיה</string>
     <string name="workout_resume">המשך</string>

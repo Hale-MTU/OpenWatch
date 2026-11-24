@@ -56,7 +56,6 @@
     <string name="workout_open">Adestramento</string>
     <string name="workout_pick">Iniciar un adestramento</string>
     <string name="workout_back">Volver</string>
-    <string name="workout_paused">En pausa</string>
     <string name="workout_waiting_for_gps">Agardando polo GPS…</string>
     <string name="workout_pause">Pausar</string>
     <string name="workout_resume">Retomar</string>

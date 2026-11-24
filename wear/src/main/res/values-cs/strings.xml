@@ -56,7 +56,6 @@
     <string name="workout_open">Trénink</string>
     <string name="workout_pick">Zahájit trénink</string>
     <string name="workout_back">Zpět</string>
-    <string name="workout_paused">Pozastaveno</string>
     <string name="workout_waiting_for_gps">Čeká se na GPS…</string>
     <string name="workout_pause">Pozastavit</string>
     <string name="workout_resume">Pokračovat</string>

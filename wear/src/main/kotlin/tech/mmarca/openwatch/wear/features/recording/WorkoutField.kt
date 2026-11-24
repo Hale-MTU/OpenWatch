@@ -1,0 +1,11 @@
+package tech.mmarca.openwatch.wear.features.recording
+
+/** A live value a workout can report. Which ones a workout has depends on the watch. */
+enum class WorkoutField {
+    HEART_RATE,
+    DISTANCE,
+    PACE,
+    SPEED,
+    ELEVATION,
+    STEPS,
+}

@@ -1,9 +1,10 @@
-package tech.mmarca.openwatch.wear.workout
+package tech.mmarca.openwatch.wear.features.recording
 
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -15,9 +16,13 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.AmbientMode
 import androidx.wear.compose.foundation.AmbientModeManager
 import androidx.wear.compose.foundation.AmbientTickEffect
@@ -25,11 +30,15 @@ import androidx.wear.compose.foundation.LocalAmbientModeManager
 import androidx.wear.compose.foundation.rememberAmbientModeManager
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
+import androidx.wear.compose.material3.Text
 import tech.mmarca.openwatch.wear.R
+import tech.mmarca.openwatch.wear.workout.WorkoutSnapshot
+import tech.mmarca.openwatch.wear.workout.sportName
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
 /**
- * The running workout, which stays on the screen in ambient mode.
+ * The running workout, which stays on the screen in ambient mode: the
+ * [interactive] layout while the screen is awake, a dim one of its own in ambient.
  *
  * Wear OS 6 keeps an app that targets API 36 visible in ambient mode, dimmed,
  * on every screen. A screen that observes the ambient state draws its own
@@ -46,10 +55,10 @@ import tech.mmarca.openwatch.wearlink.WorkoutSport
  * tick, and dashes where the heart rate and the distance would be.
  */
 @Composable
-internal fun RunningWorkout(sport: WorkoutSport, snapshot: WorkoutSnapshot, onTogglePause: () -> Unit, onStop: () -> Unit) {
+internal fun RunningWorkout(sport: WorkoutSport, snapshot: WorkoutSnapshot, interactive: @Composable () -> Unit) {
     val manager = rememberAmbientModeManagerIfSupported()
     if (manager == null) {
-        RunningList(sport, snapshot, onTogglePause, onStop)
+        interactive()
         return
     }
     CompositionLocalProvider(LocalAmbientModeManager provides manager) {
@@ -59,7 +68,7 @@ internal fun RunningWorkout(sport: WorkoutSport, snapshot: WorkoutSnapshot, onTo
         manager.AmbientTickEffect { ticked = latest }
         val ambient = manager.currentAmbientMode is AmbientMode.Ambient
         LaunchedEffect(ambient) { if (ambient) ticked = latest }
-        if (ambient) AmbientWorkout(sport, ticked) else RunningList(sport, snapshot, onTogglePause, onStop)
+        if (ambient) AmbientWorkout(sport, ticked) else interactive()
     }
 }
 
@@ -79,7 +88,7 @@ private fun AmbientWorkout(sport: WorkoutSport, snapshot: WorkoutSnapshot) {
                 style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Light),
                 color = dim,
             )
-            if (snapshot.paused) WorkoutLine(stringResource(R.string.workout_paused), color = dim)
+            if (snapshot.paused) WorkoutLine(stringResource(R.string.recording_paused), color = dim)
             for (line in ambientLines(sport, snapshot)) WorkoutLine(line, color = dim)
         }
     }
@@ -93,6 +102,22 @@ private fun ambientLines(sport: WorkoutSport, snapshot: WorkoutSnapshot): List<S
         R.string.workout_distance -> stringResource(R.string.workout_distance_placeholder)
         else -> stringResource(line.text, line.value)
     }
+}
+
+@Composable
+private fun WorkoutLine(text: String, style: TextStyle = MaterialTheme.typography.bodyMedium, color: Color) {
+    Text(text, style = style, color = color, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp))
+}
+
+/** One value line: its string and the number it formats. */
+private class ValueLine(val text: Int, val value: Any)
+
+/** The heart rate (the latest, else the average), distance, steps and height climbed that the sport has. */
+private fun valueLines(sport: WorkoutSport, snapshot: WorkoutSnapshot): List<ValueLine> = buildList {
+    (snapshot.heartRateBpm ?: snapshot.averageHeartRateBpm)?.let { add(ValueLine(R.string.workout_heart_rate, it)) }
+    snapshot.distanceMetres?.let { add(ValueLine(R.string.workout_distance, it / 1000.0)) }
+    snapshot.steps?.takeIf { sport.steps }?.let { add(ValueLine(R.string.workout_steps, it)) }
+    snapshot.ascentMetres?.takeIf { it > 0 }?.let { add(ValueLine(R.string.workout_ascent, it)) }
 }
 
 /** Hours and minutes: in ambient mode the screen changes once a minute, so seconds would be wrong. */

@@ -9,6 +9,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.openwatch.wearlink.WorkoutSport
 
 /** The workout screen's ViewModel: what it sends the recorder, and when it sends nothing. */
@@ -17,7 +18,7 @@ class WorkoutViewModelTest {
     private val scope = CoroutineScope(Job() + Dispatchers.Unconfined)
     private val workout = WorkoutState()
     private val control = FakeControl()
-    private val viewModel = WorkoutViewModel(workout, control, scope)
+    private val viewModel = WorkoutViewModel(workout, control, HeartRateZones.Basis(maxBpm = 190), scope)
 
     @After
     fun tearDown() = scope.cancel()

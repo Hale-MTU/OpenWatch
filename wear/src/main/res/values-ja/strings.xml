@@ -56,7 +56,6 @@
     <string name="workout_open">ワークアウト</string>
     <string name="workout_pick">ワークアウトを開始</string>
     <string name="workout_back">戻る</string>
-    <string name="workout_paused">一時停止中</string>
     <string name="workout_waiting_for_gps">GPS を待機中…</string>
     <string name="workout_pause">一時停止</string>
     <string name="workout_resume">再開</string>
