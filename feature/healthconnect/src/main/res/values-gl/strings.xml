@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hc_setup_missing_title">Aínda sen conceder:</string>
+    <string name="hc_setup_missing_extra">O acceso en segundo plano e ao historial está nunha páxina propia: abre a configuración de Health Connect, despois OpenWatch e despois Acceso adicional.</string>
+    <string name="hc_setup_intro">OpenWatch copia o que rexistran o teu reloxo e a túa báscula en Health Connect, onde o len OpenVitals e outras apps. Nada sae do teléfono: a app non ten permiso de internet.</string>
+    <string name="hc_setup_permissions_title">Permisos</string>
+    <string name="hc_setup_status_all_granted">Os %1$d permisos están concedidos</string>
+    <string name="hc_setup_status_partial">%1$d de %2$d permisos concedidos. Un rexistro cuxa escritura non está permitida queda no dispositivo.</string>
+    <string name="hc_setup_status_update">Health Connect precisa unha actualización antes de que OpenWatch poida usalo.</string>
+    <string name="hc_setup_status_play_store">Health Connect está instalado sen Google Play, así que non se pode usar neste teléfono.</string>
+    <string name="hc_setup_status_unavailable">Health Connect non está dispoñible neste teléfono.</string>
+    <string name="hc_setup_grant">Conceder permisos</string>
+    <string name="hc_setup_open_settings">Abrir a configuración de Health Connect</string>
+    <string name="hc_setup_continue">Continuar</string>
+</resources>

@@ -2,21 +2,16 @@ package tech.mmarca.openwatch.wear.ui.components
 
 import androidx.annotation.StringRes
 import java.text.NumberFormat
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import java.util.Locale
 import kotlin.math.roundToInt
 import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.UnitSystem
 import tech.mmarca.openwatch.wear.MetricTile
 
-private const val MetersPerKilometer = 1000.0
-private const val MetersPerMile = 1609.344
-private const val FeetPerMeter = 3.28084
-private const val PoundsPerKilogram = 2.20462
-private const val MillilitresPerFluidOunce = 29.5735
+internal const val MetersPerKilometer = 1000.0
+internal const val MetersPerMile = 1609.344
+internal const val FeetPerMeter = 3.28084
+internal const val PoundsPerKilogram = 2.20462
 private const val MinutesPerHour = 60
 private const val FahrenheitPerCelsius = 1.8
 private const val FahrenheitAtZeroCelsius = 32.0
@@ -47,10 +42,8 @@ fun formatMetricValue(metric: MetricTile, value: Double, unitSystem: UnitSystem)
             UnitSystem.METRIC -> formatOneDecimal(value)
             UnitSystem.IMPERIAL -> formatOneDecimal(value * PoundsPerKilogram)
         }
-        MetricTile.HYDRATION -> when (unitSystem) {
-            UnitSystem.METRIC -> formatCount(value.roundToInt())
-            UnitSystem.IMPERIAL -> formatCount((value / MillilitresPerFluidOunce).roundToInt())
-        }
+        // The quick log tile converts the same way, so the tile and the screens agree.
+        MetricTile.HYDRATION -> formatCount(unitSystem.water(value).roundToInt())
         else -> formatCount(value.roundToInt())
     }
 
@@ -65,10 +58,6 @@ fun formatHoursMinutes(minutes: Double): String {
 }
 
 fun formatOneDecimal(value: Double): String = String.format(Locale.getDefault(), "%.1f", value)
-
-/** A clock time in the watch's zone and locale, e.g. "23:47" or "11:47 PM". */
-fun formatClockTime(instant: Instant, zone: ZoneId = ZoneId.systemDefault()): String =
-    DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(Locale.getDefault()).format(instant.atZone(zone))
 
 @StringRes
 fun metricUnitLabel(metric: MetricTile, unitSystem: UnitSystem): Int =
@@ -94,7 +83,7 @@ fun metricUnitLabel(metric: MetricTile, unitSystem: UnitSystem): Int =
             UnitSystem.METRIC -> R.string.unit_celsius
             UnitSystem.IMPERIAL -> R.string.unit_fahrenheit
         }
-        MetricTile.RESPIRATORY_RATE -> R.string.unit_breaths
+        MetricTile.RESPIRATORY_RATE -> R.string.unit_breaths_per_minute
         MetricTile.HYDRATION -> when (unitSystem) {
             UnitSystem.METRIC -> R.string.unit_ml
             UnitSystem.IMPERIAL -> R.string.unit_fl_oz

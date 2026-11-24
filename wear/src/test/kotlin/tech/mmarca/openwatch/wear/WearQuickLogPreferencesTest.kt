@@ -1,66 +1,58 @@
 package tech.mmarca.openwatch.wear
 
+import androidx.core.content.edit
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
 import org.junit.Test
-import tech.mmarca.openwatch.wear.features.quicklog.LogValueSpecs
-import tech.mmarca.openwatch.wear.features.quicklog.QuickLogItem
-import tech.mmarca.openwatch.wear.features.quicklog.QuickLogItem.BLOOD_PRESSURE
-import tech.mmarca.openwatch.wear.features.quicklog.QuickLogItem.BREATHE
-import tech.mmarca.openwatch.wear.features.quicklog.QuickLogItem.HEIGHT
-import tech.mmarca.openwatch.wear.features.quicklog.QuickLogItem.WATER
-import tech.mmarca.openwatch.wear.features.quicklog.QuickLogItem.WEIGHT
+import tech.mmarca.openwatch.wear.QuickLogItem.BLOOD_PRESSURE
+import tech.mmarca.openwatch.wear.QuickLogItem.BREATHE
+import tech.mmarca.openwatch.wear.QuickLogItem.HEIGHT
+import tech.mmarca.openwatch.wear.QuickLogItem.WATER
+import tech.mmarca.openwatch.wear.QuickLogItem.WEIGHT
 
+/** The quick log's chosen entries, as stored. How a choice is edited is `ChoicesTest`, in `:wear:recording-core`. */
 class WearQuickLogPreferencesTest {
 
-    @Test
-    fun decode_nothingStored_returnsAllItemsInTheOldOrder() {
-        val values = LogValueSpecs.keys.map { type -> QuickLogItem.entries.first { it.entryType == type } }
-        assertEquals(listOf(WATER, WEIGHT, BLOOD_PRESSURE) + values + BREATHE, decodeQuickLogItems(null))
-    }
+    private val prefs = FakeSharedPreferences()
 
     @Test
-    fun everySingleValueTypeHasAnItem() {
-        val single = QuickLogItem.entries.filter { it.isSingleValue }.map { it.entryType }
-        assertEquals(LogValueSpecs.keys.toList(), single)
-    }
-
-    @Test
-    fun decode_emptyString_returnsNoItems() {
-        assertTrue(decodeQuickLogItems("").isEmpty())
-    }
-
-    @Test
-    fun encodeThenDecode_keepsSelectionAndOrder() {
-        val custom = listOf(BREATHE, WATER, HEIGHT)
-        assertEquals(custom, decodeQuickLogItems(encodeQuickLogItems(custom)))
-    }
-
-    @Test
-    fun decode_dropsUnknownAndDuplicateNames() {
-        assertEquals(listOf(WEIGHT, WATER), decodeQuickLogItems("WEIGHT,NOPE,WATER,WEIGHT"))
-    }
-
-    @Test
-    fun move_down_placesItemAfterTarget() {
+    fun `nothing chosen yet is every entry, in the order the quick log always listed them`() {
+        assertEquals(QuickLogItem.Defaults, WearQuickLogPreferences(prefs).chosen.value)
         assertEquals(
-            listOf(WEIGHT, BLOOD_PRESSURE, WATER, BREATHE),
-            listOf(WATER, WEIGHT, BLOOD_PRESSURE, BREATHE).withItemMoved(WATER, BLOOD_PRESSURE),
+            listOf("WATER", "WEIGHT", "BLOOD_PRESSURE", "BODY_FAT", "BLOOD_OXYGEN", "RESPIRATORY_RATE", "BODY_TEMPERATURE", "BLOOD_GLUCOSE", "HEIGHT", "BREATHE"),
+            QuickLogItem.entries.map { it.name },
         )
     }
 
     @Test
-    fun move_up_placesItemBeforeTarget() {
-        assertEquals(
-            listOf(BREATHE, WATER, WEIGHT, BLOOD_PRESSURE),
-            listOf(WATER, WEIGHT, BLOOD_PRESSURE, BREATHE).withItemMoved(BREATHE, WATER),
-        )
+    fun `a choice survives a restart, stored as the entries' names, and none stays none`() {
+        WearQuickLogPreferences(prefs).edit { listOf(BREATHE, WATER, HEIGHT) }
+
+        assertEquals(listOf(BREATHE, WATER, HEIGHT), WearQuickLogPreferences(prefs).chosen.value)
+        assertEquals("BREATHE,WATER,HEIGHT", prefs.getString(WearQuickLogPreferences.KEY_ITEMS, null))
+
+        WearQuickLogPreferences(prefs).edit { emptyList() }
+        assertEquals(emptyList<QuickLogItem>(), WearQuickLogPreferences(prefs).chosen.value)
     }
 
     @Test
-    fun move_ignoresAnItemThatIsNotActive() {
-        val items = listOf(WATER, WEIGHT)
-        assertEquals(items, items.withItemMoved(BREATHE, WATER))
-        assertEquals(items, items.withItemMoved(WATER, BREATHE))
+    fun `each change starts from the last one, and a reset forgets the choice`() {
+        val items = WearQuickLogPreferences(prefs)
+        items.edit { listOf(WATER, WEIGHT, BLOOD_PRESSURE) }
+        items.edit { Choices.moved(it, BLOOD_PRESSURE, up = true) { true } }
+        items.edit { Choices.switched(it, WATER, on = false) }
+
+        assertEquals(listOf(BLOOD_PRESSURE, WEIGHT), items.chosen.value)
+
+        items.reset()
+        assertEquals(QuickLogItem.Defaults, items.chosen.value)
+        assertNull(prefs.getString(WearQuickLogPreferences.KEY_ITEMS, null))
+    }
+
+    @Test
+    fun `a name this build does not know is dropped`() {
+        prefs.edit { putString(WearQuickLogPreferences.KEY_ITEMS, "WEIGHT,COFFEE,WATER,WEIGHT") }
+
+        assertEquals(listOf(WEIGHT, WATER), WearQuickLogPreferences(prefs).chosen.value)
     }
 }

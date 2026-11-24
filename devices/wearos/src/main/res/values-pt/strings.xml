@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_watch_wearos_bt_not_paired">Nenhum relógio Wear OS emparelhado encontrado</string>
+    <string name="settings_watch_wearos_app_running">A app OpenWatch para Wear OS está a ser executada no relógio</string>
+    <string name="settings_watch_wearos_app_no_answer">Sem resposta: o relógio está desligado, fora de alcance, ou a app OpenWatch do relógio não está instalada ou não está em execução.</string>
+    <string name="settings_watch_wearos_status_pending">A aguardar que permita este telemóvel no relógio. Abra o OpenWatch no relógio e toque em Permitir.</string>
+    <string name="settings_watch_wearos_status_unauthorized_mismatch">O relógio recusou este telemóvel: a chave não corresponde. No relógio, abra o OpenWatch, esqueça este telemóvel e volte a validar.</string>
+    <string name="settings_watch_wearos_status_unauthorized_blocked">Este telemóvel está bloqueado no relógio. No relógio, abra o OpenWatch e desbloqueie-o.</string>
+    <string name="settings_watch_wearos_status_update_watch">A app OpenWatch do relógio é mais antiga do que esta. Atualize a app do relógio.</string>
+    <string name="settings_watch_wearos_status_update_phone">A app OpenWatch do relógio é mais recente do que esta. Atualize o OpenWatch no telemóvel.</string>
+    <string name="settings_watch_wearos_status_protocol">O relógio respondeu algo que o OpenWatch não conseguiu ler. Atualize as duas apps e tente de novo.</string>
+</resources>

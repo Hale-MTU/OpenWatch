@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="connected_apps_in_use">Teraz w użyciu</string>
+    <string name="connected_apps_last_connected">Ostatnie połączenie %1$s</string>
+    <string name="connected_apps_profile_received">Ostatni profil odebrany %1$s</string>
+    <string name="connected_apps_session_heart_rate">Nagrywanie: przesyłanie tętna z %1$s</string>
+    <string name="connected_apps_session_heart_rate_steps">Nagrywanie: przesyłanie tętna i kroków z %1$s</string>
+    <string name="connected_apps_session_keeping">Nagrywanie: %1$s nadal nadaje</string>
+    <string name="connected_apps_session_waiting">Nagrywanie: oczekiwanie na odczyt z %1$s</string>
+    <string name="connected_apps_intro">Te aplikacje poprosiły o korzystanie z OpenWatch. Każda widzi tylko to, na co tutaj pozwolisz, i nic nie opuszcza telefonu.</string>
+    <string name="connected_apps_empty">Żadna aplikacja jeszcze o to nie poprosiła. OpenVitals połączy się, gdy obie aplikacje będą zainstalowane.</string>
+    <string name="connected_apps_unknown_signer">Ta aplikacja podaje się za %1$s, ale nie została podpisana przez projekt OpenVitals. Zezwól na nią tylko wtedy, gdy sam ją zbudowałeś lub zainstalowałeś i ufasz jej pochodzeniu.</string>
+    <string name="connected_apps_identity">%1$s\nKlucz podpisu %2$s</string>
+    <string name="connected_apps_lookalike">Ta aplikacja podaje się za %1$s, ale to nie jest %2$s: jej pakiet nie jest pakietem %2$s. Zezwól na nią tylko wtedy, gdy wiesz, dlaczego używa tej nazwy.</string>
+    <string name="connected_apps_state_pending">Prosi o połączenie</string>
+    <string name="connected_apps_state_trusted">Połączono</string>
+    <string name="connected_apps_state_blocked">Zablokowano</string>
+    <string name="connected_apps_asks_for">Prosi o:</string>
+    <string name="connected_apps_allow">Zezwól</string>
+    <string name="connected_apps_block">Zablokuj</string>
+    <string name="connected_apps_forget">Zapomnij</string>
+    <string name="connected_apps_unblock">Odblokuj</string>
+    <string name="connected_apps_capability_devices">Widzieć zegarki i wagę, ich baterię i ostatnią synchronizację oraz uruchamiać synchronizację</string>
+    <string name="connected_apps_capability_profile">Udostępniać profil ciała (rok urodzenia, płeć, wzrost, masa ciała) OpenWatch, w obie strony</string>
+    <string name="connected_apps_capability_recording">Utrzymywać nadawanie zegarka, gdy nagrywa aktywność</string>
+    <string name="connected_apps_capability_live">Odbierać tętno i kroki z zegarka podczas nagrywania</string>
+</resources>

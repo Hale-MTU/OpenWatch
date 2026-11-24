@@ -72,7 +72,7 @@ object WearLinkWorkoutLines {
     /** A header carries no pauses or points; they follow on their own lines. */
     fun parseHeader(line: String): WearLinkWorkout? {
         val f = fields(line)
-        if (f.size != 7 || f[0] != WORKOUT) return null
+        if (f.size < 7 || f[0] != WORKOUT) return null
         val start = f[1].toLongOrNull() ?: return null
         val end = f[2].toLongOrNull() ?: return null
         val type = f[3].toIntOrNull() ?: return null
@@ -87,7 +87,7 @@ object WearLinkWorkoutLines {
 
     fun parsePause(line: String): WearLinkWorkout.Pause? {
         val f = fields(line)
-        if (f.size != 3 || f[0] != PAUSE) return null
+        if (f.size < 3 || f[0] != PAUSE) return null
         val start = f[1].toLongOrNull() ?: return null
         val end = f[2].toLongOrNull() ?: return null
         return if (start > 0 && end > start) WearLinkWorkout.Pause(start, end) else null
@@ -99,7 +99,7 @@ object WearLinkWorkoutLines {
 
     fun parsePoint(line: String): WearLinkWorkout.RoutePoint? {
         val f = fields(line)
-        if (f.size != 6 || f[0] != POINT) return null
+        if (f.size < 6 || f[0] != POINT) return null
         val at = f[1].toLongOrNull() ?: return null
         val lat = f[2].toIntOrNull() ?: return null
         val lon = f[3].toIntOrNull() ?: return null

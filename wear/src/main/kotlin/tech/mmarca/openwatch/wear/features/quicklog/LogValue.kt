@@ -2,53 +2,70 @@ package tech.mmarca.openwatch.wear.features.quicklog
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
+import androidx.wear.compose.material3.AppScaffold
 import java.util.Locale
 import kotlin.math.pow
 import kotlin.math.roundToInt
 import tech.mmarca.openwatch.wear.R
 import tech.mmarca.openwatch.wear.UnitSystem
+import tech.mmarca.openwatch.wear.ui.preview.WearPreviews
+import tech.mmarca.openwatch.wear.ui.theme.OpenWatchWearTheme
+import tech.mmarca.openwatch.wearlink.WearLinkEntry.Type
 
 /**
  * A value the watch logs by stepping to it. [metricRange] and [metricDefault]
- * are in the metric unit; the imperial unit is a straight line from it,
- * `display = metric * imperialScale + imperialOffset`, so a value is stored
- * in metric whichever units are shown.
+ * are in the metric unit, the entry's ([Type]); the imperial unit is a
+ * straight line from it, `display = metric * imperialScale + imperialOffset`,
+ * so a value is stored in the metric unit whichever is shown. Each range
+ * stays within what Health Connect stores, so an entry the phone cannot write
+ * is never made.
  */
 internal data class LogValueSpec(
-    @StringRes val label: Int,
-    @StringRes val metricUnit: Int,
-    @StringRes val imperialUnit: Int,
+    @param:StringRes val label: Int,
+    @param:StringRes val metricUnit: Int,
+    @param:StringRes val imperialUnit: Int,
     val metricRange: ClosedFloatingPointRange<Double>,
     val metricDefault: Double,
-    /** Digits after the point; one stepper step is one unit in this place. */
+    /** Digits after the point in the metric unit; one stepper step is one unit in this place. */
     val decimals: Int,
     val imperialScale: Double = 1.0,
     val imperialOffset: Double = 0.0,
+    /** Digits after the point in the imperial unit, where they differ. */
+    val imperialDecimals: Int = decimals,
 ) {
-    fun unit(unitSystem: UnitSystem): Int =
-        if (unitSystem == UnitSystem.IMPERIAL) imperialUnit else metricUnit
+    @StringRes
+    fun unit(unitSystem: UnitSystem): Int = if (unitSystem == UnitSystem.IMPERIAL) imperialUnit else metricUnit
 
-    fun toDisplay(metric: Double, imperial: Boolean): Double =
-        if (imperial) metric * imperialScale + imperialOffset else metric
+    fun toDisplay(metric: Double, unitSystem: UnitSystem): Double =
+        if (unitSystem == UnitSystem.IMPERIAL) metric * imperialScale + imperialOffset else metric
 
-    fun toMetric(display: Double, imperial: Boolean): Double =
-        if (imperial) (display - imperialOffset) / imperialScale else display
+    fun toMetric(display: Double, unitSystem: UnitSystem): Double =
+        if (unitSystem == UnitSystem.IMPERIAL) (display - imperialOffset) / imperialScale else display
 
-    /** Stepper units per displayed unit: 10 for one decimal. */
-    val stepsPerUnit: Int get() = 10.0.pow(decimals).roundToInt()
+    /** Digits after the point the stepper shows in [unitSystem]. */
+    fun decimals(unitSystem: UnitSystem): Int = if (unitSystem == UnitSystem.IMPERIAL) imperialDecimals else decimals
 
-    fun format(display: Double): String =
-        String.format(Locale.getDefault(), "%.${decimals}f", display)
+    /** Stepper steps per displayed unit: 10 for one decimal. */
+    fun stepsPerUnit(unitSystem: UnitSystem): Int = 10.0.pow(decimals(unitSystem)).roundToInt()
+
+    fun format(display: Double, unitSystem: UnitSystem): String =
+        String.format(Locale.getDefault(), "%.${decimals(unitSystem)}f", display)
+
+    /** [display] stepped to in [unitSystem], in the metric unit, to the metric unit's own decimals. */
+    fun stored(display: Double, unitSystem: UnitSystem): Double {
+        val perUnit = 10.0.pow(decimals)
+        return (toMetric(display, unitSystem) * perUnit).roundToInt() / perUnit
+    }
 }
 
-/** The values the watch logs. Anything the phone logs that takes one number is here. */
-internal val LogValueSpecs: Map<EntryType, LogValueSpec> = mapOf(
-    EntryType.BODY_FAT to LogValueSpec(
+/** The values the quick log takes one number of, in the order it lists them. */
+internal val LogValueSpecs: Map<Type, LogValueSpec> = linkedMapOf(
+    Type.BODY_FAT to LogValueSpec(
         label = R.string.metric_body_fat,
         metricUnit = R.string.unit_percent,
         imperialUnit = R.string.unit_percent,
@@ -56,7 +73,7 @@ internal val LogValueSpecs: Map<EntryType, LogValueSpec> = mapOf(
         metricDefault = 20.0,
         decimals = 1,
     ),
-    EntryType.BLOOD_OXYGEN to LogValueSpec(
+    Type.BLOOD_OXYGEN to LogValueSpec(
         label = R.string.metric_blood_oxygen,
         metricUnit = R.string.unit_percent,
         imperialUnit = R.string.unit_percent,
@@ -64,15 +81,15 @@ internal val LogValueSpecs: Map<EntryType, LogValueSpec> = mapOf(
         metricDefault = 97.0,
         decimals = 0,
     ),
-    EntryType.RESPIRATORY_RATE to LogValueSpec(
+    Type.RESPIRATORY_RATE to LogValueSpec(
         label = R.string.metric_respiratory_rate,
-        metricUnit = R.string.unit_breaths,
-        imperialUnit = R.string.unit_breaths,
+        metricUnit = R.string.unit_breaths_per_minute,
+        imperialUnit = R.string.unit_breaths_per_minute,
         metricRange = 4.0..60.0,
         metricDefault = 14.0,
         decimals = 0,
     ),
-    EntryType.BODY_TEMPERATURE to LogValueSpec(
+    Type.BODY_TEMPERATURE to LogValueSpec(
         label = R.string.metric_body_temperature,
         metricUnit = R.string.unit_celsius,
         imperialUnit = R.string.unit_fahrenheit,
@@ -82,56 +99,71 @@ internal val LogValueSpecs: Map<EntryType, LogValueSpec> = mapOf(
         imperialScale = 1.8,
         imperialOffset = 32.0,
     ),
-    EntryType.BLOOD_GLUCOSE to LogValueSpec(
+    Type.BLOOD_GLUCOSE to LogValueSpec(
         label = R.string.metric_blood_glucose,
         metricUnit = R.string.unit_mmol_l,
         imperialUnit = R.string.unit_mg_dl,
         metricRange = 2.0..30.0,
         metricDefault = 5.5,
         decimals = 1,
-        imperialScale = 18.0182,
+        imperialScale = MG_DL_PER_MMOL_L,
+        // mg/dL is read in whole numbers.
+        imperialDecimals = 0,
     ),
     // Inches, not feet and inches: the stepper holds one number, and a whole inch
     // (2.5 cm) is finer than a height is read to. Stored in whole centimetres.
-    EntryType.HEIGHT to LogValueSpec(
+    Type.HEIGHT to LogValueSpec(
         label = R.string.metric_height,
         metricUnit = R.string.unit_cm,
         imperialUnit = R.string.unit_inch,
         metricRange = 50.0..250.0,
         metricDefault = 170.0,
         decimals = 0,
-        imperialScale = 1.0 / 2.54,
+        imperialScale = 1.0 / CM_PER_INCH,
     ),
 )
 
+/** One inch is 2.54 cm. */
+private const val CM_PER_INCH = 2.54
+
+/** Glucose: one mmol/L is 18.0182 mg/dL. */
+private const val MG_DL_PER_MMOL_L = 18.0182
+
 /**
- * One value, picked with the stepper. [initialMetric] is the last logged value
- * of this type, or the default. Saved in the metric unit.
+ * One value of [type], picked with the stepper or the crown in [unitSystem].
+ * It starts from [initialMetric], the last one logged, or the type's default,
+ * and is saved in the metric unit.
  */
 @Composable
 internal fun LogValueScreen(
-    type: EntryType,
+    type: Type,
     initialMetric: Double?,
     unitSystem: UnitSystem,
     onSave: (metric: Double) -> Unit,
 ) {
     val spec = LogValueSpecs.getValue(type)
-    val imperial = unitSystem == UnitSystem.IMPERIAL
-    val factor = spec.stepsPerUnit
-    val start = spec.toDisplay(initialMetric ?: spec.metricDefault, imperial)
-    var steps by rememberSaveable { mutableIntStateOf((start * factor).roundToInt()) }
-    val min = (spec.toDisplay(spec.metricRange.start, imperial) * factor).roundToInt()
-    val max = (spec.toDisplay(spec.metricRange.endInclusive, imperial) * factor).roundToInt()
+    val perUnit = spec.stepsPerUnit(unitSystem)
+    val min = (spec.toDisplay(spec.metricRange.start, unitSystem) * perUnit).roundToInt()
+    val max = (spec.toDisplay(spec.metricRange.endInclusive, unitSystem) * perUnit).roundToInt()
+    val start = spec.toDisplay(initialMetric ?: spec.metricDefault, unitSystem)
+    var steps by rememberSaveable { mutableIntStateOf((start * perUnit).roundToInt().coerceIn(min, max)) }
     ValueStepper(
         title = stringResource(spec.label),
         unit = stringResource(spec.unit(unitSystem)),
         value = steps,
         onValueChange = { steps = it },
         range = min..max,
-        format = { spec.format(it.toDouble() / factor) },
-        onConfirm = {
-            val display = steps.toDouble() / factor
-            onSave((spec.toMetric(display, imperial) * factor).roundToInt() / factor.toDouble())
-        },
+        format = { spec.format(it.toDouble() / perUnit, unitSystem) },
+        onConfirm = { onSave(spec.stored(steps.toDouble() / perUnit, unitSystem)) },
     )
+}
+
+@WearPreviews
+@Composable
+private fun LogValueScreenPreview() {
+    OpenWatchWearTheme {
+        AppScaffold {
+            LogValueScreen(type = Type.BODY_TEMPERATURE, initialMetric = 36.6, unitSystem = UnitSystem.METRIC, onSave = {})
+        }
+    }
 }

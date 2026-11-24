@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="link_streaming_channel">Reaaliaikaiset lukemat muille sovelluksille</string>
+    <string name="link_streaming_heart_rate">Syke välitetään sovellukseen %1$s</string>
+    <string name="link_streaming_heart_rate_steps">Syke ja askeleet välitetään sovellukseen %1$s</string>
+    <string name="link_streaming_keeping">Kello pidetään lähettämässä sovellukselle %1$s</string>
+    <string name="link_streaming_waiting">Odotetaan kelloa sovellukselle %1$s</string>
+    <string name="link_streaming_from">Laitteesta %1$s</string>
+    <string name="link_streaming_waiting_for">Odotetaan lukemaa laitteesta %1$s</string>
+</resources>

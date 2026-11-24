@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="garmin_find_phone_channel">Najít můj telefon</string>
+    <string name="garmin_find_phone_title">Vaše hodinky hledají tento telefon</string>
+    <string name="garmin_find_phone_body">Klepnutím vyzvánění zastavíte.</string>
+    <string name="garmin_find_phone_stop">Zastavit</string>
+</resources>

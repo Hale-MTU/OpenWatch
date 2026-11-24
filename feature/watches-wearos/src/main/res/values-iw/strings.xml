@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_watch_wearos_companion_missing">עדיין אין קישור של Android בין השעון הזה ל-OpenWatch. בלי הקישור, OpenWatch לא יכול להקליט אימונים שאפליקציה אחרת מתחילה בשעון.</string>
+    <string name="settings_watch_wearos_companion_link">קישור השעון</string>
+    <string name="settings_watch_wearos_status_section">מצב אפליקציית Wear OS</string>
+    <string name="settings_watch_wearos_bt_paired">השעון מותאם לטלפון הזה</string>
+    <string name="settings_watch_wearos_bt_permission">נדרשת ל-OpenWatch ההרשאה \"מכשירים בקרבת מקום\" כדי להגיע לשעון.</string>
+    <string name="settings_watch_wearos_status_bond_lost">השעון לא מותאם לטלפון הזה. פתח את הגדרות ה-Bluetooth ובצע התאמה; קודם הפוך את השעון לגלוי מהגדרות ה-Bluetooth שלו.</string>
+    <string name="settings_watch_wearos_linked_to">מקושר אל %1$s</string>
+    <string name="settings_watch_wearos_check_app">אימות אפליקציית Wear OS</string>
+    <string name="settings_watch_wearos_checking">בודק את אפליקציית Wear OS…</string>
+    <string name="settings_watch_wearos_sync_section">סנכרון עם השעון</string>
+    <string name="settings_watch_wearos_sync_body">אפליקציית OpenWatch בשעון מקליטה את הדופק שלך ואת מה שנדרש להערכת שינה, ושומרת שבוע מזה. הסנכרון מעתיק את הדופק החדש ל-Health Connect וכותב סשן שינה משוער אחד לכל לילה.</string>
+    <string name="settings_watch_wearos_sync_now">סנכרון השעון</string>
+    <string name="settings_watch_wearos_syncing">מסנכרן את השעון…</string>
+    <string name="watch_settings_section">הגדרות השעון</string>
+    <string name="watch_settings_not_read">השעון שומר את ההגדרות האלה בעצמו. קרא אותן כדי לשנות אותן כאן.</string>
+    <string name="watch_settings_unreachable">השעון לא הגיב. האם הוא קרוב ואפליקציית OpenWatch בו פועלת?</string>
+    <string name="watch_settings_read">קריאה מהשעון</string>
+    <string name="watch_settings_power_save">דופק בחיסכון בסוללה</string>
+    <string name="watch_settings_power_save_body">בערך כל 10 דקות מחוץ למצב שעת השינה. במצב שעת השינה המדידה תמיד מתבצעת כל 10 שניות.</string>
+    <string name="watch_settings_synced">התעוררויות מסונכרנות במהלך השינה</string>
+    <string name="watch_settings_synced_body">שומר כל דקת שינה בעזרת ההתעוררויות של חיישן הדופק, במקום להשאיר את השעון ער ברציפות. פועל רק עם הדופק מהחיישן.</string>
+    <string name="watch_settings_samsung_note">פלטפורמת Samsung: נדרש מצב המפתחים של Health Platform בשעון. בלעדיו הפלטפורמה שואלת את Samsung לגבי האפליקציה הזו. מקור של Samsung שנכשל חוזר לחיישן.</string>
+    <string name="watch_settings_hr_samsung">דופק מפלטפורמת Samsung</string>
+    <string name="watch_settings_hrv_samsung">שונות קצב הלב מפלטפורמת Samsung</string>
+    <string name="watch_settings_skin">טמפרטורת העור בלילה</string>
+    <string name="watch_settings_spo2">מדידת SpO2 כל שעה בלילה</string>
+    <string name="watch_settings_allow_on_watch">אשר את זה בשעון: פתח שם את OpenWatch והפעל את האפשרות פעם אחת.</string>
+</resources>

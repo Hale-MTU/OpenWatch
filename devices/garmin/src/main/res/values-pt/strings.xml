@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="garmin_find_phone_channel">Encontrar o meu telemóvel</string>
+    <string name="garmin_find_phone_title">O seu relógio está à procura deste telemóvel</string>
+    <string name="garmin_find_phone_body">Toque para parar de tocar.</string>
+    <string name="garmin_find_phone_stop">Parar</string>
+</resources>

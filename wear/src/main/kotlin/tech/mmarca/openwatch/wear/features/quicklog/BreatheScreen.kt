@@ -45,10 +45,17 @@ private const val Breaths = 6
 private const val SessionMillis = Breaths * (InhaleMillis + ExhaleMillis)
 private const val SmallestCircle = 0.45f
 
+/** The minutes one session lasts, as its entry records them. */
+const val BreatheSessionMinutes = SessionMillis / 60_000.0
+
 /**
  * A one-minute guided breath, like Fitbit Relax or Apple's Breathe: a circle
  * grows on the in-breath and shrinks on the out-breath, with a tick of haptics
  * at each turn. Finishing logs a minute of mindfulness; swiping away does not.
+ *
+ * The screen stays on for the minute the session runs, and no longer: the
+ * animation would stop with the screen, and the session with it. Once it
+ * ends the screen times out as any other.
  */
 @Composable
 fun BreatheScreen(onFinished: () -> Unit, onClose: () -> Unit) {
@@ -79,7 +86,7 @@ fun BreatheScreen(onFinished: () -> Unit, onClose: () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .keepScreenOn(),
+                .then(if (finished) Modifier else Modifier.keepScreenOn()),
             contentAlignment = Alignment.Center,
         ) {
             CircularProgressIndicator(

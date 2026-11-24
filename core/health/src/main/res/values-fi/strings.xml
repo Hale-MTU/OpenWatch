@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="health_data_section_garmin">Kirjoitetaan Garmin-kellosta</string>
+    <string name="health_data_section_wearos">Kirjoitetaan Wear OS -kellosta</string>
+    <string name="health_data_section_scale">Kirjoitetaan vaa\'asta</string>
+    <string name="health_data_section_reads">Luetaan Health Connectista</string>
+    <string name="health_data_section_watch_app">Kellosovellus pyytää kellossa</string>
+    <string name="health_data_note_garmin_weight">Paino, jonka Garmin-vaaka välittää kellon kautta.</string>
+    <string name="health_data_note_wearos_calories">Arvio kävelyn kulutuksesta askeltesi ja painosi perusteella sekä harjoituksen kalorit.</string>
+    <string name="health_data_note_wearos_sleep">Yksi arvioitu unijakso kutakin yötä ja päiväunta kohden.</string>
+    <string name="health_data_note_wearos_hrv">Yöllä, kellossa, joka pystyy mittaamaan sen.</string>
+    <string name="health_data_note_wearos_workout">Kellolla tallentamasi harjoitus, sen reitti ja matka.</string>
+    <string name="health_data_note_wearos_skin">Vain Samsung-kellosta, kun ”Ihon lämpötila yöllä” on kytketty päälle kyseiselle kellolle. Yksi tietue yössä: ero omaan tavalliseen yöhösi.</string>
+    <string name="health_data_note_scale_estimate">Arvioitu puhelimessa vaa\'an mittauksesta ja kehoprofiilistasi.</string>
+    <string name="health_data_read_weight">Kävelykaloreita ja vaa\'an kehonkoostumusta varten.</string>
+    <string name="health_data_read_height">Vaa\'an kehonkoostumusta varten.</string>
+    <string name="health_data_read_exercise">Jotta harjoituksen aikaiselle minuutille ei tehdä toista kaloriarviota.</string>
+    <string name="health_data_read_sleep">Jotta yö, jolle on jo unijakso, jätetään rauhaan.</string>
+    <string name="health_data_read_resting_heart_rate">Jotta päivä, jolle on jo leposyke, jätetään rauhaan, sekä kellon näyttämiä sykealueita varten.</string>
+    <string name="health_data_read_heart_rate">Korkein sykkeesi näitä alueita varten sekä harjoituksen energian laskemiseen.</string>
+    <string name="health_data_read_history">Viimeisin painosi ja pituutesi ovat usein vanhempia kuin 30 päivää, jotka Health Connect näyttää ilman tätä lupaa.</string>
+    <string name="health_data_read_background">Ajastettu synkronointi sovelluksen ollessa suljettuna näkee muiden sovellusten painot ja harjoitukset vain tällä luvalla.</string>
+    <string name="health_data_watch_heart_rate">Kellon sykeanturi: syke, yön sykevälivaihtelu ja uniarvio.</string>
+    <string name="health_data_watch_background">Jotta tallennus jatkuu kellon näytön ollessa pois päältä.</string>
+    <string name="health_data_watch_skin">Vain Samsung-kellossa ja vain, kun kytket päälle ihon lämpötilan mittauksen yöllä.</string>
+</resources>

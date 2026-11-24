@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="garmin_find_phone_channel">איתור הטלפון שלי</string>
+    <string name="garmin_find_phone_title">השעון שלך מחפש את הטלפון הזה</string>
+    <string name="garmin_find_phone_body">הקשה תפסיק את הצלצול.</string>
+    <string name="garmin_find_phone_stop">עצירה</string>
+</resources>

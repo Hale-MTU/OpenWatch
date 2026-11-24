@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="home_section_watches">Watches</string>
+    <string name="home_section_scale">Scale</string>
+    <string name="home_section_app">App</string>
+    <string name="home_settings">Settings</string>
+    <string name="home_settings_body">Body profile, notification access, about</string>
+    <string name="home_detail_placeholder">Choose a device to see it here.</string>
+</resources>
