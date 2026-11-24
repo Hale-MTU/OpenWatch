@@ -12,7 +12,7 @@ data class RecordingUiState(
     val distanceMeters: Int? = null,
     val steps: Int? = null,
     val elevationGainMeters: Int? = null,
-    /** The speed now, for the running workout. */
+    /** The speed now, for the running workout; null while paused or without a recent fix, which reads as a dash. */
     val speedMetersPerSecond: Double? = null,
     /** Distance over active time, for the summary. */
     val averageSpeedMetersPerSecond: Double? = null,

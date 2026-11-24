@@ -2,6 +2,7 @@ package tech.mmarca.openwatch.wear.features.recording
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.mmarca.openwatch.wear.workout.WorkoutSnapshot
@@ -23,9 +24,15 @@ class WorkoutRecordingStateTest {
         assertEquals(600L, state.elapsedSeconds)
         assertEquals(1500, state.distanceMeters)
         assertEquals(1800, state.steps)
-        // Without a recent fix the screen shows the average speed.
-        assertEquals(2.5, state.speedMetersPerSecond!!, 0.0)
         assertTrue(state.paused)
+    }
+
+    @Test
+    fun `without a speed now the live pace is empty, not the workout's average`() {
+        // Paused, or stopped at a light for ten seconds: the tracker reports no speed.
+        val state = snapshot.toRecordingState(WorkoutSport.BIKING, title = 42)
+        assertNull(state.speedMetersPerSecond)
+        assertEquals(2.5, state.averageSpeedMetersPerSecond!!, 0.0)
     }
 
     @Test

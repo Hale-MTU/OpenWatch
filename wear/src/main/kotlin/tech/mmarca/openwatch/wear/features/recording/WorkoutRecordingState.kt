@@ -15,7 +15,8 @@ internal fun WorkoutSnapshot.toRecordingState(sport: WorkoutSport, title: Int): 
     distanceMeters = distanceMetres,
     steps = steps,
     elevationGainMeters = ascentMetres,
-    speedMetersPerSecond = speedMetresPerSecond ?: averageSpeedMetresPerSecond,
+    // No speed now (paused, or no fix for a while) stays none: the average is the summary's, not a live value.
+    speedMetersPerSecond = speedMetresPerSecond,
     averageSpeedMetersPerSecond = averageSpeedMetresPerSecond,
     averageHeartRateBpm = averageHeartRateBpm,
     paused = paused,
