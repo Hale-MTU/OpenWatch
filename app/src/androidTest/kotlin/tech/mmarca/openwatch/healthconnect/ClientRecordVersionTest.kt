@@ -12,8 +12,11 @@ import androidx.test.platform.app.InstrumentationRegistry
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Test
@@ -39,9 +42,15 @@ class ClientRecordVersionTest {
     private val id = "version-probe-${System.nanoTime()}"
 
     @Before
-    fun grantWriteSteps() {
+    fun grantWriteSteps(): Unit = runBlocking {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         instrumentation.uiAutomation.grantRuntimePermission(instrumentation.targetContext.packageName, WRITE_STEPS)
+        // Health Connect learns of the grant a moment later; a write before then is refused.
+        val granted = withTimeoutOrNull(GRANT_WAIT_MILLIS) {
+            while (WRITE_STEPS !in client.permissionController.getGrantedPermissions()) delay(GRANT_POLL_MILLIS)
+            true
+        }
+        assertTrue("Health Connect never saw the WRITE_STEPS grant", granted == true)
     }
 
     private fun minute(count: Long, version: Long) = StepsRecord(
@@ -88,12 +97,15 @@ class ClientRecordVersionTest {
             assertEquals("a lower version is ignored", listOf(20L), afterLower)
             assertEquals("a higher version replaces", listOf(40L), afterHigher)
         } finally {
-            client.deleteRecords(StepsRecord::class, emptyList(), listOf(id))
+            // Cleaning up must not hide what went wrong above.
+            runCatching { client.deleteRecords(StepsRecord::class, emptyList(), listOf(id)) }
         }
     }
 
     private companion object {
         const val TAG = "VersionProbe"
         const val WRITE_STEPS = "android.permission.health.WRITE_STEPS"
+        const val GRANT_WAIT_MILLIS = 15_000L
+        const val GRANT_POLL_MILLIS = 250L
     }
 }
