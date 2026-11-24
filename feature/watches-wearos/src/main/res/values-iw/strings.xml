@@ -13,6 +13,11 @@
     <string name="settings_watch_wearos_sync_body">אפליקציית OpenWatch בשעון מקליטה את הדופק שלך ואת מה שנדרש להערכת שינה, ושומרת שבוע מזה. הסנכרון מעתיק את הדופק החדש ל-Health Connect וכותב סשן שינה משוער אחד לכל לילה.</string>
     <string name="settings_watch_wearos_sync_now">סנכרון השעון</string>
     <string name="settings_watch_wearos_syncing">מסנכרן את השעון…</string>
+    <plurals name="settings_watch_wearos_skin_baseline_nights_to_go">
+        <item quantity="one">קו הבסיס לטמפרטורת העור: נדרש עוד %1$d לילה.</item>
+        <item quantity="two">קו הבסיס לטמפרטורת העור: נדרשים עוד %1$d לילות.</item>
+        <item quantity="other">קו הבסיס לטמפרטורת העור: נדרשים עוד %1$d לילות.</item>
+    </plurals>
     <string name="watch_settings_section">הגדרות השעון</string>
     <string name="watch_settings_not_read">השעון שומר את ההגדרות האלה בעצמו. קרא אותן כדי לשנות אותן כאן.</string>
     <string name="watch_settings_unreachable">השעון לא הגיב. האם הוא קרוב ואפליקציית OpenWatch בו פועלת?</string>
@@ -27,4 +32,8 @@
     <string name="watch_settings_skin">טמפרטורת העור בלילה</string>
     <string name="watch_settings_spo2">מדידת SpO2 כל שעה בלילה</string>
     <string name="watch_settings_allow_on_watch">אשר את זה בשעון: פתח שם את OpenWatch והפעל את האפשרות פעם אחת.</string>
+    <string name="watch_settings_hr_source_explained">כבוי: החיישן של השעון עצמו, בזמן אמת. פועל: הערך של הפלטפורמה, שמועבר במנות באיחור של עד 10 דקות כשהמסך כבוי. אימון משתמש בחיישן בכל מקרה.</string>
+    <string name="watch_settings_hrv_source_explained">כבוי: HRV מאות הדופק הגולמי, בכל מרווח. פועל: מרווחי הפעימות (RR) של הפלטפורמה; כיום כ-60% RR הולכים לאיבוד, ולכן לפחות לילות יש ערך.</string>
+    <string name="watch_settings_skin_explained">טמפרטורת העור בפרק כף היד בזמן השינה, קריאה אחת בדקה. צריכת חשמל קטנה; שום דבר אחר לא משתנה.</string>
+    <string name="watch_settings_spo2_explained">חמצן בדם לכל היותר פעם בשעה בזמן השינה, כ-15 שניות של אור אדום. כמה mAh בלילה; המדידה מדולגת כשהיד זזה.</string>
 </resources>

@@ -81,6 +81,25 @@
     <string name="settings_watch_auto_sync_background_access_action">允许后台访问</string>
     <string name="settings_watch_wearos_needs_workout_write">锻炼未写入：请允许 OpenWatch 在 Health Connect 中写入锻炼、路线和距离，然后再次同步。</string>
     <string name="settings_watch_garmin_withheld">因缺少权限，未保存到 Health Connect：%1$s。授予这些权限后，从下次同步起会保存手表发送的数据。</string>
+    <string name="home_section_devices">其他设备</string>
+    <string name="devices_intro">直接与手机配对的传感器和测量仪。它们测得的数据会写入 Health Connect。</string>
+    <string name="devices_add">添加设备</string>
+    <string name="devices_permissions_title">设备权限</string>
+    <string name="devices_permissions_body">Android 会将此权限与 Health Connect 分开申请。没有它，设备将无法被发现或读取。</string>
+    <string name="devices_scan_empty">尚未找到任何设备。请唤醒设备并让它靠近手机。</string>
+    <string name="devices_scan_again">重新扫描</string>
+    <string name="devices_pairing">正在配对…</string>
+    <string name="devices_pair_refused">配对未完成。请接受 Android 的配对请求以完成配对。</string>
+    <string name="devices_pair_unreachable">无法连接到设备。请唤醒它并让它靠近手机，然后重试。</string>
+    <string name="devices_pair_not_associated">请在 Android 的对话框中允许 OpenWatch：设备有读数时，手机正是借此收到它。</string>
+    <string name="devices_last_reading">上次读数 %1$s</string>
+    <string name="devices_no_reading">暂无读数</string>
+    <string name="device_live_section">实时</string>
+    <string name="device_live_waiting">正在等待读数…</string>
+    <plurals name="device_readings_waiting">
+        <item quantity="other">%1$d 个读数尚未写入 Health Connect</item>
+    </plurals>
+    <string name="device_readings_waiting_grant">%1$s。允许 OpenWatch 在 Health Connect 中写入这些读数，它们就会被保存。</string>
     <string name="settings_watch_wearos_companion_required">Android 未将手表关联到 OpenWatch，因此没有添加。OpenWatch 需要此关联才能记录其他应用在手表上开始的锻炼。请再次点按“配对”并允许请求。</string>
     <string name="settings_sensors_open_bluetooth">打开蓝牙设置</string>
 </resources>

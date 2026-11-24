@@ -3,6 +3,11 @@
     <string name="health_data_section_garmin">يُكتب من ساعة Garmin</string>
     <string name="health_data_section_wearos">يُكتب من ساعة Wear OS</string>
     <string name="health_data_section_scale">يُكتب من الميزان</string>
+    <string name="health_data_section_standard">يُكتب من جهاز يعمل بملف Bluetooth قياسي</string>
+    <string name="health_data_note_standard_heart_rate">من حزام لمعدل نبض القلب، ما دامت شاشته مفتوحة أو ما دام تطبيق سمحت له يسجّل به: سجل واحد كل دقيقة.</string>
+    <string name="health_data_note_standard_blood_pressure">من جهاز قياس ضغط الدم، كل قراءة يسلّمها عند تنشيطه، مع كتابة النبض الذي قاسه كمعدل لنبض القلب.</string>
+    <string name="health_data_note_standard_blood_glucose">من جهاز قياس سكر الدم، القراءات التي خزّنها، ويسلّمها عند تنشيطه. لا يُكتب الفحص الذي يُجرى بمحلول الضبط.</string>
+    <string name="health_data_note_standard_weight">من ميزان يعمل بملف Weight Scale القياسي، كل وزنة يسلّمها عند تنشيطه.</string>
     <string name="health_data_section_reads">يُقرأ من Health Connect</string>
     <string name="health_data_section_watch_app">يطلبه تطبيق الساعة، على الساعة</string>
     <string name="health_data_note_garmin_weight">وزن يرسله ميزان Garmin عبر الساعة.</string>
@@ -10,6 +15,8 @@
     <string name="health_data_note_wearos_sleep">جلسة مقدَّرة واحدة لكل ليلة ولكل قيلولة.</string>
     <string name="health_data_note_wearos_hrv">ليلًا، على ساعة قادرة على قياسه.</string>
     <string name="health_data_note_wearos_workout">تمرين تسجّله على الساعة، مع مساره ومسافته.</string>
+    <string name="health_data_note_wearos_entry">ما تسجّله يدويًا على الساعة.</string>
+    <string name="health_data_note_wearos_mindfulness">جلسة تنفّس تجريها على الساعة، إذا كان Health Connect يدعم حفظ هذه الجلسات.</string>
     <string name="health_data_note_wearos_skin">فقط من ساعة Samsung، مع تفعيل «درجة حرارة الجلد ليلًا» لتلك الساعة. سجل واحد لكل ليلة: الفرق عن ليلتك المعتادة.</string>
     <string name="health_data_note_scale_estimate">تقدير يُحسب على الهاتف من قياس الميزان وملفك الجسدي.</string>
     <string name="health_data_read_weight">لسعرات المشي ولتكوين الجسم من الميزان.</string>
@@ -18,9 +25,14 @@
     <string name="health_data_read_sleep">كي تُترك الليلة التي تحتوي بالفعل على جلسة نوم دون تغيير.</string>
     <string name="health_data_read_resting_heart_rate">كي يُترك اليوم الذي يحتوي بالفعل على معدل نبض القلب أثناء الراحة دون تغيير، ولمناطق معدل نبض القلب التي تعرضها الساعة.</string>
     <string name="health_data_read_heart_rate">أعلى معدل لنبض قلبك، لتلك المناطق، ولطاقة التمرين.</string>
+    <string name="health_data_read_day_totals">إجمالي اليوم من كل التطبيقات، والذي تعرضه ساعة Wear OS.</string>
     <string name="health_data_read_history">غالبًا ما يكون آخر وزن وطول لك أقدم من الـ 30 يومًا التي يعرضها Health Connect دون هذا الإذن.</string>
     <string name="health_data_read_background">لا يمكن للمزامنة التي تعمل وفق جدول، والتطبيق مغلق، أن ترى أوزان تطبيق آخر وتمارينه إلا بهذا الإذن.</string>
     <string name="health_data_watch_heart_rate">مستشعر معدل نبض القلب في الساعة: معدل نبض القلب، وتقلّب معدل ضربات القلب ليلًا، وتقدير النوم.</string>
     <string name="health_data_watch_background">لمواصلة التسجيل وشاشة الساعة مطفأة.</string>
     <string name="health_data_watch_skin">فقط على ساعة Samsung، وفقط عند تفعيل درجة حرارة الجلد ليلًا.</string>
+    <string name="health_data_note_wearos_breathing_logged">ليلًا فقط مع تفعيل «معدل التنفس من الساعة» في الإعدادات؛ إضافةً إلى معدل التنفس الذي تسجّله على الساعة.</string>
+    <string name="health_data_note_wearos_spo2_measured">ليلًا فقط من ساعة Samsung، مع تفعيل «قياس SpO2 كل ساعة ليلًا» لتلك الساعة؛ إضافةً إلى مستوى الأكسجين في الدم الذي تسجّله أو تقيسه على الساعة.</string>
+    <string name="health_data_note_wearos_vo2">تقدير من مشي أو جري تسجّله على الساعة مع مساره، عندما يحتوي ملفك الجسدي على معدل نبض القلب أثناء الراحة.</string>
+    <string name="health_data_watch_spo2_spot">فقط على ساعة Samsung: عند تفعيل SpO2 ليلًا، وعند قياس الأكسجين في الدم على الساعة.</string>
 </resources>

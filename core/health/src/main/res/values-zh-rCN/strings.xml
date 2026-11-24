@@ -3,6 +3,11 @@
     <string name="health_data_section_garmin">从 Garmin 手表写入</string>
     <string name="health_data_section_wearos">从 Wear OS 手表写入</string>
     <string name="health_data_section_scale">从体重秤写入</string>
+    <string name="health_data_section_standard">从使用标准蓝牙配置文件的设备写入</string>
+    <string name="health_data_note_standard_heart_rate">来自心率带：在其页面打开时，或在你允许的应用用它记录时写入，每分钟一条记录。</string>
+    <string name="health_data_note_standard_blood_pressure">来自血压计：它唤醒时传来的每次读数，测得的脉搏会作为心率写入。</string>
+    <string name="health_data_note_standard_blood_glucose">来自血糖仪：它存储的读数，在唤醒时传来。用质控液进行的检测不会写入。</string>
+    <string name="health_data_note_standard_weight">来自使用标准 Weight Scale 配置文件的体重秤：它唤醒时传来的每次称重。</string>
     <string name="health_data_section_reads">从 Health Connect 读取</string>
     <string name="health_data_section_watch_app">由手表应用在手表上请求</string>
     <string name="health_data_note_garmin_weight">Garmin 体重秤通过手表转发的体重。</string>
@@ -10,6 +15,8 @@
     <string name="health_data_note_wearos_sleep">每晚和每次小睡各一条估算的睡眠记录。</string>
     <string name="health_data_note_wearos_hrv">在夜间，仅限能够测量它的手表。</string>
     <string name="health_data_note_wearos_workout">你在手表上记录的锻炼，包括其路线和距离。</string>
+    <string name="health_data_note_wearos_entry">你在手表上手动记录的内容。</string>
+    <string name="health_data_note_wearos_mindfulness">你在手表上进行的呼吸练习，前提是 Health Connect 支持保存此类记录。</string>
     <string name="health_data_note_wearos_skin">仅限 Samsung 手表，且已为该手表开启“夜间皮肤温度”。每晚一条记录：与你平常夜晚的差值。</string>
     <string name="health_data_note_scale_estimate">由手机根据体重秤的测量值和你的身体档案估算。</string>
     <string name="health_data_read_weight">用于步行卡路里和体重秤的身体成分。</string>
@@ -18,9 +25,14 @@
     <string name="health_data_read_sleep">避免改动已有睡眠记录的夜晚。</string>
     <string name="health_data_read_resting_heart_rate">避免改动已有静息心率的日子，并用于手表显示的心率区间。</string>
     <string name="health_data_read_heart_rate">你的最高心率，用于这些区间和锻炼的能量。</string>
+    <string name="health_data_read_day_totals">所有应用的当日总量，显示在 Wear OS 手表上。</string>
     <string name="health_data_read_history">你最近的体重和身高往往早于没有此权限时 Health Connect 显示的 30 天。</string>
     <string name="health_data_read_background">在应用关闭时按计划运行的同步，只有获得此权限才能看到其他应用的体重和锻炼记录。</string>
     <string name="health_data_watch_heart_rate">手表的心率传感器：心率、夜间心率变异性和睡眠估算。</string>
     <string name="health_data_watch_background">在手表屏幕关闭时继续记录。</string>
     <string name="health_data_watch_skin">仅限 Samsung 手表，并且仅在你开启夜间皮肤温度时。</string>
+    <string name="health_data_note_wearos_breathing_logged">夜间数据仅在设置中开启“来自手表的呼吸频率”时写入；另有你在手表上记录的呼吸频率。</string>
+    <string name="health_data_note_wearos_spo2_measured">夜间数据仅来自 Samsung 手表，且需为该手表开启“夜间每小时 SpO2”；另有你在手表上记录或测量的血氧。</string>
+    <string name="health_data_note_wearos_vo2">根据你在手表上记录的带路线的步行或跑步估算，前提是你的身体档案中有静息心率。</string>
+    <string name="health_data_watch_spo2_spot">仅限 Samsung 手表：在你开启夜间 SpO2 时，以及在手表上测量血氧时。</string>
 </resources>

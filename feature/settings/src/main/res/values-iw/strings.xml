@@ -25,6 +25,8 @@
     <string name="settings_respiratory_rate_title">קצב נשימה מהשעון (ניסיוני)</string>
     <string name="settings_respiratory_rate_body">קצב הנשימה מחלונות ה-HRV הליליים של השעון נכתב ל-Health Connect. עדיין לא נבדק מול מכשיר ייחוס.</string>
     <string name="health_data_open_body">כל סוג של נתוני בריאות, המכשיר שממנו הוא מגיע והסיבה.</string>
+    <string name="settings_sleep_beside_others_title">כתיבת השינה מהשעון לצד אפליקציות אחרות</string>
+    <string name="settings_sleep_beside_others_body">כותב את הלילה גם אם Samsung Health או אפליקציה אחרת כבר כתבו לילה. אז סדר העדיפויות של מקורות הנתונים ב-Health Connect קובע איזה לילה האפליקציות מציגות. כבוי: הלילה של האפליקציה האחרת גובר.</string>
     <string name="connected_apps_title">אפליקציות מחוברות</string>
     <string name="connected_apps_settings_body">אפליקציות שמשתמשות בשעונים, במשקל ובפרופיל הגוף שלך דרך OpenWatch, ומה כל אחת מהן רשאית לעשות</string>
 </resources>

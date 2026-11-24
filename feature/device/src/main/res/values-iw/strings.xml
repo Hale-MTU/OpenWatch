@@ -66,6 +66,27 @@
     <string name="settings_watch_wearos_needs_calories_write">קלוריות ההליכה לא נכתבו: אשר ל-OpenWatch לכתוב קלוריות פעילות ולקרוא אימונים ב-Health Connect כדי להעריך אותן החל מהסנכרון הבא.</string>
     <string name="settings_watch_wearos_needs_workout_write">האימונים לא נכתבו: אשר ל-OpenWatch לכתוב אימונים, מסלולים ומרחק ב-Health Connect, ואז סנכרן שוב.</string>
     <string name="settings_watch_garmin_withheld">לא נשמר ב-Health Connect בגלל חוסר הרשאה: %1$s. אשר אותן, והסנכרון הבא ישמור מאותו רגע והלאה את מה שהשעון שולח.</string>
+    <string name="home_section_devices">מכשירים אחרים</string>
+    <string name="devices_intro">חיישנים ומדי מדידה שמותאמים ישירות לטלפון. מה שהם מודדים עובר ל-Health Connect.</string>
+    <string name="devices_add">הוספת מכשיר</string>
+    <string name="devices_permissions_title">הרשאות למכשיר שלך</string>
+    <string name="devices_permissions_body">את ההרשאה הזו Android מבקש בנפרד מ-Health Connect. בלעדיה אי אפשר למצוא מכשיר או לקרוא ממנו.</string>
+    <string name="devices_scan_empty">עדיין לא נמצא דבר. יש להעיר את המכשיר ולהשאיר אותו קרוב לטלפון.</string>
+    <string name="devices_scan_again">סריקה חוזרת</string>
+    <string name="devices_pairing">מתבצעת התאמה…</string>
+    <string name="devices_pair_refused">ההתאמה לא הושלמה. כדי לסיים, יש לאשר את בקשת ההתאמה של Android.</string>
+    <string name="devices_pair_unreachable">לא ניתן היה להגיע למכשיר. יש להעיר אותו ולהשאיר אותו קרוב, ואז לנסות שוב.</string>
+    <string name="devices_pair_not_associated">יש לאשר את OpenWatch בחלון של Android: כך הטלפון שומע את המכשיר כשיש לו קריאה.</string>
+    <string name="devices_last_reading">קריאה אחרונה %1$s</string>
+    <string name="devices_no_reading">אין עדיין קריאה</string>
+    <string name="device_live_section">בזמן אמת</string>
+    <string name="device_live_waiting">ממתין לקריאה…</string>
+    <plurals name="device_readings_waiting">
+        <item quantity="one">%1$d קריאה עדיין לא ב-Health Connect</item>
+        <item quantity="two">%1$d קריאות עדיין לא ב-Health Connect</item>
+        <item quantity="other">%1$d קריאות עדיין לא ב-Health Connect</item>
+    </plurals>
+    <string name="device_readings_waiting_grant">%1$s. יש לאשר ל-OpenWatch לכתוב אותן ב-Health Connect, והן יישמרו.</string>
     <string name="settings_watch_wearos_needs_hrv_write">שונות קצב הלב לא נכתבה: אשר ל-OpenWatch לכתוב אותה ב-Health Connect, ואז סנכרן שוב.</string>
     <string name="settings_watch_wearos_needs_respiratory_write">קצב הנשימה לא נכתב: אשר ל-OpenWatch לכתוב אותו ב-Health Connect, ואז סנכרן שוב.</string>
     <string name="settings_watch_wearos_needs_spo2_write">רמת החמצן בדם לא נכתבה: אשר ל-OpenWatch לכתוב אותה ב-Health Connect, ואז סנכרן שוב.</string>

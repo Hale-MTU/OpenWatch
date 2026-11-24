@@ -13,6 +13,14 @@
     <string name="settings_watch_wearos_sync_body">يسجّل تطبيق OpenWatch على الساعة معدل نبض القلب وما يحتاج إليه تقدير النوم، ويحتفظ بها لمدة أسبوع. تنسخ المزامنة معدل نبض القلب الجديد إلى Health Connect وتكتب جلسة نوم مقدَّرة واحدة لكل ليلة.</string>
     <string name="settings_watch_wearos_sync_now">مزامنة الساعة</string>
     <string name="settings_watch_wearos_syncing">جارٍ مزامنة الساعة…</string>
+    <plurals name="settings_watch_wearos_skin_baseline_nights_to_go">
+        <item quantity="zero">خط الأساس لدرجة حرارة الجلد: يلزم %1$d ليلة إضافية.</item>
+        <item quantity="one">خط الأساس لدرجة حرارة الجلد: يلزم %1$d ليلة إضافية.</item>
+        <item quantity="two">خط الأساس لدرجة حرارة الجلد: يلزم %1$d ليلة إضافية.</item>
+        <item quantity="few">خط الأساس لدرجة حرارة الجلد: يلزم %1$d ليالٍ إضافية.</item>
+        <item quantity="many">خط الأساس لدرجة حرارة الجلد: يلزم %1$d ليلةً إضافية.</item>
+        <item quantity="other">خط الأساس لدرجة حرارة الجلد: يلزم %1$d ليلة إضافية.</item>
+    </plurals>
     <string name="watch_settings_section">إعدادات الساعة</string>
     <string name="watch_settings_not_read">تحتفظ الساعة بهذه الإعدادات بنفسها. اقرأها لتغييرها من هنا.</string>
     <string name="watch_settings_unreachable">لم تستجب الساعة. هل هي قريبة وتطبيق OpenWatch عليها يعمل؟</string>
@@ -27,4 +35,8 @@
     <string name="watch_settings_skin">درجة حرارة الجلد ليلًا</string>
     <string name="watch_settings_spo2">قياس SpO2 كل ساعة ليلًا</string>
     <string name="watch_settings_allow_on_watch">اسمح بذلك على الساعة: افتح OpenWatch هناك وفعّله مرة واحدة.</string>
+    <string name="watch_settings_hr_source_explained">عند الإيقاف: مستشعر الساعة نفسها، مباشرةً. عند التفعيل: قيمة المنصة، تُسلَّم على دفعات بتأخير يصل إلى 10 دقائق والشاشة مطفأة. يستخدم التمرين المستشعر في الحالتين.</string>
+    <string name="watch_settings_hrv_source_explained">عند الإيقاف: قياس HRV من إشارة النبض الخام، لكل فاصل. عند التفعيل: فواصل النبضات (RR) من المنصة؛ يضيع حاليًا نحو 60% RR، لذا تقل الليالي التي لها قيمة.</string>
+    <string name="watch_settings_skin_explained">درجة حرارة الجلد عند المعصم أثناء نومك، قراءة كل دقيقة. استهلاك قليل للطاقة؛ ولا يتغير شيء آخر.</string>
+    <string name="watch_settings_spo2_explained">الأكسجين في الدم مرة كل ساعة على الأكثر أثناء نومك، بنحو 15 ثانية من الضوء الأحمر. بضعة mAh في الليلة؛ ويُتخطّى القياس عند تحرك الذراع.</string>
 </resources>
