@@ -18,6 +18,7 @@ class WearOsDeviceNamesTest {
         assertTrue(isSmartwatchName("Pixel Watch 2"))
         assertTrue(isSmartwatchName("TicWatch Pro 5"))
         assertTrue(isSmartwatchName("Amazfit GTR"))
+        assertTrue(isSmartwatchName("OnePlus Watch 2R"))
     }
 
     @Test
