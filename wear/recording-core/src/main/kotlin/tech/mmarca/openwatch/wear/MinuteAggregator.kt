@@ -62,6 +62,9 @@ class MinuteAggregator(
 
     /** The start of the newest closed minute: a reading for it or an older one never opens a bucket again. */
     private var closedThrough = Long.MIN_VALUE
+
+    /** The newest minute dropped from [closedRecently]: its stored row takes nothing more. */
+    private var prunedThrough = Long.MIN_VALUE
     private var lastMagnitude = Double.NaN
     private var lastAngle: Double? = null
     private var worn = true
@@ -86,9 +89,26 @@ class MinuteAggregator(
             return
         }
         // Late: it joins the closed minute, which [revisions] hands out again.
-        val closed = closedRecently[minuteOf(epochMillis)] ?: return
+        val start = minuteOf(epochMillis)
+        val closed = closedRecently[start] ?: lateMinute(start) ?: return
         closed.heartRates += bpm.toDouble()
         revised += closed.row.epochMillis
+    }
+
+    /**
+     * A minute no reading reached before a later one closed: with the screen off the hub
+     * may deliver no accelerometer reading for it, and the Samsung platform its heart rate
+     * only minutes later. Its row is made now, with the heart rate alone, so the night has
+     * no hole there. Null for a minute too old, or one whose row has left [closedRecently]:
+     * that row is stored, and an emptier one must not replace it.
+     */
+    private fun lateMinute(start: Long): Closed? {
+        if (start <= prunedThrough || start <= closedThrough - config.lateHeartRateMillis) return null
+        val bucket = Bucket(start).also {
+            it.charging = charging
+            it.offBody = !worn
+        }
+        return Closed(row(start, bucket), bucket.heartRates).also { closedRecently[start] = it }
     }
 
     /** The off-body sensor's verdict. Sticky until the next one. */
@@ -136,7 +156,9 @@ class MinuteAggregator(
             iterator.remove()
         }
         while (closedRecently.isNotEmpty() && nowEpochMillis - closedRecently.firstKey() > config.lateHeartRateMillis) {
-            revised -= closedRecently.pollFirstEntry().key
+            val start = closedRecently.pollFirstEntry().key
+            revised -= start
+            prunedThrough = maxOf(prunedThrough, start)
         }
         return closed
     }

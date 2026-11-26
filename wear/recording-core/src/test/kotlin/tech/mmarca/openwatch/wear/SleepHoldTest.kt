@@ -137,6 +137,49 @@ class SleepHoldTest {
     }
 
     @Test
+    fun `minutes that closed without a pulse start it once their late heart rate comes`() {
+        val hold = SleepHold()
+        hold.day()
+        // The Samsung platform's pulse is minutes late with the screen off: the minutes close without it.
+        val closed = List(10) { minute(bpm = null) }
+        closed.forEach { hold.onMinute(it) }
+        assertFalse(hold.isHolding)
+
+        closed.forEachIndexed { index, it -> hold.onMinute(it.copy(bpm = 70 - index)) }
+
+        assertTrue(hold.isHolding)
+    }
+
+    @Test
+    fun `a minute that comes late fills its gap`() {
+        val hold = SleepHold()
+        hold.day()
+        hold.falling(4)
+        val missing = minute(bpm = 66)
+        repeat(5) { index -> hold.onMinute(minute(bpm = 65 - index)) }
+        assertFalse(hold.isHolding)
+
+        hold.onMinute(missing)
+
+        assertTrue(hold.isHolding)
+    }
+
+    @Test
+    fun `a minute seen again does not count twice toward a running hold`() {
+        val hold = SleepHold()
+        hold.day()
+        hold.falling(10)
+        assertTrue(hold.isHolding)
+        val waking = List(4) { minute(screen = true) }
+        waking.forEach { hold.onMinute(it) }
+
+        // The same four waking minutes again, with their late pulse: still four of the five that release it.
+        waking.forEach { hold.onMinute(it.copy(bpm = 58)) }
+
+        assertTrue(hold.isHolding)
+    }
+
+    @Test
     fun `by day the quiet run must be twenty minutes`() {
         val hold = SleepHold()
         hold.day()

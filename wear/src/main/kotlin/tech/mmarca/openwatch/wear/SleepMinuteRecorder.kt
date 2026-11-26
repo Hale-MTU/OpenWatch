@@ -326,13 +326,11 @@ internal class SleepMinuteRecorder(
     private fun closeMinutes(now: Long) {
         if (wakeLock.isHeld) applyHold()
         val closed = aggregator.close(now)
-        // A late heart rate fills in a stored minute; the hold has seen that minute already.
+        // A late heart rate fills in a stored minute, or makes one; the hold takes it too.
         val revised = aggregator.revisions()
         if (closed.isEmpty() && revised.isEmpty()) return
-        if (closed.isNotEmpty()) {
-            feedAutoHold(closed)
-            applyHold()
-        }
+        feedAutoHold((revised + closed).sortedBy { it.epochMillis })
+        applyHold()
         store.putAll(WearMetrics.SLEEP_MINUTES, revised + closed)
         debug.log(TAG) { "Stored ${closed.size} minute(s), ${revised.size} filled in late" }
         if (now - lastPrunedAt > PRUNE_EVERY_MILLIS) {

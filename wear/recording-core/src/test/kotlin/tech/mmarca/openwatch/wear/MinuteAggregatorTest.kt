@@ -218,6 +218,46 @@ class MinuteAggregatorTest {
     }
 
     @Test
+    fun `a minute only a late heart rate reaches gets a row of its own`() {
+        val aggregator = aggregator()
+        // The hub delivered nothing for the second minute; the third closed before its heart rate came.
+        still(aggregator, minute0, 60)
+        still(aggregator, minute0 + 120_000L, 60)
+        assertEquals(listOf(minute0, minute0 + 120_000L), aggregator.close(minute0 + 300_000L).map { it.epochMillis })
+
+        pulse(aggregator, minute0 + 60_000L, bpm = 53)
+        val revised = aggregator.revisions().single()
+
+        assertEquals(minute0 + 60_000L, revised.epochMillis)
+        assertEquals(WearLinkProtocol.MinuteKind.RAW, revised.kind)
+        assertEquals(53, revised.bpm)
+        assertEquals(6, revised.heartRateSamples)
+        assertEquals(0, revised.sampleCount)
+        assertEquals(WearLinkProtocol.FLAG_SPARSE, revised.flags and WearLinkProtocol.FLAG_SPARSE)
+        assertTrue("no new open minute", aggregator.close(minute0 + 600_000L).isEmpty())
+
+        // A second late reading joins the row it made.
+        aggregator.onHeartRate(minute0 + 65_000L, 59)
+        assertEquals(7, aggregator.revisions().single().heartRateSamples)
+    }
+
+    @Test
+    fun `a late heart rate makes no row for a minute already stored and gone, nor one far too old`() {
+        val aggregator = aggregator()
+        still(aggregator, minute0, 60)
+        pulse(aggregator, minute0)
+        aggregator.close(minute0 + 120_000L)
+        // The stored row leaves the window; its minute must not come back emptier.
+        still(aggregator, minute0 + 40 * 60_000L, 60)
+        aggregator.close(minute0 + 42 * 60_000L)
+        aggregator.revisions()
+
+        aggregator.onHeartRate(minute0 + 3_000L, 60)
+        aggregator.onHeartRate(minute0 + 5 * 60_000L, 60)
+        assertTrue(aggregator.revisions().isEmpty())
+    }
+
+    @Test
     fun `minutes close oldest first and only once`() {
         val aggregator = aggregator()
         still(aggregator, minute0, 60)
