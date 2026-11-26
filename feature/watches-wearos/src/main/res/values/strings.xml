@@ -22,17 +22,17 @@
     <string name="watch_settings_unreachable">The watch did not answer. Is it near and its OpenWatch app running?</string>
     <string name="watch_settings_read">Read from the watch</string>
     <string name="watch_settings_power_save">Power-save heart rate</string>
-    <string name="watch_settings_power_save_body">About every 10 minutes outside bedtime mode. Bedtime mode always measures every 10 seconds.</string>
+    <string name="watch_settings_power_save_body">Measures about every 10 minutes by day, to save battery. The day\'s curve gets coarse, and falling asleep without bedtime mode may go unnoticed. Sleep and workouts still measure often.</string>
     <string name="watch_settings_synced">Synced wake-ups during sleep</string>
-    <string name="watch_settings_synced_body">Keeps every sleep minute with the heart rate sensor\'s wake-ups instead of a lasting wake lock. Works only with the heart rate from the sensor.</string>
-    <string name="watch_settings_samsung_note">Samsung platform: needs Health Platform Developer Mode on the watch. Without it the platform asks Samsung about this app. A Samsung source that fails falls back to the sensor.</string>
+    <string name="watch_settings_synced_body">Lets the watch nap between heart rate readings while it records your sleep, instead of staying awake all night (about 4 percent of the battery an hour). Meant to use less; works only with heart rate from the sensor, not the Samsung platform.</string>
+    <string name="watch_settings_samsung_note">Samsung sources need Developer Mode in the Samsung Health Platform on this watch; without it, the platform checks this app with Samsung. If a Samsung source fails, the watch uses its own sensor.</string>
     <string name="watch_settings_hr_samsung">Heart rate from the Samsung platform</string>
     <string name="watch_settings_hrv_samsung">HRV from the Samsung platform</string>
     <string name="watch_settings_skin">Skin temperature at night</string>
     <string name="watch_settings_spo2">SpO2 hourly at night</string>
     <string name="watch_settings_allow_on_watch">Allow it on the watch: open OpenWatch there and switch it on once.</string>
-    <string name="watch_settings_hr_source_explained">Off: the watch\'s own sensor, live. On: the platform\'s value, handed over in batches up to 10 minutes late with the screen off. A workout uses the sensor either way.</string>
-    <string name="watch_settings_hrv_source_explained">Off: HRV from the raw pulse signal, every interval. On: the platform\'s beat intervals; today about 60 % of them get lost, so fewer nights have a value.</string>
-    <string name="watch_settings_skin_explained">Skin temperature at the wrist while you sleep, a reading a minute. Little power; nothing else changes.</string>
-    <string name="watch_settings_spo2_explained">Blood oxygen at most once an hour while you sleep, about 15 s of red light. A few mAh a night; skipped when the arm moves.</string>
+    <string name="watch_settings_hr_source_explained">Off: the watch\'s own sensor, read right away. On: the heart rate Samsung\'s platform measures, which arrives up to 10 minutes late while the screen is off. Workouts always use the sensor.</string>
+    <string name="watch_settings_hrv_source_explained">Off: heart rate variability at night from the raw pulse signal. On: from the platform\'s beat-to-beat data, which currently loses many beats, so fewer nights get a value.</string>
+    <string name="watch_settings_skin_explained">Measures the skin temperature at your wrist while you sleep, once a minute. Uses little battery. The phone shows the change once three nights are recorded.</string>
+    <string name="watch_settings_spo2_explained">Measures blood oxygen at most once an hour while you sleep, with about 15 seconds of red light. Uses a little battery; skipped when your arm moves.</string>
 </resources>

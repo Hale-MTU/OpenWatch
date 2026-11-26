@@ -48,7 +48,6 @@
     <string name="status_samsung_diagnostics_on">Samsung-diagnostiikka: päällä · kytke pois Asetuksista</string>
     <string name="settings_heart_rate_every_10_seconds">Syke: 10 s välein</string>
     <string name="settings_heart_rate_power_save">Syke: virransäästö</string>
-    <string name="settings_heart_rate_power_save_note">Noin 10 minuutin välein nukkumaanmenotilan ulkopuolella. Uni ilman nukkumaanmenotilaa tunnistetaan silloin harvoista lukemista.</string>
     <string name="settings_sleep_hold_wake_lock">Uni: herätyslukko</string>
     <string name="settings_sleep_hold_synced">Uni: yhdistetyt herätykset</string>
     <string name="settings_heart_rate_source_sensor">Syke: anturi</string>
@@ -57,9 +56,7 @@
     <string name="settings_skin_temperature_on">Ihon lämpötila: Samsung, yöllä</string>
     <string name="settings_spo2_off">SpO2: pois</string>
     <string name="settings_spo2_on">SpO2: Samsung, tunnin välein yöllä</string>
-    <string name="status_hrv_source_ppg">HRV: raaka PPG</string>
     <string name="status_hrv_source_samsung">HRV: Samsung-alusta</string>
-    <string name="status_hrv_source_samsung_note">Samsung-alusta: vaatii Health Platformin kehittäjätilan. Ilman sitä alusta kysyy Samsungilta tästä sovelluksesta.</string>
     <string name="status_ppg_logging">Raaka-PPG-loki päällä · lopeta painamalla pitkään</string>
     <string name="tile_heart_rate_label">Syke</string>
     <string name="tile_heart_rate_description">Viimeisin sykkeesi ja sen tämänpäiväinen käyrä kellosovelluksen tallentamina</string>
@@ -320,19 +317,11 @@
     <string name="recovery_two_minutes">Palautuminen 2 min jälkeen</string>
     <string name="settings_recording">Tallennus</string>
     <string name="settings_recording_description">Virransäästö, uni, lähteet</string>
-    <string name="settings_heart_rate_every_10_seconds_explained">Syke 10 sekunnin välein koko päivän, erissä, jotka herättävät kellon noin 40 sekunnin välein: päivän käyrä, sykealueet ja uniminuutit ovat täydelliset.</string>
-    <string name="settings_sleep_hold_explained">Miten unen pito säilyttää jokaisen minuutin: herätyslukko pitää kellon hereillä; yhdistetyt herätykset antavat sen nukkua sykeanturin herätysten välillä ja tyhjentävät silloin kaikki anturit, vain anturin sykkeellä.</string>
-    <string name="settings_heart_rate_source_explained">Anturi: kellon oma syke, reaaliajassa. Samsung: alustan arvo, joka toimitetaan näytön ollessa pois päältä erissä jopa 10 minuuttia myöhässä. Treeni käyttää anturia joka tapauksessa.</string>
-    <string name="settings_hrv_source_explained">Anturi: HRV raa\'asta pulssisignaalista, jokainen väli. Samsung: alustan lyöntivälit; nykyään niistä noin 60 % katoaa, joten harvemmalle yölle saadaan arvo.</string>
-    <string name="settings_skin_explained">Ihon lämpötila ranteesta unen aikana, Samsung-alustalta yksi lukema minuutissa. Vähän virtaa; muu ei muutu.</string>
-    <string name="settings_spo2_explained">Veren happipitoisuus enintään kerran tunnissa unen aikana, noin 15 s punaista valoa. Muutama mAh yössä; ohitetaan, kun käsi liikkuu.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Automaattinen tauko: päällä</string>
     <string name="settings_auto_pause_off">Automaattinen tauko: pois</string>
-    <string name="settings_auto_pause_explained">Reitillinen juoksu tai pyöräily menee tauolle itsestään, kun olet seissyt paikallasi 8 sekuntia, ja jatkuu, kun liikut taas, joka kerta värinällä. GPS-nopeus ratkaisee; napauttamasi tauko jatkuu, kunnes napautat uudelleen.</string>
     <string name="settings_auto_detect_on">Treenien tunnistus: päällä</string>
     <string name="settings_auto_detect_off">Treenien tunnistus: pois</string>
-    <string name="settings_auto_detect_explained">10 minuutin reippaan kävelyn tai juoksun jälkeen ilman treeniä kello tarjoutuu tallentamaan sen alusta alkaen. Se lukee askelminuutteja, jotka se säilyttää muutenkin; mitään ei tallenneta, ellet napauta Tallenna.</string>
     <string name="detected_channel_name">Tunnistetut treenit</string>
     <string name="detected_walk">Näyttää kävelyltä</string>
     <string name="detected_run">Näyttää juoksulta</string>

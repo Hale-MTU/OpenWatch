@@ -23,17 +23,10 @@
     <string name="watch_settings_unreachable">השעון לא הגיב. האם הוא קרוב ואפליקציית OpenWatch בו פועלת?</string>
     <string name="watch_settings_read">קריאה מהשעון</string>
     <string name="watch_settings_power_save">דופק בחיסכון בסוללה</string>
-    <string name="watch_settings_power_save_body">בערך כל 10 דקות מחוץ למצב שעת השינה. במצב שעת השינה המדידה תמיד מתבצעת כל 10 שניות.</string>
     <string name="watch_settings_synced">התעוררויות מסונכרנות במהלך השינה</string>
-    <string name="watch_settings_synced_body">שומר כל דקת שינה בעזרת ההתעוררויות של חיישן הדופק, במקום להשאיר את השעון ער ברציפות. פועל רק עם הדופק מהחיישן.</string>
-    <string name="watch_settings_samsung_note">פלטפורמת Samsung: נדרש מצב המפתחים של Health Platform בשעון. בלעדיו הפלטפורמה שואלת את Samsung לגבי האפליקציה הזו. מקור של Samsung שנכשל חוזר לחיישן.</string>
     <string name="watch_settings_hr_samsung">דופק מפלטפורמת Samsung</string>
     <string name="watch_settings_hrv_samsung">שונות קצב הלב מפלטפורמת Samsung</string>
     <string name="watch_settings_skin">טמפרטורת העור בלילה</string>
     <string name="watch_settings_spo2">מדידת SpO2 כל שעה בלילה</string>
     <string name="watch_settings_allow_on_watch">אשר את זה בשעון: פתח שם את OpenWatch והפעל את האפשרות פעם אחת.</string>
-    <string name="watch_settings_hr_source_explained">כבוי: החיישן של השעון עצמו, בזמן אמת. פועל: הערך של הפלטפורמה, שמועבר במנות באיחור של עד 10 דקות כשהמסך כבוי. אימון משתמש בחיישן בכל מקרה.</string>
-    <string name="watch_settings_hrv_source_explained">כבוי: HRV מאות הדופק הגולמי, בכל מרווח. פועל: מרווחי הפעימות (RR) של הפלטפורמה; כיום כ-60% RR הולכים לאיבוד, ולכן לפחות לילות יש ערך.</string>
-    <string name="watch_settings_skin_explained">טמפרטורת העור בפרק כף היד בזמן השינה, קריאה אחת בדקה. צריכת חשמל קטנה; שום דבר אחר לא משתנה.</string>
-    <string name="watch_settings_spo2_explained">חמצן בדם לכל היותר פעם בשעה בזמן השינה, כ-15 שניות של אור אדום. כמה mAh בלילה; המדידה מדולגת כשהיד זזה.</string>
 </resources>

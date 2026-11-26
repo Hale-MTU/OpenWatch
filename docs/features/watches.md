@@ -150,7 +150,7 @@ The dashboard's **Settings** button opens the watch's settings, each with how it
 - **Recording**: the settings below, each with a line on what it does, what it costs and what it loses.
 - **Units**: metric or imperial, a tap switches. The watch's screens and the quick log tile show their values in it; the phone's own setting is apart. Metric until you choose.
 
-The watch's Recording screen and the phone's *Watch settings* card (on the watch's device screen) show the same settings, kept on the watch, with the same lines on what each does:
+The watch's Recording screen and the phone's *Watch settings* card (on the watch's device screen) show the same settings, kept on the watch, with the same lines on what each does; the Recording screen groups them under All day, Sleep, Workouts and Samsung sources. [Watch settings explained](../how-to/watch-settings.md) says in plain words what each changes and costs:
 
 - **Heart rate outside bedtime mode**: every 10 seconds (the default) or power save, about every 10 minutes. Bedtime mode and a sleep hold always measure every 10 seconds.
 - **Auto-pause** and **Detect workouts** (on the watch only, both on by default): a run or a ride with a route that pauses by itself, and the offer of a walk or a run the watch sees, as described under the workouts above.

@@ -47,7 +47,6 @@
     <string name="status_samsung_diagnostics_on">Samsung 诊断：开启 · 可在设置中关闭</string>
     <string name="settings_heart_rate_every_10_seconds">心率：每 10 秒</string>
     <string name="settings_heart_rate_power_save">心率：省电</string>
-    <string name="settings_heart_rate_power_save_note">睡眠模式之外约每 10 分钟一次。此时，未开启睡眠模式时的睡眠将根据稀疏的读数检测。</string>
     <string name="settings_sleep_hold_wake_lock">睡眠：唤醒锁</string>
     <string name="settings_sleep_hold_synced">睡眠：合并唤醒</string>
     <string name="settings_heart_rate_source_sensor">心率：传感器</string>
@@ -56,9 +55,7 @@
     <string name="settings_skin_temperature_on">皮肤温度：Samsung，夜间</string>
     <string name="settings_spo2_off">SpO2：关闭</string>
     <string name="settings_spo2_on">SpO2：Samsung，夜间每小时</string>
-    <string name="status_hrv_source_ppg">HRV：原始 PPG</string>
     <string name="status_hrv_source_samsung">HRV：Samsung 平台</string>
-    <string name="status_hrv_source_samsung_note">Samsung 平台：需要 Health Platform 开发者模式。否则平台会向 Samsung 查询此应用。</string>
     <string name="status_ppg_logging">原始 PPG 日志已开启 · 长按停止</string>
     <string name="tile_heart_rate_label">心率</string>
     <string name="tile_heart_rate_description">手表应用记录的最新心率及今日变化曲线</string>
@@ -315,19 +312,11 @@
     <string name="recovery_two_minutes">2 分钟后恢复</string>
     <string name="settings_recording">数据记录</string>
     <string name="settings_recording_description">省电、睡眠、数据来源</string>
-    <string name="settings_heart_rate_every_10_seconds_explained">全天每 10 秒一次心率，分批传送，约每 40 秒唤醒一次手表：全天曲线、心率区间和睡眠分钟数都完整。</string>
-    <string name="settings_sleep_hold_explained">睡眠记录如何保留每一分钟：唤醒锁让手表保持唤醒；合并唤醒让手表在心率传感器的两次唤醒之间休眠，并在那时读取所有传感器的数据，仅适用于传感器心率。</string>
-    <string name="settings_heart_rate_source_explained">传感器：手表自身的心率，实时。Samsung：平台的数值，屏幕关闭时分批传来，最多延迟 10 分钟。锻炼时始终使用传感器。</string>
-    <string name="settings_hrv_source_explained">传感器：从原始脉搏信号计算 HRV，每个间期都有。Samsung：平台的 RR 间期；目前约 60% RR 间期会丢失，因此有数值的夜晚更少。</string>
-    <string name="settings_skin_explained">睡眠时测量手腕处的皮肤温度，由 Samsung 平台每分钟提供一次读数。耗电很少；其他一切不变。</string>
-    <string name="settings_spo2_explained">睡眠时最多每小时测量一次血氧，每次约 15 秒红光。每晚耗电几 mAh；手臂移动时跳过。</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">自动暂停：开启</string>
     <string name="settings_auto_pause_off">自动暂停：关闭</string>
-    <string name="settings_auto_pause_explained">带路线的跑步或骑行在你静止 8 秒后会自动暂停，再次移动时自动继续，每次都会振动提示。由 GPS 速度判断；你点按的暂停会一直保持，直到你再次点按。</string>
     <string name="settings_auto_detect_on">检测锻炼：开启</string>
     <string name="settings_auto_detect_off">检测锻炼：关闭</string>
-    <string name="settings_auto_detect_explained">在未开始锻炼的情况下快走或跑步 10 分钟后，手表会提议从开始的时刻起记录这次锻炼。它读取的是本来就会保存的每分钟步数；除非你点按“记录”，否则不会记录任何内容。</string>
     <string name="detected_channel_name">检测到的锻炼</string>
     <string name="detected_walk">看起来你在步行</string>
     <string name="detected_run">看起来你在跑步</string>

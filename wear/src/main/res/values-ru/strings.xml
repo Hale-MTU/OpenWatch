@@ -49,7 +49,6 @@
     <string name="status_samsung_diagnostics_on">Диагностика Samsung: вкл. · выключите в настройках</string>
     <string name="settings_heart_rate_every_10_seconds">Пульс: каждые 10 с</string>
     <string name="settings_heart_rate_power_save">Пульс: экономный режим</string>
-    <string name="settings_heart_rate_power_save_note">Примерно каждые 10 минут вне режима сна. Сон без режима сна тогда определяется по редким измерениям.</string>
     <string name="settings_sleep_hold_wake_lock">Сон: wake lock</string>
     <string name="settings_sleep_hold_synced">Сон: совмещённые пробуждения</string>
     <string name="settings_heart_rate_source_sensor">Пульс: датчик</string>
@@ -58,9 +57,7 @@
     <string name="settings_skin_temperature_on">Температура кожи: Samsung, ночью</string>
     <string name="settings_spo2_off">SpO2: выкл.</string>
     <string name="settings_spo2_on">SpO2: Samsung, каждый час ночью</string>
-    <string name="status_hrv_source_ppg">HRV: сырой PPG</string>
     <string name="status_hrv_source_samsung">HRV: платформа Samsung</string>
-    <string name="status_hrv_source_samsung_note">Платформа Samsung: нужен режим разработчика Health Platform. Без него платформа запрашивает Samsung об этом приложении.</string>
     <string name="status_ppg_logging">Журнал сырого PPG включён · долгое нажатие, чтобы остановить</string>
     <string name="tile_heart_rate_label">Пульс</string>
     <string name="tile_heart_rate_description">Ваш последний пульс и его график за сегодня, записанные приложением на часах</string>
@@ -319,19 +316,11 @@
     <string name="recovery_two_minutes">Восстановление за 2 мин</string>
     <string name="settings_recording">Запись</string>
     <string name="settings_recording_description">Экономия энергии, сон, источники</string>
-    <string name="settings_heart_rate_every_10_seconds_explained">Пульс каждые 10 секунд весь день, пакетами, которые будят часы примерно каждые 40 секунд: график дня, зоны и минуты сна получаются полными.</string>
-    <string name="settings_sleep_hold_explained">Как сохраняется каждая минута сна: wake lock не даёт часам уснуть; совмещённые пробуждения дают им спать между пробуждениями датчика пульса и тогда считывают все датчики, только с пульсом от датчика.</string>
-    <string name="settings_heart_rate_source_explained">Датчик: собственный пульс часов, в реальном времени. Samsung: значение платформы, передаётся пакетами с задержкой до 10 минут при выключенном экране. Тренировка в любом случае использует датчик.</string>
-    <string name="settings_hrv_source_explained">Датчик: HRV по сырому сигналу пульса, каждый интервал. Samsung: межударные интервалы платформы; сейчас теряется около 60 % RR-интервалов, поэтому значение есть не у каждой ночи.</string>
-    <string name="settings_skin_explained">Температура кожи на запястье во время сна, одно измерение в минуту от платформы Samsung. Мало энергии; больше ничего не меняется.</string>
-    <string name="settings_spo2_explained">Кислород в крови не чаще раза в час во время сна, около 15 с красного света. Несколько мА·ч за ночь; пропускается, если рука двигается.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Автопауза: вкл.</string>
     <string name="settings_auto_pause_off">Автопауза: выкл.</string>
-    <string name="settings_auto_pause_explained">Пробежка или поездка с маршрутом сама ставится на паузу, если вы 8 секунд стоите на месте, и продолжается, когда вы снова двигаетесь, каждый раз с вибрацией. Решает скорость по GPS; пауза, поставленная нажатием, длится до следующего нажатия.</string>
     <string name="settings_auto_detect_on">Распознавание тренировок: вкл.</string>
     <string name="settings_auto_detect_off">Распознавание тренировок: выкл.</string>
-    <string name="settings_auto_detect_explained">После 10 минут быстрой ходьбы или бега без тренировки часы предлагают записать её с момента, когда она началась. Они читают минуты с шагами, которые и так хранят; ничего не записывается, пока вы не нажмёте «Записать».</string>
     <string name="detected_channel_name">Обнаруженные тренировки</string>
     <string name="detected_walk">Похоже на прогулку</string>
     <string name="detected_run">Похоже на пробежку</string>

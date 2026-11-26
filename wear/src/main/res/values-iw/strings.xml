@@ -49,7 +49,6 @@
     <string name="status_samsung_diagnostics_on">אבחון Samsung: פעיל · אפשר לכבות בהגדרות</string>
     <string name="settings_heart_rate_every_10_seconds">דופק: כל 10 שניות</string>
     <string name="settings_heart_rate_power_save">דופק: חיסכון בסוללה</string>
-    <string name="settings_heart_rate_power_save_note">בערך כל 10 דקות מחוץ למצב שעת השינה. שינה בלי מצב שעת השינה מזוהה אז מקריאות מעטות.</string>
     <string name="settings_sleep_hold_wake_lock">שינה: השארת השעון ער</string>
     <string name="settings_sleep_hold_synced">שינה: התעוררויות מסונכרנות</string>
     <string name="settings_heart_rate_source_sensor">דופק: חיישן</string>
@@ -58,9 +57,7 @@
     <string name="settings_skin_temperature_on">טמפרטורת העור: Samsung, בלילה</string>
     <string name="settings_spo2_off">מדידת SpO2: כבויה</string>
     <string name="settings_spo2_on">מדידת SpO2: Samsung, כל שעה בלילה</string>
-    <string name="status_hrv_source_ppg">מדידת HRV: PPG גולמי</string>
     <string name="status_hrv_source_samsung">מדידת HRV: פלטפורמת Samsung</string>
-    <string name="status_hrv_source_samsung_note">פלטפורמת Samsung: נדרש מצב המפתחים של Health Platform. בלעדיו הפלטפורמה שואלת את Samsung לגבי האפליקציה הזו.</string>
     <string name="status_ppg_logging">יומן PPG גולמי פעיל · לחיצה ארוכה לעצירה</string>
     <string name="tile_heart_rate_label">דופק</string>
     <string name="tile_heart_rate_description">הדופק האחרון שלך והעקומה שלו היום, כפי שאפליקציית השעון הקליטה אותם</string>
@@ -325,19 +322,11 @@
     <string name="recovery_two_minutes">התאוששות אחרי 2 דקות</string>
     <string name="settings_recording">הקלטה</string>
     <string name="settings_recording_description">חיסכון בסוללה, שינה, מקורות</string>
-    <string name="settings_heart_rate_every_10_seconds_explained">דופק כל 10 שניות לאורך כל היום, במנות שמעירות את השעון בערך כל 40 שניות: עקומת היום, האזורים ודקות השינה שלמים.</string>
-    <string name="settings_sleep_hold_explained">איך שומרים כל דקת שינה: השארת השעון ער לא נותנת לו לישון; התעוררויות מסונכרנות מאפשרות לו לישון בין ההתעוררויות של חיישן הדופק ולרוקן אז את כל החיישנים, עם דופק מהחיישן בלבד.</string>
-    <string name="settings_heart_rate_source_explained">חיישן: הדופק של השעון עצמו, בזמן אמת. Samsung: הערך של הפלטפורמה, שמועבר במנות באיחור של עד 10 דקות כשהמסך כבוי. אימון משתמש בחיישן בכל מקרה.</string>
-    <string name="settings_hrv_source_explained">חיישן: HRV מאות הדופק הגולמי, בכל מרווח. Samsung: מרווחי הפעימות (RR) של הפלטפורמה; כיום כ-60% RR הולכים לאיבוד, ולכן לפחות לילות יש ערך.</string>
-    <string name="settings_skin_explained">טמפרטורת העור בפרק כף היד בזמן השינה, קריאה אחת בדקה מפלטפורמת Samsung. צריכת חשמל קטנה; שום דבר אחר לא משתנה.</string>
-    <string name="settings_spo2_explained">חמצן בדם לכל היותר פעם בשעה בזמן השינה, כ-15 שניות של אור אדום. כמה mAh בלילה; המדידה מדולגת כשהיד זזה.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">השהיה אוטומטית: פועלת</string>
     <string name="settings_auto_pause_off">השהיה אוטומטית: כבויה</string>
-    <string name="settings_auto_pause_explained">ריצה או רכיבה עם מסלול מושהות מעצמן אחרי 8 שניות של עמידה במקום, וממשיכות כשזזים שוב, עם רטט בכל פעם. מהירות ה-GPS קובעת; השהיה שמפעילים בהקשה נשארת עד ההקשה הבאה.</string>
     <string name="settings_auto_detect_on">זיהוי אימונים: פועל</string>
     <string name="settings_auto_detect_off">זיהוי אימונים: כבוי</string>
-    <string name="settings_auto_detect_explained">אחרי 10 דקות של הליכה מהירה או ריצה בלי אימון, השעון מציע להקליט את הפעילות מהרגע שבו היא התחילה. הוא קורא את דקות הצעדים שהוא שומר בכל מקרה; שום דבר לא מוקלט אלא אם מקישים על \"הקלטה\".</string>
     <string name="detected_channel_name">אימונים שזוהו</string>
     <string name="detected_walk">נראה כמו הליכה</string>
     <string name="detected_run">נראה כמו ריצה</string>

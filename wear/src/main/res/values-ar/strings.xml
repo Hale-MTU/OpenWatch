@@ -52,7 +52,6 @@
     <string name="status_samsung_diagnostics_on">تشخيصات Samsung: مفعّلة · أوقفها من الإعدادات</string>
     <string name="settings_heart_rate_every_10_seconds">معدل نبض القلب: كل 10 ثوانٍ</string>
     <string name="settings_heart_rate_power_save">معدل نبض القلب: توفير الطاقة</string>
-    <string name="settings_heart_rate_power_save_note">مرة كل 10 دقائق تقريبًا خارج وضع وقت النوم. عندها يُكتشف النوم دون وضع وقت النوم من قراءات متباعدة.</string>
     <string name="settings_sleep_hold_wake_lock">النوم: قفل التنشيط</string>
     <string name="settings_sleep_hold_synced">النوم: إيقاظ متزامن</string>
     <string name="settings_heart_rate_source_sensor">معدل نبض القلب: المستشعر</string>
@@ -61,9 +60,7 @@
     <string name="settings_skin_temperature_on">درجة حرارة الجلد: Samsung، ليلًا</string>
     <string name="settings_spo2_off">قياس SpO2: متوقف</string>
     <string name="settings_spo2_on">قياس SpO2: Samsung، كل ساعة ليلًا</string>
-    <string name="status_hrv_source_ppg">قياس HRV: بيانات PPG الخام</string>
     <string name="status_hrv_source_samsung">قياس HRV: منصة Samsung</string>
-    <string name="status_hrv_source_samsung_note">منصة Samsung: تتطلب وضع المطوّر في Health Platform. بدونه، تستعلم المنصة من Samsung عن هذا التطبيق.</string>
     <string name="status_ppg_logging">سجل PPG الخام مفعّل · اضغط مطولًا للإيقاف</string>
     <string name="tile_heart_rate_label">معدل نبض القلب</string>
     <string name="tile_heart_rate_description">آخر معدل لنبض قلبك ومنحناه اليوم، كما سجّلهما تطبيق الساعة</string>
@@ -340,19 +337,11 @@
     <string name="recovery_two_minutes">التعافي بعد دقيقتين</string>
     <string name="settings_recording">التسجيل</string>
     <string name="settings_recording_description">توفير الطاقة، النوم، المصادر</string>
-    <string name="settings_heart_rate_every_10_seconds_explained">معدل نبض القلب كل 10 ثوانٍ طوال اليوم، على دفعات توقظ الساعة كل 40 ثانية تقريبًا: منحنى اليوم والمناطق ودقائق النوم كاملة.</string>
-    <string name="settings_sleep_hold_explained">كيف يحتفظ تسجيل النوم بكل دقيقة: يُبقي قفل التنشيط الساعة نشطة؛ أما الإيقاظ المتزامن فيتيح لها السكون بين عمليات إيقاظ مستشعر معدل نبض القلب، وتفريغ كل المستشعرات عندها، مع معدل نبض القلب من المستشعر فقط.</string>
-    <string name="settings_heart_rate_source_explained">المستشعر: معدل نبض القلب من الساعة نفسها، مباشرةً. Samsung: قيمة المنصة، تُسلَّم على دفعات بتأخير يصل إلى 10 دقائق والشاشة مطفأة. يستخدم التمرين المستشعر في الحالتين.</string>
-    <string name="settings_hrv_source_explained">المستشعر: قياس HRV من إشارة النبض الخام، لكل فاصل. Samsung: فواصل النبضات (RR) من المنصة؛ يضيع حاليًا نحو 60% RR، لذا تقل الليالي التي لها قيمة.</string>
-    <string name="settings_skin_explained">درجة حرارة الجلد عند المعصم أثناء نومك، قراءة كل دقيقة من منصة Samsung. استهلاك قليل للطاقة؛ ولا يتغير شيء آخر.</string>
-    <string name="settings_spo2_explained">الأكسجين في الدم مرة كل ساعة على الأكثر أثناء نومك، بنحو 15 ثانية من الضوء الأحمر. بضعة mAh في الليلة؛ ويُتخطّى القياس عند تحرك الذراع.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">الإيقاف المؤقت التلقائي: مفعّل</string>
     <string name="settings_auto_pause_off">الإيقاف المؤقت التلقائي: متوقف</string>
-    <string name="settings_auto_pause_explained">يتوقف الجري أو ركوب الدراجة مع مسار مؤقتًا من تلقاء نفسه بعد وقوفك ساكنًا لمدة 8 ثوانٍ، ويُستأنف عندما تتحرك مجددًا، مع اهتزاز في كل مرة. سرعة GPS هي التي تحسم؛ أما الإيقاف المؤقت الذي تنقر عليه فيبقى حتى تنقر مرة أخرى.</string>
     <string name="settings_auto_detect_on">اكتشاف التمارين: مفعّل</string>
     <string name="settings_auto_detect_off">اكتشاف التمارين: متوقف</string>
-    <string name="settings_auto_detect_explained">بعد 10 دقائق من المشي السريع أو الجري دون تمرين، تعرض الساعة تسجيله من لحظة بدايته. تقرأ دقائق الخطوات التي تحتفظ بها على أي حال؛ ولا يُسجَّل شيء ما لم تنقر على «تسجيل».</string>
     <string name="detected_channel_name">التمارين المكتشفة</string>
     <string name="detected_walk">يبدو أنك تمشي</string>
     <string name="detected_run">يبدو أنك تجري</string>

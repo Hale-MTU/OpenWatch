@@ -20,19 +20,12 @@
     <string name="watch_settings_unreachable">O reloxo non respondeu. Está preto e coa app OpenWatch en marcha?</string>
     <string name="watch_settings_read">Ler do reloxo</string>
     <string name="watch_settings_power_save">Frecuencia cardíaca en aforro</string>
-    <string name="watch_settings_power_save_body">Arredor de cada 10 minutos fóra do modo hora de durmir. O modo hora de durmir mide sempre cada 10 segundos.</string>
     <string name="watch_settings_synced">Espertares agrupados durante o sono</string>
-    <string name="watch_settings_synced_body">Garda cada minuto de sono cos espertares do sensor cardíaco en vez dun bloqueo de activación permanente. Só funciona coa frecuencia cardíaca do sensor.</string>
-    <string name="watch_settings_samsung_note">Plataforma Samsung: precisa o modo desenvolvedor de Health Platform no reloxo. Sen el, a plataforma consulta a Samsung sobre esta app. Unha fonte Samsung que falla volve ao sensor.</string>
     <string name="watch_settings_hr_samsung">Frecuencia cardíaca da plataforma Samsung</string>
     <string name="watch_settings_hrv_samsung">VFC da plataforma Samsung</string>
     <string name="watch_settings_skin">Temperatura da pel pola noite</string>
     <string name="watch_settings_spo2">SpO2 cada hora pola noite</string>
     <string name="watch_settings_allow_on_watch">Permíteo no reloxo: abre alí OpenWatch e actívao unha vez.</string>
-    <string name="watch_settings_hr_source_explained">Desactivado: o sensor do propio reloxo, en directo. Activado: o valor da plataforma, entregado en lotes ata 10 minutos tarde coa pantalla apagada. Un adestramento usa o sensor en calquera caso.</string>
-    <string name="watch_settings_hrv_source_explained">Desactivado: VFC a partir do sinal de pulso sen procesar, en cada intervalo. Activado: os intervalos entre latexos da plataforma; hoxe pérdense arredor do 60 % deles, así que menos noites teñen un valor.</string>
-    <string name="watch_settings_skin_explained">Temperatura da pel no pulso mentres dormes, unha lectura por minuto. Pouca enerxía; nada máis cambia.</string>
-    <string name="watch_settings_spo2_explained">Osíxeno en sangue como moito unha vez por hora mentres dormes, uns 15 s de luz vermella. Uns poucos mAh por noite; omítese se o brazo se move.</string>
     <string name="settings_watch_wearos_companion_missing">Android non vinculou este reloxo con OpenWatch. Sen o vínculo, OpenWatch non pode gravar os adestramentos que outra app inicia no reloxo.</string>
     <string name="settings_watch_wearos_companion_link">Vincular reloxo</string>
 </resources>

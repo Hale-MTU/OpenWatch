@@ -19,19 +19,12 @@
     <string name="watch_settings_unreachable">ウォッチが応答しませんでした。近くにあり、OpenWatch アプリが動作していますか？</string>
     <string name="watch_settings_read">ウォッチから読み込む</string>
     <string name="watch_settings_power_save">省電力の心拍</string>
-    <string name="watch_settings_power_save_body">おやすみモード以外では約 10 分ごと。おやすみモードでは常に 10 秒ごとに測定します。</string>
     <string name="watch_settings_synced">睡眠中のまとめた起動</string>
-    <string name="watch_settings_synced_body">常時のウェイクロックの代わりに心拍センサーの起動で睡眠の各分を保ちます。センサーの心拍でのみ動作します。</string>
-    <string name="watch_settings_samsung_note">Samsung プラットフォーム：ウォッチで Health Platform の開発者モードが必要です。オフの場合、プラットフォームはこのアプリについて Samsung に問い合わせます。失敗した Samsung のソースはセンサーに切り替わります。</string>
     <string name="watch_settings_hr_samsung">Samsung プラットフォームの心拍</string>
     <string name="watch_settings_hrv_samsung">Samsung プラットフォームの HRV</string>
     <string name="watch_settings_skin">夜間の皮膚温度</string>
     <string name="watch_settings_spo2">夜間の SpO2（1 時間ごと）</string>
     <string name="watch_settings_allow_on_watch">ウォッチで許可してください：ウォッチで OpenWatch を開き、一度オンにします。</string>
-    <string name="watch_settings_hr_source_explained">オフ：ウォッチ自身のセンサー、リアルタイム。オン：プラットフォームの値。画面オフ時は最大 10 分遅れてまとめて渡されます。ワークアウトではどちらの場合もセンサーを使います。</string>
-    <string name="watch_settings_hrv_source_explained">オフ：生の脈波信号から求める HRV、すべての間隔。オン：プラットフォームの拍動間隔。現在はその約 60 % (RR 間隔) が失われるため、値が得られる夜が少なくなります。</string>
-    <string name="watch_settings_skin_explained">睡眠中の手首の皮膚温度を 1 分に 1 回測定。消費電力はわずかで、他には何も変わりません。</string>
-    <string name="watch_settings_spo2_explained">睡眠中に最大 1 時間に 1 回の血中酸素測定、約 15 秒の赤色光。一晩に数 mAh。腕が動いているときはスキップします。</string>
     <string name="settings_watch_wearos_companion_missing">Android はこのウォッチを OpenWatch にリンクしていません。リンクがないと、別のアプリがウォッチで開始したワークアウトを OpenWatch は記録できません。</string>
     <string name="settings_watch_wearos_companion_link">ウォッチをリンク</string>
 </resources>

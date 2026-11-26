@@ -49,7 +49,6 @@
     <string name="status_samsung_diagnostics_on">Diagnostika Samsung: zapnuto · vypněte v Nastavení</string>
     <string name="settings_heart_rate_every_10_seconds">Tep: každých 10 s</string>
     <string name="settings_heart_rate_power_save">Tep: úsporný režim</string>
-    <string name="settings_heart_rate_power_save_note">Přibližně každých 10 minut mimo režim spánku. Spánek bez režimu spánku se pak rozpozná z řídkých měření.</string>
     <string name="settings_sleep_hold_wake_lock">Spánek: wake lock</string>
     <string name="settings_sleep_hold_synced">Spánek: sdružené probouzení</string>
     <string name="settings_heart_rate_source_sensor">Tep: snímač</string>
@@ -58,9 +57,7 @@
     <string name="settings_skin_temperature_on">Teplota kůže: Samsung, v noci</string>
     <string name="settings_spo2_off">SpO2: vypnuto</string>
     <string name="settings_spo2_on">SpO2: Samsung, každou hodinu v noci</string>
-    <string name="status_hrv_source_ppg">HRV: surové PPG</string>
     <string name="status_hrv_source_samsung">HRV: platforma Samsung</string>
-    <string name="status_hrv_source_samsung_note">Platforma Samsung: vyžaduje vývojářský režim Health Platform. Bez něj se platforma ptá Samsungu na tuto aplikaci.</string>
     <string name="status_ppg_logging">Záznam surového PPG zapnut · dlouhým stiskem zastavíte</string>
     <string name="tile_heart_rate_label">Tep</string>
     <string name="tile_heart_rate_description">Váš poslední tep a jeho dnešní průběh, jak je zaznamenala aplikace v hodinkách</string>
@@ -319,19 +316,11 @@
     <string name="recovery_two_minutes">Zotavení po 2 min</string>
     <string name="settings_recording">Záznam</string>
     <string name="settings_recording_description">Úspora energie, spánek, zdroje</string>
-    <string name="settings_heart_rate_every_10_seconds_explained">Tep každých 10 sekund celý den, v dávkách, které hodinky probudí zhruba každých 40 sekund: průběh dne, zóny i minuty spánku jsou úplné.</string>
-    <string name="settings_sleep_hold_explained">Jak se ve spánku zachová každá minuta: wake lock drží hodinky vzhůru; sdružené probouzení je nechá spát mezi probuzeními snímače tepu a pak vyčte všechny snímače, jen s tepem ze snímače.</string>
-    <string name="settings_heart_rate_source_explained">Snímač: vlastní tep hodinek, živě. Samsung: hodnota platformy, předávaná v dávkách se zpožděním až 10 minut při vypnuté obrazovce. Trénink používá snímač v obou případech.</string>
-    <string name="settings_hrv_source_explained">Snímač: HRV ze surového pulzního signálu, každý interval. Samsung: intervaly mezi údery z platformy; dnes se ztrácí asi 60 % z nich, takže hodnotu má méně nocí.</string>
-    <string name="settings_skin_explained">Teplota kůže na zápěstí během spánku, jedno měření za minutu z platformy Samsung. Málo energie; nic jiného se nemění.</string>
-    <string name="settings_spo2_explained">Okysličení krve nejvýš jednou za hodinu během spánku, asi 15 s červeného světla. Pár mAh za noc; vynechá se, když se paže hýbe.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Automatická pauza: zapnuto</string>
     <string name="settings_auto_pause_off">Automatická pauza: vypnuto</string>
-    <string name="settings_auto_pause_explained">Běh nebo jízda s trasou se sama pozastaví, jakmile 8 sekund stojíte, a pokračuje, když se znovu dáte do pohybu, pokaždé se zavibrováním. Rozhoduje rychlost z GPS; pauza, kterou zapnete klepnutím, trvá, dokud znovu neklepnete.</string>
     <string name="settings_auto_detect_on">Rozpoznávání tréninků: zapnuto</string>
     <string name="settings_auto_detect_off">Rozpoznávání tréninků: vypnuto</string>
-    <string name="settings_auto_detect_explained">Po 10 minutách svižné chůze nebo běhu bez tréninku hodinky nabídnou, že ho zaznamenají od chvíle, kdy začal. Čtou minuty s kroky, které si stejně uchovávají; nic se nezaznamená, dokud neklepnete na Zaznamenat.</string>
     <string name="detected_channel_name">Rozpoznané tréninky</string>
     <string name="detected_walk">Vypadá to na chůzi</string>
     <string name="detected_run">Vypadá to na běh</string>
