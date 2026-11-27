@@ -26,17 +26,10 @@
     <string name="watch_settings_unreachable">لم تستجب الساعة. هل هي قريبة وتطبيق OpenWatch عليها يعمل؟</string>
     <string name="watch_settings_read">القراءة من الساعة</string>
     <string name="watch_settings_power_save">معدل نبض القلب في وضع توفير الطاقة</string>
-    <string name="watch_settings_power_save_body">مرة كل 10 دقائق تقريبًا خارج وضع وقت النوم. يقيس وضع وقت النوم دائمًا كل 10 ثوانٍ.</string>
     <string name="watch_settings_synced">عمليات إيقاظ متزامنة أثناء النوم</string>
-    <string name="watch_settings_synced_body">يحتفظ بكل دقيقة نوم بالاعتماد على عمليات إيقاظ مستشعر معدل نبض القلب بدلًا من قفل تنشيط دائم. يعمل فقط مع معدل نبض القلب من المستشعر.</string>
-    <string name="watch_settings_samsung_note">منصة Samsung: تتطلب وضع المطوّر في Health Platform على الساعة. بدونه، تستعلم المنصة من Samsung عن هذا التطبيق. إذا تعطّل مصدر من Samsung، يُستخدم المستشعر بدلًا منه.</string>
     <string name="watch_settings_hr_samsung">معدل نبض القلب من منصة Samsung</string>
     <string name="watch_settings_hrv_samsung">تقلّب معدل ضربات القلب من منصة Samsung</string>
     <string name="watch_settings_skin">درجة حرارة الجلد ليلًا</string>
     <string name="watch_settings_spo2">قياس SpO2 كل ساعة ليلًا</string>
     <string name="watch_settings_allow_on_watch">اسمح بذلك على الساعة: افتح OpenWatch هناك وفعّله مرة واحدة.</string>
-    <string name="watch_settings_hr_source_explained">عند الإيقاف: مستشعر الساعة نفسها، مباشرةً. عند التفعيل: قيمة المنصة، تُسلَّم على دفعات بتأخير يصل إلى 10 دقائق والشاشة مطفأة. يستخدم التمرين المستشعر في الحالتين.</string>
-    <string name="watch_settings_hrv_source_explained">عند الإيقاف: قياس HRV من إشارة النبض الخام، لكل فاصل. عند التفعيل: فواصل النبضات (RR) من المنصة؛ يضيع حاليًا نحو 60% RR، لذا تقل الليالي التي لها قيمة.</string>
-    <string name="watch_settings_skin_explained">درجة حرارة الجلد عند المعصم أثناء نومك، قراءة كل دقيقة. استهلاك قليل للطاقة؛ ولا يتغير شيء آخر.</string>
-    <string name="watch_settings_spo2_explained">الأكسجين في الدم مرة كل ساعة على الأكثر أثناء نومك، بنحو 15 ثانية من الضوء الأحمر. بضعة mAh في الليلة؛ ويُتخطّى القياس عند تحرك الذراع.</string>
 </resources>

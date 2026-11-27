@@ -21,19 +21,12 @@
     <string name="watch_settings_unreachable">La montre n\'a pas répondu. Est-elle à proximité et son application OpenWatch est-elle lancée ?</string>
     <string name="watch_settings_read">Lire depuis la montre</string>
     <string name="watch_settings_power_save">Fréquence cardiaque en mode économie</string>
-    <string name="watch_settings_power_save_body">Environ toutes les 10 minutes hors du mode coucher. Le mode coucher mesure toujours toutes les 10 secondes.</string>
     <string name="watch_settings_synced">Réveils groupés pendant le sommeil</string>
-    <string name="watch_settings_synced_body">Conserve chaque minute de sommeil grâce aux réveils du capteur cardiaque au lieu d\'un verrou de réveil permanent. Fonctionne seulement avec la fréquence cardiaque du capteur.</string>
-    <string name="watch_settings_samsung_note">Plateforme Samsung : nécessite le mode développeur de Health Platform sur la montre. Sans lui, la plateforme interroge Samsung au sujet de cette application. Une source Samsung qui échoue repasse au capteur.</string>
     <string name="watch_settings_hr_samsung">Fréquence cardiaque de la plateforme Samsung</string>
     <string name="watch_settings_hrv_samsung">VFC de la plateforme Samsung</string>
     <string name="watch_settings_skin">Température cutanée la nuit</string>
     <string name="watch_settings_spo2">SpO2 toutes les heures la nuit</string>
     <string name="watch_settings_allow_on_watch">Autorisez-le sur la montre : ouvrez OpenWatch dessus et activez-le une fois.</string>
-    <string name="watch_settings_hr_source_explained">Désactivé : le capteur de la montre elle-même, en direct. Activé : la valeur de la plateforme, transmise par lots jusqu\'à 10 minutes en retard écran éteint. Un entraînement utilise le capteur dans les deux cas.</string>
-    <string name="watch_settings_hrv_source_explained">Désactivé : la VFC à partir du signal de pouls brut, à chaque intervalle. Activé : les intervalles entre battements de la plateforme ; aujourd\'hui environ 60 % d\'entre eux se perdent, donc moins de nuits ont une valeur.</string>
-    <string name="watch_settings_skin_explained">La température cutanée au poignet pendant votre sommeil, une mesure par minute. Peu d\'énergie ; rien d\'autre ne change.</string>
-    <string name="watch_settings_spo2_explained">L\'oxygène sanguin au plus une fois par heure pendant votre sommeil, environ 15 s de lumière rouge. Quelques mAh par nuit ; ignoré si le bras bouge.</string>
     <string name="settings_watch_wearos_companion_missing">Android n\'a pas associé cette montre à OpenWatch. Sans cette association, OpenWatch ne peut pas enregistrer les entraînements qu\'une autre application lance sur la montre.</string>
     <string name="settings_watch_wearos_companion_link">Associer la montre</string>
 </resources>

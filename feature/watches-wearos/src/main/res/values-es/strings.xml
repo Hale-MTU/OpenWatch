@@ -21,19 +21,12 @@
     <string name="watch_settings_unreachable">El reloj no respondió. ¿Está cerca y con su app OpenWatch en marcha?</string>
     <string name="watch_settings_read">Leer del reloj</string>
     <string name="watch_settings_power_save">Frecuencia cardíaca en ahorro</string>
-    <string name="watch_settings_power_save_body">Aproximadamente cada 10 minutos fuera del modo hora de dormir. El modo hora de dormir mide siempre cada 10 segundos.</string>
     <string name="watch_settings_synced">Despertares agrupados durante el sueño</string>
-    <string name="watch_settings_synced_body">Conserva cada minuto de sueño con los despertares del sensor de frecuencia cardíaca en lugar de un bloqueo de activación permanente. Solo funciona con la frecuencia cardíaca del sensor.</string>
-    <string name="watch_settings_samsung_note">Plataforma Samsung: necesita el modo desarrollador de Health Platform en el reloj. Sin él, la plataforma consulta a Samsung sobre esta app. Una fuente Samsung que falla vuelve al sensor.</string>
     <string name="watch_settings_hr_samsung">Frecuencia cardíaca de la plataforma Samsung</string>
     <string name="watch_settings_hrv_samsung">VFC de la plataforma Samsung</string>
     <string name="watch_settings_skin">Temperatura de la piel por la noche</string>
     <string name="watch_settings_spo2">SpO2 cada hora por la noche</string>
     <string name="watch_settings_allow_on_watch">Permítelo en el reloj: abre OpenWatch allí y actívalo una vez.</string>
-    <string name="watch_settings_hr_source_explained">Desactivado: el sensor del propio reloj, en directo. Activado: el valor de la plataforma, entregado en lotes con hasta 10 minutos de retraso con la pantalla apagada. Un entrenamiento usa el sensor en ambos casos.</string>
-    <string name="watch_settings_hrv_source_explained">Desactivado: VFC a partir de la señal de pulso sin procesar, cada intervalo. Activado: los intervalos entre latidos de la plataforma; hoy se pierde en torno al 60 % de ellos, así que menos noches tienen un valor.</string>
-    <string name="watch_settings_skin_explained">Temperatura de la piel en la muñeca mientras duermes, una lectura por minuto. Poca energía; nada más cambia.</string>
-    <string name="watch_settings_spo2_explained">Oxígeno en sangre como mucho una vez por hora mientras duermes, unos 15 s de luz roja. Unos pocos mAh por noche; se omite si el brazo se mueve.</string>
     <string name="settings_watch_wearos_companion_missing">Android no ha vinculado este reloj con OpenWatch. Sin el vínculo, OpenWatch no puede grabar los entrenamientos que otra app inicia en el reloj.</string>
     <string name="settings_watch_wearos_companion_link">Vincular reloj</string>
 </resources>

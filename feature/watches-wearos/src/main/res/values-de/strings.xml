@@ -20,19 +20,19 @@
     <string name="watch_settings_unreachable">Die Uhr hat nicht geantwortet. Ist sie in der Nähe und läuft ihre OpenWatch-App?</string>
     <string name="watch_settings_read">Von der Uhr lesen</string>
     <string name="watch_settings_power_save">Puls im Sparmodus</string>
-    <string name="watch_settings_power_save_body">Etwa alle 10 Minuten außerhalb des Schlafenszeitmodus. Im Schlafenszeitmodus wird immer alle 10 Sekunden gemessen.</string>
+    <string name="watch_settings_power_save_body">Misst tagsüber etwa alle 10 Minuten, um Akku zu sparen. Die Tageskurve wird grob, und Einschlafen ohne Schlafenszeitmodus fällt eventuell nicht auf. Schlaf und Training messen weiter häufig.</string>
     <string name="watch_settings_synced">Gebündeltes Aufwecken im Schlaf</string>
-    <string name="watch_settings_synced_body">Hält jede Schlafminute vollständig über das Aufwecken durch den Pulssensor statt über einen dauerhaften Wake Lock. Funktioniert nur mit dem Puls vom Sensor.</string>
-    <string name="watch_settings_samsung_note">Samsung-Plattform: braucht den Entwicklermodus der Health Platform auf der Uhr. Ohne ihn fragt die Plattform bei Samsung nach dieser App. Eine Samsung-Quelle, die ausfällt, wechselt zum Sensor.</string>
+    <string name="watch_settings_synced_body">Lässt die Uhr zwischen den Pulsmessungen ruhen, während sie deinen Schlaf aufzeichnet, statt die ganze Nacht wach zu bleiben (etwa 4 Prozent Akku pro Stunde). Soll weniger brauchen; funktioniert nur mit dem Puls vom Sensor, nicht von der Samsung-Plattform.</string>
+    <string name="watch_settings_samsung_note">Samsung-Quellen brauchen den Entwicklermodus der Samsung Health Platform auf dieser Uhr; ohne ihn prüft die Plattform diese App bei Samsung. Fällt eine Samsung-Quelle aus, nutzt die Uhr ihren eigenen Sensor.</string>
     <string name="watch_settings_hr_samsung">Puls von der Samsung-Plattform</string>
     <string name="watch_settings_hrv_samsung">HRV von der Samsung-Plattform</string>
     <string name="watch_settings_skin">Hauttemperatur in der Nacht</string>
     <string name="watch_settings_spo2">SpO2 stündlich in der Nacht</string>
     <string name="watch_settings_allow_on_watch">Erlaube es auf der Uhr: Öffne dort OpenWatch und schalte es einmal ein.</string>
-    <string name="watch_settings_hr_source_explained">Aus: der eigene Sensor der Uhr, live. An: der Wert der Plattform, bei ausgeschaltetem Display bis zu 10 Minuten verzögert. Ein Training nutzt immer den Sensor.</string>
-    <string name="watch_settings_hrv_source_explained">Aus: HRV aus dem rohen Pulssignal, jeder Schlag. An: die Schlagabstände der Plattform; derzeit gehen davon etwa 60 % verloren, daher seltener ein Wert.</string>
-    <string name="watch_settings_skin_explained">Hauttemperatur am Handgelenk im Schlaf, ein Wert pro Minute. Wenig Strom, sonst keine Änderung.</string>
-    <string name="watch_settings_spo2_explained">Blutsauerstoff höchstens einmal pro Stunde im Schlaf, etwa 15 s Rotlicht. Wenige mAh pro Nacht; entfällt, wenn sich der Arm bewegt.</string>
+    <string name="watch_settings_hr_source_explained">Aus: der eigene Sensor der Uhr, sofort gelesen. An: der Puls der Samsung-Plattform, der bei ausgeschaltetem Display bis zu 10 Minuten später ankommt. Trainings nutzen immer den Sensor.</string>
+    <string name="watch_settings_hrv_source_explained">Aus: Herzfrequenzvariabilität in der Nacht aus dem rohen Pulssignal. An: aus den Schlag-zu-Schlag-Daten der Plattform, die derzeit viele Schläge verlieren, daher bekommen weniger Nächte einen Wert.</string>
+    <string name="watch_settings_skin_explained">Misst während des Schlafs einmal pro Minute die Hauttemperatur am Handgelenk. Braucht wenig Akku. Das Handy zeigt die Veränderung, sobald drei Nächte aufgezeichnet sind.</string>
+    <string name="watch_settings_spo2_explained">Misst während des Schlafs höchstens einmal pro Stunde den Blutsauerstoff, mit etwa 15 Sekunden rotem Licht. Braucht etwas Akku; entfällt, wenn sich der Arm bewegt.</string>
     <string name="settings_watch_wearos_companion_missing">Android hat diese Uhr nicht mit OpenWatch verknüpft. Ohne die Verknüpfung kann OpenWatch keine Workouts aufzeichnen, die eine andere App auf der Uhr startet.</string>
     <string name="settings_watch_wearos_companion_link">Uhr verknüpfen</string>
 </resources>

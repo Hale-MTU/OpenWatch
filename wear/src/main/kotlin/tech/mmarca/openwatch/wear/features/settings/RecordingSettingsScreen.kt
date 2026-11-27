@@ -88,8 +88,9 @@ internal fun RecordingSettingsRoute() {
 }
 
 /**
- * The watch's own recording settings ([WearSettings]), each with a line on
- * what it does, what it costs and what it loses: the heart rate outside
+ * The watch's own recording settings ([WearSettings]), grouped under a
+ * heading each (all day, sleep, workouts, Samsung sources), each with a line
+ * on what it does, what it costs in battery and what it loses: the heart rate outside
  * bedtime mode and how a sleep hold works, a workout's pause by itself and
  * the offer of a walk or a run the watch sees, and, on a watch with the
  * Samsung Health Platform only, where the heart rate and the HRV windows
@@ -119,16 +120,20 @@ private fun TransformingLazyColumnScope.recordingSettingsItems(
     spec: TransformationSpec,
     actions: RecordingSettingsActions,
 ) {
+    section(spec, R.string.settings_section_day)
     val powerSave = settings.heartRateDay == HeartRateInterval.POWER_SAVE
     setting(
         spec,
         if (powerSave) R.string.settings_heart_rate_power_save else R.string.settings_heart_rate_every_10_seconds,
         if (powerSave) R.string.settings_heart_rate_power_save_note else R.string.settings_heart_rate_every_10_seconds_explained,
     ) { actions.onHeartRatePowerSave(!powerSave) }
+    section(spec, R.string.settings_section_sleep)
+    item { Line(stringResource(R.string.settings_sleep_note)) }
     val synced = settings.syncedSleepHold
     setting(spec, if (synced) R.string.settings_sleep_hold_synced else R.string.settings_sleep_hold_wake_lock, R.string.settings_sleep_hold_explained) {
         actions.onSyncedSleepHold(!synced)
     }
+    section(spec, R.string.settings_section_workouts)
     val autoPause = settings.autoPause
     setting(spec, if (autoPause) R.string.settings_auto_pause_on else R.string.settings_auto_pause_off, R.string.settings_auto_pause_explained) {
         actions.onAutoPause(!autoPause)
@@ -139,6 +144,7 @@ private fun TransformingLazyColumnScope.recordingSettingsItems(
     }
     if (!samsung) return
 
+    section(spec, R.string.settings_section_samsung)
     item { Line(stringResource(R.string.status_hrv_source_samsung_note)) }
     val heartRateSamsung = settings.heartRateSource == MeasurementSource.SAMSUNG_PLATFORM
     setting(
@@ -157,6 +163,16 @@ private fun TransformingLazyColumnScope.recordingSettingsItems(
     val spo2 = settings.spo2AtNight
     setting(spec, if (spo2) R.string.settings_spo2_on else R.string.settings_spo2_off, R.string.settings_spo2_explained) {
         actions.onSpo2AtNight(!spo2)
+    }
+}
+
+/** A group of settings under its heading. */
+private fun TransformingLazyColumnScope.section(spec: TransformationSpec, @StringRes title: Int) {
+    item {
+        ListHeader(
+            modifier = Modifier.fillMaxWidth().transformedHeight(this, spec),
+            transformation = SurfaceTransformation(spec),
+        ) { Text(stringResource(title), style = MaterialTheme.typography.titleSmall) }
     }
 }
 

@@ -48,7 +48,6 @@
     <string name="status_samsung_diagnostics_on">Diagnóstico de Samsung: activado · desactívao en Axustes</string>
     <string name="settings_heart_rate_every_10_seconds">Pulso: cada 10 s</string>
     <string name="settings_heart_rate_power_save">Pulso: aforro de enerxía</string>
-    <string name="settings_heart_rate_power_save_note">Arredor de cada 10 minutos fóra do modo hora de durmir. O sono sen modo hora de durmir detéctase entón a partir de lecturas espaciadas.</string>
     <string name="settings_sleep_hold_wake_lock">Sono: bloqueo de activación</string>
     <string name="settings_sleep_hold_synced">Sono: espertares agrupados</string>
     <string name="settings_heart_rate_source_sensor">Pulso: sensor</string>
@@ -57,9 +56,7 @@
     <string name="settings_skin_temperature_on">Temperatura da pel: Samsung, pola noite</string>
     <string name="settings_spo2_off">SpO2: desactivada</string>
     <string name="settings_spo2_on">SpO2: Samsung, cada hora pola noite</string>
-    <string name="status_hrv_source_ppg">VFC: PPG sen procesar</string>
     <string name="status_hrv_source_samsung">VFC: plataforma Samsung</string>
-    <string name="status_hrv_source_samsung_note">Plataforma Samsung: precisa o modo desenvolvedor de Health Platform. Sen el, a plataforma consulta a Samsung sobre esta app.</string>
     <string name="status_ppg_logging">Rexistro de PPG sen procesar activo · mantén premido para detelo</string>
     <string name="tile_heart_rate_label">Pulso</string>
     <string name="tile_heart_rate_description">O teu último pulso e a súa curva de hoxe, tal como os rexistrou a app do reloxo</string>
@@ -320,19 +317,11 @@
     <string name="recovery_two_minutes">Recuperación tras 2 min</string>
     <string name="settings_recording">Gravación</string>
     <string name="settings_recording_description">Aforro de enerxía, sono, fontes</string>
-    <string name="settings_heart_rate_every_10_seconds_explained">Un pulso cada 10 segundos todo o día, en lotes que espertan o reloxo arredor de cada 40 segundos: a curva do día, as zonas e os minutos de sono quedan completos.</string>
-    <string name="settings_sleep_hold_explained">Como garda cada minuto o seguimento do sono: un bloqueo de activación mantén o reloxo esperto; os espertares agrupados déixano durmir entre os espertares do sensor cardíaco e baleiran entón cada sensor, só co pulso do sensor.</string>
-    <string name="settings_heart_rate_source_explained">Sensor: o pulso do propio reloxo, en directo. Samsung: o valor da plataforma, entregado en lotes ata 10 minutos tarde coa pantalla apagada. Un adestramento usa o sensor en calquera caso.</string>
-    <string name="settings_hrv_source_explained">Sensor: VFC a partir do sinal de pulso sen procesar, en cada intervalo. Samsung: os intervalos entre latexos da plataforma; hoxe pérdense arredor do 60 % deles, así que menos noites teñen un valor.</string>
-    <string name="settings_skin_explained">Temperatura da pel no pulso mentres dormes, unha lectura por minuto da plataforma Samsung. Pouca enerxía; nada máis cambia.</string>
-    <string name="settings_spo2_explained">Osíxeno en sangue como moito unha vez por hora mentres dormes, uns 15 s de luz vermella. Uns poucos mAh por noite; omítese se o brazo se move.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Pausa automática: activada</string>
     <string name="settings_auto_pause_off">Pausa automática: desactivada</string>
-    <string name="settings_auto_pause_explained">Unha carreira ou unha saída en bici con ruta pausa soa cando levas 8 segundos parado, e continúa cando te moves de novo, cunha vibración cada vez. Decide a velocidade do GPS; unha pausa que toques ti dura ata que toques de novo.</string>
     <string name="settings_auto_detect_on">Detectar adestramentos: activado</string>
     <string name="settings_auto_detect_off">Detectar adestramentos: desactivado</string>
-    <string name="settings_auto_detect_explained">Tras 10 minutos de camiñar rápido ou correr sen un adestramento, o reloxo ofrece gravalo desde onde comezou. Le os minutos de pasos que garda igualmente; non se grava nada se non tocas Gravar.</string>
     <string name="detected_channel_name">Adestramentos detectados</string>
     <string name="detected_walk">Parece unha camiñada</string>
     <string name="detected_run">Parece unha carreira</string>

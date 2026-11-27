@@ -49,7 +49,6 @@
     <string name="status_samsung_diagnostics_on">Diagnostica Samsung: attiva · disattivala in Impostazioni</string>
     <string name="settings_heart_rate_every_10_seconds">Battito: ogni 10 s</string>
     <string name="settings_heart_rate_power_save">Battito: risparmio energetico</string>
-    <string name="settings_heart_rate_power_save_note">Circa ogni 10 minuti fuori dalla modalità notte. Il sonno senza modalità notte viene quindi rilevato da letture sporadiche.</string>
     <string name="settings_sleep_hold_wake_lock">Sonno: wake lock</string>
     <string name="settings_sleep_hold_synced">Sonno: risvegli sincronizzati</string>
     <string name="settings_heart_rate_source_sensor">Battito: sensore</string>
@@ -58,9 +57,7 @@
     <string name="settings_skin_temperature_on">Temperatura cutanea: Samsung, di notte</string>
     <string name="settings_spo2_off">SpO2: disattivata</string>
     <string name="settings_spo2_on">SpO2: Samsung, ogni ora di notte</string>
-    <string name="status_hrv_source_ppg">HRV: PPG grezzo</string>
     <string name="status_hrv_source_samsung">HRV: piattaforma Samsung</string>
-    <string name="status_hrv_source_samsung_note">Piattaforma Samsung: richiede la modalità sviluppatore di Health Platform. Senza, la piattaforma chiede a Samsung di questa app.</string>
     <string name="status_ppg_logging">Registro PPG grezzo attivo · tieni premuto per fermarlo</string>
     <string name="tile_heart_rate_label">Battito</string>
     <string name="tile_heart_rate_description">Il tuo ultimo battito e la sua curva di oggi, come li ha registrati l\'app dell\'orologio</string>
@@ -325,19 +322,11 @@
     <string name="recovery_two_minutes">Recupero dopo 2 min</string>
     <string name="settings_recording">Registrazione</string>
     <string name="settings_recording_description">Risparmio energetico, sonno, fonti</string>
-    <string name="settings_heart_rate_every_10_seconds_explained">Un battito ogni 10 secondi tutto il giorno, a gruppi che svegliano l\'orologio circa ogni 40 secondi: la curva del giorno, le zone e i minuti di sonno sono completi.</string>
-    <string name="settings_sleep_hold_explained">Come il monitoraggio del sonno conserva ogni minuto: un wake lock tiene sveglio l\'orologio; i risvegli sincronizzati lo lasciano dormire tra i risvegli del sensore cardiaco e allora svuotano ogni sensore, solo con il battito dal sensore.</string>
-    <string name="settings_heart_rate_source_explained">Sensore: il battito dell\'orologio stesso, in tempo reale. Samsung: il valore della piattaforma, consegnato a gruppi fino a 10 minuti in ritardo con lo schermo spento. Un allenamento usa comunque il sensore.</string>
-    <string name="settings_hrv_source_explained">Sensore: HRV dal segnale grezzo del polso, a ogni intervallo. Samsung: gli intervalli tra i battiti della piattaforma; oggi circa il 60% di essi va perso, quindi meno notti hanno un valore.</string>
-    <string name="settings_skin_explained">Temperatura cutanea al polso mentre dormi, una lettura al minuto dalla piattaforma Samsung. Consuma poco; non cambia nient\'altro.</string>
-    <string name="settings_spo2_explained">Ossigeno nel sangue al massimo una volta all\'ora mentre dormi, circa 15 s di luce rossa. Pochi mAh a notte; saltato se il braccio si muove.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Pausa automatica: attiva</string>
     <string name="settings_auto_pause_off">Pausa automatica: disattivata</string>
-    <string name="settings_auto_pause_explained">Una corsa o un giro in bici con percorso va in pausa da solo dopo 8 secondi da fermo e riprende quando ti muovi di nuovo, con una vibrazione ogni volta. Decide la velocità GPS; una pausa che tocchi tu resta finché non tocchi di nuovo.</string>
     <string name="settings_auto_detect_on">Rileva allenamenti: attivo</string>
     <string name="settings_auto_detect_off">Rileva allenamenti: disattivato</string>
-    <string name="settings_auto_detect_explained">Dopo 10 minuti di camminata veloce o di corsa senza un allenamento, l\'orologio propone di registrarlo da dove è iniziato. Legge i minuti di passi che conserva comunque; non viene registrato nulla se non tocchi Registra.</string>
     <string name="detected_channel_name">Allenamenti rilevati</string>
     <string name="detected_walk">Sembra una camminata</string>
     <string name="detected_run">Sembra una corsa</string>

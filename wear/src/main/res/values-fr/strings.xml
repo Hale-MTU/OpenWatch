@@ -49,7 +49,6 @@
     <string name="status_samsung_diagnostics_on">Diagnostic Samsung : activé · désactivez-le dans Paramètres</string>
     <string name="settings_heart_rate_every_10_seconds">Pouls : toutes les 10 s</string>
     <string name="settings_heart_rate_power_save">Pouls : économie d\'énergie</string>
-    <string name="settings_heart_rate_power_save_note">Environ toutes les 10 minutes hors du mode coucher. Le sommeil sans mode coucher est alors détecté à partir de mesures espacées.</string>
     <string name="settings_sleep_hold_wake_lock">Sommeil : verrou de réveil</string>
     <string name="settings_sleep_hold_synced">Sommeil : réveils groupés</string>
     <string name="settings_heart_rate_source_sensor">Pouls : capteur</string>
@@ -58,9 +57,7 @@
     <string name="settings_skin_temperature_on">Température cutanée : Samsung, la nuit</string>
     <string name="settings_spo2_off">SpO2 : désactivée</string>
     <string name="settings_spo2_on">SpO2 : Samsung, toutes les heures la nuit</string>
-    <string name="status_hrv_source_ppg">VFC : PPG brut</string>
     <string name="status_hrv_source_samsung">VFC : plateforme Samsung</string>
-    <string name="status_hrv_source_samsung_note">Plateforme Samsung : nécessite le mode développeur de Health Platform. Sans lui, la plateforme interroge Samsung au sujet de cette application.</string>
     <string name="status_ppg_logging">Journal PPG brut activé · appui long pour arrêter</string>
     <string name="tile_heart_rate_label">Pouls</string>
     <string name="tile_heart_rate_description">Votre dernier pouls et sa courbe d\'aujourd\'hui, tels que l\'app de la montre les a enregistrés</string>
@@ -325,19 +322,11 @@
     <string name="recovery_two_minutes">Récupération à 2 min</string>
     <string name="settings_recording">Enregistrement</string>
     <string name="settings_recording_description">Économie d\'énergie, sommeil, sources</string>
-    <string name="settings_heart_rate_every_10_seconds_explained">Un pouls toutes les 10 secondes toute la journée, par lots qui réveillent la montre environ toutes les 40 secondes : la courbe du jour, les zones et les minutes de sommeil sont complètes.</string>
-    <string name="settings_sleep_hold_explained">Comment le suivi du sommeil garde chaque minute : un verrou de réveil maintient la montre éveillée ; les réveils groupés la laissent dormir entre les réveils du capteur cardiaque et vident alors chaque capteur, avec le pouls du capteur uniquement.</string>
-    <string name="settings_heart_rate_source_explained">Capteur : le pouls de la montre elle-même, en direct. Samsung : la valeur de la plateforme, transmise par lots jusqu\'à 10 minutes en retard écran éteint. Un entraînement utilise le capteur dans les deux cas.</string>
-    <string name="settings_hrv_source_explained">Capteur : la VFC à partir du signal de pouls brut, à chaque intervalle. Samsung : les intervalles entre battements de la plateforme ; aujourd\'hui environ 60 % d\'entre eux se perdent, donc moins de nuits ont une valeur.</string>
-    <string name="settings_skin_explained">La température cutanée au poignet pendant votre sommeil, une mesure par minute depuis la plateforme Samsung. Peu d\'énergie ; rien d\'autre ne change.</string>
-    <string name="settings_spo2_explained">L\'oxygène sanguin au plus une fois par heure pendant votre sommeil, environ 15 s de lumière rouge. Quelques mAh par nuit ; ignoré si le bras bouge.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Pause auto : activée</string>
     <string name="settings_auto_pause_off">Pause auto : désactivée</string>
-    <string name="settings_auto_pause_explained">Une course ou une sortie à vélo avec itinéraire se met en pause d\'elle-même dès que vous restez immobile 8 secondes, et reprend quand vous repartez, avec une vibration à chaque fois. C\'est la vitesse GPS qui décide ; une pause lancée d\'un toucher dure jusqu\'au toucher suivant.</string>
     <string name="settings_auto_detect_on">Détection d\'entraînements : activée</string>
     <string name="settings_auto_detect_off">Détection d\'entraînements : désactivée</string>
-    <string name="settings_auto_detect_explained">Après 10 minutes de marche rapide ou de course sans entraînement lancé, la montre propose de l\'enregistrer depuis son début. Elle lit les minutes de pas qu\'elle garde de toute façon ; rien n\'est enregistré si vous ne touchez pas Enregistrer.</string>
     <string name="detected_channel_name">Entraînements détectés</string>
     <string name="detected_walk">On dirait une marche</string>
     <string name="detected_run">On dirait une course</string>

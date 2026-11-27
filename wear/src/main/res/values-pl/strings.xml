@@ -49,7 +49,6 @@
     <string name="status_samsung_diagnostics_on">Diagnostyka Samsung: włączona · wyłącz w Ustawieniach</string>
     <string name="settings_heart_rate_every_10_seconds">Tętno: co 10 s</string>
     <string name="settings_heart_rate_power_save">Tętno: oszczędzanie energii</string>
-    <string name="settings_heart_rate_power_save_note">Mniej więcej co 10 minut poza trybem snu. Sen bez trybu snu jest wtedy wykrywany z rzadkich pomiarów.</string>
     <string name="settings_sleep_hold_wake_lock">Sen: blokada uśpienia</string>
     <string name="settings_sleep_hold_synced">Sen: zsynchronizowane wybudzenia</string>
     <string name="settings_heart_rate_source_sensor">Tętno: czujnik</string>
@@ -58,9 +57,7 @@
     <string name="settings_skin_temperature_on">Temperatura skóry: Samsung, w nocy</string>
     <string name="settings_spo2_off">SpO2: wyłączone</string>
     <string name="settings_spo2_on">SpO2: Samsung, co godzinę w nocy</string>
-    <string name="status_hrv_source_ppg">HRV: surowe PPG</string>
     <string name="status_hrv_source_samsung">HRV: platforma Samsung</string>
-    <string name="status_hrv_source_samsung_note">Platforma Samsung: wymaga trybu dewelopera Health Platform. Bez niego platforma pyta Samsung o tę aplikację.</string>
     <string name="status_ppg_logging">Dziennik surowego PPG włączony · przytrzymaj, aby zatrzymać</string>
     <string name="tile_heart_rate_label">Tętno</string>
     <string name="tile_heart_rate_description">Twoje ostatnie tętno i jego dzisiejszy przebieg zapisane przez aplikację na zegarku</string>
@@ -319,19 +316,11 @@
     <string name="recovery_two_minutes">Regeneracja po 2 min</string>
     <string name="settings_recording">Nagrywanie</string>
     <string name="settings_recording_description">Oszczędzanie energii, sen, źródła</string>
-    <string name="settings_heart_rate_every_10_seconds_explained">Tętno co 10 sekund przez cały dzień, w paczkach, które wybudzają zegarek mniej więcej co 40 sekund: dzienny przebieg, strefy i minuty snu są kompletne.</string>
-    <string name="settings_sleep_hold_explained">Jak zachować każdą minutę snu: blokada uśpienia nie pozwala zegarkowi zasnąć; zsynchronizowane wybudzenia pozwalają mu spać między wybudzeniami czujnika tętna i wtedy odczytują wszystkie czujniki, tylko z tętnem z czujnika.</string>
-    <string name="settings_heart_rate_source_explained">Czujnik: własne tętno zegarka, na żywo. Samsung: wartość platformy, przekazywana w paczkach z opóźnieniem do 10 minut przy wyłączonym ekranie. Trening i tak używa czujnika.</string>
-    <string name="settings_hrv_source_explained">Czujnik: HRV z surowego sygnału tętna, każdy odstęp. Samsung: odstępy między uderzeniami z platformy; obecnie ginie około 60% z nich, więc mniej nocy ma wartość.</string>
-    <string name="settings_skin_explained">Temperatura skóry na nadgarstku podczas snu, jeden odczyt na minutę z platformy Samsung. Mało energii; nic poza tym się nie zmienia.</string>
-    <string name="settings_spo2_explained">Natlenienie krwi najwyżej raz na godzinę podczas snu, około 15 s czerwonego światła. Kilka mAh na noc; pomijane, gdy ręka się rusza.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Autopauza: włączona</string>
     <string name="settings_auto_pause_off">Autopauza: wyłączona</string>
-    <string name="settings_auto_pause_explained">Bieg lub jazda z trasą wstrzymuje się sama, gdy stoisz w miejscu przez 8 sekund, i wznawia, gdy znów ruszysz, za każdym razem z wibracją. Decyduje prędkość z GPS; pauza włączona dotknięciem trwa, aż dotkniesz ponownie.</string>
     <string name="settings_auto_detect_on">Wykrywanie treningów: włączone</string>
     <string name="settings_auto_detect_off">Wykrywanie treningów: wyłączone</string>
-    <string name="settings_auto_detect_explained">Po 10 minutach szybkiego marszu lub biegu bez treningu zegarek proponuje nagranie go od momentu, w którym się zaczął. Odczytuje minuty z krokami, które i tak przechowuje; nic nie jest nagrywane, dopóki nie dotkniesz „Nagraj”.</string>
     <string name="detected_channel_name">Wykryte treningi</string>
     <string name="detected_walk">Wygląda na spacer</string>
     <string name="detected_run">Wygląda na bieg</string>

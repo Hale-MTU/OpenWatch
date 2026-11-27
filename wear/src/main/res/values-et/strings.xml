@@ -48,7 +48,6 @@
     <string name="status_samsung_diagnostics_on">Samsungi diagnostika: sees · lülita Seadetes välja</string>
     <string name="settings_heart_rate_every_10_seconds">Pulss: iga 10 s</string>
     <string name="settings_heart_rate_power_save">Pulss: energiasääst</string>
-    <string name="settings_heart_rate_power_save_note">Umbes iga 10 minuti järel väljaspool unerežiimi. Und ilma unerežiimita tuvastatakse siis hõredatest näitudest.</string>
     <string name="settings_sleep_hold_wake_lock">Uni: äratuslukk</string>
     <string name="settings_sleep_hold_synced">Uni: koondatud äratused</string>
     <string name="settings_heart_rate_source_sensor">Pulss: andur</string>
@@ -57,9 +56,7 @@
     <string name="settings_skin_temperature_on">Naha temperatuur: Samsung, öösel</string>
     <string name="settings_spo2_off">SpO2: väljas</string>
     <string name="settings_spo2_on">SpO2: Samsung, iga tund öösel</string>
-    <string name="status_hrv_source_ppg">HRV: toores PPG</string>
     <string name="status_hrv_source_samsung">HRV: Samsungi platvorm</string>
-    <string name="status_hrv_source_samsung_note">Samsungi platvorm: vajab Health Platformi arendajarežiimi. Ilma selleta küsib platvorm Samsungilt selle rakenduse kohta.</string>
     <string name="status_ppg_logging">Toore PPG logi sees · peatamiseks vajuta pikalt</string>
     <string name="tile_heart_rate_label">Pulss</string>
     <string name="tile_heart_rate_description">Sinu viimane pulss ja selle tänane kõver, nagu kellarakendus need salvestas</string>
@@ -320,19 +317,11 @@
     <string name="recovery_two_minutes">Taastumine 2 min pärast</string>
     <string name="settings_recording">Salvestamine</string>
     <string name="settings_recording_description">Energiasääst, uni, allikad</string>
-    <string name="settings_heart_rate_every_10_seconds_explained">Pulss iga 10 sekundi järel kogu päeva, kogumitena, mis äratavad kella umbes iga 40 sekundi järel: päeva kõver, tsoonid ja uneminutid on terviklikud.</string>
-    <string name="settings_sleep_hold_explained">Kuidas une hoidmine säilitab iga minuti: äratuslukk hoiab kella ärkvel; koondatud äratused lasevad kellal pulsianduri äratuste vahel magada ja tühjendavad siis kõik andurid, ainult anduri pulsiga.</string>
-    <string name="settings_heart_rate_source_explained">Andur: kella enda pulss, reaalajas. Samsung: platvormi väärtus, mis ekraani väljas olles edastatakse kogumitena kuni 10 minutit hiljem. Treening kasutab igal juhul andurit.</string>
-    <string name="settings_hrv_source_explained">Andur: HRV toorest pulsisignaalist, iga intervall. Samsung: platvormi löögiintervallid; praegu läheb neist umbes 60 % kaduma, seega on väärtus vähematel öödel.</string>
-    <string name="settings_skin_explained">Naha temperatuur randmel une ajal, Samsungi platvormilt üks näit minutis. Vähe energiat; muu ei muutu.</string>
-    <string name="settings_spo2_explained">Vere hapnikusisaldus une ajal kõige rohkem kord tunnis, umbes 15 s punast valgust. Paar mAh öö kohta; jäetakse vahele, kui käsi liigub.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Automaatne paus: sees</string>
     <string name="settings_auto_pause_off">Automaatne paus: väljas</string>
-    <string name="settings_auto_pause_explained">Marsruudiga jooks või rattasõit peatub ise, kui oled 8 sekundit paigal seisnud, ja jätkub, kui uuesti liigud, iga kord värinaga. Otsustab GPS-i kiirus; puudutusega tehtud paus kestab, kuni uuesti puudutad.</string>
     <string name="settings_auto_detect_on">Treeningute tuvastus: sees</string>
     <string name="settings_auto_detect_off">Treeningute tuvastus: väljas</string>
-    <string name="settings_auto_detect_explained">Pärast 10 minutit kiiret kõndi või jooksu ilma treeninguta pakub kell selle salvestamist algusest peale. Kell loeb sammuminuteid, mida see niikuinii hoiab; midagi ei salvestata, kui sa ei puuduta nuppu Salvesta.</string>
     <string name="detected_channel_name">Tuvastatud treeningud</string>
     <string name="detected_walk">Tundub, et kõnnid</string>
     <string name="detected_run">Tundub, et jooksed</string>
