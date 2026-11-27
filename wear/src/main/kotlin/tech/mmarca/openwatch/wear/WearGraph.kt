@@ -94,7 +94,12 @@ internal class WearGraph(private val app: Application) {
     val quickLog: WearQuickLogPreferences by lazy { WearQuickLogPreferences(app) }
 
     /** The settings as they change, on the watch or from the phone. The first read loads their file: off the main thread. */
-    val settings: StateFlow<WatchPreferences> by lazy { WearSettingsState(app).state }
+    val settings: StateFlow<WatchPreferences>
+        get() = settingsState.state
+
+    // Held for the process: SharedPreferences keeps its change listener only weakly, so a
+    // collected WearSettingsState would leave the flow at the value it had then.
+    private val settingsState: WearSettingsState by lazy { WearSettingsState(app) }
 
     val trust: WearTrustStore by lazy {
         WearTrustStore(app, linkState, secretKey).also { it.onPending = { pending -> phoneRequests.notify(pending) } }
