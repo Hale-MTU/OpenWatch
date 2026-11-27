@@ -45,6 +45,9 @@ travels over Bluetooth between the device and the phone. Open source under AGPL-
   without a prompt; any other app waits for your answer on the Connected apps screen, where
   each thing an app may do has its own switch.
 
+Which models have been tried, and how much battery the watch app costs on a Wear OS watch:
+[docs/features/devices.md](docs/features/devices.md).
+
 Several watches can be paired, a second one of the same kind keeping records of its own, and
 the app lists every Health Connect data type it reads and writes, the device it comes from and
 why.

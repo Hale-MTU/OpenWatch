@@ -4,7 +4,7 @@
 > **Audience:** Users and contributors.
 > **Implementation:** `devices/core`, `devices/garmin`, `devices/wearos`, `devices/notifications`, `features/watches`.
 > **Navigation:** the typed routes `Home`, `DeviceDetail`, `WatchData`, `WatchNotifications`, `WatchSettings`, `WatchAlarms` and `WatchSendPoint` in `navigation/Routes.kt`.
-> **Related:** [Permissions](../app/permissions.md), [Install the watch app on a Wear OS watch](../how-to/wear-os-sideload.md).
+> **Related:** [Supported devices](devices.md), [Permissions](../app/permissions.md), [Install the watch app on a Wear OS watch](../how-to/wear-os-sideload.md).
 
 OpenWatch writes what a watch records to Health Connect and shows no history of its own; OpenVitals, or any other Health Connect app, is where the records are read.
 
