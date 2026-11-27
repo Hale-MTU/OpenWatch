@@ -164,6 +164,100 @@ class MinuteAggregatorTest {
     }
 
     @Test
+    fun `a late heart rate fills in the closed minute and keeps its accelerometer`() {
+        heartRateRecording = false
+        val aggregator = aggregator()
+        still(aggregator, minute0, 60)
+        val closed = aggregator.close(minute0 + 120_000L).single()
+        assertNull(closed.bpm)
+
+        // The Samsung platform hands the minute's readings over minutes later.
+        pulse(aggregator, minute0, bpm = 52)
+        assertTrue("no second row is opened", aggregator.close(minute0 + 600_000L).isEmpty())
+        val revised = aggregator.revisions().single()
+
+        assertEquals(minute0, revised.epochMillis)
+        assertEquals(52, revised.bpm)
+        assertEquals(6, revised.heartRateSamples)
+        assertEquals(300, revised.sampleCount)
+        assertEquals(closed.zAngleMax, revised.zAngleMax)
+        assertEquals(closed.meanMilliG.toList(), revised.meanMilliG.toList())
+        assertTrue("handed out once", aggregator.revisions().isEmpty())
+    }
+
+    @Test
+    fun `a late heart rate adds to the samples the minute already had and makes it measurable`() {
+        val aggregator = aggregator()
+        still(aggregator, minute0, 60)
+        assertEquals(WearLinkProtocol.MinuteKind.UNMEASURABLE, aggregator.close(minute0 + 120_000L).single().kind)
+
+        aggregator.onHeartRate(minute0 + 20_000L, 50)
+        aggregator.onHeartRate(minute0 + 40_000L, 60)
+        val revised = aggregator.revisions().single()
+
+        assertEquals(WearLinkProtocol.MinuteKind.RAW, revised.kind)
+        assertEquals(55, revised.bpm)
+        assertEquals(2, revised.heartRateSamples)
+    }
+
+    @Test
+    fun `late readings other than the heart rate are dropped, and a minute too old takes nothing`() {
+        val aggregator = aggregator()
+        still(aggregator, minute0, 60)
+        pulse(aggregator, minute0)
+        aggregator.close(minute0 + 120_000L)
+
+        still(aggregator, minute0, 10)
+        aggregator.onScreenOn(minute0 + 5_000L)
+        assertTrue(aggregator.close(minute0 + 600_000L).isEmpty())
+        assertTrue(aggregator.revisions().isEmpty())
+
+        aggregator.close(minute0 + 31 * 60_000L + 1)
+        pulse(aggregator, minute0)
+        assertTrue(aggregator.revisions().isEmpty())
+    }
+
+    @Test
+    fun `a minute only a late heart rate reaches gets a row of its own`() {
+        val aggregator = aggregator()
+        // The hub delivered nothing for the second minute; the third closed before its heart rate came.
+        still(aggregator, minute0, 60)
+        still(aggregator, minute0 + 120_000L, 60)
+        assertEquals(listOf(minute0, minute0 + 120_000L), aggregator.close(minute0 + 300_000L).map { it.epochMillis })
+
+        pulse(aggregator, minute0 + 60_000L, bpm = 53)
+        val revised = aggregator.revisions().single()
+
+        assertEquals(minute0 + 60_000L, revised.epochMillis)
+        assertEquals(WearLinkProtocol.MinuteKind.RAW, revised.kind)
+        assertEquals(53, revised.bpm)
+        assertEquals(6, revised.heartRateSamples)
+        assertEquals(0, revised.sampleCount)
+        assertEquals(WearLinkProtocol.FLAG_SPARSE, revised.flags and WearLinkProtocol.FLAG_SPARSE)
+        assertTrue("no new open minute", aggregator.close(minute0 + 600_000L).isEmpty())
+
+        // A second late reading joins the row it made.
+        aggregator.onHeartRate(minute0 + 65_000L, 59)
+        assertEquals(7, aggregator.revisions().single().heartRateSamples)
+    }
+
+    @Test
+    fun `a late heart rate makes no row for a minute already stored and gone, nor one far too old`() {
+        val aggregator = aggregator()
+        still(aggregator, minute0, 60)
+        pulse(aggregator, minute0)
+        aggregator.close(minute0 + 120_000L)
+        // The stored row leaves the window; its minute must not come back emptier.
+        still(aggregator, minute0 + 40 * 60_000L, 60)
+        aggregator.close(minute0 + 42 * 60_000L)
+        aggregator.revisions()
+
+        aggregator.onHeartRate(minute0 + 3_000L, 60)
+        aggregator.onHeartRate(minute0 + 5 * 60_000L, 60)
+        assertTrue(aggregator.revisions().isEmpty())
+    }
+
+    @Test
     fun `minutes close oldest first and only once`() {
         val aggregator = aggregator()
         still(aggregator, minute0, 60)

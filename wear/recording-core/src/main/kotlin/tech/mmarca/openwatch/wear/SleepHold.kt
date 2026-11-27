@@ -8,18 +8,27 @@ package tech.mmarca.openwatch.wear
  *
  * Start: the last [Config.quietMinutes] minutes were all worn, still (no
  * steps, no screen, little movement), and the heart rate fell: the mean of
- * the later half is at least [Config.fallBpm] under the earlier half and at
- * least [Config.belowLevelBpm] under the wearer's recent level. The level
- * is the median of the last [Config.levelReadings] readings seen while not
- * holding, so a long quiet sit at a steady pulse never starts a hold. Each
- * half needs a reading, three in all, so a sparse day setting can still
- * start it.
+ * the later half is at least [Config.belowLevelBpm] under the wearer's
+ * recent level. The level is the median of the last [Config.levelReadings]
+ * readings seen while not holding, so a long quiet sit at a steady pulse
+ * never starts a hold. The fall is against that level, not inside the run:
+ * the pulse of someone falling asleep sinks a few beats an hour, half a beat
+ * in ten minutes (2026-11-27: 67 bpm at 23:30, 59 at 03:00, 54 at 05:00),
+ * so a fall asked of the run itself is never seen. The later half needs a
+ * reading, the run three, so a sparse day setting can still start it.
  *
  * Stop: [Config.wakeMinutesToRelease] waking minutes in a row (screen on,
  * steps, or movement of at least [Config.wakeMovement]), the watch off the
  * wrist or on the charger, or [Config.maxHoldMinutes]. After the cap the
  * hold waits [Config.cooldownMinutes] before it may start again. A turn in
  * bed is one or two waking minutes and does not stop it.
+ *
+ * Minutes may come again or late: the Samsung platform hands the heart
+ * rate over minutes after the minute closed, so the recorder feeds a minute
+ * a second time with its pulse, or for the first time once that pulse made
+ * its row. Such a minute replaces or fills its place in the evidence, and
+ * the start is judged again; only a minute newer than any before counts
+ * toward a running hold.
  *
  * Against false starts: by day ([Minute.daytime]) the quiet run must be
  * [Config.quietMinutesByDay] long, since sitting still to read or watch a film
@@ -39,7 +48,6 @@ class SleepHold(private val config: Config = Config()) {
         val phoneCooldownMinutes: Int = 30,
         val quietMovement: Float = 2f,
         val wakeMovement: Float = 8f,
-        val fallBpm: Float = 2f,
         val belowLevelBpm: Float = 4f,
         val levelReadings: Int = 180,
         val minLevelReadings: Int = 20,
@@ -62,8 +70,11 @@ class SleepHold(private val config: Config = Config()) {
         val waking: Boolean get() = screenOn || steps > 0
     }
 
-    private val recent = ArrayDeque<Minute>()
-    private val levelSamples = ArrayDeque<Int>()
+    /** The latest minutes by start, the newest [newest]; a late one fills its place. */
+    private val recent = java.util.TreeMap<Long, Minute>()
+    /** The heart rate of the minutes seen while not holding, by start. */
+    private val levelSamples = java.util.TreeMap<Long, Int>()
+    private var newest = Long.MIN_VALUE
     private var holding = false
     private var heldMinutes = 0
     private var wakeStreak = 0
@@ -72,20 +83,32 @@ class SleepHold(private val config: Config = Config()) {
     /** True while the hold wants the processor awake. */
     val isHolding: Boolean get() = holding
 
-    /** Feeds one closed minute, oldest first. Returns [isHolding] after it. */
+    /**
+     * Feeds one minute: a newly closed one, oldest first, or one again with
+     * the heart rate that reached it late. Returns [isHolding] after it.
+     */
     fun onMinute(minute: Minute): Boolean {
+        val isNew = minute.epochMillis > newest
         if (!minute.worn) {
-            reset()
+            if (isNew) {
+                newest = minute.epochMillis
+                reset()
+            } else {
+                recent.remove(minute.epochMillis)
+            }
             return holding
         }
-        val last = recent.lastOrNull()
-        if (last != null && minute.epochMillis - last.epochMillis != MINUTE_MILLIS) recent.clear()
-        recent.addLast(minute)
-        while (recent.size > maxOf(config.quietMinutes, config.quietMinutesByDay)) recent.removeFirst()
-        if (holding) hold(minute) else {
-            minute.bpm?.let { levelSamples.addLast(it) }
-            while (levelSamples.size > config.levelReadings) levelSamples.removeFirst()
-            if (minute.epochMillis >= coolUntil && shouldStart()) {
+        if (isNew) newest = minute.epochMillis
+        val window = maxOf(config.quietMinutes, config.quietMinutesByDay)
+        if (minute.epochMillis <= newest - window * MINUTE_MILLIS) return holding
+        recent[minute.epochMillis] = minute
+        recent.headMap(newest - (window - 1) * MINUTE_MILLIS).clear()
+        if (holding) {
+            if (isNew) hold(minute)
+        } else {
+            minute.bpm?.let { levelSamples[minute.epochMillis] = it }
+            while (levelSamples.size > config.levelReadings) levelSamples.pollFirstEntry()
+            if (newest >= coolUntil && shouldStart()) {
                 holding = true
                 heldMinutes = 0
                 wakeStreak = 0
@@ -122,23 +145,21 @@ class SleepHold(private val config: Config = Config()) {
         } else if (heldMinutes >= config.maxHoldMinutes) {
             holding = false
             recent.clear()
-            coolUntil = minute.epochMillis + config.cooldownMinutes * MINUTE_MILLIS
+            coolUntil = newest + config.cooldownMinutes * MINUTE_MILLIS
         }
     }
 
     private fun shouldStart(): Boolean {
-        val need = if (recent.lastOrNull()?.daytime == true) config.quietMinutesByDay else config.quietMinutes
-        if (recent.size < need) return false
-        val run = recent.toList().takeLast(need)
+        val need = if (recent[newest]?.daytime == true) config.quietMinutesByDay else config.quietMinutes
+        // The run is the [need] minutes up to the newest, every one of them there.
+        val run = (need - 1 downTo 0).map { recent[newest - it * MINUTE_MILLIS] ?: return false }
         if (run.any { it.waking || it.movement > config.quietMovement }) return false
         if (levelSamples.size < config.minLevelReadings) return false
         val half = run.size / 2
-        val earlier = run.take(half).mapNotNull { it.bpm }
         val later = run.drop(half).mapNotNull { it.bpm }
-        if (earlier.isEmpty() || later.isEmpty() || earlier.size + later.size < MIN_READINGS) return false
-        val laterMean = later.average()
-        val level = levelSamples.sorted()[levelSamples.size / 2]
-        return laterMean <= earlier.average() - config.fallBpm && laterMean <= level - config.belowLevelBpm
+        if (later.isEmpty() || run.count { it.bpm != null } < MIN_READINGS) return false
+        val level = levelSamples.values.sorted()[levelSamples.size / 2]
+        return later.average() <= level - config.belowLevelBpm
     }
 
     private companion object {

@@ -36,6 +36,21 @@ class SleepHoldTest {
     }
 
     @Test
+    fun `a pulse that sinks slowly over the night starts it once it is under the level`() {
+        val hold = SleepHold()
+        // In bed, still: the pulse sinks half a beat every ten minutes from 66, as on 2026-11-27.
+        repeat(180) { hold.onMinute(minute(bpm = 66)) }
+        var minutes = 0
+        while (!hold.isHolding && minutes < 180) {
+            hold.onMinute(minute(bpm = 66 - minutes / 20))
+            minutes++
+        }
+
+        assertTrue("started after $minutes minutes", hold.isHolding)
+        assertTrue("not before the pulse is 4 under the level: $minutes", minutes >= 80)
+    }
+
+    @Test
     fun `sitting still at a steady heart rate never starts it`() {
         val hold = SleepHold()
         hold.day()
@@ -57,11 +72,13 @@ class SleepHoldTest {
 
     @Test
     fun `a minute with steps, the screen or movement breaks the quiet`() {
-        for (breaker in listOf(minute(steps = 3, bpm = 60), minute(screen = true, bpm = 60), minute(movement = 5f, bpm = 60))) {
+        // Each breaker is made where it falls, after the six quiet minutes: a minute stamped before them would be a late one.
+        val breakers = listOf({ minute(steps = 3, bpm = 60) }, { minute(screen = true, bpm = 60) }, { minute(movement = 5f, bpm = 60) })
+        for (breaker in breakers) {
             val hold = SleepHold()
             hold.day()
             hold.falling(6)
-            hold.onMinute(breaker)
+            hold.onMinute(breaker())
             hold.falling(6)
             assertFalse(hold.isHolding)
         }
@@ -134,6 +151,49 @@ class SleepHoldTest {
         hold.falling(4)
 
         assertEquals(false, hold.isHolding)
+    }
+
+    @Test
+    fun `minutes that closed without a pulse start it once their late heart rate comes`() {
+        val hold = SleepHold()
+        hold.day()
+        // The Samsung platform's pulse is minutes late with the screen off: the minutes close without it.
+        val closed = List(10) { minute(bpm = null) }
+        closed.forEach { hold.onMinute(it) }
+        assertFalse(hold.isHolding)
+
+        closed.forEachIndexed { index, it -> hold.onMinute(it.copy(bpm = 70 - index)) }
+
+        assertTrue(hold.isHolding)
+    }
+
+    @Test
+    fun `a minute that comes late fills its gap`() {
+        val hold = SleepHold()
+        hold.day()
+        hold.falling(4)
+        val missing = minute(bpm = 66)
+        repeat(5) { index -> hold.onMinute(minute(bpm = 65 - index)) }
+        assertFalse(hold.isHolding)
+
+        hold.onMinute(missing)
+
+        assertTrue(hold.isHolding)
+    }
+
+    @Test
+    fun `a minute seen again does not count twice toward a running hold`() {
+        val hold = SleepHold()
+        hold.day()
+        hold.falling(10)
+        assertTrue(hold.isHolding)
+        val waking = List(4) { minute(screen = true) }
+        waking.forEach { hold.onMinute(it) }
+
+        // The same four waking minutes again, with their late pulse: still four of the five that release it.
+        waking.forEach { hold.onMinute(it.copy(bpm = 58)) }
+
+        assertTrue(hold.isHolding)
     }
 
     @Test
