@@ -36,6 +36,21 @@ class SleepHoldTest {
     }
 
     @Test
+    fun `a pulse that sinks slowly over the night starts it once it is under the level`() {
+        val hold = SleepHold()
+        // In bed, still: the pulse sinks half a beat every ten minutes from 66, as on 2026-11-27.
+        repeat(180) { hold.onMinute(minute(bpm = 66)) }
+        var minutes = 0
+        while (!hold.isHolding && minutes < 180) {
+            hold.onMinute(minute(bpm = 66 - minutes / 20))
+            minutes++
+        }
+
+        assertTrue("started after $minutes minutes", hold.isHolding)
+        assertTrue("not before the pulse is 4 under the level: $minutes", minutes >= 80)
+    }
+
+    @Test
     fun `sitting still at a steady heart rate never starts it`() {
         val hold = SleepHold()
         hold.day()
@@ -57,11 +72,13 @@ class SleepHoldTest {
 
     @Test
     fun `a minute with steps, the screen or movement breaks the quiet`() {
-        for (breaker in listOf(minute(steps = 3, bpm = 60), minute(screen = true, bpm = 60), minute(movement = 5f, bpm = 60))) {
+        // Each breaker is made where it falls, after the six quiet minutes: a minute stamped before them would be a late one.
+        val breakers = listOf({ minute(steps = 3, bpm = 60) }, { minute(screen = true, bpm = 60) }, { minute(movement = 5f, bpm = 60) })
+        for (breaker in breakers) {
             val hold = SleepHold()
             hold.day()
             hold.falling(6)
-            hold.onMinute(breaker)
+            hold.onMinute(breaker())
             hold.falling(6)
             assertFalse(hold.isHolding)
         }

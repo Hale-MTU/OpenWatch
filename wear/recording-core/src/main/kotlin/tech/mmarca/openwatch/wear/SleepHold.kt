@@ -8,12 +8,14 @@ package tech.mmarca.openwatch.wear
  *
  * Start: the last [Config.quietMinutes] minutes were all worn, still (no
  * steps, no screen, little movement), and the heart rate fell: the mean of
- * the later half is at least [Config.fallBpm] under the earlier half and at
- * least [Config.belowLevelBpm] under the wearer's recent level. The level
- * is the median of the last [Config.levelReadings] readings seen while not
- * holding, so a long quiet sit at a steady pulse never starts a hold. Each
- * half needs a reading, three in all, so a sparse day setting can still
- * start it.
+ * the later half is at least [Config.belowLevelBpm] under the wearer's
+ * recent level. The level is the median of the last [Config.levelReadings]
+ * readings seen while not holding, so a long quiet sit at a steady pulse
+ * never starts a hold. The fall is against that level, not inside the run:
+ * the pulse of someone falling asleep sinks a few beats an hour, half a beat
+ * in ten minutes (2026-11-27: 67 bpm at 23:30, 59 at 03:00, 54 at 05:00),
+ * so a fall asked of the run itself is never seen. The later half needs a
+ * reading, the run three, so a sparse day setting can still start it.
  *
  * Stop: [Config.wakeMinutesToRelease] waking minutes in a row (screen on,
  * steps, or movement of at least [Config.wakeMovement]), the watch off the
@@ -46,7 +48,6 @@ class SleepHold(private val config: Config = Config()) {
         val phoneCooldownMinutes: Int = 30,
         val quietMovement: Float = 2f,
         val wakeMovement: Float = 8f,
-        val fallBpm: Float = 2f,
         val belowLevelBpm: Float = 4f,
         val levelReadings: Int = 180,
         val minLevelReadings: Int = 20,
@@ -155,12 +156,10 @@ class SleepHold(private val config: Config = Config()) {
         if (run.any { it.waking || it.movement > config.quietMovement }) return false
         if (levelSamples.size < config.minLevelReadings) return false
         val half = run.size / 2
-        val earlier = run.take(half).mapNotNull { it.bpm }
         val later = run.drop(half).mapNotNull { it.bpm }
-        if (earlier.isEmpty() || later.isEmpty() || earlier.size + later.size < MIN_READINGS) return false
-        val laterMean = later.average()
+        if (later.isEmpty() || run.count { it.bpm != null } < MIN_READINGS) return false
         val level = levelSamples.values.sorted()[levelSamples.size / 2]
-        return laterMean <= earlier.average() - config.fallBpm && laterMean <= level - config.belowLevelBpm
+        return later.average() <= level - config.belowLevelBpm
     }
 
     private companion object {
