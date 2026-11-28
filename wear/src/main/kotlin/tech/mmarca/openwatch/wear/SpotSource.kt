@@ -9,10 +9,11 @@ import android.os.Handler
  * owns the schedule, the wake lock and the store; a source delivers between
  * [start] and [stop], on the handler it was started with.
  *
- * The Samsung Health Platform is the one implementation
- * (`samsung/SamsungSpotSource`), chosen in [WearGraph]: the red and infrared
- * channels and the skin sensor are closed to ordinary apps, so no raw sensor
- * stands behind this interface yet.
+ * Implementations, chosen in [WearGraph]: skin temperature rides the raw
+ * `com.google.sensor.skin_temperature` sensor on a Pixel Watch
+ * ([SensorSkinTemperatureSource]) and the Samsung Health Platform's tracker
+ * (`samsung/SamsungSpotSource`) elsewhere; SpO2, whose red and infrared
+ * channels stay closed to ordinary apps, has only the Samsung tracker.
  */
 internal interface SpotSource<T> {
 

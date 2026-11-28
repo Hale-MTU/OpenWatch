@@ -84,6 +84,18 @@ data class WearOsWatchPanelUiState(
 }
 
 /**
+ * Whether the watch offers skin temperature at night: from the Samsung platform or from its
+ * raw skin-temperature sensor (the Pixel's). An older watch sends no [Preferences.SKIN_SENSOR]
+ * token at all, so its absence reads as no sensor — exactly what [Preferences.OFF] would say.
+ */
+internal fun skinOfferedByWatch(settings: Map<String, String>): Boolean =
+    settings[Preferences.SAMSUNG_AVAILABLE] == Preferences.ON || settings[Preferences.SKIN_SENSOR] == Preferences.ON
+
+/** Whether the watch offers night SpO2: the Samsung platform only, so no sensor token opens it. */
+internal fun spo2OfferedByWatch(settings: Map<String, String>): Boolean =
+    settings[Preferences.SAMSUNG_AVAILABLE] == Preferences.ON
+
+/**
  * One Wear OS watch's panel: the link check, the association, the watch's settings, its live
  * heart rate, and how far the skin temperature baseline has formed.
  */

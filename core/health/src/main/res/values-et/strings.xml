@@ -17,7 +17,6 @@
     <string name="health_data_note_wearos_workout">Kellas salvestatud treening koos marsruudi ja vahemaaga.</string>
     <string name="health_data_note_wearos_entry">Mida sa kellas käsitsi sisestad.</string>
     <string name="health_data_note_wearos_mindfulness">Kellas tehtud hingamisseanss, kui Health Connect selliseid hoiab.</string>
-    <string name="health_data_note_wearos_skin">Ainult Samsungi kellast, kui selle kella jaoks on „Naha temperatuur öösel“ sisse lülitatud. Üks kirje öö kohta: erinevus sinu tavapärasest ööst.</string>
     <string name="health_data_note_scale_estimate">Hinnatud telefonis kaalu mõõtmise ja sinu kehaprofiili põhjal.</string>
     <string name="health_data_read_weight">Kõndimise kalorite ja kaalu keha koostise jaoks.</string>
     <string name="health_data_read_height">Kaalu keha koostise jaoks.</string>
@@ -30,7 +29,6 @@
     <string name="health_data_read_background">Ajastatud sünkroonimine, kui rakendus on suletud, näeb teise rakenduse kehakaalu ja treeninguid ainult selle loaga.</string>
     <string name="health_data_watch_heart_rate">Kella pulsiandur: pulss, öine südame löögisageduse varieeruvus ja une hinnang.</string>
     <string name="health_data_watch_background">Et salvestamine jätkuks, kui kella ekraan on väljas.</string>
-    <string name="health_data_watch_skin">Ainult Samsungi kellas ja ainult siis, kui lülitad sisse naha temperatuuri öösel.</string>
     <string name="health_data_note_wearos_breathing_logged">Öösel ainult siis, kui Seadetes on „Hingamissagedus kellalt“ sisse lülitatud; ning kellas sisestatud hingamissagedus.</string>
     <string name="health_data_note_wearos_spo2_measured">Öösel ainult Samsungi kellast, kui selle kella jaoks on „SpO2 iga tund öösel“ sisse lülitatud; ning vere hapnikusisaldus, mille kellas sisestad või mõõdad.</string>
     <string name="health_data_note_wearos_vo2">Hinnang kellas marsruudiga salvestatud kõnnist või jooksust, kui sinu kehaprofiilis on puhkeoleku pulss.</string>

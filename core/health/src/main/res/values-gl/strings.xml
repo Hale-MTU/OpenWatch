@@ -17,7 +17,6 @@
     <string name="health_data_note_wearos_workout">Un adestramento que rexistras no reloxo, coa súa ruta e distancia.</string>
     <string name="health_data_note_wearos_entry">O que rexistras a man no reloxo.</string>
     <string name="health_data_note_wearos_mindfulness">Unha sesión de respiración que fas no reloxo, onde Health Connect as garda.</string>
-    <string name="health_data_note_wearos_skin">Só desde un reloxo Samsung, con «Temperatura da pel pola noite» activada para ese reloxo. Un rexistro por noite: a diferenza respecto da túa noite habitual.</string>
     <string name="health_data_note_scale_estimate">Estimado no teléfono a partir da medición da báscula e do teu perfil corporal.</string>
     <string name="health_data_read_weight">Para as calorías ao camiñar e a composición corporal da báscula.</string>
     <string name="health_data_read_height">Para a composición corporal da báscula.</string>
@@ -30,7 +29,6 @@
     <string name="health_data_read_background">Unha sincronización programada, coa app pechada, só pode ver os pesos e os adestramentos doutra app con este acceso.</string>
     <string name="health_data_watch_heart_rate">O sensor de frecuencia cardíaca do reloxo: a frecuencia cardíaca, a variabilidade da frecuencia cardíaca da noite e a estimación do sono.</string>
     <string name="health_data_watch_background">Para seguir gravando coa pantalla do reloxo apagada.</string>
-    <string name="health_data_watch_skin">Só nun reloxo Samsung, e só cando activas a temperatura da pel pola noite.</string>
     <string name="health_data_note_wearos_breathing_logged">Pola noite só con «Frecuencia respiratoria do reloxo» activada en Axustes; e unha frecuencia respiratoria que rexistres no reloxo.</string>
     <string name="health_data_note_wearos_spo2_measured">Pola noite só desde un reloxo Samsung, con «SpO2 cada hora pola noite» activado para ese reloxo; e un osíxeno en sangue que rexistres ou midas no reloxo.</string>
     <string name="health_data_note_wearos_vo2">Unha estimación a partir dunha camiñada ou carreira que gravas no reloxo coa súa ruta, cando o teu perfil corporal ten unha frecuencia cardíaca en repouso.</string>

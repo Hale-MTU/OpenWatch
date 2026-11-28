@@ -55,7 +55,7 @@
     <string name="settings_heart_rate_source_sensor">Tep: snímač</string>
     <string name="settings_heart_rate_source_samsung">Tep: platforma Samsung</string>
     <string name="settings_skin_temperature_off">Teplota kůže: vypnuto</string>
-    <string name="settings_skin_temperature_on">Teplota kůže: Samsung, v noci</string>
+    <string name="settings_skin_temperature_on">Teplota kůže: zapnuto</string>
     <string name="settings_spo2_off">SpO2: vypnuto</string>
     <string name="settings_spo2_on">SpO2: Samsung, každou hodinu v noci</string>
     <string name="status_hrv_source_ppg">HRV: surové PPG</string>
@@ -323,7 +323,7 @@
     <string name="settings_sleep_hold_explained">Jak se ve spánku zachová každá minuta: wake lock drží hodinky vzhůru; sdružené probouzení je nechá spát mezi probuzeními snímače tepu a pak vyčte všechny snímače, jen s tepem ze snímače.</string>
     <string name="settings_heart_rate_source_explained">Snímač: vlastní tep hodinek, živě. Samsung: hodnota platformy, předávaná v dávkách se zpožděním až 10 minut při vypnuté obrazovce. Trénink používá snímač v obou případech.</string>
     <string name="settings_hrv_source_explained">Snímač: HRV ze surového pulzního signálu, každý interval. Samsung: intervaly mezi údery z platformy; dnes se ztrácí asi 60 % z nich, takže hodnotu má méně nocí.</string>
-    <string name="settings_skin_explained">Teplota kůže na zápěstí během spánku, jedno měření za minutu z platformy Samsung. Málo energie; nic jiného se nemění.</string>
+    <string name="settings_skin_explained">Teplota kůže na zápěstí během spánku, jedno měření za minutu. Málo energie; nic jiného se nemění.</string>
     <string name="settings_spo2_explained">Okysličení krve nejvýš jednou za hodinu během spánku, asi 15 s červeného světla. Pár mAh za noc; vynechá se, když se paže hýbe.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Automatická pauza: zapnuto</string>

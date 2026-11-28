@@ -122,9 +122,9 @@ object WearMetrics {
     )
 
     /**
-     * Skin temperature per clock minute from the Samsung platform; see
-     * `SkinTemperatureRecorder`. A minute is written again while late points
-     * for it arrive, so the newest row wins.
+     * Skin temperature per clock minute, from the Samsung platform or Pixel's
+     * raw sensor; see `SkinTemperatureRecorder`. A minute is written again
+     * while late points for it arrive, so the newest row wins.
      */
     val SKIN_TEMPERATURE = WearMetric(
         key = WearLinkProtocol.CAP_SKIN_TEMPERATURE,

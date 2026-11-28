@@ -132,7 +132,7 @@ internal class WearGraph(private val app: Application) {
     private val samsungWindows: HrvWindowSource by lazy { SamsungIbiSource(samsungFeed, debug) }
     private val samsungPpgWindows: HrvWindowSource by lazy { SamsungPpgSource(samsungFeed, debug) }
     private val spo2Source: SpotSource<Spo2Reading> by lazy { SamsungSpotSource.spo2(samsungFeed) }
-    private val skinSource: SpotSource<SkinReading> by lazy { SamsungSpotSource.skinTemperature(samsungFeed) }
+    private val skinSource: SpotSource<SkinReading> by lazy { SensorSkinTemperatureSource(app, debug).takeIf { it.isAvailable } ?: SamsungSpotSource.skinTemperature(samsungFeed) }
 
     val heartRate: HeartRateRecorder by lazy {
         HeartRateRecorder(
@@ -180,7 +180,11 @@ internal class WearGraph(private val app: Application) {
         )
     }
 
-    val skinTemperature: SkinTemperatureRecorder by lazy { SkinTemperatureRecorder(store, skinSource, debug) }
+    val skinTemperature: SkinTemperatureRecorder by lazy {
+        // The Pixel sensor is on-change: its silence means the value stands.
+        val holdLast = if (skinSource is SensorSkinTemperatureSource) SensorSkinTemperatureSource.HOLD_LAST_MILLIS else 0L
+        SkinTemperatureRecorder(store, skinSource, debug, holdLastMillis = holdLast)
+    }
 
     val spo2: Spo2Recorder by lazy {
         Spo2Recorder(app, store, spo2Source, debug, isHolding = { linkState.state.value.sleepHoldActive }, claim = spo2Claim)
@@ -310,7 +314,8 @@ internal class WearGraph(private val app: Application) {
             store = store,
             live = liveHeartRate,
             hrvAvailable = { nightHrv.hasSensor },
-            skinAvailable = { skinTemperature.isAvailable },
+            skinAvailable = { skinSource.isAvailable },
+            spo2Available = { spotSpo2Source.isAvailable },
             onPhoneActive = { at -> sleepMinutes.notePhoneActive(at) },
             heldPreferences = { WearPreferenceCodec.encode(WearSettings.read(app), abilities()) },
             setPreference = ::applyPhonePreference,
@@ -336,6 +341,8 @@ internal class WearGraph(private val app: Application) {
         samsung = samsungFeed.isAvailable,
         skinGranted = WearPermissions.hasSkinTemperature(app),
         spo2Granted = WearPermissions.hasOxygenSaturation(app),
+        // The raw sensor only: a Samsung watch's tracker is not the skin_sensor the phone asks about.
+        skinSensor = skinSource is SensorSkinTemperatureSource,
         ppgGranted = WearPermissions.hasAdditionalHealthData(app),
     )
 

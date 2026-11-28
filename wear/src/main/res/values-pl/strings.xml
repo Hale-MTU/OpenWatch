@@ -55,7 +55,7 @@
     <string name="settings_heart_rate_source_sensor">Tętno: czujnik</string>
     <string name="settings_heart_rate_source_samsung">Tętno: platforma Samsung</string>
     <string name="settings_skin_temperature_off">Temperatura skóry: wyłączona</string>
-    <string name="settings_skin_temperature_on">Temperatura skóry: Samsung, w nocy</string>
+    <string name="settings_skin_temperature_on">Temperatura skóry: włączona</string>
     <string name="settings_spo2_off">SpO2: wyłączone</string>
     <string name="settings_spo2_on">SpO2: Samsung, co godzinę w nocy</string>
     <string name="status_hrv_source_ppg">HRV: surowe PPG</string>
@@ -323,7 +323,7 @@
     <string name="settings_sleep_hold_explained">Jak zachować każdą minutę snu: blokada uśpienia nie pozwala zegarkowi zasnąć; zsynchronizowane wybudzenia pozwalają mu spać między wybudzeniami czujnika tętna i wtedy odczytują wszystkie czujniki, tylko z tętnem z czujnika.</string>
     <string name="settings_heart_rate_source_explained">Czujnik: własne tętno zegarka, na żywo. Samsung: wartość platformy, przekazywana w paczkach z opóźnieniem do 10 minut przy wyłączonym ekranie. Trening i tak używa czujnika.</string>
     <string name="settings_hrv_source_explained">Czujnik: HRV z surowego sygnału tętna, każdy odstęp. Samsung: odstępy między uderzeniami z platformy; obecnie ginie około 60% z nich, więc mniej nocy ma wartość.</string>
-    <string name="settings_skin_explained">Temperatura skóry na nadgarstku podczas snu, jeden odczyt na minutę z platformy Samsung. Mało energii; nic poza tym się nie zmienia.</string>
+    <string name="settings_skin_explained">Temperatura skóry na nadgarstku podczas snu, jeden odczyt na minutę. Mało energii; nic poza tym się nie zmienia.</string>
     <string name="settings_spo2_explained">Natlenienie krwi najwyżej raz na godzinę podczas snu, około 15 s czerwonego światła. Kilka mAh na noc; pomijane, gdy ręka się rusza.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Autopauza: włączona</string>

@@ -131,7 +131,7 @@ internal object WearSettings {
     private fun hasWakeUpHeartRate(context: Context): Boolean =
         (context.getSystemService(Context.SENSOR_SERVICE) as? SensorManager)?.getDefaultSensor(Sensor.TYPE_HEART_RATE, true) != null
 
-    /** Skin temperature at night from the Samsung platform, the only source. Off by default. */
+    /** Skin temperature at night: the Samsung platform or, on Pixel, the raw sensor. Off by default. */
     fun skinTemperature(context: Context): Boolean = prefs(context).getBoolean(KEY_SKIN_TEMPERATURE, false)
 
     fun setSkinTemperature(context: Context, on: Boolean) {

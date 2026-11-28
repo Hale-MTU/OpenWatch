@@ -53,7 +53,7 @@
     <string name="settings_heart_rate_source_sensor">心率：传感器</string>
     <string name="settings_heart_rate_source_samsung">心率：Samsung 平台</string>
     <string name="settings_skin_temperature_off">皮肤温度：关闭</string>
-    <string name="settings_skin_temperature_on">皮肤温度：Samsung，夜间</string>
+    <string name="settings_skin_temperature_on">皮肤温度：开启</string>
     <string name="settings_spo2_off">SpO2：关闭</string>
     <string name="settings_spo2_on">SpO2：Samsung，夜间每小时</string>
     <string name="status_hrv_source_ppg">HRV：原始 PPG</string>
@@ -319,7 +319,7 @@
     <string name="settings_sleep_hold_explained">睡眠记录如何保留每一分钟：唤醒锁让手表保持唤醒；合并唤醒让手表在心率传感器的两次唤醒之间休眠，并在那时读取所有传感器的数据，仅适用于传感器心率。</string>
     <string name="settings_heart_rate_source_explained">传感器：手表自身的心率，实时。Samsung：平台的数值，屏幕关闭时分批传来，最多延迟 10 分钟。锻炼时始终使用传感器。</string>
     <string name="settings_hrv_source_explained">传感器：从原始脉搏信号计算 HRV，每个间期都有。Samsung：平台的 RR 间期；目前约 60% RR 间期会丢失，因此有数值的夜晚更少。</string>
-    <string name="settings_skin_explained">睡眠时测量手腕处的皮肤温度，由 Samsung 平台每分钟提供一次读数。耗电很少；其他一切不变。</string>
+    <string name="settings_skin_explained">睡眠时测量手腕处的皮肤温度，每分钟提供一次读数。耗电很少；其他一切不变。</string>
     <string name="settings_spo2_explained">睡眠时最多每小时测量一次血氧，每次约 15 秒红光。每晚耗电几 mAh；手臂移动时跳过。</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">自动暂停：开启</string>

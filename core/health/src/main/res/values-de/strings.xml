@@ -17,7 +17,6 @@
     <string name="health_data_note_wearos_workout">Ein Training, das du auf der Uhr aufzeichnest, mit Route und Distanz.</string>
     <string name="health_data_note_wearos_entry">Was du auf der Uhr von Hand einträgst.</string>
     <string name="health_data_note_wearos_mindfulness">Eine Atemübung auf der Uhr, wo Health Connect sie speichert.</string>
-    <string name="health_data_note_wearos_skin">Nur von einer Samsung-Uhr, wenn „Hauttemperatur in der Nacht“ für diese Uhr eingeschaltet ist. Ein Eintrag pro Nacht: die Abweichung von deiner eigenen üblichen Nacht.</string>
     <string name="health_data_note_scale_estimate">Auf dem Telefon aus der Messung der Waage und deinem Körperprofil geschätzt.</string>
     <string name="health_data_read_weight">Für die Gehkalorien und die Körperzusammensetzung der Waage.</string>
     <string name="health_data_read_height">Für die Körperzusammensetzung der Waage.</string>
@@ -30,7 +29,6 @@
     <string name="health_data_read_background">Eine geplante Synchronisierung bei geschlossener App sieht die Gewichte und Trainings anderer Apps nur mit diesem Zugriff.</string>
     <string name="health_data_watch_heart_rate">Der Herzfrequenzsensor der Uhr: Herzfrequenz, die nächtliche Herzfrequenzvariabilität und die Schlafschätzung.</string>
     <string name="health_data_watch_background">Damit die Uhr bei ausgeschaltetem Bildschirm weiter aufzeichnet.</string>
-    <string name="health_data_watch_skin">Nur auf einer Samsung-Uhr und nur, wenn du die Hauttemperatur in der Nacht einschaltest.</string>
     <string name="health_data_note_wearos_breathing_logged">In der Nacht nur, wenn „Atemfrequenz von der Uhr“ in den Einstellungen eingeschaltet ist; und eine Atemfrequenz, die du auf der Uhr einträgst.</string>
     <string name="health_data_note_wearos_spo2_measured">In der Nacht nur von einer Samsung-Uhr, wenn „SpO2 stündlich in der Nacht“ für diese Uhr eingeschaltet ist; und ein Blutsauerstoff, den du auf der Uhr einträgst oder misst.</string>
     <string name="health_data_note_wearos_vo2">Eine Schätzung aus einem Gang oder Lauf, den du mit Route auf der Uhr aufzeichnest, wenn dein Körperprofil eine Ruheherzfrequenz enthält.</string>

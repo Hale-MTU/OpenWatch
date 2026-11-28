@@ -18,8 +18,8 @@ Health Connect has no separate cadence permission.
 
 Three of these are written only for a watch that measures them and only while their option is
 on: `WRITE_RESPIRATORY_RATE` from a Wear OS watch (the "Breathing rate from the watch" switch in
-Settings, on by default), and `WRITE_OXYGEN_SATURATION` and `WRITE_SKIN_TEMPERATURE` from a Samsung
-watch (the "SpO2 hourly at night" and "Skin temperature at night" switches on the watch's
+Settings, on by default), `WRITE_OXYGEN_SATURATION` from a Samsung watch and `WRITE_SKIN_TEMPERATURE`
+from a Samsung watch or a Pixel Watch (the "SpO2 hourly at night" and "Skin temperature at night" switches on the watch's
 settings card, off until the user switches them on).
 Skin temperature is one record per night, the difference from the wearer's own usual night.
 A Garmin watch's oxygen saturation and respiratory rate come with its files.
@@ -120,7 +120,7 @@ it fails `HealthPermissionsTest`.
 | `WRITE_DISTANCE` |  |
 | `WRITE_RESPIRATORY_RATE` | At night only with “Breathing rate from the watch” switched on in Settings; and a breathing rate you log on the watch. |
 | `WRITE_OXYGEN_SATURATION` | At night only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch; and a blood oxygen you log or measure on the watch. |
-| `WRITE_SKIN_TEMPERATURE` | Only from a Samsung watch, with “Skin temperature at night” switched on for that watch. One record per night: the difference from your own usual night. |
+| `WRITE_SKIN_TEMPERATURE` | Only from a Samsung watch or a Pixel Watch, with “Skin temperature at night” switched on for that watch. One record per night: the difference from your own usual night. |
 | `WRITE_HYDRATION` | What you log on the watch, by hand. |
 | `WRITE_WEIGHT` | What you log on the watch, by hand. |
 | `WRITE_BLOOD_PRESSURE` | What you log on the watch, by hand. |
@@ -173,7 +173,7 @@ it fails `HealthPermissionsTest`.
 | --- | --- |
 | `READ_HEART_RATE` | The watch's heart rate sensor: heart rate, the night's heart rate variability and the sleep estimate. |
 | `READ_HEALTH_DATA_IN_BACKGROUND` | To keep recording with the watch's screen off. |
-| `READ_SKIN_TEMPERATURE` | Only on a Samsung watch, and only when you switch on skin temperature at night. |
+| `READ_SKIN_TEMPERATURE` | Only on a Samsung watch or a Pixel Watch, and only when you switch on skin temperature at night. |
 | `READ_OXYGEN_SATURATION` | Only on a Samsung watch: when you switch on SpO2 at night, and when you measure your blood oxygen on the watch. |
 
 <!-- health-data:end -->
@@ -190,7 +190,8 @@ asked on the wrist:
 - `android.permission.health.READ_SKIN_TEMPERATURE` and `READ_OXYGEN_SATURATION`: asked only
   when the user switches on "Skin temperature at night" or "SpO2 hourly at night" on a watch that has the
   Samsung Health Platform, which checks them per tracker, and `READ_OXYGEN_SATURATION` when the
-  user starts a blood oxygen spot measurement there.
+  user starts a blood oxygen spot measurement there. On a Pixel Watch, `READ_SKIN_TEMPERATURE` alone,
+  for its own skin temperature sensor, when the user switches on "Skin temperature at night".
 - `com.samsung.android.hardware.sensormanager.permission.READ_ADDITIONAL_HEALTH_DATA` (Samsung's own): asked
   only when the user chooses the Samsung PPG as the night's heart rate variability source on a watch that
   has the Samsung Health Platform, which checks it for that tracker.

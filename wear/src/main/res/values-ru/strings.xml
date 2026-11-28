@@ -55,7 +55,7 @@
     <string name="settings_heart_rate_source_sensor">Пульс: датчик</string>
     <string name="settings_heart_rate_source_samsung">Пульс: платформа Samsung</string>
     <string name="settings_skin_temperature_off">Температура кожи: выкл.</string>
-    <string name="settings_skin_temperature_on">Температура кожи: Samsung, ночью</string>
+    <string name="settings_skin_temperature_on">Температура кожи: вкл.</string>
     <string name="settings_spo2_off">SpO2: выкл.</string>
     <string name="settings_spo2_on">SpO2: Samsung, каждый час ночью</string>
     <string name="status_hrv_source_ppg">HRV: сырой PPG</string>
@@ -323,7 +323,7 @@
     <string name="settings_sleep_hold_explained">Как сохраняется каждая минута сна: wake lock не даёт часам уснуть; совмещённые пробуждения дают им спать между пробуждениями датчика пульса и тогда считывают все датчики, только с пульсом от датчика.</string>
     <string name="settings_heart_rate_source_explained">Датчик: собственный пульс часов, в реальном времени. Samsung: значение платформы, передаётся пакетами с задержкой до 10 минут при выключенном экране. Тренировка в любом случае использует датчик.</string>
     <string name="settings_hrv_source_explained">Датчик: HRV по сырому сигналу пульса, каждый интервал. Samsung: межударные интервалы платформы; сейчас теряется около 60 % RR-интервалов, поэтому значение есть не у каждой ночи.</string>
-    <string name="settings_skin_explained">Температура кожи на запястье во время сна, одно измерение в минуту от платформы Samsung. Мало энергии; больше ничего не меняется.</string>
+    <string name="settings_skin_explained">Температура кожи на запястье во время сна, одно измерение в минуту. Мало энергии; больше ничего не меняется.</string>
     <string name="settings_spo2_explained">Кислород в крови не чаще раза в час во время сна, около 15 с красного света. Несколько мА·ч за ночь; пропускается, если рука двигается.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Автопауза: вкл.</string>

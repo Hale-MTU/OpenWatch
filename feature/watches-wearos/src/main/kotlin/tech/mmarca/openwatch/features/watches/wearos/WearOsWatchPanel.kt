@@ -417,8 +417,11 @@ private val SettingPadding = PaddingValues(horizontal = Spacing.lg, vertical = S
  * The watch's own settings, read from and written to the watch over the
  * link (`GET_PREF`, `SET_PREF`): the same switches its recording settings
  * have, each with the same line on what it does. The Samsung ones appear
- * only when the watch reports the Samsung platform. Each switch is one
- * setting; the watch answers with all of them again.
+ * only when the watch reports the Samsung platform; skin temperature
+ * appears when the watch offers it from either the Samsung platform or its
+ * raw sensor ([skinOfferedByWatch]), SpO2 stays Samsung-only
+ * ([spo2OfferedByWatch]). Each switch is one setting; the watch answers
+ * with all of them again.
  */
 @Composable
 private fun WearOsWatchSettingsCard(
@@ -483,6 +486,8 @@ private fun WearOsWatchSettingsCard(
                     contentPadding = SettingPadding,
                     onCheckedChange = { onSet(Preferences.HRV_SOURCE, if (it) Preferences.SAMSUNG else Preferences.SENSOR) },
                 )
+            }
+            if (skinOfferedByWatch(settings)) {
                 SwitchRow(
                     title = stringResource(R.string.watch_settings_skin),
                     body = stringResource(
@@ -493,6 +498,8 @@ private fun WearOsWatchSettingsCard(
                     contentPadding = SettingPadding,
                     onCheckedChange = { onSet(Preferences.SKIN_TEMPERATURE, if (it) Preferences.ON else Preferences.OFF) },
                 )
+            }
+            if (spo2OfferedByWatch(settings)) {
                 SwitchRow(
                     title = stringResource(R.string.watch_settings_spo2),
                     body = stringResource(

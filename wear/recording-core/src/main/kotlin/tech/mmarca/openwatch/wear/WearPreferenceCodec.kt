@@ -80,6 +80,8 @@ data class WatchAbilities(
     val samsung: Boolean,
     val skinGranted: Boolean,
     val spo2Granted: Boolean,
+    /** Raw skin-temperature sensor present (Pixel), independent of samsung. */
+    val skinSensor: Boolean = false,
     val ppgGranted: Boolean = false,
 )
 
@@ -106,6 +108,7 @@ object WearPreferenceCodec {
         Preferences.GOAL_ACTIVE_KCAL to (preferences.activeKcalGoal ?: 0).toString(),
         Preferences.GOAL_WATER_ML to preferences.waterGoalMl.toString(),
         Preferences.SAMSUNG_AVAILABLE to flag(abilities.samsung),
+        Preferences.SKIN_SENSOR to flag(abilities.skinSensor),
         Preferences.SKIN_GRANTED to flag(abilities.skinGranted),
         Preferences.SPO2_GRANTED to flag(abilities.spo2Granted),
     )
@@ -127,7 +130,7 @@ object WearPreferenceCodec {
             Preferences.SYNCED -> preferences.copy(syncedSleepHold = true)
             else -> null
         }
-        Preferences.SKIN_TEMPERATURE -> flag(value)?.takeIf { !it || abilities.samsung }?.let { preferences.copy(skinTemperature = it) }
+        Preferences.SKIN_TEMPERATURE -> flag(value)?.takeIf { !it || abilities.samsung || abilities.skinSensor }?.let { preferences.copy(skinTemperature = it) }
         Preferences.SPO2 -> flag(value)?.takeIf { !it || abilities.samsung }?.let { preferences.copy(spo2AtNight = it) }
         Preferences.HEART_RATE_MAX -> bpm(value, MAX_HEART_RATE_RANGE)?.let { preferences.copy(maxHeartRate = it.takeIf { bpm -> bpm > 0 }) }
         Preferences.HEART_RATE_REST -> bpm(value, RESTING_HEART_RATE_RANGE)?.let { preferences.copy(restingHeartRate = it.takeIf { bpm -> bpm > 0 }) }
