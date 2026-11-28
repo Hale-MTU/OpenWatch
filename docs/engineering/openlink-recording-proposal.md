@@ -123,6 +123,30 @@ OpenWatch no longer checks. It does no harm; it can go once no older OpenWatch i
 
 ## 3. Recording on the watch
 
+**Status: built in part for Wear OS** (`link/LinkRecordedWorkouts`, the watch's `RemoteWorkout`,
+wearlink's `WO_CTL`, capability `wc`). The phone starts, pauses, resumes and stops the watch's
+own workout, and while it runs watches its state on the link (`WO_CTL watch`, one ask after the
+other, each a background request a sync goes before): the watch holds each ask until the phase
+differs from the one the phone knows, or for five seconds, so a press on the wrist reaches the
+client as it happens and the link stays up for the workout; a watch out of reach is asked again
+after a minute. The phone side goes through `devices/core`'s `RecordedWorkoutPort`, so the host names no
+family, and the watch keeps the session in its store. A stop from either side ends it, and a
+sync of the watch writes it to Health Connect. Where it differs from below:
+
+- No foreground service, so the rule in 3.5 still holds: if Android ends OpenWatch's process
+  during a workout, the watch records on, and the client learns its state when it replays its
+  start.
+- A pause or resume while the watch is out of reach is answered with the last phase; it does not
+  wait for the link to come back.
+- The watch shows no "Started by OpenVitals" and the association is not required.
+- `STOPPED` carries the workout summary the watch's own summary screen shows: the time in each
+  zone and the zones' bounds, the TRIMP, and the recovery's falls. The watch sends it with the
+  `WS` of a stopped session; when the recovery is not there yet, the phone asks once more 150
+  seconds after the stop and sends `STOPPED` again with the fuller summary.
+- `recordingFeatures` names heart rate, pause and auto-pause, and GPS where the watch's last hello
+  announced a GPS receiver (capability `gp`), which the phone keeps per watch.
+- A Garmin cannot be told to record one: `FAILED`, `unsupported`.
+
 ### 3.1 What changes
 
 In version 1 a recording session means: the watch keeps sending live readings while

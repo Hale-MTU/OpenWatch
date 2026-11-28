@@ -2,19 +2,28 @@ package tech.mmarca.openwatch.link
 
 import java.time.Instant
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.mmarca.openlink.OpenLinkConnection
 import tech.mmarca.openlink.OpenLinkDeviceKind
 import tech.mmarca.openlink.OpenLinkIntegration
 import tech.mmarca.openlink.OpenLinkSampleType
+import tech.mmarca.openlink.OpenLinkRecordingFeature
+import tech.mmarca.openlink.OpenLinkSyncResult
 import tech.mmarca.openwatch.devices.core.DeviceFamilies
 import tech.mmarca.openwatch.devices.core.DeviceFeature
+import tech.mmarca.openwatch.devices.core.FakeDeviceFamily
+import tech.mmarca.openwatch.devices.core.sync.DeviceSyncResult
+import tech.mmarca.openwatch.devices.core.sync.HealthSeries
+import tech.mmarca.openwatch.devices.core.sync.SkipReason
+import tech.mmarca.openwatch.devices.core.sync.SkippedSeries
+import tech.mmarca.openwatch.devices.core.sync.SyncAttempt
+import tech.mmarca.openwatch.devices.core.sync.SyncFailure
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorCapability
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
 import tech.mmarca.openwatch.domain.model.DeviceIntegration
-import tech.mmarca.openwatch.devices.core.FakeDeviceFamily
 
 class LinkDevicesTest {
 
@@ -74,6 +83,8 @@ class LinkDevicesTest {
         assertEquals(now.toEpochMilli(), garmin.lastSyncedAtMillis)
         assertEquals(setOf(OpenLinkSampleType.HEART_RATE, OpenLinkSampleType.STEPS), garmin.liveSampleTypes)
         assertEquals(OpenLinkConnection.CONNECTED, devices[1].connection)
+        // A RECORD start is refused (LinkLiveSessions) until a watch can record one, so none is offered it.
+        assertTrue(devices.all { it.recordingFeatures.isEmpty() })
         assertEquals(setOf(OpenLinkSampleType.HEART_RATE), devices[1].liveSampleTypes)
         val scale = devices[2]
         assertEquals(OpenLinkDeviceKind.SCALE, scale.kind)
@@ -125,5 +136,36 @@ class LinkDevicesTest {
         assertEquals(false, devices[0].supportsRecording)
         assertEquals(true, devices[1].supportsRecording)
         assertEquals(setOf(OpenLinkSampleType.HEART_RATE), devices[1].liveSampleTypes)
+    }
+
+    @Test
+    fun `a device carries how its last sync ended, and when`() {
+        val watch = device("Galaxy Watch8", BleDeviceKind.WATCH, DeviceIntegration.WEAROS)
+        val attempt = SyncAttempt(DeviceSyncResult.Failed(SyncFailure.Interrupted), atMillis = 1_234L)
+        val shown = linkDevices(listOf(watch), emptySet(), families, emptyMap(), mapOf(watch.id to attempt)).single()
+        assertEquals(OpenLinkSyncResult.INTERRUPTED, shown.lastSyncResult)
+        assertEquals(1_234L, shown.lastSyncAttemptAtMillis)
+        assertNull(linkDevices(listOf(watch), emptySet(), families, emptyMap()).single().lastSyncResult)
+    }
+
+    @Test
+    fun `a missing grant, also for a series left out, is permission missing, and out of reach is disconnected`() {
+        val leftOut = DeviceSyncResult.Succeeded(skipped = setOf(SkippedSeries(HealthSeries.STEPS, SkipReason.PERMISSION)))
+        assertEquals(OpenLinkSyncResult.PERMISSION_MISSING, linkSyncResult(leftOut))
+        assertEquals(OpenLinkSyncResult.SUCCEEDED, linkSyncResult(DeviceSyncResult.Succeeded(skipped = setOf(SkippedSeries(HealthSeries.SKIN_TEMPERATURE, SkipReason.NO_BASELINE)))))
+        assertEquals(OpenLinkSyncResult.PERMISSION_MISSING, linkSyncResult(DeviceSyncResult.Failed(SyncFailure.HealthConnectPermission)))
+        assertEquals(OpenLinkSyncResult.DISCONNECTED, linkSyncResult(DeviceSyncResult.Failed(SyncFailure.Unreachable)))
+        assertEquals(OpenLinkSyncResult.FAILED, linkSyncResult(DeviceSyncResult.Failed(SyncFailure.RadioBusy)))
+    }
+
+    @Test
+    fun `a watch that records a workout for an app offers its sports, and GPS only when its last hello said it has it`() {
+        val watch = device("Galaxy Watch8", BleDeviceKind.WATCH, DeviceIntegration.WEAROS)
+        val plain = linkDevices(listOf(watch), emptySet(), families, emptyMap(), recordedExerciseTypes = { setOf(8, 56) }).single()
+        assertEquals(setOf(8, 56), plain.exerciseTypes)
+        assertEquals(setOf(OpenLinkRecordingFeature.HEART_RATE, OpenLinkRecordingFeature.PAUSE, OpenLinkRecordingFeature.AUTO_PAUSE), plain.recordingFeatures)
+        val withGps = linkDevices(listOf(watch), emptySet(), families, emptyMap(), recordedExerciseTypes = { setOf(8) }, recordsRoute = { true }).single()
+        assertTrue(OpenLinkRecordingFeature.GPS in withGps.recordingFeatures)
+        assertTrue(linkDevices(listOf(watch), emptySet(), families, emptyMap()).single().recordingFeatures.isEmpty())
     }
 }
