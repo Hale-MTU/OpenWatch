@@ -2,6 +2,7 @@ package tech.mmarca.openwatch.devices.wearos
 
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.SleepSessionRecord
+import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
@@ -93,7 +94,13 @@ internal class WearOsNightSeriesSync(
         if (finished.isEmpty()) return true
         val permissions = granted()
         val canWrite = WearOsSkinTemperatureImport.writePermission in permissions
-        val sleeps = if (SLEEP_READ in permissions) sleepSessions(finished.first().start, finished.last().end.plusSeconds(60)) else emptyList()
+        // Health Connect answers a range with the sessions inside it: a night's session begins hours before
+        // a late run of it, so the read is widened both ways and clipToSleep keeps what overlaps.
+        val sleeps = if (SLEEP_READ in permissions) {
+            sleepSessions(finished.first().start.minus(SLEEP_LOOKAROUND), finished.last().end.plusSeconds(60).plus(SLEEP_LOOKAROUND))
+        } else {
+            emptyList()
+        }
         val zone = zone()
         var medians = cursors.skinNightMedians(device.id)
         var handledUntil: Instant? = null
@@ -162,5 +169,8 @@ internal class WearOsNightSeriesSync(
 
     private companion object {
         val SLEEP_READ: String = HealthPermission.getReadPermission(SleepSessionRecord::class)
+
+        /** Longer than any night's session, as the step import's exercise lookaround is longer than any workout. */
+        val SLEEP_LOOKAROUND: Duration = Duration.ofHours(30)
     }
 }

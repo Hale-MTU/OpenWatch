@@ -695,14 +695,13 @@ class WearOsWatchSyncServiceTest {
         val night = skinNight(1, 34.4, length = 240)
         skinMinutes += night
         val asleepFrom = night.first().time.plus(Duration.ofMinutes(90))
-        val session = mockk<SleepSessionRecord> {
-            every { startTime } returns asleepFrom
-            every { endTime } returns night.last().time.plus(Duration.ofHours(2))
-            every { metadata } returns Metadata.manualEntry(clientRecordId = "other_sleep_1")
-        }
-        coEvery { healthConnect.forEachSyncRecordPage(SleepSessionRecord::class, any(), any(), any()) } coAnswers {
-            arg<suspend (List<androidx.health.connect.client.records.Record>) -> Unit>(3).invoke(listOf(session))
-        }
+        sleepSessionsAsHealthConnectFilters(
+            mockk {
+                every { startTime } returns asleepFrom
+                every { endTime } returns night.last().time.plus(Duration.ofHours(2))
+                every { metadata } returns Metadata.manualEntry(clientRecordId = "other_sleep_1")
+            },
+        )
 
         service().sync(WATCH, SyncTrigger.REQUESTED, null)
 
@@ -711,6 +710,43 @@ class WearOsWatchSyncServiceTest {
         assertEquals(150, cursors.skinNightMedians(WATCH.id).last().minutes)
         // The whole run was handled: the awake part is not pulled again.
         assertEquals(night.last().time, cursors.skinCursor(WATCH.id))
+    }
+
+    /** Health Connect answers a time range with the sessions inside it, not every one overlapping it. */
+    private fun sleepSessionsAsHealthConnectFilters(vararg sessions: SleepSessionRecord) {
+        coEvery { healthConnect.forEachSyncRecordPage(SleepSessionRecord::class, any(), any(), any()) } coAnswers {
+            val from = secondArg<Instant>()
+            val to = thirdArg<Instant>()
+            val inside = sessions.filter { it.startTime >= from && it.endTime <= to }
+            if (inside.isNotEmpty()) arg<suspend (List<androidx.health.connect.client.records.Record>) -> Unit>(3).invoke(inside)
+        }
+    }
+
+    @Test
+    fun `a night's late skin minutes still find the session that began the evening before`() = runTest {
+        skinSyncWith(WearOsSkinTemperatureImport.writePermission, HealthPermission.getReadPermission(SleepSessionRecord::class))
+        val earlier = listOf("2026-10-01", "2026-10-02", "2026-10-03").map {
+            WearOsSkinTemperatureImport.NightMedian(LocalDate.parse(it), 34.0, minutes = 60)
+        }
+        cursors.setSkinNightMedians(WATCH.id, earlier)
+        // The run the phone pulls now starts at 03:00; the night's session began at 23:30, ends at 05:00.
+        val run = skinNight(1, 34.4, from = Duration.ofHours(4), length = 180)
+        skinMinutes += run
+        val asleepUntil = run.first().time.plus(Duration.ofHours(2))
+        sleepSessionsAsHealthConnectFilters(
+            mockk {
+                every { startTime } returns run.first().time.minus(Duration.ofMinutes(210))
+                every { endTime } returns asleepUntil
+                every { metadata } returns Metadata.manualEntry(clientRecordId = "other_sleep_1")
+            },
+        )
+
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        val record = insertedOf<SkinTemperatureRecord>().single()
+        // The last minute asleep starts a minute before the session ends and stands for that minute.
+        assertEquals(asleepUntil, record.endTime)
+        assertEquals(120, cursors.skinNightMedians(WATCH.id).last().minutes)
     }
 
     @Test
