@@ -246,6 +246,9 @@ class WearOsWatchSyncServiceTest {
     /** Whether the watch's night is written beside another app's; the user's setting, on by default. */
     private var sleepBesideOthers = true
 
+    /** The phone's clock; t0 unless a test moves it. */
+    private var now = t0
+
     private fun service() = WearOsWatchSyncService(
         nodePort = nodePort,
         cursors = cursors,
@@ -254,7 +257,7 @@ class WearOsWatchSyncServiceTest {
         healthConnect = healthConnect,
         linkStore = linkStore,
         weightKg = { weight },
-        clock = { t0 },
+        clock = { now },
         zone = { ZoneId.of("+02:00") },
         writeRespiratoryRate = { writeBreathing },
         writeSleepBesideOthers = { sleepBesideOthers },
@@ -650,6 +653,7 @@ class WearOsWatchSyncServiceTest {
         pages += WearOsHeartRatePage(emptyList(), hasMore = false)
         every { healthConnect.isSkinTemperatureAvailable() } returns true
         coEvery { healthConnect.grantedPermissions() } returns granted.toSet()
+        coEvery { healthConnect.readsOtherAppsDataNow() } returns true
     }
 
     private val skinBaselineForming = SkippedSeries(HealthSeries.SKIN_TEMPERATURE, SkipReason.NO_BASELINE)
@@ -700,6 +704,7 @@ class WearOsWatchSyncServiceTest {
                 every { startTime } returns asleepFrom
                 every { endTime } returns night.last().time.plus(Duration.ofHours(2))
                 every { metadata } returns Metadata.manualEntry(clientRecordId = "other_sleep_1")
+                every { stages } returns emptyList()
             },
         )
 
@@ -738,6 +743,7 @@ class WearOsWatchSyncServiceTest {
                 every { startTime } returns run.first().time.minus(Duration.ofMinutes(210))
                 every { endTime } returns asleepUntil
                 every { metadata } returns Metadata.manualEntry(clientRecordId = "other_sleep_1")
+                every { stages } returns emptyList()
             },
         )
 
@@ -747,6 +753,76 @@ class WearOsWatchSyncServiceTest {
         // The last minute asleep starts a minute before the session ends and stands for that minute.
         assertEquals(asleepUntil, record.endTime)
         assertEquals(120, cursors.skinNightMedians(WATCH.id).last().minutes)
+    }
+
+    private val sleepRead = HealthPermission.getReadPermission(SleepSessionRecord::class)
+
+    private fun skinBaseline() = cursors.setSkinNightMedians(
+        WATCH.id,
+        listOf("2026-10-01", "2026-10-02", "2026-10-03").map { WearOsSkinTemperatureImport.NightMedian(LocalDate.parse(it), 34.0, minutes = 60) },
+    )
+
+    private fun session(from: Instant, to: Instant) = mockk<SleepSessionRecord> {
+        every { startTime } returns from
+        every { endTime } returns to
+        every { metadata } returns Metadata.manualEntry(clientRecordId = "other_sleep_2")
+        every { stages } returns emptyList()
+    }
+
+    @Test
+    fun `a night's skin temperature waits for its sleep session while the night may still bring one`() = runTest {
+        skinSyncWith(WearOsSkinTemperatureImport.writePermission, sleepRead)
+        skinBaseline()
+        // 23:00 to 00:00 local, synced at 06:00, before any app has written the night's session.
+        now = t0.minus(Duration.ofHours(6))
+        val night = skinNight(0, 34.4)
+        skinMinutes += night
+        sleepSessionsAsHealthConnectFilters()
+        val before = cursors.skinCursor(WATCH.id)
+
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        assertTrue(insertedOf<SkinTemperatureRecord>().isEmpty())
+        assertEquals(before, cursors.skinCursor(WATCH.id))
+
+        // The session comes: asleep from 23:20.
+        pages += WearOsHeartRatePage(emptyList(), hasMore = false)
+        sleepSessionsAsHealthConnectFilters(session(night.first().time.plus(Duration.ofMinutes(20)), night.last().time.plus(Duration.ofHours(6))))
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        assertEquals(night.first().time.plus(Duration.ofMinutes(20)), insertedOf<SkinTemperatureRecord>().single().startTime)
+        assertEquals(night.last().time, cursors.skinCursor(WATCH.id))
+    }
+
+    @Test
+    fun `a background sync that sees only this app's sessions leaves the skin night for later`() = runTest {
+        skinSyncWith(WearOsSkinTemperatureImport.writePermission, sleepRead)
+        coEvery { healthConnect.readsOtherAppsDataNow() } returns false
+        skinBaseline()
+        skinMinutes += skinNight(1, 34.4)
+        val before = cursors.skinCursor(WATCH.id)
+
+        service().sync(WATCH, SyncTrigger.BACKGROUND, null)
+
+        assertTrue(insertedOf<SkinTemperatureRecord>().isEmpty())
+        assertEquals(before, cursors.skinCursor(WATCH.id))
+    }
+
+    @Test
+    fun `a sleep session read that fails skips the skin night and the rest of the sync goes on`() = runTest {
+        skinSyncWith(WearOsSkinTemperatureImport.writePermission, sleepRead)
+        skinBaseline()
+        skinMinutes += skinNight(1, 34.4)
+        coEvery { healthConnect.forEachSyncRecordPage(SleepSessionRecord::class, any(), any(), any()) } throws java.io.IOException("rate limited")
+        val before = cursors.skinCursor(WATCH.id)
+
+        val result = service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        assertTrue(result is DeviceSyncResult.Succeeded)
+        assertTrue(insertedOf<SkinTemperatureRecord>().isEmpty())
+        assertEquals(before, cursors.skinCursor(WATCH.id))
+        // The pulls after it still came.
+        assertEquals("lg", asked.last().first)
     }
 
     @Test

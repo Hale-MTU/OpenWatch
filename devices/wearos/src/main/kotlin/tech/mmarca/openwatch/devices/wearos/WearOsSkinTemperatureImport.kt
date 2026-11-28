@@ -2,6 +2,7 @@ package tech.mmarca.openwatch.devices.wearos
 
 import androidx.health.connect.client.permission.HealthPermission
 import androidx.health.connect.client.records.SkinTemperatureRecord
+import androidx.health.connect.client.records.SleepSessionRecord
 import androidx.health.connect.client.records.metadata.Device
 import androidx.health.connect.client.records.metadata.Metadata
 import androidx.health.connect.client.units.Temperature
@@ -9,6 +10,7 @@ import androidx.health.connect.client.units.TemperatureDelta
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.ZoneId
 import tech.mmarca.healthcalculations.stats.medianOrNull
 import tech.mmarca.openwatch.devices.core.saltedRecordId
@@ -52,8 +54,11 @@ object WearOsSkinTemperatureImport {
 
     val writePermission: String = HealthPermission.getWritePermission(SkinTemperatureRecord::class)
 
-    /** One night's minutes, in time order. */
-    data class Run(val minutes: List<WearOsSkinMinute>) {
+    /**
+     * One night's minutes, in time order. [key] is where the watch's run began, which names its
+     * record: cut to the time asleep, the run keeps it, so a night pulled again writes over it.
+     */
+    data class Run(val minutes: List<WearOsSkinMinute>, val key: Instant = minutes.first().time) {
         val start: Instant get() = minutes.first().time
         val end: Instant get() = minutes.last().time
         val median: Double get() = checkNotNull(minutes.map { it.celsius }.medianOrNull())
@@ -81,17 +86,53 @@ object WearOsSkinTemperatureImport {
         runs.filter { Duration.between(it.end, now) >= SETTLE && Duration.between(it.start, it.end) >= MIN_RUN }
 
     /**
-     * [runs] of one night cut to the minutes inside a sleep session, `[start, end)`; a run with
-     * none inside is dropped. The watch records the night series from bedtime mode, which is a
-     * schedule for quiet notifications, not sleep: the evening before falling asleep would
-     * otherwise read as the night's temperature. When no session overlaps any of the runs
-     * (none estimated or none readable), the runs stand as they are.
+     * [runs] cut to the minutes inside a sleep span (`[start, end)`, [asleepSpans]); a run with
+     * fewer than [MIN_RUN] left, none or a few minutes, is dropped: it is not a night. A cut run
+     * keeps its [Run.key]. Not cut again at its gaps: one watch run stays one record.
      */
-    fun clipToSleep(runs: List<Run>, sleeps: List<ClosedRange<Instant>>): List<Run> {
-        fun asleep(minute: WearOsSkinMinute) = sleeps.any { minute.time >= it.start && minute.time < it.endInclusive }
-        if (runs.none { run -> run.minutes.any(::asleep) }) return runs
-        return runs.mapNotNull { run -> run.minutes.filter(::asleep).takeIf { it.isNotEmpty() }?.let(::Run) }
+    fun clipToSleep(runs: List<Run>, sleeps: List<ClosedRange<Instant>>): List<Run> =
+        runs.mapNotNull { run ->
+            val asleep = run.minutes.filter { minute -> sleeps.any { minute.time >= it.start && minute.time < it.endInclusive } }
+            asleep.takeIf { it.isNotEmpty() && Duration.between(it.first().time, it.last().time) >= MIN_RUN }?.let { Run(it, run.key) }
+        }
+
+    /**
+     * The runs of [night] to write and remember, or null to wait. The watch records the night
+     * series from bedtime mode, which is a schedule for quiet notifications, not sleep: the evening
+     * before falling asleep would otherwise read as the night's temperature. So a night with a
+     * sleep span anywhere in its noon-to-noon window is cut to it ([clipToSleep]); a night without
+     * one waits while it may still get one, and once it is over stands as it is. Without spans to
+     * read ([sleeps] null: no grant) the runs stand as they are.
+     */
+    fun asleepRuns(night: LocalDate, runs: List<Run>, sleeps: List<ClosedRange<Instant>>?, zone: ZoneId, now: Instant): List<Run>? {
+        if (sleeps == null) return runs
+        val opens = night.atTime(NOON).atZone(zone).toInstant()
+        val closes = night.plusDays(1).atTime(NOON).atZone(zone).toInstant()
+        if (sleeps.any { it.start < closes && it.endInclusive > opens }) return clipToSleep(runs, sleeps)
+        return if (now >= closes) runs else null
     }
+
+    /** The time asleep in [session]: its span without its awake stages, or all of it without stages. */
+    fun asleepSpans(session: SleepSessionRecord): List<ClosedRange<Instant>> {
+        val awake = session.stages.filter { it.stage in AWAKE_STAGES }.sortedBy { it.startTime }
+        val spans = ArrayList<ClosedRange<Instant>>()
+        var from = session.startTime
+        for (stage in awake) {
+            if (stage.startTime > from) spans += from..stage.startTime
+            if (stage.endTime > from) from = stage.endTime
+        }
+        if (session.endTime > from) spans += from..session.endTime
+        return spans
+    }
+
+    /** The stages that are not sleep, as the day summaries count them. */
+    val AWAKE_STAGES: Set<Int> = setOf(
+        SleepSessionRecord.STAGE_TYPE_AWAKE,
+        SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED,
+        SleepSessionRecord.STAGE_TYPE_OUT_OF_BED,
+    )
+
+    private val NOON: LocalTime = LocalTime.NOON
 
     /**
      * One night's median for the baseline, taken over [minutes] minutes; 0 where they were not
@@ -163,5 +204,5 @@ object WearOsSkinTemperatureImport {
         null
     }
 
-    fun clientRecordId(run: Run, salt: String = ""): String = saltedRecordId("$CLIENT_ID_PREFIX${run.start.toEpochMilli()}", salt)
+    fun clientRecordId(run: Run, salt: String = ""): String = saltedRecordId("$CLIENT_ID_PREFIX${run.key.toEpochMilli()}", salt)
 }

@@ -19,11 +19,7 @@ import tech.mmarca.openwatch.wearlink.WearLinkProtocol
  */
 internal object WearOsDaySummaries {
 
-    private val AWAKE_STAGES = setOf(
-        SleepSessionRecord.STAGE_TYPE_AWAKE,
-        SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED,
-        SleepSessionRecord.STAGE_TYPE_OUT_OF_BED,
-    )
+    private val AWAKE_STAGES = WearOsSkinTemperatureImport.AWAKE_STAGES
 
     fun summaries(
         days: List<LocalDate>,
