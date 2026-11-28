@@ -63,14 +63,14 @@ public class GarminCalendarResponder(
                 val shift = if (event.allDay) -zoneOffsetSeconds(event.startEpochSeconds) else 0L
                 ProtobufWriter().apply {
                     if (includeOrganizer && event.organizer != null) {
-                        string(EVENT_ORGANIZER, event.organizer.take(maxOrganizer))
+                        string(EVENT_ORGANIZER, event.organizer.cut(maxOrganizer))
                     }
-                    string(EVENT_TITLE, event.title.take(maxTitle))
+                    string(EVENT_TITLE, event.title.cut(maxTitle))
                     if (includeLocation && event.location != null) {
-                        string(EVENT_LOCATION, event.location.take(maxLocation))
+                        string(EVENT_LOCATION, event.location.cut(maxLocation))
                     }
                     if (includeDescription && event.description != null) {
-                        string(EVENT_DESCRIPTION, event.description.take(maxDescription))
+                        string(EVENT_DESCRIPTION, event.description.cut(maxDescription))
                     }
                     varint(EVENT_START, event.startEpochSeconds + shift)
                     varint(EVENT_END, event.endEpochSeconds + shift)
@@ -81,6 +81,17 @@ public class GarminCalendarResponder(
 
         GarminLog.log("[GARMIN-CAL] sending ${sent.size} event(s) to the watch")
         return calendarResponse(STATUS_OK, sent)
+    }
+
+    /**
+     * The first [max] characters, as the watch counts its limits (and Gadgetbridge cuts them),
+     * without cutting a character outside the Basic Multilingual Plane, such as an emoji, in two:
+     * its lone half would reach the watch as `?`.
+     */
+    private fun String.cut(max: Int): String {
+        if (length <= max) return this
+        val end = max.coerceAtLeast(0)
+        return substring(0, if (end > 0 && this[end - 1].isHighSurrogate()) end - 1 else end)
     }
 
     private fun calendarResponse(status: Int, events: List<ByteArray>): ByteArray {

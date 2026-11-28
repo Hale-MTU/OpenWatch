@@ -417,7 +417,7 @@ A new manoeuvre or street reaches the watch at once. A countdown that merely tic
 
 "Calendar on watch", on the watch's device screen, feeds the watch's calendar glance from the phone's calendar. Off by default; switching it on asks for Android's calendar permission.
 
-The watch asks for a window of events and names its own limits (how many events, how long each field may be), and the phone answers within them. Recurring events arrive as their occurrences, declined and cancelled meetings stay off the wrist, and all-day events land on the wearer's midnight. Events go to the watch over Bluetooth and nowhere else; they are never stored and there is no network to send them over.
+The watch asks for a window of events and names its own limits (how many events, how long each field may be), and the phone answers within them, cutting a long title between characters, never through one. The text goes as UTF-8, so a title in Cyrillic or any other script shows as the watch's fonts draw it; up to 0.5.0 it went as Latin-1, where such a title showed as question marks. Recurring events arrive as their occurrences, declined and cancelled meetings stay off the wrist, and all-day events land on the wearer's midnight. Events go to the watch over Bluetooth and nowhere else; they are never stored and there is no network to send them over.
 
 If the calendar permission is later revoked in system settings, the row says so, and the watch's asks are answered with an empty calendar rather than ignored.
 

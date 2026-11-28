@@ -108,6 +108,23 @@ class GarminCalendarTest {
     }
 
     @Test
+    fun `a title in another script reaches the watch as it reads, in UTF-8 (#81)`() {
+        val reply = responder(listOf(event(title = "Встреча с командой", location = "Офис"))).handle(request())!!
+
+        val sent = events(reply).single()
+        assertEquals("Встреча с командой", title(sent))
+        assertEquals("Офис", protobufField(sent, 3)!!.bytes!!.toString(Charsets.UTF_8))
+    }
+
+    @Test
+    fun `a title cut at the watch's limit keeps every character whole`() {
+        // The waving hand is two UTF-16 chars, at 3 and 4: a cut at 4 would leave half of it.
+        val reply = responder(listOf(event(title = "Hi \uD83D\uDC4B there"))).handle(request(maxTitle = 4))!!
+
+        assertEquals("Hi ", title(events(reply).single()))
+    }
+
+    @Test
     fun `events outside the window are not sent`() {
         val nextMonth = event(start = begin + 40 * 86_400, end = begin + 40 * 86_400 + 3_600)
         val lastWeek = event(start = begin - 7 * 86_400, end = begin - 7 * 86_400 + 3_600)

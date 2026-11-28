@@ -72,6 +72,12 @@ class GarminProtobufTest {
     }
 
     @Test
+    fun `a string field is UTF-8`() {
+        assertArrayEquals(b(0x0A, 0x04, 0xD0, 0x92, 0xD1, 0x81), ProtobufWriter().string(1, "Вс").toBytes())
+        assertArrayEquals(b(0x0A, 0x02, 0xC3, 0xA9), ProtobufWriter().string(1, "é").toBytes())
+    }
+
+    @Test
     fun `round-trips through the reader`() {
         val inner = ProtobufWriter().varint(1, 60).toBytes()
         val outer = ProtobufWriter().nested(12, inner).toBytes()

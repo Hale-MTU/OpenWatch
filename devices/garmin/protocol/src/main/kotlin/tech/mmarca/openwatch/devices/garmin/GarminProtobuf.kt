@@ -31,8 +31,12 @@ public class ProtobufWriter {
     /** A nested message with no fields. Distinct from omitting it; Garmin uses it as a whole request. */
     public fun emptyMessage(field: Int): ProtobufWriter = nested(field, ByteArray(0))
 
+    /**
+     * A string field: UTF-8, as protobuf defines it and the watch reads it. Latin-1 turned every
+     * letter outside it into `?`, so a Cyrillic calendar title showed as "????" (#81).
+     */
     public fun string(field: Int, value: String): ProtobufWriter =
-        nested(field, value.toByteArray(Charsets.ISO_8859_1))
+        nested(field, value.toByteArray(Charsets.UTF_8))
 
     /** A float field (wire type 5, fixed 32-bit little-endian). */
     public fun fixed32(field: Int, value: Float): ProtobufWriter {
