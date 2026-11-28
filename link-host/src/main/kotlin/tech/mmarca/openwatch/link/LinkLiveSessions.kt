@@ -50,6 +50,8 @@ data class LinkSessionActivity(
     val devices: List<LinkSessionDevice> = emptyList(),
     /** The live sample types a subscription under this session receives; empty if none. */
     val liveTypes: Set<OpenLinkSampleType> = emptySet(),
+    /** The device records the workout for the app ([LinkRecordedWorkouts]). */
+    val recorded: Boolean = false,
 ) {
     val streaming: List<LinkSessionDevice> get() = devices.filter { it.streaming }
 }
@@ -81,6 +83,7 @@ class LinkLiveSessions @Inject constructor(
     val activity: StateFlow<Map<String, LinkSessionActivity>> = _activity.asStateFlow()
 
     @Synchronized
+    /** A session in `STREAM` mode; a recorded workout is [LinkRecordedWorkouts]'. */
     fun startRecording(request: OpenLinkRecordingRequest) {
         if (request.sessionId in recordings) return
         val targets = targets(request.deviceId)
