@@ -11,6 +11,10 @@
 #   --no-grant       do not pre-grant runtime permissions; the app asks on the wrist
 #   --status         only report; install nothing
 #
+# After the install it grants Bluetooth, notifications, activity recognition
+# (steps), and the heart rate, background, skin temperature and SpO2 reads
+# (BODY_SENSORS before Android 16), then compiles a non-debuggable build.
+#
 # Pair the computer first: scripts/wear-pair.sh. Guide: docs/how-to/wear-os-sideload.md
 set -euo pipefail
 # shellcheck source=lib/wear-adb.sh
@@ -40,7 +44,7 @@ while [ $# -gt 0 ]; do
         --no-build) BUILD=no; shift ;;
         --no-grant) GRANT=no; shift ;;
         --status) STATUS_ONLY=yes; shift ;;
-        -h|--help) sed -n '2,14p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help) sed -n '2,18p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *) die "unknown argument $1" ;;
     esac
 done
@@ -98,13 +102,21 @@ compile_app() {
     local flags
     flags=$(shell dumpsys package "$PACKAGE" | grep pkgFlags || true)
     if [[ "$flags" == *DEBUGGABLE* ]]; then
-        warn "debuggable build: ART runs it interpreted, so scrolling is janky by design. Judge smoothness on --release or an OPENWATCH_PUBLISHED_DEBUG_APK=true build."
+        warn "debuggable build: ART runs it interpreted, so scrolling is janky by design. To judge smoothness, build with OPENWATCH_PUBLISHED_DEBUG_APK=true ./gradlew :wear:assembleDebug and install that (--release needs the release signing key)."
         return
     fi
-    shell am broadcast -a androidx.profileinstaller.action.INSTALL_PROFILE \
-        -n "$PACKAGE/androidx.profileinstaller.ProfileInstallReceiver" >/dev/null 2>&1 || true
-    sleep 1
+    # The receiver answers 1 (profile written) or 2 (already there); anything else leaves
+    # speed-profile with no profile to compile against.
+    local profile
+    profile=$(shell am broadcast -a androidx.profileinstaller.action.INSTALL_PROFILE \
+        -n "$PACKAGE/androidx.profileinstaller.ProfileInstallReceiver" 2>&1 || true)
+    if [[ "$profile" != *"result=1"* && "$profile" != *"result=2"* ]]; then
+        warn "the baseline profile was not written; compiling without it"
+    fi
     if [[ "$(shell cmd package compile -f -m speed-profile "$PACKAGE")" == *Success* ]]; then
+        # The install already started the app (package-replaced receiver, the broadcast), and ART
+        # does not swap code in a running process: stop it, so the launch below runs the compiled code.
+        shell am force-stop "$PACKAGE"
         note "compiled (speed-profile): smooth from the first launch"
     else
         warn "could not compile; the app runs JIT-only until the watch's overnight dexopt"
@@ -120,20 +132,23 @@ status() {
     fi
     local dump
     dump="$(shell dumpsys package "$PACKAGE" 2>/dev/null || true)"
-    if ! echo "$dump" | grep -q 'versionName='; then
+    # Here-strings, not `echo | grep -q`: under pipefail a dump past the pipe buffer
+    # kills echo when grep stops early, and the match reads false.
+    if ! grep -q 'versionName=' <<<"$dump"; then
         note "app: not installed"
         return
     fi
     note "app: $(echo "$dump" | sed -n 's/^ *versionName=//p' | head -1) (code $(echo "$dump" | sed -n 's/^ *versionCode=\([0-9]*\).*/\1/p' | head -1))"
     local permission
     for permission in BLUETOOTH_CONNECT POST_NOTIFICATIONS ACTIVITY_RECOGNITION READ_HEART_RATE READ_HEALTH_DATA_IN_BACKGROUND READ_SKIN_TEMPERATURE READ_OXYGEN_SATURATION BODY_SENSORS BODY_SENSORS_BACKGROUND; do
-        if echo "$dump" | grep -Eq "\.$permission: granted=true"; then
+        if grep -Eq "\.$permission: granted=true" <<<"$dump"; then
             note "granted: $permission"
-        elif echo "$dump" | grep -Eq "\.$permission: granted=false"; then
+        elif grep -Eq "\.$permission: granted=false" <<<"$dump"; then
             note "missing: $permission"
         fi
     done
-    if [[ "$(shell dumpsys activity services "$PACKAGE")" == *"$SERVICE_CLASS"* ]]; then
+    # dumpsys shortens a class under the package's own name (release: tech.mmarca.openwatch/.wear.WearAppService).
+    if [[ "$(shell dumpsys activity services "$PACKAGE")" == *"$PACKAGE/"*"${SERVICE_CLASS##*.}"* ]]; then
         note "phone link service: running"
     else
         note "phone link service: not running (open the app on the watch and grant Nearby devices)"
