@@ -13,7 +13,7 @@ import java.util.UUID
  * Every connection opens with one hello from the phone and one reply from the
  * watch; requests follow only after `OK`:
  * - `HELLO <version> <caps> <token> <name...>` — the highest version the phone speaks,
- *   its capabilities (`tm` or `-`), the secret it holds for this watch
+ *   its capabilities (`tm`, `bc` or `-`), the secret it holds for this watch
  *   (`WearLinkToken`) and its Bluetooth name, the rest of the line.
  * - `OK <version> <caps> <name...>` — the watch knows that token for this phone.
  *   To a phone that announced `tm` it is `OK <version> <caps,tm> <epochMillis>
@@ -171,6 +171,12 @@ object WearLinkProtocol {
 
     /** The phone reads the watch's clock in `OK`; a watch announces it back only with the time there. */
     const val CAP_CLOCK: String = "tm"
+
+    /**
+     * The phone knows the entry tokens `lean` and `bodywater` ([WearLinkEntries]). A phone that does not drops
+     * those lines and moves its cursor past them, so a watch logs the two only for a phone that announced this.
+     */
+    const val CAP_BODY_COMPOSITION: String = "bc"
 
     /** The watch keeps the entries made on it, logged by hand or spot-measured: `SINCE lg` ([WearLinkEntries]). */
     const val CAP_ENTRIES: String = "lg"

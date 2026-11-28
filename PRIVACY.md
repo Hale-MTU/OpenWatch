@@ -111,6 +111,8 @@ The complete list, by Health Connect permission. The app shows the same list und
 | `WRITE_BLOOD_PRESSURE` | What you log on the watch, by hand. |
 | `WRITE_MINDFULNESS` | A breathing session you do on the watch, where Health Connect keeps them. |
 | `WRITE_BODY_FAT` | What you log on the watch, by hand. |
+| `WRITE_LEAN_BODY_MASS` | What you log on the watch, by hand. |
+| `WRITE_BODY_WATER_MASS` | What you log on the watch, by hand. |
 | `WRITE_BODY_TEMPERATURE` | What you log on the watch, by hand. |
 | `WRITE_BLOOD_GLUCOSE` | What you log on the watch, by hand. |
 | `WRITE_HEIGHT` | What you log on the watch, by hand. |
@@ -180,6 +182,7 @@ The watch app records with the watch's own sensors and keeps what it records on 
 - Physical activity, for steps.
 - Location, only while you record a workout with GPS on the watch, for its route.
 - On a Samsung watch, and only if you switch the option on: skin temperature and blood oxygen at night; and blood oxygen when you measure it on the spot. For these, and optionally for heart rate, the watch app asks the health service Samsung ships on the watch for the reading. OpenWatch sends nothing to Samsung.
+- On a Samsung watch, Samsung's access to additional health data (`READ_ADDITIONAL_HEALTH_DATA`, Samsung's own permission, not Android's), only when you choose the Samsung PPG as the source of the night's heart rate variability.
 - Bluetooth, to answer the phone you allowed, and notifications, for its own status.
 
 ## Local Storage

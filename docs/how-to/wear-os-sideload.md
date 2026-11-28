@@ -94,10 +94,12 @@ After the install the script grants the runtime permissions the watch app needs,
 | --- | --- |
 | `BLUETOOTH_CONNECT` | the phone link over RFCOMM |
 | `POST_NOTIFICATIONS` | the ongoing "Phone link" notification of the foreground service |
+| `ACTIVITY_RECOGNITION` | the step counter and step detector |
 | `READ_HEART_RATE`, `READ_HEALTH_DATA_IN_BACKGROUND` (Android 16+) | the heart rate sensor, on and off screen |
-| `BODY_SENSORS`, `BODY_SENSORS_BACKGROUND` (Android 13 to 15) | the same on older releases |
+| `READ_SKIN_TEMPERATURE`, `READ_OXYGEN_SATURATION` (Android 16+) | skin temperature and SpO2 at night, when switched on |
+| `BODY_SENSORS`, `BODY_SENSORS_BACKGROUND` (Android 13 to 15) | the sensors on older releases |
 
-Pass `--no-grant` to let the app ask instead. Finally the script launches the app and prints the status below.
+Pass `--no-grant` to let the app ask instead. A non-debuggable build is then compiled against its baseline profile and stopped, so the launch runs the compiled code instead of waiting for the watch's overnight dexopt; a debuggable one cannot be compiled and scrolls janky by design. Finally the script launches the app and prints the status below.
 
 ## 5. Check
 
@@ -143,8 +145,11 @@ adb reboot
 adb install -r wear/build/outputs/apk/debug/wear-debug.apk
 adb shell pm grant tech.mmarca.openwatch.debug android.permission.BLUETOOTH_CONNECT
 adb shell pm grant tech.mmarca.openwatch.debug android.permission.POST_NOTIFICATIONS
+adb shell pm grant tech.mmarca.openwatch.debug android.permission.ACTIVITY_RECOGNITION
 adb shell pm grant tech.mmarca.openwatch.debug android.permission.health.READ_HEART_RATE
 adb shell pm grant tech.mmarca.openwatch.debug android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND
+adb shell pm grant tech.mmarca.openwatch.debug android.permission.health.READ_SKIN_TEMPERATURE
+adb shell pm grant tech.mmarca.openwatch.debug android.permission.health.READ_OXYGEN_SATURATION
 adb shell am start -n tech.mmarca.openwatch.debug/tech.mmarca.openwatch.wear.MainActivity
 ```
 

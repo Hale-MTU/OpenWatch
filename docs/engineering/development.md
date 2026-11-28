@@ -226,8 +226,8 @@ adb -s <watch> shell cat /data/local/tmp/ow-inst.txt   # until it ends in OK or 
 ```
 
 Between releases, or on a watch without the Play Store, the watch app is sideloaded over Wi-Fi adb.
-`scripts/wear-pair.sh` pairs the computer, `scripts/wear-install.sh` builds, installs and
-grants the permissions, and `scripts/wear-skip-onboarding.sh` marks a never-onboarded watch
+`scripts/wear-pair.sh` pairs the computer, `scripts/wear-install.sh` builds, installs,
+grants the permissions and compiles a non-debuggable build, and `scripts/wear-skip-onboarding.sh` marks a never-onboarded watch
 as set up. The walkthrough is [docs/how-to/wear-os-sideload.md](../how-to/wear-os-sideload.md).
 
 ## Docs and the Wiki
