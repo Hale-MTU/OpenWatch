@@ -75,6 +75,8 @@ data class GarminNotificationLinkRequest(
     val weatherProvider: (() -> tech.mmarca.openwatch.devices.weather.WeatherSnapshot?)? = null,
     /** GPS ephemeris to serve while the link is held. */
     val agpsSource: GarminAgpsSource? = null,
+    /** Where the hydration widget's drinks go while the link is held, and what answers its totals. */
+    val hydration: GarminHydrationLog? = null,
     /** Calendar events for the watch's glance; null while sync is off. */
     val calendarProvider: (
         (beginEpochSeconds: Long, endEpochSeconds: Long) -> List<GarminCalendarEvent>?
@@ -215,6 +217,7 @@ class GarminBleNotificationLink private constructor(
                     onFindPhoneCancel = request.onFindPhoneCancel,
                     weatherProvider = request.weatherProvider,
                     agpsSource = request.agpsSource,
+                    hydration = request.hydration,
                     calendarProvider = request.calendarProvider,
                     locationProvider = request.locationProvider,
                     hostForeground = request.hostForeground,

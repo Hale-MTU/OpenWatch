@@ -11,6 +11,7 @@
     <string name="health_data_section_reads">Read from Health Connect</string>
     <string name="health_data_section_watch_app">Asked by the watch app, on the watch</string>
     <string name="health_data_note_garmin_weight">A weight a Garmin scale relays through the watch.</string>
+    <string name="health_data_note_garmin_hydration">What you log in the watch\'s hydration widget.</string>
     <string name="health_data_note_wearos_calories">An estimate of what walking cost, from your steps and your weight, and a workout\'s calories.</string>
     <string name="health_data_note_wearos_sleep">One estimated session per night and per nap.</string>
     <string name="health_data_note_wearos_hrv">At night, on a watch that can measure it.</string>

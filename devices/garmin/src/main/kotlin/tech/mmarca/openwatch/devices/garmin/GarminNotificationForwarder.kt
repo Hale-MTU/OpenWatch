@@ -97,6 +97,8 @@ class GarminNotificationForwarder(
     private val onFindPhoneCancel: (() -> Unit)? = null,
     private val weatherProvider: (() -> tech.mmarca.openwatch.devices.weather.WeatherSnapshot?)? = null,
     private val agpsSource: GarminAgpsSource? = null,
+    /** The watch's hydration log, handed to every link. */
+    private val hydration: GarminHydrationLog? = null,
     private val calendarProvider: ((beginEpochSeconds: Long, endEpochSeconds: Long) -> List<GarminCalendarEvent>?)? = null,
     /** Where a held link hands recordings the watch announces. */
     private val heldSyncOwner: GarminHeldSyncOwner? = null,
@@ -257,6 +259,7 @@ class GarminNotificationForwarder(
                     onFindPhoneCancel = onFindPhoneCancel,
                     weatherProvider = weatherProvider,
                     agpsSource = agpsSource,
+                    hydration = hydration,
                     calendarProvider = calendarProvider,
                     heldSyncOwner = heldSyncOwner,
                     locationProvider = locationProvider,

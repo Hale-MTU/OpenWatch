@@ -37,6 +37,9 @@ import tech.mmarca.openwatch.devices.core.sync.SkippedSeries
 import tech.mmarca.openwatch.devices.core.sync.SyncTally
 import tech.mmarca.openwatch.domain.model.BleDeviceKind
 import tech.mmarca.openwatch.domain.model.BleSensorDevice
+import tech.mmarca.openwatch.domain.model.DeviceIntegration
+import java.time.LocalDate
+import java.time.ZoneOffset
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.CoroutineScope
 
@@ -54,6 +57,7 @@ class GarminWatchSyncServiceTest {
     private val stateStore = GarminDeviceStateStore(FakeDeviceStateRepository(), FakeSharedPreferences())
     private val downloadImport = mockk<GarminDownloadImport>()
     private val fileStore by lazy { GarminFileStore(resolveDirectory = { temp.root }) }
+    private val hydrationSink = RecordingMeasurementSink()
 
     private var pullResult: GarminPullResult = GarminPullResult(files = emptyList())
     private var pullFailure: Throwable? = null
@@ -108,6 +112,10 @@ class GarminWatchSyncServiceTest {
         downloadImport = downloadImport,
         fileStore = fileStore,
         radio = radio,
+        hydration = GarminHydrationStore(
+            FakeDeviceStateRepository(), deviceRepository, hydrationSink, FakeSharedGoals(), CoroutineScope(SupervisorJob()),
+            zone = { ZoneOffset.UTC }, today = { LocalDate.EPOCH },
+        ),
     )
 
     @Test
@@ -222,6 +230,20 @@ class GarminWatchSyncServiceTest {
     }
 
     @Test
+    fun `drinks the watch logged that wait for a grant are tried again and named with the rest`() = runTest {
+        hydrationSink.withheld = setOf(WriteHydration)
+        pullResult = GarminPullResult(files = listOf(file(1)))
+        coEvery { downloadImport.import(any(), any()) } returns
+            GarminActivityImportResult(written = 1, wellnessWithheldPermissions = setOf(WriteSleep))
+
+        val result = service().sync(WATCH, SyncTrigger.BACKGROUND, null) as DeviceSyncResult.Succeeded
+
+        assertEquals(setOf(SkippedSeries(HealthSeries.RECORDS, SkipReason.PERMISSION, setOf(WriteSleep, WriteHydration))), result.skipped)
+        // A watch stored before its family was recorded is tried as the Garmin it is.
+        assertEquals(DeviceIntegration.GARMIN, hydrationSink.retried.single()?.integration)
+    }
+
+    @Test
     fun `workouts waiting for a grant are named with the grants they need, not hidden behind Synced`() = runTest {
         pullResult = GarminPullResult(files = listOf(file(1)))
         coEvery { downloadImport.import(any(), any()) } returns GarminActivityImportResult(
@@ -314,3 +336,4 @@ class GarminWatchSyncServiceTest {
 
 private const val WriteSleep = "android.permission.health.WRITE_SLEEP"
 private const val WriteExercise = "android.permission.health.WRITE_EXERCISE"
+private const val WriteHydration = "android.permission.health.WRITE_HYDRATION"

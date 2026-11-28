@@ -93,6 +93,7 @@ object HealthDataCatalog {
             write(Vo2MaxRecord::class),
             write(SleepSessionRecord::class),
             write(WeightRecord::class, R.string.health_data_note_garmin_weight),
+            write(HydrationRecord::class, R.string.health_data_note_garmin_hydration),
         ),
         HealthDataSection.WEAROS_WATCH to listOf(
             write(HeartRateRecord::class),
