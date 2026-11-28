@@ -318,6 +318,7 @@ internal class WearGraph(private val app: Application) {
                 platformProfile(profile)?.takeIf { sensors.bodyComposition }?.let { SamsungSpotSource.bodyComposition(samsungFeed, it) }
             },
             profile = { settings.value.bodyProfile().takeIf { platformProfile(it) != null } },
+            phoneTakesBodyComposition = { store.state(WearLinkServerHost.PHONE_BODY_COMPOSITION_STATE) == "1" },
             additionalGranted = { WearPermissions.hasAdditionalHealthData(app) },
             heartRateGranted = { WearPermissions.hasHeartRate(app) },
             entries = entries,

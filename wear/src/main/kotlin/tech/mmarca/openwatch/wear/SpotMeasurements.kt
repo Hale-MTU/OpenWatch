@@ -59,6 +59,11 @@ internal class SpotMeasurements(
     private val additionalGranted: () -> Boolean = { false },
     private val heartRateGranted: () -> Boolean,
     private val entries: EntryLog,
+    /**
+     * Whether the paired phone knows the lean mass and body water entries: a phone that does not drops the lines
+     * and moves on, so for it they are never logged and its later update brings no loss.
+     */
+    private val phoneTakesBodyComposition: () -> Boolean = { false },
     private val debug: DebugProtocol,
     /** How long a measurement of a kind may take, milliseconds; its own limit but in a test. */
     private val limitMillis: (SpotKind) -> Long = { it.seconds * MILLIS_PER_SECOND },
@@ -388,11 +393,14 @@ internal class SpotMeasurements(
 
     private fun keepBody(body: BodyComposition) {
         val at = System.currentTimeMillis()
-        for ((type, value) in listOf(
+        val all = listOf(
             WearLinkEntry.Type.BODY_FAT to body.bodyFatPercent,
             WearLinkEntry.Type.LEAN_BODY_MASS to body.leanMassKg,
             WearLinkEntry.Type.BODY_WATER to body.bodyWaterKg,
-        )) {
+        )
+        val takes = phoneTakesBodyComposition()
+        if (!takes) debug.count("spot_body_composition_withheld")
+        for ((type, value) in all.filter { takes || it.first == WearLinkEntry.Type.BODY_FAT }) {
             if (!entries.log(type, value, atMillis = at, measured = true)) debug.count("spot_unlogged")
         }
     }
