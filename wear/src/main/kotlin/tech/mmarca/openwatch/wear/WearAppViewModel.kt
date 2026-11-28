@@ -51,13 +51,16 @@ class WearAppViewModel(application: Application) : AndroidViewModel(application)
             sensors,
             // The first read of the chosen tiles and quick log entries loads their files too.
             flow { emitAll(combine(graph.tiles.chosen, graph.quickLog.chosen) { tiles, items -> tiles to items }) }.flowOn(Dispatchers.IO),
-            settings.map { DisplayPreferences(unitSystem = it.unitSystem) }.distinctUntilChanged(),
-        ) { readings, entries, sensors, (tiles, quickLogItems), preferences ->
+            settings.map(::Shown).distinctUntilChanged(),
+        ) { readings, entries, sensors, (tiles, quickLogItems), shown ->
             WearUiState(
                 availableMetrics = MetricOffer.available(sensors, withReadings = readings.metrics.keys),
                 sensors = sensors,
-                metrics = readings.metrics,
-                preferences = preferences,
+                // The goals are the wearer's, set on the phone and kept in the watch's settings.
+                metrics = readings.metrics.mapValues { (tile, state) ->
+                    if (tile in shown.goals) state.copy(goal = shown.goals[tile]) else state
+                },
+                preferences = shown.preferences,
                 sleepStages = readings.sleepStages,
                 entries = entries,
                 tiles = tiles,
@@ -89,6 +92,18 @@ class WearAppViewModel(application: Application) : AndroidViewModel(application)
     /** Every quick log entry again, in the default order. */
     fun resetQuickLog() {
         viewModelScope.launch(Dispatchers.IO) { graph.quickLog.reset() }
+    }
+
+    /** What the settings change about how the readings are shown: the unit system and the daily goals. */
+    private data class Shown(val preferences: DisplayPreferences, val goals: Map<MetricTile, Double?>) {
+        constructor(settings: WatchPreferences) : this(
+            DisplayPreferences(unitSystem = settings.unitSystem, waterGoalMl = settings.waterGoalMl),
+            mapOf(
+                MetricTile.STEPS to settings.stepGoal?.toDouble(),
+                MetricTile.ACTIVE_CALORIES to settings.activeKcalGoal?.toDouble(),
+                MetricTile.HYDRATION to settings.waterGoalMl.toDouble(),
+            ),
+        )
     }
 
     private companion object {

@@ -39,6 +39,8 @@ dependencies {
 
     testImplementation(testFixtures(project(":devices:core")))
     testImplementation(testFixtures(project(":core:devices-api")))
+    // The record sink in memory, for the hydration widget's drinks through the measurement sink.
+    testImplementation(testFixtures(project(":core:health-api")))
     // The FIT test bytes the wellness import tests build their files with.
     testImplementation(testFixtures(project(":devices:garmin:protocol")))
     testImplementation(libs.junit4)

@@ -64,6 +64,9 @@ internal object WearSettings {
     /** Whether a workout pauses by itself, and whether a walk or run is offered as one; both on until the wearer switches them off. */
     private const val KEY_AUTO_PAUSE = "auto_pause"
     private const val KEY_AUTO_DETECT = "auto_detect"
+    private const val KEY_GOAL_STEPS = "goal_steps"
+    private const val KEY_GOAL_KCAL = "goal_kcal"
+    private const val KEY_GOAL_WATER = "goal_water"
 
     fun heartRateDay(context: Context): HeartRateInterval =
         prefs(context).getString(KEY_HEART_RATE_DAY, null)?.let(HeartRateInterval::fromWire)
@@ -178,6 +181,9 @@ internal object WearSettings {
         },
         autoPause = prefs(context).getBoolean(KEY_AUTO_PAUSE, true),
         autoDetect = prefs(context).getBoolean(KEY_AUTO_DETECT, true),
+        stepGoal = goal(context, KEY_GOAL_STEPS, WatchPreferences.DEFAULT_STEP_GOAL),
+        activeKcalGoal = goal(context, KEY_GOAL_KCAL, WatchPreferences.DEFAULT_ACTIVE_KCAL_GOAL),
+        waterGoalMl = goal(context, KEY_GOAL_WATER, WatchPreferences.DEFAULT_WATER_GOAL_ML) ?: WatchPreferences.DEFAULT_WATER_GOAL_ML,
     )
 
     /**
@@ -200,6 +206,9 @@ internal object WearSettings {
             .putInt(KEY_BIRTH_YEAR, preferences.birthYear ?: 0)
             .putBoolean(KEY_AUTO_PAUSE, preferences.autoPause)
             .putBoolean(KEY_AUTO_DETECT, preferences.autoDetect)
+            .putInt(KEY_GOAL_STEPS, preferences.stepGoal ?: 0)
+            .putInt(KEY_GOAL_KCAL, preferences.activeKcalGoal ?: 0)
+            .putInt(KEY_GOAL_WATER, preferences.waterGoalMl)
             .apply {
                 when (preferences.sex) {
                     BiologicalSex.FEMALE -> putString(KEY_SEX, SEX_FEMALE)
@@ -213,6 +222,12 @@ internal object WearSettings {
     }
 
     private fun positive(context: Context, key: String): Int? = prefs(context).getInt(key, 0).takeIf { it > 0 }
+
+    /** A stored goal, [default] before the phone set one, null for a stored `0` (no goal). */
+    private fun goal(context: Context, key: String, default: Int): Int? {
+        val prefs = prefs(context)
+        return if (prefs.contains(key)) prefs.getInt(key, 0).takeIf { it > 0 } else default
+    }
 
     private fun source(context: Context, key: String): Source {
         val stored = prefs(context).getString(key, null)

@@ -34,6 +34,8 @@ public data class GarminSessionHooks(
     val onHandshakeReady: (() -> Unit)? = null,
     /** The phone's player, for the watch's music controls. Null offers no controls. */
     val music: GarminMusicPort? = null,
+    /** Where the hydration widget's drinks go, and what answers its totals. Null refuses its asks. */
+    val hydration: GarminHydrationLog? = null,
 )
 
 /**
@@ -49,13 +51,14 @@ internal class GarminSessionResponders(
 ) {
 
     /**
-     * Answers the watch's HTTP-proxy fetches (weather, ephemeris).
+     * Answers the watch's HTTP-proxy fetches (weather, ephemeris, hydration).
      * The first interceptor to claim a URL wins.
      */
     private val http: GarminHttpProxy? by lazy {
         val interceptors = buildList {
             hooks.weatherProvider?.let { add(GarminWeatherInterceptor(it)) }
             hooks.agpsSource?.let { add(GarminAgpsInterceptor(it)) }
+            hooks.hydration?.let { add(GarminHydrationInterceptor(it)) }
             // OAuth last: it claims by path alone, across every domain.
             if (isNotEmpty()) add(GarminOauthInterceptor())
         }

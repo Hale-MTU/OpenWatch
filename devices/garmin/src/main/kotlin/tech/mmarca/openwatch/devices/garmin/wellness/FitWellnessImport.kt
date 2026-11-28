@@ -49,7 +49,8 @@ internal fun importMetadata(clientRecordId: String, salt: String = ""): Metadata
         clientRecordId = saltedRecordId(clientRecordId, salt),
     )
 
-private val GarminWatchDevice = Device(type = Device.TYPE_WATCH, manufacturer = "Garmin")
+/** The device a Garmin watch's records name, the hydration widget's drinks too. */
+internal val GarminWatchDevice = Device(type = Device.TYPE_WATCH, manufacturer = "Garmin")
 
 /**
  * Turns a [FitSleepSession] into a `SleepSessionRecord` import, or an empty

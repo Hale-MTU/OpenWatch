@@ -29,4 +29,10 @@
     <string name="health_data_open_body">每种健康数据类型、其来源设备及原因。</string>
     <string name="settings_sleep_beside_others_title">与其他应用并列写入手表的睡眠</string>
     <string name="settings_sleep_beside_others_body">即使 Samsung Health 或其他应用已写入当晚的睡眠，也照样写入。之后由 Health Connect 的数据源优先级决定各应用显示哪一份睡眠。关闭：以其他应用的睡眠为准。</string>
+    <string name="settings_units_title">单位</string>
+    <string name="settings_units_body">选择距离、体重、饮水和温度的显示方式。</string>
+    <string name="settings_unit_system">系统</string>
+    <string name="settings_unit_metric">公制</string>
+    <string name="settings_unit_imperial">英制</string>
+    <string name="settings_unit_follow_system_body">当前 %1$s，来自设备的度量系统设置。</string>
 </resources>

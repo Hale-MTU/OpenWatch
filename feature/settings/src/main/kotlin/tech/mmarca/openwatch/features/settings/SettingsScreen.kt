@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +31,8 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import tech.mmarca.openwatch.core.ui.R as UiR
+import tech.mmarca.openwatch.domain.preferences.UnitSystem
+import tech.mmarca.openwatch.domain.preferences.UnitSystemPreference
 import tech.mmarca.openwatch.features.watches.NotificationAccessDisclosureDialog
 import tech.mmarca.openwatch.ui.components.LocalSnackbarHostState
 import tech.mmarca.openwatch.ui.components.OpenWatchCard
@@ -66,6 +71,7 @@ fun SettingsRoute(
         onSyncEnabledChange = viewModel::setSyncEnabled,
         onWriteRespiratoryRateChange = viewModel::setWriteRespiratoryRate,
         onWriteSleepBesideOthersChange = viewModel::setWriteSleepBesideOthers,
+        onUnitSystemChange = viewModel::setUnitSystemPreference,
         onOpenNotificationAccess = {
             if (state.notificationAccessGranted) {
                 context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
@@ -111,6 +117,7 @@ fun SettingsScreen(
     onOpenHealthData: () -> Unit,
     onOpenPrivacyPolicy: () -> Unit,
     modifier: Modifier = Modifier,
+    onUnitSystemChange: (UnitSystemPreference) -> Unit = {},
 ) {
     ScreenColumn(
         modifier = modifier,
@@ -125,6 +132,12 @@ fun SettingsScreen(
             title = stringResource(R.string.body_profile_title),
             body = stringResource(R.string.body_profile_settings_body),
             onClick = onOpenBodyProfile,
+        )
+        UnitsCard(
+            selected = state.unitSystemPreference,
+            resolved = state.unitSystem,
+            decidedBy = state.unitsDecidedBy,
+            onSelect = onUnitSystemChange,
         )
         SwitchCard(
             title = stringResource(UiR.string.hc_setup_sync_title),
@@ -209,6 +222,63 @@ private fun SettingsScreenPreview() {
             onOpenPrivacyPolicy = {},
         )
     }
+}
+
+/**
+ * System, metric or imperial, as OpenVitals offers them. While a connected app decides the units
+ * ([decidedBy]) the choice shows its and cannot be changed here.
+ */
+@Composable
+private fun UnitsCard(
+    selected: UnitSystemPreference,
+    resolved: UnitSystem,
+    decidedBy: String?,
+    onSelect: (UnitSystemPreference) -> Unit,
+) {
+    OpenWatchCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(Spacing.lg)) {
+            Text(text = stringResource(R.string.settings_units_title), style = MaterialTheme.typography.titleSmall)
+            Text(
+                text = stringResource(R.string.settings_units_body),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = Spacing.xs),
+            )
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm)) {
+                UnitSystemPreference.entries.forEachIndexed { index, preference ->
+                    SegmentedButton(
+                        selected = selected == preference,
+                        onClick = { onSelect(preference) },
+                        enabled = decidedBy == null,
+                        shape = SegmentedButtonDefaults.itemShape(index = index, count = UnitSystemPreference.entries.size),
+                        label = { Text(stringResource(unitLabel(preference))) },
+                    )
+                }
+            }
+            val note = when {
+                decidedBy != null -> stringResource(R.string.settings_units_decided_by, decidedBy)
+                selected == UnitSystemPreference.SYSTEM -> stringResource(
+                    R.string.settings_unit_follow_system_body,
+                    stringResource(if (resolved == UnitSystem.IMPERIAL) R.string.settings_unit_imperial else R.string.settings_unit_metric),
+                )
+                else -> null
+            }
+            note?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = Spacing.sm),
+                )
+            }
+        }
+    }
+}
+
+private fun unitLabel(preference: UnitSystemPreference): Int = when (preference) {
+    UnitSystemPreference.SYSTEM -> R.string.settings_unit_system
+    UnitSystemPreference.METRIC -> R.string.settings_unit_metric
+    UnitSystemPreference.IMPERIAL -> R.string.settings_unit_imperial
 }
 
 @Composable

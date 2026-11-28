@@ -18,7 +18,6 @@ import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import tech.mmarca.healthcalculations.insights.MetricDailyGoalKey
 
 /**
  * One metric as a watch face complication: a short text with the metric's
@@ -150,9 +149,9 @@ class HeartRateComplicationService : MetricComplicationService() {
 
 /**
  * The steps since midnight on this watch, as the steps tile counts them: a
- * short text, or a ranged value against a day's goal of 8,000 steps,
- * health-calculations' default step goal ([MetricDailyGoalKey.STEPS]), the
- * phone app's own first goal; the watch has no goal setting.
+ * short text, or a ranged value against the day's step goal
+ * ([WatchPreferences.stepGoal]: set on the phone, health-calculations' default
+ * of 8,000 until it is), and only a short text while there is none.
  */
 class StepsComplicationService : MetricComplicationService() {
 
@@ -160,7 +159,9 @@ class StepsComplicationService : MetricComplicationService() {
 
     override val unitRes: Int = R.string.unit_steps
 
-    override val rangeMax: Double = MetricDailyGoalKey.STEPS.defaultValue
+    /** The wearer's step goal, set on the phone; no ranged value without one. */
+    override val rangeMax: Double?
+        get() = wearGraph.settings.value.stepGoal?.toDouble()
 
     override fun read(store: MetricStore, nowMillis: Long): Reading =
         TileDay.of(nowMillis, ZoneId.systemDefault()).let { day ->

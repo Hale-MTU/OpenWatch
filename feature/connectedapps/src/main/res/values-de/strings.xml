@@ -24,4 +24,5 @@
     <string name="connected_apps_capability_profile">Dein Körperprofil (Geburtsjahr, Geschlecht, Größe, Gewicht) mit OpenWatch teilen, in beide Richtungen</string>
     <string name="connected_apps_capability_recording">Deine Uhr verbunden halten, während sie eine Aktivität aufzeichnet</string>
     <string name="connected_apps_capability_live">Herzfrequenz und Schritte deiner Uhr empfangen, während sie aufzeichnet</string>
+    <string name="connected_apps_capability_settings">Deine Tagesziele (Schritte, aktive Energie, Wasser) mit OpenWatch teilen, in beide Richtungen, und die Einheiten festlegen, die OpenWatch anzeigt</string>
 </resources>

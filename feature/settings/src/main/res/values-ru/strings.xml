@@ -29,4 +29,10 @@
     <string name="health_data_open_body">Все типы данных о здоровье, откуда они поступают и зачем нужны.</string>
     <string name="settings_sleep_beside_others_title">Записывать сон с часов наряду с другими приложениями</string>
     <string name="settings_sleep_beside_others_body">Записывает ночь, даже если Samsung Health или другое приложение уже её записали. Какую ночь покажут приложения, тогда решает приоритет источников данных в Health Connect. Выключено: побеждает ночь другого приложения.</string>
+    <string name="settings_units_title">Единицы измерения</string>
+    <string name="settings_units_body">Выберите, как отображать расстояния, вес, объём жидкости и температуру.</string>
+    <string name="settings_unit_system">Системные</string>
+    <string name="settings_unit_metric">Метрические</string>
+    <string name="settings_unit_imperial">Имперские</string>
+    <string name="settings_unit_follow_system_body">Сейчас: %1$s, согласно настройкам единиц измерения на устройстве.</string>
 </resources>

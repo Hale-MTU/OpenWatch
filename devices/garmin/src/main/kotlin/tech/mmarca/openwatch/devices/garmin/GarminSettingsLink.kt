@@ -347,6 +347,7 @@ class GarminSettingsLink private constructor(
             weatherProvider: (() -> tech.mmarca.openwatch.devices.weather.WeatherSnapshot?)? = null,
             agpsSource: GarminAgpsSource? = null,
             calendarProvider: ((beginEpochSeconds: Long, endEpochSeconds: Long) -> List<GarminCalendarEvent>?)? = null,
+            hydration: GarminHydrationLog? = null,
             highMtu: Boolean = true,
         ): GarminSettingsLink {
             acquireOrWait(lease, address)
@@ -371,6 +372,7 @@ class GarminSettingsLink private constructor(
                     weatherProvider = weatherProvider,
                     agpsSource = agpsSource,
                     calendarProvider = calendarProvider,
+                    hydration = hydration,
                     onHandshakeReady = { if (!ready.isCompleted) ready.complete(Unit) },
                 ),
             )

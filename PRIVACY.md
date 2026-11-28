@@ -1,6 +1,6 @@
 # OpenWatch Privacy Policy
 
-Last updated: November 23, 2026
+Last updated: November 28, 2026
 
 OpenWatch is a local-first Android app that pairs a Garmin or Wear OS watch, a Xiaomi body composition scale and devices that use Bluetooth's standard health profiles, such as a heart rate strap, with your phone and writes what they record to Health Connect.
 
@@ -38,7 +38,7 @@ The app asks for Bluetooth and, on Android 11 and older, the location permission
 
 What a paired device recorded, when you sync it or when a sync runs on a schedule you chose:
 
-- From a Garmin watch: activities with their route and sensor samples, steps, distance, calories, heart rate, resting heart rate, heart rate variability, oxygen saturation, respiratory rate, VO2 max, basal metabolic rate, sleep, and the weight a Garmin scale relays through the watch.
+- From a Garmin watch: activities with their route and sensor samples, steps, distance, calories, heart rate, resting heart rate, heart rate variability, oxygen saturation, respiratory rate, VO2 max, basal metabolic rate, sleep, the weight a Garmin scale relays through the watch, and the drinks you log in the watch's hydration widget.
 - From a Wear OS watch: heart rate, steps (with their cadence and an estimate of the calories walking cost), floors and elevation gained recorded on the watch, an estimated sleep session per night, the night's resting heart rate and, where the watch can measure it, heart rate variability, and workouts recorded on the watch with their route, distance, calories, kilometre laps and heart rate figures, and for a walk or run with a route an estimated VO2 max. Unless you switch it off, the breathing rate at night; if you switch them on, on a Samsung watch, blood oxygen and skin temperature at night. Skin temperature is written as the difference from your own usual night. What you log on the watch by hand (water, weight, blood pressure, body fat, blood oxygen, breathing rate, body temperature, blood glucose, height, a breathing session) and what you measure on it on the spot (heart rate, heart rate variability, and on a Samsung watch blood oxygen) are written as entries.
 - From a heart rate strap: the heart rate it measured while OpenWatch was connected to it, one record per minute.
 - From a blood pressure monitor: each reading's systolic and diastolic pressure, and the pulse it measured as a heart rate. From a glucose meter: each blood glucose reading, with where the sample came from and how it stood to a meal when the meter says so; a check with control solution is not written. From a weight scale on the standard profile: each weight.
@@ -86,6 +86,7 @@ The complete list, by Health Connect permission. The app shows the same list und
 | `WRITE_VO2_MAX` |  |
 | `WRITE_SLEEP` |  |
 | `WRITE_WEIGHT` | A weight a Garmin scale relays through the watch. |
+| `WRITE_HYDRATION` | What you log in the watch's hydration widget. |
 
 **Written from a Wear OS watch**
 
@@ -189,6 +190,7 @@ Health Connect is the source of truth for every record it has a type for. OpenWa
 - A small database of the watch measurements Health Connect has no record type for (such as stress, Body Battery and sleep scores from a Garmin watch), shown on the Watch Data screen.
 - Sync cursors and file watermarks, so a sync fetches only what is new.
 - Readings a device handed over that Health Connect has not taken yet (a permission missing, sync paused), kept until they are written or you remove the device.
+- The drinks a Garmin watch's hydration widget logged in the last fortnight, by day, so the widget can show the day's total; they go with the watch when you remove it.
 
 The Wear OS watch app keeps a week of sensor readings and a month of recorded workouts in its own private storage on the watch, whether or not the phone has collected them, and deletes them after that.
 
@@ -208,8 +210,11 @@ works only inside the phone. OpenVitals is the first. Nothing travels over a net
   forget an app, or switch off any one thing it may do, at any time.
 - What a connected app can be allowed: your body profile (birth year, sex, height,
   weight), shared both ways so you enter it once; the list of your watches and scale with
-  their battery and last sync, and a request to sync one; keeping your watch streaming while
-  the app records an activity; and the watch's heart rate and steps while it does.
+  their battery and last sync, and a request to sync one; your daily goals (steps, active
+  energy, water), shared both ways and sent to your Wear OS watch for its rings, and the water
+  goal to a Garmin watch's hydration widget; your choice of metric or imperial units, which
+  OpenWatch's screens then follow; keeping your watch streaming while the app
+  records an activity; and the watch's heart rate and steps while it does.
 - Live readings go only to the app that asked for them, while its recording runs, and are
   not stored by OpenWatch. While they flow, OpenWatch shows a notification naming the app. Notifications, calendar events, music, locations and the scale's
   key are never shared.

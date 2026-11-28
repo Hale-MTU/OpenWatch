@@ -76,6 +76,7 @@ class GarminGattRadio @Inject constructor(
     private val locationSource: GarminPhoneLocationSource,
     private val agpsStore: GarminAgpsStore,
     private val calendarSource: GarminCalendarSource,
+    private val hydrationStore: GarminHydrationStore,
     private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
 ) : GarminRadio {
 
@@ -133,6 +134,7 @@ class GarminGattRadio @Inject constructor(
                 setupWizardPending = stateStore.setupWizardPending(device.id),
                 onSetupWizardCompleted = { stateStore.setSetupWizardPending(device.id, false) },
                 onHandshakeReady = { handshakeReady.complete(Unit) },
+                hydration = hydrationStore.log(device.id),
             ),
         )
 

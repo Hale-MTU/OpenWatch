@@ -2,14 +2,18 @@ package tech.mmarca.openwatch.features.settings
 
 import io.mockk.every
 import io.mockk.mockk
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import tech.mmarca.openwatch.data.repository.OpenWatchPreferences
 import tech.mmarca.openwatch.devices.FakeSharedPreferences
+import tech.mmarca.openwatch.domain.preferences.SharedUnitChoice
 import tech.mmarca.openwatch.domain.preferences.SystemUnitSystemProvider
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
+import tech.mmarca.openwatch.domain.preferences.UnitSystemPreference
 import tech.mmarca.openwatch.features.watches.WatchNotificationsGateway
 import tech.mmarca.openwatch.util.MainDispatcherRule
 
@@ -56,5 +60,36 @@ class SettingsViewModelTest {
 
         assertTrue(vm.uiState.value.writeRespiratoryRate)
         assertTrue(vm.uiState.value.writeSleepBesideOthers)
+    }
+
+    @Test
+    fun `OpenWatch's own units are the region's until one is picked, and a pick is kept`() {
+        val vm = SettingsViewModel(preferences, notifications, versionName = "0.4.1")
+        assertEquals(UnitSystemPreference.SYSTEM, vm.uiState.value.unitSystemPreference)
+        assertEquals(UnitSystem.METRIC, vm.uiState.value.unitSystem)
+
+        vm.setUnitSystemPreference(UnitSystemPreference.IMPERIAL)
+
+        assertEquals(UnitSystemPreference.IMPERIAL, vm.uiState.value.unitSystemPreference)
+        assertEquals(UnitSystem.IMPERIAL, preferences.unitSystem)
+        assertNull(vm.uiState.value.unitsDecidedBy)
+    }
+
+    @Test
+    fun `units a connected app decides win, and cannot be picked here until it no longer decides`() {
+        var decided: SharedUnitChoice? = SharedUnitChoice(UnitSystemPreference.IMPERIAL, "OpenVitals")
+        val prefs = OpenWatchPreferences(FakeSharedPreferences(), SystemUnitSystemProvider { UnitSystem.METRIC }) { decided }
+        val vm = SettingsViewModel(prefs, notifications, versionName = "0.4.1")
+        assertEquals("OpenVitals", vm.uiState.value.unitsDecidedBy)
+        assertEquals(UnitSystemPreference.IMPERIAL, vm.uiState.value.unitSystemPreference)
+
+        vm.setUnitSystemPreference(UnitSystemPreference.METRIC)
+        assertEquals(UnitSystem.IMPERIAL, prefs.unitSystem)
+
+        decided = null
+        vm.refresh()
+        assertNull(vm.uiState.value.unitsDecidedBy)
+        assertEquals(UnitSystemPreference.SYSTEM, vm.uiState.value.unitSystemPreference)
+        assertEquals(UnitSystem.METRIC, prefs.unitSystem)
     }
 }

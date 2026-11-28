@@ -13,14 +13,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import tech.mmarca.healthcalculations.preferences.BiologicalSex
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
+import tech.mmarca.openwatch.domain.preferences.SharedUnitChoice
+import tech.mmarca.openwatch.domain.preferences.SharedUnits
 import tech.mmarca.openwatch.domain.preferences.SystemUnitSystemProvider
 import tech.mmarca.openwatch.domain.preferences.UnitSystem
+import tech.mmarca.openwatch.domain.preferences.UnitSystemPreference
 import tech.mmarca.openwatch.healthconnect.HealthConnectSyncSwitch
 
 /**
  * The few app-wide preferences OpenWatch keeps: whether Health Connect writes
  * are paused, the declared body profile, the exercise type an imported
- * activity falls back to, and whether setup was finished. Plain
+ * activity falls back to, whether setup was finished, and OpenWatch's own units. Plain
  * SharedPreferences, as every store in the device layer. What a device family reads from here
  * it reads through its own contract, which the app implements over this store (no family's
  * module is a dependency of this one).
@@ -29,12 +32,18 @@ import tech.mmarca.openwatch.healthconnect.HealthConnectSyncSwitch
 class OpenWatchPreferences(
     private val prefs: SharedPreferences,
     private val unitSystemProvider: SystemUnitSystemProvider,
+    private val sharedUnits: SharedUnits = SharedUnits.NONE,
 ) : BodyProfilePreferences, HealthConnectSyncSwitch {
 
     @Inject
-    constructor(@ApplicationContext context: Context, unitSystemProvider: SystemUnitSystemProvider) : this(
+    constructor(
+        @ApplicationContext context: Context,
+        unitSystemProvider: SystemUnitSystemProvider,
+        sharedUnits: SharedUnits,
+    ) : this(
         context.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE),
         unitSystemProvider,
+        sharedUnits,
     )
 
     private val _healthConnectSyncEnabled = MutableStateFlow(prefs.getBoolean(KEY_HEALTH_CONNECT_SYNC_ENABLED, true))
@@ -88,9 +97,20 @@ class OpenWatchPreferences(
             _onboardingDone.value = value
         }
 
-    /** The system's locale decides; OpenWatch has no override of its own. */
+    /**
+     * OpenWatch's own units, chosen in Settings: the phone's region ([UnitSystemPreference.SYSTEM])
+     * until the user picks one. A connected app that decides the units wins over it ([unitsDecidedBy]).
+     */
+    var unitSystemPreference: UnitSystemPreference
+        get() = UnitSystemPreference.fromStorageValue(prefs.getString(KEY_UNIT_SYSTEM, null)) ?: UnitSystemPreference.SYSTEM
+        set(value) = prefs.edit { putString(KEY_UNIT_SYSTEM, value.storageValue) }
+
+    /** The connected app whose units the screens follow (OpenVitals), or null while OpenWatch's own hold. */
+    fun unitsDecidedBy(): SharedUnitChoice? = sharedUnits.decided()
+
+    /** What the screens show: the units a connected app decides while it does, else OpenWatch's own. */
     val unitSystem: UnitSystem
-        get() = unitSystemProvider.current()
+        get() = (sharedUnits.decided()?.preference ?: unitSystemPreference).resolve(unitSystemProvider::current)
 
     private val _bodyProfile = MutableStateFlow(readBodyProfile())
 
@@ -157,6 +177,7 @@ class OpenWatchPreferences(
         private const val KEY_WRITE_RESPIRATORY_RATE = "write_respiratory_rate"
         private const val KEY_WRITE_SLEEP_BESIDE_OTHERS = "write_sleep_beside_others"
         private const val KEY_ONBOARDING_DONE = "onboarding_done"
+        private const val KEY_UNIT_SYSTEM = "unit_system"
         private const val KEY_BODY_PROFILE_BIRTH_YEAR = "body_profile_birth_year"
         private const val KEY_BODY_PROFILE_WEIGHT_KG = "body_profile_weight_kg"
         private const val KEY_BODY_PROFILE_HEIGHT_CM = "body_profile_height_cm"

@@ -17,6 +17,7 @@
     <string name="connected_apps_capability_profile">Share your body profile (birth year, sex, height, weight) with OpenWatch, both ways</string>
     <string name="connected_apps_capability_recording">Keep your watch streaming while it records an activity</string>
     <string name="connected_apps_capability_live">Receive your watch\'s heart rate and steps while it records</string>
+    <string name="connected_apps_capability_settings">Share your daily goals (steps, active energy, water) with OpenWatch, both ways, and set the units OpenWatch shows</string>
     <string name="connected_apps_in_use">In use now</string>
     <string name="connected_apps_last_connected">Last connected %1$s</string>
     <string name="connected_apps_profile_received">Last profile received %1$s</string>

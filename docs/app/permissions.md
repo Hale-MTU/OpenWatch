@@ -100,6 +100,7 @@ it fails `HealthPermissionsTest`.
 | `WRITE_VO2_MAX` |  |
 | `WRITE_SLEEP` |  |
 | `WRITE_WEIGHT` | A weight a Garmin scale relays through the watch. |
+| `WRITE_HYDRATION` | What you log in the watch's hydration widget. |
 
 **Written from a Wear OS watch**
 

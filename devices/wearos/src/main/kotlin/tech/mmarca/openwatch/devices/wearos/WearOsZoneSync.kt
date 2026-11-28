@@ -22,8 +22,9 @@ import tech.mmarca.openwatch.wearlink.WearLinkPreferences as Preferences
  * rate, which only decides whether that maximum is believable. Without a
  * basis both are `0`. Beside them the body profile a workout's figures need
  * on the watch ([bodyProfile]: the weight, Health Connect's latest else the
- * profile's, the height, the birth year and the sex), as four more settings.
- * Extras: a failed read skips only what it was for (a weight that cannot be
+ * profile's, the height, the birth year and the sex), as four more settings,
+ * and the daily goals the connected apps share ([goals]); a goal that changes
+ * nothing on the watch resets nothing there. Extras: a failed read skips only what it was for (a weight that cannot be
  * read still sends the zones), an old watch app skips both, and neither
  * ever fails the sync.
  */
@@ -36,6 +37,8 @@ internal class WearOsZoneSync(
     private val bodyProfile: suspend () -> BodyProfile,
     private val clock: () -> Instant,
     private val zone: () -> ZoneId,
+    /** The daily goals the connected apps share, as watch settings ([WatchGoals.tokens]); a goal never set is not in it. */
+    private val goals: suspend () -> List<Pair<String, String>> = { emptyList() },
 ) {
 
     suspend fun sync(device: BleSensorDevice, retry: WearOsLinkRetry) {
@@ -49,11 +52,13 @@ internal class WearOsZoneSync(
             )
         }
         val body = read("profile") { profileSettings(bodyProfile()) }
-        for ((key, value) in zones.orEmpty() + body.orEmpty()) {
+        val shared = read("goals") { goals() }
+        for ((key, value) in zones.orEmpty() + body.orEmpty() + shared.orEmpty()) {
             retry.run { nodePort.setWatchSetting(device.address, device.bluetoothName, key, value) }
         }
         if (zones != null) WearOsLog.log("zones: sent")
         if (body != null) WearOsLog.log("profile: sent")
+        if (!shared.isNullOrEmpty()) WearOsLog.log("goals: sent")
     }
 
     /** The settings [settings] makes; null, logged under [what], when a read for them fails. */

@@ -29,4 +29,10 @@
     <string name="health_data_open_body">Każdy typ danych o zdrowiu, urządzenie, z którego pochodzi, i dlaczego.</string>
     <string name="settings_sleep_beside_others_title">Zapisuj sen z zegarka obok innych aplikacji</string>
     <string name="settings_sleep_beside_others_body">Zapisuje noc, nawet jeśli Samsung Health lub inna aplikacja już ją zapisała. O tym, którą noc pokażą aplikacje, decyduje wtedy priorytet źródeł danych w Health Connect. Wyłączone: wygrywa noc innej aplikacji.</string>
+    <string name="settings_units_title">Jednostki</string>
+    <string name="settings_units_body">Wybierz, jak wyświetlać dystanse, wagę, nawodnienie i temperaturę.</string>
+    <string name="settings_unit_system">Systemowe</string>
+    <string name="settings_unit_metric">Metryczne</string>
+    <string name="settings_unit_imperial">Imperialne</string>
+    <string name="settings_unit_follow_system_body">Obecnie %1$s, z ustawienia systemu miar urządzenia.</string>
 </resources>

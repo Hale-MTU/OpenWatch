@@ -11,7 +11,7 @@ import tech.mmarca.openwatch.data.repository.contract.BodyProfilePreferences
 import tech.mmarca.openwatch.core.performance.ApplicationScope
 
 /**
- * Sends the device list and local profile changes to the bound OpenLink clients, and keeps
+ * Sends the device list, local profile changes and the shared settings (the daily goals) to the bound OpenLink clients, and keeps
  * the streaming notification up while a client holds a session.
  */
 @Singleton
@@ -21,6 +21,7 @@ class OpenWatchLinkPublisher @Inject constructor(
     private val preferences: BodyProfilePreferences,
     private val profileSync: LinkProfileSync,
     private val streamingNotifier: LinkStreamingNotifier,
+    private val settings: LinkSettingsStore,
     @ApplicationScope appScope: CoroutineScope,
 ) {
     private val scope = appScope
@@ -39,5 +40,7 @@ class OpenWatchLinkPublisher @Inject constructor(
             }
         }
         scope.launch { streamingNotifier.run() }
+        // Every change, from a connected app or from a watch's card, goes to every client that may see it.
+        scope.launch { settings.changes.collect { host.publishSettings(it) } }
     }
 }

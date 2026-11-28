@@ -52,6 +52,8 @@ class GarminWatchSyncService @Inject constructor(
     private val fileStore: GarminFileStore,
     /** Everything that touches Bluetooth. A test hands over a fake and drives a whole sync. */
     private val radio: GarminRadio,
+    /** The hydration widget's drinks, which a sync hands to Health Connect again if they wait. */
+    private val hydration: GarminHydrationStore,
     @ApplicationScope appScope: CoroutineScope,
     private val radioLeases: RadioLeaseRegistry,
     private val dispatchers: DispatcherProvider = DefaultDispatcherProvider,
@@ -162,7 +164,10 @@ class GarminWatchSyncService @Inject constructor(
             }
         }
 
-        val done = outcome(downloaded.size, activities, pendingWithheld)
+        // Drinks the hydration widget logged that still wait for Health Connect: a grant given
+        // since lets them in, and one still missing is named with the rest.
+        val hydrationWithheld = hydration.retryPending(device).withheld
+        val done = outcome(downloaded.size, activities, pendingWithheld + hydrationWithheld)
         val incompleteReason = pull.incompleteReason
         if (incompleteReason != null) {
             // The reason is the link's own account, for the log; the screen says "part-way".

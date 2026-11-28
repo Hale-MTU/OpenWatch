@@ -101,12 +101,12 @@ data class SampleStats(val low: Double, val average: Double?, val high: Double)
 data class DisplayPreferences(
     /** The wearer's choice in the watch's settings ([WatchPreferences.unitSystem]). */
     val unitSystem: UnitSystem = UnitSystem.METRIC,
-    /** The day's water goal, millilitres. */
+    /** The day's water goal, millilitres ([WatchPreferences.waterGoalMl], set on the phone). */
     val waterGoalMl: Int = DEFAULT_WATER_GOAL_ML,
 ) {
     companion object {
-        /** Two litres, a common goal for a day; there is no setting for it yet. */
-        const val DEFAULT_WATER_GOAL_ML = 2_000
+        /** Two litres until the phone sets another goal. */
+        const val DEFAULT_WATER_GOAL_ML = WatchPreferences.DEFAULT_WATER_GOAL_ML
 
         /** A glass: what one tap on water adds, in the quick log and on its tile, millilitres. */
         const val WATER_SERVING_ML = 250.0

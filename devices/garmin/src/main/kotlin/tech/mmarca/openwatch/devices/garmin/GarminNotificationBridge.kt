@@ -52,6 +52,7 @@ class GarminNotificationBridge @Inject constructor(
     private val foregroundGate: tech.mmarca.openwatch.core.performance.AppForegroundGate,
     private val realtimeStore: GarminRealtimeStore,
     private val musicRelay: GarminMusicRelay,
+    private val hydrationStore: GarminHydrationStore,
     @ApplicationScope appScope: CoroutineScope,
     private val radioLeases: RadioLeaseRegistry,
     // Lazy: the controller reaches the sync ports, and the bridge must not wait on them at start.
@@ -196,6 +197,7 @@ class GarminNotificationBridge @Inject constructor(
             onFindPhoneCancel = { findPhoneRinger.stop() },
             weatherProvider = { weatherStore.freshSnapshot() },
             agpsSource = agpsStore.source(),
+            hydration = deviceFor(address)?.let { hydrationStore.log(it.id) },
             calendarProvider = { begin, end ->
                 val device = deviceFor(address)
                 if (device != null && stateStore.calendarSync(device.id)) {

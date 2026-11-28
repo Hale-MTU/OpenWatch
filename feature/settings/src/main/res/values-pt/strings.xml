@@ -29,4 +29,10 @@
     <string name="health_data_open_body">Cada tipo de dados de saúde, o dispositivo de onde vem e porquê.</string>
     <string name="settings_sleep_beside_others_title">Gravar o sono do relógio ao lado do de outras apps</string>
     <string name="settings_sleep_beside_others_body">Grava a noite mesmo que o Samsung Health ou outra app já tenha gravado uma. A prioridade das fontes de dados do Health Connect decide então que noite as apps mostram. Desativado: prevalece a noite da outra app.</string>
+    <string name="settings_units_title">Unidades</string>
+    <string name="settings_units_body">Escolha como são apresentadas as distâncias, os pesos, a hidratação e a temperatura.</string>
+    <string name="settings_unit_system">Sistema</string>
+    <string name="settings_unit_metric">Métrico</string>
+    <string name="settings_unit_imperial">Imperial</string>
+    <string name="settings_unit_follow_system_body">Atualmente %1$s, a partir da definição do sistema de medida do dispositivo.</string>
 </resources>

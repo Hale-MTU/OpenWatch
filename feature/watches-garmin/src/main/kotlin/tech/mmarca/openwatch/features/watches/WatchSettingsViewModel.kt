@@ -70,6 +70,7 @@ class WatchSettingsLinks @VisibleForTesting internal constructor(
         agpsStore: tech.mmarca.openwatch.devices.garmin.GarminAgpsStore,
         stateStore: tech.mmarca.openwatch.devices.garmin.GarminDeviceStateStore,
         calendarSource: tech.mmarca.openwatch.devices.garmin.GarminCalendarSource,
+        hydrationStore: tech.mmarca.openwatch.devices.garmin.GarminHydrationStore,
         @ApplicationScope appScope: CoroutineScope,
         radioLeases: tech.mmarca.openwatch.devices.core.RadioLeaseRegistry,
         dispatchers: DispatcherProvider,
@@ -100,6 +101,7 @@ class WatchSettingsLinks @VisibleForTesting internal constructor(
                         null
                     }
                 },
+                hydration = hydrationStore.log(deviceId),
                 highMtu = stateStore.highMtu(device.address),
             )
         },
