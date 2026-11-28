@@ -3,6 +3,7 @@ package tech.mmarca.openwatch.wearlink
 import java.io.ByteArrayOutputStream
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -217,6 +218,22 @@ class WearLinkLoopbackTest {
         assertEquals(3, seen.size)
         session.close()
         assertEquals(WearLinkServer.Outcome.SERVED, link.serverOutcome())
+    }
+
+    @Test
+    fun `the watch learns what a trusted phone announced, and an unknown phone's hello tells it nothing`() {
+        val loopback = trusted()
+        val link = loopback.connect()
+        val asked = hello().copy(capabilities = setOf(WearLinkProtocol.CAP_CLOCK, WearLinkProtocol.CAP_BODY_COMPOSITION))
+
+        (WearLinkClient.hello(link.clientConnection, asked) as WearLinkOutcome.Ok).value.close()
+
+        assertEquals(setOf(WearLinkProtocol.CAP_CLOCK, WearLinkProtocol.CAP_BODY_COMPOSITION), loopback.handler.phoneAnnounced)
+
+        val stranger = Loopback()
+        val other = stranger.connect()
+        WearLinkClient.hello(other.clientConnection, asked)
+        assertNull(stranger.handler.phoneAnnounced)
     }
 
     @Test

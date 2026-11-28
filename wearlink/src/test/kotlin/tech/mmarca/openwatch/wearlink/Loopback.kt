@@ -158,8 +158,15 @@ class MemoryHandler(
         rows += Row(key, time, line, ++seq)
     }
 
+    /** What the last trusted phone announced in its hello. */
+    @Volatile
+    var phoneAnnounced: Set<String>? = null
+
     override fun localName(): String = name
     override fun capabilities(): Set<String> = announced
+    override fun phoneCapabilities(capabilities: Set<String>) {
+        phoneAnnounced = capabilities
+    }
     override fun nowMillis(): Long = now
 
     @Synchronized

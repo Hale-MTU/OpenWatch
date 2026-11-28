@@ -137,6 +137,10 @@ class WearLinkServerHost(
     ) : WearLinkRequestHandler {
         override fun localName(): String = localName.invoke()
 
+        override fun phoneCapabilities(capabilities: Set<String>) {
+            store.setState(PHONE_BODY_COMPOSITION_STATE, if (WearLinkProtocol.CAP_BODY_COMPOSITION in capabilities) "1" else "0")
+        }
+
         override fun capabilities(): Set<String> = WearMetrics.ALL.mapTo(LinkedHashSet()) { it.key }.apply {
             if (live.hasSensor) add(WearLinkProtocol.CAP_LIVE_HEART_RATE)
             if (!hrvAvailable()) {
@@ -180,8 +184,14 @@ class WearLinkServerHost(
             live.window(seconds, emit)
     }
 
-    private companion object {
-        const val TAG = "WearLinkServerHost"
-        const val SERVICE_NAME = "OpenWatchWearApp"
+    companion object {
+        /**
+         * "1" once the phone last connected announced it knows the entry tokens of a body composition's lean mass and
+         * body water (`bc`), "0" when it did not, none before any phone did.
+         */
+        const val PHONE_BODY_COMPOSITION_STATE = "phone_body_composition"
+
+        private const val TAG = "WearLinkServerHost"
+        private const val SERVICE_NAME = "OpenWatchWearApp"
     }
 }

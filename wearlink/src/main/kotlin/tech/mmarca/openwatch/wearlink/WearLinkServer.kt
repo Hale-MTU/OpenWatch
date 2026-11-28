@@ -138,6 +138,7 @@ class WearLinkServer(
             return WearLinkProtocol.HelloReply.Pending
         }
         // Only a phone that asked for the clock reads a field before the name.
+        handler.phoneCapabilities(hello.capabilities)
         val clock = if (WearLinkProtocol.CAP_CLOCK in hello.capabilities) handler.nowMillis() else null
         return WearLinkProtocol.HelloReply.Ok(hello.version, handler.capabilities(), handler.localName(), clock)
     }

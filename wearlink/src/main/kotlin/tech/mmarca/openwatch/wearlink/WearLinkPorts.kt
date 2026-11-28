@@ -49,6 +49,9 @@ interface WearLinkRequestHandler {
 
     fun capabilities(): Set<String>
 
+    /** The capabilities a trusted phone announced in its hello, for what the watch logs from now on. Called on the link's thread. */
+    fun phoneCapabilities(capabilities: Set<String>) = Unit
+
     /** The watch's clock, sent in `OK` to a phone that announced [WearLinkProtocol.CAP_CLOCK]. */
     fun nowMillis(): Long = System.currentTimeMillis()
 

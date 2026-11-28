@@ -87,6 +87,7 @@ class SpotMeasurementsTest {
         body: SpotSource<BodyCompositionReading>? = null,
         profile: tech.mmarca.healthcalculations.preferences.BodyProfile? = wearer,
         limit: Long = 300L,
+        phoneTakesBodyComposition: Boolean = true,
     ) = SpotMeasurements(
         app,
         heartRate = { heartRate },
@@ -103,6 +104,7 @@ class SpotMeasurementsTest {
         additionalGranted = { granted },
         heartRateGranted = { granted },
         entries = entries,
+        phoneTakesBodyComposition = { phoneTakesBodyComposition },
         debug = DebugProtocol.off(),
         // Long enough for every fake's readings; short where a measurement waits its time out.
         limitMillis = { limit },
@@ -322,6 +324,16 @@ class SpotMeasurementsTest {
         val kept = stored().associate { it.type to it.value }
         assertEquals(mapOf(WearLinkEntry.Type.BODY_FAT to 19.6, WearLinkEntry.Type.LEAN_BODY_MASS to 64.3, WearLinkEntry.Type.BODY_WATER to 47.1), kept)
         assertTrue(stored().all { it.measured })
+    }
+
+    @Test
+    fun `for a phone that does not know the lean mass and body water entries only the body fat is kept`() {
+        val now = System.currentTimeMillis()
+        val tracker = FakeTracker(listOf(listOf(listOf(bia(now, progress = 1f, result = composition)))))
+
+        events(spot(body = tracker, phoneTakesBodyComposition = false), SpotKind.BODY_COMPOSITION)
+
+        assertEquals(mapOf(WearLinkEntry.Type.BODY_FAT to 19.6), stored().associate { it.type to it.value })
     }
 
     @Test
