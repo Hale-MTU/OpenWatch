@@ -16,7 +16,8 @@ import tech.mmarca.openwatch.devices.core.saltedRecordId
 /**
  * Turns the watch's skin temperature minutes (the Samsung platform's, recorded
  * while sleep is held) into Health Connect records: one `SkinTemperatureRecord`
- * per night run, wrist, keyed `wearos_skin_<run start millis>`.
+ * per night run, wrist, keyed `wearos_skin_<run start millis>`, cut to the
+ * minutes asleep ([clipToSleep]).
  *
  * Health Connect stores a skin temperature as deltas from a baseline, which is
  * how the measure is meant to be read: a night warmer or cooler than the
@@ -78,6 +79,19 @@ object WearOsSkinTemperatureImport {
     /** The runs that are over at [now] and long enough to count. */
     fun finished(runs: List<Run>, now: Instant): List<Run> =
         runs.filter { Duration.between(it.end, now) >= SETTLE && Duration.between(it.start, it.end) >= MIN_RUN }
+
+    /**
+     * [runs] of one night cut to the minutes inside a sleep session, `[start, end)`; a run with
+     * none inside is dropped. The watch records the night series from bedtime mode, which is a
+     * schedule for quiet notifications, not sleep: the evening before falling asleep would
+     * otherwise read as the night's temperature. When no session overlaps any of the runs
+     * (none estimated or none readable), the runs stand as they are.
+     */
+    fun clipToSleep(runs: List<Run>, sleeps: List<ClosedRange<Instant>>): List<Run> {
+        fun asleep(minute: WearOsSkinMinute) = sleeps.any { minute.time >= it.start && minute.time < it.endInclusive }
+        if (runs.none { run -> run.minutes.any(::asleep) }) return runs
+        return runs.mapNotNull { run -> run.minutes.filter(::asleep).takeIf { it.isNotEmpty() }?.let(::Run) }
+    }
 
     /**
      * One night's median for the baseline, taken over [minutes] minutes; 0 where they were not

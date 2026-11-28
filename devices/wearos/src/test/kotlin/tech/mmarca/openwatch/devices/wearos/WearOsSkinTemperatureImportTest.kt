@@ -32,6 +32,33 @@ class WearOsSkinTemperatureImportTest {
         assertTrue(WearOsSkinTemperatureImport.finished(runs, t0.plusSeconds(60L * 185)).isEmpty())
     }
 
+    private fun span(fromMinute: Long, toMinute: Long) = t0.plusSeconds(60 * fromMinute)..t0.plusSeconds(60 * toMinute)
+
+    @Test
+    fun `a night's runs keep only the minutes inside a sleep session`() {
+        // 22:00 to 02:00 recorded from bedtime mode; asleep 23:40 to 01:30.
+        val runs = WearOsSkinTemperatureImport.runs(minutes(0, 240))
+        val asleep = WearOsSkinTemperatureImport.clipToSleep(runs, listOf(span(100, 210)))
+        assertEquals(t0.plusSeconds(60 * 100), asleep.single().start)
+        assertEquals(t0.plusSeconds(60 * 209), asleep.single().end)
+        assertEquals(110, asleep.single().minutes.size)
+    }
+
+    @Test
+    fun `a run outside every session of its night is dropped, one inside two sessions keeps both parts`() {
+        val runs = WearOsSkinTemperatureImport.runs(minutes(0, 60) + minutes(120, 180))
+        val asleep = WearOsSkinTemperatureImport.clipToSleep(runs, listOf(span(150, 200), span(220, 260)))
+        assertEquals(1, asleep.size)
+        assertEquals(50 + 40, asleep.single().minutes.size)
+    }
+
+    @Test
+    fun `without a sleep session overlapping them the runs stand as they are`() {
+        val runs = WearOsSkinTemperatureImport.runs(minutes(0, 60))
+        assertEquals(runs, WearOsSkinTemperatureImport.clipToSleep(runs, emptyList()))
+        assertEquals(runs, WearOsSkinTemperatureImport.clipToSleep(runs, listOf(span(-600, -500))))
+    }
+
     private fun night(date: String, celsius: Double, minutes: Int = 60) = NightMedian(LocalDate.parse(date), celsius, minutes)
 
     @Test

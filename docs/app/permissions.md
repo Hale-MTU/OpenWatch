@@ -21,7 +21,8 @@ on: `WRITE_RESPIRATORY_RATE` from a Wear OS watch (the "Breathing rate from the 
 Settings, on by default), and `WRITE_OXYGEN_SATURATION` and `WRITE_SKIN_TEMPERATURE` from a Samsung
 watch (the "SpO2 hourly at night" and "Skin temperature at night" switches on the watch's
 settings card, off until the user switches them on).
-Skin temperature is one record per night, the difference from the wearer's own usual night.
+Skin temperature is one record per night, the difference from the wearer's own usual night,
+taken over the time asleep, not the whole bedtime schedule.
 A Garmin watch's oxygen saturation and respiratory rate come with its files.
 
 What the entries made on a Wear OS watch write, each when the phone pulls it: `WRITE_HYDRATION`,
@@ -53,7 +54,8 @@ A record whose write is not granted stays on the device; the rest of a sync goes
 
 What the estimates read: `READ_WEIGHT` and `READ_HEIGHT` (the walking energy and the body
 composition), `READ_EXERCISE` (a minute inside a workout gets no walking-energy estimate),
-`READ_SLEEP` (a night that already holds a sleep session is left alone),
+`READ_SLEEP` (a night that already holds a sleep session is left alone, and a night's skin
+temperature counts only the time inside a sleep session),
 `READ_RESTING_HEART_RATE` (a day that already holds a resting heart rate is left alone, and
 the heart rate zones the watch shows), `READ_HEART_RATE` (the highest heart rate, for those
 zones, and a workout's energy). `READ_HEALTH_DATA_HISTORY`: the latest weight and height are

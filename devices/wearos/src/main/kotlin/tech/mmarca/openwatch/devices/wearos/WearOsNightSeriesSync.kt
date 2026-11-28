@@ -1,5 +1,7 @@
 package tech.mmarca.openwatch.devices.wearos
 
+import androidx.health.connect.client.permission.HealthPermission
+import androidx.health.connect.client.records.SleepSessionRecord
 import java.time.Instant
 import java.time.ZoneId
 import kotlinx.coroutines.CancellationException
@@ -89,14 +91,17 @@ internal class WearOsNightSeriesSync(
         val minutes = reader.newerThan(device, WearOsSeries.SKIN_TEMPERATURE, cursors.skinCursor(device.id)) ?: return false
         val finished = WearOsSkinTemperatureImport.finished(WearOsSkinTemperatureImport.runs(minutes), clock())
         if (finished.isEmpty()) return true
-        val canWrite = WearOsSkinTemperatureImport.writePermission in granted()
+        val permissions = granted()
+        val canWrite = WearOsSkinTemperatureImport.writePermission in permissions
+        val sleeps = if (SLEEP_READ in permissions) sleepSessions(finished.first().start, finished.last().end.plusSeconds(60)) else emptyList()
         val zone = zone()
         var medians = cursors.skinNightMedians(device.id)
         var handledUntil: Instant? = null
         var written = 0
         var withoutBaseline = 0
         var refused = 0
-        nights@ for ((night, runs) in finished.groupBy { WearOsSkinTemperatureImport.nightOf(it, zone) }) {
+        nights@ for ((night, handled) in finished.groupBy { WearOsSkinTemperatureImport.nightOf(it, zone) }) {
+            val runs = WearOsSkinTemperatureImport.clipToSleep(handled, sleeps)
             val baseline = WearOsSkinTemperatureImport.baseline(night, medians)
             // Too few other nights: this one only joins the baseline, which needs no grant.
             val kept = if (baseline == null) {
@@ -130,7 +135,8 @@ internal class WearOsNightSeriesSync(
                 accepted
             }
             medians = WearOsSkinTemperatureImport.remember(medians, night, kept)
-            handledUntil = runs.last().end
+            // Past the awake minutes too: they were looked at, and are not pulled again.
+            handledUntil = handled.last().end
         }
         if (withoutBaseline > 0) skipped += SkippedSeries(HealthSeries.SKIN_TEMPERATURE, SkipReason.NO_BASELINE)
         cursors.setSkinNightMedians(device.id, medians)
@@ -138,5 +144,23 @@ internal class WearOsNightSeriesSync(
         handledUntil?.let { cursors.setSkinCursor(device.id, it) }
         WearOsLog.log("skin: $written run(s) written, $withoutBaseline night(s) without a baseline yet, $refused run(s) refused")
         return true
+    }
+
+    /** The sleep sessions from any app overlapping `[from, to)`; none when Health Connect refuses the read. */
+    private suspend fun sleepSessions(from: Instant, to: Instant): List<ClosedRange<Instant>> = try {
+        val spans = ArrayList<ClosedRange<Instant>>()
+        healthConnect.forEachSyncRecordPage(SleepSessionRecord::class, from, to) { page ->
+            page.filterIsInstance<SleepSessionRecord>().forEach { spans += it.startTime..it.endTime }
+        }
+        spans
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Exception) {
+        if (error !is SecurityException && !error.isPermissionFailure()) throw error
+        emptyList()
+    }
+
+    private companion object {
+        val SLEEP_READ: String = HealthPermission.getReadPermission(SleepSessionRecord::class)
     }
 }

@@ -685,6 +685,35 @@ class WearOsWatchSyncServiceTest {
     }
 
     @Test
+    fun `a night's skin temperature counts only while asleep, not the bedtime schedule before it`() = runTest {
+        skinSyncWith(WearOsSkinTemperatureImport.writePermission, HealthPermission.getReadPermission(SleepSessionRecord::class))
+        val earlier = listOf("2026-10-01", "2026-10-02", "2026-10-03").map {
+            WearOsSkinTemperatureImport.NightMedian(LocalDate.parse(it), 34.0, minutes = 60)
+        }
+        cursors.setSkinNightMedians(WATCH.id, earlier)
+        // Bedtime mode from 23:00 local, four hours of minutes; asleep from 00:30 on.
+        val night = skinNight(1, 34.4, length = 240)
+        skinMinutes += night
+        val asleepFrom = night.first().time.plus(Duration.ofMinutes(90))
+        val session = mockk<SleepSessionRecord> {
+            every { startTime } returns asleepFrom
+            every { endTime } returns night.last().time.plus(Duration.ofHours(2))
+            every { metadata } returns Metadata.manualEntry(clientRecordId = "other_sleep_1")
+        }
+        coEvery { healthConnect.forEachSyncRecordPage(SleepSessionRecord::class, any(), any(), any()) } coAnswers {
+            arg<suspend (List<androidx.health.connect.client.records.Record>) -> Unit>(3).invoke(listOf(session))
+        }
+
+        service().sync(WATCH, SyncTrigger.REQUESTED, null)
+
+        val record = insertedOf<SkinTemperatureRecord>().single()
+        assertEquals(asleepFrom, record.startTime)
+        assertEquals(150, cursors.skinNightMedians(WATCH.id).last().minutes)
+        // The whole run was handled: the awake part is not pulled again.
+        assertEquals(night.last().time, cursors.skinCursor(WATCH.id))
+    }
+
+    @Test
     fun `a first night the tracker dropped out of is one night, not its own baseline`() = runTest {
         skinSyncWith(WearOsSkinTemperatureImport.writePermission)
         // Four runs of 40 minutes, an hour apart: one night, cut by the gaps.
