@@ -17,7 +17,6 @@
     <string name="health_data_note_wearos_workout">אימון שהקלטת בשעון, עם המסלול והמרחק שלו.</string>
     <string name="health_data_note_wearos_entry">מה שמתעדים ידנית בשעון.</string>
     <string name="health_data_note_wearos_mindfulness">תרגיל נשימה שעושים בשעון, אם Health Connect תומך בשמירה של תרגילים כאלה.</string>
-    <string name="health_data_note_wearos_skin">רק משעון Samsung, כשהאפשרות \"טמפרטורת העור בלילה\" מופעלת עבור השעון הזה. רשומה אחת לכל לילה: ההפרש מהלילה הרגיל שלך.</string>
     <string name="health_data_note_scale_estimate">מוערך בטלפון לפי המדידה של המשקל ולפי פרופיל הגוף שלך.</string>
     <string name="health_data_read_weight">עבור קלוריות ההליכה והרכב הגוף שהמשקל מודד.</string>
     <string name="health_data_read_height">עבור הרכב הגוף שהמשקל מודד.</string>
@@ -30,7 +29,6 @@
     <string name="health_data_read_background">סנכרון שרץ לפי לוח זמנים, כשהאפליקציה סגורה, יכול לראות משקלים ואימונים של אפליקציה אחרת רק עם ההרשאה הזו.</string>
     <string name="health_data_watch_heart_rate">חיישן הדופק של השעון: דופק, שונות קצב הלב בלילה והערכת השינה.</string>
     <string name="health_data_watch_background">כדי להמשיך להקליט כשמסך השעון כבוי.</string>
-    <string name="health_data_watch_skin">רק בשעון Samsung, ורק כשמפעילים טמפרטורת עור בלילה.</string>
     <string name="health_data_note_wearos_breathing_logged">בלילה רק כשהאפשרות \"קצב נשימה מהשעון\" מופעלת בהגדרות; וגם קצב נשימה שמתעדים בשעון.</string>
     <string name="health_data_note_wearos_spo2_measured">בלילה רק משעון Samsung, כשהאפשרות \"מדידת SpO2 כל שעה בלילה\" מופעלת עבור השעון הזה; וגם חמצן בדם שמתעדים או מודדים בשעון.</string>
     <string name="health_data_note_wearos_vo2">הערכה מהליכה או ריצה שמקליטים בשעון עם המסלול שלהן, כשבפרופיל הגוף שלך יש דופק במנוחה.</string>

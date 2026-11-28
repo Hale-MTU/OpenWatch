@@ -1,7 +1,9 @@
 package tech.mmarca.openwatch.wear
 
 import android.hardware.SensorManager
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -23,11 +25,14 @@ class SensorSkinTemperatureSourceTest {
     }
 
     @Test
-    fun `only a reading from well before the listener registered is the cached one`() {
+    fun `the standing value handed at registration counts from then, unless it is too old to stand`() {
         val registered = 1_794_100_020_000L
-        assertTrue(SensorSkinTemperatureSource.isCachedReading(registered - 10 * 60_000, registered))
-        assertFalse(SensorSkinTemperatureSource.isCachedReading(registered - 10_000, registered))
-        // A FIFO point delivered late, but taken after registering, is kept however old it is now.
-        assertFalse(SensorSkinTemperatureSource.isCachedReading(registered + 60_000, registered))
+        // An on-change sensor hands over its standing value: ten minutes old, it is today's value now.
+        assertEquals(registered, SensorSkinTemperatureSource.pointTime(registered - 10 * 60_000, registered))
+        // Older than a silence may last, it is not.
+        assertNull(SensorSkinTemperatureSource.pointTime(registered - 2 * 60 * 60_000, registered))
+        assertEquals(registered - 10_000, SensorSkinTemperatureSource.pointTime(registered - 10_000, registered))
+        // A FIFO point delivered late, but taken after registering, keeps its own time.
+        assertEquals(registered + 60_000, SensorSkinTemperatureSource.pointTime(registered + 60_000, registered))
     }
 }

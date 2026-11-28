@@ -74,12 +74,11 @@ internal class SensorSkinTemperatureSource(
         if (event.sensor.stringType != SKIN_SENSOR_TYPE) return
         val target = sink ?: return
         val at = SensorTime.epochMillisOf(event.timestamp)
-        // The cached reading handed to a new listener carries the time the sensor last ran. Only
-        // that one is dropped: a point that waited in the FIFO for a wake-up, even for ten minutes
-        // under power-save heart rate, was taken after registering and is kept.
-        if (isCachedReading(at, registeredAtMillis)) return
+        // The reading handed to a new listener is the sensor's standing value, stamped when it last
+        // changed; a point that waited in the FIFO for a wake-up was taken after registering.
+        val pointAt = pointTime(at, registeredAtMillis) ?: return
         // NaN ambient, not a placeholder: the recorder owns the missing-ambient policy.
-        target.onReadings(listOf(SkinReading(at, event.values[0], Float.NaN, isMeasuredSkinPoint(event.accuracy))))
+        target.onReadings(listOf(SkinReading(pointAt, event.values[0], Float.NaN, isMeasuredSkinPoint(event.accuracy))))
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
@@ -102,19 +101,28 @@ internal class SensorSkinTemperatureSource(
         /** The sensor is on-change anyway; the delay asks for no more than its own ~30 s cadence. */
         private const val SAMPLING = SensorManager.SENSOR_DELAY_NORMAL
 
+        /** A reading older than this before registering is the sensor's standing one; younger is as good as current. */
+        private const val CACHED_MARGIN_MILLIS = 30_000L
+
+        /**
+         * The time a point taken at [eventAtMillis] counts from, for a listener registered at
+         * [registeredAtMillis]; null to drop it. The standing value handed at registration
+         * counts from the registration, as an on-change sensor's value holds until it changes,
+         * unless it is older than a silence may last ([HOLD_LAST_MILLIS]). Every other point
+         * keeps its own time, however late it was delivered.
+         */
+        internal fun pointTime(eventAtMillis: Long, registeredAtMillis: Long): Long? = when {
+            eventAtMillis >= registeredAtMillis - CACHED_MARGIN_MILLIS -> eventAtMillis
+            eventAtMillis >= registeredAtMillis - HOLD_LAST_MILLIS -> registeredAtMillis
+            else -> null
+        }
+
         /**
          * A point the sensor itself stands behind: the Pixel Watch reports
          * medium accuracy or higher while worn. The narrow pure seam the unit
          * tests hold — the accuracy threshold is the sensor contract's only
          * branch, everything else needs a real watch.
          */
-        /** A reading older than this before registering is the sensor's cached one; younger is as good as current. */
-        private const val CACHED_MARGIN_MILLIS = 30_000L
-
-        /** Whether a point taken at [eventAtMillis] is the cached reading a listener registered at [registeredAtMillis] is first handed. */
-        internal fun isCachedReading(eventAtMillis: Long, registeredAtMillis: Long): Boolean =
-            eventAtMillis < registeredAtMillis - CACHED_MARGIN_MILLIS
-
         internal fun isMeasuredSkinPoint(accuracy: Int): Boolean =
             accuracy >= SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM
     }

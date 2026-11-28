@@ -17,7 +17,6 @@
     <string name="health_data_note_wearos_workout">Un allenamento che registri sull\'orologio, con il suo percorso e la distanza.</string>
     <string name="health_data_note_wearos_entry">Ciò che registri a mano sull\'orologio.</string>
     <string name="health_data_note_wearos_mindfulness">Una sessione di respirazione che fai sull\'orologio, dove Health Connect le conserva.</string>
-    <string name="health_data_note_wearos_skin">Solo da un orologio Samsung, con l\'opzione «Temperatura cutanea di notte» attiva per quell\'orologio. Un record per notte: la differenza rispetto alla tua notte abituale.</string>
     <string name="health_data_note_scale_estimate">Stimato sul telefono dalla misurazione della bilancia e dal tuo profilo corporeo.</string>
     <string name="health_data_read_weight">Per le calorie della camminata e la composizione corporea della bilancia.</string>
     <string name="health_data_read_height">Per la composizione corporea della bilancia.</string>
@@ -30,7 +29,6 @@
     <string name="health_data_read_background">Una sincronizzazione programmata, con l\'app chiusa, vede i pesi e gli allenamenti di un\'altra app solo con questo accesso.</string>
     <string name="health_data_watch_heart_rate">Il sensore di frequenza cardiaca dell\'orologio: frequenza cardiaca, variabilità della frequenza cardiaca notturna e stima del sonno.</string>
     <string name="health_data_watch_background">Per continuare a registrare con lo schermo dell\'orologio spento.</string>
-    <string name="health_data_watch_skin">Solo su un orologio Samsung, e solo se attivi la temperatura cutanea di notte.</string>
     <string name="health_data_note_wearos_breathing_logged">Di notte solo con «Frequenza respiratoria dall\'orologio» attiva in Impostazioni; e una frequenza respiratoria che registri sull\'orologio.</string>
     <string name="health_data_note_wearos_spo2_measured">Di notte solo da un orologio Samsung, con «SpO2 ogni ora di notte» attiva per quell\'orologio; e un valore di ossigeno nel sangue che registri o misuri sull\'orologio.</string>
     <string name="health_data_note_wearos_vo2">Una stima da una camminata o una corsa che registri sull\'orologio con il suo percorso, quando il tuo profilo corporeo contiene una frequenza cardiaca a riposo.</string>

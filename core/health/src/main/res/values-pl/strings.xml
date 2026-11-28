@@ -17,7 +17,6 @@
     <string name="health_data_note_wearos_workout">Trening, który nagrywasz na zegarku, z jego trasą i dystansem.</string>
     <string name="health_data_note_wearos_entry">To, co wpiszesz ręcznie na zegarku.</string>
     <string name="health_data_note_wearos_mindfulness">Sesja oddechowa wykonana na zegarku, jeśli Health Connect takie sesje przechowuje.</string>
-    <string name="health_data_note_wearos_skin">Tylko z zegarka Samsung, z włączoną dla niego opcją „Temperatura skóry w nocy”. Jeden rekord na noc: różnica względem Twojej zwykłej nocy.</string>
     <string name="health_data_note_scale_estimate">Szacowane na telefonie na podstawie pomiaru z wagi i Twojego profilu ciała.</string>
     <string name="health_data_read_weight">Do kalorii z chodzenia i składu ciała z wagi.</string>
     <string name="health_data_read_height">Do składu ciała z wagi.</string>
@@ -30,7 +29,6 @@
     <string name="health_data_read_background">Synchronizacja uruchamiana według harmonogramu, przy zamkniętej aplikacji, widzi pomiary masy ciała i treningi z innej aplikacji tylko z tym dostępem.</string>
     <string name="health_data_watch_heart_rate">Czujnik tętna zegarka: tętno, nocna zmienność rytmu serca i szacunek snu.</string>
     <string name="health_data_watch_background">Aby nagrywanie trwało przy wyłączonym ekranie zegarka.</string>
-    <string name="health_data_watch_skin">Tylko na zegarku Samsung i tylko wtedy, gdy włączysz temperaturę skóry w nocy.</string>
     <string name="health_data_note_wearos_breathing_logged">W nocy tylko z włączoną opcją „Częstość oddechu z zegarka” w Ustawieniach; oraz częstość oddechu wpisana na zegarku.</string>
     <string name="health_data_note_wearos_spo2_measured">W nocy tylko z zegarka Samsung, z włączoną dla niego opcją „SpO2 co godzinę w nocy”; oraz natlenienie krwi wpisane lub zmierzone na zegarku.</string>
     <string name="health_data_note_wearos_vo2">Szacunek z marszu lub biegu nagranego na zegarku z trasą, gdy Twój profil ciała zawiera tętno spoczynkowe.</string>

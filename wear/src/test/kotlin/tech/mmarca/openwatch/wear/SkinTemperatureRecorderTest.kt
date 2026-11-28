@@ -110,12 +110,47 @@ class SkinMinuteBufferTest {
     }
 
     @Test
-    fun `a silence longer than the hold limit is left empty`() {
+    fun `a silence longer than the hold limit is filled only up to the limit`() {
         val buffer = SkinMinuteBuffer(holdLastMillis = 30 * 60_000L)
+        val written = buffer.add(listOf(skin(minute + 1_000, 34.0f))) +
+            buffer.add(listOf(skin(minute + 40 * 60_000 + 1_000, 34.2f))) +
+            buffer.add(listOf(skin(minute + 41 * 60_000 + 1_000, 34.4f)))
+        // 30 minutes after the reading at 0:01 the value no longer stands: 0 to 30, then 40.
+        assertEquals((0..30).map { minute + it * 60_000L } + (minute + 40 * 60_000), written.map { it.epochMillis })
+    }
+
+    @Test
+    fun `the held minutes are written as time passes, not only when the next point comes`() {
+        val buffer = SkinMinuteBuffer(holdLastMillis = 90 * 60_000L)
         buffer.add(listOf(skin(minute + 1_000, 34.0f)))
-        buffer.add(listOf(skin(minute + 40 * 60_000 + 1_000, 34.2f)))
-        val closed = buffer.add(listOf(skin(minute + 41 * 60_000 + 1_000, 34.4f)))
-        assertEquals(listOf(minute + 40 * 60_000), closed.map { it.epochMillis })
+        // A phone syncing at 0:10 finds the minutes up to 0:09 already there.
+        assertEquals((0..9).map { minute + it * 60_000L }, buffer.tick(minute + 10 * 60_000 + 5_000).map { it.epochMillis })
+        assertTrue(buffer.tick(minute + 10 * 60_000 + 30_000).isEmpty())
+        // The value is kept: the next point fills on from where the tick stopped.
+        val next = buffer.add(listOf(skin(minute + 20 * 60_000 + 1_000, 34.2f)))
+        assertEquals((10..19).map { minute + it * 60_000L }, next.map { it.epochMillis })
+        assertEquals(setOf(3400), next.map { it.skin100 }.toSet())
+    }
+
+    @Test
+    fun `a point the sensor does not stand behind ends the hold`() {
+        val buffer = SkinMinuteBuffer(holdLastMillis = 90 * 60_000L)
+        val written = buffer.add(listOf(skin(minute + 1_000, 34.0f))) +
+            buffer.add(listOf(SkinReading(minute + 5 * 60_000 + 1_000, 33.0f, Float.NaN, measured = false))) +
+            buffer.add(listOf(skin(minute + 20 * 60_000 + 1_000, 34.2f))) +
+            buffer.add(listOf(skin(minute + 21 * 60_000 + 1_000, 34.4f)))
+        // Held up to the poor-contact point at 0:05, nothing from there until the next good one.
+        assertEquals((0..4).map { minute + it * 60_000L } + (minute + 20 * 60_000), written.map { it.epochMillis })
+    }
+
+    @Test
+    fun `an impossible point ends the hold too, and the limit counts from the last real reading`() {
+        val buffer = SkinMinuteBuffer(holdLastMillis = 60 * 60_000L)
+        val written = listOf(0, 60, 120, 121).flatMap { at ->
+            buffer.add(listOf(skin(minute + at * 60_000L + 1_000, if (at == 60 || at == 120) 19.5f else 34.0f)))
+        } + buffer.tick(minute + 130 * 60_000L)
+        // 19.5 °C is off the wrist: no row, and the 34.0 before it is not carried across it.
+        assertEquals((0..59).map { minute + it * 60_000L } + (121..129).map { minute + it * 60_000L }, written.map { it.epochMillis })
     }
 
     @Test

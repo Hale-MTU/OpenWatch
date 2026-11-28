@@ -17,7 +17,6 @@
     <string name="health_data_note_wearos_workout">Тренировка, записанная вами на часах, с маршрутом и расстоянием.</string>
     <string name="health_data_note_wearos_entry">То, что вы вручную записываете на часах.</string>
     <string name="health_data_note_wearos_mindfulness">Дыхательная сессия на часах, если Health Connect хранит такие сессии.</string>
-    <string name="health_data_note_wearos_skin">Только с часов Samsung, если для этих часов включён параметр «Температура кожи ночью». Одна запись за ночь: отклонение от вашей обычной ночи.</string>
     <string name="health_data_note_scale_estimate">Рассчитывается на телефоне по измерению весов и вашему профилю тела.</string>
     <string name="health_data_read_weight">Для калорий ходьбы и состава тела по весам.</string>
     <string name="health_data_read_height">Для состава тела по весам.</string>
@@ -30,7 +29,6 @@
     <string name="health_data_read_background">Синхронизация по расписанию при закрытом приложении видит вес и тренировки из других приложений только с этим разрешением.</string>
     <string name="health_data_watch_heart_rate">Датчик пульса часов: пульс, ночная вариабельность сердечного ритма и оценка сна.</string>
     <string name="health_data_watch_background">Чтобы продолжать запись при выключенном экране часов.</string>
-    <string name="health_data_watch_skin">Только на часах Samsung и только если вы включите измерение температуры кожи ночью.</string>
     <string name="health_data_note_wearos_breathing_logged">Ночью — только если в настройках включён параметр «Частота дыхания с часов»; а также частота дыхания, которую вы записываете на часах.</string>
     <string name="health_data_note_wearos_spo2_measured">Ночью — только с часов Samsung, если для этих часов включён параметр «SpO2 каждый час ночью»; а также кислород в крови, который вы записываете или измеряете на часах.</string>
     <string name="health_data_note_wearos_vo2">Оценка по ходьбе или бегу, записанным на часах с маршрутом, если в вашем профиле тела есть пульс в покое.</string>

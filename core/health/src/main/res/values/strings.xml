@@ -18,7 +18,7 @@
     <string name="health_data_note_wearos_workout">A workout you record on the watch, with its route and distance.</string>
     <string name="health_data_note_wearos_entry">What you log on the watch, by hand.</string>
     <string name="health_data_note_wearos_mindfulness">A breathing session you do on the watch, where Health Connect keeps them.</string>
-    <string name="health_data_note_wearos_skin">Only from a Samsung watch, with “Skin temperature at night” switched on for that watch. One record per night: the difference from your own usual night.</string>
+    <string name="health_data_note_wearos_skin">Only from a Samsung watch or a Pixel Watch, with “Skin temperature at night” switched on for that watch. One record per night: the difference from your own usual night.</string>
     <string name="health_data_note_scale_estimate">Estimated on the phone from the scale\'s measurement and your body profile.</string>
     <string name="health_data_read_weight">For the walking calories and the scale\'s body composition.</string>
     <string name="health_data_read_height">For the scale\'s body composition.</string>
@@ -31,7 +31,7 @@
     <string name="health_data_read_background">A sync that runs on a schedule, with the app closed, can only see another app\'s weights and workouts with it.</string>
     <string name="health_data_watch_heart_rate">The watch\'s heart rate sensor: heart rate, the night\'s heart rate variability and the sleep estimate.</string>
     <string name="health_data_watch_background">To keep recording with the watch\'s screen off.</string>
-    <string name="health_data_watch_skin">Only on a Samsung watch, and only when you switch on skin temperature at night.</string>
+    <string name="health_data_watch_skin">Only on a Samsung watch or a Pixel Watch, and only when you switch on skin temperature at night.</string>
     <string name="health_data_note_wearos_breathing_logged">At night only with “Breathing rate from the watch” switched on in Settings; and a breathing rate you log on the watch.</string>
     <string name="health_data_note_wearos_spo2_measured">At night only from a Samsung watch, with “SpO2 hourly at night” switched on for that watch; and a blood oxygen you log or measure on the watch.</string>
     <string name="health_data_note_wearos_vo2">An estimate from a walk or run you record on the watch with its route, when your body profile holds a resting heart rate.</string>
