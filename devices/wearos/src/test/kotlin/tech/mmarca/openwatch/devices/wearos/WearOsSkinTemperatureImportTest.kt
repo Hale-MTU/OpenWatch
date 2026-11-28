@@ -1,5 +1,7 @@
 package tech.mmarca.openwatch.devices.wearos
 
+import androidx.health.connect.client.records.SleepSessionRecord
+import androidx.health.connect.client.records.metadata.Metadata
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -30,6 +32,79 @@ class WearOsSkinTemperatureImportTest {
         val now = t0.plusSeconds(60L * (179 + 30))
         assertTrue(WearOsSkinTemperatureImport.finished(runs, now).map { it.start } == listOf(t0.plusSeconds(3600)))
         assertTrue(WearOsSkinTemperatureImport.finished(runs, t0.plusSeconds(60L * 185)).isEmpty())
+    }
+
+    private fun span(fromMinute: Long, toMinute: Long) = t0.plusSeconds(60 * fromMinute)..t0.plusSeconds(60 * toMinute)
+
+    @Test
+    fun `a night's runs keep only the minutes inside a sleep session`() {
+        // 22:00 to 02:00 recorded from bedtime mode; asleep 23:40 to 01:30.
+        val runs = WearOsSkinTemperatureImport.runs(minutes(0, 240))
+        val asleep = WearOsSkinTemperatureImport.clipToSleep(runs, listOf(span(100, 210)))
+        assertEquals(t0.plusSeconds(60 * 100), asleep.single().start)
+        assertEquals(t0.plusSeconds(60 * 209), asleep.single().end)
+        assertEquals(110, asleep.single().minutes.size)
+    }
+
+    @Test
+    fun `a run outside every session of its night is dropped, one inside two sessions keeps both parts`() {
+        val runs = WearOsSkinTemperatureImport.runs(minutes(0, 60) + minutes(120, 180))
+        val asleep = WearOsSkinTemperatureImport.clipToSleep(runs, listOf(span(150, 200), span(220, 260)))
+        assertEquals(1, asleep.size)
+        assertEquals(50 + 40, asleep.single().minutes.size)
+    }
+
+    @Test
+    fun `a run cut to a few minutes is no night, and a cut run keeps its record id`() {
+        val run = WearOsSkinTemperatureImport.runs(minutes(0, 190)).single()
+        // Taken off at 01:10, asleep from 01:00 by another app: ten minutes are not a night.
+        assertTrue(WearOsSkinTemperatureImport.clipToSleep(listOf(run), listOf(span(180, 600))).isEmpty())
+        val cut = WearOsSkinTemperatureImport.clipToSleep(listOf(run), listOf(span(60, 600))).single()
+        assertEquals(t0.plusSeconds(60 * 60), cut.start)
+        // A re-pull that cuts elsewhere still writes over the same record.
+        assertEquals(WearOsSkinTemperatureImport.clientRecordId(run), WearOsSkinTemperatureImport.clientRecordId(cut))
+    }
+
+    private val utc = ZoneOffset.UTC
+
+    @Test
+    fun `a night with a session anywhere in it is cut to it, whichever runs this sync brought`() {
+        // Bedtime 22:00 to 23:30, then the charger; another app's session 00:30 to 07:00.
+        val evening = WearOsSkinTemperatureImport.runs(minutes(0, 90))
+        val night = LocalDate.parse("2026-11-08")
+        assertEquals(
+            emptyList<WearOsSkinTemperatureImport.Run>(),
+            WearOsSkinTemperatureImport.asleepRuns(night, evening, listOf(span(150, 540)), utc, now = t0.plusSeconds(3600L * 10)),
+        )
+    }
+
+    @Test
+    fun `a night without a session yet waits, a night over without one stands as it is`() {
+        val evening = WearOsSkinTemperatureImport.runs(minutes(0, 90))
+        val night = LocalDate.parse("2026-11-08")
+        // 23:30 that night: the session may still come.
+        assertNull(WearOsSkinTemperatureImport.asleepRuns(night, evening, emptyList(), utc, now = t0.plusSeconds(60L * 120)))
+        // Past noon the next day: nothing will come, so the runs stand, as before sessions were read.
+        assertEquals(evening, WearOsSkinTemperatureImport.asleepRuns(night, evening, listOf(span(-2000, -1900)), utc, now = t0.plusSeconds(3600L * 15)))
+        // Without sessions to read at all: as before.
+        assertEquals(evening, WearOsSkinTemperatureImport.asleepRuns(night, evening, null, utc, now = t0.plusSeconds(60L * 120)))
+    }
+
+    @Test
+    fun `a session's awake stages are not asleep`() {
+        val session = SleepSessionRecord(
+            startTime = t0, startZoneOffset = utc, endTime = t0.plusSeconds(60L * 540), endZoneOffset = utc,
+            stages = listOf(
+                SleepSessionRecord.Stage(t0, t0.plusSeconds(60L * 100), SleepSessionRecord.STAGE_TYPE_AWAKE_IN_BED),
+                SleepSessionRecord.Stage(t0.plusSeconds(60L * 100), t0.plusSeconds(60L * 300), SleepSessionRecord.STAGE_TYPE_LIGHT),
+                SleepSessionRecord.Stage(t0.plusSeconds(60L * 300), t0.plusSeconds(60L * 310), SleepSessionRecord.STAGE_TYPE_AWAKE),
+                SleepSessionRecord.Stage(t0.plusSeconds(60L * 310), t0.plusSeconds(60L * 540), SleepSessionRecord.STAGE_TYPE_DEEP),
+            ),
+            metadata = Metadata.manualEntry(),
+        )
+        assertEquals(listOf(span(100, 300), span(310, 540)), WearOsSkinTemperatureImport.asleepSpans(session))
+        val plain = SleepSessionRecord(t0, utc, t0.plusSeconds(60L * 540), utc, metadata = Metadata.manualEntry())
+        assertEquals(listOf(span(0, 540)), WearOsSkinTemperatureImport.asleepSpans(plain))
     }
 
     private fun night(date: String, celsius: Double, minutes: Int = 60) = NightMedian(LocalDate.parse(date), celsius, minutes)
