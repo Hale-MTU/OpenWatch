@@ -18,10 +18,14 @@ import tech.mmarca.openlink.host.SharedPreferencesTrustStorage
 import tech.mmarca.openwatch.MainActivity
 import tech.mmarca.openwatch.StartupActor
 import tech.mmarca.openwatch.devices.core.SharedGoals
+import tech.mmarca.openwatch.domain.preferences.SharedUnits
 import tech.mmarca.openwatch.link.AppLabelResolver
 import tech.mmarca.openwatch.link.ConnectedAppsIntent
 import tech.mmarca.openwatch.link.FirstPartyApps
+import tech.mmarca.openwatch.link.InstalledApps
 import tech.mmarca.openwatch.link.LinkSettingsStore
+import tech.mmarca.openwatch.link.LinkSharedUnits
+import tech.mmarca.openwatch.link.SystemInstalledApps
 import tech.mmarca.openwatch.link.OpenWatchLinkCapabilities
 import tech.mmarca.openwatch.link.OpenWatchLinkPublisher
 import tech.mmarca.openwatch.link.SystemAppLabelResolver
@@ -39,6 +43,14 @@ object LinkModule {
     /** The daily goals the connected apps share, as a watch's sync and card read and set them. */
     @Provides
     fun provideSharedGoals(store: LinkSettingsStore): SharedGoals = store
+
+    /** The units a connected app (OpenVitals) decides, which OpenWatch's own give way to. */
+    @Provides
+    fun provideSharedUnits(units: LinkSharedUnits): SharedUnits = units
+
+    @Provides
+    @Singleton
+    fun provideInstalledApps(@ApplicationContext context: Context): InstalledApps = SystemInstalledApps(context)
 
     @Provides
     @Singleton

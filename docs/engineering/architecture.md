@@ -54,7 +54,7 @@ OpenWatch seams noted.
 | `devices/` | Nothing in the app: the device layer is the modules under `devices/` (below). The app's tests keep the checks that need two families at once (`DeviceIntegrationParityTest`, `NotificationCategoryParityTest`, the classifiers'). |
 | `features/home` | The device list and the way to the other screens. |
 | `features/device`, `features/watches`, `features/scales` | The device screens, as in OpenVitals, and Home's "Other devices" section (`features/device/DevicesSection`): the devices of every family that pairs through the app's own flow (`DevicePairing`), and that flow, which scans for the services the families name, offers each device one of them claims and no watch family does, and pairs it through its family; it names no family. Every paired device opens on one route, `DeviceDetail(deviceId)`; `features/device` picks its screen once from the registry: its family's own screen when the family brings one (the scale), the device screen otherwise. A device's screen is the part every device has (`WatchDeviceScreen`: the header, the schedule, removal) and its family's panel, `features/watches/garmin` or `features/watches/wearos`, each with its own ViewModel, or the generic panel for a family with none. The generic screens name no family: a family's screens plug in through the contributions of `features/device/DeviceContributions.kt`, bound under the family's persisted name by the family's own Hilt module in the screens (`GarminFeatureModule`, `WearOsFeatureModule`, `XiaomiScaleFeatureModule`): a `DeviceScreenContribution` draws a whole destination, a `DevicePanelContribution` a panel, and a `WatchOnboarding` is a watch family's pairing in Home's add-a-watch flow, with the checklist it shows. A family's panel opens its own screens through `DeviceScreenHost.navigate`, with routes it declares. |
-| `features/healthconnect`, `features/settings` | Health Connect setup, the sync switch, the body profile, notification access. |
+| `features/healthconnect`, `features/settings` | Health Connect setup, the sync switch, the body profile, the units, notification access. |
 | `features/connectedapps` | The apps that use OpenWatch over OpenLink: allow, block, per-capability switches, forget; a warning for a first-party name under an unknown signer; overlays hidden while it shows. |
 | `link/` | The OpenLink host, the module `:link-host`: the exported service, the device list and profile as OpenLink shows them, the shared settings (the daily goals, in `LinkSettingsStore`, the newer value per key winning; it is also `devices/core`'s `SharedGoals`, which a Wear OS watch's sync sends to the watch and its card sets, and a Garmin watch's hydration widget shows, so no device family sees an OpenLink type), recording sessions and live readings for another app. |
 | `healthconnect/` | `HealthConnectGateway`, `ActivityRecordWriter`, the sync gate, intents and availability, and the data catalog; in `:core:health`, with `data/repository/ImportedRecordRepository` and `ActivityWriteRepository`. |
@@ -74,7 +74,7 @@ Where the copied code met an OpenVitals class that did not come along, it meets 
 | `HealthConnectManager`, `HealthRepository` | `HealthConnectGateway`: the granted set (cached thirty seconds, dropped on a return to the foreground), `readsOtherAppsDataNow`, inserts and deletes by client id, this app's own ids and versions over a span (`readOwnClientRecordVersions`, origin-filtered, so it needs no read grant), a page reader, the exercise session ranges, the latest weight and height. Reads throw on failure. |
 | `AppleHealthImportRepository` | `ImportedRecordRepository`, the same three methods, behind the `HealthRecordStore` interface the write helpers and their tests' fake use. |
 | `BodyRepository.resolveBodyProfile` | `BodyProfileProvider`: the declared profile with Health Connect's weight and height on top. |
-| `PreferencesRepository` | `OpenWatchPreferences`: the sync switch, the body profile, the fallback exercise type, setup done. |
+| `PreferencesRepository` | `OpenWatchPreferences`: the sync switch, the body profile, the fallback exercise type, setup done, OpenWatch's own units (which give way to a connected app's through `core/model`'s `SharedUnits`). |
 | `ActivityRepository` (reads and writes) | `ActivityWriteRepository` over `ActivityRecordWriter`: the write half, verbatim. |
 | `ActivityRecordingController` | Gone: OpenWatch records no activity, so a sync is never refused for one. |
 | Body Energy, home widgets | Gone: OpenVitals derives those from the records OpenWatch writes. |
@@ -385,7 +385,14 @@ service with an AIDL interface. The library is a git submodule at `openlink/` ta
 composite build (`includeBuild("openlink")`, dependency `tech.mmarca.openlink:host`); its
 protocol and trust rules are `openlink/docs/spec.md`. Health data still travels through
 Health Connect; OpenLink carries the body profile, the device list with "sync now",
-recording sessions and live readings.
+the shared settings, recording sessions and live readings.
+
+The units are the one setting a connected app decides rather than shares: OpenVitals sends
+`units.system`, OpenWatch never sets it, and `LinkSharedUnits` keeps which app sent it. While
+that app is installed (`InstalledApps`, which follows the package broadcasts), trusted and
+allowed `settings`, its choice is `core/model`'s `SharedUnits`, which `OpenWatchPreferences`
+shows the screens in and Settings shows locked, with the app's name; otherwise OpenWatch's own
+choice holds.
 
 The host is the module `:link-host` (`link-host/`, package `link`), an Android library: the
 service, declared in the module's manifest, the capabilities, the first-party list

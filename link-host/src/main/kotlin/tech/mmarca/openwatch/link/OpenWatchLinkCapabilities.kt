@@ -19,6 +19,7 @@ class OpenWatchLinkCapabilities @Inject constructor(
     private val syncController: DeviceSyncController,
     private val sessions: LinkLiveSessions,
     private val settings: LinkSettingsStore,
+    private val units: LinkSharedUnits,
 ) : OpenLinkHostCapabilities {
 
     override fun profile(): OpenLinkProfile = profileSync.current()
@@ -29,9 +30,13 @@ class OpenWatchLinkCapabilities @Inject constructor(
 
     override fun settings(): OpenLinkSettings = settings.linkSettings()
 
-    /** The store keeps the newer value per key and publishes what changed, which tells the other clients. */
+    /**
+     * The store keeps the newer value per key and publishes what changed, which tells the other
+     * clients; units it took make [caller] the app that decides them.
+     */
     override fun setSettings(caller: OpenLinkCaller, settings: OpenLinkSettings) {
         this.settings.accept(settings)
+        units.onSettingsFrom(caller.packageName, settings)
     }
 
     override fun devices(): List<OpenLinkDevice> = devices.devices.value

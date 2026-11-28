@@ -29,4 +29,10 @@
     <string name="health_data_open_body">Jeder Gesundheitsdatentyp, das Gerät, von dem er stammt, und warum.</string>
     <string name="settings_sleep_beside_others_title">Schlaf der Uhr neben anderen Apps schreiben</string>
     <string name="settings_sleep_beside_others_body">Schreibt die Nacht, auch wenn Samsung Health oder eine andere App schon eine geschrieben hat. Welche Nacht Apps zeigen, entscheidet dann die Datenquellen-Priorität in Health Connect. Aus: Die Nacht der anderen App gewinnt.</string>
+    <string name="settings_units_title">Einheiten</string>
+    <string name="settings_units_body">Wähle, wie Distanzen, Gewichte, Hydrierung und Temperatur angezeigt werden.</string>
+    <string name="settings_unit_system">System</string>
+    <string name="settings_unit_metric">Metrisch</string>
+    <string name="settings_unit_imperial">Imperial</string>
+    <string name="settings_unit_follow_system_body">Derzeit %1$s, aus der Maßsystem-Einstellung deines Geräts.</string>
 </resources>

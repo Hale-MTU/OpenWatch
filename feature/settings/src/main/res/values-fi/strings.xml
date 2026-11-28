@@ -29,4 +29,10 @@
     <string name="health_data_open_body">Jokainen terveystietotyyppi, laite, josta se tulee, ja miksi.</string>
     <string name="settings_sleep_beside_others_title">Kirjoita kellon uni muiden sovellusten rinnalle</string>
     <string name="settings_sleep_beside_others_body">Kirjoittaa yön, vaikka Samsung Health tai muu sovellus olisi jo kirjoittanut sellaisen. Health Connectin tietolähteiden tärkeysjärjestys päättää sitten, minkä yön sovellukset näyttävät. Pois: toisen sovelluksen yö voittaa.</string>
+    <string name="settings_units_title">Yksiköt</string>
+    <string name="settings_units_body">Valitse, miten matkat, painot, nesteytys ja lämpötila näytetään.</string>
+    <string name="settings_unit_system">Järjestelmä</string>
+    <string name="settings_unit_metric">Metrinen</string>
+    <string name="settings_unit_imperial">Brittiläinen</string>
+    <string name="settings_unit_follow_system_body">Tällä hetkellä %1$s, laitteesi mittajärjestelmäasetuksen mukaan.</string>
 </resources>
