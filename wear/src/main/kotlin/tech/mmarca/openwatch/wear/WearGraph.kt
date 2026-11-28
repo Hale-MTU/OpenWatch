@@ -18,7 +18,9 @@ import tech.mmarca.openwatch.wear.samsung.SamsungHealthPlatform
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateFeed
 import tech.mmarca.openwatch.wear.samsung.SamsungHeartRateSource
 import tech.mmarca.openwatch.wear.samsung.SamsungIbiSource
+import tech.mmarca.openwatch.wear.samsung.SamsungPpgSource
 import tech.mmarca.openwatch.wear.samsung.SamsungSpotSource
+import tech.mmarca.openwatch.wear.samsung.SamsungTrackerTypes
 import tech.mmarca.openwatch.wear.workout.ActivityDetectionMonitor
 import tech.mmarca.openwatch.wear.workout.MetricStoreWorkoutRows
 import tech.mmarca.openwatch.wear.workout.WorkoutRecorder
@@ -129,6 +131,7 @@ internal class WearGraph(private val app: Application) {
     /** The night's SpO2 and a spot one take turns with the platform's tracker, which it starts for the first reader only. */
     private val spo2Claim = SensorClaim()
     private val samsungWindows: HrvWindowSource by lazy { SamsungIbiSource(samsungFeed, debug) }
+    private val samsungPpgWindows: HrvWindowSource by lazy { SamsungPpgSource(samsungFeed, debug) }
     private val spo2Source: SpotSource<Spo2Reading> by lazy { SamsungSpotSource.spo2(samsungFeed) }
     private val skinSource: SpotSource<SkinReading> by lazy { SamsungSpotSource.skinTemperature(samsungFeed) }
 
@@ -173,6 +176,7 @@ internal class WearGraph(private val app: Application) {
             isHolding = { linkState.state.value.sleepHoldActive },
             ppg = ppgWindows,
             samsung = samsungWindows,
+            samsungPpg = samsungPpgWindows,
             claim = hrvClaim,
         )
     }
@@ -230,6 +234,30 @@ internal class WearGraph(private val app: Application) {
             barometer = AscentRecorder.hasBarometer(app),
             gps = app.packageManager.hasSystemFeature(PackageManager.FEATURE_LOCATION_GPS),
             spo2 = spotSpo2Source.isAvailable,
+            ecg = samsungFeed.isAvailable && SamsungHealthPlatform.TRACKER_ECG in samsungTypes,
+            bodyComposition = samsungFeed.isAvailable && SamsungHealthPlatform.TRACKER_BIA in samsungTypes,
+        )
+    }
+
+    /** Asks the Samsung platform again which trackers it has, without waiting; `WearAppService` at each start. */
+    fun refreshSamsungTrackerTypes() = SamsungTrackerTypes.refresh(app)
+
+    /** The Samsung platform's tracker types as it last listed them; refreshed at each start of the service. */
+    private val samsungTypes: Set<String> by lazy { SamsungTrackerTypes.read(app) }
+
+    private val spotEcgSource: SpotSource<EcgSample> by lazy { SamsungSpotSource.ecg(samsungFeed) }
+
+    /** The wearer as the platform takes them, from the profile the phone sent; null while any of the four is missing. */
+    private fun platformProfile(profile: BodyProfile): SamsungHealthPlatform.UserProfile? {
+        val height = profile.heightCm ?: return null
+        val weight = profile.weightKg ?: return null
+        val birthYear = profile.birthYear ?: return null
+        val sex = profile.sex ?: return null
+        return SamsungHealthPlatform.UserProfile(
+            heightCm = height.toFloat(),
+            weightKg = weight.toFloat(),
+            male = sex == BiologicalSex.MALE,
+            ageYears = (Year.now().value - birthYear).coerceAtLeast(0),
         )
     }
 
@@ -285,6 +313,13 @@ internal class WearGraph(private val app: Application) {
             spo2 = { spotSpo2Source.takeIf { sensors.spo2 } },
             spo2Claim = spo2Claim,
             spo2Granted = { WearPermissions.hasOxygenSaturation(app) },
+            ecg = { spotEcgSource.takeIf { sensors.ecg } },
+            bodyComposition = { profile ->
+                platformProfile(profile)?.takeIf { sensors.bodyComposition }?.let { SamsungSpotSource.bodyComposition(samsungFeed, it) }
+            },
+            profile = { settings.value.bodyProfile().takeIf { platformProfile(it) != null } },
+            phoneTakesBodyComposition = { store.state(WearLinkServerHost.PHONE_BODY_COMPOSITION_STATE) == "1" },
+            additionalGranted = { WearPermissions.hasAdditionalHealthData(app) },
             heartRateGranted = { WearPermissions.hasHeartRate(app) },
             entries = entries,
             debug = debug,
@@ -333,6 +368,7 @@ internal class WearGraph(private val app: Application) {
         samsung = samsungFeed.isAvailable,
         skinGranted = WearPermissions.hasSkinTemperature(app),
         spo2Granted = WearPermissions.hasOxygenSaturation(app),
+        ppgGranted = WearPermissions.hasAdditionalHealthData(app),
     )
 
     /** A setting the phone changed: stored, and the running service follows. Link thread. */

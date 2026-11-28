@@ -26,7 +26,8 @@ A Garmin watch's oxygen saturation and respiratory rate come with its files.
 
 What the entries made on a Wear OS watch write, each when the phone pulls it: `WRITE_HYDRATION`,
 `WRITE_WEIGHT`, `WRITE_BLOOD_PRESSURE`, `WRITE_BODY_FAT`, `WRITE_OXYGEN_SATURATION`,
-`WRITE_RESPIRATORY_RATE`, `WRITE_BODY_TEMPERATURE`, `WRITE_BLOOD_GLUCOSE` and `WRITE_HEIGHT` (a value logged in
+`WRITE_RESPIRATORY_RATE`, `WRITE_BODY_TEMPERATURE`, `WRITE_BLOOD_GLUCOSE`, `WRITE_HEIGHT`,
+`WRITE_LEAN_BODY_MASS` and `WRITE_BODY_WATER_MASS` (a value logged in
 the watch's quick log: a hand-logged blood oxygen or breathing rate is written whatever the night
 switches say), `WRITE_MINDFULNESS` (a breathing session, only where Health Connect
 stores mindfulness sessions), and `WRITE_HEART_RATE`, `WRITE_HEART_RATE_VARIABILITY` and, on a
@@ -125,6 +126,8 @@ it fails `HealthPermissionsTest`.
 | `WRITE_BLOOD_PRESSURE` | What you log on the watch, by hand. |
 | `WRITE_MINDFULNESS` | A breathing session you do on the watch, where Health Connect keeps them. |
 | `WRITE_BODY_FAT` | What you log on the watch, by hand. |
+| `WRITE_LEAN_BODY_MASS` | A lean body mass the watch logs as an entry. |
+| `WRITE_BODY_WATER_MASS` | A body water mass the watch logs as an entry. |
 | `WRITE_BODY_TEMPERATURE` | What you log on the watch, by hand. |
 | `WRITE_BLOOD_GLUCOSE` | What you log on the watch, by hand. |
 | `WRITE_HEIGHT` | What you log on the watch, by hand. |
@@ -172,6 +175,7 @@ it fails `HealthPermissionsTest`.
 | `READ_HEALTH_DATA_IN_BACKGROUND` | To keep recording with the watch's screen off. |
 | `READ_SKIN_TEMPERATURE` | Only on a Samsung watch, and only when you switch on skin temperature at night. |
 | `READ_OXYGEN_SATURATION` | Only on a Samsung watch: when you switch on SpO2 at night, and when you measure your blood oxygen on the watch. |
+| `READ_ADDITIONAL_HEALTH_DATA` | Samsung's own permission, only on a Samsung watch and only when you choose the Samsung PPG as the source of the night's heart rate variability. |
 
 <!-- health-data:end -->
 
@@ -188,6 +192,9 @@ asked on the wrist:
   when the user switches on "Skin temperature at night" or "SpO2 hourly at night" on a watch that has the
   Samsung Health Platform, which checks them per tracker, and `READ_OXYGEN_SATURATION` when the
   user starts a blood oxygen spot measurement there.
+- `com.samsung.android.hardware.sensormanager.permission.READ_ADDITIONAL_HEALTH_DATA` (Samsung's own): asked
+  only when the user chooses the Samsung PPG as the night's heart rate variability source on a watch that
+  has the Samsung Health Platform, which checks it for that tracker.
 - `ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION` and `FOREGROUND_SERVICE_LOCATION`: a
   workout recorded with GPS on the watch, and only while it runs.
 - `BLUETOOTH_CONNECT`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_CONNECTED_DEVICE`,
