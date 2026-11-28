@@ -72,12 +72,13 @@ internal class SamsungHeartRateFeed(private val context: Context, private val de
 
     /**
      * Joins tracker [type] and starts it if this is its first reader. False when the platform refused the bind.
-     * [ppgColours] are the first reader's: what the tracker is created with.
+     * [profile] and [ppgColours] are the first reader's: they are what the tracker is created with.
      */
     fun subscribeRaw(
         type: String,
         subscriber: RawSubscriber,
         handler: Handler,
+        profile: SamsungHealthPlatform.UserProfile? = null,
         ppgColours: List<String> = emptyList(),
     ): Boolean = synchronized(lock) {
         val readers = rawSubscribers.getOrPut(type) { LinkedHashMap() }
@@ -86,7 +87,7 @@ internal class SamsungHeartRateFeed(private val context: Context, private val de
             readers.remove(subscriber)
             return false
         }
-        if (readers.size == 1) track(type, subscriber.javaClass.simpleName, ppgColours)
+        if (readers.size == 1) track(type, subscriber.javaClass.simpleName, profile, ppgColours)
         true
     }
 
@@ -132,6 +133,7 @@ internal class SamsungHeartRateFeed(private val context: Context, private val de
     private fun track(
         type: String,
         by: String,
+        profile: SamsungHealthPlatform.UserProfile? = null,
         ppgColours: List<String> = emptyList(),
     ) {
         val client = platform ?: return
@@ -147,6 +149,7 @@ internal class SamsungHeartRateFeed(private val context: Context, private val de
                 onPoints = { raw -> deliverRaw(type, raw) },
                 onFlushed = { flushed(type) },
                 onError = { failed(type) },
+                profile = profile,
                 ppgColours = ppgColours,
             )
         }
