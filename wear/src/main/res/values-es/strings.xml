@@ -54,7 +54,7 @@
     <string name="settings_heart_rate_source_sensor">Pulso: sensor</string>
     <string name="settings_heart_rate_source_samsung">Pulso: plataforma Samsung</string>
     <string name="settings_skin_temperature_off">Temperatura de la piel: desactivada</string>
-    <string name="settings_skin_temperature_on">Temperatura de la piel: Samsung, por la noche</string>
+    <string name="settings_skin_temperature_on">Temperatura de la piel: activada</string>
     <string name="settings_spo2_off">SpO2: desactivada</string>
     <string name="settings_spo2_on">SpO2: Samsung, cada hora por la noche</string>
     <string name="status_hrv_source_ppg">VFC: PPG sin procesar</string>
@@ -318,7 +318,7 @@
     <string name="settings_sleep_hold_explained">Cómo se conserva cada minuto de sueño: el bloqueo de activación mantiene el reloj despierto; los despertares agrupados lo dejan dormir entre los despertares del sensor de pulso y vacían entonces todos los sensores, solo con el pulso del sensor.</string>
     <string name="settings_heart_rate_source_explained">Sensor: el pulso del propio reloj, en directo. Samsung: el valor de la plataforma, entregado en lotes con hasta 10 minutos de retraso con la pantalla apagada. Un entrenamiento usa el sensor en ambos casos.</string>
     <string name="settings_hrv_source_explained">Sensor: VFC a partir de la señal de pulso sin procesar, cada intervalo. Samsung: los intervalos entre latidos de la plataforma; hoy se pierde en torno al 60 % de ellos, así que menos noches tienen un valor.</string>
-    <string name="settings_skin_explained">Temperatura de la piel en la muñeca mientras duermes, una lectura por minuto de la plataforma Samsung. Poca energía; nada más cambia.</string>
+    <string name="settings_skin_explained">Temperatura de la piel en la muñeca mientras duermes, una lectura por minuto. Poca energía; nada más cambia.</string>
     <string name="settings_spo2_explained">Oxígeno en sangre como mucho una vez por hora mientras duermes, unos 15 s de luz roja. Unos pocos mAh por noche; se omite si el brazo se mueve.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Pausa automática: activada</string>

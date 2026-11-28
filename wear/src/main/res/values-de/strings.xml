@@ -53,7 +53,7 @@
     <string name="settings_heart_rate_source_sensor">Puls: Sensor</string>
     <string name="settings_heart_rate_source_samsung">Puls: Samsung-Plattform</string>
     <string name="settings_skin_temperature_off">Hauttemperatur: aus</string>
-    <string name="settings_skin_temperature_on">Hauttemperatur: Samsung, nachts</string>
+    <string name="settings_skin_temperature_on">Hauttemperatur: an</string>
     <string name="settings_spo2_off">SpO2: aus</string>
     <string name="settings_spo2_on">SpO2: Samsung, stündlich nachts</string>
     <string name="status_hrv_source_ppg">HRV: rohes PPG</string>
@@ -313,7 +313,7 @@
     <string name="settings_sleep_hold_explained">Wie ein Schlaf-Hold jede Minute festhält: Ein Wake Lock hält die Uhr wach; gebündeltes Aufwecken lässt sie zwischen den Weckrufen des Pulssensors schlafen und leert dann jeden Sensor, nur mit dem Puls vom Sensor.</string>
     <string name="settings_heart_rate_source_explained">Sensor: der eigene Puls der Uhr, live. Samsung: der Wert der Plattform, bei ausgeschaltetem Display bis zu 10 Minuten verzögert. Ein Training nutzt immer den Sensor.</string>
     <string name="settings_hrv_source_explained">Sensor: HRV aus dem rohen Pulssignal, jeder Schlag. Samsung: die Schlagabstände der Plattform; derzeit gehen davon etwa 60 % verloren, daher seltener ein Wert.</string>
-    <string name="settings_skin_explained">Hauttemperatur am Handgelenk im Schlaf, ein Wert pro Minute von der Samsung-Plattform. Wenig Strom, sonst keine Änderung.</string>
+    <string name="settings_skin_explained">Hauttemperatur am Handgelenk im Schlaf, ein Wert pro Minute. Wenig Strom, sonst keine Änderung.</string>
     <string name="settings_spo2_explained">Blutsauerstoff höchstens einmal pro Stunde im Schlaf, etwa 15 s Rotlicht. Wenige mAh pro Nacht; entfällt, wenn sich der Arm bewegt.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Auto-Pause: an</string>

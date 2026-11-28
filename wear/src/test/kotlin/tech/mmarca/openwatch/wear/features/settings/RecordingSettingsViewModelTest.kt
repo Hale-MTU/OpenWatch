@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.mmarca.openwatch.wear.WatchPreferences
@@ -24,7 +25,7 @@ class RecordingSettingsViewModelTest {
     @After
     fun tearDown() = scope.cancel()
 
-    private fun viewModel() = RecordingSettingsViewModel(port, settings, Dispatchers.Unconfined, scope).also { vm ->
+    private fun viewModel(port: RecordingSettingsPort = this.port) = RecordingSettingsViewModel(port, settings, Dispatchers.Unconfined, scope).also { vm ->
         // The screen collects the state while it is shown; so does the test.
         scope.launch { vm.state.collect {} }
     }
@@ -39,6 +40,23 @@ class RecordingSettingsViewModelTest {
         settings.value = SETTINGS.copy(heartRateDay = HeartRateInterval.POWER_SAVE)
 
         assertEquals(HeartRateInterval.POWER_SAVE, vm.state.value.settings?.heartRateDay)
+    }
+
+    @Test
+    fun `the skin row shows on a Pixel with only the raw skin sensor`() {
+        val vm = viewModel(FakePort(samsung = false, skin = true))
+
+        assertTrue(vm.state.value.skin)
+        assertFalse(vm.state.value.samsung)
+    }
+
+    @Test
+    fun `the skin flag comes off the port, not off the Samsung flag`() {
+        // The port answers the two apart; the screen shows each exactly as the port says.
+        val vm = viewModel(FakePort(samsung = true, skin = false))
+
+        assertTrue(vm.state.value.samsung)
+        assertFalse(vm.state.value.skin)
     }
 
     @Test
@@ -72,10 +90,15 @@ class RecordingSettingsViewModelTest {
         assertEquals(SETTINGS.copy(autoPause = false, autoDetect = false), port.stored)
     }
 
-    private class FakePort : RecordingSettingsPort {
+    private class FakePort(
+        private val samsung: Boolean = true,
+        private val skin: Boolean = true,
+    ) : RecordingSettingsPort {
         var stored = SETTINGS
 
-        override fun samsung(): Boolean = true
+        override fun samsung(): Boolean = samsung
+
+        override fun skin(): Boolean = skin
 
         override fun change(change: (WatchPreferences) -> WatchPreferences) {
             stored = change(stored)

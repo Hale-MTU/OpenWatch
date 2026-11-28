@@ -29,8 +29,10 @@ class WearLinkServerHost(
     live: LiveHeartRate,
     /** Whether the watch has the raw PPG sensor a night-time HRV window needs. */
     hrvAvailable: () -> Boolean,
-    /** Whether the watch has the Samsung platform, the only source of skin temperature and SpO2. */
+    /** Whether the watch has a skin-temperature source, Pixel's raw sensor or the Samsung platform. */
     skinAvailable: () -> Boolean,
+    /** Whether the watch has the Samsung platform, the only source of SpO2. */
+    spo2Available: () -> Boolean,
     /** The phone reported the wearer active at the given time. Called on the link's thread. */
     onPhoneActive: (Long) -> Unit,
     /** The watch's settings as the phone reads them. Called on the link's thread. */
@@ -44,7 +46,7 @@ class WearLinkServerHost(
     private val localName: () -> String,
     private val state: WearLinkState,
 ) {
-    private val server = WearLinkServer(trust, Handler(store, live, hrvAvailable, skinAvailable, onPhoneActive, heldPreferences, setPreference, workouts, putDay, localName))
+    private val server = WearLinkServer(trust, Handler(store, live, hrvAvailable, skinAvailable, spo2Available, onPhoneActive, heldPreferences, setPreference, workouts, putDay, localName))
 
     @Volatile
     private var serverSocket: BluetoothServerSocket? = null
@@ -128,6 +130,7 @@ class WearLinkServerHost(
         private val live: LiveHeartRate,
         private val hrvAvailable: () -> Boolean,
         private val skinAvailable: () -> Boolean,
+        private val spo2Available: () -> Boolean,
         private val onPhoneActive: (Long) -> Unit,
         private val heldPreferences: () -> Map<String, String>,
         private val setPreference: (String, String) -> Boolean,
@@ -137,23 +140,12 @@ class WearLinkServerHost(
     ) : WearLinkRequestHandler {
         override fun localName(): String = localName.invoke()
 
-        override fun capabilities(): Set<String> = WearMetrics.ALL.mapTo(LinkedHashSet()) { it.key }.apply {
-            if (live.hasSensor) add(WearLinkProtocol.CAP_LIVE_HEART_RATE)
-            if (!hrvAvailable()) {
-                remove(WearLinkProtocol.CAP_HRV)
-                remove(WearLinkProtocol.CAP_RESPIRATORY_RATE)
-            }
-            if (!skinAvailable()) {
-                remove(WearLinkProtocol.CAP_SKIN_TEMPERATURE)
-                remove(WearLinkProtocol.CAP_SPO2)
-            }
-            add(WearLinkProtocol.CAP_PHONE_ACTIVE)
-            add(WearLinkProtocol.CAP_PREFERENCES)
-            add(WearLinkProtocol.CAP_DAY_SUMMARY)
-            // The metric list holds the workouts' pauses and route too; only the header key is a capability.
-            remove("wp")
-            remove("wr")
-        }
+        override fun capabilities(): Set<String> = capabilitiesFor(
+            liveHeartRate = live.hasSensor,
+            hrvAvailable = hrvAvailable(),
+            skinAvailable = skinAvailable(),
+            spo2Available = spo2Available(),
+        )
 
         /** A series the watch announces, answered by its store's sequence numbers. */
         override fun seriesSince(key: String, cursor: String, limit: Int): WearLinkSince.Page? {
@@ -180,8 +172,31 @@ class WearLinkServerHost(
             live.window(seconds, emit)
     }
 
-    private companion object {
-        const val TAG = "WearLinkServerHost"
-        const val SERVICE_NAME = "OpenWatchWearApp"
+    internal companion object {
+        /**
+         * What the link announces for a watch with these sensors: every metric
+         * key less what no available source can back. Skin and SpO2 gate apart
+         * — Pixel's raw skin sensor announces `sk` without `o2`. Pure, the
+         * seam the unit tests hold; the sensors themselves need a watch.
+         */
+        internal fun capabilitiesFor(liveHeartRate: Boolean, hrvAvailable: Boolean, skinAvailable: Boolean, spo2Available: Boolean): Set<String> =
+            WearMetrics.ALL.mapTo(LinkedHashSet()) { it.key }.apply {
+                if (liveHeartRate) add(WearLinkProtocol.CAP_LIVE_HEART_RATE)
+                if (!hrvAvailable) {
+                    remove(WearLinkProtocol.CAP_HRV)
+                    remove(WearLinkProtocol.CAP_RESPIRATORY_RATE)
+                }
+                if (!skinAvailable) remove(WearLinkProtocol.CAP_SKIN_TEMPERATURE)
+                if (!spo2Available) remove(WearLinkProtocol.CAP_SPO2)
+                add(WearLinkProtocol.CAP_PHONE_ACTIVE)
+                add(WearLinkProtocol.CAP_PREFERENCES)
+                add(WearLinkProtocol.CAP_DAY_SUMMARY)
+                // The metric list holds the workouts' pauses and route too; only the header key is a capability.
+                remove("wp")
+                remove("wr")
+            }
+
+        private const val TAG = "WearLinkServerHost"
+        private const val SERVICE_NAME = "OpenWatchWearApp"
     }
 }

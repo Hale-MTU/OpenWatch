@@ -58,7 +58,7 @@
     <string name="settings_heart_rate_source_sensor">معدل نبض القلب: المستشعر</string>
     <string name="settings_heart_rate_source_samsung">معدل نبض القلب: منصة Samsung</string>
     <string name="settings_skin_temperature_off">درجة حرارة الجلد: متوقفة</string>
-    <string name="settings_skin_temperature_on">درجة حرارة الجلد: Samsung، ليلًا</string>
+    <string name="settings_skin_temperature_on">درجة حرارة الجلد: مفعّلة</string>
     <string name="settings_spo2_off">قياس SpO2: متوقف</string>
     <string name="settings_spo2_on">قياس SpO2: Samsung، كل ساعة ليلًا</string>
     <string name="status_hrv_source_ppg">قياس HRV: بيانات PPG الخام</string>
@@ -344,7 +344,7 @@
     <string name="settings_sleep_hold_explained">كيف يحتفظ تسجيل النوم بكل دقيقة: يُبقي قفل التنشيط الساعة نشطة؛ أما الإيقاظ المتزامن فيتيح لها السكون بين عمليات إيقاظ مستشعر معدل نبض القلب، وتفريغ كل المستشعرات عندها، مع معدل نبض القلب من المستشعر فقط.</string>
     <string name="settings_heart_rate_source_explained">المستشعر: معدل نبض القلب من الساعة نفسها، مباشرةً. Samsung: قيمة المنصة، تُسلَّم على دفعات بتأخير يصل إلى 10 دقائق والشاشة مطفأة. يستخدم التمرين المستشعر في الحالتين.</string>
     <string name="settings_hrv_source_explained">المستشعر: قياس HRV من إشارة النبض الخام، لكل فاصل. Samsung: فواصل النبضات (RR) من المنصة؛ يضيع حاليًا نحو 60% RR، لذا تقل الليالي التي لها قيمة.</string>
-    <string name="settings_skin_explained">درجة حرارة الجلد عند المعصم أثناء نومك، قراءة كل دقيقة من منصة Samsung. استهلاك قليل للطاقة؛ ولا يتغير شيء آخر.</string>
+    <string name="settings_skin_explained">درجة حرارة الجلد عند المعصم أثناء نومك، قراءة كل دقيقة. استهلاك قليل للطاقة؛ ولا يتغير شيء آخر.</string>
     <string name="settings_spo2_explained">الأكسجين في الدم مرة كل ساعة على الأكثر أثناء نومك، بنحو 15 ثانية من الضوء الأحمر. بضعة mAh في الليلة؛ ويُتخطّى القياس عند تحرك الذراع.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">الإيقاف المؤقت التلقائي: مفعّل</string>

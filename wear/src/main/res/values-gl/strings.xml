@@ -54,7 +54,7 @@
     <string name="settings_heart_rate_source_sensor">Pulso: sensor</string>
     <string name="settings_heart_rate_source_samsung">Pulso: plataforma Samsung</string>
     <string name="settings_skin_temperature_off">Temperatura da pel: desactivada</string>
-    <string name="settings_skin_temperature_on">Temperatura da pel: Samsung, pola noite</string>
+    <string name="settings_skin_temperature_on">Temperatura da pel: activada</string>
     <string name="settings_spo2_off">SpO2: desactivada</string>
     <string name="settings_spo2_on">SpO2: Samsung, cada hora pola noite</string>
     <string name="status_hrv_source_ppg">VFC: PPG sen procesar</string>
@@ -324,7 +324,7 @@
     <string name="settings_sleep_hold_explained">Como garda cada minuto o seguimento do sono: un bloqueo de activación mantén o reloxo esperto; os espertares agrupados déixano durmir entre os espertares do sensor cardíaco e baleiran entón cada sensor, só co pulso do sensor.</string>
     <string name="settings_heart_rate_source_explained">Sensor: o pulso do propio reloxo, en directo. Samsung: o valor da plataforma, entregado en lotes ata 10 minutos tarde coa pantalla apagada. Un adestramento usa o sensor en calquera caso.</string>
     <string name="settings_hrv_source_explained">Sensor: VFC a partir do sinal de pulso sen procesar, en cada intervalo. Samsung: os intervalos entre latexos da plataforma; hoxe pérdense arredor do 60 % deles, así que menos noites teñen un valor.</string>
-    <string name="settings_skin_explained">Temperatura da pel no pulso mentres dormes, unha lectura por minuto da plataforma Samsung. Pouca enerxía; nada máis cambia.</string>
+    <string name="settings_skin_explained">Temperatura da pel no pulso mentres dormes, unha lectura por minuto. Pouca enerxía; nada máis cambia.</string>
     <string name="settings_spo2_explained">Osíxeno en sangue como moito unha vez por hora mentres dormes, uns 15 s de luz vermella. Uns poucos mAh por noite; omítese se o brazo se move.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Pausa automática: activada</string>

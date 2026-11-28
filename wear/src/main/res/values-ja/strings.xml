@@ -53,7 +53,7 @@
     <string name="settings_heart_rate_source_sensor">心拍数: センサー</string>
     <string name="settings_heart_rate_source_samsung">心拍数: Samsung プラットフォーム</string>
     <string name="settings_skin_temperature_off">皮膚温度: オフ</string>
-    <string name="settings_skin_temperature_on">皮膚温度: Samsung、夜間</string>
+    <string name="settings_skin_temperature_on">皮膚温度: オン</string>
     <string name="settings_spo2_off">SpO2: オフ</string>
     <string name="settings_spo2_on">SpO2: Samsung、夜間 1 時間ごと</string>
     <string name="status_hrv_source_ppg">HRV: 生の PPG</string>
@@ -319,7 +319,7 @@
     <string name="settings_sleep_hold_explained">睡眠中に毎分を記録する方法: ウェイクロックはウォッチを起動したままにします。まとめた起動では心拍センサーの起動の合間にスリープし、そのときにすべてのセンサーを読み出します（センサーの心拍数でのみ動作）。</string>
     <string name="settings_heart_rate_source_explained">センサー: ウォッチ自身の心拍数、リアルタイム。Samsung: プラットフォームの値。画面オフ時は最大 10 分遅れてまとめて渡されます。ワークアウトではどちらの場合もセンサーを使います。</string>
     <string name="settings_hrv_source_explained">センサー: 生の脈波信号から求める HRV、すべての間隔。Samsung: プラットフォームの拍動間隔。現在はその約 60 % (RR 間隔) が失われるため、値が得られる夜が少なくなります。</string>
-    <string name="settings_skin_explained">睡眠中の手首の皮膚温度を、Samsung プラットフォームから 1 分に 1 回取得。消費電力はわずかで、他には何も変わりません。</string>
+    <string name="settings_skin_explained">睡眠中の手首の皮膚温度を、1 分に 1 回取得。消費電力はわずかで、他には何も変わりません。</string>
     <string name="settings_spo2_explained">睡眠中に最大 1 時間に 1 回の血中酸素測定、約 15 秒の赤色光。一晩に数 mAh。腕が動いているときはスキップします。</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">自動一時停止: オン</string>

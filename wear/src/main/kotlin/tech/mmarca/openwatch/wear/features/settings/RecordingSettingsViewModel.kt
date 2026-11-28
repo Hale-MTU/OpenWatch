@@ -29,12 +29,19 @@ internal interface RecordingSettingsPort {
     /** Whether the watch has the Samsung Health Platform, which adds its settings. Blocks. */
     fun samsung(): Boolean
 
+    /** Whether the watch has any skin-temperature source: the Samsung platform or Pixel's raw sensor. Blocks. */
+    fun skin(): Boolean
+
     /** Applies [change] to the stored settings and tells the running service. Blocks. */
     fun change(change: (WatchPreferences) -> WatchPreferences)
 }
 
 /** The recording settings screen's state; null parts are not read yet. */
-internal data class RecordingSettingsUiState(val settings: WatchPreferences? = null, val samsung: Boolean = false)
+internal data class RecordingSettingsUiState(
+    val settings: WatchPreferences? = null,
+    val samsung: Boolean = false,
+    val skin: Boolean = false,
+)
 
 /**
  * The recording settings' state: the settings as they change, on the watch
@@ -50,9 +57,12 @@ internal class RecordingSettingsViewModel(
 ) : ViewModel(scope) {
 
     private val samsung: Flow<Boolean> = flow { emit(port.samsung()) }.flowOn(io)
+    private val skin: Flow<Boolean> = flow { emit(port.skin()) }.flowOn(io)
 
     val state: StateFlow<RecordingSettingsUiState> =
-        combine(settings.flowOn(io), samsung.onStart { emit(false) }) { prefs, samsung -> RecordingSettingsUiState(prefs, samsung) }
+        combine(settings.flowOn(io), samsung.onStart { emit(false) }, skin.onStart { emit(false) }) { prefs, samsung, skin ->
+            RecordingSettingsUiState(prefs, samsung, skin)
+        }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MILLIS), RecordingSettingsUiState())
 
     fun setHeartRatePowerSave(on: Boolean) = change {
@@ -103,6 +113,8 @@ internal class RecordingSettingsViewModel(
 internal class GraphRecordingSettingsPort(private val context: Context, private val graph: WearGraph) : RecordingSettingsPort {
 
     override fun samsung(): Boolean = graph.abilities().samsung
+
+    override fun skin(): Boolean = graph.abilities().let { it.samsung || it.skinSensor }
 
     override fun change(change: (WatchPreferences) -> WatchPreferences) {
         WearSettings.write(context, change(WearSettings.read(context)))

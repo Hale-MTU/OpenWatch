@@ -7,6 +7,7 @@ import tech.mmarca.healthcalculations.insights.HeartRateZones
 import tech.mmarca.healthcalculations.preferences.BiologicalSex
 import tech.mmarca.healthcalculations.preferences.BodyProfile
 import tech.mmarca.openwatch.wearlink.HeartRateInterval
+import tech.mmarca.openwatch.wearlink.WearLinkPreferences
 
 class WearPreferenceCodecTest {
 
@@ -20,6 +21,7 @@ class WearPreferenceCodecTest {
     )
     private val samsung = WatchAbilities(samsung = true, skinGranted = true, spo2Granted = false)
     private val pixel = WatchAbilities(samsung = false, skinGranted = false, spo2Granted = false)
+    private val pixelRaw = WatchAbilities(samsung = false, skinGranted = true, spo2Granted = false, skinSensor = true)
 
     @Test
     fun `every setting and ability goes out as a token`() {
@@ -29,10 +31,29 @@ class WearPreferenceCodecTest {
                 "skin" to "0", "spo2" to "0", "hr_max" to "0", "hr_rest" to "0",
                 "body_hg" to "0", "body_cm" to "0", "birth_year" to "0", "sex" to "0",
                 "goal_steps" to "8000", "goal_kcal" to "400", "goal_water" to "2000",
-                "samsung" to "1", "skin_granted" to "1", "spo2_granted" to "0",
+                "samsung" to "1", "skin_sensor" to "0", "skin_granted" to "1", "spo2_granted" to "0",
             ),
             WearPreferenceCodec.encode(defaults, samsung),
         )
+    }
+
+    @Test
+    fun `skin_sensor goes out as 1 with the raw Pixel sensor and 0 without it`() {
+        assertEquals("1", WearPreferenceCodec.encode(defaults, pixelRaw)[WearLinkPreferences.SKIN_SENSOR])
+        assertEquals("0", WearPreferenceCodec.encode(defaults, pixel)[WearLinkPreferences.SKIN_SENSOR])
+        assertEquals("0", WearPreferenceCodec.encode(defaults, samsung)[WearLinkPreferences.SKIN_SENSOR])
+    }
+
+    @Test
+    fun `an older watch's reply without the skin_sensor token behaves like skin_sensor 0`() {
+        // The phone only gates on what encode emits; a pre-token watch never sends the key,
+        // so an absent entry must read as false, not as an unknown ability.
+        val oldWatchReply = WearPreferenceCodec.encode(defaults, pixel) - WearLinkPreferences.SKIN_SENSOR
+        assertEquals(null, oldWatchReply[WearLinkPreferences.SKIN_SENSOR])
+        assertEquals("0", WearPreferenceCodec.encode(defaults, pixel)[WearLinkPreferences.SKIN_SENSOR])
+        // And the watch side refuses skin on such a watch, the same as an explicit 0.
+        assertNull(WearPreferenceCodec.apply(defaults, pixel, WearLinkPreferences.SKIN_TEMPERATURE, WearLinkPreferences.ON))
+        assertEquals(true, WearPreferenceCodec.apply(defaults, pixelRaw, WearLinkPreferences.SKIN_TEMPERATURE, WearLinkPreferences.ON)!!.skinTemperature)
     }
 
     @Test
@@ -53,6 +74,12 @@ class WearPreferenceCodecTest {
         assertNull(WearPreferenceCodec.apply(defaults, pixel, "hr_source", "samsung"))
         assertNull(WearPreferenceCodec.apply(defaults, pixel, "skin", "1"))
         assertEquals(defaults, WearPreferenceCodec.apply(defaults, pixel, "skin", "0"))
+    }
+
+    @Test
+    fun `the raw Pixel skin sensor opens skin but never SpO2`() {
+        assertEquals(true, WearPreferenceCodec.apply(defaults, pixelRaw, "skin", "1")!!.skinTemperature)
+        assertNull(WearPreferenceCodec.apply(defaults, pixelRaw, "spo2", "1"))
     }
 
     @Test

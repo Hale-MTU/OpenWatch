@@ -55,7 +55,7 @@
     <string name="settings_heart_rate_source_sensor">Pouls : capteur</string>
     <string name="settings_heart_rate_source_samsung">Pouls : plateforme Samsung</string>
     <string name="settings_skin_temperature_off">Température cutanée : désactivée</string>
-    <string name="settings_skin_temperature_on">Température cutanée : Samsung, la nuit</string>
+    <string name="settings_skin_temperature_on">Température cutanée : activée</string>
     <string name="settings_spo2_off">SpO2 : désactivée</string>
     <string name="settings_spo2_on">SpO2 : Samsung, toutes les heures la nuit</string>
     <string name="status_hrv_source_ppg">VFC : PPG brut</string>
@@ -329,7 +329,7 @@
     <string name="settings_sleep_hold_explained">Comment le suivi du sommeil garde chaque minute : un verrou de réveil maintient la montre éveillée ; les réveils groupés la laissent dormir entre les réveils du capteur cardiaque et vident alors chaque capteur, avec le pouls du capteur uniquement.</string>
     <string name="settings_heart_rate_source_explained">Capteur : le pouls de la montre elle-même, en direct. Samsung : la valeur de la plateforme, transmise par lots jusqu\'à 10 minutes en retard écran éteint. Un entraînement utilise le capteur dans les deux cas.</string>
     <string name="settings_hrv_source_explained">Capteur : la VFC à partir du signal de pouls brut, à chaque intervalle. Samsung : les intervalles entre battements de la plateforme ; aujourd\'hui environ 60 % d\'entre eux se perdent, donc moins de nuits ont une valeur.</string>
-    <string name="settings_skin_explained">La température cutanée au poignet pendant votre sommeil, une mesure par minute depuis la plateforme Samsung. Peu d\'énergie ; rien d\'autre ne change.</string>
+    <string name="settings_skin_explained">La température cutanée au poignet pendant votre sommeil, une mesure par minute. Peu d\'énergie ; rien d\'autre ne change.</string>
     <string name="settings_spo2_explained">L\'oxygène sanguin au plus une fois par heure pendant votre sommeil, environ 15 s de lumière rouge. Quelques mAh par nuit ; ignoré si le bras bouge.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Pause auto : activée</string>

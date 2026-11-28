@@ -92,8 +92,9 @@ internal fun RecordingSettingsRoute() {
  * what it does, what it costs and what it loses: the heart rate outside
  * bedtime mode and how a sleep hold works, a workout's pause by itself and
  * the offer of a walk or a run the watch sees, and, on a watch with the
- * Samsung Health Platform only, where the heart rate and the HRV windows
- * come from, skin temperature and SpO2. The running service follows a change at once,
+ * Samsung Health Platform, where the heart rate and the HRV windows come
+ * from and SpO2; skin temperature wherever the watch has a skin source,
+ * the Samsung platform or Pixel's raw sensor. The running service follows a change at once,
  * and a change the phone makes shows at once too.
  */
 @Composable
@@ -108,7 +109,7 @@ internal fun RecordingSettingsScreen(state: RecordingSettingsUiState, actions: R
                     transformation = SurfaceTransformation(spec),
                 ) { Text(stringResource(R.string.settings_recording)) }
             }
-            state.settings?.let { settings -> recordingSettingsItems(settings, state.samsung, spec, actions) }
+            state.settings?.let { settings -> recordingSettingsItems(settings, state.samsung, state.skin, spec, actions) }
         }
     }
 }
@@ -116,6 +117,7 @@ internal fun RecordingSettingsScreen(state: RecordingSettingsUiState, actions: R
 private fun TransformingLazyColumnScope.recordingSettingsItems(
     settings: WatchPreferences,
     samsung: Boolean,
+    skinAvailable: Boolean,
     spec: TransformationSpec,
     actions: RecordingSettingsActions,
 ) {
@@ -137,26 +139,32 @@ private fun TransformingLazyColumnScope.recordingSettingsItems(
     setting(spec, if (autoDetect) R.string.settings_auto_detect_on else R.string.settings_auto_detect_off, R.string.settings_auto_detect_explained) {
         actions.onAutoDetect(!autoDetect)
     }
-    if (!samsung) return
-
-    item { Line(stringResource(R.string.status_hrv_source_samsung_note)) }
-    val heartRateSamsung = settings.heartRateSource == MeasurementSource.SAMSUNG_PLATFORM
-    setting(
-        spec,
-        if (heartRateSamsung) R.string.settings_heart_rate_source_samsung else R.string.settings_heart_rate_source_sensor,
-        R.string.settings_heart_rate_source_explained,
-    ) { actions.onHeartRateSource(flip(settings.heartRateSource)) }
-    val hrvSamsung = settings.hrvSource == MeasurementSource.SAMSUNG_PLATFORM
-    setting(spec, if (hrvSamsung) R.string.status_hrv_source_samsung else R.string.status_hrv_source_ppg, R.string.settings_hrv_source_explained) {
-        actions.onHrvSource(flip(settings.hrvSource))
+    if (samsung) {
+        item { Line(stringResource(R.string.status_hrv_source_samsung_note)) }
+        val heartRateSamsung = settings.heartRateSource == MeasurementSource.SAMSUNG_PLATFORM
+        setting(
+            spec,
+            if (heartRateSamsung) R.string.settings_heart_rate_source_samsung else R.string.settings_heart_rate_source_sensor,
+            R.string.settings_heart_rate_source_explained,
+        ) { actions.onHeartRateSource(flip(settings.heartRateSource)) }
+        val hrvSamsung = settings.hrvSource == MeasurementSource.SAMSUNG_PLATFORM
+        setting(spec, if (hrvSamsung) R.string.status_hrv_source_samsung else R.string.status_hrv_source_ppg, R.string.settings_hrv_source_explained) {
+            actions.onHrvSource(flip(settings.hrvSource))
+        }
     }
-    val skin = settings.skinTemperature
-    setting(spec, if (skin) R.string.settings_skin_temperature_on else R.string.settings_skin_temperature_off, R.string.settings_skin_explained) {
-        actions.onSkinTemperature(!skin)
+    // Skin temperature wherever a skin source exists: Pixel's raw sensor or the Samsung platform.
+    if (skinAvailable) {
+        val skin = settings.skinTemperature
+        setting(spec, if (skin) R.string.settings_skin_temperature_on else R.string.settings_skin_temperature_off, R.string.settings_skin_explained) {
+            actions.onSkinTemperature(!skin)
+        }
     }
-    val spo2 = settings.spo2AtNight
-    setting(spec, if (spo2) R.string.settings_spo2_on else R.string.settings_spo2_off, R.string.settings_spo2_explained) {
-        actions.onSpo2AtNight(!spo2)
+    // SpO2 stays Samsung-only: the platform is its only source.
+    if (samsung) {
+        val spo2 = settings.spo2AtNight
+        setting(spec, if (spo2) R.string.settings_spo2_on else R.string.settings_spo2_off, R.string.settings_spo2_explained) {
+            actions.onSpo2AtNight(!spo2)
+        }
     }
 }
 

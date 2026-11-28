@@ -69,8 +69,9 @@ import java.util.UUID
  *   (beat intervals, signal baseline) agreed on it.
  * - `O2 <epochMillis> <percent> <bpm|->` — one SpO2 spot measurement by the
  *   Samsung platform: its time, the saturation in percent, the heart rate.
- * - `SK <minuteMillis> <skin100> <ambient100>` — one minute of the Samsung
- *   platform's skin temperature, in hundredths of a degree Celsius.
+ * - `SK <minuteMillis> <skin100> <ambient100>` — one minute of skin temperature
+ *   (the Samsung platform or, on Pixel, the raw sensor) — its minute, skin and
+ *   ambient in hundredths of °C.
  * - `LG <epochMillis> <type> <value1000> <second1000|-> <m|h>` — one entry made
  *   on the watch, logged by hand (`h`) or spot-measured (`m`), its values in
  *   thousandths of its type's unit ([WearLinkEntries]). Added without a
@@ -153,7 +154,7 @@ object WearLinkProtocol {
     /** The watch measures the breathing rate in its night windows: `SINCE rr`. */
     const val CAP_RESPIRATORY_RATE: String = "rr"
 
-    /** The watch records skin temperature from the Samsung platform: `SINCE sk`. */
+    /** The watch records skin temperature, from the Samsung platform or Pixel's raw sensor: `SINCE sk`. */
     const val CAP_SKIN_TEMPERATURE: String = "sk"
 
     /** The watch measures SpO2 at night with the Samsung platform: `SINCE o2`. */

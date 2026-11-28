@@ -54,7 +54,7 @@
     <string name="settings_heart_rate_source_sensor">Pulss: andur</string>
     <string name="settings_heart_rate_source_samsung">Pulss: Samsungi platvorm</string>
     <string name="settings_skin_temperature_off">Naha temperatuur: väljas</string>
-    <string name="settings_skin_temperature_on">Naha temperatuur: Samsung, öösel</string>
+    <string name="settings_skin_temperature_on">Naha temperatuur: sees</string>
     <string name="settings_spo2_off">SpO2: väljas</string>
     <string name="settings_spo2_on">SpO2: Samsung, iga tund öösel</string>
     <string name="status_hrv_source_ppg">HRV: toores PPG</string>
@@ -324,7 +324,7 @@
     <string name="settings_sleep_hold_explained">Kuidas une hoidmine säilitab iga minuti: äratuslukk hoiab kella ärkvel; koondatud äratused lasevad kellal pulsianduri äratuste vahel magada ja tühjendavad siis kõik andurid, ainult anduri pulsiga.</string>
     <string name="settings_heart_rate_source_explained">Andur: kella enda pulss, reaalajas. Samsung: platvormi väärtus, mis ekraani väljas olles edastatakse kogumitena kuni 10 minutit hiljem. Treening kasutab igal juhul andurit.</string>
     <string name="settings_hrv_source_explained">Andur: HRV toorest pulsisignaalist, iga intervall. Samsung: platvormi löögiintervallid; praegu läheb neist umbes 60 % kaduma, seega on väärtus vähematel öödel.</string>
-    <string name="settings_skin_explained">Naha temperatuur randmel une ajal, Samsungi platvormilt üks näit minutis. Vähe energiat; muu ei muutu.</string>
+    <string name="settings_skin_explained">Naha temperatuur randmel une ajal, üks näit minutis. Vähe energiat; muu ei muutu.</string>
     <string name="settings_spo2_explained">Vere hapnikusisaldus une ajal kõige rohkem kord tunnis, umbes 15 s punast valgust. Paar mAh öö kohta; jäetakse vahele, kui käsi liigub.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Automaatne paus: sees</string>

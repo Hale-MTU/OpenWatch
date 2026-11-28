@@ -55,7 +55,7 @@
     <string name="settings_heart_rate_source_sensor">Battito: sensore</string>
     <string name="settings_heart_rate_source_samsung">Battito: piattaforma Samsung</string>
     <string name="settings_skin_temperature_off">Temperatura cutanea: disattivata</string>
-    <string name="settings_skin_temperature_on">Temperatura cutanea: Samsung, di notte</string>
+    <string name="settings_skin_temperature_on">Temperatura cutanea: attivata</string>
     <string name="settings_spo2_off">SpO2: disattivata</string>
     <string name="settings_spo2_on">SpO2: Samsung, ogni ora di notte</string>
     <string name="status_hrv_source_ppg">HRV: PPG grezzo</string>
@@ -329,7 +329,7 @@
     <string name="settings_sleep_hold_explained">Come il monitoraggio del sonno conserva ogni minuto: un wake lock tiene sveglio l\'orologio; i risvegli sincronizzati lo lasciano dormire tra i risvegli del sensore cardiaco e allora svuotano ogni sensore, solo con il battito dal sensore.</string>
     <string name="settings_heart_rate_source_explained">Sensore: il battito dell\'orologio stesso, in tempo reale. Samsung: il valore della piattaforma, consegnato a gruppi fino a 10 minuti in ritardo con lo schermo spento. Un allenamento usa comunque il sensore.</string>
     <string name="settings_hrv_source_explained">Sensore: HRV dal segnale grezzo del polso, a ogni intervallo. Samsung: gli intervalli tra i battiti della piattaforma; oggi circa il 60% di essi va perso, quindi meno notti hanno un valore.</string>
-    <string name="settings_skin_explained">Temperatura cutanea al polso mentre dormi, una lettura al minuto dalla piattaforma Samsung. Consuma poco; non cambia nient\'altro.</string>
+    <string name="settings_skin_explained">Temperatura cutanea al polso mentre dormi, una lettura al minuto. Consuma poco; non cambia nient\'altro.</string>
     <string name="settings_spo2_explained">Ossigeno nel sangue al massimo una volta all\'ora mentre dormi, circa 15 s di luce rossa. Pochi mAh a notte; saltato se il braccio si muove.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Pausa automatica: attiva</string>

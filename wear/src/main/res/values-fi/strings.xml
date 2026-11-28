@@ -54,7 +54,7 @@
     <string name="settings_heart_rate_source_sensor">Syke: anturi</string>
     <string name="settings_heart_rate_source_samsung">Syke: Samsung-alusta</string>
     <string name="settings_skin_temperature_off">Ihon lämpötila: pois</string>
-    <string name="settings_skin_temperature_on">Ihon lämpötila: Samsung, yöllä</string>
+    <string name="settings_skin_temperature_on">Ihon lämpötila: päällä</string>
     <string name="settings_spo2_off">SpO2: pois</string>
     <string name="settings_spo2_on">SpO2: Samsung, tunnin välein yöllä</string>
     <string name="status_hrv_source_ppg">HRV: raaka PPG</string>
@@ -324,7 +324,7 @@
     <string name="settings_sleep_hold_explained">Miten unen pito säilyttää jokaisen minuutin: herätyslukko pitää kellon hereillä; yhdistetyt herätykset antavat sen nukkua sykeanturin herätysten välillä ja tyhjentävät silloin kaikki anturit, vain anturin sykkeellä.</string>
     <string name="settings_heart_rate_source_explained">Anturi: kellon oma syke, reaaliajassa. Samsung: alustan arvo, joka toimitetaan näytön ollessa pois päältä erissä jopa 10 minuuttia myöhässä. Treeni käyttää anturia joka tapauksessa.</string>
     <string name="settings_hrv_source_explained">Anturi: HRV raa\'asta pulssisignaalista, jokainen väli. Samsung: alustan lyöntivälit; nykyään niistä noin 60 % katoaa, joten harvemmalle yölle saadaan arvo.</string>
-    <string name="settings_skin_explained">Ihon lämpötila ranteesta unen aikana, Samsung-alustalta yksi lukema minuutissa. Vähän virtaa; muu ei muutu.</string>
+    <string name="settings_skin_explained">Ihon lämpötila ranteesta unen aikana, yksi lukema minuutissa. Vähän virtaa; muu ei muutu.</string>
     <string name="settings_spo2_explained">Veren happipitoisuus enintään kerran tunnissa unen aikana, noin 15 s punaista valoa. Muutama mAh yössä; ohitetaan, kun käsi liikkuu.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">Automaattinen tauko: päällä</string>

@@ -166,6 +166,26 @@ class WearOsWatchPanelViewModelTest {
     }
 
     @Test
+    fun `which night settings the watch offers turns on its reported abilities`() {
+        // A Samsung watch offers skin and SpO2; the raw sensor token changes nothing there.
+        val samsung = mapOf(Preferences.SAMSUNG_AVAILABLE to Preferences.ON)
+        assertEquals(true, skinOfferedByWatch(samsung))
+        assertEquals(true, spo2OfferedByWatch(samsung))
+
+        // A Pixel with only the raw skin sensor offers skin, and never SpO2.
+        val pixelRaw = mapOf(Preferences.SKIN_SENSOR to Preferences.ON)
+        assertEquals(true, skinOfferedByWatch(pixelRaw))
+        assertEquals(false, spo2OfferedByWatch(pixelRaw))
+
+        // Neither ability: neither switch. An older watch that sends no skin_sensor token
+        // reads as no sensor, the same as an explicit OFF.
+        val plain = mapOf(Preferences.SKIN_SENSOR to Preferences.OFF)
+        assertEquals(false, skinOfferedByWatch(plain))
+        assertEquals(false, skinOfferedByWatch(emptyMap()))
+        assertEquals(false, spo2OfferedByWatch(emptyMap()))
+    }
+
+    @Test
     fun `the skin temperature line is kept back when the watch says the measurement is off`() {
         val forming = WearOsWatchPanelUiState(skinNightsToBaseline = 2)
 

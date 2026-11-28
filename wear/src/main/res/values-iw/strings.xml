@@ -55,7 +55,7 @@
     <string name="settings_heart_rate_source_sensor">דופק: חיישן</string>
     <string name="settings_heart_rate_source_samsung">דופק: פלטפורמת Samsung</string>
     <string name="settings_skin_temperature_off">טמפרטורת העור: כבויה</string>
-    <string name="settings_skin_temperature_on">טמפרטורת העור: Samsung, בלילה</string>
+    <string name="settings_skin_temperature_on">טמפרטורת העור: פעילה</string>
     <string name="settings_spo2_off">מדידת SpO2: כבויה</string>
     <string name="settings_spo2_on">מדידת SpO2: Samsung, כל שעה בלילה</string>
     <string name="status_hrv_source_ppg">מדידת HRV: PPG גולמי</string>
@@ -329,7 +329,7 @@
     <string name="settings_sleep_hold_explained">איך שומרים כל דקת שינה: השארת השעון ער לא נותנת לו לישון; התעוררויות מסונכרנות מאפשרות לו לישון בין ההתעוררויות של חיישן הדופק ולרוקן אז את כל החיישנים, עם דופק מהחיישן בלבד.</string>
     <string name="settings_heart_rate_source_explained">חיישן: הדופק של השעון עצמו, בזמן אמת. Samsung: הערך של הפלטפורמה, שמועבר במנות באיחור של עד 10 דקות כשהמסך כבוי. אימון משתמש בחיישן בכל מקרה.</string>
     <string name="settings_hrv_source_explained">חיישן: HRV מאות הדופק הגולמי, בכל מרווח. Samsung: מרווחי הפעימות (RR) של הפלטפורמה; כיום כ-60% RR הולכים לאיבוד, ולכן לפחות לילות יש ערך.</string>
-    <string name="settings_skin_explained">טמפרטורת העור בפרק כף היד בזמן השינה, קריאה אחת בדקה מפלטפורמת Samsung. צריכת חשמל קטנה; שום דבר אחר לא משתנה.</string>
+    <string name="settings_skin_explained">טמפרטורת העור בפרק כף היד בזמן השינה, קריאה אחת בדקה. צריכת חשמל קטנה; שום דבר אחר לא משתנה.</string>
     <string name="settings_spo2_explained">חמצן בדם לכל היותר פעם בשעה בזמן השינה, כ-15 שניות של אור אדום. כמה mAh בלילה; המדידה מדולגת כשהיד זזה.</string>
     <string name="measure_value_placeholder">-- %1$s</string>
     <string name="settings_auto_pause_on">השהיה אוטומטית: פועלת</string>
