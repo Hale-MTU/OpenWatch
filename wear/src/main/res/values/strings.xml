@@ -332,11 +332,13 @@
     <string name="settings_auto_pause_explained">A run or a ride with a route pauses by itself once you have stood still for 8 seconds, and goes on when you move again, with a buzz each time. The GPS speed decides; a pause you tap stays until you tap again.</string>
     <string name="settings_auto_detect_on">Detect workouts: on</string>
     <string name="settings_auto_detect_off">Detect workouts: off</string>
-    <string name="settings_auto_detect_explained">After 10 minutes of brisk walking or running without a workout, the watch offers to record it from where it began. It reads the step minutes it keeps anyway; nothing is recorded unless you tap Record.</string>
+    <string name="settings_auto_detect_explained">After 10 minutes of brisk walking or running without a workout, or of a raised heart rate with few steps (a ride, once your phone has sent your maximum), the watch offers to record it from where it began. It reads the step and heart rate minutes it keeps anyway; nothing is recorded unless you tap Record. A sauna, a hot bath, rowing or a fever can look like a ride too, and every ride is offered as outdoor cycling without GPS.</string>
     <string name="detected_channel_name">Detected workouts</string>
     <string name="detected_walk">Looks like a walk</string>
     <string name="detected_run">Looks like a run</string>
     <string name="detected_body">%1$d min, %2$s. Record it?</string>
+    <string name="detected_ride">Looks like a ride</string>
+    <string name="detected_ride_body">%1$d min at about %2$d bpm. Record it?</string>
     <string name="detected_start">Record</string>
     <plurals name="detected_steps">
         <item quantity="one">%d step</item>

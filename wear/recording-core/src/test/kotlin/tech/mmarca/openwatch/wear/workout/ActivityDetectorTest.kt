@@ -67,4 +67,64 @@ class ActivityDetectorTest {
         assertEquals(11, found.minutes)
         assertEquals(11 * 105, found.steps)
     }
+
+    /** Six samples a minute, as the heart rate is kept at full rate. */
+    private fun heartRate(vararg bpmPerMinute: Int) = bpmPerMinute.flatMapIndexed { i, bpm ->
+        (0 until 6).map { WearLinkProtocol.HeartRateSample(t0 + i * 60_000L + it * 10_000L, bpm) }
+    }
+
+    /** Zone 3's lower bound for a maximum of 190 and a resting rate of 60: 60 + 0.4 x 130. */
+    private val moderate = 112
+
+    @Test fun `twelve minutes of a raised heart rate with few steps are a ride`() {
+        val found = ActivityDetector.detectRide(rows(*IntArray(12) { 4 }), heartRate(*IntArray(12) { 130 }), nowAfter(12), moderate)!!
+
+        assertEquals(WorkoutSport.BIKING, found.sport)
+        assertEquals(t0, found.startMillis)
+        assertEquals(12, found.minutes)
+        assertEquals(130, found.heartRateBpm)
+    }
+
+    @Test fun `a stop at a light does not break a ride, a sitting heart rate is no ride`() {
+        val bpm = IntArray(12) { 130 }.also { it[5] = 95 }
+        assertEquals(12, ActivityDetector.detectRide(rows(*IntArray(12) { 0 }), heartRate(*bpm), nowAfter(12), moderate)!!.minutes)
+
+        assertNull(ActivityDetector.detectRide(rows(*IntArray(15) { 0 }), heartRate(*IntArray(15) { 85 }), nowAfter(15), moderate))
+    }
+
+    @Test fun `a walk is no ride, and minutes without a heart rate are none either`() {
+        assertNull(ActivityDetector.detectRide(rows(*IntArray(12) { 110 }), heartRate(*IntArray(12) { 130 }), nowAfter(12), moderate))
+
+        // Power save: one sample every ten minutes.
+        val sparse = heartRate(*IntArray(20) { 130 }).filter { (it.epochMillis - t0) % 600_000L == 0L }
+        assertNull(ActivityDetector.detectRide(rows(*IntArray(20) { 0 }), sparse, nowAfter(20), moderate))
+    }
+
+    /** A row for every minute with steps; a minute of no steps has no row, as a real one has none. */
+    private fun sparseRows(vararg stepsPerMinute: Int) = stepsPerMinute.toList().mapIndexedNotNull { i, steps ->
+        WearLinkProtocol.StepMinute(t0 + i * 60_000L, steps).takeIf { steps > 0 }
+    }
+
+    @Test fun `a ride's boundaries, exactly the zone's bound and 29 steps and ten minutes count, one below does not`() {
+        assertEquals(10, ActivityDetector.detectRide(rows(*IntArray(10) { 29 }), heartRate(*IntArray(10) { moderate }), nowAfter(10), moderate)!!.minutes)
+        assertNull(ActivityDetector.detectRide(rows(*IntArray(10) { 4 }), heartRate(*IntArray(10) { moderate - 1 }), nowAfter(10), moderate))
+        assertNull(ActivityDetector.detectRide(rows(*IntArray(10) { 30 }), heartRate(*IntArray(10) { 130 }), nowAfter(10), moderate))
+        assertNull(ActivityDetector.detectRide(rows(*IntArray(9) { 4 }), heartRate(*IntArray(9) { 130 }), nowAfter(9), moderate))
+    }
+
+    @Test fun `a ride is told by minutes without a step row too`() {
+        val found = ActivityDetector.detectRide(sparseRows(*IntArray(12) { 0 }), heartRate(*IntArray(12) { 130 }), nowAfter(12), moderate)!!
+
+        assertEquals(12, found.minutes)
+    }
+
+    @Test fun `a minute that misses with many steps, or two in a row, break the ride`() {
+        val steps = IntArray(12) { 4 }.also { it[5] = 90 }
+        val bpm = IntArray(12) { 130 }.also { it[5] = 95 }
+        // The minute with many steps breaks it: the six minutes after it are too few.
+        assertNull(ActivityDetector.detectRide(rows(*steps), heartRate(*bpm), nowAfter(12), moderate))
+
+        val two = IntArray(12) { 130 }.also { it[5] = 95; it[6] = 95 }
+        assertNull(ActivityDetector.detectRide(rows(*IntArray(12) { 0 }), heartRate(*two), nowAfter(12), moderate))
+    }
 }

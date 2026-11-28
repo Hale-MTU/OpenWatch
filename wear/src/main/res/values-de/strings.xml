@@ -321,11 +321,13 @@
     <string name="settings_auto_pause_explained">Ein Lauf oder eine Radfahrt mit Route pausiert von selbst, sobald du 8 Sekunden stillstehst, und geht weiter, wenn du dich wieder bewegst, jedes Mal mit einem Vibrieren. Es entscheidet die GPS-Geschwindigkeit; eine Pause, die du antippst, bleibt, bis du wieder tippst.</string>
     <string name="settings_auto_detect_on">Workouts erkennen: an</string>
     <string name="settings_auto_detect_off">Workouts erkennen: aus</string>
-    <string name="settings_auto_detect_explained">Nach 10 Minuten zügigem Gehen oder Laufen ohne Training bietet die Uhr an, es ab seinem Beginn aufzuzeichnen. Sie liest die Schrittminuten, die sie ohnehin speichert; aufgezeichnet wird nur, wenn du auf Aufzeichnen tippst.</string>
+    <string name="settings_auto_detect_explained">Nach 10 Minuten zügigem Gehen oder Laufen ohne Training, oder erhöhtem Puls bei wenigen Schritten (eine Radfahrt, sobald dein Telefon dein Maximum geschickt hat), bietet die Uhr an, es ab seinem Beginn aufzuzeichnen. Sie liest die Schritt- und Pulsminuten, die sie ohnehin speichert; aufgezeichnet wird nur, wenn du auf Aufzeichnen tippst. Sauna, ein heißes Bad, Rudern oder Fieber können auch wie eine Radfahrt aussehen, und jede Fahrt wird als Radfahren im Freien ohne GPS angeboten.</string>
     <string name="detected_channel_name">Erkannte Workouts</string>
     <string name="detected_walk">Sieht nach einem Spaziergang aus</string>
     <string name="detected_run">Sieht nach einem Lauf aus</string>
     <string name="detected_body">%1$d min, %2$s. Aufzeichnen?</string>
+    <string name="detected_ride">Sieht nach einer Radfahrt aus</string>
+    <string name="detected_ride_body">%1$d min bei etwa %2$d Schlägen pro Minute. Aufzeichnen?</string>
     <string name="detected_start">Aufzeichnen</string>
     <plurals name="detected_steps">
         <item quantity="one">%d Schritt</item>

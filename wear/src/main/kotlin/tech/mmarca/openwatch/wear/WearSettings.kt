@@ -27,7 +27,8 @@ import tech.mmarca.openwatch.wearlink.HeartRateInterval
  *   watch's settings; metric until the wearer chooses.
  * - `auto_pause` and `auto_detect` ([WatchPreferences.autoPause],
  *   [WatchPreferences.autoDetect]): a workout's pause by itself and the
- *   offer of a walk or run seen in the step minutes, both on by default.
+ *   offer of a walk or run seen in the step minutes, or of a ride seen in the
+ *   heart rate (with the phone's maximum), both on by default.
  */
 internal object WearSettings {
 
@@ -61,7 +62,7 @@ internal object WearSettings {
     /** A [UnitSystem] name; written only when the wearer chooses. */
     private const val KEY_UNIT_SYSTEM = "unit_system"
 
-    /** Whether a workout pauses by itself, and whether a walk or run is offered as one; both on until the wearer switches them off. */
+    /** Whether a workout pauses by itself, and whether a walk, run or ride is offered as one; both on until the wearer switches them off. */
     private const val KEY_AUTO_PAUSE = "auto_pause"
     private const val KEY_AUTO_DETECT = "auto_detect"
     private const val KEY_GOAL_STEPS = "goal_steps"
